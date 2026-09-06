@@ -1,0 +1,83 @@
+name: praticis-aidd
+
+services:
+
+  # ──────────────────────────────────────────────────────
+  # QDRANT — semantic memory server for this stack's projects.
+  # ──────────────────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    container_name: aidd-core-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant/config.yaml:/qdrant/config/production.yaml:ro
+      - ${QDRANT_STORAGE_PATH:-./_docker/qdrant}:/qdrant/storage
+    healthcheck:
+      # The official image ships without curl/wget/nc (a deliberate
+      # security choice by the Qdrant maintainers), so this uses
+      # bash's built-in /dev/tcp to check the port is accepting
+      # connections instead of an HTTP readiness check.
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ──────────────────────────────────────────────────────
+  # MCP QDRANT — memory <-> agent bridge (Claude Code / Antigravity / Cursor)
+  # Embeddings via FastEmbed (local ONNX, CPU-only, ~130MB) —
+  # does NOT use Ollama or any paid API. Downloads the model once
+  # from HuggingFace on first use; runs fully offline afterward.
+  # ──────────────────────────────────────────────────────
+  mcp-qdrant:
+    build:
+      context: ./qdrant
+      dockerfile: Dockerfile
+    container_name: aidd-mcp-qdrant
+    restart: unless-stopped
+    volumes:
+      - ./qdrant/run-mcp.py:/app/run-mcp.py:ro
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - COLLECTION_NAME=${COLLECTION_NAME:-vault}
+      - EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+    ports:
+      - "3002:3000"
+
+  # ──────────────────────────────────────────────────────
+  # MCP OBSIDIAN — vault <-> agent bridge
+  # Local vault: specs, ADRs, and per-project conventions.
+  # ──────────────────────────────────────────────────────
+  mcp-obsidian:
+    build:
+      context: ./obsidian
+      dockerfile: Dockerfile
+    container_name: aidd-mcp-obsidian
+    restart: unless-stopped
+    volumes:
+      - ${OBSIDIAN_VAULT_PATH:-./_docker/obsidian}:/vault
+    ports:
+      - "3001:3000"
+
+  # ──────────────────────────────────────────────────────
+  # MCP GIT — automated git operations
+  # Points to this machine's local projects folder.
+  # ──────────────────────────────────────────────────────
+  mcp-git:
+    build:
+      context: ./git
+      dockerfile: Dockerfile
+    container_name: aidd-mcp-git
+    restart: unless-stopped
+    volumes:
+      - ${WORKSPACE_PATH:-./_docker/workspace}:/workspace
+      - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
+      - type: bind
+        source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
+        target: /root/.gitconfig
+        read_only: true
+    ports:
+      - "3003:3000"

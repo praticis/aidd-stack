@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "obsidian": {
+      "serverUrl": "http://localhost:3001/mcp"
+    },
+    "qdrant": {
+      "serverUrl": "http://localhost:3002/mcp/"
+    },
+    "git": {
+      "serverUrl": "http://localhost:3003/mcp"
+    }
+  }
+}
