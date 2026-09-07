@@ -344,7 +344,14 @@ distribute_mcp_config() {
     search_base="$workspace_path/$SCAN_TENANT_VALUE"
   fi
 
-  # Locates .git directories up to a maximum depth of 3 folders
+  # NEW: also drop a copy at the workspace root itself. Skills like
+  # business-refine intentionally run from the workspace root (they
+  # need a cross-project view, not a single-project one), and Claude
+  # Code only reads .mcp.json from the exact directory it's launched
+  # from — it does not search upward through parent directories.
+  cp "$mcp_source" "$workspace_path/.mcp.json"
+  printf "  ${GREEN}[copied]${NC} .mcp.json -> %s/.mcp.json (workspace root)\n" "$workspace_path"
+
   find "$search_base" -maxdepth 3 -type d -name ".git" 2>/dev/null | while read -r git_dir; do
     local proj_dir
     proj_dir="$(dirname "$git_dir")"
