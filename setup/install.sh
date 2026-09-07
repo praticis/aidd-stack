@@ -161,12 +161,12 @@ run_skills() {
   info "Scan Skill Configuration:"
   echo "  1) Auto Mode (default)"
   echo "  2) Specify Company Name / Context"
-  read -r -p "Select an option [1/2, default: 1]: " scan_option
+  read -r -p "Select an option [1/2, default: 1]: " scan_option </dev/tty
 
   SCAN_TENANT_VALUE="auto"
 
   if [[ "$scan_option" == "2" ]]; then
-    read -r -p "Enter company/context name [default: auto]: " company_name
+    read -r -p "Enter company/context name [default: auto]: " company_name </dev/tty
     SCAN_TENANT_VALUE="${company_name:-auto}"
   fi
 
@@ -275,8 +275,8 @@ run_environment() {
     info "$env_file already exists — leaving it untouched."
   else
     echo ""
-    read -r -p "Enter your workspace path [Default: $HOME/workspace]: " user_workspace
-    
+    read -r -p "Enter your workspace path [Default: $HOME/workspace]: " user_workspace </dev/tty
+
     local workspace_path="${user_workspace:-$HOME/workspace}"
     workspace_path="${workspace_path/#\~/$HOME}"
 
@@ -295,7 +295,7 @@ EOF
   fi
 
   echo ""
-  read -r -p "Bring up the Docker Compose stack now? [y/N] " reply
+  read -r -p "Bring up the Docker Compose stack now? [y/N] " reply </dev/tty
   if [[ "$reply" =~ ^[Yy]$ ]]; then
     info "Starting Docker Compose inside $AIDD_DIR..."
     (cd "$AIDD_DIR" && docker compose up -d --build)
