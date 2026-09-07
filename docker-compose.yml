@@ -42,7 +42,6 @@ services:
       - ./qdrant/run-mcp.py:/app/run-mcp.py:ro
     environment:
       - QDRANT_URL=http://qdrant:6333
-      - COLLECTION_NAME=${COLLECTION_NAME:-vault}
       - EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
     ports:
       - "3002:3000"

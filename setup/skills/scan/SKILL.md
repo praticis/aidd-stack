@@ -18,15 +18,19 @@ Look at the `tenant` field in this file's frontmatter:
   below the projects workspace root (e.g. in
   `~/workspace/company-name/project-name`, `<tenant>` = `company-name`; in
   `~/workspace/personal/my-app`, `<tenant>` = `personal`).
-- Otherwise → use the value as-is as `<tenant>` (e.g. `company-name`).
+- Otherwise → use the value as-is as `<tenant>` (e.g. `company-b`).
 
-This value is used as `<tenant>` throughout the rest of this skill.
+`<tenant>` is used as the Qdrant **collection name** throughout this
+skill — each tenant gets its own physically separate collection, not
+a shared one filtered by payload.
 
 ## Always run at the start of the session
 
-1. Use `qdrant-find`, filtering by `tenant: "<tenant>"`,
-   `project: "<current-repo-name>"`, and `type: "conventions"`, to
+1. Use `qdrant-find` with `collection_name: "<tenant>"`, filtering by
+   `project: "<current-repo-name>"` and `type: "conventions"`, to
    check whether a saved mapping for this project already exists.
+   (If the collection doesn't exist yet, treat it the same as "not
+   found" — proceed to step 3.)
 
 2. **If it already exists**: load these conventions as context and
    follow them in any new implementation. Do not repeat step 3.
@@ -46,10 +50,12 @@ This value is used as `<tenant>` throughout the rest of this skill.
      inside the vault if it doesn't exist yet). If the page already
      exists, update/complement it rather than overwriting — add or
      revise the `## Identified conventions` section.
-   - Save the same summary to `qdrant` as a lesson, with payload
-     `{"tenant": "<tenant>", "project": "<current-repo-name>", "type": "conventions"}`,
-     so the next session retrieves it instantly without needing to
-     scan everything again.
+   - Save the same summary to `qdrant` as a lesson, using
+     `qdrant` with `collection_name: "<tenant>"` and payload
+     `{"project": "<current-repo-name>", "type": "conventions"}`
+     (the collection itself now identifies the tenant, so it's no
+     longer part of the payload), so the next session retrieves it
+     instantly without needing to scan everything again.
 
 ## From here on
 
@@ -59,5 +65,6 @@ pattern different from what already exists in the project without
 explicitly justifying why.
 
 At the end of a relevant task (a non-obvious bug fix, a design
-decision, a workaround), save a new lesson to `qdrant` with
-`{"tenant": "<tenant>", "project": "<current-repo-name>", "type": "lesson"}`.
+decision, a workaround), save a new lesson via `qdrant` with
+`collection_name: "<tenant>"` and payload
+`{"project": "<current-repo-name>", "type": "lesson"}`.

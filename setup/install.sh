@@ -261,7 +261,6 @@ WORKSPACE_PATH=$workspace_path
 # Persistent Storage inside ~/.aidd/_docker
 OBSIDIAN_VAULT_PATH=$docker_dir/obsidian-vault
 QDRANT_STORAGE_PATH=$docker_dir/qdrant-storage
-COLLECTION_NAME=vault
 
 # Service Endpoints
 QDRANT_URL=http://localhost:6333
