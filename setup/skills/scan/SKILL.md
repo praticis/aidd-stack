@@ -18,16 +18,25 @@ Look at the `tenant` field in this file's frontmatter:
   below the projects workspace root (e.g. in
   `~/workspace/company-name/project-name`, `<tenant>` = `company-name`; in
   `~/workspace/personal/my-app`, `<tenant>` = `personal`).
-- Otherwise → use the value as-is as `<tenant>` (e.g. `company-b`).
+- Otherwise → use the value as-is as `<tenant>` (e.g. `custom-tenant`).
 
 `<tenant>` is used as the Qdrant **collection name** throughout this
 skill — each tenant gets its own physically separate collection, not
 a shared one filtered by payload.
 
+**IMPORTANT — a common mistake to avoid**: `<tenant>` is NOT the
+current repository/project name. If `tenant` is a fixed value (not
+`auto`), that exact same value is the `collection_name` for **every**
+project you work on from this machine — never substitute the current
+project's name as the collection name, even if it feels more natural.
+The project name only ever goes in the `project` field of the
+payload, never in `collection_name`.
+
 ## Always run at the start of the session
 
-1. Use `qdrant-find` with `collection_name: "<tenant>"`, filtering by
-   `project: "<current-repo-name>"` and `type: "conventions"`, to
+1. Use `qdrant-find` with `collection_name: "<tenant>"` (the tenant
+   value determined above — re-check it if you're unsure), filtering
+   by `project: "<current-repo-name>"` and `type: "conventions"`, to
    check whether a saved mapping for this project already exists.
    (If the collection doesn't exist yet, treat it the same as "not
    found" — proceed to step 3.)
@@ -51,7 +60,8 @@ a shared one filtered by payload.
      exists, update/complement it rather than overwriting — add or
      revise the `## Identified conventions` section.
    - Save the same summary to `qdrant` as a lesson, using
-     `qdrant` with `collection_name: "<tenant>"` and payload
+     `qdrant-store` with `collection_name: "<tenant>"` (same value as
+     step 1 — not the project name) and payload
      `{"project": "<current-repo-name>", "type": "conventions"}`
      (the collection itself now identifies the tenant, so it's no
      longer part of the payload), so the next session retrieves it
@@ -65,6 +75,6 @@ pattern different from what already exists in the project without
 explicitly justifying why.
 
 At the end of a relevant task (a non-obvious bug fix, a design
-decision, a workaround), save a new lesson via `qdrant` with
-`collection_name: "<tenant>"` and payload
+decision, a workaround), save a new lesson via `qdrant-store` with
+`collection_name: "<tenant>"` (never the project name) and payload
 `{"project": "<current-repo-name>", "type": "lesson"}`.
