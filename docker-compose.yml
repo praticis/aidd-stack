@@ -14,7 +14,7 @@ services:
       - "6334:6334"
     volumes:
       - ./qdrant/config.yaml:/qdrant/config/production.yaml:ro
-      - ${QDRANT_STORAGE_PATH:-./_docker/qdrant}:/qdrant/storage
+      - qdrant_data:/qdrant/storage
     healthcheck:
       # The official image ships without curl/wget/nc (a deliberate
       # security choice by the Qdrant maintainers), so this uses
@@ -80,3 +80,6 @@ services:
         read_only: true
     ports:
       - "3003:3000"
+
+volumes:
+  qdrant_data:
