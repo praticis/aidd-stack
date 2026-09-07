@@ -1,0 +1,1 @@
+curl -fsSL https://raw.githubusercontent.com/praticis/aidd-stack/refs/heads/main/setup/install.sh | bash

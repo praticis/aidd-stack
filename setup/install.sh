@@ -9,14 +9,40 @@
 #   ./install.sh                 # Global skills + ~/.aidd infra setup
 #   ./install.sh --project       # Project-scoped skills + ~/.aidd infra setup
 #
+# Can also be run remotely:
+#   curl -fsSL https://raw.githubusercontent.com/praticis/aidd-stack/main/setup/install.sh | bash
+#
 
 set -eo pipefail
 
 # ------------------------------------------------------------------------------
-# 1. Configuration: Global Paths, Directories & Exclusion Rules
+# Bootstrap: detect whether this is running from a real local checkout
+# or via `curl | bash` (no files on disk). If the latter, clone the
+# repository into a temp directory first and continue from there.
 # ------------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_URL="https://github.com/praticis/aidd-stack.git"
+
+_candidate_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
+
+if [ -n "$_candidate_script_dir" ] && [ -d "$_candidate_script_dir/../git" ]; then
+  # Real checkout: install.sh has its sibling folders (git/, obsidian/,
+  # qdrant/, skills/) right there on disk. Use it as-is.
+  SCRIPT_DIR="$_candidate_script_dir"
+  ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+  # No usable local checkout (e.g. curl | bash) — clone the repo into a
+  # temp directory and point everything at that instead.
+  if ! command -v git &> /dev/null; then
+    echo "git is required to install aidd-stack this way. Install git and try again." >&2
+    exit 1
+  fi
+  TMP_CLONE="$(mktemp -d -t aidd-stack.XXXXXX)"
+  echo "No local checkout detected — cloning $REPO_URL into $TMP_CLONE..."
+  git clone --depth 1 "$REPO_URL" "$TMP_CLONE"
+  ROOT_DIR="$TMP_CLONE"
+  SCRIPT_DIR="$TMP_CLONE/setup"
+fi
+
 AIDD_DIR="$HOME/.aidd"
 
 # Folders to copy from $ROOT_DIR into $AIDD_DIR
