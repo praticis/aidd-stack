@@ -8,6 +8,9 @@
     },
     "git": {
       "serverUrl": "http://localhost:3003/mcp"
+    },
+    "atlassian": { 
+      "serverUrl": "https://mcp.atlassian.com/v2/mcp" 
     }
   }
 }
