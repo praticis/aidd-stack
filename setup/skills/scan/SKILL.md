@@ -32,6 +32,25 @@ project's name as the collection name, even if it feels more natural.
 The project name only ever goes in the `project` field of the
 payload, never in `collection_name`.
 
+## Vault layout
+
+```
+<tenant>/
+├── knowledge/
+│   ├── shared/                      (reserved — cross-project notes)
+│   └── <current-repo-name>/
+│       └── <current-repo-name>.md   (this skill's file — see below)
+└── refine-business/                 (written by the refine-business skill, not this one)
+```
+
+`<current-repo-name>.md` is this project's **index page**, not just a
+one-off dump. Other skills or later sessions may add sibling files
+inside the same `<current-repo-name>/` folder (code-review notes,
+incident write-ups, anything else that accumulates about this
+project). When that happens, this index page should grow a short
+list of links to them — but don't invent that section before any such
+file actually exists.
+
 ## Always run at the start of the session
 
 1. Use `qdrant-find` with `collection_name: "<tenant>"` (the tenant
@@ -55,10 +74,12 @@ payload, never in `collection_name`.
 
    Then:
    - Save this summary to the vault via `obsidian`, at the path
-     `<tenant>/<current-repo-name>.md` (create the `<tenant>/` folder
-     inside the vault if it doesn't exist yet). If the page already
-     exists, update/complement it rather than overwriting — add or
-     revise the `## Identified conventions` section.
+     `<tenant>/knowledge/<current-repo-name>/<current-repo-name>.md`
+     (create the folders if they don't exist yet). If the page
+     already exists, update/complement it rather than overwriting —
+     add or revise the `## Identified conventions` section, leaving
+     any other section intact (including a links section pointing to
+     sibling files, if one has been added since).
    - Save the same summary to `qdrant` as a lesson, using
      `qdrant-store` with `collection_name: "<tenant>"` (same value as
      step 1 — not the project name) and payload
