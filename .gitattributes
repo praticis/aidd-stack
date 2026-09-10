@@ -1,0 +1,15 @@
+# Normalize line endings: LF in the repo for every text file.
+* text=auto
+
+# Files that break with CRLF regardless of the checkout platform
+# (shebang lookup, cypher-shell parsing, docker build context).
+*.sh          text eol=lf
+*.cypher      text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+*.json        text eol=lf
+*.py          text eol=lf
+Dockerfile    text eol=lf
+.mcp.json     text eol=lf
+.gitattributes text eol=lf
+.gitignore    text eol=lf

@@ -1,5 +1,11 @@
 name: praticis-aidd
 
+# Configuration contract: every `${VAR:?}` below is REQUIRED. How it is
+# provided is up to the caller — ~/.aidd/.env (written by setup/install.sh),
+# the host environment, `--env-file`, a secrets manager, CI variables.
+# Compose aborts before starting any container if one is unset or empty.
+# Only SSH_PATH and GIT_CONFIG_PATH keep host-derived defaults.
+
 services:
 
   # ──────────────────────────────────────────────────────
@@ -57,7 +63,7 @@ services:
     container_name: aidd-mcp-obsidian
     restart: unless-stopped
     volumes:
-      - ${OBSIDIAN_VAULT_PATH:-./_docker/obsidian}:/vault
+      - ${OBSIDIAN_VAULT_PATH:?}:/vault
     ports:
       - "3001:3000"
 
@@ -72,7 +78,7 @@ services:
     container_name: aidd-mcp-git
     restart: unless-stopped
     volumes:
-      - ${WORKSPACE_PATH:-./_docker/workspace}:/workspace
+      - ${WORKSPACE_PATH:?}:/workspace
       - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
       - type: bind
         source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
@@ -81,5 +87,88 @@ services:
     ports:
       - "3003:3000"
 
+  # ──────────────────────────────────────────────────────
+  # NEO4J — code graph (micro: symbols/calls; macro: contracts
+  # between repos). Schema: neo4j/SCHEMA.md · ADR: docs/adr/ADR-001.
+  # Browser: http://localhost:7474 · Bolt: bolt://localhost:7687
+  #
+  # Credentials must be supplied by the environment (see contract above).
+  # NOTE: the official image only accepts `neo4j` as the initial user
+  # (NEO4J_AUTH); the password is written to the volume on first start,
+  # so changing it later requires `docker compose down -v` (dev only)
+  # or ALTER USER via cypher-shell.
+  # ──────────────────────────────────────────────────────
+  neo4j:
+    image: neo4j:5-community
+    restart: unless-stopped
+    container_name: aidd-core-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:?}/${NEO4J_PASSWORD:?}
+      # Community Edition has a single user database; its name is fixed at
+      # first start (initial.*) — like the password, it lives in the volume.
+      - NEO4J_initial_dbms_default__database=${NEO4J_DATABASE:?}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_server_memory_heap_initial__size=${NEO4J_HEAP:?}
+      - NEO4J_server_memory_heap_max__size=${NEO4J_HEAP:?}
+      - NEO4J_server_memory_pagecache_size=${NEO4J_PAGECACHE:?}
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      # cypher-shell can read NEO4J_USERNAME/NEO4J_PASSWORD from env, but
+      # the server entrypoint would treat those as config settings, so
+      # the check passes them explicitly instead.
+      test: ["CMD-SHELL", "cypher-shell -u ${NEO4J_USER:?} -p ${NEO4J_PASSWORD:?} -d ${NEO4J_DATABASE:?} 'RETURN 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────
+  # NEO4J INIT — one-shot: applies code graph constraints and
+  # indexes from neo4j/init/schema.cypher (idempotent).
+  # ──────────────────────────────────────────────────────
+  neo4j-init:
+    image: neo4j:5-community
+    container_name: aidd-neo4j-init
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      # cypher-shell reads these three directly.
+      - NEO4J_ADDRESS=bolt://neo4j:7687
+      - NEO4J_USERNAME=${NEO4J_USER:?}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+    volumes:
+      - ./neo4j/init:/init:ro
+    entrypoint: ["cypher-shell", "-d", "${NEO4J_DATABASE:?}", "-f", "/init/schema.cypher"]
+    restart: "no"
+
+  # ──────────────────────────────────────────────────────
+  # MCP NEO4J — raw Cypher access to the graph (Neo4j Labs).
+  # The `atlas` MCP (intent tools: who_consumes, trace_flow,
+  # impact_analysis) will live on port 3005.
+  # ──────────────────────────────────────────────────────
+  mcp-neo4j:
+    build:
+      context: ./neo4j
+      dockerfile: Dockerfile
+    container_name: aidd-mcp-neo4j
+    restart: unless-stopped
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USERNAME=${NEO4J_USER:?}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+      - NEO4J_DATABASE=${NEO4J_DATABASE:?}
+    ports:
+      - "3004:3000"
+
 volumes:
   qdrant_data:
+  neo4j_data:

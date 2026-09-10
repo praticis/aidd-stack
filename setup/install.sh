@@ -50,6 +50,7 @@ SYNC_FOLDERS=(
   "git"
   "obsidian"
   "qdrant"
+  "neo4j"
 )
 
 # Files at the root to copy directly into $AIDD_DIR
@@ -144,6 +145,12 @@ provision_aidd_structure() {
       printf "  ${GREEN}[copied]${NC} %s -> ~/.aidd/%s\n" "$file" "$file"
     fi
   done
+
+  # Health check script, runnable from the install dir: ~/.aidd/install-check.sh
+  if [ -f "$SCRIPT_DIR/install-check.sh" ]; then
+    cp "$SCRIPT_DIR/install-check.sh" "$AIDD_DIR/install-check.sh" && chmod +x "$AIDD_DIR/install-check.sh"
+    printf "  ${GREEN}[copied]${NC} install-check.sh -> ~/.aidd/install-check.sh\n"
+  fi
 
   success "Global .aidd structure provisioned successfully."
 }
@@ -261,6 +268,39 @@ run_skills() {
 # ------------------------------------------------------------------------------
 # 5. Infrastructure & Environment (.env)
 # ------------------------------------------------------------------------------
+# docker-compose.yml treats every variable it reads as required (${VAR:?}).
+# When .env predates a new variable, append it with a sane default instead
+# of letting compose abort. Existing values are never touched.
+ensure_env_defaults() {
+  local env_file="$1"
+  local key value
+  local neo4j_password
+  if command -v openssl &> /dev/null; then
+    neo4j_password="$(openssl rand -hex 12)"
+  else
+    neo4j_password="aidd-$(date +%s)"
+  fi
+
+  local defaults=(
+    "OBSIDIAN_VAULT_PATH=$AIDD_DIR/_docker/obsidian-vault"
+    "NEO4J_USER=neo4j"
+    "NEO4J_PASSWORD=$neo4j_password"
+    "NEO4J_DATABASE=atlas"
+    "NEO4J_HEAP=1G"
+    "NEO4J_PAGECACHE=512M"
+  )
+
+  for kv in "${defaults[@]}"; do
+    key="${kv%%=*}"
+    value="${kv#*=}"
+    if ! grep -q "^${key}=" "$env_file"; then
+      printf "\n%s=%s\n" "$key" "$value" >> "$env_file"
+      printf "  ${GREEN}[added]${NC} %s to %s\n" "$key" "$env_file"
+      [ "$key" = "NEO4J_PASSWORD" ] && info "Generated a random Neo4j password — Browser login at http://localhost:7474 uses NEO4J_USER/NEO4J_PASSWORD from $env_file."
+    fi
+  done
+}
+
 run_environment() {
   local env_file="$AIDD_DIR/.env"
   local docker_dir="$AIDD_DIR/_docker"
@@ -272,13 +312,25 @@ run_environment() {
   mkdir -p "$docker_dir/qdrant-storage"
 
   if [ -f "$env_file" ]; then
-    info "$env_file already exists — leaving it untouched."
+    info "$env_file already exists — keeping existing values, adding missing keys only."
+    ensure_env_defaults "$env_file"
   else
     echo ""
     read -r -p "Enter your workspace path [Default: $HOME/workspace]: " user_workspace </dev/tty
 
     local workspace_path="${user_workspace:-$HOME/workspace}"
     workspace_path="${workspace_path/#\~/$HOME}"
+
+    # Random Neo4j password (Neo4j requires >= 8 chars). Falls back to a
+    # time-based value when neither openssl nor /dev/urandom is available.
+    local neo4j_password
+    if command -v openssl &> /dev/null; then
+      neo4j_password="$(openssl rand -hex 12)"
+    elif [ -r /dev/urandom ]; then
+      neo4j_password="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+    else
+      neo4j_password="aidd-$(date +%s)"
+    fi
 
     cat > "$env_file" << EOF
 # MCP Git & Container Workspace Mapping
@@ -290,8 +342,21 @@ QDRANT_STORAGE_PATH=$docker_dir/qdrant-storage
 
 # Service Endpoints
 QDRANT_URL=http://localhost:6333
+
+# Neo4j (code graph) — the ONLY place these credentials are defined.
+# docker-compose.yml refuses to start without NEO4J_PASSWORD.
+# The official image only supports 'neo4j' as the initial user.
+# Changing the password after first start: 'docker compose down -v'
+# (wipes the graph — dev only) or ALTER USER via cypher-shell.
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=$neo4j_password
+# Single user database (Community Edition); name is fixed at first start.
+NEO4J_DATABASE=atlas
+NEO4J_HEAP=1G
+NEO4J_PAGECACHE=512M
 EOF
     success "Created $env_file with WORKSPACE_PATH=$workspace_path"
+    info "Generated a random Neo4j password — see NEO4J_PASSWORD in $env_file (Browser login at http://localhost:7474)."
   fi
 
   echo ""
