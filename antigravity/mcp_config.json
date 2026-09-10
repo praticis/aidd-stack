@@ -11,6 +11,9 @@
     },
     "atlassian": { 
       "serverUrl": "https://mcp.atlassian.com/v2/mcp" 
+    },
+    "atlas": {
+      "serverUrl": "http://localhost:3004/mcp/"
     }
   }
 }
