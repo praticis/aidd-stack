@@ -16,7 +16,7 @@
       "type": "http", 
       "url": "https://mcp.atlassian.com/v2/mcp"
     },
-    "graph": {
+    "atlas": {
       "type": "http",
       "url": "http://localhost:3004/mcp/"
     }

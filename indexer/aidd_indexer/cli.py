@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -25,7 +26,7 @@ from pathlib import Path
 from . import INDEXER_VERSION
 from .config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
 from .discovery import PARSEABLE, build_files, discover_modules, list_files
-from .extract import extract_file, load_language
+from .extract import GRAMMAR_ERRORS, extract_file, load_language
 from .gitinfo import current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
 from .model import ExtractionResult, RepoInfo
 from .resolve import Resolved, Resolver
@@ -33,6 +34,14 @@ from .resolve import Resolved, Resolver
 
 def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
+
+
+class GrammarError(RuntimeError):
+    """A supported language's grammar failed to load — the environment is broken."""
+
+
+# who started this run — recorded on every IndexRun (manual | scheduled | bootstrap)
+TRIGGER = os.getenv("AIDD_TRIGGER", "manual")
 
 
 # -- core: extract + resolve one tree -------------------------------------------------------
@@ -46,10 +55,19 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
     res = ExtractionResult(repo=repo, modules=modules, files=files)
     log(f"[discover] {len(rel_files)} files, {len(files)} recorded, {len(modules)} modules, stack={repo.stack} ({time.time()-t0:.1f}s)")
 
+    missing = []
     for lang in sorted({f.language for f in files} & PARSEABLE):
         cl = load_language(lang)
         if cl:
             res.warnings.extend(cl.warnings)
+        else:
+            missing.append(lang)
+    if missing:
+        # A supported language we cannot parse means the snapshot would be silently empty.
+        # That is an installation defect, not a property of the repo — fail loudly.
+        details = "; ".join(f"{l}: {GRAMMAR_ERRORS.get(l, 'unknown error')}" for l in missing)
+        raise GrammarError(f"cannot load tree-sitter grammar(s) for {', '.join(missing)} — {details}. "
+                           "Run `aidd selftest`; rebuild the indexer image if it fails.")
 
     extractors = []
     t0 = time.time()
@@ -104,7 +122,7 @@ def index_exported_ref(gw, repo_path: Path, name: str, tenant: str, ref: str, sh
         repo = RepoInfo(tenant=tenant, name=name, ref=ref, commit_sha=sha, root=str(tmp), default_ref=default, url=url)
         res, rv = extract_and_resolve(repo)
         t0 = time.time()
-        counts = gw.write(res, rv, started, ephemeral=ephemeral, area=area)
+        counts = gw.write(res, rv, started, ephemeral=ephemeral, area=area, trigger=TRIGGER)
         log(f"[write]    {name}@{ref} {json.dumps(counts)} ({time.time()-t0:.1f}s)")
         return counts
     finally:
@@ -168,7 +186,7 @@ def cmd_index(args: argparse.Namespace) -> int:
     gw, cfg = open_graph()
     try:
         t0 = time.time()
-        counts = gw.write(res, rv, started, ephemeral=args.ephemeral)
+        counts = gw.write(res, rv, started, ephemeral=args.ephemeral, trigger=TRIGGER)
         log(f"[write]    {json.dumps(counts)} ({time.time()-t0:.1f}s) → {cfg.uri}/{cfg.database}")
     finally:
         gw.close()
@@ -212,7 +230,8 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
         return 1
     gw, cfg = open_graph()
     try:
-        print(render_plan(plan, gw.snapshot_shas(tenant.name)))
+        if not args.quiet_plan:
+            print(render_plan(plan, gw.snapshot_shas(tenant.name)))
         if not args.yes:
             if not sys.stdin.isatty():
                 log(f"\nno interactive terminal to confirm indexing {len(plan.items)} snapshots — re-run with --yes")
@@ -224,6 +243,8 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
             if answer not in ("y", "yes"):
                 log("aborted — nothing was written (use --yes to skip this prompt)")
                 return 1
+        global TRIGGER
+        TRIGGER = "bootstrap" if TRIGGER == "manual" else TRIGGER
         return _run_items(gw, tenant, plan.items, skip_up_to_date=False)
     finally:
         gw.close()
@@ -254,6 +275,8 @@ def _run_items(gw, tenant, items, skip_up_to_date: bool) -> int:
             index_exported_ref(gw, it.repo.path, it.repo.name, tenant.name, it.ref, it.sha,
                                it.ephemeral, it.repo.url, it.repo.default_ref, it.repo.area)
             ok += 1
+        except GrammarError:
+            raise                      # environment defect: stop instead of writing 26 empty snapshots
         except Exception as e:  # noqa: BLE001 — one repo must not stop the portfolio
             failed += 1
             log(f"[error]    {it.repo.name}@{it.ref}: {type(e).__name__}: {str(e).splitlines()[0]}")
@@ -263,6 +286,29 @@ def _run_items(gw, tenant, items, skip_up_to_date: bool) -> int:
                 pass
     log(f"\n[done] {ok} indexed, {failed} failed ({time.time()-t_all:.0f}s)")
     return 0 if failed == 0 else 1
+
+
+def cmd_selftest(args: argparse.Namespace) -> int:
+    """Load every grammar and compile every query. Exit 1 on any failure."""
+    import tree_sitter, tree_sitter_language_pack  # noqa: F401
+    from importlib.metadata import version
+    log(f"tree-sitter {version('tree-sitter')} · tree-sitter-language-pack {version('tree-sitter-language-pack')} · python {sys.version.split()[0]}")
+    bad = 0
+    for lang in sorted(PARSEABLE):
+        cl = load_language(lang)
+        if cl is None:
+            print(f"  [FAIL] {lang}: {GRAMMAR_ERRORS.get(lang, 'unknown error')}")
+            bad += 1
+            continue
+        skipped = len(cl.warnings)
+        print(f"  [OK]   {lang}: {len(cl.patterns)} query patterns" + (f", {skipped} skipped (grammar mismatch)" if skipped else ""))
+        for w in cl.warnings:
+            print(f"         - {w}")
+    if bad:
+        log(f"{bad} grammar(s) failed to load — the indexer would produce empty snapshots. Rebuild: docker compose --profile tools build --no-cache indexer")
+        return 1
+    log("all grammars loaded.")
+    return 0
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -275,10 +321,15 @@ def cmd_status(args: argparse.Namespace) -> int:
         print("atlas is empty — nothing indexed yet.")
         return 0
     w = max(len(f"{r['tenant']}/{r['repo']}@{r['ref']}") for r in rows)
+    oldest = 0
     for r in rows:
         key = f"{r['tenant']}/{r['repo']}@{r['ref']}"
         flags = ("ephemeral " if r.get("ephemeral") else "") + (r.get("status") or "")
-        print(f"{key:<{w}}  {r['sha'] or '-':<10}  {(r['indexed_at'] or '-')[:19]:<19}  files={r['files']:<5} {flags:<12} {r['counts'] or ''}")
+        age = r.get("age_min")
+        oldest = max(oldest, age or 0)
+        age_s = "-" if age is None else (f"{age}m" if age < 120 else f"{age // 60}h" if age < 2880 else f"{age // 1440}d")
+        print(f"{key:<{w}}  {r['sha'] or '-':<10}  age={age_s:<5} files={r['files']:<5} {flags:<12} {r.get('trigger') or '-':<9} {r['counts'] or ''}")
+    print(f"\n{len(rows)} snapshots; oldest indexed {oldest} min ago")
     return 0
 
 
@@ -321,6 +372,7 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("bootstrap", help="index every snapshot the plan lists")
     manifest_args(b)
     b.add_argument("--yes", "-y", action="store_true", help="do not ask for confirmation")
+    b.add_argument("--quiet-plan", action="store_true", help="do not print the plan again (install.sh shows it first)")
     b.set_defaults(fn=cmd_bootstrap)
 
     r = sub.add_parser("refresh", help="re-index snapshots whose commit changed; GC stale ephemeral ones")
@@ -336,6 +388,9 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--dry-run", action="store_true", help="extract and resolve, but do not write to Neo4j")
     i.add_argument("--out", help="with --dry-run: write the full payload as JSON to this file")
     i.set_defaults(fn=cmd_index)
+
+    st = sub.add_parser("selftest", help="load every grammar and query; non-zero exit if the environment is broken")
+    st.set_defaults(fn=cmd_selftest)
 
     s = sub.add_parser("status", help="list indexed snapshots")
     s.add_argument("--tenant")
@@ -353,6 +408,9 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as e:
         log(f"error: {e}")
         return 2
+    except GrammarError as e:
+        log(f"error: {e}")
+        return 4
     except KeyboardInterrupt:
         log("interrupted")
         return 130

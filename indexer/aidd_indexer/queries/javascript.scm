@@ -1,5 +1,4 @@
-;; TypeScript / TSX (also used for JavaScript with the js grammar; patterns
-;; referring to type-only nodes simply fail to compile there and are skipped).
+;; JavaScript (plain) — same shape as typescript.scm without type-only nodes.
 
 (function_declaration name: (identifier) @name) @def.function
 
@@ -7,21 +6,13 @@
 
 (method_definition name: (property_identifier) @name) @def.method
 
-(method_signature name: (property_identifier) @name) @def.method
-
-(class_declaration name: (type_identifier) @name) @def.class
-
-(abstract_class_declaration name: (type_identifier) @name) @def.class
-
-(interface_declaration name: (type_identifier) @name) @def.interface
-
-(enum_declaration name: (identifier) @name) @def.enum
-
-(type_alias_declaration name: (type_identifier) @name) @def.type
+(class_declaration name: (identifier) @name) @def.class
 
 (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))) @def.function
 
 (lexical_declaration (variable_declarator name: (identifier) @name value: (function_expression))) @def.function
+
+(variable_declaration (variable_declarator name: (identifier) @name value: (arrow_function))) @def.function
 
 (call_expression function: (identifier) @callee) @call
 

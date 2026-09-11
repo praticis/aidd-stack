@@ -151,6 +151,50 @@ mcp_check "git"      "http://localhost:3003/mcp"
 mcp_check "atlas"    "http://localhost:3004/mcp/"
 
 # ------------------------------------------------------------------------------
+# 5b. Indexer self-test (grammars + queries) — a broken image writes EMPTY snapshots
+# ------------------------------------------------------------------------------
+section "5b. Indexer self-test"
+if (cd "$AIDD_DIR" && docker compose run --rm indexer selftest 2>&1 | sed 's/^/         /'; exit "${PIPESTATUS[0]}"); then
+  ok "all tree-sitter grammars load inside the indexer image"
+else
+  fail "indexer self-test failed — rebuild: cd $AIDD_DIR && docker compose --profile tools build --no-cache indexer"
+fi
+if command -v cypher >/dev/null 2>&1 || true; then
+  empty="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
+    'MATCH (s:Snapshot) WHERE NOT (s)<-[:IN_SNAPSHOT]-(:File)-[:CONTAINS]->(:Symbol) RETURN count(s)' 2>/dev/null | grep -E '^[0-9]+$' | head -1)"
+  if [ -n "$empty" ]; then
+    [ "$empty" = "0" ] && ok "no snapshot without symbols" || fail "$empty snapshot(s) have files but zero symbols — indexed with a broken image? re-run: $AIDD_DIR/aidd bootstrap"
+  fi
+fi
+
+# ------------------------------------------------------------------------------
+# 6. Continuous update
+# ------------------------------------------------------------------------------
+section "6. Continuous update"
+
+interval="${AIDD_REFRESH_INTERVAL_MINUTES:-15}"
+logf="$AIDD_DIR/logs/refresh.log"
+if [ -s "${AIDD_GIT_TOKEN_FILE:-$AIDD_DIR/secrets/git-token}" ]; then
+  ok "read-only token present ($(stat -c %a "${AIDD_GIT_TOKEN_FILE:-$AIDD_DIR/secrets/git-token}") perms)"
+else
+  warn "no service token — scheduled fetch depends on your personal ssh session (aidd schedule install to configure)"
+fi
+if [ -f "$logf" ]; then
+  last_line="$(grep -E 'refresh end' "$logf" | tail -1)"
+  last_ts="$(echo "$last_line" | sed -E 's/^=== ([^ ]+) .*/\1/')"
+  if [ -n "$last_ts" ] && last_epoch=$(date -d "$last_ts" +%s 2>/dev/null); then
+    age_min=$(( ( $(date +%s) - last_epoch ) / 60 ))
+    if [ "$age_min" -le $(( interval * 2 )) ]; then ok "last refresh ${age_min} min ago (interval ${interval} min)"; else fail "last refresh ${age_min} min ago — scheduler not firing? (interval ${interval} min; aidd schedule status)"; fi
+    echo "$last_line" | grep -q 'rc=0' && ok "last refresh succeeded" || fail "last refresh failed: $last_line"
+  else
+    warn "could not parse last refresh timestamp from $logf"
+  fi
+else
+  warn "no refresh has run yet ($logf missing) — run: $AIDD_DIR/aidd refresh"
+fi
+[ -x "$AIDD_DIR/aidd" ] && { "$AIDD_DIR/aidd" schedule check 2>/dev/null | sed 's/^/         /'; [ "${PIPESTATUS[0]}" -eq 0 ] || FAILS=$((FAILS + 1)); }
+
+# ------------------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------------------
 echo ""
