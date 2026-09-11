@@ -1,0 +1,26 @@
+[project]
+name = "aidd-indexer"
+version = "0.1.0"
+description = "aidd-stack code graph indexer: parses repositories with tree-sitter and loads the micro graph (files, symbols, calls, imports) into Neo4j (atlas)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "tree-sitter>=0.25,<0.27",
+  "tree-sitter-language-pack>=0.9",
+  "neo4j>=5.20,<7",
+  "pyyaml>=6",
+]
+
+[project.scripts]
+aidd = "aidd_indexer.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["aidd_indexer*"]
+
+[tool.setuptools.package-data]
+aidd_indexer = ["queries/*.scm"]

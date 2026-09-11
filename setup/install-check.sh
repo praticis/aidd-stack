@@ -36,12 +36,13 @@ fi
 # shellcheck disable=SC1090
 set -a; . "$ENV_FILE"; set +a
 
-REQUIRED_VARS=(WORKSPACE_PATH OBSIDIAN_VAULT_PATH NEO4J_USER NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HEAP NEO4J_PAGECACHE)
+REQUIRED_VARS=(WORKSPACE_PATH OBSIDIAN_VAULT_PATH AIDD_TENANT NEO4J_USER NEO4J_PASSWORD NEO4J_DATABASE NEO4J_HEAP NEO4J_PAGECACHE)
 for v in "${REQUIRED_VARS[@]}"; do
   if [ -n "${!v:-}" ]; then ok "$v is set"; else fail "$v is missing or empty"; fi
 done
 
 [ -d "${WORKSPACE_PATH:-/nonexistent}" ] && ok "WORKSPACE_PATH exists ($WORKSPACE_PATH)" || fail "WORKSPACE_PATH does not exist: ${WORKSPACE_PATH:-<unset>}"
+[ -f "$AIDD_DIR/atlas.yaml" ] && ok "atlas.yaml present" || fail "atlas.yaml missing at $AIDD_DIR — install.sh writes it (step 4)"
 
 # ------------------------------------------------------------------------------
 # Containers
@@ -88,7 +89,8 @@ if echo "$out" | grep -q '^1$'; then
   ok "authentication and database '$NEO4J_DATABASE' reachable"
 else
   fail "cannot query '$NEO4J_DATABASE' as $NEO4J_USER: $(echo "$out" | head -1)"
-  echo "         (password/database are fixed on first start — if you changed .env after that: docker compose down -v)"
+  echo "         (password/database are fixed on first start of the volume — a re-created .env with an old"
+  echo "          neo4j_data volume causes exactly this: cd $AIDD_DIR && docker compose down -v && docker compose up -d)"
 fi
 
 out="$(cypher 'SHOW DATABASES YIELD name, currentStatus WHERE name <> "system" RETURN name + ":" + currentStatus')"
