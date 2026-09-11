@@ -1,14 +1,15 @@
 ---
 name: scan
-description: Project conventions and architecture — use ALWAYS before implementing anything new (endpoint, use case, fix, test), even if the request doesn't mention conventions. Instantly retrieves the already-saved mapping (architecture, naming, contracts, tests, decisions), or, the first time in this solution, scans and saves that mapping for future sessions.
+description: Project conventions and architecture — use ALWAYS before implementing anything new (endpoint, use case, fix, test), even if the request doesn't mention conventions. Instantly retrieves the already-saved mapping (architecture, naming, contracts, tests, decisions), or, the first time in this solution, scans and saves that mapping for future sessions. Uses the `atlas` code graph when available, with a full fallback to reading the tree.
 tenant: auto
 ---
 
 # Scan — project reconnaissance
 
-You have access to three MCP tools: `obsidian` (spec/ADR vault),
-`qdrant` (semantic memory of lessons and conventions), and `git`
-(repository operations).
+You have access to four MCP tools: `atlas` (the code graph — repos,
+modules, files, symbols, calls, imports; read-only), `obsidian`
+(spec/ADR vault), `qdrant` (semantic memory of lessons and
+conventions), and `git` (repository operations).
 
 ## Determining the tenant
 
@@ -22,7 +23,8 @@ Look at the `tenant` field in this file's frontmatter:
 
 `<tenant>` is used as the Qdrant **collection name** throughout this
 skill — each tenant gets its own physically separate collection, not
-a shared one filtered by payload.
+a shared one filtered by payload. (`atlas` is already scoped to the
+tenant server-side; never pass a tenant to it.)
 
 **IMPORTANT — a common mistake to avoid**: `<tenant>` is NOT the
 current repository/project name. If `tenant` is a fixed value (not
@@ -53,6 +55,25 @@ file actually exists.
 
 ## Always run at the start of the session
 
+0. **Ask the code graph first (`atlas`, with fallback).**
+   Call `atlas_status`. Then:
+   - If the call fails, the tool is not listed, or `<current-repo-name>`
+     is not among `repos` → atlas is **unavailable for this repo**.
+     Say so in one line and continue with steps 1–3 exactly as written
+     below (reading the tree yourself). Never block on atlas.
+   - Otherwise call `repo_map` for `<current-repo-name>`. Pass
+     `ref: "<current branch>"` when `git branch --show-current` is
+     listed in that repo's `snapshots`; omit `ref` otherwise (the
+     default branch is used). Keep the result as **the structural
+     ground truth** for this session: modules and their sizes, entry
+     points (HTTP handlers, controllers, commands), external packages,
+     symbol kinds. Do not re-derive that list by walking folders.
+   - Note the snapshot identity from the response (`ref`, `sha`,
+     `indexed_at`) — it goes into the vault page (step 3) so staleness
+     is visible later. If `sha` differs from `git rev-parse --short HEAD`,
+     the graph is a few commits behind (it refreshes every ~15 min):
+     still use it, and mention the gap when it matters.
+
 1. Use `qdrant-find` with `collection_name: "<tenant>"` (the tenant
    value determined above — re-check it if you're unsure), filtering
    by `project: "<current-repo-name>"` and `type: "conventions"`, to
@@ -61,16 +82,29 @@ file actually exists.
    found" — proceed to step 3.)
 
 2. **If it already exists**: load these conventions as context and
-   follow them in any new implementation. Do not repeat step 3.
+   follow them in any new implementation. If the `repo_map` from step 0
+   contradicts them (a layer/module that no longer exists, a new
+   adapter, a new external dependency), update the `## Identified
+   conventions` section of the vault page and re-store the lesson in
+   qdrant; otherwise do not repeat step 3.
 
-3. **If it doesn't exist (first time opening this solution)**: scan
-   the repository structure (folder organization, layer/DDD pattern,
-   naming conventions, testing stack, recurring architectural
-   patterns) and produce an objective summary covering:
-   - Identified architecture and layers
-   - Naming conventions (classes, files, branches, commits)
-   - Testing patterns (framework, coverage, folder structure)
-   - Apparent architectural decisions (implicit ADRs in the code)
+3. **If it doesn't exist (first time opening this solution)**: produce
+   an objective summary covering:
+   - Identified architecture and layers — from `repo_map.modules` and
+     `repo_map.entry_points` when atlas is available (confirm with a
+     quick look at 2–3 representative files); from the folder
+     structure otherwise
+   - Naming conventions (classes, files, branches, commits) — read
+     representative files; `find_symbol` with `kind` (e.g. `struct`,
+     `interface`, `class`) shows naming at scale
+   - Testing patterns (framework, coverage, folder structure) — test
+     files are visible in `repo_map.modules` (`*_test.go`, `*.spec.ts`,
+     `*Tests.cs` counts) and in the source tree
+   - Apparent architectural decisions (implicit ADRs in the code) —
+     `symbol_context` on a central symbol (e.g. the request decoder,
+     the DI container, the base repository) reveals the enforced
+     patterns quickly
+   - External dependencies and integrations — `repo_map.external_packages`
 
    Then:
    - Save this summary to the vault via `obsidian`, at the path
@@ -79,7 +113,9 @@ file actually exists.
      already exists, update/complement it rather than overwriting —
      add or revise the `## Identified conventions` section, leaving
      any other section intact (including a links section pointing to
-     sibling files, if one has been added since).
+     sibling files, if one has been added since). When atlas was
+     used, add a short `## Source` line: `atlas <repo>@<ref> <sha>
+     (indexed <indexed_at>)`; otherwise `tree scan (atlas unavailable)`.
    - Save the same summary to `qdrant` as a lesson, using
      `qdrant-store` with `collection_name: "<tenant>"` (same value as
      step 1 — not the project name) and payload
@@ -88,12 +124,36 @@ file actually exists.
      longer part of the payload), so the next session retrieves it
      instantly without needing to scan everything again.
 
+If `obsidian` or `qdrant` are unavailable in the session, say so in one line and still deliver the summary in the conversation; do not silently skip persistence — tell the user the mapping was **not** saved to the vault/collection so the next session will scan again.
+
 ## From here on
 
 Every new implementation must follow the conventions loaded in step 1
 or identified in step 3 — do not introduce an architectural or naming
 pattern different from what already exists in the project without
 explicitly justifying why.
+
+Before touching code, locate the existing pattern and the blast radius
+through atlas when it is available — it is faster and more complete
+than grep:
+
+- `find_symbol` to find where something similar already exists (pass
+  the same `ref` as in step 0 when you are on a feature branch);
+- `symbol_context` on the symbol you are about to change: definition,
+  container, what it calls, **who calls it**, what the file imports;
+- `who_calls` to list every caller of a function you are changing —
+  those are the tests and call sites to re-check;
+- `cypher_readonly` for anything the other tools do not answer
+  (schema: Repo, Snapshot, Module, File, Symbol, Package; edges
+  HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS; `$tenant` is
+  bound for you; add `LIMIT`).
+
+Calls in the graph are resolved by name inside the repo (each `CALLS`
+edge carries its `strategy`): treat `same-file`/`same-module` hits as
+reliable and `unique-name` hits as likely. Calls into external packages
+and the standard library are not in the graph. If a tool errors or the
+repo/branch is not indexed, fall back to grep and reading files —
+never stop because atlas is missing.
 
 At the end of a relevant task (a non-obvious bug fix, a design
 decision, a workaround), save a new lesson via `qdrant-store` with
