@@ -57,7 +57,7 @@ container_state() { docker inspect -f '{{.State.Status}}' "$1" 2>/dev/null || ec
 container_health() { docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}n/a{{end}}' "$1" 2>/dev/null || echo "missing"; }
 container_exit() { docker inspect -f '{{.State.ExitCode}}' "$1" 2>/dev/null || echo "?"; }
 
-for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-neo4j; do
+for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-atlas; do
   state="$(container_state "$c")"; health="$(container_health "$c")"
   if [ "$state" = "running" ] && { [ "$health" = "healthy" ] || [ "$health" = "n/a" ]; }; then
     ok "$c running${health:+ ($health)}"
@@ -148,7 +148,30 @@ mcp_check() {
 mcp_check "obsidian" "http://localhost:3001/mcp"
 mcp_check "qdrant"   "http://localhost:3002/mcp/"
 mcp_check "git"      "http://localhost:3003/mcp"
-mcp_check "atlas"    "http://localhost:3004/mcp/"
+mcp_check "atlas"    "http://localhost:3005/mcp"
+
+# atlas is ours: go one step further and call a real tool (stateless transport → a plain POST works).
+atlas_body="$(curl -s -X POST http://localhost:3005/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"atlas_status","arguments":{}}}' --max-time 15)"
+if echo "$atlas_body" | grep -q '"isError": *true'; then
+  fail "atlas_status returned a tool error: $(echo "$atlas_body" | head -c 300)"
+elif echo "$atlas_body" | grep -q '"tenant"'; then
+  atlas_repos="$(echo "$atlas_body" | grep -o '\\"repo\\": *\\"[^\\]*' | sed 's/.*: *\\"//' | sort -u | tr '\n' ' ')"
+  if [ -n "$atlas_repos" ]; then
+    ok "atlas_status answers for tenant $AIDD_TENANT — repos: $atlas_repos"
+  else
+    warn "atlas_status answers but lists no repos — run: aidd bootstrap"
+  fi
+else
+  fail "atlas_status did not answer as expected: $(echo "$atlas_body" | head -c 300)"
+fi
+health="$(curl -s --max-time 5 http://localhost:3005/healthz || true)"
+case "$health" in
+  *'"status":"ok"'*) ok "atlas /healthz ok (neo4j reachable from the MCP)";;
+  "")                fail "atlas /healthz unreachable";;
+  *)                 fail "atlas /healthz: $health";;
+esac
 
 # ------------------------------------------------------------------------------
 # 5b. Indexer self-test (grammars + queries) — a broken image writes EMPTY snapshots

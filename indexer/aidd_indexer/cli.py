@@ -314,6 +314,12 @@ def cmd_selftest(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    from .mcp_server import serve
+    log(f"atlas MCP · tenant={os.getenv('AIDD_TENANT', '?')} · neo4j={os.getenv('NEO4J_URI', '?')}/{os.getenv('NEO4J_DATABASE', '?')}")
+    return serve(host=args.host, port=args.port)
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     gw, _ = open_graph()
     try:
@@ -394,6 +400,11 @@ def main(argv: list[str] | None = None) -> int:
 
     st = sub.add_parser("selftest", help="load every grammar and query; non-zero exit if the environment is broken")
     st.set_defaults(fn=cmd_selftest)
+
+    sv = sub.add_parser("serve", help="run the `atlas` MCP server (streamable HTTP, read-only tools over the graph)")
+    sv.add_argument("--host", default=None, help="bind address (default: ATLAS_MCP_HOST or 0.0.0.0)")
+    sv.add_argument("--port", type=int, default=None, help="port (default: ATLAS_MCP_PORT or 3000)")
+    sv.set_defaults(fn=cmd_serve)
 
     s = sub.add_parser("status", help="list indexed snapshots")
     s.add_argument("--tenant")

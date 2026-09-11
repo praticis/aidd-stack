@@ -19,7 +19,7 @@ the reliable path for developers — and the only one the scheduler uses.
 aidd plan                     # host fetch + plan
 aidd bootstrap                # host fetch + index everything (asks first)
 aidd refresh                  # host fetch + only what changed (+ GC); locked, logged
-aidd index caracara --ref develop
+aidd index <repo> --ref develop
 aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
 aidd schedule install|status|remove
 AIDD_NO_FETCH=1 aidd plan     # skip the host fetch
@@ -56,6 +56,10 @@ docker compose run --rm indexer status
 docker compose run --rm indexer index <repo>                 # one repo, checkout as-is
 docker compose run --rm indexer index <repo> --ref develop   # one repo, a specific fetched branch
 docker compose run --rm indexer wipe <repo>
+docker compose run --rm indexer selftest              # grammars + queries load (the image build runs this too)
+
+# The `atlas` MCP is the same image serving `aidd serve` (compose service mcp-atlas, port 3005):
+curl -s http://localhost:3005/healthz                 # {"status":"ok","neo4j":true,...}
 ```
 
 **Ref policy** (per tenant): `always` branches are indexed when they exist (`main`, `master`,

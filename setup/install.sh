@@ -181,18 +181,34 @@ run_skills() {
   local scope
   local tools=()
 
-  # Prompt for scan skill execution mode
+  # Tenant: on an upgrade the value already lives in ~/.aidd/.env — keep it by default and
+  # only offer to change it; the full prompt is for first installs.
+  local existing_tenant=""
+  if [ -f "$HOME/.aidd/.env" ]; then
+    existing_tenant="$(grep -E '^AIDD_TENANT=' "$HOME/.aidd/.env" | head -1 | cut -d= -f2- | tr -d '"')"
+  fi
   echo ""
-  info "Scan Skill Configuration:"
-  echo "  1) Auto Mode (default)"
-  echo "  2) Specify Company Name / Context"
-  read -r -p "Select an option [1/2, default: 1]: " scan_option </dev/tty
-
-  SCAN_TENANT_VALUE="auto"
-
-  if [[ "$scan_option" == "2" ]]; then
-    read -r -p "Enter company/context name [default: auto]: " company_name </dev/tty
-    SCAN_TENANT_VALUE="${company_name:-auto}"
+  if [ -n "$existing_tenant" ]; then
+    info "Scan Skill Configuration: tenant '$existing_tenant' already configured (~/.aidd/.env)."
+    echo "  1) Keep '$existing_tenant'   [default]"
+    echo "  2) Change it"
+    read -r -p "Select an option [1/2, default: 1]: " keep_tenant </dev/tty
+    if [[ "$keep_tenant" == "2" ]]; then
+      read -r -p "Enter company/context name (or 'auto'): " company_name </dev/tty
+      SCAN_TENANT_VALUE="${company_name:-$existing_tenant}"
+    else
+      SCAN_TENANT_VALUE="$existing_tenant"
+    fi
+  else
+    info "Scan Skill Configuration:"
+    echo "  1) Auto Mode (default)"
+    echo "  2) Specify Company Name / Context"
+    read -r -p "Select an option [1/2, default: 1]: " scan_option </dev/tty
+    SCAN_TENANT_VALUE="auto"
+    if [[ "$scan_option" == "2" ]]; then
+      read -r -p "Enter company/context name [default: auto]: " company_name </dev/tty
+      SCAN_TENANT_VALUE="${company_name:-auto}"
+    fi
   fi
 
   info "Scan skill tenant set to: $SCAN_TENANT_VALUE"
@@ -430,8 +446,11 @@ EOF
   fi
 
   echo ""
-  read -r -p "Bring up the Docker Compose stack now? [y/N] " reply </dev/tty
-  if [[ "$reply" =~ ^[Yy]$ ]]; then
+  info "Infrastructure:"
+  echo "  1) Build and start the Docker Compose stack now   [default]"
+  echo "  2) Skip — start later with:  cd $AIDD_DIR && docker compose --profile tools build && docker compose up -d"
+  read -r -p "Select an option [1/2, default: 1]: " reply </dev/tty
+  if [[ "${reply:-1}" != "2" ]]; then
     info "Starting Docker Compose inside $AIDD_DIR..."
     if (cd "$AIDD_DIR" && docker compose --profile tools build && docker compose up -d); then
       success "Docker Compose started (indexer image built as well)."
@@ -536,12 +555,19 @@ run_atlas_bootstrap() {
   fi
 
   echo ""
+  local def=1
+  [ "${AIDD_UPGRADE:-0}" = 1 ] && def=2
   info "Atlas bootstrap — populate the code graph with this tenant's repositories:"
-  echo "  1) Index the local workspace now (repos already cloned)   [default]"
-  echo "  2) Skip — run 'docker compose run --rm indexer bootstrap' later"
+  if [ "$def" = 1 ]; then
+    echo "  1) Index the local workspace now (repos already cloned)   [default]"
+    echo "  2) Skip — run '$AIDD_DIR/aidd bootstrap' later"
+  else
+    echo "  1) Re-index the local workspace now (only changed snapshots are rewritten)"
+    echo "  2) Skip — the graph is already populated; the scheduled refresh keeps it current   [default]"
+  fi
   echo "  (remote providers — GitHub/GitLab/Azure DevOps — arrive in a later phase; see atlas.yaml comments)"
-  read -r -p "Select an option [1/2, default: 1]: " opt </dev/tty
-  if [[ "$opt" == "2" ]]; then
+  read -r -p "Select an option [1/2, default: $def]: " opt </dev/tty
+  if [[ "${opt:-$def}" == "2" ]]; then
     info "Skipped."
     return 0
   fi
@@ -575,15 +601,30 @@ run_continuous_update() {
   local token_file="$secrets_dir/git-token"
 
   echo ""
+  local def=1 configured=0
+  if [ -s "$token_file" ] && "$AIDD_DIR/aidd" schedule check >/dev/null 2>&1; then
+    configured=1; def=2
+  fi
   info "Continuous update keeps atlas in sync with your remotes (fetch + incremental re-index)."
-  echo "  It runs unattended, so it needs a READ-ONLY token (GitHub fine-grained PAT, 'Contents: read'"
-  echo "  on the organization's repositories). Your personal ssh key is never used by the scheduler."
-  echo ""
-  echo "  1) Configure now: paste a read-only PAT and install the scheduler   [default]"
-  echo "  2) Skip — set up later with:  $AIDD_DIR/aidd schedule install"
-  read -r -p "Select an option [1/2, default: 1]: " opt </dev/tty
-  if [[ "$opt" == "2" ]]; then
-    info "Skipped. Atlas will only update when you run '$AIDD_DIR/aidd refresh' yourself."
+  if [ "$configured" = 1 ]; then
+    echo "  Already configured: token present and scheduler healthy ($AIDD_DIR/aidd schedule status)."
+    echo ""
+    echo "  1) Reconfigure (interval / scheduler; the token is kept unless you delete $token_file)"
+    echo "  2) Keep the current configuration   [default]"
+  else
+    echo "  It runs unattended, so it needs a READ-ONLY token (GitHub fine-grained PAT, 'Contents: read'"
+    echo "  on the organization's repositories). Your personal ssh key is never used by the scheduler."
+    echo ""
+    echo "  1) Configure now: paste a read-only PAT and install the scheduler   [default]"
+    echo "  2) Skip — set up later with:  $AIDD_DIR/aidd schedule install"
+  fi
+  read -r -p "Select an option [1/2, default: $def]: " opt </dev/tty
+  if [[ "${opt:-$def}" == "2" ]]; then
+    if [ "$configured" = 1 ]; then
+      info "Kept. Status: $AIDD_DIR/aidd schedule status"
+    else
+      info "Skipped. Atlas will only update when you run '$AIDD_DIR/aidd refresh' yourself."
+    fi
     return 0
   fi
 
@@ -681,7 +722,12 @@ distribute_mcp_config() {
 # 7. Main Execution
 # ------------------------------------------------------------------------------
 main() {
+  # Upgrade vs first install: an existing ~/.aidd/.env means the stack was configured before,
+  # so the interactive steps default to "keep / skip" instead of "configure / index".
+  AIDD_UPGRADE=0
+  [ -f "$AIDD_DIR/.env" ] && AIDD_UPGRADE=1
   printf "\n${BOLD}=== Starting .aidd Global Declarative Setup ===${NC}\n\n"
+  [ "$AIDD_UPGRADE" = 1 ] && info "Existing installation detected at $AIDD_DIR — running as an upgrade (defaults keep what is already configured)."
 
   printf "${BOLD}=== 1. Provisioning ~/.aidd Structure ===${NC}\n"
   provision_aidd_structure
