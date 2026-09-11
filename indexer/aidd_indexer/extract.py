@@ -49,6 +49,9 @@ class CompiledLanguage:
     warnings: list[str] = field(default_factory=list)
 
 
+GRAMMAR_ERRORS: dict[str, str] = {}   # language -> why it could not be loaded (surfaced by the CLI)
+
+
 @lru_cache(maxsize=None)
 def load_language(name: str) -> CompiledLanguage | None:
     grammar = "csharp" if name == "csharp" else name
@@ -56,6 +59,7 @@ def load_language(name: str) -> CompiledLanguage | None:
         language = get_language(grammar)
         parser = get_parser(grammar)
     except Exception as e:  # noqa: BLE001
+        GRAMMAR_ERRORS[name] = f"{type(e).__name__}: {e}"
         return None
     cl = CompiledLanguage(name=name, language=language, parser=parser)
     src_file = QUERY_DIR / f"{name}.scm"
@@ -377,7 +381,7 @@ class FileExtractor:
 def extract_file(repo: RepoInfo, file: FileInfo) -> tuple[FileExtractor | None, list[str]]:
     cl = load_language(file.language)
     if cl is None:
-        return None, [f"{file.path}: no grammar for {file.language}"]
+        return None, [f"{file.path}: no grammar for {file.language} ({GRAMMAR_ERRORS.get(file.language, 'unknown error')})"]
     src = (Path(repo.root) / file.path).read_bytes()
     fx = FileExtractor(repo, file, src, cl)
     try:

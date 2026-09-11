@@ -1,0 +1,410 @@
+#!/usr/bin/env bash
+#
+# aidd — host-side wrapper for the atlas indexer and the continuous-update process.
+#
+# Why a wrapper: `git fetch` needs credentials, and credentials live on the host
+# (ssh-agent, keychain, a read-only PAT). Unix sockets do not survive the trip
+# into a Docker Desktop / WSL container, so the wrapper fetches on the host and
+# runs the containerized indexer with --no-fetch.
+#
+#   aidd plan | bootstrap | refresh [args...]   host fetch, then run in the container
+#   aidd index <repo> [--ref R] [args...]       host fetch of that repo, then run
+#   aidd fetch                                   host fetch only
+#   aidd schedule install | remove | status      automatic `aidd refresh` (systemd user timer preferred,
+#   aidd schedule check [--fix]                 Task Scheduler / cron as fallbacks); check verifies the
+#                                                unattended prerequisites and repairs what it can
+#   aidd status | wipe | ...                     pass-through to the container
+#
+# Installed by setup/install.sh to ~/.aidd/aidd (+ ~/.local/bin/aidd when writable).
+#
+# Environment / .env keys:
+#   AIDD_DIR                       install dir (default ~/.aidd)
+#   AIDD_NO_FETCH=1                skip the host fetch
+#   AIDD_TRIGGER=manual|scheduled  recorded on each IndexRun (the scheduler sets `scheduled`)
+#   AIDD_GIT_TOKEN_FILE            .env: file holding a read-only PAT for the service fetch
+#                                  (default ~/.aidd/secrets/git-token when present)
+#   AIDD_FETCH_AUTH=service|personal  force PAT (service) or your own ssh/agent (personal);
+#                                  default: service when a token file exists, else personal
+#   AIDD_REFRESH_INTERVAL_MINUTES  .env: scheduler interval (default 15)
+
+set -uo pipefail
+
+AIDD_DIR="${AIDD_DIR:-$HOME/.aidd}"
+ENV_FILE="$AIDD_DIR/.env"
+MANIFEST="$AIDD_DIR/atlas.yaml"
+LOG_DIR="$AIDD_DIR/logs"
+LOCK_DIR="$AIDD_DIR/locks"
+ASKPASS="$AIDD_DIR/git-askpass.sh"
+
+GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'
+log()  { printf "${GREEN}[aidd]${NC} %s\n" "$1" >&2; }
+warn() { printf "${YELLOW}[aidd]${NC} %s\n" "$1" >&2; }
+die()  { printf "${RED}[aidd]${NC} %s\n" "$1" >&2; exit 1; }
+
+env_get() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d'=' -f2-; }
+
+[ -f "$ENV_FILE" ] || die ".env not found at $ENV_FILE — run setup/install.sh first"
+[ -f "$MANIFEST" ] || die "atlas.yaml not found at $MANIFEST — run setup/install.sh first"
+WORKSPACE_PATH="$(env_get WORKSPACE_PATH)"
+[ -d "$WORKSPACE_PATH" ] || die "WORKSPACE_PATH from .env does not exist: $WORKSPACE_PATH"
+
+TOKEN_FILE="${AIDD_GIT_TOKEN_FILE:-$(env_get AIDD_GIT_TOKEN_FILE)}"
+[ -z "$TOKEN_FILE" ] && [ -f "$AIDD_DIR/secrets/git-token" ] && TOKEN_FILE="$AIDD_DIR/secrets/git-token"
+FETCH_AUTH="${AIDD_FETCH_AUTH:-}"
+if [ -z "$FETCH_AUTH" ]; then
+  if [ -n "$TOKEN_FILE" ] && [ -s "$TOKEN_FILE" ]; then FETCH_AUTH="service"; else FETCH_AUTH="personal"; fi
+fi
+export AIDD_TRIGGER="${AIDD_TRIGGER:-manual}"
+
+# ---------------------------------------------------------------------------
+# host-side fetch
+# ---------------------------------------------------------------------------
+local_source_dirs() {
+  grep -E '^\s*path:\s*' "$MANIFEST" | sed -E 's/^\s*path:\s*//; s/^["'"'"']//; s/["'"'"']\s*$//' \
+    | sed -E "s#^/workspace#$WORKSPACE_PATH#"
+}
+
+# git -c options that make an ssh remote fetch over https for this one command,
+# so a read-only PAT can be used without touching the repo's own remote config.
+https_rewrite_opts() {
+  local repo="$1" url host
+  url="$(git -C "$repo" remote get-url origin 2>/dev/null)" || return 0
+  case "$url" in
+    git@*:*)      host="${url#git@}"; host="${host%%:*}" ;;
+    ssh://git@*)  host="${url#ssh://git@}"; host="${host%%/*}" ;;
+    *)            return 0 ;;   # already https (or something else): nothing to rewrite
+  esac
+  printf -- '-c\nurl.https://%s/.insteadOf=git@%s:\n-c\nurl.https://%s/.insteadOf=ssh://git@%s/\n' "$host" "$host" "$host" "$host"
+}
+
+fetch_repo() {
+  local repo="$1" name out rc
+  name="$(basename "$repo")"
+  git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+
+  if [ "$FETCH_AUTH" = "service" ]; then
+    [ -x "$ASKPASS" ] || die "service fetch needs $ASKPASS (installed by setup/install.sh)"
+    local -a opts=()
+    mapfile -t opts < <(https_rewrite_opts "$repo")
+    out="$(AIDD_GIT_TOKEN="$(cat "$TOKEN_FILE")" GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 \
+           git -C "$repo" "${opts[@]}" fetch --all --prune --quiet 2>&1)"; rc=$?
+  else
+    out="$(GIT_TERMINAL_PROMPT=0 git -C "$repo" fetch --all --prune --quiet 2>&1)"; rc=$?
+  fi
+
+  if [ $rc -eq 0 ]; then
+    log "fetch $name: ok ($FETCH_AUTH)"
+  else
+    warn "fetch $name failed ($FETCH_AUTH) — indexing on local refs. $(echo "$out" | grep -E 'Permission denied|Authentication failed|fatal|error' | head -1)"
+    return 1
+  fi
+}
+
+host_fetch_all() {
+  local dir failed=0
+  while IFS= read -r dir; do
+    [ -d "$dir" ] || { warn "manifest path not found on host: $dir"; continue; }
+    for repo in "$dir"/*/; do
+      [ -d "$repo/.git" ] && { fetch_repo "${repo%/}" || failed=$((failed + 1)); }
+    done
+  done < <(local_source_dirs)
+  return 0
+}
+
+host_fetch_one() {
+  local arg="$1" candidates=()
+  [ -d "$WORKSPACE_PATH/$arg/.git" ] && candidates+=("$WORKSPACE_PATH/$arg")
+  for c in "$WORKSPACE_PATH"/*/"$arg"; do [ -d "$c/.git" ] && candidates+=("$c"); done
+  [ -d "$arg/.git" ] && candidates+=("$arg")
+  if [ ${#candidates[@]} -eq 0 ]; then
+    warn "could not locate repo '$arg' on the host for fetching — the indexer will resolve it"
+    return 0
+  fi
+  fetch_repo "${candidates[0]}"
+}
+
+compose() { (cd "$AIDD_DIR" && docker compose run --rm -e AIDD_TRIGGER indexer "$@"); }
+
+# ---------------------------------------------------------------------------
+# refresh: lock + log (this is what the scheduler runs)
+# ---------------------------------------------------------------------------
+rotate_log() {
+  local f="$1"
+  [ -f "$f" ] || return 0
+  local size; size=$(stat -c %s "$f" 2>/dev/null || echo 0)
+  if [ "$size" -gt 5242880 ]; then   # 5 MB, keep 3
+    mv -f "$f.2" "$f.3" 2>/dev/null; mv -f "$f.1" "$f.2" 2>/dev/null; mv -f "$f" "$f.1"
+  fi
+}
+
+run_refresh() {
+  mkdir -p "$LOG_DIR" "$LOCK_DIR"
+  local logf="$LOG_DIR/refresh.log"
+  rotate_log "$logf"
+  exec 9>"$LOCK_DIR/refresh.lock"
+  if ! flock -n 9; then
+    echo "$(date -Is) [skip] another refresh is still running" >> "$logf"
+    warn "another refresh is still running — skipped"
+    return 0
+  fi
+  {
+    echo "=== $(date -Is) refresh start (trigger=$AIDD_TRIGGER auth=$FETCH_AUTH)"
+    [ "${AIDD_NO_FETCH:-0}" != "1" ] && host_fetch_all
+    compose refresh --no-fetch "$@"
+    local rc=$?
+    echo "=== $(date -Is) refresh end rc=$rc"
+    exit $rc
+  } 2>&1 | tee -a "$logf" >&2
+  return "${PIPESTATUS[0]}"
+}
+
+# ---------------------------------------------------------------------------
+# scheduler
+# ---------------------------------------------------------------------------
+is_wsl() { grep -qi microsoft /proc/version 2>/dev/null; }
+interval_min() { local v; v="$(env_get AIDD_REFRESH_INTERVAL_MINUTES)"; echo "${v:-15}"; }
+TASK_NAME="aidd-atlas-refresh"
+
+has_user_systemd() { command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; }
+
+schedule_install() {
+  local every; every="$(interval_min)"
+
+  # Preferred everywhere (WSL included): a systemd *user* timer. It runs inside the same
+  # environment as Docker and the repos, opens no window, and survives closed terminals.
+  # On WSL it needs systemd enabled ([boot] systemd=true in /etc/wsl.conf) and the distro
+  # running — with systemd on, WSL keeps the distro alive and Docker Desktop starts it.
+  if has_user_systemd; then
+    local unit_dir="$HOME/.config/systemd/user"; mkdir -p "$unit_dir"
+    cat > "$unit_dir/aidd-refresh.service" <<EOF
+[Unit]
+Description=aidd atlas refresh (fetch + incremental re-index)
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=AIDD_TRIGGER=scheduled
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=$AIDD_DIR/aidd refresh
+EOF
+    cat > "$unit_dir/aidd-refresh.timer" <<EOF
+[Unit]
+Description=Run aidd atlas refresh every $every minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=${every}min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+    systemctl --user daemon-reload && systemctl --user enable --now aidd-refresh.timer \
+      || die "could not enable the systemd user timer (systemctl --user status aidd-refresh.timer)"
+    # keep the user's systemd instance alive without an open login session
+    if command -v loginctl >/dev/null 2>&1 && ! loginctl show-user "$USER" 2>/dev/null | grep -q 'Linger=yes'; then
+      loginctl enable-linger "$USER" 2>/dev/null || sudo loginctl enable-linger "$USER" 2>/dev/null \
+        || warn "could not enable linger — run: sudo loginctl enable-linger $USER  (otherwise the timer stops when you log out)"
+    fi
+    log "systemd user timer 'aidd-refresh.timer' every $every min  (systemctl --user list-timers)"
+    # a Windows Task Scheduler entry from an earlier install would double-run (and pop a console)
+    if is_wsl && command -v schtasks.exe >/dev/null 2>&1 && schtasks.exe /Query /TN "$TASK_NAME" >/dev/null 2>&1; then
+      schtasks.exe /Delete /F /TN "$TASK_NAME" >/dev/null 2>&1 && log "removed Windows task '$TASK_NAME' — the systemd timer replaces it"
+    fi
+    if is_wsl; then
+      log "WSL: the timer fires while the distro is running. Docker Desktop's WSL integration starts it at login;"
+      log "     to be safe, enable 'Start WSL on login' or keep a terminal open. Check: wsl.exe --list --running"
+    fi
+    return 0
+  fi
+
+  # WSL without systemd: Windows Task Scheduler as a fallback. `conhost --headless`
+  # keeps the console window from popping up on every run.
+  if is_wsl && command -v schtasks.exe >/dev/null 2>&1; then
+    warn "systemd is not enabled in this WSL distro — falling back to Windows Task Scheduler."
+    warn "Preferred: add '[boot]\\nsystemd=true' to /etc/wsl.conf, run 'wsl.exe --shutdown', reopen, then: aidd schedule install"
+    local distro="${WSL_DISTRO_NAME:-}"; [ -n "$distro" ] || die "WSL_DISTRO_NAME is not set — run this from inside the WSL distro"
+    local tr="conhost.exe --headless wsl.exe -d $distro -u $USER -- env AIDD_TRIGGER=scheduled $AIDD_DIR/aidd refresh"
+    if schtasks.exe /Create /F /TN "$TASK_NAME" /SC MINUTE /MO "$every" /TR "$tr" >/dev/null; then
+      log "Windows Task Scheduler: '$TASK_NAME' every $every min, hidden window → $tr"
+    else
+      die "schtasks.exe failed — create the task manually: every $every min run: $tr"
+    fi
+    return 0
+  fi
+
+  if command -v crontab >/dev/null 2>&1; then
+    local line="*/$every * * * * AIDD_TRIGGER=scheduled $AIDD_DIR/aidd refresh >/dev/null 2>&1 # $TASK_NAME"
+    (crontab -l 2>/dev/null | grep -v "# $TASK_NAME"; echo "$line") | crontab - \
+      && log "cron: $line" || die "could not install the crontab entry"
+    return 0
+  fi
+  die "no scheduler available (systemd --user, schtasks.exe or crontab)"
+}
+
+schedule_remove() {
+  local vbs; vbs="$(startup_folder)/${AUTOSTART_TASK}.vbs"; [ -f "$vbs" ] && rm -f "$vbs" && log "removed Startup script ${vbs##*/}"
+  # remove every flavour — an earlier install may have used another one
+  if is_wsl && command -v schtasks.exe >/dev/null 2>&1; then
+    schtasks.exe /Delete /F /TN "$TASK_NAME" >/dev/null 2>&1 && log "removed Windows task '$TASK_NAME'" || warn "no Windows task '$TASK_NAME'"
+  fi
+  if has_user_systemd; then
+    systemctl --user disable --now aidd-refresh.timer >/dev/null 2>&1 && log "removed systemd timer" || true
+    rm -f "$HOME/.config/systemd/user/aidd-refresh."{service,timer}
+  fi
+  if command -v crontab >/dev/null 2>&1; then
+    crontab -l 2>/dev/null | grep -v "# $TASK_NAME" | crontab - 2>/dev/null || true
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# schedule check: are the unattended-refresh prerequisites met?  (--fix repairs what it can)
+# ---------------------------------------------------------------------------
+AUTOSTART_TASK="aidd-wsl-autostart"
+
+c_ok()   { printf "  ${GREEN}[OK]${NC}   %s\n" "$1"; }
+c_fail() { printf "  ${RED}[FAIL]${NC} %s\n" "$1"; CHECK_FAILS=$((CHECK_FAILS + 1)); }
+c_warn() { printf "  ${YELLOW}[WARN]${NC} %s\n" "$1"; }
+
+# Windows per-user Startup folder, as a WSL path ("" when not resolvable)
+startup_folder() {
+  is_wsl && command -v cmd.exe >/dev/null 2>&1 || { echo ""; return; }
+  local appdata; appdata="$(cmd.exe /c 'echo %APPDATA%' 2>/dev/null | tr -d '\r\n')"
+  [ -n "$appdata" ] || { echo ""; return; }
+  local dir; dir="$(wslpath -u "$appdata" 2>/dev/null)/Microsoft/Windows/Start Menu/Programs/Startup"
+  [ -d "$dir" ] && echo "$dir" || echo ""
+}
+
+wsl_conf_systemd() {  # true when /etc/wsl.conf enables systemd
+  [ -f /etc/wsl.conf ] && awk 'tolower($0)~/^\[boot\]/{b=1;next} /^\[/{b=0} b && tolower($0)~/^systemd[ ]*=[ ]*true/{f=1} END{exit !f}' /etc/wsl.conf
+}
+
+schedule_check() {
+  local fix="${1:-}"; CHECK_FAILS=0
+  local every; every="$(interval_min)"
+  echo "scheduler prerequisites (interval ${every} min, auth ${FETCH_AUTH}):"
+
+  # 1. credential for unattended fetch
+  if [ "$FETCH_AUTH" = "service" ]; then c_ok "service credential present (${TOKEN_FILE})"
+  else c_fail "no service token — unattended fetch will fail after reboot (install.sh step 6, or write ~/.aidd/secrets/git-token)"; fi
+
+  if is_wsl; then
+    # 2. systemd enabled in wsl.conf and actually running
+    if wsl_conf_systemd; then c_ok "/etc/wsl.conf enables systemd"
+    else
+      if [ "$fix" = "--fix" ]; then
+        if sudo -n true 2>/dev/null || sudo -v; then
+          if [ -f /etc/wsl.conf ] && grep -qi '^\[boot\]' /etc/wsl.conf; then
+            sudo sed -i 's/^\[boot\]/[boot]\nsystemd=true/i' /etc/wsl.conf
+          else
+            printf '\n[boot]\nsystemd=true\n' | sudo tee -a /etc/wsl.conf >/dev/null
+          fi
+          c_warn "systemd=true written to /etc/wsl.conf — now run in PowerShell:  wsl --shutdown   then reopen the terminal and re-run: aidd schedule check --fix"
+        else c_fail "could not write /etc/wsl.conf (sudo) — add:  [boot]\\n systemd=true"; fi
+      else c_fail "/etc/wsl.conf does not enable systemd — run: aidd schedule check --fix"; fi
+    fi
+    if [ "$(ps -p 1 -o comm= 2>/dev/null)" = "systemd" ]; then c_ok "systemd is PID 1 (distro booted with systemd)"
+    else c_fail "systemd is not running (PID 1 = $(ps -p 1 -o comm= 2>/dev/null)) — needs 'wsl --shutdown' after enabling it"; fi
+
+    # 3. distro autostart at Windows logon (the timer only fires while the distro runs).
+    #    schtasks /SC ONLOGON needs elevation, so the default is a hidden .vbs in the
+    #    user's Startup folder — no admin rights required.
+    local startup_vbs; startup_vbs="$(startup_folder)/${AUTOSTART_TASK}.vbs"
+    if [ -n "$startup_vbs" ] && [ -f "$startup_vbs" ]; then
+      c_ok "Startup-folder script '${AUTOSTART_TASK}.vbs' starts this distro at Windows login"
+    elif command -v schtasks.exe >/dev/null 2>&1 && schtasks.exe /Query /TN "$AUTOSTART_TASK" >/dev/null 2>&1; then
+      c_ok "Windows logon task '$AUTOSTART_TASK' starts this distro at login"
+    else
+      if [ "$fix" = "--fix" ]; then
+        if [ -n "$startup_vbs" ] && printf 'CreateObject("WScript.Shell").Run "wsl.exe -d %s -u %s -- true", 0, False\r\n' \
+             "${WSL_DISTRO_NAME:-Ubuntu}" "$USER" > "$startup_vbs" 2>/dev/null; then
+          c_ok "created '${startup_vbs##*/}' in the Windows Startup folder (hidden) — the distro, and its timers, come up after reboot"
+        else c_fail "could not write to the Windows Startup folder — create the shortcut manually or run elevated: schtasks /Create /SC ONLOGON /TN $AUTOSTART_TASK /TR \"wsl.exe -d ${WSL_DISTRO_NAME:-Ubuntu} -- true\""; fi
+      else c_warn "nothing starts the distro after a Windows reboot (timers wait until you open a terminal) — fix with: aidd schedule check --fix"; fi
+    fi
+    if command -v schtasks.exe >/dev/null 2>&1 && schtasks.exe /Query /TN "$TASK_NAME" >/dev/null 2>&1 && has_user_systemd; then
+      if [ "$fix" = "--fix" ]; then schtasks.exe /Delete /F /TN "$TASK_NAME" >/dev/null 2>&1 && c_ok "removed legacy Windows task '$TASK_NAME' (systemd timer takes over)"
+      else c_warn "legacy Windows task '$TASK_NAME' still exists alongside systemd — remove with --fix (double runs are harmless thanks to the lock, but noisy)"; fi
+    fi
+  fi
+
+  # 4. user systemd + linger + timer
+  if has_user_systemd; then
+    c_ok "systemctl --user works"
+    if loginctl show-user "$USER" 2>/dev/null | grep -q 'Linger=yes'; then c_ok "linger enabled — user systemd survives logout"
+    else
+      if [ "$fix" = "--fix" ]; then (loginctl enable-linger "$USER" 2>/dev/null || sudo loginctl enable-linger "$USER") && c_ok "linger enabled" || c_fail "could not enable linger"
+      else c_fail "linger disabled — timers stop when you log out (aidd schedule check --fix)"; fi
+    fi
+    if systemctl --user is-active aidd-refresh.timer >/dev/null 2>&1; then
+      c_ok "aidd-refresh.timer active — $(systemctl --user list-timers aidd-refresh.timer --no-pager --all 2>/dev/null | grep aidd-refresh | awk '{print "next "$1" "$2" "$3" ("$4" "$5")"}')"
+    else
+      if [ "$fix" = "--fix" ]; then schedule_install; else c_fail "aidd-refresh.timer not active — run: aidd schedule install"; fi
+    fi
+  else
+    is_wsl && c_warn "systemctl --user unavailable — Windows Task Scheduler fallback is in use (window hidden)"
+  fi
+
+  # 5. evidence: did a scheduled run happen recently?
+  local logf="$LOG_DIR/refresh.log"
+  if [ -f "$logf" ] && grep -q 'trigger=scheduled' "$logf"; then
+    local last; last="$(grep -E 'refresh end' "$logf" | tail -1 | sed -E 's/^=== ([^ ]+) .*rc=([0-9]+).*/\1 rc=\2/')"
+    if [ -z "$last" ]; then c_ok "scheduled runs are landing — last: in progress"
+    elif [[ "$last" == *"rc=0" ]]; then c_ok "scheduled runs are landing — last: $last"
+    else c_warn "last scheduled refresh FAILED — $last (see $logf)"; fi
+  else c_warn "no scheduled run recorded yet in $logf (wait one interval, then re-check)"; fi
+
+  [ "$CHECK_FAILS" -eq 0 ] && echo "all scheduler prerequisites met." || { echo "$CHECK_FAILS prerequisite(s) failing."; return 1; }
+}
+
+schedule_status() {
+  echo "interval: $(interval_min) min   auth: $FETCH_AUTH   token file: ${TOKEN_FILE:-none}"
+  local shown=0
+  if is_wsl && command -v schtasks.exe >/dev/null 2>&1; then
+    # labels are localized (Status: Pronto / Ready) — print the whole short LIST block
+    local q; q="$(schtasks.exe /Query /TN "$TASK_NAME" /FO LIST 2>/dev/null | tr -d '\r' | sed '/^\s*$/d')"
+    if [ -n "$q" ]; then echo "$q" | sed 's/^/  /'; shown=1; fi
+  fi
+  if [ -f "$HOME/.config/systemd/user/aidd-refresh.timer" ] && command -v systemctl >/dev/null 2>&1; then
+    systemctl --user list-timers aidd-refresh.timer --no-pager 2>/dev/null | head -2 | sed 's/^/  /'; shown=1
+  fi
+  if command -v crontab >/dev/null 2>&1 && crontab -l 2>/dev/null | grep -q "# $TASK_NAME"; then
+    crontab -l | grep "# $TASK_NAME" | sed 's/^/  cron: /'; shown=1
+  fi
+  [ "$shown" = 1 ] || echo "  scheduler: not installed (aidd schedule install)"
+  local logf="$LOG_DIR/refresh.log"
+  if [ -f "$logf" ]; then
+    echo "last refresh: $(grep -E 'refresh end' "$logf" | tail -1)"
+  else
+    echo "last refresh: never (no $logf)"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+cmd="${1:-}"
+[ -n "$cmd" ] || { compose --help; exit 0; }
+shift
+
+case "$cmd" in
+  fetch)      host_fetch_all ;;
+  refresh)    run_refresh "$@" ;;
+  plan|bootstrap)
+    if [ "${AIDD_NO_FETCH:-0}" != "1" ]; then
+      log "fetching remote-tracking refs on the host (auth: $FETCH_AUTH)"
+      host_fetch_all
+    fi
+    compose "$cmd" --no-fetch "$@" ;;
+  index)
+    repo="${1:-}"; [ -n "$repo" ] || die "usage: aidd index <repo> [--ref R] [--ephemeral]"
+    [ "${AIDD_NO_FETCH:-0}" != "1" ] && host_fetch_one "$repo"
+    compose index --no-fetch "$@" ;;
+  schedule)
+    case "${1:-status}" in
+      install) schedule_install ;;
+      remove)  schedule_remove ;;
+      status)  schedule_status ;;
+      check)   schedule_check "${2:-}" ;;
+      *) die "usage: aidd schedule install|remove|status|check [--fix]" ;;
+    esac ;;
+  *)          compose "$cmd" "$@" ;;
+esac

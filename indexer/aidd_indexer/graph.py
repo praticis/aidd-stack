@@ -60,7 +60,7 @@ class GraphWriter:
 
     # ------------------------------------------------------------------------------
     def write(self, res: ExtractionResult, rv: Resolved, started: datetime, ephemeral: bool,
-              area: str | None = None) -> dict[str, int]:
+              area: str | None = None, trigger: str = "manual") -> dict[str, int]:
         repo = res.repo
         now = datetime.now(timezone.utc).isoformat()
         common = dict(tenant=repo.tenant, repo=repo.name, ref=repo.ref, sha=repo.commit_sha, now=now)
@@ -167,9 +167,10 @@ class GraphWriter:
             MERGE (r:IndexRun {id: $id})
             SET r.tenant = $tenant, r.repo = $repo, r.ref = $ref, r.commit_sha = $sha,
                 r.started_at = datetime($started), r.finished_at = datetime($finished),
-                r.status = 'ok', r.counts = $counts_json, r.errors = $errors, r.indexer_version = $ver
+                r.status = 'ok', r.counts = $counts_json, r.errors = $errors, r.indexer_version = $ver,
+                r.trigger = $trigger
             MERGE (s)-[:HAS_RUN]->(r)
-        """, id=ids.index_run(repo.tenant, repo.name, repo.ref, started.isoformat()),
+        """, id=ids.index_run(repo.tenant, repo.name, repo.ref, started.isoformat()), trigger=trigger,
              snap_id=ids.snapshot(repo.tenant, repo.name, repo.ref), started=started.isoformat(),
              finished=finished.isoformat(), counts_json=json.dumps(counts), errors=res.warnings[:50],
              ver=INDEXER_VERSION, **common)
@@ -216,7 +217,8 @@ class GraphWriter:
             OPTIONAL MATCH (f:File)-[:IN_SNAPSHOT]->(s)
             RETURN s.tenant AS tenant, s.repo AS repo, s.ref AS ref, left(s.commit_sha, 10) AS sha,
                    toString(s.indexed_at) AS indexed_at, count(f) AS files, last.counts AS counts,
-                   last.status AS status, s.ephemeral AS ephemeral
+                   last.status AS status, s.ephemeral AS ephemeral, last.trigger AS trigger,
+                   duration.between(s.indexed_at, datetime()).minutes AS age_min
             ORDER BY tenant, repo, ref
         """
         with self.driver.session(database=self.cfg.database) as s:

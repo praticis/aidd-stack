@@ -80,6 +80,9 @@ services:
     volumes:
       - ${WORKSPACE_PATH:?}:/workspace
       - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
+      # host ssh-agent socket when available; /dev/null otherwise (ssh then
+      # silently falls back to the key files).
+      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
       - type: bind
         source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
         target: /root/.gitconfig
@@ -179,8 +182,11 @@ services:
   #   docker compose run --rm indexer bootstrap   # index it all (asks first)
   #   docker compose run --rm indexer refresh     # only what changed
   #   docker compose run --rm indexer index <repo> [--ref develop]
-  # Repositories come from WORKSPACE_PATH (same mount as mcp-git), read-only;
-  # refs are materialized with `git archive`, so the checkout is never touched.
+  # Repositories come from WORKSPACE_PATH (same mount as mcp-git). The mount is
+  # read-write ONLY so the indexer can `git fetch --all --prune` before planning
+  # (writes stay inside .git/); refs are materialized with `git archive`, so the
+  # working tree is never touched. SSH keys / .gitconfig are mounted read-only
+  # for the fetch, exactly like mcp-git.
   # ──────────────────────────────────────────────────────
   indexer:
     build:
@@ -199,9 +205,37 @@ services:
       - WORKSPACE_PATH=/workspace
       - AIDD_TENANT=${AIDD_TENANT:?}
       - AIDD_CONFIG=/app/atlas.yaml
+      - AIDD_TRIGGER=${AIDD_TRIGGER:-manual}     # recorded on IndexRun: manual | scheduled | bootstrap
+      # --- git fetch authentication (all optional, all non-interactive) ---------
+      # ssh: keys from ~/.ssh (mounted below). Passphrase-protected keys need the
+      # host's ssh-agent: run `eval $(ssh-agent) && ssh-add` in the shell that
+      # invokes docker compose; SSH_AUTH_SOCK is then forwarded as /ssh-agent.
+      # New hosts are trusted automatically and recorded in a scratch file
+      # (the mounted known_hosts is read-only).
+      - SSH_AUTH_SOCK=/ssh-agent
+      - GIT_SSH_COMMAND=ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/tmp/known_hosts -o UserKnownHostsFile=/root/.ssh/known_hosts
+      # https: PATs via GIT_ASKPASS (see indexer/git-askpass.sh). Set in .env:
+      #   AIDD_GIT_TOKEN=<pat>                    (any host)
+      #   AIDD_GIT_TOKEN_GITHUB_COM=<pat>         (per-host override)
+      #   AIDD_GIT_USERNAME=x-access-token        (default; fine for GitHub/GitLab/Azure DevOps)
+      - GIT_ASKPASS=/app/git-askpass.sh
+      - GIT_TERMINAL_PROMPT=0
+      - AIDD_GIT_TOKEN=${AIDD_GIT_TOKEN:-}
+      - AIDD_GIT_TOKEN_GITHUB_COM=${AIDD_GIT_TOKEN_GITHUB_COM:-}
+      - AIDD_GIT_TOKEN_GITLAB_COM=${AIDD_GIT_TOKEN_GITLAB_COM:-}
+      - AIDD_GIT_TOKEN_DEV_AZURE_COM=${AIDD_GIT_TOKEN_DEV_AZURE_COM:-}
+      - AIDD_GIT_USERNAME=${AIDD_GIT_USERNAME:-x-access-token}
     volumes:
-      - ${WORKSPACE_PATH:?}:/workspace:ro
+      - ${WORKSPACE_PATH:?}:/workspace
       - ./atlas.yaml:/app/atlas.yaml:ro
+      - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
+      # host ssh-agent socket when available; /dev/null otherwise (ssh then
+      # silently falls back to the key files).
+      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
+      - type: bind
+        source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
+        target: /root/.gitconfig
+        read_only: true
 
 volumes:
   qdrant_data:

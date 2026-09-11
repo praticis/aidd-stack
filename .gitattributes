@@ -13,3 +13,4 @@ Dockerfile    text eol=lf
 .mcp.json     text eol=lf
 .gitattributes text eol=lf
 .gitignore    text eol=lf
+setup/aidd    text eol=lf

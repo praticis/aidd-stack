@@ -155,6 +155,21 @@ provision_aidd_structure() {
     printf "  ${GREEN}[copied]${NC} install-check.sh -> ~/.aidd/install-check.sh\n"
   fi
 
+  # Host-side wrapper: fetches with the user's own git credentials, then runs the
+  # containerized indexer. Also linked into ~/.local/bin when that exists.
+  if [ -f "$SCRIPT_DIR/aidd" ]; then
+    cp "$SCRIPT_DIR/aidd" "$AIDD_DIR/aidd" && chmod +x "$AIDD_DIR/aidd"
+    printf "  ${GREEN}[copied]${NC} aidd -> ~/.aidd/aidd\n"
+    # the PAT askpass helper is shared by the host wrapper and the container image
+    if [ -f "$ROOT_DIR/indexer/git-askpass.sh" ]; then
+      cp "$ROOT_DIR/indexer/git-askpass.sh" "$AIDD_DIR/git-askpass.sh" && chmod +x "$AIDD_DIR/git-askpass.sh"
+    fi
+    if [ -d "$HOME/.local/bin" ] && [ -w "$HOME/.local/bin" ]; then
+      ln -sf "$AIDD_DIR/aidd" "$HOME/.local/bin/aidd"
+      printf "  ${GREEN}[linked]${NC} ~/.local/bin/aidd\n"
+    fi
+  fi
+
   success "Global .aidd structure provisioned successfully."
 }
 
@@ -375,6 +390,13 @@ NEO4J_PASSWORD=$neo4j_password
 NEO4J_DATABASE=atlas
 NEO4J_HEAP=1G
 NEO4J_PAGECACHE=512M
+
+# Continuous update (aidd refresh on a schedule) — configured in step 6 of install.sh.
+# The service fetch uses a READ-ONLY PAT stored in the file below (chmod 600), never in
+# this .env. Without the file, fetches use your personal ssh/agent (interactive use only).
+AIDD_GIT_TOKEN_FILE=$AIDD_DIR/secrets/git-token
+AIDD_REFRESH_INTERVAL_MINUTES=15
+# In-container fetch (server/CI only): AIDD_GIT_TOKEN / AIDD_GIT_TOKEN_<HOST> / AIDD_GIT_USERNAME
 EOF
     ENV_CREATED_NOW=1
     success "Created $env_file with WORKSPACE_PATH=$workspace_path"
@@ -524,19 +546,79 @@ run_atlas_bootstrap() {
     return 0
   fi
   echo ""
-  info "Computing the indexing plan from $AIDD_DIR/atlas.yaml ..."
-  if ! (cd "$AIDD_DIR" && docker compose run --rm indexer plan); then
-    warn "Could not compute the plan — see output above. Later: cd $AIDD_DIR && docker compose run --rm indexer plan"
+  info "Computing the indexing plan from $AIDD_DIR/atlas.yaml (local refs as cloned — no git fetch at install time) ..."
+  if ! AIDD_NO_FETCH=1 "$AIDD_DIR/aidd" plan; then
+    warn "Could not compute the plan — see output above. Later: $AIDD_DIR/aidd plan"
     return 0
   fi
   echo ""
   read -r -p "Index everything listed above into atlas? [Y/n] " go </dev/tty
   if [[ "$go" =~ ^[Nn]$ ]]; then
-    info "Skipped. Later: cd $AIDD_DIR && docker compose run --rm indexer bootstrap"
+    info "Skipped. Later: $AIDD_DIR/aidd bootstrap"
     return 0
   fi
-  (cd "$AIDD_DIR" && docker compose run --rm indexer bootstrap --yes) \
-    || warn "Bootstrap finished with errors — see output above; 'docker compose run --rm indexer status' shows what landed."
+  # plan already fetched a moment ago — skip the second host fetch
+  AIDD_NO_FETCH=1 "$AIDD_DIR/aidd" bootstrap --yes --quiet-plan \
+    || warn "Bootstrap finished with errors — see output above; '$AIDD_DIR/aidd status' shows what landed."
+}
+
+# ------------------------------------------------------------------------------
+# 5c. Continuous update — read-only PAT + scheduled `aidd refresh`
+# ------------------------------------------------------------------------------
+# Installation indexes what is cloned (D12). Keeping atlas current is a separate,
+# unattended process: it needs a credential that works with nobody at the
+# keyboard (a fine-grained, read-only PAT) and a scheduler. Both are optional
+# here and can be (re)configured later with `aidd schedule install`.
+run_continuous_update() {
+  local env_file="$AIDD_DIR/.env"
+  local secrets_dir="$AIDD_DIR/secrets"
+  local token_file="$secrets_dir/git-token"
+
+  echo ""
+  info "Continuous update keeps atlas in sync with your remotes (fetch + incremental re-index)."
+  echo "  It runs unattended, so it needs a READ-ONLY token (GitHub fine-grained PAT, 'Contents: read'"
+  echo "  on the organization's repositories). Your personal ssh key is never used by the scheduler."
+  echo ""
+  echo "  1) Configure now: paste a read-only PAT and install the scheduler   [default]"
+  echo "  2) Skip — set up later with:  $AIDD_DIR/aidd schedule install"
+  read -r -p "Select an option [1/2, default: 1]: " opt </dev/tty
+  if [[ "$opt" == "2" ]]; then
+    info "Skipped. Atlas will only update when you run '$AIDD_DIR/aidd refresh' yourself."
+    return 0
+  fi
+
+  if [ -s "$token_file" ]; then
+    info "A token already exists at $token_file — keeping it (delete the file to replace)."
+  else
+    read -r -s -p "Read-only PAT (input hidden; leave empty to skip the token): " pat </dev/tty
+    echo ""
+    if [ -n "$pat" ]; then
+      mkdir -p "$secrets_dir" && chmod 700 "$secrets_dir"
+      printf '%s\n' "$pat" > "$token_file" && chmod 600 "$token_file"
+      unset pat
+      success "Token stored at $token_file (600). Fetch will use HTTPS with this token, even for ssh remotes."
+    else
+      warn "No token — scheduled fetches will try your personal ssh credentials and fail after reboot until you log in."
+    fi
+  fi
+
+  local every
+  read -r -p "Refresh interval in minutes [default: 15]: " every </dev/tty
+  every="${every:-15}"
+  if grep -q '^AIDD_REFRESH_INTERVAL_MINUTES=' "$env_file"; then
+    sed -i.bak -E "s/^AIDD_REFRESH_INTERVAL_MINUTES=.*/AIDD_REFRESH_INTERVAL_MINUTES=$every/" "$env_file" && rm -f "$env_file.bak"
+  else
+    printf '\nAIDD_REFRESH_INTERVAL_MINUTES=%s\n' "$every" >> "$env_file"
+  fi
+
+  if "$AIDD_DIR/aidd" schedule install; then
+    success "Scheduler installed. Check with: $AIDD_DIR/aidd schedule status   Logs: $AIDD_DIR/logs/refresh.log"
+  else
+    warn "Scheduler not installed — see the message above; retry with: $AIDD_DIR/aidd schedule install"
+  fi
+  echo ""
+  info "Checking unattended-refresh prerequisites (repairing what can be repaired) ..."
+  "$AIDD_DIR/aidd" schedule check --fix || warn "Some prerequisites are still failing — follow the instructions above, then: $AIDD_DIR/aidd schedule check"
 }
 
 # ------------------------------------------------------------------------------
@@ -619,6 +701,10 @@ main() {
   echo ""
   printf "${BOLD}=== 5. Distributing MCP Configuration ===${NC}\n"
   distribute_mcp_config
+
+  echo ""
+  printf "${BOLD}=== 6. Continuous Update (scheduled refresh) ===${NC}\n"
+  run_continuous_update
 
   printf "\n${GREEN}${BOLD}✓ Setup completed successfully at $AIDD_DIR!${NC}\n\n"
 }

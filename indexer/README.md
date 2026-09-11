@@ -11,18 +11,35 @@ marks today's edges so they can be upgraded in place.
 ## Run (recommended: the `aidd` host wrapper)
 
 `setup/install.sh` installs `~/.aidd/aidd` (linked as `aidd` when `~/.local/bin` exists). It runs
-`git fetch --all --prune` **on your machine** — with your ssh-agent, keychain, PATs or credential
-manager — and then calls the containerized indexer with `--no-fetch`. Unix sockets (ssh-agent) do not
-cross into Docker Desktop/WSL containers, so this is the reliable path for developers.
+`git fetch --all --prune` **on your machine** and then calls the containerized indexer with
+`--no-fetch`. Unix sockets (ssh-agent) do not cross into Docker Desktop/WSL containers, so this is
+the reliable path for developers — and the only one the scheduler uses.
 
 ```bash
 aidd plan                     # host fetch + plan
 aidd bootstrap                # host fetch + index everything (asks first)
-aidd refresh                  # host fetch + only what changed
+aidd refresh                  # host fetch + only what changed (+ GC); locked, logged
 aidd index caracara --ref develop
-aidd status
+aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
+aidd schedule install|status|remove
 AIDD_NO_FETCH=1 aidd plan     # skip the host fetch
 ```
+
+**Fetch authentication on the host.** Two modes, chosen automatically:
+
+| mode | when | how |
+|---|---|---|
+| `service` | `~/.aidd/secrets/git-token` exists (written by `install.sh` step 6) | a **read-only PAT** sent via `GIT_ASKPASS`; ssh remotes are rewritten to https for that one command (`url.<https>.insteadOf`), the repo config is untouched. This is what the scheduler needs: works with nobody logged in, survives reboots, revocable |
+| `personal` | no token file (or `AIDD_FETCH_AUTH=personal`) | your own ssh key / agent / credential helper — fine interactively, fails unattended when the key has a passphrase |
+
+**Scheduler.** `aidd schedule install` reads `AIDD_REFRESH_INTERVAL_MINUTES` from `.env` (default 15)
+and installs, in order of preference: a **systemd user timer** (Linux and WSL with `systemd=true` in
+`/etc/wsl.conf` — runs where Docker and the repos live, no window, `loginctl enable-linger` keeps it
+alive without a terminal), the Windows Task Scheduler as a fallback on WSL without systemd (hidden via
+`conhost --headless`), or a crontab entry.
+Each run is serialized with `flock`, appends to `~/.aidd/logs/refresh.log` (rotated at 5 MB), and
+records `trigger: scheduled` on the `IndexRun`. `install-check.sh` fails when the last refresh is
+older than twice the interval.
 
 ## Run (directly from the compose stack)
 
