@@ -1,0 +1,41 @@
+# atlas.yaml — what the aidd indexer feeds into atlas. Written by setup/install.sh;
+# edit freely, then `aidd plan` to preview and `aidd refresh` to apply.
+# Rules: tenants are always explicit (no defaults); tokens are referenced by the
+# NAME of an environment variable, never by value.
+
+tenants:
+  <tenant>:
+    sources:
+      # Repositories already cloned in the developer workspace (inside the
+      # container WORKSPACE_PATH is mounted at /workspace).
+      - type: local
+        path: /workspace/<tenant>
+        include: ["*"]
+        exclude: []
+        fetch: false           # in-container fetch (server/CI with PATs). Developers: leave false —
+                               # the host wrapper / scheduler fetches with your own credentials.
+      # Remote providers (roadmap F1) — one per tenant, each tenant may differ:
+      # - type: github            # github | gitlab | azure-devops | bitbucket
+      #   org: <org-or-group>
+      #   token_env: GITHUB_TOKEN_<TENANT>
+      #   include: ["*"]
+      #   exclude: ["*-archive", "poc-*"]
+      #   skip_archived: true
+
+    refs:
+      always: ["main", "master", "develop"]   # indexed when they exist
+      patterns: []                             # e.g. ["release/*"]
+      active:                                  # recently active branches -> ephemeral snapshots
+        max_age_days: 14
+        max_per_repo: 5
+        exclude: ["dependabot/*", "renovate/*", "docs/*", "ci/*", "cd/*", "pipeline/*"]
+      gc_ephemeral_after_days: 30
+
+    # Optional: business areas (bounded contexts). Values are repo names or globs.
+    # Used to group `aidd plan` output and stored as Repo.area.
+    areas: {}
+    #  checkout: ["orders-*", "payments-api"]
+    #  catalog: ["catalog-api", "search"]
+
+    # Optional: cron for automatic `aidd refresh` (scheduler service — roadmap F1).
+    schedule: ""

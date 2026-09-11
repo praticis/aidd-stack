@@ -51,6 +51,7 @@ SYNC_FOLDERS=(
   "obsidian"
   "qdrant"
   "neo4j"
+  "indexer"
 )
 
 # Files at the root to copy directly into $AIDD_DIR
@@ -71,6 +72,8 @@ EXCLUDE_PATTERNS=(
 
 # Global variable to store current selected tenant across modules
 SCAN_TENANT_VALUE="auto"
+# Set when this run created a fresh .env (drives the stale-volume check)
+ENV_CREATED_NOW=0
 
 # ------------------------------------------------------------------------------
 # 2. Output Formatting & Helpers
@@ -273,7 +276,7 @@ run_skills() {
 # of letting compose abort. Existing values are never touched.
 ensure_env_defaults() {
   local env_file="$1"
-  local key value
+  local key value current
   local neo4j_password
   if command -v openssl &> /dev/null; then
     neo4j_password="$(openssl rand -hex 12)"
@@ -299,6 +302,19 @@ ensure_env_defaults() {
       [ "$key" = "NEO4J_PASSWORD" ] && info "Generated a random Neo4j password — Browser login at http://localhost:7474 uses NEO4J_USER/NEO4J_PASSWORD from $env_file."
     fi
   done
+
+  # AIDD_TENANT is different: it always follows the choice made in step 2 of
+  # this run, so the .env, the skills' frontmatter and the containers agree.
+  if grep -q "^AIDD_TENANT=" "$env_file"; then
+    current="$(grep "^AIDD_TENANT=" "$env_file" | cut -d'=' -f2-)"
+    if [ "$current" != "$SCAN_TENANT_VALUE" ]; then
+      sed -i.bak -E "s/^AIDD_TENANT=.*/AIDD_TENANT=$SCAN_TENANT_VALUE/" "$env_file" && rm -f "$env_file.bak"
+      printf "  ${YELLOW}[updated]${NC} AIDD_TENANT: %s -> %s\n" "$current" "$SCAN_TENANT_VALUE"
+    fi
+  else
+    printf "\nAIDD_TENANT=%s\n" "$SCAN_TENANT_VALUE" >> "$env_file"
+    printf "  ${GREEN}[added]${NC} AIDD_TENANT=%s to %s\n" "$SCAN_TENANT_VALUE" "$env_file"
+  fi
 }
 
 run_environment() {
@@ -336,6 +352,11 @@ run_environment() {
 # MCP Git & Container Workspace Mapping
 WORKSPACE_PATH=$workspace_path
 
+# Tenant chosen during setup (source of truth: this script, step 2).
+# 'auto' = derive from the folder below WORKSPACE_PATH (<workspace>/<tenant>/<repo>);
+# any other value is used as-is by skills, indexer and MCPs. Never left unset.
+AIDD_TENANT=$SCAN_TENANT_VALUE
+
 # Persistent Storage inside ~/.aidd/_docker
 OBSIDIAN_VAULT_PATH=$docker_dir/obsidian-vault
 QDRANT_STORAGE_PATH=$docker_dir/qdrant-storage
@@ -355,21 +376,167 @@ NEO4J_DATABASE=atlas
 NEO4J_HEAP=1G
 NEO4J_PAGECACHE=512M
 EOF
+    ENV_CREATED_NOW=1
     success "Created $env_file with WORKSPACE_PATH=$workspace_path"
     info "Generated a random Neo4j password — see NEO4J_PASSWORD in $env_file (Browser login at http://localhost:7474)."
+  fi
+
+  # The manifest must exist BEFORE the first `docker compose up`: it is bind-mounted
+  # into the indexer as a file, and Docker turns a missing bind source into a directory.
+  write_atlas_manifest
+
+  # Named volumes outlive ~/.aidd. A brand-new .env carries a brand-new Neo4j
+  # password, but an old neo4j_data volume still holds the previous one — the
+  # server would start and every connection would fail with "unauthorized".
+  if [ "${ENV_CREATED_NOW:-0}" = "1" ]; then
+    local old_volumes
+    old_volumes="$(docker volume ls -q 2>/dev/null | grep -E '^praticis-aidd_(neo4j|qdrant)_data$' || true)"
+    if [ -n "$old_volumes" ]; then
+      echo ""
+      warn "Data volumes from a previous installation exist:"
+      echo "$old_volumes" | sed 's/^/    /'
+      warn "The new NEO4J_PASSWORD in .env will NOT match the password stored in the old neo4j_data volume."
+      read -r -p "Remove these volumes for a clean start? (all indexed data is lost) [Y/n] " wipe </dev/tty
+      if [[ ! "$wipe" =~ ^[Nn]$ ]]; then
+        (cd "$AIDD_DIR" && docker compose down -v --remove-orphans >/dev/null 2>&1 || true)
+        echo "$old_volumes" | xargs -r docker volume rm >/dev/null 2>&1 || true
+        success "Old volumes removed."
+      else
+        warn "Keeping old volumes — set NEO4J_PASSWORD in $env_file to the previous password, or expect authentication failures."
+      fi
+    fi
   fi
 
   echo ""
   read -r -p "Bring up the Docker Compose stack now? [y/N] " reply </dev/tty
   if [[ "$reply" =~ ^[Yy]$ ]]; then
     info "Starting Docker Compose inside $AIDD_DIR..."
-    (cd "$AIDD_DIR" && docker compose up -d --build)
-    success "Docker Compose started."
+    if (cd "$AIDD_DIR" && docker compose --profile tools build && docker compose up -d); then
+      success "Docker Compose started (indexer image built as well)."
+    else
+      warn "docker compose up failed. Last Neo4j log lines (most common culprit — APOC download or memory):"
+      (cd "$AIDD_DIR" && docker compose logs --tail 40 neo4j 2>/dev/null | sed 's/^/    /')
+      warn "Full logs: cd $AIDD_DIR && docker compose logs neo4j   (compose commands must run from $AIDD_DIR, where .env lives)"
+      error "Infrastructure did not come up — fix the cause above and re-run this script."
+    fi
   else
-    info "Skipped. Run 'docker compose up -d --build' inside $AIDD_DIR when ready."
+    info "Skipped. Run 'docker compose --profile tools build && docker compose up -d' inside $AIDD_DIR when ready."
   fi
 
   success "Infrastructure setup completed successfully."
+}
+
+# ------------------------------------------------------------------------------
+# 5b. Atlas manifest (atlas.yaml) & bootstrap indexing
+# ------------------------------------------------------------------------------
+# Writes ~/.aidd/atlas.yaml from the tenant chosen in step 2 and the workspace
+# path in .env, then offers to index the local workspace right away.
+# Tenant layout mirrors the skills: `auto` = every sub-folder of the workspace
+# is a tenant; a fixed value = that folder (or the workspace root if absent).
+write_atlas_manifest() {
+  local manifest="$AIDD_DIR/atlas.yaml"
+  local env_file="$AIDD_DIR/.env"
+  local workspace_path
+  workspace_path="$(grep "^WORKSPACE_PATH=" "$env_file" | cut -d'=' -f2-)"
+
+  if [ -f "$manifest" ]; then
+    info "$manifest already exists — leaving it untouched (edit it, then 'aidd plan')."
+    return 0
+  fi
+
+  local tenants=()
+  if [ "$SCAN_TENANT_VALUE" = "auto" ]; then
+    for d in "$workspace_path"/*/; do
+      [ -d "$d" ] || continue
+      local name; name="$(basename "$d")"
+      [[ "$name" == .* ]] && continue
+      # a tenant folder holds repositories, not a repository itself
+      [ -d "$d/.git" ] && continue
+      tenants+=("$name")
+    done
+    if [ ${#tenants[@]} -eq 0 ]; then
+      warn "tenant=auto but no tenant folders found under $workspace_path (expected <workspace>/<tenant>/<repo>). Writing an empty template."
+    fi
+  else
+    tenants+=("$SCAN_TENANT_VALUE")
+  fi
+
+  {
+    echo "# atlas.yaml — what the aidd indexer feeds into atlas."
+    echo "# Generated by setup/install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ). Reference: indexer/atlas.example.yaml"
+    echo "# Preview with: docker compose run --rm indexer plan"
+    echo ""
+    echo "tenants:"
+    for t in "${tenants[@]}"; do
+      local path="/workspace/$t"
+      # fixed tenant whose folder does not exist: repos live at the workspace root
+      [ "$SCAN_TENANT_VALUE" != "auto" ] && [ ! -d "$workspace_path/$t" ] && path="/workspace"
+      cat <<YAML
+  $t:
+    sources:
+      - type: local
+        path: $path
+        include: ["*"]
+        exclude: []
+        # git fetch is NOT part of indexing: the continuous-update process
+        # (aidd refresh via the host wrapper / scheduler) fetches with your
+        # credentials before calling the indexer. Keep false here.
+        fetch: false
+    refs:
+      always: ["main", "master", "develop"]
+      patterns: []
+      active:
+        max_age_days: 14
+        max_per_repo: 5
+        exclude: ["dependabot/*", "renovate/*", "docs/*", "ci/*", "cd/*", "pipeline/*"]
+      gc_ephemeral_after_days: 30
+    areas: {}
+    schedule: ""
+YAML
+    done
+  } > "$manifest"
+  success "Wrote $manifest (tenants: ${tenants[*]:-none})."
+}
+
+run_atlas_bootstrap() {
+  write_atlas_manifest   # no-op when step 3 already wrote it
+
+  # Guard against the bind-mount gotcha (a directory where the manifest should be).
+  if [ -d "$AIDD_DIR/atlas.yaml" ]; then
+    warn "$AIDD_DIR/atlas.yaml is a DIRECTORY (created by docker compose before the file existed)."
+    warn "Fix: cd $AIDD_DIR && docker compose down && rmdir atlas.yaml && re-run this script."
+    return 0
+  fi
+
+  if ! (cd "$AIDD_DIR" && docker compose ps --status running 2>/dev/null | grep -q aidd-core-neo4j); then
+    info "Neo4j is not running — skipping bootstrap. Later: cd $AIDD_DIR && docker compose run --rm indexer bootstrap"
+    return 0
+  fi
+
+  echo ""
+  info "Atlas bootstrap — populate the code graph with this tenant's repositories:"
+  echo "  1) Index the local workspace now (repos already cloned)   [default]"
+  echo "  2) Skip — run 'docker compose run --rm indexer bootstrap' later"
+  echo "  (remote providers — GitHub/GitLab/Azure DevOps — arrive in a later phase; see atlas.yaml comments)"
+  read -r -p "Select an option [1/2, default: 1]: " opt </dev/tty
+  if [[ "$opt" == "2" ]]; then
+    info "Skipped."
+    return 0
+  fi
+  echo ""
+  info "Computing the indexing plan from $AIDD_DIR/atlas.yaml ..."
+  if ! (cd "$AIDD_DIR" && docker compose run --rm indexer plan); then
+    warn "Could not compute the plan — see output above. Later: cd $AIDD_DIR && docker compose run --rm indexer plan"
+    return 0
+  fi
+  echo ""
+  read -r -p "Index everything listed above into atlas? [Y/n] " go </dev/tty
+  if [[ "$go" =~ ^[Nn]$ ]]; then
+    info "Skipped. Later: cd $AIDD_DIR && docker compose run --rm indexer bootstrap"
+    return 0
+  fi
+  (cd "$AIDD_DIR" && docker compose run --rm indexer bootstrap --yes) \
+    || warn "Bootstrap finished with errors — see output above; 'docker compose run --rm indexer status' shows what landed."
 }
 
 # ------------------------------------------------------------------------------
@@ -446,7 +613,11 @@ main() {
   run_environment
 
   echo ""
-  printf "${BOLD}=== 4. Distributing MCP Configuration ===${NC}\n"
+  printf "${BOLD}=== 4. Atlas Bootstrap ===${NC}\n"
+  run_atlas_bootstrap
+
+  echo ""
+  printf "${BOLD}=== 5. Distributing MCP Configuration ===${NC}\n"
   distribute_mcp_config
 
   printf "\n${GREEN}${BOLD}✓ Setup completed successfully at $AIDD_DIR!${NC}\n\n"

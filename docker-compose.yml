@@ -122,10 +122,12 @@ services:
       # the server entrypoint would treat those as config settings, so
       # the check passes them explicitly instead.
       test: ["CMD-SHELL", "cypher-shell -u ${NEO4J_USER:?} -p ${NEO4J_PASSWORD:?} -d ${NEO4J_DATABASE:?} 'RETURN 1' || exit 1"]
+      # First start on a fresh volume downloads APOC and creates the database;
+      # on slow networks that alone can take minutes. ~6 min budget total.
       interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 30s
+      retries: 20
+      start_period: 60s
 
   # ──────────────────────────────────────────────────────
   # NEO4J INIT — one-shot: applies code graph constraints and
@@ -168,6 +170,38 @@ services:
       - NEO4J_DATABASE=${NEO4J_DATABASE:?}
     ports:
       - "3004:3000"
+
+  # ──────────────────────────────────────────────────────
+  # INDEXER — loads repositories' micro graph into atlas. Not a
+  # long-running service: it is in the "tools" profile so `docker
+  # compose up` skips it; run on demand:
+  #   docker compose run --rm indexer plan        # what atlas.yaml would index
+  #   docker compose run --rm indexer bootstrap   # index it all (asks first)
+  #   docker compose run --rm indexer refresh     # only what changed
+  #   docker compose run --rm indexer index <repo> [--ref develop]
+  # Repositories come from WORKSPACE_PATH (same mount as mcp-git), read-only;
+  # refs are materialized with `git archive`, so the checkout is never touched.
+  # ──────────────────────────────────────────────────────
+  indexer:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+    container_name: aidd-indexer
+    profiles: ["tools"]
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USERNAME=${NEO4J_USER:?}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+      - NEO4J_DATABASE=${NEO4J_DATABASE:?}
+      - WORKSPACE_PATH=/workspace
+      - AIDD_TENANT=${AIDD_TENANT:?}
+      - AIDD_CONFIG=/app/atlas.yaml
+    volumes:
+      - ${WORKSPACE_PATH:?}:/workspace:ro
+      - ./atlas.yaml:/app/atlas.yaml:ro
 
 volumes:
   qdrant_data:

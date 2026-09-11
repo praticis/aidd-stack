@@ -73,13 +73,15 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Edge | From → To | Props |
 |---|---|---|
 | `CONTAINS` | Repo→Module, Module→File, File→Symbol, Symbol→Symbol (member) | |
-| `IMPORTS` | File→File, Module→Module, File→Package | `alias?` |
-| `CALLS` | Symbol→Symbol | `line`, `resolved` (bool: resolved by SCIP vs. matched by name) |
+| `IMPORTS` | File→File \| Module \| Package | `spec` (as written), `line`. Go imports target the package `Module`; unresolved specs become external `Package` nodes (`stdlib` flag) |
+| `CALLS` | Symbol \| File→Symbol | `line`, `resolved` (bool: SCIP vs. name match), `strategy` (`same-file`, `same-module`, `unique-name`, `*-ambiguous`); a `File` source means a top-level call |
 | `REFERENCES` | Symbol→Symbol | read/write without a call (types, fields) |
 | `IMPLEMENTS` | Symbol→Symbol | class/struct → interface |
 | `EXTENDS` | Symbol→Symbol | inheritance |
 | `ACCEPTS` / `RETURNS` | Symbol→Symbol | parameter/return types (for data tracing) |
 | `IN_SNAPSHOT` | File→Snapshot | membership; enables GC by difference |
+| `HAS_SNAPSHOT` | Repo→Snapshot | one per indexed ref |
+| `HAS_RUN` | Snapshot→IndexRun | indexing history |
 
 ### Macro (between repo/service and contract)
 
