@@ -8,6 +8,7 @@ support is skipped (with a warning) instead of disabling the language.
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -51,10 +52,30 @@ class CompiledLanguage:
 
 GRAMMAR_ERRORS: dict[str, str] = {}   # language -> why it could not be loaded (surfaced by the CLI)
 
+# tree-sitter-language-pack >= 1.x ships NO grammars in the wheel: `get_language()` downloads a
+# prebuilt .so from GitHub Releases into TREE_SITTER_LANGUAGE_PACK_CACHE_DIR on first use.
+# The indexer image prefetches every PARSEABLE grammar at build time (see indexer/Dockerfile) and
+# sets AIDD_GRAMMAR_OFFLINE=1, so a run never depends on the network: a grammar missing from the
+# cache is a broken image, reported immediately instead of after a download timeout.
+GRAMMAR_OFFLINE = os.environ.get("AIDD_GRAMMAR_OFFLINE", "") not in ("", "0", "false")
+
+
+def grammar_cached(grammar: str) -> bool:
+    try:
+        from tree_sitter_language_pack import downloaded_languages
+        return grammar in set(downloaded_languages())
+    except Exception:  # noqa: BLE001
+        return False
+
 
 @lru_cache(maxsize=None)
 def load_language(name: str) -> CompiledLanguage | None:
     grammar = "csharp" if name == "csharp" else name
+    if GRAMMAR_OFFLINE and not grammar_cached(grammar):
+        from tree_sitter_language_pack import cache_dir
+        GRAMMAR_ERRORS[name] = (f"grammar '{grammar}' is not in the image cache ({cache_dir()}) and "
+                                f"AIDD_GRAMMAR_OFFLINE is set — rebuild the indexer image")
+        return None
     try:
         language = get_language(grammar)
         parser = get_parser(grammar)

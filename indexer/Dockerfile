@@ -17,6 +17,15 @@ COPY aidd_indexer ./aidd_indexer
 COPY git-askpass.sh /app/git-askpass.sh
 RUN pip install . && chmod +x /app/git-askpass.sh
 
+# Every `docker compose run` is a fresh container, so
+# without this step each run would download again — and fail (empty snapshots / rc=4). 
+# Bake the grammars into the image and forbid downloads at runtime.
+ENV TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=/opt/tslp-cache \
+    AIDD_GRAMMAR_OFFLINE=1
+RUN python -c "import tree_sitter_language_pack as t; t.prefetch(['go','typescript','tsx','javascript','python','csharp']); print('grammars:', t.downloaded_languages())" \
+ && rm -rf /opt/tslp-cache/tree-sitter-language-pack/*/bundles \
+ && aidd selftest
+
 # Repositories are mounted read-only at /workspace (see docker-compose.yml).
 ENV WORKSPACE_PATH=/workspace
 ENTRYPOINT ["aidd"]

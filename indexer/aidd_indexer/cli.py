@@ -293,6 +293,9 @@ def cmd_selftest(args: argparse.Namespace) -> int:
     import tree_sitter, tree_sitter_language_pack  # noqa: F401
     from importlib.metadata import version
     log(f"tree-sitter {version('tree-sitter')} · tree-sitter-language-pack {version('tree-sitter-language-pack')} · python {sys.version.split()[0]}")
+    from .extract import GRAMMAR_OFFLINE
+    log(f"grammar cache {tree_sitter_language_pack.cache_dir()} · cached: {', '.join(tree_sitter_language_pack.downloaded_languages()) or '(none)'}"
+        f" · downloads {'forbidden (AIDD_GRAMMAR_OFFLINE)' if GRAMMAR_OFFLINE else 'allowed'}")
     bad = 0
     for lang in sorted(PARSEABLE):
         cl = load_language(lang)
