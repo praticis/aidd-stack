@@ -126,6 +126,7 @@ def build_server(store: Store | None = None):
             "Read-only access to the aidd code graph (micro level: repos, modules, files, symbols, "
             "calls, imports). Start with atlas_status to see what is indexed; use repo_map for an "
             "overview of one repository, find_symbol / who_calls / symbol_context to navigate code, "
+            "http_map / who_consumes for HTTP integrations between repositories, "
             "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md). If a repo or ref is "
             "not indexed the tool says so — fall back to reading the source tree."
         ),
@@ -302,6 +303,66 @@ def build_server(store: Store | None = None):
         """, **base)
         return {"symbol": sy, "parent": parent[0] if parent else None, "members": members,
                 "calls": callees, "called_by": callers, "file_imports": imports}
+
+    @mcp.tool()
+    def http_map(repo: str, ref: str | None = None) -> dict[str, Any]:
+        """HTTP surface of one repository at a ref: the routes it EXPOSES (method, path template,
+        framework, handler symbol) and the outbound HTTP calls it makes with a literal path
+        (method, path template, where in the code, which package/env var hints at the target
+        service). Extracted deterministically from the source — no runtime data."""
+        s = st()
+        ref = s.resolve_ref(repo, ref)
+        base = dict(repo=repo, ref=ref)
+        exposes = s.read("""
+            MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+            OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            RETURN e.id AS id, e.method AS method, e.path AS path, e.framework AS framework,
+                   h.id AS handler_id, h.qualified_name AS handler, x.evidence AS evidence
+            ORDER BY path, method
+        """, **base)
+        calls = s.read("""
+            MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+            OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
+            RETURN c.id AS id, c.method AS method, c.path AS path, c.via AS via, c.target_hint AS target_hint,
+                   c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence
+            ORDER BY target_hint, path, method
+        """, **base)
+        by_target: dict[str, int] = {}
+        for c in calls:
+            by_target[c["target_hint"] or "?"] = by_target.get(c["target_hint"] or "?", 0) + 1
+        return {**base, "exposes": exposes, "outbound_calls": calls, "outbound_by_target_hint": by_target}
+
+    @mcp.tool()
+    def who_consumes(path: str, method: str | None = None, repo: str | None = None) -> dict[str, Any]:
+        """Which repositories call an HTTP route, and from where. `path` is a route template as
+        exposed ('/v1/users/{id}' — placeholder names do not matter) or a prefix; `repo` narrows
+        to the service exposing it. Returns each matching endpoint with its handler and its
+        consumers (repo, ref, caller symbol, file:line). Consumers come from outbound calls with a
+        literal/template path in the consumer's code; URLs assembled dynamically are invisible."""
+        s = st()
+        key = re.sub(r"\{[^}]*\}", "{param}", path.rstrip("/") or "/")
+        rows = s.read("""
+            MATCH (svc:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
+            WHERE ($repo IS NULL OR svc.name = $repo)
+              AND ($method IS NULL OR e.method = toUpper($method) OR e.method = 'ANY')
+              AND (e.path_key = $key OR e.path_key STARTS WITH $key + '/')
+            WITH DISTINCT svc, e
+            OPTIONAL MATCH (e)-[:HANDLED_BY]->(h:Symbol)
+            WITH svc, e, collect(DISTINCT {ref: h.ref, symbol: h.qualified_name})[0..3] AS handlers
+            OPTIONAL MATCH (c:HttpCall {tenant: $tenant, path_key: e.path_key})
+            WHERE (c.method = e.method OR e.method = 'ANY' OR c.method = 'ANY') AND c.repo <> svc.name
+            OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
+            WITH svc, e, handlers, c, caller ORDER BY c.repo, c.ref, c.line
+            RETURN svc.name AS service, e.id AS endpoint_id, e.method AS method, e.path AS path, handlers,
+                   [x IN collect(CASE WHEN c IS NULL THEN null ELSE
+                        {repo: c.repo, ref: c.ref, method: c.method, path: c.path,
+                         caller: coalesce(caller.qualified_name, caller.path), evidence: c.evidence,
+                         target_hint: c.target_hint, confidence: 'exact'} END) WHERE x IS NOT NULL] AS consumers
+            ORDER BY service, path, method LIMIT 50
+        """, key=key, method=method, repo=repo)
+        for r in rows:
+            r["consumer_repos"] = sorted({c["repo"] for c in r["consumers"]})
+        return {"query": {"path": path, "method": method, "repo": repo}, "endpoints": rows}
 
     @mcp.tool()
     def cypher_readonly(query: str, params: dict[str, Any] | None = None) -> dict[str, Any]:

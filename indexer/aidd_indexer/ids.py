@@ -30,3 +30,15 @@ def package(tenant: str, ecosystem: str, name: str) -> str:
 
 def index_run(tenant: str, repo: str, ref: str, started_iso: str) -> str:
     return f"{tenant}/{repo}@{ref}/run/{started_iso}"
+
+
+def service(tenant: str, name: str) -> str:
+    return f"{tenant}/svc/{name}"
+
+
+def http_endpoint(tenant: str, service_name: str, method: str, path: str) -> str:
+    return f"{tenant}/svc/{service_name}/http/{method} {path}"
+
+
+def http_call(tenant: str, repo: str, ref: str, file_path: str, line: int) -> str:
+    return f"{tenant}/{repo}@{ref}/httpcall/{file_path}:{line}"

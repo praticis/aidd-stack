@@ -111,6 +111,7 @@ the fastest way to inspect what a language query extracts.
 |---|---|
 | `cli.py` | `aidd plan / bootstrap / refresh / index / status / wipe` |
 | `manifest.py` | `atlas.yaml` loader (tenants, sources, ref policy, areas) |
+| `integrations.py` | HTTP integration candidates: routes exposed (`HttpEndpoint`) and outbound calls with literal paths (`HttpCall`) — the input of the linker |
 | `planner.py` | sources → repos → (repo, ref, sha) items with reasons; plan rendering |
 | `discovery.py` | file list (`git ls-files`), languages, modules (manifests + Go packages) |
 | `extract.py` | tree-sitter parsing; symbols, call sites, imports, entry-point heuristics |

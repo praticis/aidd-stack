@@ -46,13 +46,14 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is inferred (domain/app/infra/api) |
 | `File` | `path`, `language`, `loc`, `last_touched`, `churn_90d`, `authors[]` | git metrics land here (roadmap F1.9) |
 | `Symbol` | `name`, `qualified_name`, `kind`, `signature`, `doc`, `visibility`, `line_start`, `line_end`, `scip_symbol?`, `is_entry_point` | `kind` ∈ `class, interface, struct, enum, function, method, field, const, type, handler, job` |
+| `HttpCall` | `method`, `path` (template), `path_key`, `raw_path`, `via` (callee as written), `target_hint` (package/dir: `outbound/<svc>` → `<svc>`), `env_hints[]` (base-URL env var names seen nearby), `line`, `evidence` | **outbound HTTP call site** with a literal/template path — a `CONSUMES` candidate (F0.4). Micro: per ref, GC'd like `Symbol`. `path_key` = `path` with every placeholder as `{param}` — the join key with `HttpEndpoint.path_key` |
 
 ### Macro
 
 | Label | Specific props | Identity |
 |---|---|---|
 | `Service` | `name`, `env_vars[]`, `base_urls[]` | logical deployable; usually 1:1 with `Repo`, may be N:1 (monorepo) |
-| `HttpEndpoint` | `method`, `path` (normalized template `/orders/{id}`), `openapi_operation_id?` | `(service, method, path)` |
+| `HttpEndpoint` | `method` (`GET`…`ANY`), `path` (normalized template `/orders/{id}`), `path_key`, `framework`, `first_seen`, `last_seen`, `openapi_operation_id?` | `(service, method, path)`; which refs expose it lives on the `EXPOSES {ref}` edges |
 | `GrpcService` | `name`, `proto_path`, `package` | `package.Service` |
 | `GrpcMethod` | `name`, `request_type`, `response_type`, `streaming` | `package.Service/Method` |
 | `Topic` | `name`, `broker` (`kafka`,`rabbitmq`,`sqs`,`sns`,`pubsub`), `kind` (`topic`,`queue`,`exchange`) | `(broker, name)` |
@@ -82,14 +83,15 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `IN_SNAPSHOT` | File→Snapshot | membership; enables GC by difference |
 | `HAS_SNAPSHOT` | Repo→Snapshot | one per indexed ref |
 | `HAS_RUN` | Snapshot→IndexRun | indexing history |
+| `MAKES_HTTP_CALL` | Symbol \| File→HttpCall | the call site's enclosing symbol (or the file for top-level code); `File-[:CONTAINS]->HttpCall` also holds |
 
 ### Macro (between repo/service and contract)
 
 | Edge | From → To | Meaning |
 |---|---|---|
 | `DEPLOYS` | Repo→Service | the repo produces the service |
-| `EXPOSES` | Service→HttpEndpoint \| GrpcService | implements the contract |
-| `HANDLED_BY` | HttpEndpoint \| GrpcMethod → Symbol | **macro→micro bridge**: the concrete handler (entry of `trace_flow`) |
+| `EXPOSES` | Service→HttpEndpoint \| GrpcService | implements the contract. **One edge per `ref`** (`{ref}` is the MERGE key) with `commit_sha`, `evidence`, `line`, `raw_pattern`, `confidence`; edges of a ref not refreshed at the current commit are removed, and an endpoint with no `EXPOSES` and no `CONSUMES` is deleted |
+| `HANDLED_BY` | HttpEndpoint \| GrpcMethod → Symbol | **macro→micro bridge**: the concrete handler (entry of `trace_flow`). One edge per `ref` (`{ref}` key), same lifecycle as `EXPOSES` |
 | `CONSUMES` | Service→HttpEndpoint | outbound HTTP call |
 | `CALLS_GRPC` | Service→GrpcMethod | outbound gRPC call |
 | `CALLED_FROM` | HttpEndpoint \| GrpcMethod → Symbol | **micro→macro bridge**: the call site in the consumer's code |

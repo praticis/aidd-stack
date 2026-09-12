@@ -83,6 +83,14 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
         res.calls.extend(fx.calls)
         res.imports.extend(fx.imports)
     log(f"[extract]  {len(res.symbols)} symbols, {len(res.calls)} call sites, {len(res.imports)} imports ({time.time()-t0:.1f}s)")
+    # integration candidates (F0.4): routes exposed + outbound HTTP calls with literal paths
+    from .integrations import extract_http
+    t1 = time.time()
+    hr = extract_http(repo, extractors)
+    res.endpoints, res.http_calls = hr.endpoints, hr.calls
+    res.warnings.extend(hr.warnings)
+    resolved = sum(1 for e in hr.endpoints if e.handler_id)
+    log(f"[http]     {len(hr.endpoints)} endpoints exposed ({resolved} with handler), {len(hr.calls)} outbound calls ({time.time()-t1:.1f}s)")
     return res, extractors
 
 
@@ -174,6 +182,8 @@ def cmd_index(args: argparse.Namespace) -> int:
             "calls": [asdict(c) for c in rv.calls],
             "imports": [asdict(i) for i in rv.imports],
             "packages": [asdict(p) for p in rv.packages.values()],
+            "endpoints": [asdict(e) for e in res.endpoints],
+            "http_calls": [asdict(c) for c in res.http_calls],
             "warnings": res.warnings,
         }
         if args.out:

@@ -185,7 +185,12 @@ def render_plan(plan: Plan, stale: dict[tuple[str, str], str] | None = None) -> 
             state = ""
             if stale is not None:
                 indexed = stale.get((it.repo.name, it.ref))
-                state = "  [up to date]" if indexed == it.sha else ("  [changed]" if indexed else "  [new]")
+                if indexed == it.sha:
+                    state = "  [up to date]"
+                elif indexed == "":
+                    state = "  [reindex: older indexer]"
+                else:
+                    state = "  [changed]" if indexed else "  [new]"
             eph = "  ephemeral" if it.ephemeral else ""
             lines.append(f"    - {it.ref:<40} {it.sha[:10]}  {it.reason:<14}{eph}{state}")
     if plan.skipped:
