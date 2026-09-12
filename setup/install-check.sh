@@ -188,6 +188,20 @@ if command -v cypher >/dev/null 2>&1 || true; then
   if [ -n "$empty" ]; then
     [ "$empty" = "0" ] && ok "no snapshot without symbols" || fail "$empty snapshot(s) have files but zero symbols — indexed with a broken image? re-run: $AIDD_DIR/aidd bootstrap"
   fi
+  # snapshots written by an older indexer are re-indexed by the next refresh (new extractors)
+  stale="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
+    "MATCH (s:Snapshot) WITH collect(DISTINCT s.indexer_version) AS v RETURN size(v)" 2>/dev/null | grep -E '^[0-9]+$' | head -1)"
+  [ -n "$stale" ] && [ "$stale" -gt 1 ] && warn "snapshots from more than one indexer version — the next refresh re-indexes the older ones (or run: $AIDD_DIR/aidd refresh)"
+  http="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
+    "OPTIONAL MATCH (e:HttpEndpoint) WITH count(e) AS eps OPTIONAL MATCH (c:HttpCall) RETURN toString(eps) + ' ' + toString(count(c))" 2>/dev/null | tr -d '"' | grep -E '^[0-9]+ [0-9]+$' | head -1)"
+  if [ -n "$http" ]; then
+    eps="${http%% *}"; calls="${http##* }"
+    if [ "$eps" = "0" ] && [ "$calls" = "0" ]; then
+      warn "no HTTP endpoints / outbound calls in atlas yet — re-index after upgrading: $AIDD_DIR/aidd refresh"
+    else
+      ok "integration candidates: $eps HTTP endpoints exposed, $calls outbound calls recorded"
+    fi
+  fi
 fi
 
 # ------------------------------------------------------------------------------

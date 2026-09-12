@@ -15,6 +15,7 @@ from neo4j import GraphDatabase, Driver
 
 from . import INDEXER_VERSION, ids
 from .config import Neo4jConfig
+from .integrations import path_key
 from .model import ExtractionResult
 from .resolve import Resolved
 
@@ -153,9 +154,68 @@ class GraphWriter:
             SET e.line = i.line
         """, [i.__dict__ for i in rv.imports])
 
+        # ---- integration candidates (SCHEMA.md §3/§7) -------------------------------------
+        # Service is 1:1 with the repo in v0 (monorepos split it later).
+        svc_id = ids.service(repo.tenant, repo.name)
+        self._run("""
+            MATCH (r:Repo {id: $repo_id})
+            MERGE (s:Service {id: $id})
+            SET s.tenant = $tenant, s.name = $repo, s.repo = $repo, s.last_seen = datetime($now)
+            MERGE (r)-[:DEPLOYS]->(s)
+        """, id=svc_id, repo_id=ids.repo(repo.tenant, repo.name), **common)
+
+        counts["endpoints"] = self._batched("""
+            UNWIND $rows AS e
+            MERGE (n:HttpEndpoint {id: e.id})
+            SET n.tenant = $tenant, n.service = $repo, n.method = e.method, n.path = e.path, n.path_key = e.path_key,
+                n.framework = e.framework, n.last_seen = datetime($now)
+            SET n.first_seen = coalesce(n.first_seen, datetime($now))
+            WITH n, e
+            MATCH (s:Service {id: $svc_id})
+            MERGE (s)-[x:EXPOSES {ref: $ref}]->(n)
+            SET x.commit_sha = $sha, x.evidence = e.evidence, x.line = e.line, x.raw_pattern = e.raw_pattern,
+                x.confidence = 'exact', x.last_seen = datetime($now)
+            WITH n, e
+            OPTIONAL MATCH (h:Symbol {id: e.handler_id})
+            FOREACH (_ IN CASE WHEN h IS NULL THEN [] ELSE [1] END |
+              MERGE (n)-[hb:HANDLED_BY {ref: $ref}]->(h)
+              SET hb.commit_sha = $sha, hb.evidence = e.evidence, hb.confidence = 'exact')
+        """, [e.__dict__ | {"path_key": path_key(e.path)} for e in res.endpoints], svc_id=svc_id, **common)
+
+        counts["http_calls"] = self._batched("""
+            UNWIND $rows AS c
+            MERGE (n:HttpCall {id: c.id})
+            SET n.tenant = $tenant, n.repo = $repo, n.ref = $ref, n.commit_sha = $sha, n.indexed_at = datetime($now),
+                n.method = c.method, n.path = c.path, n.path_key = c.path_key, n.raw_path = c.raw_path, n.via = c.via,
+                n.target_hint = c.target_hint, n.env_hints = c.env_hints, n.line = c.line, n.evidence = c.evidence,
+                n.content_hash = c.method + ' ' + c.path + '@' + c.evidence
+            WITH n, c
+            MATCH (caller:Symbol|File {id: c.caller_id})
+            MERGE (caller)-[:MAKES_HTTP_CALL]->(n)
+            WITH n, c
+            MATCH (f:File {id: c.file_id})
+            MERGE (f)-[:CONTAINS]->(n)
+        """, [c.__dict__ | {"path_key": path_key(c.path)} for c in res.http_calls], **common)
+
+        # EXPOSES / HANDLED_BY edges of this ref that were not refreshed at this commit are stale
+        # (route removed or moved); endpoints left without any exposer and consumer are dropped.
+        self._run("""
+            MATCH (:Service {id: $svc_id})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+            WHERE x.commit_sha <> $sha
+            DELETE x
+            WITH e
+            OPTIONAL MATCH (e)-[hb:HANDLED_BY {ref: $ref}]->()
+            DELETE hb
+        """, svc_id=svc_id, **common)
+        self._run("""
+            MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})
+            WHERE NOT (e)<-[:EXPOSES]-() AND NOT (e)<-[:CONSUMES]-()
+            DETACH DELETE e
+        """, **common)
+
         # Orphan GC: micro nodes of this (tenant, repo, ref) not seen at this commit.
         rec = self._run_autocommit("""
-            MATCH (n:File|Symbol|Module {tenant: $tenant, repo: $repo, ref: $ref})
+            MATCH (n:File|Symbol|Module|HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
             WHERE n.commit_sha <> $sha
             CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS
         """, **common)
@@ -178,10 +238,12 @@ class GraphWriter:
 
     # ------------------------------------------------------------------------------
     def snapshot_shas(self, tenant: str) -> dict[tuple[str, str], str]:
-        """(repo, ref) -> commit_sha currently in the graph — the input of `plan`/`refresh`."""
+        """(repo, ref) -> commit_sha currently in the graph — the input of `plan`/`refresh`.
+        A snapshot written by an older indexer reports an empty sha, so the next refresh
+        re-indexes it (new extractors → new nodes, e.g. HttpEndpoint/HttpCall in 0.2.0)."""
         with self.driver.session(database=self.cfg.database) as s:
-            rows = s.run("MATCH (n:Snapshot {tenant: $tenant}) RETURN n.repo AS repo, n.ref AS ref, n.commit_sha AS sha", tenant=tenant)
-            return {(r["repo"], r["ref"]): r["sha"] for r in rows}
+            rows = s.run("MATCH (n:Snapshot {tenant: $tenant}) RETURN n.repo AS repo, n.ref AS ref, n.commit_sha AS sha, n.indexer_version AS ver", tenant=tenant)
+            return {(r["repo"], r["ref"]): (r["sha"] if r["ver"] == INDEXER_VERSION else "") for r in rows}
 
     def gc_ephemeral(self, tenant: str, older_than_days: int, keep: set[tuple[str, str]]) -> int:
         """Drop ephemeral snapshots that the current plan no longer lists and that were not
@@ -226,9 +288,26 @@ class GraphWriter:
 
     def wipe(self, tenant: str, repo: str, ref: str | None) -> int:
         q = """
-            MATCH (n:File|Symbol|Module|Snapshot|IndexRun {tenant: $tenant, repo: $repo})
+            MATCH (n:File|Symbol|Module|Snapshot|IndexRun|HttpCall {tenant: $tenant, repo: $repo})
             WHERE $ref IS NULL OR n.ref = $ref
             CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS
         """
         rec = self._run_autocommit(q, tenant=tenant, repo=repo, ref=ref)
-        return rec.counters.nodes_deleted if rec else 0
+        n = rec.counters.nodes_deleted if rec else 0
+        # macro side: this ref no longer exposes anything; drop endpoints nobody references
+        self._run("""
+            MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES]->(e:HttpEndpoint)
+            WHERE $ref IS NULL OR x.ref = $ref
+            DELETE x
+            WITH e
+            OPTIONAL MATCH (e)-[hb:HANDLED_BY]->() WHERE $ref IS NULL OR hb.ref = $ref
+            DELETE hb
+        """, tenant=tenant, repo=repo, ref=ref)
+        self._run("""
+            MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})
+            WHERE NOT (e)<-[:EXPOSES]-() AND NOT (e)<-[:CONSUMES]-()
+            DETACH DELETE e
+        """, tenant=tenant, repo=repo)
+        if ref is None:
+            self._run("MATCH (s:Service {tenant: $tenant, name: $repo}) WHERE NOT (s)-[:EXPOSES|CONSUMES]->() DETACH DELETE s", tenant=tenant, repo=repo)
+        return n

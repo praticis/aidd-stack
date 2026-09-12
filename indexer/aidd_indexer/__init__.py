@@ -5,4 +5,4 @@ symbols, calls, imports) → resolution (name-based, within the repo) →
 graph write (idempotent MERGE by id, orphan GC per snapshot).
 """
 
-INDEXER_VERSION = "0.1.0"
+INDEXER_VERSION = "0.2.0"
