@@ -23,8 +23,14 @@ Look at the `tenant` field in this file's frontmatter:
 
 `<tenant>` is used as the Qdrant **collection name** throughout this
 skill — each tenant gets its own physically separate collection, not
-a shared one filtered by payload. (`atlas` is already scoped to the
-tenant server-side; never pass a tenant to it.)
+a shared one filtered by payload.
+
+For `atlas` the rule follows the same frontmatter: when `tenant` is a
+fixed value the server is already scoped to it — **omit** the `tenant`
+argument on every atlas call; when `tenant` is `auto` the atlas serves
+several tenants — **pass `tenant: "<tenant>"`** (the value determined
+above) on every atlas call. If you omit it in auto mode the tool
+answers with the list of indexed tenants instead of data.
 
 **IMPORTANT — a common mistake to avoid**: `<tenant>` is NOT the
 current repository/project name. If `tenant` is a fixed value (not
@@ -56,7 +62,7 @@ file actually exists.
 ## Always run at the start of the session
 
 0. **Ask the code graph first (`atlas`, with fallback).**
-   Call `atlas_status`. Then:
+   Call `atlas_status` (with `tenant` in auto mode — see above). Then:
    - If the call fails, the tool is not listed, or `<current-repo-name>`
      is not among `repos` → atlas is **unavailable for this repo**.
      Say so in one line and continue with steps 1–3 exactly as written
@@ -124,7 +130,10 @@ file actually exists.
      longer part of the payload), so the next session retrieves it
      instantly without needing to scan everything again.
 
-If `obsidian` or `qdrant` are unavailable in the session, say so in one line and still deliver the summary in the conversation; do not silently skip persistence — tell the user the mapping was **not** saved to the vault/collection so the next session will scan again.
+If `obsidian` or `qdrant` are unavailable in the session, say so in one
+line and still deliver the summary in the conversation; do not
+silently skip persistence — tell the user the mapping was **not** saved
+to the vault/collection so the next session will scan again.
 
 ## From here on
 

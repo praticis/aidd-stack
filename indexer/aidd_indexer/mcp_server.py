@@ -1,7 +1,9 @@
 """`atlas` MCP server — intent-level, read-only access to the code graph for the skills.
 
 Design (ROADMAP F0.6):
-  * Every query is scoped to AIDD_TENANT; the caller never passes a tenant.
+  * Every query is scoped to a tenant. Fixed mode (AIDD_TENANT=<name>): server-side, the caller never
+    passes one. Multi-tenant mode (AIDD_TENANT=auto, workspace <ws>/<tenant>/<repo>): tools take an
+    optional `tenant`; omitted → the only tenant in the graph, or an error listing them.
   * `ref` defaults to the repo's default branch; ephemeral (feature-branch) snapshots
     are searched only when a `ref` is named explicitly.
   * Results are compact JSON, sized for an LLM context (limits everywhere).
@@ -40,28 +42,59 @@ class AtlasError(RuntimeError):
     """Raised for user-facing errors (unknown repo/ref, refused query). Surfaces as a tool error."""
 
 
-def _tenant() -> str:
+def _tenant() -> str | None:
+    """Fixed tenant from AIDD_TENANT, or None for multi-tenant mode (`AIDD_TENANT=auto`: the
+    workspace is laid out as <workspace>/<tenant>/<repo> and the graph may hold several tenants;
+    tools then take an optional `tenant` argument, resolved by the skill from the repo path)."""
     t = os.getenv("AIDD_TENANT", "").strip()
-    if not t or t == "auto":
-        raise ConfigError("AIDD_TENANT must be set to a concrete tenant for the atlas MCP (not 'auto')")
-    return t
+    if not t:
+        raise ConfigError("AIDD_TENANT must be set (a tenant name, or 'auto' for multi-tenant mode)")
+    return None if t == "auto" else t
 
 
 class Store:
-    """Thin read-only Neo4j accessor. One instance per server process."""
+    """Thin read-only Neo4j accessor. One driver per server process; `scoped(tenant)` returns a
+    view bound to one tenant (every query is parameterized with `$tenant`)."""
 
-    def __init__(self, cfg: Neo4jConfig, tenant: str):
+    def __init__(self, cfg: Neo4jConfig, tenant: str | None, driver=None):
         self.cfg = cfg
-        self.tenant = tenant
-        self.driver = GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password), notifications_min_severity="OFF")
+        self.tenant = tenant                     # None = multi-tenant mode, resolve per call
+        self.driver = driver or GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password), notifications_min_severity="OFF")
 
     def close(self) -> None:
         self.driver.close()
 
+    def scoped(self, tenant: str) -> "Store":
+        view = Store.__new__(Store)
+        view.cfg, view.tenant, view.driver = self.cfg, tenant, self.driver
+        return view
+
     def read(self, query: str, **params: Any) -> list[dict[str, Any]]:
-        params.setdefault("tenant", self.tenant)
+        if self.tenant is not None:
+            params.setdefault("tenant", self.tenant)
         with self.driver.session(database=self.cfg.database, default_access_mode="READ") as s:
             return s.execute_read(lambda tx: [r.data() for r in tx.run(query, **params)])
+
+    def tenants(self) -> list[str]:
+        return [r["t"] for r in self.read("MATCH (r:Repo) RETURN DISTINCT r.tenant AS t ORDER BY t")]
+
+    def resolve_tenant(self, tenant: str | None) -> "Store":
+        """Fixed mode: the server's tenant wins (a different explicit one is an error, not silently
+        ignored). Multi-tenant mode: the argument, or the only tenant in the graph, or an error listing them."""
+        if self.tenant is not None:
+            if tenant and tenant != self.tenant:
+                raise AtlasError(f"this atlas serves tenant '{self.tenant}' only (AIDD_TENANT); got '{tenant}'")
+            return self
+        if tenant:
+            known = self.tenants()
+            if tenant not in known:
+                raise AtlasError(f"tenant '{tenant}' is not in atlas. Indexed tenants: {', '.join(known) or '(none)'}")
+            return self.scoped(tenant)
+        known = self.tenants()
+        if len(known) == 1:
+            return self.scoped(known[0])
+        raise AtlasError("multi-tenant atlas (AIDD_TENANT=auto): pass `tenant` — the workspace folder right below "
+                         f"WORKSPACE_PATH for this repo. Indexed tenants: {', '.join(known) or '(none)'}")
 
     def ping(self) -> bool:
         try:
@@ -128,7 +161,9 @@ def build_server(store: Store | None = None):
             "overview of one repository, find_symbol / who_calls / symbol_context to navigate code, "
             "http_map / who_consumes for HTTP integrations between repositories, "
             "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md). If a repo or ref is "
-            "not indexed the tool says so — fall back to reading the source tree."
+            "not indexed the tool says so — fall back to reading the source tree. In multi-tenant mode "
+            "(AIDD_TENANT=auto) every tool accepts `tenant` = the workspace folder right below WORKSPACE_PATH "
+            "for the current repo; omit it when the graph holds a single tenant."
         ),
         host=os.getenv("ATLAS_MCP_HOST", "0.0.0.0"),
         port=int(os.getenv("ATLAS_MCP_PORT", "3000")),
@@ -136,23 +171,29 @@ def build_server(store: Store | None = None):
         json_response=True,
     )
 
-    def st() -> Store:
-        return the_store
+    def st(tenant: str | None = None) -> Store:
+        return the_store.resolve_tenant(tenant)
 
     # ---- tools ---------------------------------------------------------------------------
     @mcp.tool()
-    def atlas_status() -> dict[str, Any]:
+    def atlas_status(tenant: str | None = None) -> dict[str, Any]:
         """What atlas knows: indexed repositories, their refs (default branch + active feature
-        branches), commit and freshness. Call first; a repo missing here means 'not indexed'."""
-        s = st()
-        return {"tenant": s.tenant, "indexer_version": INDEXER_VERSION, "repos": s.repos()}
+        branches), commit and freshness. Call first; a repo missing here means 'not indexed'.
+        In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
+        the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
+        if the_store.tenant is None and not tenant:
+            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION,
+                    "tenants": [{"tenant": t, "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
+        s = st(tenant)
+        return {"mode": "fixed" if the_store.tenant else "multi-tenant", "tenant": s.tenant,
+                "indexer_version": INDEXER_VERSION, "repos": s.repos()}
 
     @mcp.tool()
-    def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40) -> dict[str, Any]:
+    def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
         """Overview of one repository at a ref (default: its default branch): stack, modules with
         file/symbol counts, entry points (HTTP handlers, controllers, commands) and the external
         packages it depends on. Use it before reading files — it tells where things live."""
-        s = st()
+        s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref)
         head = s.read("""
@@ -190,12 +231,12 @@ def build_server(store: Store | None = None):
 
     @mcp.tool()
     def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
-                    kind: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
+                    kind: str | None = None, limit: int = 20, tenant: str | None = None) -> list[dict[str, Any]]:
         """Full-text search over symbol names, qualified names, signatures and docstrings
         (functions, methods, classes, structs, interfaces...), topped up with substring matches on
         the name ('Handler' finds 'Handler', 'HandlerFunc' and 'AuthHandler'). Without `ref`, only default branches are
         searched; name a `ref` to search a feature branch. `kind` filters e.g. function|method|class|struct|interface."""
-        s = st()
+        s = st(tenant)
         if repo:
             ref = s.resolve_ref(repo, ref)
         rows = s.read("""
@@ -257,11 +298,11 @@ def build_server(store: Store | None = None):
         return rows[0]
 
     @mcp.tool()
-    def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50) -> dict[str, Any]:
+    def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50, tenant: str | None = None) -> dict[str, Any]:
         """Incoming calls: which symbols (and files) call `symbol`. `symbol` may be a symbol id from
         find_symbol, a qualified name (pkg.Type.Method) or a bare name when unambiguous. Calls are
         resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven."""
-        s = st()
+        s = st(tenant)
         target = _symbol(s, symbol, repo, ref)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
@@ -273,11 +314,11 @@ def build_server(store: Store | None = None):
         return {"symbol": target, "callers": callers, "caller_count": len(callers)}
 
     @mcp.tool()
-    def symbol_context(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 30) -> dict[str, Any]:
+    def symbol_context(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 30, tenant: str | None = None) -> dict[str, Any]:
         """Everything the graph knows around one symbol: definition (file, lines, signature, doc),
         its container (class/struct) and members, what it calls, who calls it, and what its file
         imports. The right tool before editing a function or estimating impact."""
-        s = st()
+        s = st(tenant)
         sy = _symbol(s, symbol, repo, ref)
         base = dict(id=sy["id"], limit=min(limit, MAX_ROWS))
         parent = s.read("MATCH (p:Symbol)-[:CONTAINS]->(:Symbol {id: $id}) RETURN p.id AS id, p.kind AS kind, p.qualified_name AS qualified_name", **base)
@@ -305,12 +346,12 @@ def build_server(store: Store | None = None):
                 "calls": callees, "called_by": callers, "file_imports": imports}
 
     @mcp.tool()
-    def http_map(repo: str, ref: str | None = None) -> dict[str, Any]:
+    def http_map(repo: str, ref: str | None = None, tenant: str | None = None) -> dict[str, Any]:
         """HTTP surface of one repository at a ref: the routes it EXPOSES (method, path template,
         framework, handler symbol) and the outbound HTTP calls it makes with a literal path
         (method, path template, where in the code, which package/env var hints at the target
         service). Extracted deterministically from the source — no runtime data."""
-        s = st()
+        s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref)
         exposes = s.read("""
@@ -333,13 +374,13 @@ def build_server(store: Store | None = None):
         return {**base, "exposes": exposes, "outbound_calls": calls, "outbound_by_target_hint": by_target}
 
     @mcp.tool()
-    def who_consumes(path: str, method: str | None = None, repo: str | None = None) -> dict[str, Any]:
+    def who_consumes(path: str, method: str | None = None, repo: str | None = None, tenant: str | None = None) -> dict[str, Any]:
         """Which repositories call an HTTP route, and from where. `path` is a route template as
         exposed ('/v1/users/{id}' — placeholder names do not matter) or a prefix; `repo` narrows
         to the service exposing it. Returns each matching endpoint with its handler and its
         consumers (repo, ref, caller symbol, file:line). Consumers come from outbound calls with a
         literal/template path in the consumer's code; URLs assembled dynamically are invisible."""
-        s = st()
+        s = st(tenant)
         key = re.sub(r"\{[^}]*\}", "{param}", path.rstrip("/") or "/")
         rows = s.read("""
             MATCH (svc:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
@@ -365,14 +406,14 @@ def build_server(store: Store | None = None):
         return {"query": {"path": path, "method": method, "repo": repo}, "endpoints": rows}
 
     @mcp.tool()
-    def cypher_readonly(query: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:
         """Run a read-only Cypher query against atlas (schema in neo4j/SCHEMA.md: Repo, Snapshot,
         Module, File, Symbol, Package; edges HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS).
         `$tenant` is always bound — filter on it: MATCH (s:Symbol {tenant: $tenant, repo: 'x'}) ...
         Writes are refused. At most 200 rows are returned; add LIMIT yourself for big scans."""
         if FORBIDDEN.search(query):
             raise AtlasError("refused: only read-only Cypher is allowed through atlas (no CREATE/MERGE/SET/DELETE/CALL{}/apoc writers)")
-        s = st()
+        s = st(tenant)
         p = dict(params or {})
         p["tenant"] = s.tenant
         rows = s.read(query, **p)
@@ -382,7 +423,7 @@ def build_server(store: Store | None = None):
     # ---- plain HTTP health for docker/compose and install-check ---------------------------
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_: Request) -> JSONResponse:
-        s = st()
+        s = st(tenant)
         ok = s.ping()
         return JSONResponse({"status": "ok" if ok else "degraded", "neo4j": ok, "tenant": s.tenant,
                              "version": INDEXER_VERSION}, status_code=200 if ok else 503)
