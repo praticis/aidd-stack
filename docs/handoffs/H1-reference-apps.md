@@ -15,6 +15,15 @@ outras linguagens. Este handoff é sobre garantir que o indexador entende *esse*
 linguagens em que ele existe, com resultado esperado conhecido (ground truth), e usar isso como
 suíte de regressão permanente.
 
+## Pré-requisito: o refactor do ADR-003 já feito
+
+O padrão do autor **não** deve ser codificado dentro de `integrations.py`. Ele vira a primeira
+**convenção** real (`docs/adr/ADR-003-language-modules.md`, seção "Convenções como extensões"): um
+pacote `aidd_conventions_<nome>` (pode ser repo próprio) com `convention.yaml` (pastas → camadas,
+registradores de rota, layout do outbound) + hooks Python só onde precisar (regras estruturais,
+`target_of`). Ativado por `conventions: [<nome>-v1]` no `atlas.yaml`. Se o refactor ainda não estiver
+feito quando este chat começar, fazer primeiro (F0.4.4) — é mecânico e tem regressão numérica.
+
 ## Objetivo
 
 1. Ter, dentro do repositório (`indexer/tests/fixtures/<lang>-<framework>/`), **uma aplicação mínima
@@ -26,8 +35,11 @@ suíte de regressão permanente.
 3. Um teste (`indexer/tests/test_fixtures.py`, pytest) que roda `extract_tree` + `extract_http` em cada
    fixture e compara com o `expected.json` — **precisão e recall 100 %** é o critério, porque o padrão é
    controlado.
-4. Onde o extrator falhar, evoluir `integrations.py` (ou `extract.py`/queries) — sem regredir o corpus
+4. Onde o extrator genérico falhar por causa do padrão, a correção vai na **convenção** (yaml/hooks);
+   só o que é regra geral de linguagem/framework vai em `languages/<lang>/` — sem regredir o corpus
    público (`scripts/http_corpus.py`).
+5. As `rules()` da convenção (direção de dependência, um handler por path, decoder único, sem PII em
+   log…) geram nós `Violation`; validar nas fixtures com uma violação proposital cada.
 
 ## O que o chat precisa perguntar/obter do autor logo no início
 
