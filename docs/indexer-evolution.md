@@ -68,6 +68,10 @@ Regras aprendidas no corpus (não regredir):
 | `vApi.MapGroup("api/catalog").HasApiVersion(1,0)` | procurar o `MapGroup` **interno** da cadeia |
 | supertest `request(app).get('/x')` em `e2e/` | `TEST_FILE` + filtro por `getHttpServer/supertest` |
 | `Execute`, `Call`, `Send`, `Do` genéricos | `GENERIC_OUTBOUND` exige receiver cliente |
+| C# `GetAsync($"api/x/{id}")` não detectado | `_interpolated` ignora `interpolation_start`/aspas — só texto + `{param}` |
+| `new Uri($"api/x", UriKind.Relative)`, `string.Format("api/x/{0}")`, `Routes.X.Replace(..)` | `path_of` desce em `object_creation_expression(Uri)`, `Format`, `Replace/Trim*` |
+| `SendAsync(msg)` duplicando `new HttpRequestMessage` | `SendAsync` com variável local que é `HttpRequestMessage` é ignorado |
+| Flurl: URL é o *receiver* (`url.AppendPathSegment("x").GetJsonAsync()`) | `_flurl_path` percorre a cadeia antes do verbo; checado **antes** do early-return de args vazios |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
 arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
@@ -91,8 +95,11 @@ inspecionar o que o extrator viu num repo específico.
 
 ## 5. Como medir (sem se enganar)
 
-- **Fixture mínima** (a de `docs/handoffs/H1-reference-apps.md` vai virar `indexer/tests/fixtures/`): cada
-  padrão suportado aparece uma vez com o resultado esperado. Regressão binária.
+- **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
+  padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
+  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `ts-express-nest`, `csharp-httpclients`
+  (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers). Regenerar `expected.json` só depois de conferir
+  cada linha na fonte — nunca a partir da saída do extrator sem revisão.
 - **Corpus público** (`scripts/http_corpus.py`): ordem de grandeza por repo documentada no docstring; um
   desvio grande em qualquer repo é sinal de regressão ou de melhoria — em ambos os casos, olhar o JSON.
 - **Amostragem manual**: sortear 10–20 itens por repo e conferir na fonte (`evidence` aponta linha).

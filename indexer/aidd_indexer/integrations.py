@@ -68,6 +68,10 @@ OUTBOUND = {
     "get": "GET", "post": "POST", "put": "PUT", "patch": "PATCH", "delete": "DELETE", "head": "HEAD", "options": "OPTIONS",
     "Get": "GET", "Post": "POST", "Put": "PUT", "Patch": "PATCH", "Delete": "DELETE", "Head": "HEAD",
 }
+FLURL_VERBS = {"GetAsync": "GET", "GetJsonAsync": "GET", "GetStringAsync": "GET", "GetStreamAsync": "GET",
+               "PostAsync": "POST", "PostJsonAsync": "POST", "PostStringAsync": "POST", "PostUrlEncodedAsync": "POST",
+               "PutAsync": "PUT", "PutJsonAsync": "PUT", "PatchAsync": "PATCH", "PatchJsonAsync": "PATCH",
+               "DeleteAsync": "DELETE", "HeadAsync": "HEAD", "OptionsAsync": "OPTIONS"}
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
 
@@ -117,6 +121,7 @@ def normalize_path(path: str) -> str:
     p = re.sub(r"<(?:[a-z_]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id> (Flask)
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)      # :id (gin, express, echo)
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)(\.\.\.)?\}", r"{\1}", p)  # {id...} → {id}
+    p = re.sub(r"\{\d+\}", "{param}", p)                             # string.Format("{0}")
     p = re.sub(r"\[controller\]", "{controller}", p, flags=re.I)  # ASP.NET token (resolved later by the linker)
     p = re.sub(r"\[action\]", "{action}", p, flags=re.I)
     p = re.sub(r"\*\w*", "{rest}", p)                             # wildcards
@@ -292,12 +297,9 @@ class _BaseScanner:
         for c in n.children:
             if c.type in ("interpolation", "template_substitution"):
                 parts.append("{param}")
-            elif c.type in ("string_content", "string_fragment", "interpolated_string_text"):
+            elif c.type in ("string_content", "string_fragment", "interpolated_string_text", "escape_sequence"):
                 parts.append(_text(c, self.src))
-            elif c.is_named and c.type not in ("string_start", "string_end", "escape_sequence"):
-                parts.append(_text(c, self.src))
-            elif c.type == "escape_sequence":
-                parts.append(_text(c, self.src))
+            # interpolation_start ($"), string_start/end, quotes: structural, no text
         raw = "".join(parts) if parts else _unquote(_text(n, self.src))
         return re.sub(r"\{[^}]*\}", "{param}", raw) if n.type == "interpolated_string_expression" else raw
 
@@ -403,10 +405,22 @@ class _BaseScanner:
                     rp = self.path_of(recv, lenient, _depth + 1) if recv is not None else None
                     return rp.replace("{}", "{param}") if rp else None
                 return self.path_of(arg_nodes[0], lenient, _depth + 1) if arg_nodes else None
+            if fname in ("Replace", "replace", "TrimStart", "TrimEnd", "Trim", "ToLower", "ToLowerInvariant", "lstrip", "rstrip", "strip"):
+                recv = fn.child_by_field_name("object") if fn is not None and fn.type == "attribute" else None
+                if recv is None and fn is not None and fn.type in ("member_access_expression", "member_expression", "selector_expression"):
+                    kids_fn = [c for c in fn.children if c.is_named]
+                    recv = kids_fn[0] if kids_fn else None
+                return self.path_of(recv, lenient, _depth + 1) if recv is not None else None
             if fname in ("Join", "JoinPath", "urljoin", "Combine"):
                 segs = [self.path_of(a, lenient, _depth + 1) or "{param}" for a in arg_nodes]
                 segs = [s for s in segs if s]
                 return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
+            return None
+        if t == "object_creation_expression":             # new Uri("api/x", UriKind.Relative)
+            if "Uri" in _text(n, src).split("(")[0]:
+                args = next((c for c in n.children if c.type == "argument_list"), None)
+                arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named] if args else []
+                return self.path_of(arg_nodes[0], lenient, _depth + 1) if arg_nodes else None
             return None
         if t in ("parenthesized_expression", "await_expression", "unary_expression"):
             inner = [c for c in n.children if c.is_named]
@@ -773,7 +787,7 @@ class _CsScanner(_BaseScanner):
             if m.type != "method_declaration":
                 continue
             for name, lit, a in self._attrs(m):
-                if name in ("Get", "Post", "Put", "Patch", "Delete", "Head") and lit is not None:
+                if name in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options") and lit is not None:
                     self.add_call(a, VERB_BY_NAME[name], lit, "refit")
 
     def _maybe_group(self, n: Node) -> None:
@@ -813,6 +827,14 @@ class _CsScanner(_BaseScanner):
         name = callee.split(".")[-1]
         recv_last = (callee.rsplit(".", 1)[0] if "." in callee else "").split(".")[-1]
         arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named]
+        # Flurl: the *receiver* is the URL — "api/x".GetJsonAsync(), url.AppendPathSegment("orders").PostJsonAsync(body)
+        if name in FLURL_VERBS and fn.type == "member_access_expression":
+            kids_fn = [c for c in fn.children if c.is_named]
+            recv_node = kids_fn[0] if kids_fn else None
+            p = self._flurl_path(recv_node) if recv_node is not None else None
+            if p is not None:
+                self.add_call(n, FLURL_VERBS[name], p, "flurl." + name)
+                return
         if not arg_nodes:
             return
         if name in CS_MAP and len(arg_nodes) >= 2:
@@ -824,6 +846,10 @@ class _CsScanner(_BaseScanner):
                 self.add_endpoint(n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], prefix=self.group_prefix.get(recv_last, ""))
                 return
         if name in OUTBOUND and name.endswith("Async"):
+            if name == "SendAsync" and arg_nodes and arg_nodes[0].type == "identifier":
+                val = self.resolve_local(arg_nodes[0])
+                if val is not None and val.type == "object_creation_expression" and "HttpRequestMessage" in _text(val, self.src):
+                    return                                  # recorded at `new HttpRequestMessage(...)`
             method = OUTBOUND.get(name) or self.method_from_args(arg_nodes)
             for a in arg_nodes:
                 p = self.path_of(a, lenient=True)
@@ -831,17 +857,50 @@ class _CsScanner(_BaseScanner):
                     self.add_call(n, method, p, callee)
                     return
 
+    def _flurl_path(self, n: Node) -> str | None:
+        """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""
+        segs: list[str] = []
+        cur = n
+        while cur is not None and cur.type == "invocation_expression":
+            kids = [c for c in cur.children if c.is_named]
+            if len(kids) < 2 or kids[0].type != "member_access_expression":
+                break
+            fk = [c for c in kids[0].children if c.is_named]
+            mname = _text(fk[-1], self.src) if fk else ""
+            args = [self._unwrap_arg(c) for c in kids[1].children if c.is_named]
+            if mname in ("AppendPathSegment", "AppendPathSegments", "Request"):
+                for a in args:
+                    lit = _unquote(_text(a, self.src)) if a.type in STRING_NODES else None
+                    segs.insert(0, lit if lit else "{param}")
+            elif mname in ("SetQueryParam", "SetQueryParams", "WithHeader", "WithHeaders", "WithOAuthBearerToken", "WithTimeout", "AllowAnyHttpStatus", "WithBasicAuth"):
+                pass
+            else:
+                break
+            cur = fk[0] if fk else None
+        base = self.path_of(cur, lenient=True) if cur is not None else None
+        if base is None and not segs:
+            return None
+        path = "/".join([base.strip("/")] if base else []) + ("/" + "/".join(segs) if segs else "")
+        return ("/" + path.lstrip("/")) if path else None
+
     def _request_message(self, n: Node) -> None:
-        txt = _text(n, self.src)
-        if "HttpRequestMessage" not in txt:
+        """`new HttpRequestMessage(HttpMethod.Post, "api/x")` and RestSharp `new RestRequest("api/x", Method.Post)`."""
+        head = _text(n, self.src).split("(")[0]
+        if "HttpRequestMessage" not in head and "RestRequest" not in head:
             return
         args = next((c for c in n.children if c.type == "argument_list"), None)
         arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named] if args else []
         method = self.method_from_args(arg_nodes)
+        if method is None:                                   # RestSharp: Method.Get / Method.Post
+            for a in arg_nodes:
+                m = re.match(r"^Method\.([A-Za-z]+)$", _text(a, self.src))
+                if m and m.group(1).upper() in HTTP_METHODS:
+                    method = m.group(1).upper()
+        via = "new HttpRequestMessage" if "HttpRequestMessage" in head else "new RestRequest"
         for a in arg_nodes:
             p = self.path_of(a, lenient=True)
             if p is not None:
-                self.add_call(n, method, p, "new HttpRequestMessage")
+                self.add_call(n, method, p, via)
                 return
 
 
