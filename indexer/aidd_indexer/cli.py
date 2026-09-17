@@ -24,12 +24,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import INDEXER_VERSION
-from .config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
-from .discovery import PARSEABLE, build_files, discover_modules, list_files
-from .extract import GRAMMAR_ERRORS, extract_file, load_language
-from .gitinfo import current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
-from .model import ExtractionResult, RepoInfo
-from .resolve import Resolved, Resolver
+from . import conventions, languages
+from .core.config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
+from .core.discovery import build_files, discover_modules, list_files
+from .core.extract import GRAMMAR_ERRORS, extract_file, load_language
+from .core.gitinfo import current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
+from .core.model import ExtractionResult, RepoInfo
+from .core.resolve import Resolved, Resolver
 
 
 def log(msg: str) -> None:
@@ -56,7 +57,7 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
     log(f"[discover] {len(rel_files)} files, {len(files)} recorded, {len(modules)} modules, stack={repo.stack} ({time.time()-t0:.1f}s)")
 
     missing = []
-    for lang in sorted({f.language for f in files} & PARSEABLE):
+    for lang in sorted({f.language for f in files} & languages.parseable()):
         cl = load_language(lang)
         if cl:
             res.warnings.extend(cl.warnings)
@@ -72,7 +73,7 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
     extractors = []
     t0 = time.time()
     for f in files:
-        if f.language not in PARSEABLE:
+        if f.language not in languages.parseable():
             continue
         fx, warns = extract_file(repo, f)
         res.warnings.extend(warns)
@@ -84,7 +85,7 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
         res.imports.extend(fx.imports)
     log(f"[extract]  {len(res.symbols)} symbols, {len(res.calls)} call sites, {len(res.imports)} imports ({time.time()-t0:.1f}s)")
     # integration candidates (F0.4): routes exposed + outbound HTTP calls with literal paths
-    from .integrations import extract_http
+    from .core.integrations import extract_http
     t1 = time.time()
     hr = extract_http(repo, extractors)
     res.endpoints, res.http_calls = hr.endpoints, hr.calls
@@ -94,11 +95,32 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
     return res, extractors
 
 
-def extract_and_resolve(repo: RepoInfo) -> tuple[ExtractionResult, Resolved]:
+def conventions_for(tenant: str, repo_name: str, config: str | None = None) -> list:
+    """Conventions declared for this tenant in atlas.yaml (+ AIDD_CONVENTIONS=path,path for ad-hoc runs)."""
+    specs: list = [p for p in os.getenv("AIDD_CONVENTIONS", "").split(",") if p.strip()]
+    try:
+        from .core.manifest import load_manifest
+        tc = load_manifest(config).tenants.get(tenant)
+        if tc:
+            specs += tc.conventions
+    except ConfigError:
+        pass                                    # no manifest (plain `aidd index` outside the container) — fine
+    return conventions.load(specs, repo_name)
+
+
+def extract_and_resolve(repo: RepoInfo, convs: list | None = None) -> tuple[ExtractionResult, Resolved]:
     res, extractors = extract_tree(repo)
     rv = Resolver(res, extractors).run()
     log(f"[resolve]  {len(rv.calls)} CALLS edges ({rv.unresolved_calls} unresolved call sites), "
         f"{len(rv.imports)} IMPORTS edges ({rv.unresolved_imports} unresolved), {len(rv.packages)} external packages")
+    if convs is None:
+        convs = conventions_for(repo.tenant, repo.name)
+    if convs:
+        t0 = time.time()
+        conventions.apply(convs, res, rv)
+        layered = sum(1 for f in res.files if f.layer)
+        log(f"[conv]     {', '.join(c.id for c in convs)}: {layered} files layered, "
+            f"{len(res.violations)} violations ({time.time()-t0:.1f}s)")
     for w in res.warnings[:10]:
         log(f"[warn]     {w}")
     if len(res.warnings) > 10:
@@ -138,7 +160,7 @@ def index_exported_ref(gw, repo_path: Path, name: str, tenant: str, ref: str, sh
 
 
 def open_graph():
-    from .graph import GraphWriter  # lazy: dry-run / plan must work without a database
+    from .core.graph import GraphWriter  # lazy: dry-run / plan must work without a database
     cfg = Neo4jConfig.from_env()
     gw = GraphWriter(cfg)
     gw.verify()
@@ -184,6 +206,7 @@ def cmd_index(args: argparse.Namespace) -> int:
             "packages": [asdict(p) for p in rv.packages.values()],
             "endpoints": [asdict(e) for e in res.endpoints],
             "http_calls": [asdict(c) for c in res.http_calls],
+            "violations": [asdict(v) for v in res.violations],
             "warnings": res.warnings,
         }
         if args.out:
@@ -204,8 +227,8 @@ def cmd_index(args: argparse.Namespace) -> int:
 
 
 def _load_plan(args: argparse.Namespace):
-    from .manifest import load_manifest
-    from .planner import build_plan
+    from .core.manifest import load_manifest
+    from .core.planner import build_plan
     manifest = load_manifest(args.config)
     tenant = manifest.tenant(args.tenant)
     only = [r.strip() for r in args.repos.split(",")] if getattr(args, "repos", None) else None
@@ -216,7 +239,7 @@ def _load_plan(args: argparse.Namespace):
 
 
 def cmd_plan(args: argparse.Namespace) -> int:
-    from .planner import render_plan
+    from .core.planner import render_plan
     tenant, plan = _load_plan(args)
     stale = None
     if not args.offline:
@@ -233,7 +256,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
 
 
 def cmd_bootstrap(args: argparse.Namespace) -> int:
-    from .planner import render_plan
+    from .core.planner import render_plan
     tenant, plan = _load_plan(args)
     if not plan.items:
         log("nothing to index — check sources in the manifest")
@@ -303,11 +326,11 @@ def cmd_selftest(args: argparse.Namespace) -> int:
     import tree_sitter, tree_sitter_language_pack  # noqa: F401
     from importlib.metadata import version
     log(f"tree-sitter {version('tree-sitter')} · tree-sitter-language-pack {version('tree-sitter-language-pack')} · python {sys.version.split()[0]}")
-    from .extract import GRAMMAR_OFFLINE
+    from .core.extract import GRAMMAR_OFFLINE
     log(f"grammar cache {tree_sitter_language_pack.cache_dir()} · cached: {', '.join(tree_sitter_language_pack.downloaded_languages()) or '(none)'}"
         f" · downloads {'forbidden (AIDD_GRAMMAR_OFFLINE)' if GRAMMAR_OFFLINE else 'allowed'}")
     bad = 0
-    for lang in sorted(PARSEABLE):
+    for lang in sorted(languages.parseable()):
         cl = load_language(lang)
         if cl is None:
             print(f"  [FAIL] {lang}: {GRAMMAR_ERRORS.get(lang, 'unknown error')}")
@@ -325,7 +348,7 @@ def cmd_selftest(args: argparse.Namespace) -> int:
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
-    from .mcp_server import serve
+    from .mcp.server import serve
     log(f"atlas MCP · tenant={os.getenv('AIDD_TENANT', '?')} · neo4j={os.getenv('NEO4J_URI', '?')}/{os.getenv('NEO4J_DATABASE', '?')}")
     return serve(host=args.host, port=args.port)
 

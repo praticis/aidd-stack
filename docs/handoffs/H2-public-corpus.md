@@ -2,12 +2,14 @@
 
 > Cole este arquivo (ou peça para ler `docs/handoffs/H2-public-corpus.md`) no início de um chat
 > novo. Antes de qualquer coisa o chat deve ler `docs/indexer-evolution.md`, `docs/ROADMAP.md`
-> (F0.4) e `indexer/aidd_indexer/integrations.py`, e rodar `python indexer/scripts/http_corpus.py`
+> (F0.4), `indexer/aidd_indexer/core/http_base.py` e `indexer/aidd_indexer/languages/<lang>/http.py`, e rodar
+> `python indexer/scripts/http_corpus.py`
 > para ter a baseline em mãos.
 
 ## Contexto em um parágrafo
 
-O extrator de integrações HTTP (`integrations.py`) foi calibrado em 15 repositórios públicos
+O extrator de integrações HTTP (`core/integrations.py` orquestra; cada linguagem decide em `languages/<lang>/http.py`;
+o que é comum está em `core/http_base.BaseScanner`) foi calibrado em 15 repositórios públicos
 (Go: chi, gin, fiber, gorilla, alertmanager · TS: nest, express, fastify · C#: eShop, CleanArchitecture ·
 Python: fastapi, flask). Isso tirou o viés dos três repos pequenos do time, mas ainda é uma amostra
 pequena, sem *ground truth* e com frameworks faltando. Este handoff é sobre transformar o corpus em um
@@ -85,6 +87,7 @@ instrumento de medição de verdade: mais repos, mais frameworks, gabarito onde 
 
 - `scripts/http_corpus.py` com a lista ampliada e suporte a `--expected`/`--baseline` (diff de ids).
 - `docs/corpus-report.md` com P/R por repo e linguagem e a lista categorizada de gaps.
-- `integrations.py` evoluído para as categorias que são regra geral; fixture do H1 (se já existir) e
-  corpus sem regressão.
+- `languages/<lang>/http.py` (e `core/http_base.py` para o que é comum a todas) evoluídos para as categorias
+  que são regra geral — nunca heurística de uma organização (isso é convenção, ver ADR-003); fixture do H1
+  (se já existir) e corpus sem regressão.
 - ROADMAP: F0.4.3 "corpus ampliado + métricas" marcado; gaps direcionados a F0.5 (linker) ou F1.

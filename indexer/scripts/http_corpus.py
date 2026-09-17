@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Calibration corpus for the HTTP integration extractor (aidd_indexer/integrations.py).
+"""Calibration corpus for the HTTP integration extractor (aidd_indexer/core/integrations.py + languages/<lang>/http.py).
 
 Clones public repositories across Go / TypeScript / C# / Python frameworks and prints, per
 repo, how many routes and outbound calls the extractor finds — a regression check that the
@@ -46,8 +46,8 @@ def main() -> int:
     args = ap.parse_args()
     os.environ.setdefault("AIDD_TENANT", "corpus")
     from aidd_indexer.cli import extract_tree
-    from aidd_indexer.integrations import extract_http
-    from aidd_indexer.model import RepoInfo
+    from aidd_indexer.core.integrations import extract_http
+    from aidd_indexer.core.model import RepoInfo
 
     base = Path(args.dir)
     base.mkdir(parents=True, exist_ok=True)

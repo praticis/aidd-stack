@@ -13,9 +13,10 @@ from typing import Any, Iterable
 
 from neo4j import GraphDatabase, Driver
 
-from . import INDEXER_VERSION, ids
+from .. import INDEXER_VERSION
+from . import ids
 from .config import Neo4jConfig
-from .integrations import path_key
+from .paths import path_key
 from .model import ExtractionResult
 from .resolve import Resolved
 
@@ -88,7 +89,7 @@ class GraphWriter:
             UNWIND $rows AS m
             MERGE (n:Module {id: m.id})
             SET n.tenant = $tenant, n.repo = $repo, n.ref = $ref, n.commit_sha = $sha, n.indexed_at = datetime($now),
-                n.name = m.name, n.path = m.path, n.kind = m.kind, n.content_hash = m.kind + ':' + m.path
+                n.name = m.name, n.path = m.path, n.kind = m.kind, n.layer = m.layer, n.content_hash = m.kind + ':' + m.path
             WITH n
             MATCH (r:Repo {id: $repo_id})
             MERGE (r)-[:CONTAINS]->(n)
@@ -98,7 +99,7 @@ class GraphWriter:
             UNWIND $rows AS f
             MERGE (n:File {id: f.id})
             SET n.tenant = $tenant, n.repo = $repo, n.ref = $ref, n.commit_sha = $sha, n.indexed_at = datetime($now),
-                n.path = f.path, n.language = f.language, n.loc = f.loc, n.content_hash = f.content_hash
+                n.path = f.path, n.language = f.language, n.loc = f.loc, n.layer = f.layer, n.content_hash = f.content_hash
             WITH n, f
             MATCH (m:Module {id: f.module_id})
             MERGE (m)-[:CONTAINS]->(n)
@@ -197,6 +198,21 @@ class GraphWriter:
             MERGE (f)-[:CONTAINS]->(n)
         """, [c.__dict__ | {"path_key": path_key(c.path)} for c in res.http_calls], **common)
 
+        # ---- convention violations (conventions/) — micro, GC'd like Symbol -------------------
+        counts["violations"] = self._batched("""
+            UNWIND $rows AS v
+            MERGE (n:Violation {id: v.id})
+            SET n.tenant = $tenant, n.repo = $repo, n.ref = $ref, n.commit_sha = $sha, n.indexed_at = datetime($now),
+                n.convention = v.convention, n.rule = v.rule, n.severity = v.severity, n.message = v.message,
+                n.line = v.line, n.evidence = v.evidence, n.content_hash = v.rule + '@' + v.evidence
+            WITH n, v
+            MATCH (f:File {id: v.file_id})
+            MERGE (f)-[:HAS_VIOLATION]->(n)
+            WITH n, v
+            OPTIONAL MATCH (s:Symbol {id: v.symbol_id})
+            FOREACH (_ IN CASE WHEN s IS NULL THEN [] ELSE [1] END | MERGE (s)-[:HAS_VIOLATION]->(n))
+        """, [v.__dict__ for v in res.violations], **common)
+
         # EXPOSES / HANDLED_BY edges of this ref that were not refreshed at this commit are stale
         # (route removed or moved); endpoints left without any exposer and consumer are dropped.
         self._run("""
@@ -215,7 +231,7 @@ class GraphWriter:
 
         # Orphan GC: micro nodes of this (tenant, repo, ref) not seen at this commit.
         rec = self._run_autocommit("""
-            MATCH (n:File|Symbol|Module|HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+            MATCH (n:File|Symbol|Module|HttpCall|Violation {tenant: $tenant, repo: $repo, ref: $ref})
             WHERE n.commit_sha <> $sha
             CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS
         """, **common)
@@ -288,7 +304,7 @@ class GraphWriter:
 
     def wipe(self, tenant: str, repo: str, ref: str | None) -> int:
         q = """
-            MATCH (n:File|Symbol|Module|Snapshot|IndexRun|HttpCall {tenant: $tenant, repo: $repo})
+            MATCH (n:File|Symbol|Module|Snapshot|IndexRun|HttpCall|Violation {tenant: $tenant, repo: $repo})
             WHERE $ref IS NULL OR n.ref = $ref
             CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS
         """

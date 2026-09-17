@@ -1,6 +1,6 @@
 # ADR-003 — Indexador em núcleo compartilhado + módulos por linguagem
 
-**Status:** proposto (executar após F0.4.1, antes de abrir H1/H2) · **Data:** 2026-09-14 · **Fase:** 0
+**Status:** aceito e implementado em 2026-09-17 (F0.4.4) — ver "Como ficou" no fim · **Data:** 2026-09-14 · **Fase:** 0
 
 ## Contexto
 
@@ -15,7 +15,7 @@ Duas frentes vão evoluir esse conhecimento em paralelo (handoffs H1 e H2) e o S
 linguagem (ADR-002). Com o layout atual, cada frente edita os mesmos arquivos grandes; conflitos e
 regressões cruzadas são inevitáveis.
 
-## Decisão (proposta)
+## Decisão
 
 Separar em **núcleo** e **módulos de linguagem**, com um contrato explícito:
 
@@ -122,3 +122,54 @@ real escrita contra o contrato, não código dentro de `integrations.py`.
   existe.
 - Fica para depois: empacotar linguagens como plugins externos (entry points) e um `LanguageSupport`
   declarativo em YAML — só se aparecer necessidade de terceiros adicionarem linguagens sem tocar no repo.
+
+## Como ficou (2026-09-17)
+
+Implementado em um único conjunto de commits, com a regressão prevista: fixtures 5/5 (3 HTTP + 2 da
+costura de convenções) e o **corpus público byte a byte idêntico** ao baseline — não só os
+candidatos HTTP, mas símbolos, `CALLS`, `IMPORTS`, pacotes e avisos dos 15 repositórios.
+`INDEXER_VERSION` continua `0.2.1`.
+
+Layout final (difere do desenho em detalhes):
+
+```
+aidd_indexer/
+  cli.py                    extract_tree() ficou aqui (não houve `core/pipeline.py`)
+  core/   config manifest planner gitinfo discovery extract resolve integrations http_base paths graph ids model
+  languages/  __init__.py (REGISTRY, by_id, by_extension, parseable, grammars)  base.py (LanguageSupport)
+              go/ typescript/ csharp/ python/  → queries.scm  symbols.py  http.py
+  conventions/  __init__.py (load/apply)  base.py (Convention, ConventionContext)  declarative.py (convention.yaml)
+  mcp/server.py
+```
+
+- `LanguageSupport` (`languages/base.py`) tem hooks em quatro grupos: identidade (`id, grammar,
+  extensions, query_file, stack, manifests, manifest_suffixes, builtin_receivers, ecosystem,
+  http_scanner, namespace_nodes, entry_point_hints, decorator_entry`), descoberta
+  (`discover_modules` — pacotes Go), símbolos (`module_prefix, qualified_name, adjust_kind,
+  scope_chain, visibility, doc_extra, import_bindings, file_scope`) e resolução (`resolve_setup,
+  resolve_import, link_symbols`). `core/` não tem mais nenhum `if language ==`.
+- O módulo `typescript` registra três ids (`typescript`, `tsx`, `javascript`) com a mesma classe e
+  dois `.scm` (`queries.scm` para ts/tsx, `queries.javascript.scm` para js).
+- O `Dockerfile` pré-baixa as gramáticas a partir de `languages.grammars()`; o `selftest` itera
+  `languages.parseable()`. Adicionar linguagem = pasta + uma linha em `_MODULES`.
+- **Ficou compartilhado** (decisão consciente, sem ganho em fragmentar agora): `TEST_FILE` e a tabela
+  `OUTBOUND` em `core/http_base.py`, `GENERATED_SUFFIXES` em `core/config.py`. Se um módulo precisar
+  de padrões próprios, vira atributo do `LanguageSupport` na hora.
+- **Convenções** (`aidd_indexer/conventions/`): contrato `Convention` com `configure`, `layer_of`,
+  `target_of`, `is_entry_point`, `check(ctx) -> [ViolationInfo]`. Três formas de plugar, todas via
+  `atlas.yaml` → `tenants.<t>.conventions:` (com `repos:` opcional): `path:` para um
+  `convention.yaml` declarativo (`layers`, `targets`, `entry_points`, `rules`: `forbid_import`,
+  `endpoints_only_in`, `http_calls_only_in`), `id:` para uma classe publicada no entry point
+  `aidd.conventions` ou referenciada como `pacote.modulo:Classe`. Aqui **usamos entry points** ao
+  contrário do que o texto acima dizia para linguagens — convenções são o caso em que código de
+  terceiros (a organização) precisa entrar sem tocar neste repo; o registro de linguagens segue
+  estático.
+- Efeito no grafo: `File.layer`, `Module.layer` (quando todos os arquivos concordam), `HttpCall.target_hint`
+  refinado, `Symbol.is_entry_point`, e nós `Violation{convention, rule, severity, message, line,
+  evidence}` ligados por `HAS_VIOLATION` a `File` (e a `Symbol` quando atribuível); GC por `commit_sha`
+  como os demais nós micro. Constraint/índices em `neo4j/init/schema.cypher`. Sem convenção
+  configurada, nada muda — é o que o teste `test_without_conventions_is_untouched` garante.
+- Ainda não implementado (fica para o H1, que é quem precisa): `route_patterns` / `client_patterns`
+  (registradores e clientes HTTP declarados pela convenção, entrando no scanner da linguagem) e
+  regras além das três declarativas. O lugar é `Convention` + um hook novo no `BaseScanner`; não é
+  mais um `if` em `integrations.py`.

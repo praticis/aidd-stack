@@ -25,8 +25,8 @@ from typing import Any
 
 from neo4j import GraphDatabase
 
-from . import INDEXER_VERSION
-from .config import ConfigError, Neo4jConfig
+from .. import INDEXER_VERSION
+from ..core.config import ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
 FORBIDDEN = re.compile(
@@ -423,9 +423,8 @@ def build_server(store: Store | None = None):
     # ---- plain HTTP health for docker/compose and install-check ---------------------------
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_: Request) -> JSONResponse:
-        s = st(tenant)
-        ok = s.ping()
-        return JSONResponse({"status": "ok" if ok else "degraded", "neo4j": ok, "tenant": s.tenant,
+        ok = the_store.ping()            # process-wide store: no tenant resolution here (auto → tenant null)
+        return JSONResponse({"status": "ok" if ok else "degraded", "neo4j": ok, "tenant": the_store.tenant,
                              "version": INDEXER_VERSION}, status_code=200 if ok else 503)
 
     return mcp

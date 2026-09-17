@@ -19,8 +19,8 @@ FIXTURES = sorted(p for p in (Path(__file__).parent / "fixtures").iterdir() if (
 
 def _extract(root: Path):
     from aidd_indexer.cli import extract_tree
-    from aidd_indexer.integrations import extract_http
-    from aidd_indexer.model import RepoInfo
+    from aidd_indexer.core.integrations import extract_http
+    from aidd_indexer.core.model import RepoInfo
 
     repo = RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
     res, extractors = extract_tree(repo)

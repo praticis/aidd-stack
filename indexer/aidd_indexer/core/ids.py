@@ -42,3 +42,7 @@ def http_endpoint(tenant: str, service_name: str, method: str, path: str) -> str
 
 def http_call(tenant: str, repo: str, ref: str, file_path: str, line: int) -> str:
     return f"{tenant}/{repo}@{ref}/httpcall/{file_path}:{line}"
+
+
+def violation(tenant: str, repo: str, ref: str, convention: str, rule: str, file_path: str, line: int) -> str:
+    return f"{tenant}/{repo}@{ref}/violation/{convention}.{rule}/{file_path}:{line}"

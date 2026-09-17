@@ -56,6 +56,7 @@ class TenantConfig:
     refs: RefPolicy
     areas: dict[str, list[str]] = field(default_factory=dict)   # optional: area -> repo names/globs
     schedule: str = ""
+    conventions: list = field(default_factory=list)              # optional: convention specs (aidd_indexer.conventions)
 
     def area_of(self, repo: str) -> str | None:
         for area, repos in self.areas.items():
@@ -135,5 +136,10 @@ def load_manifest(path: str | None = None) -> Manifest:
             gc_ephemeral_after_days=int(r.get("gc_ephemeral_after_days", 30)),
         )
         areas = {k: list(v or []) for k, v in (t.get("areas") or {}).items()}
-        tenants[name] = TenantConfig(name=name, sources=sources, refs=refs, areas=areas, schedule=t.get("schedule", "") or "")
+        convs = t.get("conventions") or []
+        if not isinstance(convs, list):
+            raise ConfigError(f"{p}: tenant '{name}': 'conventions' must be a list")
+        convs = [{k: (_expand(v) if k == "path" else v) for k, v in c.items()} if isinstance(c, dict) else _expand(c) for c in convs]
+        tenants[name] = TenantConfig(name=name, sources=sources, refs=refs, areas=areas, schedule=t.get("schedule", "") or "",
+                                     conventions=convs)
     return Manifest(path=p, tenants=tenants)

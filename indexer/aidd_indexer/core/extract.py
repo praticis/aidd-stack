@@ -1,8 +1,10 @@
 """tree-sitter extraction: symbols, call sites and imports per file.
 
-Language queries live in `queries/<language>.scm`. Each blank-line-separated
-pattern is compiled on its own so a pattern the installed grammar does not
-support is skipped (with a warning) instead of disabling the language.
+Language queries live in `languages/<lang>/queries.scm`. Each blank-line-separated pattern is
+compiled on its own so a pattern the installed grammar does not support is skipped (with a
+warning) instead of disabling the language. Everything language-specific (qualified names,
+visibility, docstrings, import bindings, entry-point markers) is delegated to the file's
+`LanguageSupport` (see `languages/base.py`) — this module has no `if language == ...`.
 """
 
 from __future__ import annotations
@@ -13,32 +15,18 @@ import re
 import sys
 from dataclasses import dataclass, field
 from functools import lru_cache
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from tree_sitter import Language, Node, Parser, Query, QueryCursor, QueryError
 from tree_sitter_language_pack import get_language, get_parser
 
+from .. import languages
+from ..languages.base import LanguageSupport, node_text as _text, walk as _walk
 from . import ids
 from .model import CallInfo, FileInfo, ImportInfo, RepoInfo, SymbolInfo
 
-QUERY_DIR = Path(__file__).parent / "queries"
-
 # Symbol kinds that a call can target.
 CALLABLE_KINDS = {"function", "method", "class", "struct"}
-
-# Scope-bearing nodes that are not symbols but prefix qualified names.
-NAMESPACE_NODES = {"namespace_declaration", "file_scoped_namespace_declaration"}
-
-ENTRY_POINT_HINTS = (
-    # Go
-    "http.ResponseWriter", "*gin.Context", "echo.Context", "*fiber.Ctx", "context.Context, req",
-    # TS (NestJS/Express) — decorators are matched on preceding siblings, see _entry_point
-    # C#
-    "[HttpGet", "[HttpPost", "[HttpPut", "[HttpDelete", "[HttpPatch", "[Route", "IActionResult",
-)
-DECORATOR_ENTRY = re.compile(r"@(Get|Post|Put|Delete|Patch|All|MessagePattern|EventPattern|Cron|Query|Mutation|GrpcMethod|SqsMessageHandler|RabbitSubscribe|Process)\b"
-                             r"|@(app|router|api|bp|blueprint)\.(get|post|put|delete|patch|route|websocket)\b"
-                             r"|\[(HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|Route|Function|ServiceBusTrigger|QueueTrigger)\b")
 
 
 @dataclass
@@ -70,7 +58,11 @@ def grammar_cached(grammar: str) -> bool:
 
 @lru_cache(maxsize=None)
 def load_language(name: str) -> CompiledLanguage | None:
-    grammar = "csharp" if name == "csharp" else name
+    lang = languages.by_id(name)
+    if lang is None:
+        GRAMMAR_ERRORS[name] = "no language module registered"
+        return None
+    grammar = lang.grammar
     if GRAMMAR_OFFLINE and not grammar_cached(grammar):
         from tree_sitter_language_pack import cache_dir
         GRAMMAR_ERRORS[name] = (f"grammar '{grammar}' is not in the image cache ({cache_dir()}) and "
@@ -83,7 +75,7 @@ def load_language(name: str) -> CompiledLanguage | None:
         GRAMMAR_ERRORS[name] = f"{type(e).__name__}: {e}"
         return None
     cl = CompiledLanguage(name=name, language=language, parser=parser)
-    src_file = QUERY_DIR / f"{name}.scm"
+    src_file = lang.query_file
     if not src_file.exists():
         return cl
     text = src_file.read_text(encoding="utf-8")
@@ -100,10 +92,6 @@ def load_language(name: str) -> CompiledLanguage | None:
     return cl
 
 
-def _text(node: Node, src: bytes) -> str:
-    return src[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
-
-
 _ATTR_PREFIX = re.compile(r"^(\s*(\[[^\]]*\]|@[\w.]+(\([^)]*\))?)\s*)+")
 
 
@@ -117,19 +105,14 @@ def _first_line(node: Node, src: bytes, limit: int = 200) -> str:
     return " ".join(t.split())[:limit]
 
 
-def _doc(node: Node, src: bytes, language: str) -> str:
+def _doc(node: Node, src: bytes, lang: LanguageSupport) -> str:
     parts: list[str] = []
     sib = node.prev_sibling
     while sib is not None and sib.type in ("comment", "line_comment", "block_comment", "decorator", "attribute_list"):
         if sib.type in ("comment", "line_comment", "block_comment"):
             parts.insert(0, _text(sib, src))
         sib = sib.prev_sibling
-    if language == "python":
-        body = node.child_by_field_name("body")
-        if body is not None and body.child_count and body.children[0].type == "expression_statement":
-            first = body.children[0].children[0] if body.children[0].child_count else None
-            if first is not None and first.type == "string":
-                parts.append(_text(first, src))
+    parts += lang.doc_extra(node, src)
     doc = "\n".join(parts)
     doc = re.sub(r"^\s*(///?|/\*+|\*+/?|#|\"\"\"|''')\s?", "", doc, flags=re.M).strip()
     return doc[:1000]
@@ -158,49 +141,15 @@ def _leading_decorators(node: Node, src: bytes) -> str:
     return "\n".join(texts)
 
 
-def _entry_point(node: Node, src: bytes, signature: str) -> bool:
-    if any(h in signature for h in ENTRY_POINT_HINTS):
+def _entry_point(node: Node, src: bytes, signature: str, lang: LanguageSupport) -> bool:
+    if any(h in signature for h in lang.entry_point_hints):
         return True
-    return bool(DECORATOR_ENTRY.search(_leading_decorators(node, src)))
+    if lang.decorator_entry is None:
+        return False
+    return bool(lang.decorator_entry.search(_leading_decorators(node, src)))
 
 
-def _visibility(name: str, node: Node, src: bytes, language: str) -> str:
-    if language == "go":
-        return "public" if name[:1].isupper() else "private"
-    if language == "python":
-        return "private" if name.startswith("_") else "public"
-    head = _first_line(node, src)
-    if re.search(r"\b(private|protected|internal)\b", head):
-        return "private"
-    if re.search(r"\b(public|export)\b", head):
-        return "public"
-    if node.parent is not None and node.parent.type == "export_statement":
-        return "public"
-    return "unknown"
-
-
-def _go_receiver(node: Node, src: bytes) -> str | None:
-    recv = node.child_by_field_name("receiver")
-    if recv is None:
-        return None
-    for tid in _walk(recv):
-        if tid.type == "type_identifier":
-            return _text(tid, src)
-    return None
-
-
-def _ancestors(node: Node):
-    n = node.parent
-    while n is not None:
-        yield n
-        n = n.parent
-
-
-_TS_IMPORT = re.compile(r"import\s+(?:type\s+)?(?:(\w+)\s*,?\s*)?(?:\*\s+as\s+(\w+))?\s*(?:\{([^}]*)\})?")
-_PY_IMPORT = re.compile(r"^\s*(?:from\s+[\w.]+\s+)?import\s+(.*)$", re.S)
-
-
-def _import_bindings(inode: Node, spec: str, src: bytes, language: str) -> list[str]:
+def _import_bindings(inode: Node, spec: str, src: bytes, lang: LanguageSupport) -> list[str]:
     """Local names introduced by the import statement that contains `inode`."""
     stmt = inode
     while stmt is not None and stmt.type not in ("import_statement", "import_spec", "import_from_statement",
@@ -208,70 +157,21 @@ def _import_bindings(inode: Node, spec: str, src: bytes, language: str) -> list[
         stmt = stmt.parent
     if stmt is None:
         return []
-    text = _text(stmt, src)
-    if language in ("typescript", "tsx", "javascript"):
-        m = _TS_IMPORT.search(text)
-        names: list[str] = []
-        if m:
-            if m.group(1): names.append(m.group(1))
-            if m.group(2): names.append(m.group(2))
-            if m.group(3):
-                for part in m.group(3).split(","):
-                    part = part.strip()
-                    if part:
-                        names.append(part.split(" as ")[-1].strip())
-        rq = re.search(r"(?:const|let|var)\s+(\w+)\s*=\s*require", text)
-        if rq: names.append(rq.group(1))
-        return names
-    if language == "go":
-        alias = stmt.child_by_field_name("name")
-        if alias is not None:
-            return [_text(alias, src)]
-        base = spec.rstrip("/").split("/")[-1]
-        base = re.sub(r"^v\d+$", "", base) or spec.rstrip("/").split("/")[-2]
-        return [re.sub(r"[-.].*$", "", base) or base]
-    if language == "python":
-        m = _PY_IMPORT.match(text)
-        if not m:
-            return []
-        names = []
-        for part in m.group(1).replace("(", "").replace(")", "").split(","):
-            part = part.strip()
-            if not part: continue
-            if " as " in part: names.append(part.split(" as ")[-1].strip())
-            else: names.append(part.split(".")[0])
-        return names
-    return []
-
-
-def _walk(node: Node):
-    stack = [node]
-    while stack:
-        n = stack.pop()
-        yield n
-        stack.extend(reversed(n.children))
-
-
-def _module_of(file: FileInfo) -> str:
-    """Scope prefix for qualified names: directory (Go) or path without ext."""
-    p = PurePosixPath(file.path)
-    if file.language == "go":
-        d = str(p.parent)
-        return "" if d == "." else d.replace("/", ".")
-    return str(p.with_suffix("")) if file.language != "csharp" else ""
+    return lang.import_bindings(_text(stmt, src), stmt, spec, src)
 
 
 class FileExtractor:
     def __init__(self, repo: RepoInfo, file: FileInfo, src: bytes, cl: CompiledLanguage):
         self.repo, self.file, self.src, self.cl = repo, file, src, cl
+        self.lang: LanguageSupport = languages.by_id(file.language)  # type: ignore[assignment]
         self.tree = cl.parser.parse(src)
         self.defs: dict[int, tuple[str, Node]] = {}   # def node id -> (kind, name node)
         self.symbol_by_node: dict[int, SymbolInfo] = {}
         self.symbols: list[SymbolInfo] = []
         self.calls: list[CallInfo] = []
         self.imports: list[ImportInfo] = []
-        self.namespaces: list[str] = []                # C# namespaces declared in this file
-        self.file_namespace: str | None = None         # C# `namespace X;` (file-scoped) — prefixes everything
+        self.namespaces: list[str] = []                # namespaces declared in this file (C#)
+        self.file_namespace: str | None = None         # file-scoped namespace — prefixes everything (C# `namespace X;`)
         self.seen_ids: set[str] = set()
 
     # -- pass 1: collect definitions ------------------------------------------------
@@ -298,16 +198,9 @@ class FileExtractor:
                         file_id=self.file.id,
                         spec=spec,
                         line=inode.start_point[0] + 1,
-                        bindings=_import_bindings(inode, spec, self.src, self.file.language),
+                        bindings=_import_bindings(inode, spec, self.src, self.lang),
                     ))
-        if self.file.language == "csharp":
-            for n in _walk(self.tree.root_node):
-                if n.type in NAMESPACE_NODES:
-                    nm = n.child_by_field_name("name")
-                    if nm is not None:
-                        self.namespaces.append(_text(nm, self.src))
-                        if n.type == "file_scoped_namespace_declaration":
-                            self.file_namespace = _text(nm, self.src)
+        self.namespaces, self.file_namespace = self.lang.file_scope(self.tree.root_node, self.src)
 
         # materialize symbols outer-first so parents exist before children
         for dnode_id, (kind, nnode) in sorted(self.defs.items(), key=lambda kv: kv[1][1].start_byte):
@@ -345,7 +238,7 @@ class FileExtractor:
         while n is not None:
             if n.id in self.symbol_by_node:
                 chain.insert(0, self.symbol_by_node[n.id].name)
-            elif n.type in NAMESPACE_NODES:
+            elif n.type in self.lang.namespace_nodes:
                 nm = n.child_by_field_name("name")
                 if nm is not None:
                     chain.insert(0, _text(nm, self.src))
@@ -354,26 +247,11 @@ class FileExtractor:
 
     def _make_symbol(self, dnode: Node, kind: str, nnode: Node) -> None:
         name = _text(nnode, self.src)
-        lang = self.file.language
+        lang = self.lang
         parent = self._enclosing_symbol(dnode)
-        chain = self._scope_chain(dnode)
-
-        if lang == "python" and kind == "function" and parent is not None and parent.kind == "class":
-            kind = "method"
-        if lang == "go" and kind == "method":
-            recv = _go_receiver(dnode, self.src)
-            if recv:
-                chain = [recv]
-
-        prefix = _module_of(self.file)
-        if lang == "csharp" and self.file_namespace and not any(
-            n.type in NAMESPACE_NODES for n in _ancestors(dnode)
-        ):
-            chain = [self.file_namespace] + chain
-        parts = ([prefix] if prefix else []) + chain + [name]
-        qualified = ".".join(parts) if lang in ("go", "csharp") else (
-            (prefix + ":" if prefix else "") + ".".join(chain + [name])
-        )
+        kind = lang.adjust_kind(kind, parent)
+        chain = lang.scope_chain(dnode, self.src, self._scope_chain(dnode), kind, self.file_namespace)
+        qualified = lang.qualified_name(lang.module_prefix(self.file), chain, name)
         sid = ids.symbol(self.repo.tenant, self.repo.name, self.repo.ref, qualified, kind)
         if sid in self.seen_ids:  # overloads / shadowed names inside one file
             sid = f"{sid}~{dnode.start_point[0] + 1}"
@@ -388,12 +266,12 @@ class FileExtractor:
             kind=kind,
             signature=signature,
             doc=_doc(dnode, self.src, lang),
-            visibility=_visibility(name, dnode, self.src, lang),
+            visibility=lang.visibility(name, dnode, self.src, signature),
             line_start=dnode.start_point[0] + 1,
             line_end=dnode.end_point[0] + 1,
             content_hash=hashlib.sha1(self.src[dnode.start_byte:dnode.end_byte]).hexdigest(),
             parent_id=parent.id if parent else None,
-            is_entry_point=_entry_point(dnode, self.src, signature) if kind in ("function", "method") else False,
+            is_entry_point=_entry_point(dnode, self.src, signature, lang) if kind in ("function", "method") else False,
         )
         self.symbols.append(sym)
         self.symbol_by_node[dnode.id] = sym
