@@ -37,5 +37,15 @@ tenants:
     #  checkout: ["orders-*", "payments-api"]
     #  catalog: ["catalog-api", "search"]
 
+    # Optional: conventions of your development pattern (layers, allowed dependencies, which
+    # client folder talks to which service). See setup/conventions/hexagonal.example.yaml.
+    # Each entry is a declarative file (`path`) or a Python class (`id`: entry point in the
+    # `aidd.conventions` group, or `package.module:Class`); `repos` restricts it to some repos.
+    conventions: []
+    #  - path: /workspace/<tenant>/.aidd/convention.yaml
+    #    repos: ["*"]
+    #  - id: my_company.aidd_conventions:Hexagonal
+    #    options: {}
+
     # Optional: cron for automatic `aidd refresh` (scheduler service — roadmap F1).
     schedule: ""

@@ -43,9 +43,10 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 |---|---|---|
 | `Repo` | `name`, `default_ref`, `stack[]` (`go`,`ts`,`dotnet`,`python`…), `url` | 1 per (tenant, repo) — no `ref` |
 | `Snapshot` | `repo`, `ref`, `commit_sha`, `indexed_at`, `indexer_version`, `ephemeral` | 1 per (repo, ref); drives orphan GC (§5) |
-| `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is inferred (domain/app/infra/api) |
-| `File` | `path`, `language`, `loc`, `last_touched`, `churn_90d`, `authors[]` | git metrics land here (roadmap F1.9) |
+| `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is set by a **convention** (F0.4.4) when all its files agree, else null |
+| `File` | `path`, `language`, `loc`, `layer?`, `last_touched`, `churn_90d`, `authors[]` | `layer` set by a convention's `layers:` globs; git metrics land here (roadmap F1.9) |
 | `Symbol` | `name`, `qualified_name`, `kind`, `signature`, `doc`, `visibility`, `line_start`, `line_end`, `scip_symbol?`, `is_entry_point` | `kind` ∈ `class, interface, struct, enum, function, method, field, const, type, handler, job` |
+| `Violation` | `convention`, `rule`, `severity` (`error`,`warning`,`info`), `message`, `line`, `evidence` | a convention rule broken at one place (F0.4.4). Micro: per ref, GC'd like `Symbol`. `(File)-[:HAS_VIOLATION]->(Violation)`, `(Symbol)-[:HAS_VIOLATION]->` when attributable |
 | `HttpCall` | `method`, `path` (template), `path_key`, `raw_path`, `via` (callee as written), `target_hint` (package/dir: `outbound/<svc>` → `<svc>`), `env_hints[]` (base-URL env var names seen nearby), `line`, `evidence` | **outbound HTTP call site** with a literal/template path — a `CONSUMES` candidate (F0.4). Micro: per ref, GC'd like `Symbol`. `path_key` = `path` with every placeholder as `{param}` — the join key with `HttpEndpoint.path_key` |
 
 ### Macro
@@ -83,6 +84,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `IN_SNAPSHOT` | File→Snapshot | membership; enables GC by difference |
 | `HAS_SNAPSHOT` | Repo→Snapshot | one per indexed ref |
 | `HAS_RUN` | Snapshot→IndexRun | indexing history |
+| `HAS_VIOLATION` | File \| Symbol→Violation | a convention rule broken here (F0.4.4); rebuilt per commit like the node |
 | `MAKES_HTTP_CALL` | Symbol \| File→HttpCall | the call site's enclosing symbol (or the file for top-level code); `File-[:CONTAINS]->HttpCall` also holds |
 
 ### Macro (between repo/service and contract)
@@ -124,6 +126,7 @@ Topic         <tenant>/topic/<broker>/<name>
 Package       <tenant>/pkg/<ecosystem>/<name>
 DbTable       <tenant>/db/<database>/<schema>.<name>
 IndexRun      <tenant>/<repo>@<ref>/run/<started_at-iso>
+Violation     <tenant>/<repo>@<ref>/violation/<convention>.<rule>/<path>:<line>
 ```
 
 `qualified_name` follows the language's native convention (`pkg.Type.Method` in Go,

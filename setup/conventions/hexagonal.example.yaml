@@ -1,0 +1,41 @@
+# Example convention (copy, rename, adjust globs) — declares the architectural layers of a
+# hexagonal / ports-and-adapters repo and the rules between them. Reference it from atlas.yaml:
+#
+#   tenants:
+#     <tenant>:
+#       conventions:
+#         - path: /workspace/<tenant>/.aidd/convention.yaml   # or any path visible to the container
+#           repos: ["*"]                                       # optional globs
+#
+# What it produces in atlas: File.layer / Module.layer, refined HttpCall.target_hint, extra
+# Symbol.is_entry_point, and one Violation node per rule broken (see neo4j/SCHEMA.md).
+# Format reference: indexer/aidd_indexer/conventions/declarative.py
+
+id: hexagonal
+
+layers:                              # first matching glob wins; repo-relative; `**` = any depth
+  domain:       ["internal/domain/**", "src/domain/**", "src/Domain/**"]
+  application:  ["internal/app/**", "internal/application/**", "src/application/**", "src/Application/**"]
+  adapters-in:  ["internal/adapters/in/**", "internal/adapters/inbound/**", "src/api/**", "src/Api/**", "cmd/**"]
+  adapters-out: ["internal/adapters/out/**", "internal/adapters/outbound/**", "src/infra/**", "src/Infrastructure/**"]
+
+targets:                             # outbound calls from these files talk to this service (overrides the dir heuristic)
+  "internal/adapters/outbound/billing/**": billing
+  "src/Infrastructure/Clients/Catalog/**": catalog
+
+entry_points:                        # extra markers on top of the language heuristics
+  signature_contains: ["*fiber.Ctx", "IRequestHandler"]
+
+rules:
+  - id: domain-is-pure               # a File in `from` importing a File in one of `to`
+    forbid_import: {from: domain, to: [application, adapters-in, adapters-out]}
+    severity: error
+  - id: application-ignores-adapters
+    forbid_import: {from: application, to: [adapters-in, adapters-out]}
+    severity: error
+  - id: routes-live-in-adapters-in   # HttpEndpoint declared in another layer
+    endpoints_only_in: [adapters-in]
+    severity: warning
+  - id: clients-live-in-adapters-out # outbound HttpCall made from another layer
+    http_calls_only_in: [adapters-out]
+    severity: warning

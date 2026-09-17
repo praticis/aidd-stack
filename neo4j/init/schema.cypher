@@ -14,6 +14,7 @@ CREATE CONSTRAINT service_id    IF NOT EXISTS FOR (n:Service)         REQUIRE n.
 CREATE CONSTRAINT snapshot_id   IF NOT EXISTS FOR (n:Snapshot)        REQUIRE n.id IS UNIQUE;
 CREATE CONSTRAINT indexrun_id   IF NOT EXISTS FOR (n:IndexRun)        REQUIRE n.id IS UNIQUE;
 CREATE CONSTRAINT httpcall_id   IF NOT EXISTS FOR (n:HttpCall)        REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT violation_id  IF NOT EXISTS FOR (n:Violation)       REQUIRE n.id IS UNIQUE;
 
 // ---- Filters most used by the MCP -------------------------------------------
 CREATE INDEX symbol_tenant_repo_ref IF NOT EXISTS FOR (n:Symbol) ON (n.tenant, n.repo, n.ref);
@@ -29,6 +30,8 @@ CREATE INDEX httpcall_tenant_repo_ref IF NOT EXISTS FOR (n:HttpCall) ON (n.tenan
 CREATE INDEX httpcall_method_path   IF NOT EXISTS FOR (n:HttpCall) ON (n.method, n.path_key);
 CREATE INDEX http_method_pathkey    IF NOT EXISTS FOR (n:HttpEndpoint) ON (n.method, n.path_key);
 CREATE INDEX http_tenant_service    IF NOT EXISTS FOR (n:HttpEndpoint) ON (n.tenant, n.service);
+CREATE INDEX violation_tenant_repo_ref IF NOT EXISTS FOR (n:Violation) ON (n.tenant, n.repo, n.ref);
+CREATE INDEX violation_rule         IF NOT EXISTS FOR (n:Violation) ON (n.convention, n.rule);
 
 // ---- Text search (fallback when Qdrant doesn't have the symbol) --------------
 CREATE FULLTEXT INDEX symbol_fulltext IF NOT EXISTS

@@ -105,24 +105,51 @@ aidd index my-repo
 `--dry-run --out` writes the full payload (symbols, resolved calls, imports, packages) as JSON —
 the fastest way to inspect what a language query extracts.
 
-## Layout
+## Layout (ADR-003: core + language modules + conventions)
 
-| file | role |
-|---|---|
-| `cli.py` | `aidd plan / bootstrap / refresh / index / status / wipe` |
-| `manifest.py` | `atlas.yaml` loader (tenants, sources, ref policy, areas) |
-| `integrations.py` | HTTP integration candidates: routes exposed (`HttpEndpoint`) and outbound calls with literal paths (`HttpCall`) — the input of the linker |
-| `planner.py` | sources → repos → (repo, ref, sha) items with reasons; plan rendering |
-| `discovery.py` | file list (`git ls-files`), languages, modules (manifests + Go packages) |
-| `extract.py` | tree-sitter parsing; symbols, call sites, imports, entry-point heuristics |
-| `queries/*.scm` | per-language patterns — compiled one by one, unsupported ones are skipped with a warning |
-| `resolve.py` | name-based call resolution, import resolution, external `Package` nodes |
-| `graph.py` | Neo4j writer: idempotent `MERGE`, snapshot, orphan GC, `IndexRun` |
-| `ids.py` | id convention (SCHEMA.md §4) |
+```
+aidd_indexer/
+  cli.py                    aidd plan / bootstrap / refresh / index / status / wipe / selftest / serve
+  core/                     language-agnostic pipeline — never names a language
+    config.py manifest.py   env + atlas.yaml (tenants, sources, refs, areas, conventions)
+    planner.py gitinfo.py   sources → (repo, ref, sha) items; git plumbing
+    discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
+    extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
+    resolve.py              name-based CALLS, IMPORTS via LanguageSupport.resolve_import, external Packages
+    integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner)
+    http_base.py            BaseScanner: expression → path template, handler-vs-data, method detection
+    paths.py                normalize_path / path_key (shared with graph.py and the MCP)
+    graph.py ids.py model.py Neo4j writer (idempotent MERGE, GC), id convention, dataclasses
+  languages/                one folder per language; registered in languages/__init__.py
+    base.py                 LanguageSupport contract (identity · discovery · symbols · resolution · http)
+    go/ typescript/ csharp/ python/
+      queries.scm           tree-sitter patterns: @def.<kind> + @name, @call + @callee (+ @receiver), @import
+      symbols.py            the LanguageSupport subclass (qualified names, visibility, imports, resolution)
+      http.py               the BaseScanner subclass (routes exposed, outbound calls)
+  conventions/              pluggable rules of *your* development pattern (layers, allowed deps, targets)
+    base.py                 Convention contract + ConventionContext
+    declarative.py          convention.yaml → Convention (no Python needed)
+    __init__.py             registry: path | entry point `aidd.conventions` | `module:Class`; apply()
+  mcp/server.py             MCP `atlas` (read-only tools over the graph)
+```
 
 ## Adding a language
 
-1. Map the extension in `discovery.LANGUAGE_BY_EXT` and add it to `PARSEABLE`.
-2. Write `queries/<language>.scm` with `@def.<kind>` + `@name`, `@call` + `@callee` (+ optional
-   `@receiver`), and `@import` captures. Blank lines separate patterns.
-3. Teach `resolve._resolve_one` how that ecosystem's import specs map to files/packages.
+1. `mkdir aidd_indexer/languages/<lang>/` with `queries.scm` (`@def.<kind>` + `@name`, `@call` +
+   `@callee` (+ optional `@receiver`), `@import`; blank lines separate patterns).
+2. `symbols.py`: subclass `LanguageSupport`, override only what differs (`module_prefix`,
+   `qualified_name`, `visibility`, `import_bindings`, `resolve_import`, …) and export
+   `LANGUAGES = [<instance>]` with `id`, `grammar`, `extensions`, `query_file`, `stack`, `manifests`.
+3. Optional `http.py`: subclass `BaseScanner`, set `http_scanner=` on the instance.
+4. Add the folder name to `_MODULES` in `languages/__init__.py`. The Dockerfile prefetches the
+   grammar and `aidd selftest` checks it — nothing else to edit.
+5. Add a fixture under `tests/fixtures/` and run the public corpus (`scripts/http_corpus.py`).
+
+## Adding a convention
+
+Write a `convention.yaml` (see `setup/conventions/hexagonal.example.yaml`) and reference it in
+`atlas.yaml` under the tenant's `conventions:`. For rules the declarative format cannot express,
+subclass `aidd_indexer.conventions.base.Convention` in your own package and publish it under the
+`aidd.conventions` entry-point group (or reference it as `package.module:Class`). Conventions never
+change extraction — they annotate (`File.layer`, `Module.layer`, `HttpCall.target_hint`,
+`Symbol.is_entry_point`) and emit `Violation` nodes.

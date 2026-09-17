@@ -27,6 +27,7 @@ class ModuleInfo:
     name: str
     path: str                      # repo-relative directory ("" = repo root)
     kind: str                      # go-module | npm-package | csproj | py-package | root
+    layer: str | None = None       # set by conventions (domain | application | adapters-in | ...), else None
 
 
 @dataclass
@@ -37,6 +38,7 @@ class FileInfo:
     loc: int
     content_hash: str
     module_id: str
+    layer: str | None = None       # set by conventions, else None
 
 
 @dataclass
@@ -117,6 +119,7 @@ class ExtractionResult:
     imports: list[ImportInfo] = field(default_factory=list)
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     http_calls: list[HttpCallInfo] = field(default_factory=list)
+    violations: list["ViolationInfo"] = field(default_factory=list)   # conventions (F0.4.4)
     warnings: list[str] = field(default_factory=list)
 
     def counts(self) -> dict[str, int]:
@@ -128,5 +131,20 @@ class ExtractionResult:
             "imports": len(self.imports),
             "endpoints": len(self.endpoints),
             "http_calls": len(self.http_calls),
+            "violations": len(self.violations),
             "warnings": len(self.warnings),
         }
+
+
+@dataclass
+class ViolationInfo:
+    """A convention rule broken at a place in the code (written as a `Violation` node)."""
+    id: str
+    convention: str                # convention id (e.g. hexagonal)
+    rule: str                      # rule id inside the convention (e.g. forbid_import)
+    severity: str                  # error | warning | info
+    message: str
+    file_id: str
+    line: int
+    symbol_id: str | None
+    evidence: str                  # repo:path:line

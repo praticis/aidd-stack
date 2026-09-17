@@ -24,4 +24,4 @@ build-backend = "setuptools.build_meta"
 include = ["aidd_indexer*"]
 
 [tool.setuptools.package-data]
-aidd_indexer = ["queries/*.scm"]
+aidd_indexer = ["languages/*/*.scm"]

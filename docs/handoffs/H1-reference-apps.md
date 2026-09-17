@@ -2,12 +2,12 @@
 
 > Cole este arquivo (ou peça para ler `docs/handoffs/H1-reference-apps.md`) no início de um chat
 > novo. Antes de qualquer coisa o chat deve ler `docs/indexer-evolution.md`, `docs/ROADMAP.md`
-> (seção "Onde estamos" e F0.4/F0.5) e `indexer/aidd_indexer/integrations.py`.
+> (seção "Onde estamos" e F0.4/F0.5), `indexer/aidd_indexer/languages/base.py` e `indexer/aidd_indexer/conventions/`.
 
 ## Contexto em um parágrafo
 
 O aidd-stack indexa repositórios num grafo de código (Neo4j `atlas`) e expõe isso às skills via MCP.
-O extrator de integrações HTTP (`integrations.py`, F0.4) reconhece rotas expostas e chamadas de saída
+O extrator de integrações HTTP (`core/integrations.py` + `languages/<lang>/http.py`, F0.4) reconhece rotas expostas e chamadas de saída
 por heurísticas sobre a árvore tree-sitter. Ele foi calibrado num corpus público, mas o alvo real é
 **o padrão de arquitetura que o autor definiu para os times** — hexagonal, com um jeito próprio de
 registrar rotas, de encapsular clientes HTTP e de nomear camadas — hoje aplicado em Go e replicado em
@@ -15,14 +15,27 @@ outras linguagens. Este handoff é sobre garantir que o indexador entende *esse*
 linguagens em que ele existe, com resultado esperado conhecido (ground truth), e usar isso como
 suíte de regressão permanente.
 
-## Pré-requisito: o refactor do ADR-003 já feito
+## Pré-requisito: o refactor do ADR-003 (F0.4.4) — **feito em 2026-09-17**
 
-O padrão do autor **não** deve ser codificado dentro de `integrations.py`. Ele vira a primeira
-**convenção** real (`docs/adr/ADR-003-language-modules.md`, seção "Convenções como extensões"): um
-pacote `aidd_conventions_<nome>` (pode ser repo próprio) com `convention.yaml` (pastas → camadas,
-registradores de rota, layout do outbound) + hooks Python só onde precisar (regras estruturais,
-`target_of`). Ativado por `conventions: [<nome>-v1]` no `atlas.yaml`. Se o refactor ainda não estiver
-feito quando este chat começar, fazer primeiro (F0.4.4) — é mecânico e tem regressão numérica.
+O padrão do autor **não** entra em `core/` nem em `languages/`. Ele vira a primeira **convenção**
+real, escrita contra o contrato que já existe:
+
+- `indexer/aidd_indexer/conventions/base.py` — `Convention` com `configure(options)`, `layer_of(file,
+  module)`, `target_of(http_call, file)`, `is_entry_point(symbol, file)`, `check(ctx) -> [ViolationInfo]`.
+- `conventions/declarative.py` — `convention.yaml` (camadas por glob, `targets`, `entry_points`, regras
+  `forbid_import` / `endpoints_only_in` / `http_calls_only_in`). Exemplo comentado em
+  `setup/conventions/hexagonal.example.yaml`; comece por ele.
+- Ativação em `atlas.yaml`: `tenants.<t>.conventions: [{path: .../convention.yaml, repos: ["*"]}]` ou
+  `{id: pacote.modulo:Classe}` / entry point `aidd.conventions` para o que exigir Python. Para testar
+  sem manifesto: `AIDD_CONVENTIONS=/caminho/convention.yaml aidd index <repo> --dry-run --out x.json`
+  (o payload traz `violations` e `layer` em files/modules).
+- O que **ainda não existe** e é provavelmente o que o padrão do autor vai pedir primeiro:
+  `route_patterns` / `client_patterns` (registradores e clientes HTTP próprios, ex.:
+  `registerRoutes`+`setHandlerSecurity`, `PostJSON`) entrando no scanner da linguagem via um hook em
+  `core/http_base.BaseScanner` consultado pela convenção ativa. Implementar como hook, com fixture;
+  nunca como `if` no scanner.
+- Regressão obrigatória a cada mudança: `pytest indexer/tests/` (5 testes) e o corpus público idêntico
+  (`scripts/http_corpus.py`). Mudança em `core/` ou `languages/` só se for regra geral da linguagem.
 
 ## Objetivo
 
@@ -85,6 +98,8 @@ feito quando este chat começar, fazer primeiro (F0.4.4) — é mecânico e tem 
 ## Entregáveis esperados ao fim do chat
 
 - `indexer/tests/fixtures/*` (≥ 1 por linguagem) + `expected.json` + `tests/test_fixtures.py` verdes.
-- `integrations.py` evoluído, corpus público sem regressão, tabela de regras atualizada no guia.
+- A convenção do padrão do autor (`convention.yaml` + classe `Convention` se precisar) com testes em
+  `tests/test_conventions.py`; hooks novos no contrato só quando o YAML não expressar; corpus público
+  sem regressão; tabela de regras atualizada no guia.
 - ROADMAP: item F0.4.2 "fixtures do padrão do autor" marcado, com a lista de gaps que ficaram para o
   F0.5 (linker) e F1 (SCIP/gRPC).
