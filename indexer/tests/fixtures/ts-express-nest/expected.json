@@ -1,0 +1,47 @@
+{
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/orders",
+   "handler": "create"
+  },
+  {
+   "method": "GET",
+   "path": "/orders/{id}",
+   "handler": "findOne"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/checkout",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/health",
+   "handler": "<inline>"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/v1/auth/failed-attempt",
+   "via": "axios.post",
+   "target_hint": "src",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/v1/orders/{param}",
+   "via": "axios.get",
+   "target_hint": "src",
+   "line": 10
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/users/{param}",
+   "via": "fetch",
+   "target_hint": "src",
+   "line": 11
+  }
+ ]
+}

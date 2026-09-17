@@ -1,6 +1,6 @@
 [project]
 name = "aidd-indexer"
-version = "0.2.0"
+version = "0.2.1"
 description = "aidd-stack code graph indexer: parses repositories with tree-sitter and loads the micro graph (files, symbols, calls, imports) into Neo4j (atlas)."
 readme = "README.md"
 requires-python = ">=3.11"

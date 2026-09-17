@@ -1,0 +1,94 @@
+{
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/v1/orders",
+   "handler": "createOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{id}",
+   "handler": "getOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/chi/items",
+   "handler": "listItems"
+  },
+  {
+   "method": "POST",
+   "path": "/chi/items",
+   "handler": "createItem"
+  },
+  {
+   "method": "POST",
+   "path": "/gorilla/things",
+   "handler": "createThing"
+  },
+  {
+   "method": "GET",
+   "path": "/gorilla/things/{id}",
+   "handler": "getThing"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "health"
+  },
+  {
+   "method": "ANY",
+   "path": "/legacy/users",
+   "handler": "legacyUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/metrics",
+   "handler": "metrics"
+  },
+  {
+   "method": "ANY",
+   "path": "/ping",
+   "handler": "ping"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/failed-attempt",
+   "handler": "invalidLogin"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/{id}",
+   "handler": "getUser"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/v1/auth/failed-attempt",
+   "via": "c.PostJSON",
+   "target_hint": "billing",
+   "line": 16
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/{param}",
+   "via": "http.NewRequestWithContext",
+   "target_hint": "billing",
+   "line": 20
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "via": "c.hc.Get",
+   "target_hint": "billing",
+   "line": 26
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/users/{param}/sessions",
+   "via": "http.NewRequest",
+   "target_hint": "billing",
+   "line": 32
+  }
+ ]
+}
