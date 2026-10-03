@@ -94,9 +94,9 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `DEPLOYS` | Repo→Service | the repo produces the service |
 | `EXPOSES` | Service→HttpEndpoint \| GrpcService | implements the contract. **One edge per `ref`** (`{ref}` is the MERGE key) with `commit_sha`, `evidence`, `line`, `raw_pattern`, `confidence`; edges of a ref not refreshed at the current commit are removed, and an endpoint with no `EXPOSES` and no `CONSUMES` is deleted |
 | `HANDLED_BY` | HttpEndpoint \| GrpcMethod → Symbol | **macro→micro bridge**: the concrete handler (entry of `trace_flow`). One edge per `ref` (`{ref}` key), same lifecycle as `EXPOSES` |
-| `CONSUMES` | Service→HttpEndpoint | outbound HTTP call |
+| `CONSUMES` | Service→HttpEndpoint | outbound HTTP call, **materialized by the linker (F0.5)** from `HttpCall × HttpEndpoint`. One edge per `ref` (`{ref}` key) per (consumer, endpoint): `commit_sha`, `confidence` (`exact` = same `path_key`; `suffix` = one path is a segment suffix of the other **and** a hint names the provider), `hint` (`target_hint` \| `env_hint` \| null — what broke a tie between services), `call_count`, `methods[]`, `evidence[]` (≤10 call sites), `linked_at`. Never links a service to itself; when several services expose the path and no hint picks one, **no edge** (the MCP lists them as `possible_consumers`). Rebuilt for the whole tenant on every `aidd link` / end of index·bootstrap·refresh |
 | `CALLS_GRPC` | Service→GrpcMethod | outbound gRPC call |
-| `CALLED_FROM` | HttpEndpoint \| GrpcMethod → Symbol | **micro→macro bridge**: the call site in the consumer's code |
+| `CALLED_FROM` | HttpEndpoint \| GrpcMethod → Symbol \| File | **micro→macro bridge**: one edge per linked call site (`{ref, call_id}` key; target = the `HttpCall`'s caller symbol, or the file for top-level code) with `commit_sha`, `line`, `method`, `confidence`, `hint`, `evidence`, `via`. Same lifecycle as `CONSUMES` |
 | `DEFINES_PROTO` | Repo→GrpcService | where the `.proto` lives |
 | `PUBLISHES` / `SUBSCRIBES` | Service→Topic | `event_schema?` |
 | `PRODUCES` / `CONSUMES_EVENT` | Service→EventSchema | when a schema exists |

@@ -170,6 +170,7 @@ class FileExtractor:
         self.symbols: list[SymbolInfo] = []
         self.calls: list[CallInfo] = []
         self.imports: list[ImportInfo] = []
+        self.facts: dict = {}                          # LanguageSupport.file_facts (Go: struct fields, import aliases)
         self.namespaces: list[str] = []                # namespaces declared in this file (C#)
         self.file_namespace: str | None = None         # file-scoped namespace — prefixes everything (C# `namespace X;`)
         self.seen_ids: set[str] = set()
@@ -201,6 +202,7 @@ class FileExtractor:
                         bindings=_import_bindings(inode, spec, self.src, self.lang),
                     ))
         self.namespaces, self.file_namespace = self.lang.file_scope(self.tree.root_node, self.src)
+        self.facts = self.lang.file_facts(self.tree.root_node, self.src)
 
         # materialize symbols outer-first so parents exist before children
         for dnode_id, (kind, nnode) in sorted(self.defs.items(), key=lambda kv: kv[1][1].start_byte):
@@ -209,12 +211,15 @@ class FileExtractor:
 
         for cnode, callee, receiver in raw_calls:
             caller = self._enclosing_symbol(cnode)
+            typed = self.lang.call_receiver(cnode, receiver, self.src) if receiver is not None else None
             self.calls.append(CallInfo(
                 caller_id=caller.id if caller else self.file.id,
                 callee_name=_text(callee, self.src),
                 receiver=(_text(receiver, self.src)[:80] if receiver is not None else None),
                 line=cnode.start_point[0] + 1,
                 file_id=self.file.id,
+                receiver_type=typed[0] if typed else None,
+                receiver_path=typed[1] if typed else (),
             ))
 
     def _node_by_id(self, node_id: int, hint: Node) -> Node:

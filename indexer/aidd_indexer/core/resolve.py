@@ -16,6 +16,7 @@ from pathlib import Path
 from .. import languages
 from ..languages.base import ResolveContext
 from . import ids
+from .config import is_test_path
 from .extract import CALLABLE_KINDS, FileExtractor
 from .model import ExtractionResult, FileInfo, SymbolInfo
 
@@ -28,7 +29,7 @@ class CallEdge:
     caller_id: str
     callee_id: str
     line: int
-    strategy: str          # same-file | same-module | unique-name (+ "-ambiguous")
+    strategy: str          # receiver-type | receiver-type-impl | same-file | same-module | unique-name (+ "-ambiguous")
 
 
 @dataclass
@@ -77,7 +78,8 @@ class Resolver:
         self.packages: dict[str, PackageNode] = {}
         self.external_bindings: dict[str, set[str]] = defaultdict(set)   # file id -> names bound to external packages
         self.ctx = ResolveContext(self.root, self.files_by_path, self.modules_by_path, self.module_by_id,
-                                  self.files_by_id, dict(namespaces))
+                                  self.files_by_id, dict(namespaces), facts={fx.file.id: fx.facts for fx in extractors})
+        self.test_file = {f.id: is_test_path(f.path) for f in result.files}
         for lang in languages.all():
             lang.resolve_setup(self.ctx)
 
@@ -96,6 +98,28 @@ class Resolver:
                     unresolved += 1          # call into an external package / runtime builtin
                     continue
             caller_file = self.files_by_id.get(c.file_id)
+            # production code never targets test code: drop fakes/mocks from the candidate set
+            if not self.test_file.get(c.file_id, False):
+                prod = [s for s in cands if not self.test_file.get(s.file_id, False)]
+                if not prod:
+                    unresolved += 1
+                    continue
+                cands = prod
+            # static receiver type (Go: struct field / parameter / constructor) picks the method among homonyms
+            if c.receiver_type and caller_file is not None:
+                lang = languages.by_id(caller_file.language)
+                qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
+                if qtype:
+                    typed = self._method_on(cands, c.callee_name, qtype, lang)
+                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name)
+                    impl_typed = self._method_on(cands, c.callee_name, impl, lang) if impl else None
+                    if typed is not None:
+                        edges.append(CallEdge(c.caller_id, typed.id, c.line, "receiver-type"))
+                    if impl_typed is not None:
+                        edges.append(CallEdge(c.caller_id, impl_typed.id, c.line, "receiver-type-impl"))
+                    if typed is None and impl_typed is None:
+                        unresolved += 1      # the receiver's type is known and it has no such method here (inherited from a package): don't guess
+                    continue
             same_file = [s for s in cands if s.file_id == c.file_id]
             if same_file:
                 chosen, strat = same_file, "same-file"
@@ -119,6 +143,14 @@ class Resolver:
             for s in chosen:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
+
+    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
+        """The candidate declared on `qtype` or, failing that, on its nearest in-repo supertype."""
+        for t in [qtype] + lang.supertypes(self.ctx, qtype):
+            hit = [s for s in cands if s.qualified_name == f"{t}.{name}"]
+            if len(hit) == 1:
+                return hit[0]
+        return None
 
     # -- imports ---------------------------------------------------------------------
     def _pkg(self, ecosystem: str, name: str, stdlib: bool = False) -> str:

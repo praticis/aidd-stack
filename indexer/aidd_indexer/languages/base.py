@@ -53,6 +53,7 @@ class ResolveContext:
     module_by_id: dict[str, "ModuleInfo"]
     files_by_id: dict[str, "FileInfo"]
     namespaces: dict[str, list[str]]           # declared namespace -> declaring file ids (from `file_scope`)
+    facts: dict[str, dict[str, Any]] = field(default_factory=dict)   # file id -> `file_facts()` of its language
     extra: dict[str, Any] = field(default_factory=dict)   # per-language scratch filled by `resolve_setup`
 
     def file_at(self, rel: str) -> "FileInfo | None":
@@ -123,6 +124,16 @@ class LanguageSupport:
         """(namespaces declared in the file, file-scoped namespace) — C# only for now."""
         return [], None
 
+    def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
+        """Per-file facts the resolver may need later (Go: struct field types, import aliases,
+        constructor return types). Stored on the extractor and handed to `resolve_receiver` via ctx.facts."""
+        return {}
+
+    def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
+        """(static type of the receiver's base variable as written, field path) for `x.y.Method()`,
+        when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
+        return None
+
     # ---- resolution ---------------------------------------------------------------------
     def resolve_setup(self, ctx: ResolveContext) -> None:
         """Compute per-repo lookups once (Go: module paths from go.mod) into `ctx.extra`."""
@@ -130,6 +141,25 @@ class LanguageSupport:
 
     def resolve_import(self, ctx: ResolveContext, file: "FileInfo", spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
         """(target id, label) for an import spec, `label` in File | Module | Package; None = unresolved."""
+        return None
+
+    def resolve_receiver(self, ctx: ResolveContext, file: "FileInfo", receiver_type: str, path: tuple[str, ...]) -> str | None:
+        """Qualified type name (`internal.domain.password.Policy`) of a call receiver, following
+        `path` through struct fields; None when it cannot be determined. Lets `resolve.py` pick the
+        method of *that* type among homonyms (strategy `receiver-type`)."""
+        return None
+
+    def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        """Qualified names of the in-repo base types of a type (nearest first), so a method inherited
+        from a base class declared in this repo still resolves by receiver type."""
+        return []
+
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
+        """Qualified name of the single concrete type that implements `qualified_type` *and* can
+        serve `method` for it — None when there are zero or several implementers, or when the
+        implementer's `method` is an explicit implementation of another interface. A call on the
+        interface then also links to the implementation (strategy `receiver-type-impl`), the usual
+        DI case in C#."""
         return None
 
     def link_symbols(self, symbols: list["SymbolInfo"], files_by_id: dict[str, "FileInfo"]) -> None:

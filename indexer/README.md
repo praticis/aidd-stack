@@ -109,7 +109,7 @@ the fastest way to inspect what a language query extracts.
 
 ```
 aidd_indexer/
-  cli.py                    aidd plan / bootstrap / refresh / index / status / wipe / selftest / serve
+  cli.py                    aidd plan / bootstrap / refresh / index / link / status / wipe / selftest / serve
   core/                     language-agnostic pipeline — never names a language
     config.py manifest.py   env + atlas.yaml (tenants, sources, refs, areas, conventions)
     planner.py gitinfo.py   sources → (repo, ref, sha) items; git plumbing
@@ -119,6 +119,7 @@ aidd_indexer/
     integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner)
     http_base.py            BaseScanner: expression → path template, handler-vs-data, method detection
     paths.py                normalize_path / path_key (shared with graph.py and the MCP)
+    linker.py               HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM (pure; graph.py reads and writes)
     graph.py ids.py model.py Neo4j writer (idempotent MERGE, GC), id convention, dataclasses
   languages/                one folder per language; registered in languages/__init__.py
     base.py                 LanguageSupport contract (identity · discovery · symbols · resolution · http)
@@ -138,7 +139,8 @@ aidd_indexer/
 1. `mkdir aidd_indexer/languages/<lang>/` with `queries.scm` (`@def.<kind>` + `@name`, `@call` +
    `@callee` (+ optional `@receiver`), `@import`; blank lines separate patterns).
 2. `symbols.py`: subclass `LanguageSupport`, override only what differs (`module_prefix`,
-   `qualified_name`, `visibility`, `import_bindings`, `resolve_import`, …) and export
+   `qualified_name`, `visibility`, `import_bindings`, `resolve_import`; optionally `file_facts` +
+   `call_receiver` + `resolve_receiver` so method calls resolve by the receiver's static type) and export
    `LANGUAGES = [<instance>]` with `id`, `grammar`, `extensions`, `query_file`, `stack`, `manifests`.
 3. Optional `http.py`: subclass `BaseScanner`, set `http_scanner=` on the instance.
 4. Add the folder name to `_MODULES` in `languages/__init__.py`. The Dockerfile prefetches the

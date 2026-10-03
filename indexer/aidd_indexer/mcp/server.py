@@ -26,7 +26,7 @@ from typing import Any
 from neo4j import GraphDatabase
 
 from .. import INDEXER_VERSION
-from ..core.config import ConfigError, Neo4jConfig
+from ..core.config import is_test_path, ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
 FORBIDDEN = re.compile(
@@ -144,6 +144,23 @@ def _fulltext_query(text: str) -> str:
 
 
 # ------------------------------------------------------------------------------------------
+def _collapse_refs(consumers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per (repo, caller) with the refs it appears in — a call site indexed on 13 branches
+    is one consumer, not thirteen. `evidence` is taken from the first ref in sorted order (the
+    default branch sorts first in practice: 'main' < 'feature/...' is not guaranteed, so refs are listed)."""
+    groups: dict[tuple[str, str], dict[str, Any]] = {}
+    for c in consumers:
+        key = (c["repo"], c.get("caller") or "")
+        g = groups.setdefault(key, {**{k: v for k, v in c.items() if k != "ref"}, "refs": []})
+        g["refs"].append(c["ref"])
+    out = []
+    for g in groups.values():
+        g["refs"] = sorted(set(g["refs"]), key=lambda r: (r not in ("main", "master", "develop"), r))
+        g["ref_count"] = len(g["refs"])
+        out.append(g)
+    return sorted(out, key=lambda g: (g["repo"], g.get("caller") or ""))
+
+
 def build_server(store: Store | None = None):
     from mcp.server.fastmcp import FastMCP
     from starlette.requests import Request
@@ -159,7 +176,8 @@ def build_server(store: Store | None = None):
             "Read-only access to the aidd code graph (micro level: repos, modules, files, symbols, "
             "calls, imports). Start with atlas_status to see what is indexed; use repo_map for an "
             "overview of one repository, find_symbol / who_calls / symbol_context to navigate code, "
-            "http_map / who_consumes for HTTP integrations between repositories, "
+            "http_map / who_consumes for HTTP integrations between repositories, impact_of for the "
+            "cross-repo blast radius of a symbol, ref_diff for what a branch adds to a repo's surface, "
             "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md). If a repo or ref is "
             "not indexed the tool says so — fall back to reading the source tree. In multi-tenant mode "
             "(AIDD_TENANT=auto) every tool accepts `tenant` = the workspace folder right below WORKSPACE_PATH "
@@ -350,36 +368,50 @@ def build_server(store: Store | None = None):
         """HTTP surface of one repository at a ref: the routes it EXPOSES (method, path template,
         framework, handler symbol) and the outbound HTTP calls it makes with a literal path
         (method, path template, where in the code, which package/env var hints at the target
-        service). Extracted deterministically from the source — no runtime data."""
+        service, and `linked_to`: the endpoint of another service the linker matched it to, or
+        null). Extracted deterministically from the source — no runtime data."""
         s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref)
         exposes = s.read("""
             MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
             OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            OPTIONAL MATCH (consumer:Service)-[:CONSUMES]->(e)
             RETURN e.id AS id, e.method AS method, e.path AS path, e.framework AS framework,
-                   h.id AS handler_id, h.qualified_name AS handler, x.evidence AS evidence
+                   h.id AS handler_id, h.qualified_name AS handler, x.evidence AS evidence,
+                   collect(DISTINCT consumer.name) AS consumer_repos
             ORDER BY path, method
         """, **base)
         calls = s.read("""
             MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
             OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
+            OPTIONAL MATCH (target:HttpEndpoint)-[cf:CALLED_FROM {call_id: c.id}]->()
             RETURN c.id AS id, c.method AS method, c.path AS path, c.via AS via, c.target_hint AS target_hint,
-                   c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence
+                   c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence,
+                   CASE WHEN target IS NULL THEN null ELSE
+                        {service: target.service, method: target.method, path: target.path, confidence: cf.confidence, hint: cf.hint}
+                   END AS linked_to
             ORDER BY target_hint, path, method
         """, **base)
         by_target: dict[str, int] = {}
         for c in calls:
             by_target[c["target_hint"] or "?"] = by_target.get(c["target_hint"] or "?", 0) + 1
-        return {**base, "exposes": exposes, "outbound_calls": calls, "outbound_by_target_hint": by_target}
+        linked = sum(1 for c in calls if c["linked_to"])
+        return {**base, "exposes": exposes, "outbound_calls": calls, "outbound_by_target_hint": by_target,
+                "outbound_linked": linked, "outbound_unlinked": len(calls) - linked}
 
     @mcp.tool()
     def who_consumes(path: str, method: str | None = None, repo: str | None = None, tenant: str | None = None) -> dict[str, Any]:
         """Which repositories call an HTTP route, and from where. `path` is a route template as
         exposed ('/v1/users/{id}' — placeholder names do not matter) or a prefix; `repo` narrows
-        to the service exposing it. Returns each matching endpoint with its handler and its
-        consumers (repo, ref, caller symbol, file:line). Consumers come from outbound calls with a
-        literal/template path in the consumer's code; URLs assembled dynamically are invisible."""
+        to the service exposing it. Returns each matching endpoint with its handler, its
+        `consumers` (materialized CONSUMES/CALLED_FROM edges, one per repo × caller symbol with the
+        `refs` where the call site exists, file:line evidence, confidence exact|suffix and which
+        hint broke a tie) and `possible_consumers`: outbound
+        calls with the same path that the linker did NOT link — usually because several services
+        expose that path and nothing (target_hint, env var name, convention `targets:`) picks one.
+        Consumers come from outbound calls with a literal/template path in the consumer's code;
+        URLs assembled dynamically are invisible."""
         s = st(tenant)
         key = re.sub(r"\{[^}]*\}", "{param}", path.rstrip("/") or "/")
         rows = s.read("""
@@ -390,20 +422,128 @@ def build_server(store: Store | None = None):
             WITH DISTINCT svc, e
             OPTIONAL MATCH (e)-[:HANDLED_BY]->(h:Symbol)
             WITH svc, e, collect(DISTINCT {ref: h.ref, symbol: h.qualified_name})[0..3] AS handlers
+            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
+            WITH svc, e, handlers, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            WITH svc, e, handlers,
+                 [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
+                    {repo: caller.repo, ref: cf.ref, method: cf.method, caller: coalesce(caller.qualified_name, caller.path),
+                     evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
             OPTIONAL MATCH (c:HttpCall {tenant: $tenant, path_key: e.path_key})
             WHERE (c.method = e.method OR e.method = 'ANY' OR c.method = 'ANY') AND c.repo <> svc.name
-            OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
-            WITH svc, e, handlers, c, caller ORDER BY c.repo, c.ref, c.line
-            RETURN svc.name AS service, e.id AS endpoint_id, e.method AS method, e.path AS path, handlers,
+              AND NOT EXISTS { MATCH (e)-[x:CALLED_FROM]->() WHERE x.call_id = c.id }
+            OPTIONAL MATCH (pc)-[:MAKES_HTTP_CALL]->(c)
+            WITH svc, e, handlers, consumers, c, pc ORDER BY c.repo, c.ref, c.line
+            RETURN svc.name AS service, e.id AS endpoint_id, e.method AS method, e.path AS path, handlers, consumers,
                    [x IN collect(CASE WHEN c IS NULL THEN null ELSE
                         {repo: c.repo, ref: c.ref, method: c.method, path: c.path,
-                         caller: coalesce(caller.qualified_name, caller.path), evidence: c.evidence,
-                         target_hint: c.target_hint, confidence: 'exact'} END) WHERE x IS NOT NULL] AS consumers
+                         caller: coalesce(pc.qualified_name, pc.path), evidence: c.evidence,
+                         target_hint: c.target_hint, env_hints: c.env_hints} END) WHERE x IS NOT NULL][0..20] AS possible_consumers
             ORDER BY service, path, method LIMIT 50
         """, key=key, method=method, repo=repo)
         for r in rows:
+            r["consumers"] = _collapse_refs(r["consumers"])
             r["consumer_repos"] = sorted({c["repo"] for c in r["consumers"]})
         return {"query": {"path": path, "method": method, "repo": repo}, "endpoints": rows}
+
+    @mcp.tool()
+    def impact_of(symbol: str, repo: str | None = None, ref: str | None = None, max_depth: int = 6,
+                  tenant: str | None = None) -> dict[str, Any]:
+        """Blast radius of changing one symbol, across repositories. Walks incoming CALLS inside the
+        symbol's repo/ref (up to `max_depth` hops) to the HTTP handlers that reach it, then the
+        routes those handlers serve (HANDLED_BY) and the services that consume them (CONSUMES /
+        CALLED_FROM, materialized by the linker). Returns: `internal_callers` (symbols in the same
+        repo that reach it, with hop distance), `exposed_through` (routes whose handler reaches it),
+        `consumers` (other repos: service, route, caller symbol, file:line, confidence). Each internal
+        caller carries `test: true|false` (file under a test path) and the counts are split into
+        `production_caller_count` / `test_caller_count` — read the production ones first. An empty
+        `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
+        app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
+        `-ambiguous` are likely, not proven."""
+        s = st(tenant)
+        sy = _symbol(s, symbol, repo, ref)
+        depth = max(1, min(max_depth, 10))
+        callers = s.read(f"""
+            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(:Symbol {{id: $id}})
+            WHERE h.ref = $ref AND h.repo = $repo
+            WITH h, min(length(p)) AS hops, collect(DISTINCT [r IN relationships(p) | r.strategy]) AS strategies
+            MATCH (f:File)-[:CONTAINS]->(h)
+            RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file, hops,
+                   h.is_entry_point AS entry_point,
+                   any(st IN reduce(acc = [], x IN strategies | acc + x) WHERE st ENDS WITH 'ambiguous') AS via_ambiguous
+            ORDER BY hops, qualified_name LIMIT $limit
+        """, id=sy["id"], ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
+        for c in callers:
+            c["test"] = is_test_path(c["file"])
+        production = [c for c in callers if not c["test"]]
+        reach_ids = [sy["id"]] + [c["id"] for c in callers]
+        exposed = s.read("""
+            MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            WHERE h.id IN $ids
+            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
+            WITH e, h, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            RETURN e.id AS endpoint_id, e.service AS service, e.method AS method, e.path AS path,
+                   h.qualified_name AS handler,
+                   [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
+                        {repo: caller.repo, ref: cf.ref, caller: coalesce(caller.qualified_name, caller.path),
+                         evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
+            ORDER BY path, method
+        """, ref=sy["ref"], ids=reach_ids)
+        consumers = []
+        for e in exposed:
+            for c in _collapse_refs(e.pop("consumers")):
+                consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
+        return {"symbol": sy, "internal_callers": callers, "internal_caller_count": len(callers),
+                "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
+                "exposed_through": exposed, "consumers": consumers,
+                "consumer_repos": sorted({c["repo"] for c in consumers})}
+
+    @mcp.tool()
+    def ref_diff(repo: str, ref: str, base: str | None = None, tenant: str | None = None) -> dict[str, Any]:
+        """What a branch adds or removes compared to another indexed ref of the same repo (default:
+        the repo's default branch): HTTP routes exposed (`endpoints_added` / `endpoints_removed`),
+        entry-point symbols (handlers, controllers, commands — `entry_points_added` / `_removed`, by
+        qualified name) and outbound HTTP calls (`http_calls_added` / `_removed`, by method+path).
+        Useful to review a feature branch's surface before it merges, or to explain why
+        `who_consumes` shows a route only in some refs. `snapshots` gives the indexed sha of each
+        ref — compare with `git rev-parse` before trusting a diff on a branch you just merged into."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = s.resolve_ref(repo, base)
+        if ref == base:
+            raise AtlasError(f"ref and base are the same ({ref}) — pass a different `base`")
+
+        def surface(r: str) -> dict[str, Any]:
+            eps = s.read("""
+                MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+                OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+                RETURN e.method + ' ' + e.path AS key, e.method AS method, e.path AS path, h.qualified_name AS handler, x.evidence AS evidence
+            """, repo=repo, ref=r)
+            syms = s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref, is_entry_point: true})
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.qualified_name AS key, sy.kind AS kind, f.path AS file, sy.line_start AS line
+            """, repo=repo, ref=r)
+            calls = s.read("""
+                MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+                RETURN DISTINCT c.method + ' ' + c.path AS key, c.method AS method, c.path AS path, c.target_hint AS target_hint
+            """, repo=repo, ref=r)
+            return {"endpoints": {r["key"]: r for r in eps}, "entry_points": {r["key"]: r for r in syms},
+                    "http_calls": {r["key"]: r for r in calls}}
+
+        a, b = surface(ref), surface(base)
+        snaps = {r["ref"]: r for r in s.read("""
+            MATCH (sn:Snapshot {tenant: $tenant, repo: $repo}) WHERE sn.ref IN [$ref, $base]
+            RETURN sn.ref AS ref, left(sn.commit_sha, 10) AS sha, toString(sn.indexed_at) AS indexed_at
+        """, repo=repo, ref=ref, base=base)}
+        out: dict[str, Any] = {"repo": repo, "ref": ref, "base": base,
+                               "snapshots": snaps,
+                               "note": "compares the INDEXED commits above (remote-tracking refs). A local merge or "
+                                       "unpushed commits are not in the graph until they are pushed and refreshed."}
+        for kind in ("endpoints", "entry_points", "http_calls"):
+            out[f"{kind}_added"] = [a[kind][k] for k in sorted(set(a[kind]) - set(b[kind]))]
+            out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
+        out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
+        return out
 
     @mcp.tool()
     def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:

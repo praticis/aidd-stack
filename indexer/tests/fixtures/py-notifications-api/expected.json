@@ -1,0 +1,7 @@
+{
+  "endpoints": [
+    {"method": "GET", "path": "/health", "handler": "health"},
+    {"method": "POST", "path": "/v1/notifications", "handler": "send"}
+  ],
+  "calls": []
+}

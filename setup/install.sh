@@ -569,6 +569,12 @@ run_atlas_bootstrap() {
   read -r -p "Select an option [1/2, default: $def]: " opt </dev/tty
   if [[ "${opt:-$def}" == "2" ]]; then
     info "Skipped."
+    if [ "${AIDD_UPGRADE:-0}" = 1 ]; then
+      # snapshots are already in the graph; (re)build the cross-repo CONSUMES/CALLED_FROM edges
+      # with the current linker — cheap, and the scheduled refresh only links when something changed
+      info "Linking HTTP calls to endpoints across repositories (aidd link) ..."
+      "$AIDD_DIR/aidd" link || warn "Linker failed — see output above; later: $AIDD_DIR/aidd link"
+    fi
     return 0
   fi
   echo ""
