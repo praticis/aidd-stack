@@ -1,0 +1,66 @@
+{
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/v1/users/me",
+      "handler": "getUserMe"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/users",
+      "handler": "createUser"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/users/{id}",
+      "handler": "getUser"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/password-policy",
+      "handler": "passwordPolicy"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/onboardings/{onboardingId}/documents/{documentId}/ocr-reference",
+      "handler": "registerOCRReference"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboardings/{onboardingId}/documents/{documentId}/upload",
+      "handler": "uploadDocument"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboardings/{onboardingId}/steps/password",
+      "handler": "savePassword"
+    }
+  ],
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/v1/onboardings/{param}/steps",
+      "line": 47
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboardings/{param}/submit",
+      "line": 55
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/onboardings/{param}/documents/{param}/ocr-reference",
+      "line": 66
+    },
+    {
+      "method": "POST",
+      "path": "/v1/liveness/session",
+      "line": 76
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboardings",
+      "line": 85
+    }
+  ]
+}

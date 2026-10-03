@@ -26,6 +26,7 @@ from pathlib import Path
 from . import INDEXER_VERSION
 from . import conventions, languages
 from .core.config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
+from .core.deps import collect_manifest_deps
 from .core.discovery import build_files, discover_modules, list_files
 from .core.extract import GRAMMAR_ERRORS, extract_file, load_language
 from .core.gitinfo import current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
@@ -47,13 +48,14 @@ TRIGGER = os.getenv("AIDD_TRIGGER", "manual")
 
 # -- core: extract + resolve one tree -------------------------------------------------------
 
-def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
+def extract_tree(repo: RepoInfo, patterns=None) -> tuple[ExtractionResult, list]:
     t0 = time.time()
     rel_files = list_files(Path(repo.root))
     modules, stack = discover_modules(repo, rel_files)
     repo.stack = sorted(stack)
     files = build_files(repo, rel_files, modules)
     res = ExtractionResult(repo=repo, modules=modules, files=files)
+    res.provides, res.requires = collect_manifest_deps(repo, rel_files)
     log(f"[discover] {len(rel_files)} files, {len(files)} recorded, {len(modules)} modules, stack={repo.stack} ({time.time()-t0:.1f}s)")
 
     missing = []
@@ -87,7 +89,7 @@ def extract_tree(repo: RepoInfo) -> tuple[ExtractionResult, list]:
     # integration candidates (F0.4): routes exposed + outbound HTTP calls with literal paths
     from .core.integrations import extract_http
     t1 = time.time()
-    hr = extract_http(repo, extractors)
+    hr = extract_http(repo, extractors, patterns)
     res.endpoints, res.http_calls = hr.endpoints, hr.calls
     res.warnings.extend(hr.warnings)
     resolved = sum(1 for e in hr.endpoints if e.handler_id)
@@ -109,12 +111,12 @@ def conventions_for(tenant: str, repo_name: str, config: str | None = None) -> l
 
 
 def extract_and_resolve(repo: RepoInfo, convs: list | None = None) -> tuple[ExtractionResult, Resolved]:
-    res, extractors = extract_tree(repo)
+    if convs is None:
+        convs = conventions_for(repo.tenant, repo.name)
+    res, extractors = extract_tree(repo, conventions.scan_patterns(convs))
     rv = Resolver(res, extractors).run()
     log(f"[resolve]  {len(rv.calls)} CALLS edges ({rv.unresolved_calls} unresolved call sites), "
         f"{len(rv.imports)} IMPORTS edges ({rv.unresolved_imports} unresolved), {len(rv.packages)} external packages")
-    if convs is None:
-        convs = conventions_for(repo.tenant, repo.name)
     if convs:
         t0 = time.time()
         conventions.apply(convs, res, rv)
@@ -208,6 +210,8 @@ def cmd_index(args: argparse.Namespace) -> int:
             "endpoints": [asdict(e) for e in res.endpoints],
             "http_calls": [asdict(c) for c in res.http_calls],
             "violations": [asdict(v) for v in res.violations],
+            "provides": [asdict(p) for p in res.provides],
+            "requires": [asdict(d) for d in res.requires],
             "warnings": res.warnings,
         }
         if args.out:
@@ -229,12 +233,13 @@ def cmd_index(args: argparse.Namespace) -> int:
 
 
 def _link(gw, tenant: str) -> None:
-    """Rebuild the tenant's CONSUMES / CALLED_FROM edges (F0.5) — after any snapshot changes."""
+    """Rebuild the tenant's CONSUMES / CALLED_FROM (F0.5) and DEPENDS_ON (F0.5.1) edges — after any snapshot changes."""
     t0 = time.time()
     c = gw.link_tenant(tenant)
     log(f"[link]     {tenant}: {c['linked']} call sites linked ({c['exact']} exact, {c['suffix']} suffix, "
         f"{c['by_hint']} by hint), {c['ambiguous']} ambiguous, {c['unmatched']} unmatched "
-        f"of {c['calls']} calls × {c['endpoints']} endpoints ({time.time()-t0:.1f}s)")
+        f"of {c['calls']} calls × {c['endpoints']} endpoints; {c['depends_on']} DEPENDS_ON edges "
+        f"from {c['deps_packages']} internal packages ({c['deps_ambiguous']} ambiguous) ({time.time()-t0:.1f}s)")
 
 
 def _load_plan(args: argparse.Namespace):
@@ -307,6 +312,13 @@ def cmd_refresh(args: argparse.Namespace) -> int:
         gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
                                keep={(it.repo.name, it.ref) for it in plan.items})
         log(f"[refresh] ephemeral snapshots removed: {gone}")
+        planned = {(it.repo.name, it.ref) for it in plan.items}
+        planned_repos = {it.repo.name for it in plan.items}
+        outside = sorted(k for k in gw.persistent_snapshots(tenant.name) if k not in planned and k[0] in planned_repos)
+        if outside:
+            log(f"[refresh] {len(outside)} persistent snapshot(s) outside the ref policy (kept — branch gone or refs changed): "
+                + ", ".join(f"{r}@{ref}" for r, ref in outside[:10]) + (" …" if len(outside) > 10 else "")
+                + f" — remove with: aidd wipe <repo> --ref <ref>")
         if todo or gone:
             _link(gw, tenant.name)
         return rc
@@ -422,9 +434,10 @@ def cmd_wipe(args: argparse.Namespace) -> int:
     gw, _ = open_graph()
     try:
         n = gw.wipe(tenant, name, args.ref)
+        log(f"[wipe] deleted {n} nodes for {tenant}/{name}" + (f"@{args.ref}" if args.ref else " (all refs)"))
+        _link(gw, tenant)          # CONSUMES / CALLED_FROM / DEPENDS_ON of the wiped ref go with it
     finally:
         gw.close()
-    log(f"[wipe] deleted {n} nodes for {tenant}/{name}" + (f"@{args.ref}" if args.ref else " (all refs)"))
     return 0
 
 

@@ -207,6 +207,9 @@ if command -v cypher >/dev/null 2>&1 || true; then
       fi
     fi
   fi
+  deps="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
+    "OPTIONAL MATCH ()-[d:DEPENDS_ON]->() RETURN count(d)" 2>/dev/null | grep -E '^[0-9]+$' | head -1)"
+  [ -n "$deps" ] && ok "linker: $deps DEPENDS_ON edge(s) between services (internal packages from manifests)"
 fi
 
 # ------------------------------------------------------------------------------

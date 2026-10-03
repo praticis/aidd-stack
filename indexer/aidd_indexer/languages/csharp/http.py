@@ -136,6 +136,8 @@ class CsScanner(BaseScanner):
         name = callee.split(".")[-1]
         recv_last = (callee.rsplit(".", 1)[0] if "." in callee else "").split(".")[-1]
         arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named]
+        if self.convention_call(n, name, recv_last, callee, arg_nodes):
+            return
         # Flurl: the *receiver* is the URL — "api/x".GetJsonAsync(), url.AppendPathSegment("orders").PostJsonAsync(body)
         if name in FLURL_VERBS and fn.type == "member_access_expression":
             kids_fn = [c for c in fn.children if c.is_named]

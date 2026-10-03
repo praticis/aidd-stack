@@ -10,17 +10,22 @@ for every file, then each parseable file is handed to the scanner its language m
 from __future__ import annotations
 
 from .. import languages
-from .http_base import TEST_FILE, HttpResult, PackageContext, collect_constants, dir_of
+from .http_base import TEST_FILE, HttpResult, PackageContext, ScanPatterns, collect_constants, dir_of
 from .model import RepoInfo
 
 
-def extract_http(repo: RepoInfo, extractors: list) -> HttpResult:
-    """`extractors` are FileExtractor objects (core/extract.py) after `.run()`."""
+def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | None" = None) -> HttpResult:
+    """`extractors` are FileExtractor objects (core/extract.py) after `.run()`; `patterns` is what the
+    tenant's conventions add to the scanners (route registrars / client methods of an internal SDK)."""
     out = HttpResult()
     by_dir: dict[str, PackageContext] = {}
     for fx in extractors:
-        ctx = by_dir.setdefault(dir_of(fx.file.path), PackageContext())
+        ctx = by_dir.setdefault(dir_of(fx.file.path), PackageContext(patterns))
         collect_constants(fx, ctx)
+        if not TEST_FILE.search("/" + fx.file.path):
+            for s in fx.symbols:
+                if s.kind in ("function", "method"):
+                    ctx.functions_by_name.setdefault(s.name, []).append(s)
     for fx in extractors:
         if TEST_FILE.search("/" + fx.file.path):
             continue

@@ -26,6 +26,16 @@ targets:                             # outbound calls from these files talk to t
 entry_points:                        # extra markers on top of the language heuristics
   signature_contains: ["*fiber.Ctx", "IRequestHandler"]
 
+route_patterns:                      # route registrars of an internal SDK the generic scanner cannot know
+  registrars:                        #   name -> fixed HTTP method, or null when the method is an argument / unknown
+    Route: null                      #   srv.Route("GET", "/v1/ping", h)   -> GET /v1/ping, handler h
+    RegisterGet: GET                 #   srv.RegisterGet("/v1/ping", h)
+
+client_patterns:                     # HTTP client methods / receivers of an internal SDK
+  methods:
+    DoJSON: null                     #   gw.DoJSON(ctx, "POST", "/v1/orders", out) -> POST /v1/orders
+  receivers: ["gateway", "gw"]       #   generic verbs on these receivers (gw.Do(ctx, "/v1/x")) count as outbound calls
+
 rules:
   - id: domain-is-pure               # a File in `from` importing a File in one of `to`
     forbid_import: {from: domain, to: [application, adapters-in, adapters-out]}

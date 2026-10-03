@@ -7,6 +7,7 @@ extensions and `index.*`); everything else is an npm package (`node:` = stdlib).
 
 from __future__ import annotations
 
+import json
 import posixpath
 import re
 from pathlib import Path, PurePosixPath
@@ -51,6 +52,24 @@ class TypeScriptSupport(LanguageSupport):
         if rq:
             names.append(rq.group(1))
         return names
+
+    def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
+        """package.json: `name` publishes; `dependencies` + `peerDependencies` require (dev deps are
+        tooling, not a runtime link between services). Workspace/file specs still count — they
+        name the package."""
+        try:
+            data = json.loads(text)
+        except ValueError:
+            return [], []
+        if not isinstance(data, dict):
+            return [], []
+        names = [data["name"]] if isinstance(data.get("name"), str) else []
+        deps = []
+        for section in ("dependencies", "peerDependencies"):
+            block = data.get(section)
+            if isinstance(block, dict):
+                deps.extend((k, str(v)) for k, v in block.items())
+        return names, deps
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
         here = PurePosixPath(file.path).parent

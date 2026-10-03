@@ -16,7 +16,7 @@ from neo4j import GraphDatabase, Driver
 from .. import INDEXER_VERSION
 from . import ids
 from .config import Neo4jConfig
-from .linker import CallRow, EndpointRow, called_from_rows, consumes_rows, link
+from .linker import CallRow, DepRow, EndpointRow, ProvideRow, called_from_rows, consumes_rows, depends_on_rows, link, link_deps
 from .paths import path_key
 from .model import ExtractionResult
 from .resolve import Resolved
@@ -81,10 +81,14 @@ class GraphWriter:
             MATCH (r:Repo {id: $repo_id})
             MERGE (s:Snapshot {id: $id})
             SET s.tenant = $tenant, s.repo = $repo, s.ref = $ref, s.commit_sha = $sha,
-                s.indexed_at = datetime($now), s.indexer_version = $ver, s.ephemeral = $ephemeral
+                s.indexed_at = datetime($now), s.indexer_version = $ver, s.ephemeral = $ephemeral,
+                s.provides = $provides, s.requires = $requires
             MERGE (r)-[:HAS_SNAPSHOT]->(s)
         """, id=ids.snapshot(repo.tenant, repo.name, repo.ref), repo_id=ids.repo(repo.tenant, repo.name),
-             ver=INDEXER_VERSION, ephemeral=ephemeral, **common)
+             ver=INDEXER_VERSION, ephemeral=ephemeral,
+             provides=sorted({p.key() for p in res.provides}),
+             requires=sorted({f"{d.key()}@{d.version}" for d in res.requires}), **common)
+        counts["provides"], counts["requires"] = len(res.provides), len(res.requires)
 
         counts["modules"] = self._batched("""
             UNWIND $rows AS m
@@ -166,6 +170,15 @@ class GraphWriter:
             MERGE (r)-[:DEPLOYS]->(s)
         """, id=svc_id, repo_id=ids.repo(repo.tenant, repo.name), **common)
 
+        # Endpoint ids are keyed by `path_key` since 0.2.8; a node written by an older indexer under
+        # the raw `path` would survive on EXPOSES edges of refs not reindexed in this run (ephemeral
+        # branches waiting for their GC) and the linker would link calls to both. Drop them.
+        self._run("""
+            MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})
+            WHERE e.id <> $tenant + '/svc/' + $repo + '/http/' + e.method + ' ' + coalesce(e.path_key, e.path)
+            DETACH DELETE e
+        """, **common)
+
         counts["endpoints"] = self._batched("""
             UNWIND $rows AS e
             MERGE (n:HttpEndpoint {id: e.id})
@@ -181,7 +194,7 @@ class GraphWriter:
             OPTIONAL MATCH (h:Symbol {id: e.handler_id})
             FOREACH (_ IN CASE WHEN h IS NULL THEN [] ELSE [1] END |
               MERGE (n)-[hb:HANDLED_BY {ref: $ref}]->(h)
-              SET hb.commit_sha = $sha, hb.evidence = e.evidence, hb.confidence = 'exact')
+              SET hb.commit_sha = $sha, hb.evidence = e.evidence, hb.confidence = 'exact', hb.last_seen = datetime($now))
         """, [e.__dict__ | {"path_key": path_key(e.path)} for e in res.endpoints], svc_id=svc_id, **common)
 
         counts["http_calls"] = self._batched("""
@@ -216,24 +229,29 @@ class GraphWriter:
 
         # EXPOSES / HANDLED_BY edges of this ref that were not refreshed at this commit are stale
         # (route removed or moved); endpoints left without any exposer and consumer are dropped.
+        # "Refreshed" = touched by *this* run (`last_seen`), not "same commit": a reindex of the same sha
+        # (indexer upgrade) must also drop what the new extractor no longer sees.
         self._run("""
             MATCH (:Service {id: $svc_id})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
-            WHERE x.commit_sha <> $sha
+            WHERE x.last_seen IS NULL OR x.last_seen <> datetime($now)
             DELETE x
-            WITH e
-            OPTIONAL MATCH (e)-[hb:HANDLED_BY {ref: $ref}]->()
-            DELETE hb
         """, svc_id=svc_id, **common)
+        self._run("""
+            MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})-[hb:HANDLED_BY {ref: $ref}]->()
+            WHERE hb.last_seen IS NULL OR hb.last_seen <> datetime($now)
+            DELETE hb
+        """, **common)
         self._run("""
             MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})
             WHERE NOT (e)<-[:EXPOSES]-() AND NOT (e)<-[:CONSUMES]-()
             DETACH DELETE e
         """, **common)
 
-        # Orphan GC: micro nodes of this (tenant, repo, ref) not seen at this commit.
+        # Orphan GC: micro nodes of this (tenant, repo, ref) not written by this run (same rule as above:
+        # a commit can be reindexed by a newer extractor and lose nodes).
         rec = self._run_autocommit("""
             MATCH (n:File|Symbol|Module|HttpCall|Violation {tenant: $tenant, repo: $repo, ref: $ref})
-            WHERE n.commit_sha <> $sha
+            WHERE n.indexed_at IS NULL OR n.indexed_at <> datetime($now)
             CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 1000 ROWS
         """, **common)
         counts["orphans_deleted"] = rec.counters.nodes_deleted if rec else 0
@@ -288,7 +306,33 @@ class GraphWriter:
             SET c.commit_sha = r.commit_sha, c.line = r.line, c.method = r.method, c.confidence = r.confidence,
                 c.hint = r.hint, c.evidence = r.evidence, c.via = r.via, c.linked_at = datetime($now)
         """, called_from_rows(result), tenant=tenant, now=now)
-        return {"endpoints": len(endpoints), "calls": len(calls)} | result.counts()
+        deps = self._link_deps(tenant, now)
+        return {"endpoints": len(endpoints), "calls": len(calls)} | result.counts() | deps
+
+    def _link_deps(self, tenant: str, now: str) -> dict[str, int]:
+        """`Snapshot.requires` × `Snapshot.provides` → `Service -[:DEPENDS_ON {ref}]-> Service` (F0.5.1).
+        What a repo publishes is the union over its refs; what it requires is per ref."""
+        snaps = self._rows("""
+            MATCH (s:Snapshot {tenant: $tenant})
+            RETURN s.repo AS repo, s.ref AS ref, s.commit_sha AS sha, s.provides AS provides, s.requires AS requires
+        """, tenant=tenant)
+        provides = [ProvideRow(r["repo"], key) for r in snaps for key in (r["provides"] or ())]
+        requires = []
+        for r in snaps:
+            for item in r["requires"] or ():
+                key, _, version = item.rpartition("@")
+                requires.append(DepRow(r["repo"], r["ref"], r["sha"] or "", key, version))
+        result = link_deps(requires, provides)
+        self._run("MATCH (:Service {tenant: $tenant})-[d:DEPENDS_ON]->() DELETE d", tenant=tenant)
+        rows = depends_on_rows(result)
+        self._batched("""
+            UNWIND $rows AS r
+            MATCH (a:Service {tenant: $tenant, name: r.repo}), (b:Service {tenant: $tenant, name: r.provider})
+            MERGE (a)-[d:DEPENDS_ON {ref: r.ref}]->(b)
+            SET d.commit_sha = r.commit_sha, d.packages = r.packages, d.versions = r.versions,
+                d.ecosystems = r.ecosystems, d.linked_at = datetime($now)
+        """, rows, tenant=tenant, now=now)
+        return {"depends_on": len(rows), "deps_packages": len(result.edges), "deps_ambiguous": len(result.ambiguous)}
 
     def _rows(self, cypher: str, **params) -> list[dict]:
         with self.driver.session(database=self.cfg.database) as s:
@@ -302,6 +346,15 @@ class GraphWriter:
         with self.driver.session(database=self.cfg.database) as s:
             rows = s.run("MATCH (n:Snapshot {tenant: $tenant}) RETURN n.repo AS repo, n.ref AS ref, n.commit_sha AS sha, n.indexer_version AS ver", tenant=tenant)
             return {(r["repo"], r["ref"]): (r["sha"] if r["ver"] == INDEXER_VERSION else "") for r in rows}
+
+    def persistent_snapshots(self, tenant: str) -> set[tuple[str, str]]:
+        """(repo, ref) of the snapshots that only a policy change or `aidd wipe` removes
+        (`always` / `patterns` refs); ephemeral ones have their own GC."""
+        rows = self._rows("""
+            MATCH (s:Snapshot {tenant: $tenant}) WHERE coalesce(s.ephemeral, false) = false
+            RETURN s.repo AS repo, s.ref AS ref
+        """, tenant=tenant)
+        return {(r["repo"], r["ref"]) for r in rows}
 
     def gc_ephemeral(self, tenant: str, older_than_days: int, keep: set[tuple[str, str]]) -> int:
         """Drop ephemeral snapshots that the current plan no longer lists and that were not

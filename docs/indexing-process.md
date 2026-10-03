@@ -53,6 +53,12 @@ tenants:
         max_per_repo: 5        # …limitado a K por repo, marcadas ephemeral: true
         exclude: ["dependabot/*", "renovate/*", "docs/*", "ci/*", "cd/*", "pipeline/*"]
       gc_ephemeral_after_days: 30
+      overrides:             # opcional: política por repo (nome exato ou glob; sobrescreve só o que declarar)
+        <project>:
+          always: ["main"]   # ex.: `develop` abandonada neste repo — sai da política sem mexer no tenant
+        "legacy-*":
+          always: ["master"]
+          active: false      # sem branches ativas para esses
     schedule: "0 */6 * * *"    # refresh automático (aidd sync + index --changed) até a Fase 3
 ```
 

@@ -119,7 +119,8 @@ aidd_indexer/
     integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner)
     http_base.py            BaseScanner: expression → path template, handler-vs-data, method detection
     paths.py                normalize_path / path_key (shared with graph.py and the MCP)
-    linker.py               HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM (pure; graph.py reads and writes)
+    deps.py                 manifests → provides / requires per repo (LanguageSupport.manifest_deps)
+    linker.py               HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM; requires × provides → DEPENDS_ON (pure; graph.py reads and writes)
     graph.py ids.py model.py Neo4j writer (idempotent MERGE, GC), id convention, dataclasses
   languages/                one folder per language; registered in languages/__init__.py
     base.py                 LanguageSupport contract (identity · discovery · symbols · resolution · http)

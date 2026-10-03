@@ -58,6 +58,8 @@ class GoScanner(BaseScanner):
         arg_nodes = [c for c in args.children if c.is_named]
         if not arg_nodes:
             return
+        if self.convention_call(n, name, recv_last, callee, arg_nodes):
+            return
 
         # ---- exposed routes ---------------------------------------------------------------
         if name in GO_REGISTRARS and len(arg_nodes) >= 2 and not CLIENT_RECEIVER.search(recv_last):

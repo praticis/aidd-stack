@@ -36,8 +36,10 @@ def service(tenant: str, name: str) -> str:
     return f"{tenant}/svc/{name}"
 
 
-def http_endpoint(tenant: str, service_name: str, method: str, path: str) -> str:
-    return f"{tenant}/svc/{service_name}/http/{method} {path}"
+def http_endpoint(tenant: str, service_name: str, method: str, path_key: str) -> str:
+    """Keyed by `path_key` (placeholders normalized to `{param}`): renaming `{id}` to `{userId}`
+    on a branch is the same route, not a second endpoint. The display `path` stays an attribute."""
+    return f"{tenant}/svc/{service_name}/http/{method} {path_key}"
 
 
 def http_call(tenant: str, repo: str, ref: str, file_path: str, line: int) -> str:

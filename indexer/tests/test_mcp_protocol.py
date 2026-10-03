@@ -11,7 +11,7 @@ import pytest
 from aidd_indexer.mcp.server import Store, _collapse_refs, build_server
 
 EXPECTED_TOOLS = {"atlas_status", "repo_map", "find_symbol", "who_calls", "symbol_context", "http_map",
-                  "who_consumes", "impact_of", "ref_diff", "cypher_readonly"}
+                  "who_consumes", "impact_of", "ref_diff", "violations", "cypher_readonly"}
 
 
 class FakeStore(Store):

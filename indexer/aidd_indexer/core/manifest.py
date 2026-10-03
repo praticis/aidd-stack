@@ -32,6 +32,30 @@ class RefPolicy:
     patterns: list[str] = field(default_factory=list)
     active: ActivePolicy = field(default_factory=ActivePolicy)
     gc_ephemeral_after_days: int = 30
+    overrides: dict[str, dict] = field(default_factory=dict)   # repo name or glob -> {always, patterns, active}
+
+    def for_repo(self, repo: str) -> "RefPolicy":
+        """The policy one repo sees: tenant defaults with every matching `overrides` entry applied
+        (declaration order; later wins). Lets `<project>@develop` stay out when that branch is dead
+        without touching the tenant-wide `always` (F0.3.6)."""
+        pol = RefPolicy(list(self.always), list(self.patterns), ActivePolicy(**self.active.__dict__),
+                        self.gc_ephemeral_after_days)
+        for pattern, o in self.overrides.items():
+            if not fnmatch.fnmatch(repo, pattern):
+                continue
+            if "always" in o:
+                pol.always = list(o["always"] or [])
+            if "patterns" in o:
+                pol.patterns = list(o["patterns"] or [])
+            a = o.get("active")
+            if isinstance(a, dict):
+                pol.active = ActivePolicy(
+                    max_age_days=int(a.get("max_age_days", pol.active.max_age_days)),
+                    max_per_repo=int(a.get("max_per_repo", pol.active.max_per_repo)),
+                    exclude=list(a.get("exclude", pol.active.exclude)))
+            elif a is False:
+                pol.active = ActivePolicy(max_per_repo=0)
+        return pol
 
 
 @dataclass
@@ -125,6 +149,8 @@ def load_manifest(path: str | None = None) -> Manifest:
 
         r = t.get("refs") or {}
         a = r.get("active") or {}
+        if r.get("overrides") and not isinstance(r["overrides"], dict):
+            raise ConfigError(f"{p}: tenant '{name}': 'refs.overrides' must be a map of repo name/glob -> policy")
         refs = RefPolicy(
             always=r.get("always", RefPolicy().always),
             patterns=r.get("patterns") or [],
@@ -134,6 +160,7 @@ def load_manifest(path: str | None = None) -> Manifest:
                 exclude=a.get("exclude", ActivePolicy().exclude),
             ),
             gc_ephemeral_after_days=int(r.get("gc_ephemeral_after_days", 30)),
+            overrides={str(k): v for k, v in (r.get("overrides") or {}).items() if isinstance(v, dict)},
         )
         areas = {k: list(v or []) for k, v in (t.get("areas") or {}).items()}
         convs = t.get("conventions") or []

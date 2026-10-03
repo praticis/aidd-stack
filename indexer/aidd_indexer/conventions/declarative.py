@@ -36,6 +36,7 @@ import yaml
 from ..core import ids
 from ..core.config import ConfigError
 from ..core.model import FileInfo, HttpCallInfo, ModuleInfo, SymbolInfo, ViolationInfo
+from ..core.scan_patterns import ScanPatterns
 from .base import Convention, ConventionContext
 
 
@@ -67,6 +68,7 @@ class DeclarativeConvention(Convention):
             (layer, _glob_re(g)) for layer, globs in (raw.get("layers") or {}).items() for g in (globs or [])
         ]
         self.targets: list[tuple[re.Pattern, str]] = [(_glob_re(g), str(svc)) for g, svc in (raw.get("targets") or {}).items()]
+        self.patterns = ScanPatterns.from_dict(raw)
         ep = raw.get("entry_points") or {}
         self.entry_sig: tuple[str, ...] = tuple(ep.get("signature_contains") or [])
         self.rules: list[dict[str, Any]] = list(raw.get("rules") or [])
@@ -78,6 +80,9 @@ class DeclarativeConvention(Convention):
 
     def configure(self, options: dict[str, Any]) -> None:
         pass
+
+    def scan_patterns(self) -> ScanPatterns:
+        return self.patterns
 
     # ---- annotation
     def layer_of(self, file: FileInfo, module: ModuleInfo | None) -> str | None:

@@ -13,6 +13,10 @@ Rules, in order of confidence:
              weak: `/documents/{param}/upload` is the tail of many unrelated routes (seen in the
              first portfolio run), so without corroboration the call stays unmatched.
 
+Second join (F0.5.1): `Snapshot.requires` × `Snapshot.provides` — a manifest dependency whose
+package name another repo of the tenant publishes becomes `Service -[:DEPENDS_ON {ref}]-> Service`.
+Same stance: exact normalized name, never self, two publishers of the same name → no edge.
+
 When more than one service exposes a candidate, the call's `target_hint` (directory heuristic or a
 convention's `targets:`) and `env_hints` (`BILLING_URL`) disambiguate by matching a token of the
 service name. Still more than one service → **no edge** (precision before recall, as in the
@@ -170,3 +174,65 @@ def called_from_rows(result: LinkResult) -> list[dict]:
         "ref": e.call.ref, "commit_sha": e.call.commit_sha, "line": e.call.line, "method": e.call.method,
         "confidence": e.confidence, "hint": e.hint, "evidence": e.call.evidence, "via": e.call.via,
     } for e in sorted(result.edges, key=lambda e: (e.endpoint.id, e.call.evidence))]
+
+
+# ---- F0.5.1: manifests → DEPENDS_ON ------------------------------------------------------
+
+@dataclass(frozen=True)
+class ProvideRow:
+    repo: str
+    key: str                       # "<ecosystem>:<normalized name>"
+
+
+@dataclass(frozen=True)
+class DepRow:
+    repo: str
+    ref: str
+    commit_sha: str
+    key: str                       # "<ecosystem>:<normalized name>"
+    version: str
+
+
+@dataclass(frozen=True)
+class DepEdge:
+    dep: DepRow
+    provider: str
+
+
+@dataclass
+class DepLinkResult:
+    edges: list[DepEdge] = field(default_factory=list)
+    ambiguous: dict[str, list[str]] = field(default_factory=dict)   # package key -> publishing repos
+
+
+def link_deps(requires: list[DepRow], provides: list[ProvideRow]) -> DepLinkResult:
+    publishers: dict[str, set[str]] = defaultdict(set)
+    for p in provides:
+        publishers[p.key].add(p.repo)
+    out = DepLinkResult()
+    for d in requires:
+        repos = publishers.get(d.key, set()) - {d.repo}
+        if not repos:
+            continue
+        if len(repos) > 1:
+            out.ambiguous[d.key] = sorted(repos)
+            continue
+        out.edges.append(DepEdge(d, next(iter(repos))))
+    return out
+
+
+def depends_on_rows(result: DepLinkResult) -> list[dict]:
+    """One `DEPENDS_ON {ref}` per (consumer, provider, ref) with the packages that justify it."""
+    groups: dict[tuple[str, str, str], list[DepEdge]] = defaultdict(list)
+    for e in result.edges:
+        groups[(e.dep.repo, e.provider, e.dep.ref)].append(e)
+    rows = []
+    for (repo, provider, ref), edges in sorted(groups.items()):
+        edges = sorted({(e.dep.key, e.dep.version): e for e in edges}.values(), key=lambda e: e.dep.key)
+        rows.append({
+            "repo": repo, "provider": provider, "ref": ref, "commit_sha": edges[0].dep.commit_sha,
+            "packages": [e.dep.key.split(":", 1)[1] for e in edges],
+            "versions": [e.dep.version for e in edges],
+            "ecosystems": sorted({e.dep.key.split(":", 1)[0] for e in edges}),
+        })
+    return rows

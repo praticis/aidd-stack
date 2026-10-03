@@ -27,7 +27,8 @@ from ..languages.base import node_text as text, walk
 from . import ids
 from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
-from .paths import (ENV_URL_NAME, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, VERB_BY_NAME,
+from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
+from .paths import (ENV_URL_NAME, path_key, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, VERB_BY_NAME,
                     has_literal_segment, looks_like_rel_path, normalize_path, unquote)
 
 
@@ -47,6 +48,7 @@ OUTBOUND = {
     "get": "GET", "post": "POST", "put": "PUT", "patch": "PATCH", "delete": "DELETE", "head": "HEAD", "options": "OPTIONS",
     "Get": "GET", "Post": "POST", "Put": "PUT", "Patch": "PATCH", "Delete": "DELETE", "Head": "HEAD",
 }
+REQUEST_PATH_FIELDS = frozenset({"path", "url", "uri", "endpoint", "requesturi"})
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
 
@@ -70,9 +72,11 @@ class HttpResult:
 class PackageContext:
     """Per directory (Go package / TS folder / C# namespace dir): route constants and env-var names."""
 
-    def __init__(self) -> None:
+    def __init__(self, patterns: "ScanPatterns | None" = None) -> None:
         self.route_consts: dict[str, str] = {}     # name -> raw path
         self.env_hints: set[str] = set()
+        self.patterns = patterns or ScanPatterns()
+        self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
 
 
 def dir_of(file_path: str) -> str:
@@ -148,6 +152,31 @@ class BaseScanner:
 
     def evidence(self, node: Node) -> str:
         return f"{self.repo.name}:{self.fx.file.path}:{node.start_point[0] + 1}"
+
+    def is_client_receiver(self, recv_last: str) -> bool:
+        return bool(CLIENT_RECEIVER.search(recv_last)) or self.ctx.patterns.is_client(recv_last)
+
+    def convention_call(self, n: Node, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> bool:
+        """Route registrars / client methods declared by a convention (`ScanPatterns`). Called first by
+        every language scanner; True = recorded (or deliberately ignored), stop here."""
+        pats = self.ctx.patterns
+        if name in pats.registrars and len(arg_nodes) >= 2:
+            fixed = pats.registrars[name]
+            path_idx = next((i for i, a in enumerate(arg_nodes) if self.path_of(a) is not None), None)
+            if path_idx is not None:
+                method = fixed or self.method_from_args(arg_nodes[:path_idx + 1]) or "ANY"
+                handler = next((a for a in reversed(arg_nodes) if self.is_handler_like(a)), None)
+                self.add_endpoint(n, method, self.path_of(arg_nodes[path_idx]) or "", "convention", handler,
+                                  prefix=self.group_prefix.get(recv_last, ""))
+                return True
+        if name in pats.clients or (name in GENERIC_OUTBOUND and pats.is_client(recv_last)):
+            method = pats.clients.get(name) or OUTBOUND.get(name) or self.method_from_args(arg_nodes)
+            for a in arg_nodes:
+                p = self.path_of(a, lenient=True)
+                if p is not None:
+                    self.add_call(n, method, p, callee)
+                    return True
+        return False
 
     # -- template of an interpolated string (Python f"", C# $"", JS `${}`) ------------------
     def _interpolated(self, n: Node) -> str:
@@ -232,8 +261,18 @@ class BaseScanner:
             return None
         if t in ("binary_expression", "concatenated_string", "binary_operator"):   # base + "/v1/x" + id
             raw = ""
-            for c in n.children:
-                if not c.is_named:
+            operands: list[Node] = []                    # flatten `a + b + c + ...` (left-nested) into one list
+            stack = [c for c in reversed(n.children) if c.is_named]
+            while stack:
+                c = stack.pop()
+                if c.type == t:
+                    stack.extend(k for k in reversed(c.children) if k.is_named)
+                else:
+                    operands.append(c)
+            for c in operands:
+                verb = re.match(r"^(?:http\.)?Method([A-Z][a-z]+)$", text(c, src))        # http.MethodPut + " " + path
+                if verb and verb.group(1).upper() in HTTP_METHODS:
+                    raw += verb.group(1).upper()
                     continue
                 p = self.path_of(c, lenient, _depth + 1) if c.type not in STRING_NODES else (self._interpolated(c) if any(k.type in ("interpolation", "template_substitution") for k in c.children) else unquote(text(c, src)))
                 if p is None:
@@ -244,8 +283,8 @@ class BaseScanner:
             raw = re.sub(r"^\{param\}(?=/)", "", raw)
             if not raw:
                 return None
-            if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw):
-                return raw
+            if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw) or re.match(r"^[A-Z]+ /", raw):
+                return raw                                           # "PUT " + base + "/x" is a net/http 1.22 pattern
             return ("/" + raw) if lenient and "/" in raw and not raw.startswith("{") else None
         if t in ("call_expression", "invocation_expression", "call"):     # fmt.Sprintf("/v1/%s", id), "...".format(), path.Join
             fn = n.child_by_field_name("function")
@@ -270,9 +309,15 @@ class BaseScanner:
                     recv = kids_fn[0] if kids_fn else None
                 return self.path_of(recv, lenient, _depth + 1) if recv is not None else None
             if fname in ("Join", "JoinPath", "urljoin", "Combine"):
-                segs = [self.path_of(a, lenient, _depth + 1) or "{param}" for a in arg_nodes]
+                segs = [(unquote(text(a, src)) if a.type in STRING_NODES and not any(k.type in ("interpolation", "template_substitution") for k in a.children)
+                         else self.path_of(a, lenient, _depth + 1)) or "{param}" for a in arg_nodes]
                 segs = [s for s in segs if s]
                 return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
+            return None
+        if t in ("composite_literal", "object", "dictionary", "anonymous_object_creation_expression"):   # Request{Path: p} / {url: p}
+            for key, val in self._keyed_fields(n):
+                if key.lower() in REQUEST_PATH_FIELDS:
+                    return self.path_of(val, True, _depth + 1)
             return None
         if t == "object_creation_expression":             # new Uri("api/x", UriKind.Relative)
             if "Uri" in text(n, src).split("(")[0]:
@@ -287,6 +332,20 @@ class BaseScanner:
             inner = [c for c in n.children if c.is_named]
             return self.path_of(inner[-1], lenient, _depth + 1) if inner else None
         return None
+
+    def _keyed_fields(self, n: Node) -> list[tuple[str, Node]]:
+        """(key, value) pairs of an object / struct literal, one level deep."""
+        out: list[tuple[str, Node]] = []
+        for d in walk(n):
+            if d is n or d.type not in ("keyed_element", "pair", "member_declarator", "property_assignment"):
+                continue
+            kids = [c for c in d.children if c.is_named]
+            if len(kids) >= 2:
+                val = kids[-1]
+                while val.type == "literal_element" and val.named_child_count == 1:     # Go wraps both sides
+                    val = val.named_children[0]
+                out.append((unquote(text(kids[0], self.src)).strip(), val))
+        return out
 
     def _unwrap_arg(self, n: Node) -> Node:
         if n.type == "argument":            # C#: argument -> expression
@@ -305,9 +364,11 @@ class BaseScanner:
                 if v in HTTP_METHODS:
                     return v
             if a.type in ("object", "composite_literal", "dictionary", "anonymous_object_creation_expression"):
-                mm = re.search(r"method\s*[:=]\s*[\"'`]([A-Za-z]+)[\"'`]", txt, re.I)
-                if mm and mm.group(1).upper() in HTTP_METHODS:
-                    return mm.group(1).upper()
+                mm = re.search(r"method\s*[:=]\s*(?:[\"'`]([A-Za-z]+)[\"'`]|(?:http\.)?Method([A-Z][a-z]+)|HttpMethod\.([A-Z][a-z]+))", txt, re.I)
+                if mm:
+                    v = (mm.group(1) or mm.group(2) or mm.group(3) or "").upper()
+                    if v in HTTP_METHODS:
+                        return v
         return None
 
     def is_handler_like(self, n: Node | None) -> bool:
@@ -327,19 +388,62 @@ class BaseScanner:
             return not re.search(r"\b(Sprintf|Errorf|Marshal|Join|format|Encode|Serialize|bytes\.|strings\.)", txt)
         return False
 
+    def _function_symbol(self, name: str):
+        """The function a handler name refers to: this file first, else the only one with that name
+        in the directory (a Go package / a controller folder spans files); two homonyms → None."""
+        cands = [c for c in self.symbols_by_name.get(name) or [] if c.kind in ("function", "method")]
+        if cands:
+            return cands[0]
+        pkg = self.ctx.functions_by_name.get(name) or []
+        return pkg[0] if len(pkg) == 1 else None
+
+    def _handler_in_call(self, call: Node, depth: int = 0):
+        """`mw(h, WithX())`, `http.HandlerFunc(h)`, `chain(a, b)(h)`: the first argument (depth-first,
+        the callee of a curried call included) that names a function of this repo. Option calls
+        with no function argument (`WithX()`) are skipped."""
+        if depth > 3:
+            return None
+        fn = call.child_by_field_name("function")
+        args = call.child_by_field_name("arguments")
+        kids = [c for c in args.children if c.is_named] if args is not None else []
+        if fn is None:                       # C#
+            named = [c for c in call.children if c.is_named]
+            fn = named[0] if named else None
+            al = next((c for c in named if c.type == "argument_list"), None)
+            kids = [self._unwrap_arg(c) for c in al.children if c.is_named] if al is not None else []
+        for a in kids:
+            a = self._unwrap_arg(a)
+            if a.type in HANDLER_NODES:
+                return "<inline>", None
+            if a.type in ("identifier", "selector_expression", "member_expression", "member_access_expression", "attribute"):
+                sym = self._function_symbol(text(a, self.src).split(".")[-1])
+                if sym is not None:
+                    return sym.name, sym.id
+            elif a.type in ("call_expression", "invocation_expression", "call"):
+                found = self._handler_in_call(a, depth + 1)
+                if found:
+                    return found
+        if fn is not None and fn.type in ("call_expression", "invocation_expression", "call"):
+            return self._handler_in_call(fn, depth + 1)
+        return None
+
     def resolve_handler(self, handler_node: Node | None) -> tuple[str | None, str | None]:
         if handler_node is None:
             return None, None
         node = self._unwrap_arg(handler_node)
         if node.type in HANDLER_NODES:
             return "<inline>", None
+        if node.type in ("call_expression", "invocation_expression", "call"):
+            found = self._handler_in_call(node)
+            if found:
+                return found
         txt = text(node, self.src).strip()
         m = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*\)*\s*$", txt)
         name = m.group(1) if m else None
         if not name or name.lower() in ("nil", "null", "none"):
             return None, None
-        cands = [c for c in self.symbols_by_name.get(name) or [] if c.kind in ("function", "method")]
-        return name, (cands[0].id if cands else None)
+        sym = self._function_symbol(name)
+        return name, (sym.id if sym else None)
 
     def add_endpoint(self, node: Node, method: str, raw_pattern: str, framework: str, handler_node: Node | None,
                      prefix: str = "", handler_name: str | None = None, handler_id: str | None = None) -> None:
@@ -352,7 +456,7 @@ class BaseScanner:
         if handler_name is None and handler_node is not None:
             handler_name, handler_id = self.resolve_handler(handler_node)
         self.out.endpoints.append(HttpEndpointInfo(
-            id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path),
+            id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path_key(path)),
             method=method or "ANY", path=path, raw_pattern=raw_pattern, framework=framework,
             file_id=self.fx.file.id, line=node.start_point[0] + 1,
             handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),

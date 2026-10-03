@@ -144,6 +144,16 @@ def _fulltext_query(text: str) -> str:
 
 
 # ------------------------------------------------------------------------------------------
+def _collapse_dependents(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One line per dependent service: packages (union over refs) and the refs that declare them."""
+    by: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        e = by.setdefault(r["service"], {"service": r["service"], "packages": set(), "refs": set()})
+        e["packages"].update(r["packages"] or ())
+        e["refs"].update(r["refs"] or ())
+    return [{"service": k, "packages": sorted(v["packages"]), "refs": sorted(v["refs"])} for k, v in sorted(by.items())]
+
+
 def _collapse_refs(consumers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One row per (repo, caller) with the refs it appears in — a call site indexed on 13 branches
     is one consumer, not thirteen. `evidence` is taken from the first ref in sorted order (the
@@ -209,8 +219,11 @@ def build_server(store: Store | None = None):
     @mcp.tool()
     def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
         """Overview of one repository at a ref (default: its default branch): stack, modules with
-        file/symbol counts, entry points (HTTP handlers, controllers, commands) and the external
-        packages it depends on. Use it before reading files — it tells where things live."""
+        file/symbol counts, entry points (HTTP handlers, controllers, commands), the external
+        packages it imports, `layers` (files per architectural layer when a convention is configured,
+        with their violation count — see `violations`), and `depends_on` / `depended_by`: other services
+        of the workspace linked through internal packages declared in manifests (go.mod, .csproj,
+        package.json, pyproject). Use it before reading files — it tells where things live."""
         s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref)
@@ -244,8 +257,25 @@ def build_server(store: Store | None = None):
             MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref})
             RETURN sy.kind AS kind, count(*) AS n ORDER BY n DESC
         """, **base)
+        layers = s.read("""
+            MATCH (f:File {tenant: $tenant, repo: $repo, ref: $ref}) WHERE f.layer IS NOT NULL
+            OPTIONAL MATCH (f)-[:HAS_VIOLATION]->(v:Violation)
+            RETURN f.layer AS layer, count(DISTINCT f) AS files, count(DISTINCT v) AS violations
+            ORDER BY layer
+        """, **base)
+        depends_on = s.read("""
+            MATCH (:Service {tenant: $tenant, name: $repo})-[d:DEPENDS_ON {ref: $ref}]->(b:Service)
+            RETURN b.name AS service, d.packages AS packages, d.versions AS versions, d.ecosystems AS ecosystems
+            ORDER BY service
+        """, **base)
+        depended_by = s.read("""
+            MATCH (a:Service)-[d:DEPENDS_ON]->(:Service {tenant: $tenant, name: $repo})
+            RETURN a.name AS service, d.packages AS packages, collect(DISTINCT d.ref) AS refs
+            ORDER BY service
+        """, **base)
         return {**base, **head, "symbol_kinds": {k["kind"]: k["n"] for k in kinds},
-                "modules": modules, "entry_points": entry_points, "external_packages": packages}
+                "modules": modules, "entry_points": entry_points, "external_packages": packages,
+                "layers": layers, "depends_on": depends_on, "depended_by": _collapse_dependents(depended_by)}
 
     @mcp.tool()
     def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
@@ -386,13 +416,19 @@ def build_server(store: Store | None = None):
             MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
             OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
             OPTIONAL MATCH (target:HttpEndpoint)-[cf:CALLED_FROM {call_id: c.id}]->()
+            WITH c, caller, collect(DISTINCT CASE WHEN target IS NULL THEN null ELSE
+                 {service: target.service, method: target.method, path: target.path, confidence: cf.confidence, hint: cf.hint}
+                 END) AS targets
             RETURN c.id AS id, c.method AS method, c.path AS path, c.via AS via, c.target_hint AS target_hint,
                    c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence,
-                   CASE WHEN target IS NULL THEN null ELSE
-                        {service: target.service, method: target.method, path: target.path, confidence: cf.confidence, hint: cf.hint}
-                   END AS linked_to
+                   [t IN targets WHERE t IS NOT NULL] AS targets
             ORDER BY target_hint, path, method
         """, **base)
+        for c in calls:                          # one row per call site; a call linked to several endpoints lists them all
+            targets = c.pop("targets") or []
+            c["linked_to"] = targets[0] if targets else None
+            if len(targets) > 1:
+                c["also_linked_to"] = targets[1:]
         by_target: dict[str, int] = {}
         for c in calls:
             by_target[c["target_hint"] or "?"] = by_target.get(c["target_hint"] or "?", 0) + 1
@@ -544,6 +580,36 @@ def build_server(store: Store | None = None):
             out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
         out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
         return out
+
+    @mcp.tool()
+    def violations(repo: str, ref: str | None = None, severity: str | None = None, rule: str | None = None,
+                   layer: str | None = None, limit: int = 100, tenant: str | None = None) -> dict[str, Any]:
+        """Convention violations recorded for a repository at a ref (default: its default branch):
+        which rule, where (file:line, symbol), severity and message — e.g. a domain file importing an
+        adapter, a route declared outside the inbound layer. Empty when no convention is configured for
+        the tenant (`atlas.yaml: conventions`). Filter by `severity` (error|warning|info), `rule` id or
+        the `layer` of the offending file; `summary` counts per rule regardless of `limit`."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = dict(repo=repo, ref=ref, severity=severity, rule=rule, layer=layer)
+        where = ("WHERE ($severity IS NULL OR v.severity = $severity) AND ($rule IS NULL OR v.rule = $rule) "
+                 "AND ($layer IS NULL OR f.layer = $layer)")
+        rows = s.read(f"""
+            MATCH (f:File {{tenant: $tenant, repo: $repo, ref: $ref}})-[:HAS_VIOLATION]->(v:Violation)
+            {where}
+            OPTIONAL MATCH (sy:Symbol)-[:HAS_VIOLATION]->(v)
+            RETURN v.convention AS convention, v.rule AS rule, v.severity AS severity, v.message AS message,
+                   f.path AS file, f.layer AS layer, v.line AS line, sy.qualified_name AS symbol, v.evidence AS evidence
+            ORDER BY CASE v.severity WHEN 'error' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, f.path, v.line
+            LIMIT $limit
+        """, limit=limit, **base)
+        summary = s.read(f"""
+            MATCH (f:File {{tenant: $tenant, repo: $repo, ref: $ref}})-[:HAS_VIOLATION]->(v:Violation)
+            {where}
+            RETURN v.convention AS convention, v.rule AS rule, v.severity AS severity, count(*) AS n
+            ORDER BY n DESC
+        """, **base)
+        return {"repo": repo, "ref": ref, "total": sum(r["n"] for r in summary), "summary": summary, "violations": rows}
 
     @mcp.tool()
     def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:
