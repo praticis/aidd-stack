@@ -28,24 +28,25 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `cli.py` | comandos `plan / bootstrap / refresh / index / status / wipe / selftest / serve`; `extract_tree()` é o pipeline por repo; `extract_and_resolve()` aplica as convenções |
 | `core/discovery.py` | quais arquivos entram; linguagem por extensão via `languages.by_extension()`; módulos por manifesto (declarados em cada `LanguageSupport.manifests`) + `discover_modules()` de cada linguagem (pacotes Go) |
 | `core/extract.py` | `FileExtractor`: parse tree-sitter + `queries.scm` → `SymbolInfo`, `CallInfo`, `ImportInfo`; delega a `LanguageSupport` nomes qualificados, visibilidade, docstrings, bindings de import e marcadores de entry point; `load_language()` com `GRAMMAR_ERRORS` |
-| `core/resolve.py` | `CALLS` por nome (same-file → same-module → unique-name); `IMPORTS` via `LanguageSupport.resolve_import()` → File/Module/Package; `link_symbols()` por linguagem (receivers Go) |
+| `core/resolve.py` | `CALLS`: candidatos pelo nome do callee, **código de produção nunca aponta para símbolo de teste**, depois tipo estático do receiver (`LanguageSupport.resolve_receiver` → método no tipo ou em `supertypes` do repo = `receiver-type`; interface com `implementations` único = `receiver-type-impl`; tipo conhecido sem o método = **sem aresta**) → same-file → same-module → unique-name (`-ambiguous` quando sobra mais de um); `IMPORTS` via `resolve_import()` → File/Module/Package; `link_symbols()` por linguagem |
 | `core/integrations.py` | orquestra os **candidatos HTTP**: contexto por diretório → `LanguageSupport.http_scanner` de cada arquivo — ver §3 |
 | `core/http_base.py` | `BaseScanner` (as peças reutilizáveis de §3), `PackageContext`, `TEST_FILE`, tabela `OUTBOUND` |
 | `core/paths.py` | `normalize_path`, `path_key`, `unquote`, regexes de path — usados pelo extrator, pelo `graph.py` e pelo MCP |
+| `core/linker.py` | **F0.5**: `link(calls, endpoints)` puro (exact → suffix → desempate por hint → ambíguo = nada) + `consumes_rows`/`called_from_rows`; `GraphWriter.link_tenant` lê/grava |
 | `core/model.py` | dataclasses de tudo + `ExtractionResult` (inclui `violations`) |
 | `core/graph.py` | `GraphWriter.write()`: MERGE idempotente, `EXPOSES{ref}`/`HANDLED_BY{ref}`, `Violation`/`HAS_VIOLATION`, GC de órfãos por `commit_sha`, `IndexRun` |
 | `core/planner.py` / `core/manifest.py` / `core/gitinfo.py` | `atlas.yaml` (tenants, sources, refs, areas, **conventions**) → plano de (repo, ref, sha); `git archive` por ref |
 | `languages/__init__.py` | registro: `REGISTRY`, `by_id`, `by_extension`, `parseable()`, `grammars()`; `_MODULES` lista as pastas |
 | `languages/base.py` | contrato `LanguageSupport` (identidade · descoberta · símbolos · resolução · http) e `ResolveContext` |
 | `languages/<lang>/queries.scm` | padrões `def.<kind>`, `call`, `import` — compilados padrão a padrão (um inválido é pulado com warning) |
-| `languages/<lang>/symbols.py` | a subclasse de `LanguageSupport` + `LANGUAGES = [...]` (typescript registra `typescript`, `tsx`, `javascript`) |
+| `languages/<lang>/symbols.py` | a subclasse de `LanguageSupport` + `LANGUAGES = [...]` (typescript registra `typescript`, `tsx`, `javascript`). Go e C# implementam também `file_facts`, `call_receiver` e `resolve_receiver` (Go: receiver do método, parâmetro, `x := T{}`, `x := pkg.New()` inclusive retorno múltiplo, campos de struct e campos promovidos por embedding; C#: campos/propriedades/parâmetros/locais/`base.`, membros herdados) e C# ainda `supertypes` + `implementations` (interface → implementador único) |
 | `languages/<lang>/http.py` | o scanner HTTP da linguagem (`GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`) e suas tabelas de registradores |
 | `conventions/base.py` | contrato `Convention` (`layer_of`, `target_of`, `is_entry_point`, `check`) e `ConventionContext` |
 | `conventions/declarative.py` | `convention.yaml` → `Convention` (camadas por glob, alvos, entry points, regras `forbid_import` / `endpoints_only_in` / `http_calls_only_in`) |
 | `conventions/__init__.py` | `load(specs, repo)` (arquivo, entry point `aidd.conventions` ou `pacote.modulo:Classe`) e `apply()` |
-| `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, cypher_readonly` |
+| `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, impact_of, ref_diff, cypher_readonly` — perguntas douradas em `docs/golden-questions.md` |
 | `scripts/http_corpus.py` | corpus público de calibração do extrator HTTP (§5) |
-| `tests/` | fixtures HTTP (golden) + `test_conventions.py` (costura das convenções) |
+| `tests/` | fixtures HTTP (golden) + `test_conventions.py` (costura das convenções) + `test_linker.py` (regras + par de fixtures `go-http-mix` → `go-billing-api`) + `test_mcp_protocol.py` (tools do MCP com store fake) |
 
 Pipeline de um repo (`cli.extract_tree` → `extract_and_resolve`): `list_files` → `discover_modules` →
 `build_files` → para cada arquivo parseável `FileExtractor.run()` → `extract_http(repo, extractors)` →
@@ -141,7 +142,8 @@ inspecionar o que o extrator viu num repo específico.
 
 - **Linguagem nova**: `languages/<lang>/` com `queries.scm` (`def.*`/`call`/`import`), `symbols.py`
   (subclasse de `LanguageSupport` sobrescrevendo só o que difere — nomes qualificados, visibilidade,
-  bindings de import, `resolve_import`; exportar `LANGUAGES = [instância]` com `id`, `grammar`,
+  bindings de import, `resolve_import`; opcionalmente `file_facts`/`call_receiver`/`resolve_receiver` para
+  resolver chamadas pelo tipo estático do receiver); exportar `LANGUAGES = [instância]` com `id`, `grammar`,
   `extensions`, `query_file`, `stack`, `manifests`) e, se houver HTTP, `http.py` (subclasse de
   `BaseScanner`, `http_scanner=` na instância). Registrar a pasta em `languages/__init__.py:_MODULES`.
   O `Dockerfile` e o `selftest` leem o registro — nada mais a editar. Fixture em `tests/fixtures/`.
@@ -159,7 +161,10 @@ inspecionar o que o extrator viu num repo específico.
 
 ## 8. O que vem depois do extrator (para não invadir)
 
-- **F0.5 linker**: `HttpCall × HttpEndpoint` por `path_key` + método → `CONSUMES` (Service→HttpEndpoint)
-  e `CALLED_FROM` (HttpEndpoint→Symbol), com desempate por `target_hint`/`env_hints` e match por sufixo.
+- **F0.5 linker (feito)**: `core/linker.py` — `HttpCall × HttpEndpoint` por `path_key` + método →
+  `CONSUMES` (Service→HttpEndpoint) e `CALLED_FROM` (HttpEndpoint→Symbol); `exact` antes de `suffix`,
+  desempate por `target_hint`/`env_hints`, ambíguo não grava. Roda por tenant inteiro ao fim de
+  `index`/`bootstrap`/`refresh` e em `aidd link`. Se uma chamada não liga, a pergunta é sempre "o que
+  falta no extrator ou na convenção (`targets:`)?" — não "o linker deveria chutar?".
 - **F0.7 perguntas douradas**: `who_consumes('/v1/<rota>')` respondida pelo grafo no par piloto.
 - F1: SCIP para `CALLS` resolvidos, gRPC/proto, mensageria, Qdrant.

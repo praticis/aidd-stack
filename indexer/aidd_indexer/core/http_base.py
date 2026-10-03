@@ -25,6 +25,7 @@ from tree_sitter import Node
 
 from ..languages.base import node_text as text, walk
 from . import ids
+from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
 from .paths import (ENV_URL_NAME, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, VERB_BY_NAME,
                     has_literal_segment, looks_like_rel_path, normalize_path, unquote)
@@ -49,8 +50,6 @@ OUTBOUND = {
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
 
-TEST_FILE = re.compile(r"(_test\.go$|\.spec\.[tj]sx?$|\.test\.[tj]sx?$|(^|/)test_[^/]*\.py$|_test\.py$|conftest\.py$|"
-                       r"Tests?\.cs$|/tests?/|/testdata/|/mocks?/|/e2e/|/integration[-_]tests?/|/__tests__/|\.Tests?/|/testing/)")
 STRING_NODES = {"interpreted_string_literal", "raw_string_literal", "string", "string_literal", "template_string",
                 "verbatim_string_literal", "interpolated_string_expression"}
 HANDLER_NODES = {"func_literal", "arrow_function", "function_expression", "function", "lambda_expression",

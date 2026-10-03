@@ -193,13 +193,18 @@ if command -v cypher >/dev/null 2>&1 || true; then
     "MATCH (s:Snapshot) WITH collect(DISTINCT s.indexer_version) AS v RETURN size(v)" 2>/dev/null | grep -E '^[0-9]+$' | head -1)"
   [ -n "$stale" ] && [ "$stale" -gt 1 ] && warn "snapshots from more than one indexer version — the next refresh re-indexes the older ones (or run: $AIDD_DIR/aidd refresh)"
   http="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
-    "OPTIONAL MATCH (e:HttpEndpoint) WITH count(e) AS eps OPTIONAL MATCH (c:HttpCall) RETURN toString(eps) + ' ' + toString(count(c))" 2>/dev/null | tr -d '"' | grep -E '^[0-9]+ [0-9]+$' | head -1)"
+    "OPTIONAL MATCH (e:HttpEndpoint) WITH count(e) AS eps OPTIONAL MATCH (c:HttpCall) WITH eps, count(c) AS calls OPTIONAL MATCH ()-[x:CONSUMES]->() RETURN toString(eps) + ' ' + toString(calls) + ' ' + toString(count(x))" 2>/dev/null | tr -d '"' | grep -E '^[0-9]+ [0-9]+ [0-9]+$' | head -1)"
   if [ -n "$http" ]; then
-    eps="${http%% *}"; calls="${http##* }"
+    read -r eps calls consumes <<<"$http"
     if [ "$eps" = "0" ] && [ "$calls" = "0" ]; then
       warn "no HTTP endpoints / outbound calls in atlas yet — re-index after upgrading: $AIDD_DIR/aidd refresh"
     else
       ok "integration candidates: $eps HTTP endpoints exposed, $calls outbound calls recorded"
+      if [ "$calls" != "0" ] && [ "$consumes" = "0" ]; then
+        warn "outbound calls exist but no CONSUMES edge — the linker has not run (or nothing matched): $AIDD_DIR/aidd link"
+      else
+        ok "linker: $consumes CONSUMES edge(s) between services"
+      fi
     fi
   fi
 fi

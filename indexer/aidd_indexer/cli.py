@@ -186,6 +186,7 @@ def cmd_index(args: argparse.Namespace) -> int:
         try:
             index_exported_ref(gw, repo_path, repo_path.name, tenant, args.ref, branches[args.ref]["sha"],
                                args.ephemeral, remote_url(repo_path), default_ref(repo_path), None)
+            _link(gw, tenant)
         finally:
             gw.close()
         return 0
@@ -221,9 +222,19 @@ def cmd_index(args: argparse.Namespace) -> int:
         t0 = time.time()
         counts = gw.write(res, rv, started, ephemeral=args.ephemeral, trigger=TRIGGER)
         log(f"[write]    {json.dumps(counts)} ({time.time()-t0:.1f}s) → {cfg.uri}/{cfg.database}")
+        _link(gw, tenant)
     finally:
         gw.close()
     return 0
+
+
+def _link(gw, tenant: str) -> None:
+    """Rebuild the tenant's CONSUMES / CALLED_FROM edges (F0.5) — after any snapshot changes."""
+    t0 = time.time()
+    c = gw.link_tenant(tenant)
+    log(f"[link]     {tenant}: {c['linked']} call sites linked ({c['exact']} exact, {c['suffix']} suffix, "
+        f"{c['by_hint']} by hint), {c['ambiguous']} ambiguous, {c['unmatched']} unmatched "
+        f"of {c['calls']} calls × {c['endpoints']} endpoints ({time.time()-t0:.1f}s)")
 
 
 def _load_plan(args: argparse.Namespace):
@@ -278,7 +289,9 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
                 return 1
         global TRIGGER
         TRIGGER = "bootstrap" if TRIGGER == "manual" else TRIGGER
-        return _run_items(gw, tenant, plan.items, skip_up_to_date=False)
+        rc = _run_items(gw, tenant, plan.items, skip_up_to_date=False)
+        _link(gw, tenant.name)
+        return rc
     finally:
         gw.close()
 
@@ -294,6 +307,8 @@ def cmd_refresh(args: argparse.Namespace) -> int:
         gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
                                keep={(it.repo.name, it.ref) for it in plan.items})
         log(f"[refresh] ephemeral snapshots removed: {gone}")
+        if todo or gone:
+            _link(gw, tenant.name)
         return rc
     finally:
         gw.close()
@@ -319,6 +334,25 @@ def _run_items(gw, tenant, items, skip_up_to_date: bool) -> int:
                 pass
     log(f"\n[done] {ok} indexed, {failed} failed ({time.time()-t_all:.0f}s)")
     return 0 if failed == 0 else 1
+
+
+def cmd_link(args: argparse.Namespace) -> int:
+    """Rebuild CONSUMES / CALLED_FROM for one tenant (or every tenant of the manifest)."""
+    from .core.manifest import load_manifest
+    if args.tenant:
+        tenants = [args.tenant]
+    else:
+        try:
+            tenants = list(load_manifest(args.config).tenants)
+        except ConfigError as e:
+            raise ConfigError(f"{e} — or pass --tenant")
+    gw, _ = open_graph()
+    try:
+        for t in tenants:
+            _link(gw, t)
+    finally:
+        gw.close()
+    return 0
 
 
 def cmd_selftest(args: argparse.Namespace) -> int:
@@ -430,6 +464,11 @@ def main(argv: list[str] | None = None) -> int:
     i.add_argument("--dry-run", action="store_true", help="extract and resolve, but do not write to Neo4j")
     i.add_argument("--out", help="with --dry-run: write the full payload as JSON to this file")
     i.set_defaults(fn=cmd_index)
+
+    lk = sub.add_parser("link", help="rebuild CONSUMES/CALLED_FROM edges (HttpCall × HttpEndpoint) for a tenant")
+    lk.add_argument("--tenant", help="tenant to link (default: every tenant in the manifest)")
+    lk.add_argument("--config", help="manifest path (default: $AIDD_CONFIG or /app/atlas.yaml)")
+    lk.set_defaults(fn=cmd_link)
 
     st = sub.add_parser("selftest", help="load every grammar and query; non-zero exit if the environment is broken")
     st.set_defaults(fn=cmd_selftest)

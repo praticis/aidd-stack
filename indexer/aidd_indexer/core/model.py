@@ -65,6 +65,9 @@ class CallInfo:
     receiver: str | None           # `x` in x.Foo(), None for bare calls
     line: int
     file_id: str
+    receiver_type: str | None = None       # static type of the receiver's base variable as written (`*Complete`, `pw.Policy`,
+                                           # or `call:pw.NewPolicy` when it comes from a constructor) — language hook
+    receiver_path: tuple[str, ...] = ()    # field chain after the base variable: `uc.policy.Validate` -> ("policy",)
 
 
 @dataclass

@@ -1,0 +1,9 @@
+{
+  "endpoints": [
+    {"method": "GET", "path": "/health", "handler": "Health"},
+    {"method": "POST", "path": "/v1/auth/failed-attempt", "handler": "FailedAttempt"},
+    {"method": "DELETE", "path": "/v1/users/{id}/sessions", "handler": "RevokeSessions"},
+    {"method": "GET", "path": "/internal/v1/users/{id}", "handler": "GetUser"}
+  ],
+  "calls": []
+}

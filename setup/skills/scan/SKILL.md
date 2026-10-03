@@ -110,7 +110,17 @@ file actually exists.
      `symbol_context` on a central symbol (e.g. the request decoder,
      the DI container, the base repository) reveals the enforced
      patterns quickly
-   - External dependencies and integrations — `repo_map.external_packages`
+   - External dependencies and integrations — `repo_map.external_packages`,
+     and `http_map` for the HTTP surface: routes exposed (with
+     `consumer_repos` — who calls them) and outbound calls (with
+     `linked_to` — which service/endpoint each one hits, when the linker
+     matched it). `who_consumes(path)` answers the reverse question for
+     one route; `possible_consumers` there are unlinked matches (several
+     services expose the path) — say so instead of treating them as facts.
+     Before changing a function, `impact_of(symbol)` gives the blast radius
+     across repositories (routes that reach it and who consumes them);
+     `ref_diff(repo, ref)` lists what the current branch adds to the
+     service's surface compared with the default branch
 
    Then:
    - Save this summary to the vault via `obsidian`, at the path

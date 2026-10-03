@@ -16,6 +16,7 @@ from neo4j import GraphDatabase, Driver
 from .. import INDEXER_VERSION
 from . import ids
 from .config import Neo4jConfig
+from .linker import CallRow, EndpointRow, called_from_rows, consumes_rows, link
 from .paths import path_key
 from .model import ExtractionResult
 from .resolve import Resolved
@@ -251,6 +252,47 @@ class GraphWriter:
              finished=finished.isoformat(), counts_json=json.dumps(counts), errors=res.warnings[:50],
              ver=INDEXER_VERSION, **common)
         return counts
+
+    # ---- linker (F0.5): HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM ---------------
+    def link_tenant(self, tenant: str) -> dict[str, int]:
+        """Rebuild every CONSUMES / CALLED_FROM edge of the tenant from what is in the graph now.
+        Cross-repo by nature (a call in A matches a route of B), so it runs after the snapshots
+        are written — at the end of index/bootstrap/refresh, or `aidd link`. Idempotent."""
+        endpoints = [EndpointRow(r["id"], r["service"], r["method"], r["path_key"]) for r in self._rows("""
+            MATCH (s:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
+            RETURN DISTINCT e.id AS id, s.name AS service, e.method AS method, e.path_key AS path_key
+        """, tenant=tenant)]
+        calls = [CallRow(r["id"], r["repo"], r["ref"], r["sha"], r["method"], r["path_key"], r["target_hint"] or "",
+                         tuple(r["env_hints"] or ()), r["caller_id"], r["evidence"], r["via"] or "", r["line"])
+                 for r in self._rows("""
+            MATCH (caller)-[:MAKES_HTTP_CALL]->(c:HttpCall {tenant: $tenant})
+            RETURN c.id AS id, c.repo AS repo, c.ref AS ref, c.commit_sha AS sha, c.method AS method,
+                   c.path_key AS path_key, c.target_hint AS target_hint, c.env_hints AS env_hints,
+                   caller.id AS caller_id, c.evidence AS evidence, c.via AS via, c.line AS line
+        """, tenant=tenant)]
+        result = link(calls, endpoints)
+        now = datetime.now(timezone.utc).isoformat()
+        self._run("MATCH (:Service {tenant: $tenant})-[c:CONSUMES]->() DELETE c", tenant=tenant)
+        self._run("MATCH (:HttpEndpoint {tenant: $tenant})-[c:CALLED_FROM]->() DELETE c", tenant=tenant)
+        self._batched("""
+            UNWIND $rows AS r
+            MATCH (s:Service {tenant: $tenant, name: r.repo}), (e:HttpEndpoint {id: r.endpoint_id})
+            MERGE (s)-[c:CONSUMES {ref: r.ref}]->(e)
+            SET c.commit_sha = r.commit_sha, c.confidence = r.confidence, c.hint = r.hint, c.call_count = r.call_count,
+                c.methods = r.methods, c.evidence = r.evidence, c.linked_at = datetime($now)
+        """, consumes_rows(result), tenant=tenant, now=now)
+        self._batched("""
+            UNWIND $rows AS r
+            MATCH (e:HttpEndpoint {id: r.endpoint_id}), (caller:Symbol|File {id: r.caller_id})
+            MERGE (e)-[c:CALLED_FROM {ref: r.ref, call_id: r.call_id}]->(caller)
+            SET c.commit_sha = r.commit_sha, c.line = r.line, c.method = r.method, c.confidence = r.confidence,
+                c.hint = r.hint, c.evidence = r.evidence, c.via = r.via, c.linked_at = datetime($now)
+        """, called_from_rows(result), tenant=tenant, now=now)
+        return {"endpoints": len(endpoints), "calls": len(calls)} | result.counts()
+
+    def _rows(self, cypher: str, **params) -> list[dict]:
+        with self.driver.session(database=self.cfg.database) as s:
+            return [dict(r) for r in s.run(cypher, **params)]
 
     # ------------------------------------------------------------------------------
     def snapshot_shas(self, tenant: str) -> dict[tuple[str, str], str]:

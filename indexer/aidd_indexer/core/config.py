@@ -15,6 +15,8 @@ Environment (same names as docker-compose.yml / .env):
 
 from __future__ import annotations
 
+import re
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -52,6 +54,14 @@ DEFAULT_EXCLUDES = {
 
 # Generated code is noise for the graph; extend via .aidd/index.yaml later (F1.1).
 GENERATED_SUFFIXES = (".pb.go", "_pb2.py", "_pb2_grpc.py", ".min.js", ".d.ts", ".g.cs", ".Designer.cs")
+
+# Test code: skipped by the HTTP extractor, and never a call target for production code (resolve.py).
+TEST_FILE = re.compile(r"(_test\.go$|\.spec\.[tj]sx?$|\.test\.[tj]sx?$|(^|/)test_[^/]*\.py$|_test\.py$|conftest\.py$|"
+                       r"Tests?\.cs$|/tests?/|/testdata/|/mocks?/|/e2e/|/integration[-_]tests?/|/__tests__/|\.Tests?/|/testing/)")
+
+
+def is_test_path(path: str) -> bool:
+    return bool(TEST_FILE.search("/" + path))
 
 
 def workspace_root() -> Path:
