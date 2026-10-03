@@ -77,6 +77,8 @@ class TsScanner(BaseScanner):
             return
         if "getHttpServer" in callee or "supertest" in callee or "request(app" in callee:
             return                                                  # supertest-style test clients
+        if self.convention_call(n, name, recv_last, callee, arg_nodes):
+            return
         if name in TS_REGISTRARS and len(arg_nodes) >= 2:
             p = self.path_of(arg_nodes[0])
             if p is not None and p.startswith("/") and (self.is_handler_like(arg_nodes[-1]) or recv_last in self.router_vars) \

@@ -111,7 +111,7 @@ def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = 
     repo.url = repo.url or remote_url(repo.path)
     repo.default_ref = repo.default_ref or default_ref(repo.path)
     by_name = {b["name"]: b for b in branches}
-    pol = tenant.refs
+    pol = tenant.refs.for_repo(repo.name)
     items: list[PlanItem] = []
     taken: set[str] = set()
 

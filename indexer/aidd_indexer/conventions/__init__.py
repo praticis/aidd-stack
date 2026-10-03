@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.config import ConfigError
+from ..core.scan_patterns import ScanPatterns
 from ..core.model import ExtractionResult
 from ..core.resolve import Resolved
 from .base import Convention, ConventionContext
@@ -67,6 +68,13 @@ def load(specs: list[dict[str, Any] | str], repo_name: str) -> list[Convention]:
         if repos and not any(fnmatch.fnmatch(repo_name, g) for g in repos):
             continue
         out.append(load_one(spec))
+    return out
+
+
+def scan_patterns(convs: list[Convention]) -> ScanPatterns:
+    out = ScanPatterns()
+    for c in convs or []:
+        out = out.merge(c.scan_patterns())
     return out
 
 

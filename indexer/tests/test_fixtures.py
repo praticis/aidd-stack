@@ -38,3 +38,9 @@ def test_fixture(root: Path):
     exp_calls = sorted({(c["method"], c["path"], c["line"]) for c in expected["calls"]})
     assert got_calls == exp_calls, f"calls differ\n missing={set(exp_calls)-set(got_calls)}\n extra={set(got_calls)-set(exp_calls)}"
     assert not hr.warnings, hr.warnings
+
+
+def test_wrapped_handlers_resolve_to_symbols():
+    """`mux.Handle(p, wrap(h, WithX()))`, `http.HandlerFunc(h)` and `chain(a, b)(h)` all point at `h`'s symbol."""
+    hr = _extract(Path(__file__).parent / "fixtures" / "go-wrapped-http")
+    assert all(e.handler_id for e in hr.endpoints), [(e.path, e.handler_name) for e in hr.endpoints if not e.handler_id]

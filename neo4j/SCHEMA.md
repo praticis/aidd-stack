@@ -42,7 +42,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Label | Specific props | Notes |
 |---|---|---|
 | `Repo` | `name`, `default_ref`, `stack[]` (`go`,`ts`,`dotnet`,`python`…), `url` | 1 per (tenant, repo) — no `ref` |
-| `Snapshot` | `repo`, `ref`, `commit_sha`, `indexed_at`, `indexer_version`, `ephemeral` | 1 per (repo, ref); drives orphan GC (§5) |
+| `Snapshot` | `repo`, `ref`, `commit_sha`, `indexed_at`, `indexer_version`, `ephemeral`, `provides[]` (`<ecosystem>:<package>` the manifests publish — go.mod `module`, `PackageId`, package.json `name`, pyproject `name`), `requires[]` (`<ecosystem>:<package>@<version>` direct dependencies) | 1 per (repo, ref); drives orphan GC (§5); `provides`/`requires` feed `DEPENDS_ON` (F0.5.1) |
 | `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is set by a **convention** (F0.4.4) when all its files agree, else null |
 | `File` | `path`, `language`, `loc`, `layer?`, `last_touched`, `churn_90d`, `authors[]` | `layer` set by a convention's `layers:` globs; git metrics land here (roadmap F1.9) |
 | `Symbol` | `name`, `qualified_name`, `kind`, `signature`, `doc`, `visibility`, `line_start`, `line_end`, `scip_symbol?`, `is_entry_point` | `kind` ∈ `class, interface, struct, enum, function, method, field, const, type, handler, job` |
@@ -54,7 +54,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Label | Specific props | Identity |
 |---|---|---|
 | `Service` | `name`, `env_vars[]`, `base_urls[]` | logical deployable; usually 1:1 with `Repo`, may be N:1 (monorepo) |
-| `HttpEndpoint` | `method` (`GET`…`ANY`), `path` (normalized template `/orders/{id}`), `path_key`, `framework`, `first_seen`, `last_seen`, `openapi_operation_id?` | `(service, method, path)`; which refs expose it lives on the `EXPOSES {ref}` edges |
+| `HttpEndpoint` | `method` (`GET`…`ANY`), `path` (normalized template `/orders/{id}`), `path_key`, `framework`, `first_seen`, `last_seen`, `openapi_operation_id?` | id = `(service, method, path_key)` — placeholders normalized, so `{id}` renamed to `{userId}` on a branch is the same endpoint; `path` keeps the latest spelling written. Which refs expose it lives on the `EXPOSES {ref}` edges |
 | `GrpcService` | `name`, `proto_path`, `package` | `package.Service` |
 | `GrpcMethod` | `name`, `request_type`, `response_type`, `streaming` | `package.Service/Method` |
 | `Topic` | `name`, `broker` (`kafka`,`rabbitmq`,`sqs`,`sns`,`pubsub`), `kind` (`topic`,`queue`,`exchange`) | `(broker, name)` |
@@ -100,7 +100,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `DEFINES_PROTO` | Repo→GrpcService | where the `.proto` lives |
 | `PUBLISHES` / `SUBSCRIBES` | Service→Topic | `event_schema?` |
 | `PRODUCES` / `CONSUMES_EVENT` | Service→EventSchema | when a schema exists |
-| `DEPENDS_ON` | Repo→Package | `version_range`, `dev` (bool) |
+| `DEPENDS_ON` | Service→Service | **internal package dependency, materialized by the linker (F0.5.1)** from `Snapshot.requires × Snapshot.provides` of the tenant: one edge per `ref` (`{ref}` key) per (consumer, provider) with `commit_sha`, `packages[]`, `versions[]`, `ecosystems[]`, `linked_at`. Names are normalized (lower-case; pypi `_`→`-`); never self; a package published by two repos links to **neither** (listed as ambiguous in the `aidd link` log). External packages stay `Package` nodes reached by `IMPORTS` |
 | `PROVIDES` | Repo→Package | the repo publishes the internal package |
 | `READS` / `WRITES` | Symbol→DbTable | via ORM/migrations/SQL |
 | `OWNS_TABLE` | Service→DbTable | inferred: single writer |

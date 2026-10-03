@@ -112,6 +112,30 @@ class HttpCallInfo:
     evidence: str = ""
 
 
+@dataclass(frozen=True)
+class ManifestDep:
+    """One declared dependency of a build manifest (F0.5.1). `name` is normalized per ecosystem
+    (lower-case; pypi `_` → `-`), so two repos naming the same package agree byte for byte."""
+    ecosystem: str                 # go | npm | nuget | pypi
+    name: str
+    version: str                   # as written; "" when the manifest has none
+    manifest: str                  # repo-relative path of the manifest
+
+    def key(self) -> str:
+        return f"{self.ecosystem}:{self.name}"
+
+
+@dataclass(frozen=True)
+class ManifestProvide:
+    """A package name this repo publishes (go.mod `module`, `PackageId`, package.json `name`, ...)."""
+    ecosystem: str
+    name: str
+    manifest: str
+
+    def key(self) -> str:
+        return f"{self.ecosystem}:{self.name}"
+
+
 @dataclass
 class ExtractionResult:
     repo: RepoInfo
@@ -123,6 +147,8 @@ class ExtractionResult:
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     http_calls: list[HttpCallInfo] = field(default_factory=list)
     violations: list["ViolationInfo"] = field(default_factory=list)   # conventions (F0.4.4)
+    provides: list[ManifestProvide] = field(default_factory=list)      # manifests (F0.5.1)
+    requires: list[ManifestDep] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
     def counts(self) -> dict[str, int]:
@@ -135,6 +161,8 @@ class ExtractionResult:
             "endpoints": len(self.endpoints),
             "http_calls": len(self.http_calls),
             "violations": len(self.violations),
+            "provides": len(self.provides),
+            "requires": len(self.requires),
             "warnings": len(self.warnings),
         }
 

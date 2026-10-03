@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import sys
+import tomllib
 from pathlib import Path, PurePosixPath
 
 from tree_sitter import Node
@@ -20,6 +21,17 @@ HERE = Path(__file__).parent
 STDLIB = set(getattr(sys, "stdlib_module_names", ()))
 _IMPORT = re.compile(r"^\s*(?:from\s+[\w.]+\s+)?import\s+(.*)$", re.S)
 _DECORATOR_ENTRY = re.compile(r"@(app|router|api|bp|blueprint)\.(get|post|put|delete|patch|route|websocket)\b")
+
+
+_PY_REQ = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(?:\[[^\]]*\])?\s*([^;#]*)")
+
+
+def _py_requirement(line: str) -> tuple[str, str] | None:
+    line = line.strip()
+    if not line or line.startswith(("#", "-", "git+", "http://", "https://")):
+        return None
+    m = _PY_REQ.match(line)
+    return (m.group(1), m.group(2).strip()) if m else None
 
 
 class PythonSupport(LanguageSupport):
@@ -53,6 +65,26 @@ class PythonSupport(LanguageSupport):
             else:
                 names.append(part.split(".")[0])
         return names
+
+    def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
+        """pyproject.toml: `[project] name` publishes, `[project] dependencies` require (PEP 621;
+        poetry's `[tool.poetry]` too). requirements.txt: one requirement per line."""
+        if rel_path.endswith("requirements.txt"):
+            return [], [d for d in (_py_requirement(l) for l in text.splitlines()) if d]
+        if not rel_path.endswith("pyproject.toml"):
+            return [], []
+        try:
+            data = tomllib.loads(text)
+        except tomllib.TOMLDecodeError:
+            return [], []
+        project = data.get("project") or {}
+        poetry = (data.get("tool") or {}).get("poetry") or {}
+        names = [n for n in (project.get("name"), poetry.get("name")) if isinstance(n, str)]
+        deps = [d for d in (_py_requirement(r) for r in project.get("dependencies") or [] if isinstance(r, str)) if d]
+        for k, v in (poetry.get("dependencies") or {}).items():
+            if k.lower() != "python":
+                deps.append((k, v if isinstance(v, str) else str((v or {}).get("version", ""))))
+        return names, deps
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
         here = PurePosixPath(file.path).parent

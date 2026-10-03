@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..core.scan_patterns import ScanPatterns
 from ..core.model import ExtractionResult, FileInfo, HttpCallInfo, ModuleInfo, SymbolInfo, ViolationInfo
 from ..core.resolve import Resolved
 
@@ -42,6 +43,12 @@ class Convention:
     def configure(self, options: dict[str, Any]) -> None:
         """Options from atlas.yaml (`conventions: [{id: x, options: {...}}]`)."""
         return None
+
+    # ---- scanner hook (before extraction): what the organization's own SDK adds to the HTTP scanners
+    def scan_patterns(self) -> ScanPatterns:
+        """Route registrars / HTTP client methods the generic tables cannot know (`srv.Route(...)`,
+        `sdk.DoJSON(...)`). Merged across the tenant's conventions and handed to every scanner."""
+        return ScanPatterns()
 
     # ---- annotation hooks (called per element, first non-None answer wins across conventions)
     def layer_of(self, file: FileInfo, module: ModuleInfo | None) -> str | None:

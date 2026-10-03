@@ -105,6 +105,10 @@ def _receiver(node: Node, src: bytes) -> str | None:
     return None
 
 
+_GO_MODULE_LINE = re.compile(r"^module\s+(\S+)", re.M)
+_GO_REQUIRE_LINE = re.compile(r"^\s*(?:require\s+)?([a-zA-Z0-9.\-_~/]+\.[a-zA-Z0-9.\-_~/]+)\s+(v[^\s/]+)(?:\s*//.*)?$", re.M)
+
+
 class GoSupport(LanguageSupport):
     # ---- discovery: every directory with .go files is a package — the unit imports point at
     def discover_modules(self, repo: RepoInfo, rel_files: list[str], modules: dict[str, ModuleInfo]) -> None:
@@ -300,6 +304,13 @@ class GoSupport(LanguageSupport):
         return f"{prefix}.{tname}" if prefix else tname
 
     # ---- resolution
+    def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
+        """go.mod: `module` publishes; `require` lines (single or block) are direct deps unless
+        marked `// indirect`."""
+        names = _GO_MODULE_LINE.findall(text)
+        deps = [(m.group(1), m.group(2)) for m in _GO_REQUIRE_LINE.finditer(text) if "// indirect" not in m.group(0)]
+        return names, deps
+
     def resolve_setup(self, ctx: ResolveContext) -> None:
         # module paths from go.mod, longest first
         ctx.extra["go_modules"] = sorted(

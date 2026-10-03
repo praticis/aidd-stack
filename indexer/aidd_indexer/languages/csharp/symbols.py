@@ -24,6 +24,12 @@ _BUILTINS = frozenset({"Console", "Task", "String", "Enumerable", "Convert"})
 _DECORATOR_ENTRY = re.compile(r"\[(HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|Route|Function|ServiceBusTrigger|QueueTrigger)\b")
 
 
+_CS_PACKAGE_ID = re.compile(r"<PackageId>\s*([^<]+?)\s*</PackageId>")
+_CS_ASSEMBLY_NAME = re.compile(r"<AssemblyName>\s*([^<]+?)\s*</AssemblyName>")
+_CS_PACKAGE_REF = re.compile(r"<PackageReference\b([^>]*)/?>", re.S)
+_CS_ATTR = re.compile(r'(\w+)\s*=\s*"([^"]*)"')
+
+
 class CSharpSupport(LanguageSupport):
     def module_prefix(self, file: FileInfo) -> str:
         return ""                                   # namespaces carry the scope
@@ -147,6 +153,19 @@ class CSharpSupport(LanguageSupport):
                         break
             cur = self._lookup_type(ctx, decl_file, mt) if mt else None
         return cur[0] if cur else None
+
+    def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
+        """.csproj: `<PackageId>` (else `<AssemblyName>`, else the file stem) publishes;
+        `<PackageReference Include=".." Version="..">` requires. `<ProjectReference>` is intra-repo."""
+        m = _CS_PACKAGE_ID.search(text) or _CS_ASSEMBLY_NAME.search(text)
+        name = m.group(1).strip() if m else Path(rel_path).stem
+        deps = []
+        for ref in _CS_PACKAGE_REF.finditer(text):
+            attrs = dict(_CS_ATTR.findall(ref.group(1)))
+            inc = attrs.get("Include") or attrs.get("Update")
+            if inc:
+                deps.append((inc, attrs.get("Version", "")))
+        return [name], deps
 
     def resolve_setup(self, ctx: ResolveContext) -> None:
         impl: dict[str, list[str]] = {}

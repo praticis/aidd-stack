@@ -120,7 +120,12 @@ file actually exists.
      Before changing a function, `impact_of(symbol)` gives the blast radius
      across repositories (routes that reach it and who consumes them);
      `ref_diff(repo, ref)` lists what the current branch adds to the
-     service's surface compared with the default branch
+     service's surface compared with the default branch.
+     `repo_map.depends_on` / `depended_by` are the services linked through
+     internal packages (manifests), `repo_map.layers` the files per
+     architectural layer when a convention is configured, and
+     `violations(repo)` the convention rules broken (file:line, rule,
+     severity) — empty means no convention, not a clean repo
 
    Then:
    - Save this summary to the vault via `obsidian`, at the path

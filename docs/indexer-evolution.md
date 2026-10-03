@@ -29,8 +29,9 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `core/discovery.py` | quais arquivos entram; linguagem por extensão via `languages.by_extension()`; módulos por manifesto (declarados em cada `LanguageSupport.manifests`) + `discover_modules()` de cada linguagem (pacotes Go) |
 | `core/extract.py` | `FileExtractor`: parse tree-sitter + `queries.scm` → `SymbolInfo`, `CallInfo`, `ImportInfo`; delega a `LanguageSupport` nomes qualificados, visibilidade, docstrings, bindings de import e marcadores de entry point; `load_language()` com `GRAMMAR_ERRORS` |
 | `core/resolve.py` | `CALLS`: candidatos pelo nome do callee, **código de produção nunca aponta para símbolo de teste**, depois tipo estático do receiver (`LanguageSupport.resolve_receiver` → método no tipo ou em `supertypes` do repo = `receiver-type`; interface com `implementations` único = `receiver-type-impl`; tipo conhecido sem o método = **sem aresta**) → same-file → same-module → unique-name (`-ambiguous` quando sobra mais de um); `IMPORTS` via `resolve_import()` → File/Module/Package; `link_symbols()` por linguagem |
+| `core/deps.py` | manifestos → `provides`/`requires` por repo (`LanguageSupport.manifest_deps`: go.mod, .csproj, package.json, pyproject/requirements), nomes normalizados por ecossistema; vão para o `Snapshot` e o linker cruza por tenant em `DEPENDS_ON` (Service→Service) — F0.5.1 |
 | `core/integrations.py` | orquestra os **candidatos HTTP**: contexto por diretório → `LanguageSupport.http_scanner` de cada arquivo — ver §3 |
-| `core/http_base.py` | `BaseScanner` (as peças reutilizáveis de §3), `PackageContext`, `TEST_FILE`, tabela `OUTBOUND` |
+| `core/http_base.py` | `BaseScanner` (as peças reutilizáveis de §3), `PackageContext`, `TEST_FILE`, tabela `OUTBOUND`; `convention_call()` aplica os `ScanPatterns` da convenção (`route_patterns`/`client_patterns`, em `core/scan_patterns.py`) antes das tabelas genéricas; handler embrulhado em middleware/opções resolve pelo argumento mais interno que é função do repo; objetos de request (`Request{Method:, Path:}`) e `url.JoinPath` viram caminho |
 | `core/paths.py` | `normalize_path`, `path_key`, `unquote`, regexes de path — usados pelo extrator, pelo `graph.py` e pelo MCP |
 | `core/linker.py` | **F0.5**: `link(calls, endpoints)` puro (exact → suffix → desempate por hint → ambíguo = nada) + `consumes_rows`/`called_from_rows`; `GraphWriter.link_tenant` lê/grava |
 | `core/model.py` | dataclasses de tudo + `ExtractionResult` (inclui `violations`) |
@@ -44,7 +45,7 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `conventions/base.py` | contrato `Convention` (`layer_of`, `target_of`, `is_entry_point`, `check`) e `ConventionContext` |
 | `conventions/declarative.py` | `convention.yaml` → `Convention` (camadas por glob, alvos, entry points, regras `forbid_import` / `endpoints_only_in` / `http_calls_only_in`) |
 | `conventions/__init__.py` | `load(specs, repo)` (arquivo, entry point `aidd.conventions` ou `pacote.modulo:Classe`) e `apply()` |
-| `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, impact_of, ref_diff, cypher_readonly` — perguntas douradas em `docs/golden-questions.md` |
+| `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, impact_of, ref_diff, violations, cypher_readonly` — perguntas douradas em `docs/golden-questions.md` |
 | `scripts/http_corpus.py` | corpus público de calibração do extrator HTTP (§5) |
 | `tests/` | fixtures HTTP (golden) + `test_conventions.py` (costura das convenções) + `test_linker.py` (regras + par de fixtures `go-http-mix` → `go-billing-api`) + `test_mcp_protocol.py` (tools do MCP com store fake) |
 
@@ -166,5 +167,9 @@ inspecionar o que o extrator viu num repo específico.
   desempate por `target_hint`/`env_hints`, ambíguo não grava. Roda por tenant inteiro ao fim de
   `index`/`bootstrap`/`refresh` e em `aidd link`. Se uma chamada não liga, a pergunta é sempre "o que
   falta no extrator ou na convenção (`targets:`)?" — não "o linker deveria chutar?".
+- **F0.5.1 `DEPENDS_ON` (feito)**: segunda junção do linker — `Snapshot.requires × Snapshot.provides`
+  (pacotes internos declarados nos manifestos) → `Service -[:DEPENDS_ON {ref}]-> Service`, mesma postura
+  (nome exato normalizado, nunca a si mesmo, dois publicadores → nenhuma aresta). `repo_map` devolve
+  `depends_on`/`depended_by`. É a dependência que o scan HTTP não enxerga (contratos, SDKs internos).
 - **F0.7 perguntas douradas**: `who_consumes('/v1/<rota>')` respondida pelo grafo no par piloto.
 - F1: SCIP para `CALLS` resolvidos, gRPC/proto, mensageria, Qdrant.
