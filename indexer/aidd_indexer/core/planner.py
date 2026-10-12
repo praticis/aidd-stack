@@ -15,8 +15,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .config import ConfigError
-from .gitinfo import default_ref, fetch, is_git_repo, is_merged_into, list_branches, remote_url
+from .gitinfo import default_ref, fetch, has_git, is_merged_into, list_branches, remote_url
 from .manifest import Source, TenantConfig
+from .mirror import mirror_path, mirror_root, sync
 
 
 @dataclass
@@ -43,6 +44,7 @@ class Plan:
     tenant: str
     items: list[PlanItem] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)   # human-readable notes (no git, no refs, ...)
+    errors: list[str] = field(default_factory=list)    # repos that could not be read at all (the run fails)
 
     def repos(self) -> list[RepoCandidate]:
         seen: dict[str, RepoCandidate] = {}
@@ -75,17 +77,39 @@ def discover_local(source: Source, tenant: TenantConfig) -> list[RepoCandidate]:
     return repos
 
 
-def discover_repos(tenant: TenantConfig, do_fetch: bool = True,
-                   progress=None) -> tuple[list[RepoCandidate], list[str]]:
+def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
+                   errors: list[str] | None = None) -> tuple[list[RepoCandidate], list[str]]:
     """Repos from every source. For local sources with `fetch: true` (default) the
     remote-tracking refs are refreshed first — the atlas must see what the team pushed,
-    not what one developer last fetched. A failed fetch is a note, not an error."""
+    not what one developer last fetched. A failed fetch is a note, not an error.
+
+    With `$AIDD_MIRROR_DIR` set (the refresher service) the workspace is only read: each repo is
+    synced into its own mirror (core/mirror.py) and planned from there; `fetch` then governs the
+    remote half of that sync."""
     repos: dict[str, RepoCandidate] = {}
     notes: list[str] = []
+    mroot = mirror_root()
     for s in tenant.sources:
         if s.type == "local":
             found = discover_local(s, tenant)
-            if do_fetch and s.fetch:
+            if mroot is not None:
+                kept = []
+                for r in found:
+                    if progress:
+                        progress(f"[mirror] {r.name}")
+                    mp = mirror_path(mroot, tenant.name, r.name)
+                    try:
+                        ok, msg = sync(r.path, mp, remote=do_fetch and s.fetch)
+                    except RuntimeError as e:
+                        (errors if errors is not None else notes).append(f"{r.name}: {e} — skipped")
+                        continue
+                    if not ok and do_fetch and s.fetch:
+                        notes.append(f"{r.name}: {msg}")
+                    r.url = remote_url(r.path)
+                    r.path = mp
+                    kept.append(r)
+                found = kept
+            elif do_fetch and s.fetch:
                 for r in found:
                     if progress:
                         progress(f"[fetch] {r.name}")
@@ -103,7 +127,7 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True,
 
 def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = None) -> tuple[list[PlanItem], str | None]:
     now = now or datetime.now(timezone.utc)
-    if not is_git_repo(repo.path):
+    if not has_git(repo.path):
         return [], f"{repo.name}: not a git repository"
     branches = list_branches(repo.path)
     if not branches:
@@ -154,7 +178,7 @@ def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = 
 def build_plan(tenant: TenantConfig, only_repos: list[str] | None = None,
                do_fetch: bool = True, progress=None) -> Plan:
     plan = Plan(tenant=tenant.name)
-    repos, notes = discover_repos(tenant, do_fetch=do_fetch, progress=progress)
+    repos, notes = discover_repos(tenant, do_fetch=do_fetch, progress=progress, errors=plan.errors)
     plan.skipped.extend(notes)
     if only_repos:
         wanted = set(only_repos)
@@ -193,6 +217,9 @@ def render_plan(plan: Plan, stale: dict[tuple[str, str], str] | None = None) -> 
                     state = "  [changed]" if indexed else "  [new]"
             eph = "  ephemeral" if it.ephemeral else ""
             lines.append(f"    - {it.ref:<40} {it.sha[:10]}  {it.reason:<14}{eph}{state}")
+    if plan.errors:
+        lines.append("\nerrors (not indexed):")
+        lines += [f"  - {s}" for s in plan.errors]
     if plan.skipped:
         lines.append("\nskipped:")
         lines += [f"  - {s}" for s in plan.skipped]

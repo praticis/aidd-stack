@@ -8,7 +8,13 @@ Design (ROADMAP F0.6):
     are searched only when a `ref` is named explicitly.
   * Results are compact JSON, sized for an LLM context (limits everywhere).
   * `cypher_readonly` runs inside a READ transaction — the server rejects writes — and
-    additionally refuses obvious mutation keywords before sending anything.
+    additionally refuses obvious mutation keywords before sending anything. Tenant scoping of raw
+    Cypher cannot be enforced (a query may simply not filter on `$tenant`): in multi-tenant mode it
+    can read every tenant. Offered by default; `ATLAS_RAW_CYPHER=off` withdraws it in multi-tenant mode
+    when the tenants must not see each other (e.g. several client organizations on one machine).
+  * DNS-rebinding protection: only `Host` values in ATLAS_ALLOWED_HOSTS (default localhost,
+    127.0.0.1, [::1] and the compose service name, any port) and browser `Origin`s on those hosts are
+    accepted — a web page cannot reach the server through a rebinding domain.
 
 Transport: streamable HTTP, stateless, JSON responses — `POST /mcp` works with a plain
 curl `initialize` (install-check.sh) as well as with Claude Code / Cursor / Antigravity.
@@ -29,9 +35,11 @@ from .. import INDEXER_VERSION
 from ..core.config import is_test_path, ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
+NO_REFRESH = {"stale": True, "note": "no refresh recorded — the graph only changes when someone runs `aidd index`/`aidd refresh` "
+                                     "(is the refresher service running? `aidd schedule status`)"}
 FORBIDDEN = re.compile(
     r"\b(CREATE|MERGE|DELETE|DETACH|SET|REMOVE|DROP|CALL\s+\{|LOAD\s+CSV|FOREACH|"
-    r"apoc\.(create|merge|refactor|periodic|load|export|import|trigger|cypher\.run(Write|Many|Schema))|"
+    r"apoc\.(create|merge|refactor|periodic|load|export|import|trigger|cypher\.)|"
     r"db\.(create|drop|index\.fulltext\.(create|drop))|dbms\.)",
     re.IGNORECASE,
 )
@@ -40,6 +48,22 @@ LUCENE_SPECIAL = re.compile(r'([+\-!(){}\[\]^"~*?:\\/]|&&|\|\|)')
 
 class AtlasError(RuntimeError):
     """Raised for user-facing errors (unknown repo/ref, refused query). Surfaces as a tool error."""
+
+
+def _off(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in ("0", "off", "false", "no")
+
+
+def transport_security():
+    from mcp.server.transport_security import TransportSecuritySettings
+    hosts = [h.strip() for h in os.getenv("ATLAS_ALLOWED_HOSTS", "").split(",") if h.strip()] or \
+        ["localhost", "127.0.0.1", "[::1]", "mcp-atlas"]
+    with_port = [h if ":" in h.replace("[::1]", "") else f"{h}:*" for h in hosts]
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=sorted(set(hosts + with_port)),
+        allowed_origins=sorted({f"{scheme}://{h}" for h in with_port for scheme in ("http", "https")}),
+    )
 
 
 def _tenant() -> str | None:
@@ -96,6 +120,21 @@ class Store:
         raise AtlasError("multi-tenant atlas (AIDD_TENANT=auto): pass `tenant` — the workspace folder right below "
                          f"WORKSPACE_PATH for this repo. Indexed tenants: {', '.join(known) or '(none)'}")
 
+    def refresh_state(self) -> dict[str, Any] | None:
+        """Last refresh of this tenant (written by every `aidd refresh`, even when nothing changed).
+        `stale`: no refresh within 2 intervals — the graph may lag behind the remotes."""
+        rows = self.read("""
+            MATCH (h:RefreshState {tenant: $tenant})
+            RETURN toString(h.last_finished_at) AS last_finished_at, h.last_rc AS last_rc, h.trigger AS trigger,
+                   h.interval_min AS interval_min, h.changed AS changed,
+                   duration.inSeconds(h.last_finished_at, datetime()).seconds / 60 AS age_min
+        """)
+        if not rows:
+            return None
+        r = rows[0]
+        r["stale"] = r["age_min"] is not None and r["age_min"] > 2 * int(r["interval_min"] or 15)
+        return r
+
     def ping(self) -> bool:
         try:
             self.read("RETURN 1 AS ok")
@@ -111,7 +150,7 @@ class Store:
             RETURN r.name AS repo, r.default_ref AS default_ref, r.stack AS stack, r.area AS area,
                    collect({ref: s.ref, sha: left(s.commit_sha, 10), ephemeral: s.ephemeral,
                             indexed_at: toString(s.indexed_at),
-                            age_min: duration.between(s.indexed_at, datetime()).minutes}) AS snapshots
+                            age_min: duration.inSeconds(s.indexed_at, datetime()).seconds / 60}) AS snapshots
             ORDER BY repo
         """)
 
@@ -188,7 +227,7 @@ def build_server(store: Store | None = None):
             "overview of one repository, find_symbol / who_calls / symbol_context to navigate code, "
             "http_map / who_consumes for HTTP integrations between repositories, impact_of for the "
             "cross-repo blast radius of a symbol, ref_diff for what a branch adds to a repo's surface, "
-            "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md). If a repo or ref is "
+            "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md; filter on $tenant). If a repo or ref is "
             "not indexed the tool says so — fall back to reading the source tree. In multi-tenant mode "
             "(AIDD_TENANT=auto) every tool accepts `tenant` = the workspace folder right below WORKSPACE_PATH "
             "for the current repo; omit it when the graph holds a single tenant."
@@ -197,6 +236,7 @@ def build_server(store: Store | None = None):
         port=int(os.getenv("ATLAS_MCP_PORT", "3000")),
         stateless_http=True,
         json_response=True,
+        transport_security=transport_security(),
     )
 
     def st(tenant: str | None = None) -> Store:
@@ -207,14 +247,17 @@ def build_server(store: Store | None = None):
     def atlas_status(tenant: str | None = None) -> dict[str, Any]:
         """What atlas knows: indexed repositories, their refs (default branch + active feature
         branches), commit and freshness. Call first; a repo missing here means 'not indexed'.
+        `refresh` is the tenant's last automatic update: when `stale` is true the refresher has not run
+        for over two intervals and the graph may lag behind the remotes — say so in your answer.
         In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
         the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
         if the_store.tenant is None and not tenant:
             return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION,
-                    "tenants": [{"tenant": t, "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
+                    "tenants": [{"tenant": t, "refresh": the_store.scoped(t).refresh_state() or NO_REFRESH,
+                                 "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
         s = st(tenant)
         return {"mode": "fixed" if the_store.tenant else "multi-tenant", "tenant": s.tenant,
-                "indexer_version": INDEXER_VERSION, "repos": s.repos()}
+                "indexer_version": INDEXER_VERSION, "refresh": s.refresh_state() or NO_REFRESH, "repos": s.repos()}
 
     @mcp.tool()
     def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
@@ -611,7 +654,9 @@ def build_server(store: Store | None = None):
         """, **base)
         return {"repo": repo, "ref": ref, "total": sum(r["n"] for r in summary), "summary": summary, "violations": rows}
 
-    @mcp.tool()
+    raw_cypher = the_store.tenant is not None or not _off("ATLAS_RAW_CYPHER")
+
+    @(mcp.tool() if raw_cypher else (lambda f: f))
     def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:
         """Run a read-only Cypher query against atlas (schema in neo4j/SCHEMA.md: Repo, Snapshot,
         Module, File, Symbol, Package; edges HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS).

@@ -67,6 +67,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Label | Props | |
 |---|---|---|
 | `IndexRun` | `repo`, `ref`, `commit_sha`, `started_at`, `finished_at`, `status`, `counts{}`, `errors[]` | history (`aidd status`) |
+| `RefreshState` | `tenant` (unique), `last_started_at`, `last_finished_at`, `last_rc`, `trigger`, `interval_min`, `changed`, `indexer_version` | one per tenant, rewritten by every `refresh` — even one that indexed nothing — so a dead refresher is visible (`atlas_status.refresh.stale`, install-check) |
 
 ## 3. Edges
 
@@ -126,6 +127,7 @@ Topic         <tenant>/topic/<broker>/<name>
 Package       <tenant>/pkg/<ecosystem>/<name>
 DbTable       <tenant>/db/<database>/<schema>.<name>
 IndexRun      <tenant>/<repo>@<ref>/run/<started_at-iso>
+RefreshState  (keyed by `tenant`, no `id`)
 Violation     <tenant>/<repo>@<ref>/violation/<convention>.<rule>/<path>:<line>
 ```
 

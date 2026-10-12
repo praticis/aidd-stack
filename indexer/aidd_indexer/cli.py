@@ -2,7 +2,9 @@
 
   aidd plan      [--tenant T] [--repos a,b] [--config FILE]           what would be indexed, and why
   aidd bootstrap [--tenant T] [--repos a,b] [--yes] [--config FILE]   index everything the plan lists
-  aidd refresh   [--tenant T] [--config FILE]                          re-index only what changed + GC
+  aidd refresh   [--tenant T] [--config FILE]                          re-index only what changed + GC (every tenant)
+  aidd daemon    [--config FILE]                                       refresh every AIDD_REFRESH_INTERVAL_MINUTES (service)
+  aidd daemon-health                                                   exit 0 when the refresher is alive (healthcheck)
   aidd index <repo|path> [--ref REF] [--tenant T] [--ephemeral] [--dry-run [--out FILE]]
   aidd status    [--tenant T]
   aidd wipe <repo> [--ref REF] [--tenant T]
@@ -24,12 +26,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import INDEXER_VERSION
-from . import conventions, languages
+from . import conventions, daemon, languages
 from .core.config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
 from .core.deps import collect_manifest_deps
 from .core.discovery import build_files, discover_modules, list_files
 from .core.extract import GRAMMAR_ERRORS, extract_file, load_language
-from .core.gitinfo import current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
+from .core.gitinfo import branch_sha, current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
+from .core.mirror import mirror_path, mirror_root, sync as sync_mirror
 from .core.model import ExtractionResult, RepoInfo
 from .core.resolve import Resolved, Resolver
 
@@ -178,16 +181,24 @@ def cmd_index(args: argparse.Namespace) -> int:
 
     # --ref that differs from the checkout: index that ref via git archive
     if args.ref and is_git_repo(repo_path) and args.ref != current_ref(repo_path) and not args.dry_run:
-        if not args.no_fetch:
+        url = remote_url(repo_path)
+        git_dir = repo_path
+        mroot = mirror_root()
+        if mroot is not None:          # refresher service: read the workspace, write only the mirror
+            git_dir = mirror_path(mroot, tenant, repo_path.name)
+            ok, msg = sync_mirror(repo_path, git_dir, remote=not args.no_fetch)
+            log(f"[mirror]   {repo_path.name}: {msg}")
+        elif not args.no_fetch:
             ok, msg = fetch(repo_path)
             log(f"[fetch]    {repo_path.name}: {msg}" + ("" if ok else " — using local refs"))
-        branches = {b["name"]: b for b in list_branches(repo_path)}
-        if args.ref not in branches:
-            raise ConfigError(f"ref '{args.ref}' not found in {repo_path.name} (known: {', '.join(sorted(branches)[:15])}...)")
+        sha = branch_sha(git_dir, args.ref)
+        if not sha:
+            known = sorted(b["name"] for b in list_branches(git_dir))
+            raise ConfigError(f"ref '{args.ref}' not found in {repo_path.name} (known: {', '.join(known[:15])}...)")
         gw, cfg = open_graph()
         try:
-            index_exported_ref(gw, repo_path, repo_path.name, tenant, args.ref, branches[args.ref]["sha"],
-                               args.ephemeral, remote_url(repo_path), default_ref(repo_path), None)
+            index_exported_ref(gw, git_dir, repo_path.name, tenant, args.ref, sha,
+                               args.ephemeral, url, default_ref(git_dir), None)
             _link(gw, tenant)
         finally:
             gw.close()
@@ -242,15 +253,16 @@ def _link(gw, tenant: str) -> None:
         f"from {c['deps_packages']} internal packages ({c['deps_ambiguous']} ambiguous) ({time.time()-t0:.1f}s)")
 
 
-def _load_plan(args: argparse.Namespace):
+def _load_plan(args: argparse.Namespace, tenant_name: str | None = None):
     from .core.manifest import load_manifest
     from .core.planner import build_plan
     manifest = load_manifest(args.config)
-    tenant = manifest.tenant(args.tenant)
+    tenant = manifest.tenant(tenant_name or args.tenant)
     only = [r.strip() for r in args.repos.split(",")] if getattr(args, "repos", None) else None
     do_fetch = not getattr(args, "no_fetch", False)
     if do_fetch:
-        log("[fetch] refreshing remote-tracking refs (git fetch --all --prune) — use --no-fetch to skip")
+        log("[fetch] " + ("syncing mirrors and fetching the remotes" if mirror_root() else
+                          "refreshing remote-tracking refs (git fetch --all --prune)") + " — use --no-fetch to skip")
     return tenant, build_plan(tenant, only, do_fetch=do_fetch, progress=log)
 
 
@@ -294,42 +306,97 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
                 return 1
         global TRIGGER
         TRIGGER = "bootstrap" if TRIGGER == "manual" else TRIGGER
-        rc = _run_items(gw, tenant, plan.items, skip_up_to_date=False)
-        _link(gw, tenant.name)
+        started = datetime.now(timezone.utc).isoformat()
+        try:
+            with daemon.refresh_lock():
+                rc = _run_items(gw, tenant, plan.items, skip_up_to_date=False)
+                _link(gw, tenant.name)
+        except daemon.Busy as e:
+            log(f"[bootstrap] {e} — wait for it (aidd logs) and run again")
+            return 1
+        gw.heartbeat(tenant.name, started, datetime.now(timezone.utc).isoformat(), rc, TRIGGER,
+                     daemon.interval_min(), len(plan.items))
         return rc
     finally:
         gw.close()
 
 
 def cmd_refresh(args: argparse.Namespace) -> int:
-    tenant, plan = _load_plan(args)
-    gw, _ = open_graph()
+    """Refresh one tenant (`--tenant`) or every tenant of the manifest, under the refresh lock."""
+    from .core.manifest import load_manifest
+    names = [args.tenant] if args.tenant else list(load_manifest(args.config).tenants)
     try:
-        indexed = gw.snapshot_shas(tenant.name)
-        todo = [it for it in plan.items if indexed.get((it.repo.name, it.ref)) != it.sha]
-        log(f"[refresh] {len(todo)} of {len(plan.items)} snapshots changed or new")
-        rc = _run_items(gw, tenant, todo, skip_up_to_date=True) if todo else 0
-        gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
-                               keep={(it.repo.name, it.ref) for it in plan.items})
-        log(f"[refresh] ephemeral snapshots removed: {gone}")
-        planned = {(it.repo.name, it.ref) for it in plan.items}
-        planned_repos = {it.repo.name for it in plan.items}
-        outside = sorted(k for k in gw.persistent_snapshots(tenant.name) if k not in planned and k[0] in planned_repos)
-        if outside:
-            log(f"[refresh] {len(outside)} persistent snapshot(s) outside the ref policy (kept — branch gone or refs changed): "
-                + ", ".join(f"{r}@{ref}" for r, ref in outside[:10]) + (" …" if len(outside) > 10 else "")
-                + f" — remove with: aidd wipe <repo> --ref <ref>")
-        if todo or gone:
-            _link(gw, tenant.name)
-        return rc
+        with daemon.refresh_lock():
+            return _refresh_all(args, names)
+    except daemon.Busy as e:
+        log(f"[refresh] {e} — skipped")
+        return 0
+
+
+def _refresh_all(args: argparse.Namespace, names: list[str]) -> int:
+    daemon.mark_start(TRIGGER)
+    rc, summary = 0, {}
+    try:
+        gw, _ = open_graph()
+        try:
+            for name in names:
+                if daemon.STOP.is_set():
+                    break
+                started = datetime.now(timezone.utc).isoformat()
+                try:
+                    r, info = _refresh_tenant(gw, args, name)
+                except ConfigError as e:       # one tenant's broken source must not stop the others
+                    log(f"[refresh] {name}: {e}")
+                    r, info = 2, {"error": str(e)}
+                rc = max(rc, r)
+                summary[name] = info
+                gw.heartbeat(name, started, datetime.now(timezone.utc).isoformat(), r, TRIGGER,
+                             daemon.interval_min(), int(info.get("changed", 0)))
+        finally:
+            gw.close()
+    except Exception:
+        rc = max(rc, 3)
+        raise
     finally:
-        gw.close()
+        daemon.mark_end(rc, summary)
+    return rc
+
+
+def _refresh_tenant(gw, args: argparse.Namespace, tenant_name: str) -> tuple[int, dict]:
+    log(f"\n[refresh] tenant {tenant_name}")
+    tenant, plan = _load_plan(args, tenant_name)
+    indexed = gw.snapshot_shas(tenant.name)
+    todo = [it for it in plan.items if indexed.get((it.repo.name, it.ref)) != it.sha]
+    log(f"[refresh] {len(todo)} of {len(plan.items)} snapshots changed or new")
+    rc = _run_items(gw, tenant, todo, skip_up_to_date=True) if todo else 0
+    gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
+                           keep={(it.repo.name, it.ref) for it in plan.items})
+    log(f"[refresh] ephemeral snapshots removed: {gone}")
+    planned = {(it.repo.name, it.ref) for it in plan.items}
+    planned_repos = {it.repo.name for it in plan.items}
+    outside = sorted(k for k in gw.persistent_snapshots(tenant.name) if k not in planned and k[0] in planned_repos)
+    if outside:
+        log(f"[refresh] {len(outside)} persistent snapshot(s) outside the ref policy (kept — branch gone or refs changed): "
+            + ", ".join(f"{r}@{ref}" for r, ref in outside[:10]) + (" …" if len(outside) > 10 else "")
+            + f" — remove with: aidd wipe <repo> --ref <ref>")
+    if todo or gone:
+        _link(gw, tenant.name)
+    for e in plan.errors:
+        log(f"[error]    {e}")
+    if plan.errors:
+        rc = max(rc, 1)                # a repo that could not be read is a failed run, not a footnote
+    return rc, {"snapshots": len(plan.items), "changed": len(todo), "gc": gone, "notes": plan.skipped[:20],
+                "errors": plan.errors[:20]}
 
 
 def _run_items(gw, tenant, items, skip_up_to_date: bool) -> int:
     ok = failed = 0
     t_all = time.time()
     for n, it in enumerate(items, 1):
+        if daemon.STOP.is_set():
+            log(f"[stop]     stopping before {it.repo.name}@{it.ref} — the next refresh picks it up")
+            failed += 1
+            break
         log(f"\n[{n}/{len(items)}] {it.repo.name}@{it.ref} ({it.reason})")
         try:
             index_exported_ref(gw, it.repo.path, it.repo.name, tenant.name, it.ref, it.sha,
@@ -346,6 +413,37 @@ def _run_items(gw, tenant, items, skip_up_to_date: bool) -> int:
                 pass
     log(f"\n[done] {ok} indexed, {failed} failed ({time.time()-t_all:.0f}s)")
     return 0 if failed == 0 else 1
+
+
+def cmd_daemon(args: argparse.Namespace) -> int:
+    """The refresher service: `refresh` every tenant, sleep an interval (± 10 %), repeat. Errors are
+    logged and retried on the next round (Neo4j restarting, a manifest being edited)."""
+    daemon.install_signal_handlers()
+    every = daemon.interval_min()
+    log(f"[daemon] aidd {INDEXER_VERSION} refresher — every {every} min ± 10 %, state in {daemon.state_dir() or '(none)'}, "
+        f"mirrors in {mirror_root() or '(workspace, no mirrors)'}")
+    while not daemon.STOP.is_set():
+        bad = daemon.unwritable_dirs([d for d in (daemon.state_dir(), mirror_root()) if d is not None])
+        if bad:
+            log(f"[daemon] cannot write {'; '.join(bad)} — running as uid {os.getuid()}. On the host the directories "
+                f"must belong to the user in AIDD_UID (~/.aidd/.env): sudo chown -R $(id -u):$(id -g) ~/.aidd/mirrors ~/.aidd/state "
+                f"— retrying next round")
+        try:
+            rc = cmd_refresh(args)
+        except Exception as e:  # noqa: BLE001 — the loop outlives any single failure
+            rc = 3
+            log(f"[daemon] refresh failed: {type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''}")
+        delay = daemon.next_delay(every * 60)
+        log(f"[daemon] rc={rc}; next refresh in {delay / 60:.1f} min")
+        daemon.STOP.wait(delay)
+    log("[daemon] stopped")
+    return 0
+
+
+def cmd_daemon_health(args: argparse.Namespace) -> int:
+    ok, msg = daemon.health()
+    print(msg)
+    return 0 if ok else 1
 
 
 def cmd_link(args: argparse.Namespace) -> int:
@@ -464,9 +562,16 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--quiet-plan", action="store_true", help="do not print the plan again (install.sh shows it first)")
     b.set_defaults(fn=cmd_bootstrap)
 
-    r = sub.add_parser("refresh", help="re-index snapshots whose commit changed; GC stale ephemeral ones")
+    r = sub.add_parser("refresh", help="re-index snapshots whose commit changed; GC stale ephemeral ones (every tenant unless --tenant)")
     manifest_args(r, repos=False)
     r.set_defaults(fn=cmd_refresh)
+
+    dm = sub.add_parser("daemon", help="refresh every AIDD_REFRESH_INTERVAL_MINUTES until stopped (the `refresher` service)")
+    manifest_args(dm, repos=False)
+    dm.set_defaults(fn=cmd_daemon)
+
+    dh = sub.add_parser("daemon-health", help="exit 0 when the refresher finished a run within 2 intervals (healthcheck)")
+    dh.set_defaults(fn=cmd_daemon_health)
 
     i = sub.add_parser("index", help="index one repository (checkout as-is, or a given --ref)")
     i.add_argument("repo", help="repo name under WORKSPACE_PATH, or a path")

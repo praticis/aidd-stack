@@ -77,8 +77,8 @@ gap de recall registrado para o H1 (`docs/handoffs/H1-reference-apps.md`).
 
 **Pergunta:** "Desenhe as integrações HTTP entre os repositórios deste tenant."
 
-**MCP:** `cypher_readonly` com a consulta abaixo (é a "workspace map" do `SCHEMA.md` §7); ou
-`http_map` por repo e somar. Candidata a ferramenta própria (`workspace_map`) na F1.
+**MCP:** `cypher_readonly` com a consulta abaixo (é a "workspace map" do `SCHEMA.md` §7; ausente num atlas
+multi-tenant com `ATLAS_RAW_CYPHER=off`); ou `http_map` por repo e somar. Candidata a ferramenta própria (`workspace_map`) na F1.
 
 **Cypher:**
 

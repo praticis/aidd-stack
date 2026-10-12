@@ -8,38 +8,51 @@ calls **by name inside the repo** (`same-file` → `same-module` → `unique-nam
 cross-file resolution via SCIP arrives in roadmap F1.2; the edge property `resolved=false`
 marks today's edges so they can be upgraded in place.
 
-## Run (recommended: the `aidd` host wrapper)
+## Run (recommended: the `aidd` client)
 
-`setup/install.sh` installs `~/.aidd/aidd` (linked as `aidd` when `~/.local/bin` exists). It runs
-`git fetch --all --prune` **on your machine** and then calls the containerized indexer with
-`--no-fetch`. Unix sockets (ssh-agent) do not cross into Docker Desktop/WSL containers, so this is
-the reliable path for developers — and the only one the scheduler uses.
+`setup/install.sh` installs `~/.aidd/aidd` (linked as `aidd` when `~/.local/bin` exists). It is a thin
+client: every command runs in a container — inside the `refresher` when it is running (so it shares
+its lock), otherwise in a one-off `indexer` container of the same image.
 
 ```bash
-aidd plan                     # host fetch + plan
-aidd bootstrap                # host fetch + index everything (asks first)
-aidd refresh                  # host fetch + only what changed (+ GC); locked, logged
-aidd index <repo> --ref develop
+aidd plan                     # what atlas.yaml would index, and why
+aidd bootstrap                # index everything (asks first)
+aidd refresh                  # only what changed (+ GC), every tenant; skipped while another refresh runs
+aidd index <repo> --ref feature/x   # one branch on demand — pushed or not
 aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
-aidd schedule install|status|remove
-AIDD_NO_FETCH=1 aidd plan     # skip the host fetch
+aidd schedule install|status|remove|check [--fix]   # the refresher (see below)
+aidd logs [-f]                # the refresher's log
+AIDD_NO_FETCH=1 aidd plan     # no remote fetch (mirrors synced from the workspace only)
 ```
 
-**Fetch authentication on the host.** Two modes, chosen automatically:
+**Refresher (continuous update, D15).** The `refresher` compose service runs `aidd daemon`: a
+`refresh` of every tenant in the manifest every `AIDD_REFRESH_INTERVAL_MINUTES` (`.env`, default 15,
+± 10 % jitter, counted from the end of the previous run). Docker restarts it after reboots on every OS
+— there is no host scheduler (the systemd timer / Task Scheduler / cron of earlier versions are
+removed by `aidd schedule install` or `aidd schedule check --fix`). Each run writes
+`~/.aidd/state/status.json` (read by the compose healthcheck `aidd daemon-health` and by
+`aidd schedule status`) and a `RefreshState` per tenant in atlas (read by `atlas_status.refresh` —
+`stale: true` after two intervals without a run — and by `install-check.sh`). SIGTERM finishes the
+snapshot being written and exits.
 
-| mode | when | how |
-|---|---|---|
-| `service` | `~/.aidd/secrets/git-token` exists (written by `install.sh` step 6) | a **read-only PAT** sent via `GIT_ASKPASS`; ssh remotes are rewritten to https for that one command (`url.<https>.insteadOf`), the repo config is untouched. This is what the scheduler needs: works with nobody logged in, survives reboots, revocable |
-| `personal` | no token file (or `AIDD_FETCH_AUTH=personal`) | your own ssh key / agent / credential helper — fine interactively, fails unattended when the key has a passphrase |
+**Mirrors — the workspace is read-only.** The indexer containers mount `WORKSPACE_PATH` read-only and
+never write to your clones. Each repo is synced into `~/.aidd/mirrors/<tenant>/<repo>.git`
+([`core/mirror.py`](aidd_indexer/core/mirror.py)): first from your clone (your branches, unpushed ones
+included, and your view of `origin`, no network), then `git fetch origin` with the service credential.
+Plans, `git archive` and `index --ref` read the mirror. Disable the remote half with `--no-fetch` or
+`fetch: false` on the source.
 
-**Scheduler.** `aidd schedule install` reads `AIDD_REFRESH_INTERVAL_MINUTES` from `.env` (default 15)
-and installs, in order of preference: a **systemd user timer** (Linux and WSL with `systemd=true` in
-`/etc/wsl.conf` — runs where Docker and the repos live, no window, `loginctl enable-linger` keeps it
-alive without a terminal), the Windows Task Scheduler as a fallback on WSL without systemd (hidden via
-`conhost --headless`), or a crontab entry.
-Each run is serialized with `flock`, appends to `~/.aidd/logs/refresh.log` (rotated at 5 MB), and
-records `trigger: scheduled` on the `IndexRun`. `install-check.sh` fails when the last refresh is
-older than twice the interval.
+**Fetch authentication.** A **read-only PAT** in `~/.aidd/secrets/git-token` (one line, `chmod 600`,
+written by `install.sh` step 6). Compose mounts it as a secret file (`/run/secrets/git-token`) — never
+an environment variable, so it does not show in `docker inspect` — and `git-askpass.sh` hands it to
+git; ssh remotes are fetched over https for that one command (`url.<https>.insteadOf`), the mirror's
+config is not rewritten. Without a token (empty file) ssh remotes are not fetched at all: the mirrors
+follow your own fetches. Your personal ssh key and agent are never mounted. Server/CI variants:
+`AIDD_GIT_TOKEN` / `AIDD_GIT_TOKEN_<HOST>` (`GITHUB_COM`, `GITLAB_COM`, `DEV_AZURE_COM`), username
+`x-access-token` by default.
+
+The containers run as the host user (`AIDD_UID`/`AIDD_GID` in `.env`), so the mirrors, the state and
+anything else written to bind mounts belong to you, on Linux as on macOS.
 
 ## Run (directly from the compose stack)
 
@@ -54,11 +67,12 @@ docker compose run --rm indexer bootstrap            # index all of it (prints t
 docker compose run --rm indexer refresh              # only snapshots whose commit changed + GC of stale ephemeral ones
 docker compose run --rm indexer status
 docker compose run --rm indexer index <repo>                 # one repo, checkout as-is
-docker compose run --rm indexer index <repo> --ref develop   # one repo, a specific fetched branch
+docker compose run --rm indexer index <repo> --ref develop   # one repo, a specific branch (from the mirror)
 docker compose run --rm indexer wipe <repo>
 docker compose run --rm indexer selftest              # grammars + queries load (the image build runs this too)
 
-# The `atlas` MCP is the same image serving `aidd serve` (compose service mcp-atlas, port 3005):
+# The `atlas` MCP is the same image serving `aidd serve` (compose service mcp-atlas, behind
+# mcp-gateway on port 3005):
 curl -s http://localhost:3005/healthz                 # {"status":"ok","neo4j":true,...}
 ```
 
@@ -67,25 +81,9 @@ curl -s http://localhost:3005/healthz                 # {"status":"ok","neo4j":t
 commit in the last `max_age_days`, not merged into the default branch, not matching `exclude`
 (bots and non-code branches: `dependabot/*`, `renovate/*`, `docs/*`, `ci/*`, `cd/*`, `pipeline/*`), capped at `max_per_repo` — these are flagged `ephemeral` and removed by `refresh` after
 `gc_ephemeral_after_days` once they stop being selected. All branches are never indexed.
-
-Before reading refs, `plan`/`bootstrap`/`refresh` (and `index --ref`) run `git fetch --all --prune`
-in each local repo, so the atlas reflects what the team pushed rather than what one developer last
-fetched. A failed fetch is reported under `skipped:` and the repo is planned on its local refs.
-Disable with `--no-fetch` or `fetch: false` on the source.
-
-**Authentication for the in-container fetch** (server/CI scenario; developers should prefer the
-host wrapper above, where all of this is moot):
-
-| remote | how |
-|---|---|
-| ssh, key without passphrase | works out of the box (`~/.ssh` is mounted read-only) |
-| ssh, key with passphrase | start the agent in the shell that runs compose: `eval $(ssh-agent) && ssh-add`; `SSH_AUTH_SOCK` is forwarded into the container |
-| https + PAT | `AIDD_GIT_TOKEN=<pat>` in `.env`; per host `AIDD_GIT_TOKEN_GITHUB_COM`, `..._GITLAB_COM`, `..._DEV_AZURE_COM`; username defaults to `x-access-token` |
-| https + Git Credential Manager / `gh auth` | not available inside the container — use a PAT as above |
-
-Tokens are read from environment variables only (`git-askpass.sh`), never stored in files or in
-`atlas.yaml`.
-Refs are then materialized with `git archive <sha>` into a temp dir — the working tree is never touched.
+The policy reads the remote-tracking branches (what the team pushed); a branch that only exists in
+your clone is indexed on demand (`aidd index <repo> --ref <branch>`).
+Refs are materialized with `git archive <sha>` into a temp dir — no working tree is touched.
 
 `AIDD_TENANT` is **required** (written to `.env` by `setup/install.sh`, same value as the skills'
 `tenant:` frontmatter). For `index`, `auto` derives the tenant from the path

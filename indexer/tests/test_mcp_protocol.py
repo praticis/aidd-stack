@@ -86,3 +86,58 @@ def test_ref_diff_same_ref_is_an_error(server):
 def test_collapse_refs_orders_default_branch_first():
     rows = [{"repo": "a", "ref": "feature/x", "caller": "C", "evidence": "e"}, {"repo": "a", "ref": "main", "caller": "C", "evidence": "e"}]
     assert _collapse_refs(rows)[0]["refs"] == ["main", "feature/x"]
+
+
+class MultiTenantStore(FakeStore):
+    def __init__(self):
+        super().__init__()
+        self.tenant = None
+
+    def scoped(self, tenant):
+        view = MultiTenantStore()
+        view.tenant = tenant
+        return view
+
+    def read(self, query, **params):
+        if "MATCH (r:Repo) RETURN DISTINCT r.tenant" in query:
+            return [{"t": "acme"}, {"t": "globex"}]
+        if "MATCH (h:RefreshState" in query:
+            return [{"last_finished_at": "2026-10-12T10:00:00Z", "last_rc": 0, "trigger": "scheduled",
+                     "interval_min": 15, "changed": 0, "age_min": 45}]
+        return super().read(query, **params)
+
+
+def test_raw_cypher_can_be_withdrawn_across_tenants(monkeypatch):
+    """Tenant scoping of free Cypher cannot be enforced: offered by default, `ATLAS_RAW_CYPHER=off`
+    withdraws it from a multi-tenant atlas (a fixed-tenant one keeps it)."""
+    monkeypatch.setenv("AIDD_TENANT", "auto")
+    monkeypatch.delenv("ATLAS_RAW_CYPHER", raising=False)
+    names = {t.name for t in asyncio.run(build_server(store=MultiTenantStore()).list_tools())}
+    assert "cypher_readonly" in names
+    monkeypatch.setenv("ATLAS_RAW_CYPHER", "off")
+    names = {t.name for t in asyncio.run(build_server(store=MultiTenantStore()).list_tools())}
+    assert "cypher_readonly" not in names and "repo_map" in names
+    monkeypatch.setenv("AIDD_TENANT", "t")
+    names = {t.name for t in asyncio.run(build_server(store=FakeStore()).list_tools())}
+    assert "cypher_readonly" in names
+
+
+def test_atlas_status_reports_refresh_staleness(monkeypatch):
+    monkeypatch.setenv("AIDD_TENANT", "auto")
+    out = _call(build_server(store=MultiTenantStore()), "atlas_status", {"tenant": "acme"})
+    assert out["refresh"]["stale"] is True and out["refresh"]["age_min"] == 45      # > 2 × 15 min
+    out = _call(build_server(store=FakeStore()), "atlas_status", {})
+    assert out["refresh"]["stale"] is True and "no refresh recorded" in out["refresh"]["note"]
+
+
+def test_rebinding_hosts_and_foreign_origins_are_refused(server):
+    from starlette.testclient import TestClient
+    body = {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}}}
+    hdrs = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
+    app = server.streamable_http_app()
+    with TestClient(app, base_url="http://localhost:3005") as c:
+        assert c.post("/mcp", json=body, headers=hdrs).status_code == 200
+        assert c.post("/mcp", json=body, headers={**hdrs, "Host": "evil.example:3005"}).status_code in (403, 421)
+        assert c.post("/mcp", json=body, headers={**hdrs, "Origin": "http://evil.example"}).status_code == 403
+        assert c.post("/mcp", json=body, headers={**hdrs, "Origin": "http://localhost:5173"}).status_code == 200

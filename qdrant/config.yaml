@@ -5,7 +5,7 @@ service:
   host: 0.0.0.0
   http_port: 6333
   grpc_port: 6334
-  enable_cors: true
+  enable_cors: false    # the REST API is for the MCP container and local tools, not for browsers
 
 optimizers:
   default_segment_number: 2

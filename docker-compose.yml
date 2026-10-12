@@ -4,7 +4,59 @@ name: praticis-aidd
 # provided is up to the caller — ~/.aidd/.env (written by setup/install.sh),
 # the host environment, `--env-file`, a secrets manager, CI variables.
 # Compose aborts before starting any container if one is unset or empty.
-# Only SSH_PATH and GIT_CONFIG_PATH keep host-derived defaults.
+#
+# Exposure (docs/ROADMAP.md, trilha "Segurança e operação"):
+#   * every published port binds to AIDD_BIND_ADDRESS (default 127.0.0.1) — nothing is
+#     reachable from the network the laptop is on;
+#   * the MCP servers publish nothing themselves: `mcp-gateway` fronts them on the same
+#     ports as before (3001/3002/3003/3005) and refuses any request whose Host or browser
+#     Origin is not localhost — the defense against DNS rebinding from a web page;
+#   * Qdrant requires QDRANT_API_KEY, Neo4j its password; images and packages are pinned.
+# Containers that touch host files run as the host user (AIDD_UID/AIDD_GID, written by
+# install.sh), so nothing in the workspace or vault ends up owned by root.
+
+x-hardened: &hardened
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+
+# Shared by `indexer` (on-demand) and `refresher` (the loop): the workspace is READ-ONLY —
+# git reads and fetches happen in mirrors the indexer owns (indexer/aidd_indexer/core/mirror.py).
+x-indexer: &indexer
+  build:
+    context: ./indexer
+    dockerfile: Dockerfile
+  image: aidd-indexer:local          # shared with mcp-atlas: built once
+  user: "${AIDD_UID:-1000}:${AIDD_GID:-1000}"
+  <<: *hardened
+  depends_on:
+    neo4j:
+      condition: service_healthy
+  environment: &indexer-env
+    NEO4J_URI: bolt://neo4j:7687
+    NEO4J_USERNAME: ${NEO4J_USER:?}
+    NEO4J_PASSWORD: ${NEO4J_PASSWORD:?}
+    NEO4J_DATABASE: ${NEO4J_DATABASE:?}
+    WORKSPACE_PATH: /workspace
+    AIDD_TENANT: ${AIDD_TENANT:?}
+    AIDD_CONFIG: /app/atlas.yaml
+    AIDD_TRIGGER: ${AIDD_TRIGGER:-manual}       # recorded on IndexRun: manual | scheduled | bootstrap
+    AIDD_MIRROR_DIR: /var/lib/aidd/mirrors
+    AIDD_STATE_DIR: /var/lib/aidd/state
+    AIDD_REFRESH_INTERVAL_MINUTES: ${AIDD_REFRESH_INTERVAL_MINUTES:-15}
+    HOME: /tmp
+    # --- remote fetch into the mirrors: a read-only PAT, read from a file (never an env var) ---
+    AIDD_GIT_TOKEN_FILE: /run/secrets/git-token
+    GIT_ASKPASS: /app/git-askpass.sh
+    GIT_TERMINAL_PROMPT: "0"
+    GIT_SSH_COMMAND: ssh -o BatchMode=yes
+    AIDD_GIT_USERNAME: ${AIDD_GIT_USERNAME:-x-access-token}
+  secrets:
+    - git-token
+  volumes:
+    - ${WORKSPACE_PATH:?}:/workspace:ro
+    - ./atlas.yaml:/app/atlas.yaml:ro
+    - ./mirrors:/var/lib/aidd/mirrors
+    - ./state:/var/lib/aidd/state
 
 services:
 
@@ -12,12 +64,14 @@ services:
   # QDRANT — semantic memory server for this stack's projects.
   # ──────────────────────────────────────────────────────
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.19.1
     restart: unless-stopped
     container_name: aidd-core-qdrant
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:6333:6333"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:6334:6334"
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY:?}
     volumes:
       - ./qdrant/config.yaml:/qdrant/config/production.yaml:ro
       - qdrant_data:/qdrant/storage
@@ -37,6 +91,7 @@ services:
   # Embeddings via FastEmbed (local ONNX, CPU-only, ~130MB) —
   # does NOT use Ollama or any paid API. Downloads the model once
   # from HuggingFace on first use; runs fully offline afterward.
+  # Reached through mcp-gateway at http://localhost:3002/mcp/
   # ──────────────────────────────────────────────────────
   mcp-qdrant:
     build:
@@ -44,17 +99,18 @@ services:
       dockerfile: Dockerfile
     container_name: aidd-mcp-qdrant
     restart: unless-stopped
+    <<: *hardened
     volumes:
       - ./qdrant/run-mcp.py:/app/run-mcp.py:ro
     environment:
       - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY:?}
       - EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
-    ports:
-      - "3002:3000"
 
   # ──────────────────────────────────────────────────────
   # MCP OBSIDIAN — vault <-> agent bridge
   # Local vault: specs, ADRs, and per-project conventions.
+  # Reached through mcp-gateway at http://localhost:3001/mcp
   # ──────────────────────────────────────────────────────
   mcp-obsidian:
     build:
@@ -62,14 +118,19 @@ services:
       dockerfile: Dockerfile
     container_name: aidd-mcp-obsidian
     restart: unless-stopped
+    user: "${AIDD_UID:-1000}:${AIDD_GID:-1000}"
+    <<: *hardened
+    environment:
+      - HOME=/tmp
     volumes:
       - ${OBSIDIAN_VAULT_PATH:?}:/vault
-    ports:
-      - "3001:3000"
 
   # ──────────────────────────────────────────────────────
-  # MCP GIT — automated git operations
-  # Points to this machine's local projects folder.
+  # MCP GIT — local git operations on the workspace (status, diff, log,
+  # branch, commit). It holds NO credentials: no ssh keys, no ssh-agent —
+  # push/pull/fetch to remotes happen in your own terminal. Commit identity
+  # comes from your ~/.gitconfig (read-only, as the system config).
+  # Reached through mcp-gateway at http://localhost:3003/mcp
   # ──────────────────────────────────────────────────────
   mcp-git:
     build:
@@ -77,18 +138,48 @@ services:
       dockerfile: Dockerfile
     container_name: aidd-mcp-git
     restart: unless-stopped
+    user: "${AIDD_UID:-1000}:${AIDD_GID:-1000}"
+    <<: *hardened
+    environment:
+      - HOME=/tmp
+      - LOGS_DIR=/tmp/logs
+      - GIT_TERMINAL_PROMPT=0
+      - GIT_SSH_COMMAND=ssh -o BatchMode=yes
     volumes:
       - ${WORKSPACE_PATH:?}:/workspace
-      - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
-      # host ssh-agent socket when available; /dev/null otherwise (ssh then
-      # silently falls back to the key files).
-      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
       - type: bind
         source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
-        target: /root/.gitconfig
+        target: /etc/gitconfig
         read_only: true
+
+  # ──────────────────────────────────────────────────────
+  # MCP GATEWAY — the only published entry to the MCP servers. Same ports as
+  # before, so .mcp.json does not change; requests whose Host is not
+  # localhost / 127.0.0.1 / [::1], or that carry a browser Origin from
+  # another site, get 403 (gateway/nginx.conf).
+  # ──────────────────────────────────────────────────────
+  mcp-gateway:
+    image: nginx:1.28.0-alpine
+    container_name: aidd-mcp-gateway
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      - mcp-obsidian
+      - mcp-qdrant
+      - mcp-git
+      - mcp-atlas
     ports:
-      - "3003:3000"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3001:3001"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3002:3002"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3003:3003"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3005:3005"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   # ──────────────────────────────────────────────────────
   # NEO4J — code graph (micro: symbols/calls; macro: contracts
@@ -102,12 +193,12 @@ services:
   # or ALTER USER via cypher-shell.
   # ──────────────────────────────────────────────────────
   neo4j:
-    image: neo4j:5-community
+    image: neo4j:5.26.30-community
     restart: unless-stopped
     container_name: aidd-core-neo4j
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:7474:7474"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:7687:7687"
     environment:
       - NEO4J_AUTH=${NEO4J_USER:?}/${NEO4J_PASSWORD:?}
       # Community Edition has a single user database; its name is fixed at
@@ -117,7 +208,12 @@ services:
       - NEO4J_server_memory_heap_initial__size=${NEO4J_HEAP:?}
       - NEO4J_server_memory_heap_max__size=${NEO4J_HEAP:?}
       - NEO4J_server_memory_pagecache_size=${NEO4J_PAGECACHE:?}
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      # Only these APOC procedures/functions are loaded: apoc.version (install-check), apoc.meta.*
+      # (the debug MCP's schema tool) and the pure data helpers apoc.coll/text/map.* for
+      # cypher_readonly queries. No apoc.load/export/cypher.* → no file or URL access and no
+      # dynamic Cypher from a query that reaches the database.
+      - NEO4J_dbms_security_procedures_allowlist=apoc.version,apoc.meta.*,apoc.coll.*,apoc.text.*,apoc.map.*
+      - NEO4J_dbms_usage__report_enabled=false
     volumes:
       - neo4j_data:/data
     healthcheck:
@@ -137,7 +233,7 @@ services:
   # indexes from neo4j/init/schema.cypher (idempotent).
   # ──────────────────────────────────────────────────────
   neo4j-init:
-    image: neo4j:5-community
+    image: neo4j:5.26.30-community
     container_name: aidd-neo4j-init
     depends_on:
       neo4j:
@@ -155,8 +251,8 @@ services:
   # ──────────────────────────────────────────────────────
   # MCP ATLAS — the code graph as the skills see it: read-only
   # intent tools (atlas_status, repo_map, find_symbol, who_calls,
-  # symbol_context, cypher_readonly), tenant-scoped, streamable
-  # HTTP at http://localhost:3005/mcp  ·  health: /healthz
+  # symbol_context, ...), tenant-scoped, streamable HTTP through
+  # mcp-gateway at http://localhost:3005/mcp  ·  health: /healthz
   # Same image as the indexer (`aidd serve`).
   # ──────────────────────────────────────────────────────
   mcp-atlas:
@@ -166,6 +262,8 @@ services:
     image: aidd-indexer:local
     container_name: aidd-mcp-atlas
     restart: unless-stopped
+    user: "${AIDD_UID:-1000}:${AIDD_GID:-1000}"
+    <<: *hardened
     depends_on:
       neo4j:
         condition: service_healthy
@@ -176,8 +274,10 @@ services:
       - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
       - NEO4J_DATABASE=${NEO4J_DATABASE:?}
       - AIDD_TENANT=${AIDD_TENANT:?}
-    ports:
-      - "3005:3000"
+      # multi-tenant mode: raw Cypher can read every tenant. `off` withdraws cypher_readonly when
+      # the tenants must not see each other (several client organizations on one machine)
+      - ATLAS_RAW_CYPHER=${ATLAS_RAW_CYPHER:-on}
+      - HOME=/tmp
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:3000/healthz', timeout=3).status == 200 else 1)"]
       interval: 30s
@@ -198,6 +298,7 @@ services:
     container_name: aidd-mcp-neo4j
     profiles: ["debug"]
     restart: unless-stopped
+    <<: *hardened
     depends_on:
       neo4j:
         condition: service_healthy
@@ -207,71 +308,55 @@ services:
       - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
       - NEO4J_DATABASE=${NEO4J_DATABASE:?}
     ports:
-      - "3004:3000"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3004:3000"
 
   # ──────────────────────────────────────────────────────
-  # INDEXER — loads repositories' micro graph into atlas. Not a
-  # long-running service: it is in the "tools" profile so `docker
-  # compose up` skips it; run on demand:
+  # REFRESHER — keeps atlas current (D15): `aidd daemon` runs `refresh` for
+  # every tenant of atlas.yaml every AIDD_REFRESH_INTERVAL_MINUTES (± 10 %).
+  # Replaces the host schedulers (systemd timer / Task Scheduler / cron):
+  # Docker restarts it on every OS. The workspace is mounted READ-ONLY;
+  # each repo is synced into ./mirrors (local refs, then a remote fetch with
+  # the read-only PAT in ./secrets/git-token when present). Last run:
+  # ./state/status.json · `aidd schedule status` · `docker logs aidd-refresher`.
+  # ──────────────────────────────────────────────────────
+  refresher:
+    <<: *indexer
+    container_name: aidd-refresher
+    restart: unless-stopped
+    command: ["daemon"]
+    environment:
+      <<: *indexer-env
+      AIDD_TRIGGER: scheduled
+    stop_grace_period: 2m            # SIGTERM → finish the snapshot being written, then exit
+    cpus: ${AIDD_REFRESH_CPUS:-2}
+    mem_limit: ${AIDD_REFRESH_MEMORY:-4g}
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+    healthcheck:
+      test: ["CMD", "aidd", "daemon-health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # ──────────────────────────────────────────────────────
+  # INDEXER — the same image on demand (profile "tools"; `docker compose up`
+  # skips it). The host wrapper ~/.aidd/aidd prefers `docker compose exec
+  # refresher ...` when the refresher runs (shared lock), and falls back to:
   #   docker compose run --rm indexer plan        # what atlas.yaml would index
   #   docker compose run --rm indexer bootstrap   # index it all (asks first)
-  #   docker compose run --rm indexer refresh     # only what changed
   #   docker compose run --rm indexer index <repo> [--ref develop]
-  # Repositories come from WORKSPACE_PATH (same mount as mcp-git). The mount is
-  # read-write ONLY so the indexer can `git fetch --all --prune` before planning
-  # (writes stay inside .git/); refs are materialized with `git archive`, so the
-  # working tree is never touched. SSH keys / .gitconfig are mounted read-only
-  # for the fetch, exactly like mcp-git.
   # ──────────────────────────────────────────────────────
   indexer:
-    build:
-      context: ./indexer
-      dockerfile: Dockerfile
-    image: aidd-indexer:local      # shared with mcp-atlas: built once
+    <<: *indexer
     container_name: aidd-indexer
     profiles: ["tools"]
-    depends_on:
-      neo4j:
-        condition: service_healthy
-    environment:
-      - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USERNAME=${NEO4J_USER:?}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
-      - NEO4J_DATABASE=${NEO4J_DATABASE:?}
-      - WORKSPACE_PATH=/workspace
-      - AIDD_TENANT=${AIDD_TENANT:?}
-      - AIDD_CONFIG=/app/atlas.yaml
-      - AIDD_TRIGGER=${AIDD_TRIGGER:-manual}     # recorded on IndexRun: manual | scheduled | bootstrap
-      # --- git fetch authentication (all optional, all non-interactive) ---------
-      # ssh: keys from ~/.ssh (mounted below). Passphrase-protected keys need the
-      # host's ssh-agent: run `eval $(ssh-agent) && ssh-add` in the shell that
-      # invokes docker compose; SSH_AUTH_SOCK is then forwarded as /ssh-agent.
-      # New hosts are trusted automatically and recorded in a scratch file
-      # (the mounted known_hosts is read-only).
-      - SSH_AUTH_SOCK=/ssh-agent
-      - GIT_SSH_COMMAND=ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/tmp/known_hosts -o UserKnownHostsFile=/root/.ssh/known_hosts
-      # https: PATs via GIT_ASKPASS (see indexer/git-askpass.sh). Set in .env:
-      #   AIDD_GIT_TOKEN=<pat>                    (any host)
-      #   AIDD_GIT_TOKEN_GITHUB_COM=<pat>         (per-host override)
-      #   AIDD_GIT_USERNAME=x-access-token        (default; fine for GitHub/GitLab/Azure DevOps)
-      - GIT_ASKPASS=/app/git-askpass.sh
-      - GIT_TERMINAL_PROMPT=0
-      - AIDD_GIT_TOKEN=${AIDD_GIT_TOKEN:-}
-      - AIDD_GIT_TOKEN_GITHUB_COM=${AIDD_GIT_TOKEN_GITHUB_COM:-}
-      - AIDD_GIT_TOKEN_GITLAB_COM=${AIDD_GIT_TOKEN_GITLAB_COM:-}
-      - AIDD_GIT_TOKEN_DEV_AZURE_COM=${AIDD_GIT_TOKEN_DEV_AZURE_COM:-}
-      - AIDD_GIT_USERNAME=${AIDD_GIT_USERNAME:-x-access-token}
-    volumes:
-      - ${WORKSPACE_PATH:?}:/workspace
-      - ./atlas.yaml:/app/atlas.yaml:ro
-      - ${SSH_PATH:-${HOME}/.ssh}:/root/.ssh:ro
-      # host ssh-agent socket when available; /dev/null otherwise (ssh then
-      # silently falls back to the key files).
-      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
-      - type: bind
-        source: ${GIT_CONFIG_PATH:-${HOME}/.gitconfig}
-        target: /root/.gitconfig
-        read_only: true
+
+secrets:
+  git-token:
+    # read-only PAT (one line). An EMPTY file is valid: the mirrors then follow your own fetches.
+    file: ${AIDD_GIT_TOKEN_FILE:-./secrets/git-token}
 
 volumes:
   qdrant_data:

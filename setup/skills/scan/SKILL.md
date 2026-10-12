@@ -78,7 +78,10 @@ file actually exists.
      `indexed_at`) — it goes into the vault page (step 3) so staleness
      is visible later. If `sha` differs from `git rev-parse --short HEAD`,
      the graph is a few commits behind (it refreshes every ~15 min):
-     still use it, and mention the gap when it matters.
+     still use it, and mention the gap when it matters. If
+     `atlas_status.refresh.stale` is true, the automatic refresh has
+     stopped — say so in one line (the user can check it with
+     `aidd schedule status`) and treat the graph as possibly outdated.
 
 1. Use `qdrant-find` with `collection_name: "<tenant>"` (the tenant
    value determined above — re-check it if you're unsure), filtering
@@ -170,7 +173,10 @@ than grep:
 - `cypher_readonly` for anything the other tools do not answer
   (schema: Repo, Snapshot, Module, File, Symbol, Package; edges
   HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS; `$tenant` is
-  bound for you; add `LIMIT`).
+  bound for you — always filter on it, a query without `$tenant` reads
+  other tenants too; add `LIMIT`). If the tool is not listed (an atlas
+  configured with `ATLAS_RAW_CYPHER=off`), answer with the other tools
+  or the source tree.
 
 Calls in the graph are resolved by name inside the repo (each `CALLS`
 edge carries its `strategy`): treat `same-file`/`same-module` hits as

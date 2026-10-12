@@ -24,6 +24,11 @@ def is_git_repo(repo: Path) -> bool:
     return _git(repo, "rev-parse", "--is-inside-work-tree") == "true"
 
 
+def has_git(repo: Path) -> bool:
+    """A working tree or a bare repository (the refresher's mirrors)."""
+    return _git(repo, "rev-parse", "--git-dir") is not None
+
+
 def head_sha(repo: Path) -> str:
     return _git(repo, "rev-parse", "HEAD") or "workdir"
 
@@ -79,6 +84,15 @@ def list_branches(repo: Path) -> list[dict]:
         else:
             local.append({"name": name, "sha": sha, "committed_at": date, "remote": False})
     return remote if remote else local
+
+
+def branch_sha(repo: Path, name: str) -> str | None:
+    """Commit of a branch: the remote-tracking one when the repo has it (what `list_branches`
+    reports), else a local head — a feature branch that was never pushed."""
+    for b in list_branches(repo):
+        if b["name"] == name:
+            return b["sha"]
+    return _git(repo, "rev-parse", "--verify", "--quiet", f"refs/heads/{name}^{{commit}}")
 
 
 def is_merged_into(repo: Path, sha: str, base_sha: str) -> bool:

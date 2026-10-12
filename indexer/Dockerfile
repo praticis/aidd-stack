@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# Base image pinned to the patch release — bump deliberately (python deps: pyproject.toml).
+FROM python:3.12.15-slim
 
 # git: read refs / archive trees of the mounted repositories.
 # openssh-client + ca-certificates: `git fetch` over ssh:// and https://
@@ -10,6 +11,11 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# The containers run as the host user (docker-compose.yml `user:`), which may not own the mounted
+# repos as the image sees them: trust every repository for git, for every git process in the
+# container (system config — also read by `git fetch <local path>`'s upload-pack).
+RUN git config --system --add safe.directory '*'
 
 WORKDIR /app
 COPY pyproject.toml README.md ./
@@ -34,9 +40,13 @@ ENV TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=/opt/tslp-cache \
 # module is prefetched automatically.
 RUN python -c "import tree_sitter_language_pack as t, aidd_indexer.languages as L; g = sorted(L.grammars()); t.prefetch(g); print('grammars:', g, '->', t.downloaded_languages())" \
  && rm -rf /opt/tslp-cache/tree-sitter-language-pack/*/bundles \
- && aidd selftest
+ && chmod -R a+rX /opt/tslp-cache \
+ && aidd selftest \
+ && setpriv --reuid=65534 --regid=65534 --clear-groups aidd selftest >/dev/null
+# ^ compose runs these containers as the host user (any uid): the grammars must load for it too
 
-# Repositories are mounted read-only at /workspace (see docker-compose.yml).
+# Repositories are mounted read-only at /workspace; git reads and fetches go to the mirrors under
+# /var/lib/aidd/mirrors (core/mirror.py, docker-compose.yml).
 ENV WORKSPACE_PATH=/workspace
 ENTRYPOINT ["aidd"]
 CMD ["--help"]

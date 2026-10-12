@@ -48,6 +48,35 @@ GRAMMAR_ERRORS: dict[str, str] = {}   # language -> why it could not be loaded (
 GRAMMAR_OFFLINE = os.environ.get("AIDD_GRAMMAR_OFFLINE", "") not in ("", "0", "false")
 
 
+def _own_grammar_cache() -> None:
+    """The pack refuses a cache directory not owned by the running uid. The image bakes the grammars
+    as root, while compose runs the containers as the host user (any uid): load them from a private
+    copy (12 MB, once per container) instead."""
+    src = os.environ.get("TREE_SITTER_LANGUAGE_PACK_CACHE_DIR", "")
+    if not src or not hasattr(os, "getuid") or os.getuid() == 0:
+        return
+    try:
+        if Path(src).stat().st_uid == os.getuid():
+            return
+    except OSError:
+        return
+    import shutil
+    import tempfile
+    dst = Path(tempfile.gettempdir()) / f"aidd-grammars-{os.getuid()}"
+    if not dst.exists():
+        tmp = Path(tempfile.mkdtemp(prefix="aidd-grammars-", dir=tempfile.gettempdir()))
+        shutil.copytree(src, tmp / "c")
+        try:
+            (tmp / "c").rename(dst)          # atomic: a concurrent process may have won the race
+        except OSError:
+            pass
+        shutil.rmtree(tmp, ignore_errors=True)
+    os.environ["TREE_SITTER_LANGUAGE_PACK_CACHE_DIR"] = str(dst)
+
+
+_own_grammar_cache()
+
+
 def grammar_cached(grammar: str) -> bool:
     try:
         from tree_sitter_language_pack import downloaded_languages

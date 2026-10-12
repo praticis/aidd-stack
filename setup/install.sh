@@ -52,6 +52,7 @@ SYNC_FOLDERS=(
   "qdrant"
   "neo4j"
   "indexer"
+  "gateway"
 )
 
 # Files at the root to copy directly into $AIDD_DIR
@@ -155,15 +156,13 @@ provision_aidd_structure() {
     printf "  ${GREEN}[copied]${NC} install-check.sh -> ~/.aidd/install-check.sh\n"
   fi
 
-  # Host-side wrapper: fetches with the user's own git credentials, then runs the
-  # containerized indexer. Also linked into ~/.local/bin when that exists.
+  # Host-side client: runs indexer commands in the refresher / indexer containers and manages
+  # the refresher (`aidd schedule ...`). Also linked into ~/.local/bin when that exists.
   if [ -f "$SCRIPT_DIR/aidd" ]; then
     cp "$SCRIPT_DIR/aidd" "$AIDD_DIR/aidd" && chmod +x "$AIDD_DIR/aidd"
     printf "  ${GREEN}[copied]${NC} aidd -> ~/.aidd/aidd\n"
-    # the PAT askpass helper is shared by the host wrapper and the container image
-    if [ -f "$ROOT_DIR/indexer/git-askpass.sh" ]; then
-      cp "$ROOT_DIR/indexer/git-askpass.sh" "$AIDD_DIR/git-askpass.sh" && chmod +x "$AIDD_DIR/git-askpass.sh"
-    fi
+    # left by versions that fetched on the host; the image carries its own copy now
+    rm -f "$AIDD_DIR/git-askpass.sh"
     if [ -d "$HOME/.local/bin" ] && [ -w "$HOME/.local/bin" ]; then
       ln -sf "$AIDD_DIR/aidd" "$HOME/.local/bin/aidd"
       printf "  ${GREEN}[linked]${NC} ~/.local/bin/aidd\n"
@@ -305,6 +304,48 @@ run_skills() {
 # docker-compose.yml treats every variable it reads as required (${VAR:?}).
 # When .env predates a new variable, append it with a sane default instead
 # of letting compose abort. Existing values are never touched.
+random_secret() {
+  if command -v openssl &> /dev/null; then openssl rand -hex 24
+  elif [ -r /dev/urandom ]; then head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n'
+  else echo "aidd-$(date +%s)-$$"; fi
+}
+
+# Bind-mount sources the containers write to (mirrors, state) and the secret file compose mounts
+# must exist before `docker compose up`, owned by the user: Docker would create them as root, and a
+# missing secret file aborts compose. An empty token file is valid (no remote fetch).
+ensure_runtime_dirs() {
+  local token_file
+  token_file="$(grep -E '^AIDD_GIT_TOKEN_FILE=' "$AIDD_DIR/.env" 2>/dev/null | head -1 | cut -d= -f2-)"
+  token_file="${token_file:-$AIDD_DIR/secrets/git-token}"
+  local d
+  for d in "$AIDD_DIR/mirrors" "$AIDD_DIR/state"; do
+    # left by a run under sudo: an empty directory owned by someone else is recreated as yours
+    if [ -d "$d" ] && [ ! -O "$d" ]; then
+      if rmdir "$d" 2>/dev/null; then printf "  ${YELLOW}[fixed]${NC} %s was owned by another user — recreated as yours\n" "$d"
+      else warn "$d is not owned by you and not empty — run: sudo chown -R $(id -u):$(id -g) $d"; fi
+    fi
+  done
+  mkdir -p "$AIDD_DIR/mirrors" "$AIDD_DIR/state" "$(dirname "$token_file")"
+  chmod 700 "$(dirname "$token_file")" 2>/dev/null || true
+  [ -e "$token_file" ] || { : > "$token_file" && chmod 600 "$token_file"; }
+}
+
+# Manifests generated before D15 say `fetch: false` because the host wrapper fetched. The
+# refresher now fetches into its own mirrors, so the generated block flips to `fetch: true`.
+# Hand-written manifests (without the generated comment) are left alone.
+migrate_atlas_manifest() {
+  local manifest="$AIDD_DIR/atlas.yaml"
+  [ -f "$manifest" ] && grep -q 'git fetch is NOT part of indexing' "$manifest" || return 0
+  local tmp; tmp="$(mktemp)"
+  awk '
+    /# git fetch is NOT part of indexing/ { print "        # the refresher fetches into its own mirrors (your clones are read-only to it)"; skip=1; next }
+    skip && /^ *#/ { next }
+    skip && /fetch: false/ { sub(/fetch: false/, "fetch: true"); skip=0 }
+    { print }
+  ' "$manifest" > "$tmp" && cp "$tmp" "$manifest" && rm -f "$tmp"
+  printf "  ${GREEN}[migrated]${NC} atlas.yaml: local sources fetch into the refresher mirrors (fetch: true)\n"
+}
+
 ensure_env_defaults() {
   local env_file="$1"
   local key value current
@@ -322,6 +363,11 @@ ensure_env_defaults() {
     "NEO4J_DATABASE=atlas"
     "NEO4J_HEAP=1G"
     "NEO4J_PAGECACHE=512M"
+    "QDRANT_API_KEY=$(random_secret)"
+    "AIDD_UID=$(id -u)"
+    "AIDD_GID=$(id -g)"
+    "AIDD_GIT_TOKEN_FILE=$AIDD_DIR/secrets/git-token"
+    "AIDD_REFRESH_INTERVAL_MINUTES=15"
   )
 
   for kv in "${defaults[@]}"; do
@@ -331,6 +377,7 @@ ensure_env_defaults() {
       printf "\n%s=%s\n" "$key" "$value" >> "$env_file"
       printf "  ${GREEN}[added]${NC} %s to %s\n" "$key" "$env_file"
       [ "$key" = "NEO4J_PASSWORD" ] && info "Generated a random Neo4j password — Browser login at http://localhost:7474 uses NEO4J_USER/NEO4J_PASSWORD from $env_file."
+      [ "$key" = "QDRANT_API_KEY" ] && info "Qdrant now requires an API key (QDRANT_API_KEY in $env_file) — the MCP container receives it from compose."
     fi
   done
 
@@ -395,6 +442,14 @@ QDRANT_STORAGE_PATH=$docker_dir/qdrant-storage
 # Service Endpoints
 QDRANT_URL=http://localhost:6333
 
+# Containers that write to your files (workspace, vault, mirrors) run as you, so nothing ends up
+# owned by root.
+AIDD_UID=$(id -u)
+AIDD_GID=$(id -g)
+
+# Qdrant API key — required by Qdrant, passed to the MCP container by compose.
+QDRANT_API_KEY=$(random_secret)
+
 # Neo4j (code graph) — the ONLY place these credentials are defined.
 # docker-compose.yml refuses to start without NEO4J_PASSWORD.
 # The official image only supports 'neo4j' as the initial user.
@@ -407,12 +462,11 @@ NEO4J_DATABASE=atlas
 NEO4J_HEAP=1G
 NEO4J_PAGECACHE=512M
 
-# Continuous update (aidd refresh on a schedule) — configured in step 6 of install.sh.
-# The service fetch uses a READ-ONLY PAT stored in the file below (chmod 600), never in
-# this .env. Without the file, fetches use your personal ssh/agent (interactive use only).
+# Continuous update — the refresher container (step 6 of install.sh). It fetches the remotes
+# into its own mirrors with a READ-ONLY PAT stored in the file below (chmod 600), never in this
+# .env. An empty file is valid: the mirrors then follow your own fetches.
 AIDD_GIT_TOKEN_FILE=$AIDD_DIR/secrets/git-token
 AIDD_REFRESH_INTERVAL_MINUTES=15
-# In-container fetch (server/CI only): AIDD_GIT_TOKEN / AIDD_GIT_TOKEN_<HOST> / AIDD_GIT_USERNAME
 EOF
     ENV_CREATED_NOW=1
     success "Created $env_file with WORKSPACE_PATH=$workspace_path"
@@ -422,6 +476,8 @@ EOF
   # The manifest must exist BEFORE the first `docker compose up`: it is bind-mounted
   # into the indexer as a file, and Docker turns a missing bind source into a directory.
   write_atlas_manifest
+  migrate_atlas_manifest
+  ensure_runtime_dirs
 
   # Named volumes outlive ~/.aidd. A brand-new .env carries a brand-new Neo4j
   # password, but an old neo4j_data volume still holds the previous one — the
@@ -452,8 +508,9 @@ EOF
   read -r -p "Select an option [1/2, default: 1]: " reply </dev/tty
   if [[ "${reply:-1}" != "2" ]]; then
     info "Starting Docker Compose inside $AIDD_DIR..."
-    if (cd "$AIDD_DIR" && docker compose --profile tools build && docker compose up -d); then
-      success "Docker Compose started (indexer image built as well)."
+    # everything but the refresher: step 4 (bootstrap) runs first, step 6 starts the refresher
+    if (cd "$AIDD_DIR" && docker compose --profile tools build && docker compose up -d --remove-orphans --scale refresher=0); then
+      success "Docker Compose started (indexer image built as well; the refresher starts in step 6)."
     else
       warn "docker compose up failed. Last Neo4j log lines (most common culprit — APOC download or memory):"
       (cd "$AIDD_DIR" && docker compose logs --tail 40 neo4j 2>/dev/null | sed 's/^/    /')
@@ -519,10 +576,8 @@ write_atlas_manifest() {
         path: $path
         include: ["*"]
         exclude: []
-        # git fetch is NOT part of indexing: the continuous-update process
-        # (aidd refresh via the host wrapper / scheduler) fetches with your
-        # credentials before calling the indexer. Keep false here.
-        fetch: false
+        # the refresher fetches into its own mirrors (your clones are read-only to it)
+        fetch: true
     refs:
       always: ["main", "master", "develop"]
       patterns: []
@@ -549,7 +604,8 @@ run_atlas_bootstrap() {
     return 0
   fi
 
-  if ! (cd "$AIDD_DIR" && docker compose ps --status running 2>/dev/null | grep -q aidd-core-neo4j); then
+  # (not `compose ps | grep -q`: with pipefail, grep closing the pipe early fails the whole check)
+  if [ "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' aidd-core-neo4j 2>/dev/null)" != "healthy" ]; then
     info "Neo4j is not running — skipping bootstrap. Later: cd $AIDD_DIR && docker compose run --rm indexer bootstrap"
     return 0
   fi
@@ -563,7 +619,7 @@ run_atlas_bootstrap() {
     echo "  2) Skip — run '$AIDD_DIR/aidd bootstrap' later"
   else
     echo "  1) Re-index the local workspace now (only changed snapshots are rewritten)"
-    echo "  2) Skip — the graph is already populated; the scheduled refresh keeps it current   [default]"
+    echo "  2) Skip — the graph is already populated; the refresher keeps it current   [default]"
   fi
   echo "  (remote providers — GitHub/GitLab/Azure DevOps — arrive in a later phase; see atlas.yaml comments)"
   read -r -p "Select an option [1/2, default: $def]: " opt </dev/tty
@@ -571,7 +627,7 @@ run_atlas_bootstrap() {
     info "Skipped."
     if [ "${AIDD_UPGRADE:-0}" = 1 ]; then
       # snapshots are already in the graph; (re)build the cross-repo CONSUMES/CALLED_FROM edges
-      # with the current linker — cheap, and the scheduled refresh only links when something changed
+      # with the current linker — cheap, and the refresher only links when something changed
       info "Linking HTTP calls to endpoints across repositories (aidd link) ..."
       "$AIDD_DIR/aidd" link || warn "Linker failed — see output above; later: $AIDD_DIR/aidd link"
     fi
@@ -595,63 +651,46 @@ run_atlas_bootstrap() {
 }
 
 # ------------------------------------------------------------------------------
-# 5c. Continuous update — read-only PAT + scheduled `aidd refresh`
+# 5c. Continuous update — the refresher container (+ optional read-only PAT)
 # ------------------------------------------------------------------------------
-# Installation indexes what is cloned (D12). Keeping atlas current is a separate,
-# unattended process: it needs a credential that works with nobody at the
-# keyboard (a fine-grained, read-only PAT) and a scheduler. Both are optional
-# here and can be (re)configured later with `aidd schedule install`.
+# Installation indexes what is cloned (D12). Keeping atlas current is the refresher's job
+# (docker-compose.yml, D15): it syncs every repo into its own mirror and re-indexes what changed.
+# With a read-only PAT it also fetches the remotes (what the team pushed); without one the mirrors
+# follow your own fetches. Reconfigure later with `aidd schedule install`.
 run_continuous_update() {
   local env_file="$AIDD_DIR/.env"
-  local secrets_dir="$AIDD_DIR/secrets"
-  local token_file="$secrets_dir/git-token"
+  local token_file
+  token_file="$(grep -E '^AIDD_GIT_TOKEN_FILE=' "$env_file" 2>/dev/null | head -1 | cut -d= -f2-)"
+  token_file="${token_file:-$AIDD_DIR/secrets/git-token}"
+  ensure_runtime_dirs
 
   echo ""
-  local def=1 configured=0
-  if [ -s "$token_file" ] && "$AIDD_DIR/aidd" schedule check >/dev/null 2>&1; then
-    configured=1; def=2
-  fi
-  info "Continuous update keeps atlas in sync with your remotes (fetch + incremental re-index)."
-  if [ "$configured" = 1 ]; then
-    echo "  Already configured: token present and scheduler healthy ($AIDD_DIR/aidd schedule status)."
-    echo ""
-    echo "  1) Reconfigure (interval / scheduler; the token is kept unless you delete $token_file)"
-    echo "  2) Keep the current configuration   [default]"
-  else
-    echo "  It runs unattended, so it needs a READ-ONLY token (GitHub fine-grained PAT, 'Contents: read'"
-    echo "  on the organization's repositories). Your personal ssh key is never used by the scheduler."
-    echo ""
-    echo "  1) Configure now: paste a read-only PAT and install the scheduler   [default]"
-    echo "  2) Skip — set up later with:  $AIDD_DIR/aidd schedule install"
-  fi
-  read -r -p "Select an option [1/2, default: $def]: " opt </dev/tty
-  if [[ "${opt:-$def}" == "2" ]]; then
-    if [ "$configured" = 1 ]; then
-      info "Kept. Status: $AIDD_DIR/aidd schedule status"
-    else
-      info "Skipped. Atlas will only update when you run '$AIDD_DIR/aidd refresh' yourself."
-    fi
-    return 0
-  fi
+  info "Continuous update: the refresher container re-indexes what changed every few minutes."
+  local had_old_scheduler=0
+  { [ -f "$HOME/.config/systemd/user/aidd-refresh.timer" ] || crontab -l 2>/dev/null | grep '# aidd-atlas-refresh' >/dev/null; } && had_old_scheduler=1
+  [ "$had_old_scheduler" = 1 ] && info "A host scheduler from an earlier version exists — it is replaced by the container (removed now)."
 
   if [ -s "$token_file" ]; then
-    info "A token already exists at $token_file — keeping it (delete the file to replace)."
+    info "Read-only token present at $token_file — kept (empty the file to stop remote fetches)."
   else
-    read -r -s -p "Read-only PAT (input hidden; leave empty to skip the token): " pat </dev/tty
+    echo "  Optional: a READ-ONLY token (GitHub fine-grained PAT, 'Contents: read' on the organization's"
+    echo "  repositories) lets the refresher see what the team pushed, not only what you fetched."
+    echo "  Your personal ssh key is never used by it."
+    read -r -s -p "Read-only PAT (input hidden; leave empty to skip): " pat </dev/tty
     echo ""
     if [ -n "$pat" ]; then
-      mkdir -p "$secrets_dir" && chmod 700 "$secrets_dir"
       printf '%s\n' "$pat" > "$token_file" && chmod 600 "$token_file"
       unset pat
-      success "Token stored at $token_file (600). Fetch will use HTTPS with this token, even for ssh remotes."
+      success "Token stored at $token_file (600), mounted read-only into the refresher as a file."
     else
-      warn "No token — scheduled fetches will try your personal ssh credentials and fail after reboot until you log in."
+      info "No token — the refresher syncs from your clones; add one later in $token_file + 'aidd schedule install'."
     fi
   fi
 
-  local every
-  read -r -p "Refresh interval in minutes [default: 15]: " every </dev/tty
-  every="${every:-15}"
+  local current every
+  current="$(grep -E '^AIDD_REFRESH_INTERVAL_MINUTES=' "$env_file" | head -1 | cut -d= -f2-)"
+  read -r -p "Refresh interval in minutes [default: ${current:-15}]: " every </dev/tty
+  every="${every:-${current:-15}}"
   if grep -q '^AIDD_REFRESH_INTERVAL_MINUTES=' "$env_file"; then
     sed -i.bak -E "s/^AIDD_REFRESH_INTERVAL_MINUTES=.*/AIDD_REFRESH_INTERVAL_MINUTES=$every/" "$env_file" && rm -f "$env_file.bak"
   else
@@ -659,13 +698,10 @@ run_continuous_update() {
   fi
 
   if "$AIDD_DIR/aidd" schedule install; then
-    success "Scheduler installed. Check with: $AIDD_DIR/aidd schedule status   Logs: $AIDD_DIR/logs/refresh.log"
+    success "Refresher running. Status: $AIDD_DIR/aidd schedule status   Logs: $AIDD_DIR/aidd logs"
   else
-    warn "Scheduler not installed — see the message above; retry with: $AIDD_DIR/aidd schedule install"
+    warn "Refresher not started — see the message above; retry with: $AIDD_DIR/aidd schedule install"
   fi
-  echo ""
-  info "Checking unattended-refresh prerequisites (repairing what can be repaired) ..."
-  "$AIDD_DIR/aidd" schedule check --fix || warn "Some prerequisites are still failing — follow the instructions above, then: $AIDD_DIR/aidd schedule check"
 }
 
 # ------------------------------------------------------------------------------
@@ -728,6 +764,12 @@ distribute_mcp_config() {
 # 7. Main Execution
 # ------------------------------------------------------------------------------
 main() {
+  # Everything here is per user (~/.aidd, skills, .mcp.json, the uid the containers run as).
+  # Under sudo, AIDD_UID becomes 0 and new directories belong to root — the containers then
+  # cannot write to them (Docker Desktop writes as you).
+  if [ "$(id -u)" = "0" ] && [ "${AIDD_ALLOW_ROOT:-0}" != "1" ]; then
+    error "Do not run install.sh as root/sudo — run it as your user: ${0}  (docker must work without sudo; on Linux add yourself to the 'docker' group). A root-only host: AIDD_ALLOW_ROOT=1."
+  fi
   # Upgrade vs first install: an existing ~/.aidd/.env means the stack was configured before,
   # so the interactive steps default to "keep / skip" instead of "configure / index".
   AIDD_UPGRADE=0
@@ -755,7 +797,7 @@ main() {
   distribute_mcp_config
 
   echo ""
-  printf "${BOLD}=== 6. Continuous Update (scheduled refresh) ===${NC}\n"
+  printf "${BOLD}=== 6. Continuous Update (refresher) ===${NC}\n"
   run_continuous_update
 
   printf "\n${GREEN}${BOLD}✓ Setup completed successfully at $AIDD_DIR!${NC}\n\n"

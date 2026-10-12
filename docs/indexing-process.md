@@ -104,6 +104,6 @@ escolher?"). O `install.sh` continua sendo também o comando de **upgrade**: re-
 ## 7. Decisões
 
 - D8 **Em aberto** — providers em uso por tenant; necessário só na F1.
-- D9 **Resolvido** — sem espelhos na fonte `local`: o indexador faz `git fetch --all --prune` (credenciais SSH/.gitconfig montadas como no `mcp-git`) e materializa refs com `git archive <sha>`; a working tree nunca é tocada. Espelhos bare só com providers remotos (F1).
+- D9 **Substituído pelo D15 (2026-10-12)** — o refresher mantém um espelho bare por repo também na fonte `local` e monta o workspace só leitura (ver ROADMAP, trilha "Segurança e operação"). Texto original: sem espelhos na fonte `local`: o indexador faz `git fetch --all --prune` (credenciais SSH/.gitconfig montadas como no `mcp-git`) e materializa refs com `git archive <sha>`; a working tree nunca é tocada. Espelhos bare só com providers remotos (F1).
 - D10 **Resolvido** — defaults `14 dias / 5 por repo / GC 30 dias`, editáveis no `atlas.yaml`.
 - D11 **Simplificado** — `areas:` opcional no manifesto (nome → repos/globs), usado pelo `aidd plan` para agrupar e gravado em `Repo.area`. Nós `Domain`/`System`/`Team` e Backstage/Compass ficam para F2.

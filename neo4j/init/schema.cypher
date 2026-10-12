@@ -15,6 +15,7 @@ CREATE CONSTRAINT snapshot_id   IF NOT EXISTS FOR (n:Snapshot)        REQUIRE n.
 CREATE CONSTRAINT indexrun_id   IF NOT EXISTS FOR (n:IndexRun)        REQUIRE n.id IS UNIQUE;
 CREATE CONSTRAINT httpcall_id   IF NOT EXISTS FOR (n:HttpCall)        REQUIRE n.id IS UNIQUE;
 CREATE CONSTRAINT violation_id  IF NOT EXISTS FOR (n:Violation)       REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT refresh_tenant IF NOT EXISTS FOR (n:RefreshState)   REQUIRE n.tenant IS UNIQUE;
 
 // ---- Filters most used by the MCP -------------------------------------------
 CREATE INDEX symbol_tenant_repo_ref IF NOT EXISTS FOR (n:Symbol) ON (n.tenant, n.repo, n.ref);

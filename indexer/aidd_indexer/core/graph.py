@@ -380,6 +380,19 @@ class GraphWriter:
         """, id=ids.index_run(tenant, repo, ref, now), tenant=tenant, repo=repo, ref=ref, sha=sha,
              now=now, error=error[:2000], ver=INDEXER_VERSION)
 
+    def heartbeat(self, tenant: str, started: str, finished: str, rc: int, trigger: str,
+                  interval_min: int, changed: int) -> None:
+        """One `RefreshState` per tenant, rewritten by every refresh — even one that indexed nothing.
+        Snapshot ages alone cannot tell "nothing changed" from "the refresher died"; this can
+        (`atlas_status.refresh`, install-check)."""
+        self._run("""
+            MERGE (h:RefreshState {tenant: $tenant})
+            SET h.last_started_at = datetime($started), h.last_finished_at = datetime($finished),
+                h.last_rc = $rc, h.trigger = $trigger, h.interval_min = $interval, h.changed = $changed,
+                h.indexer_version = $ver
+        """, tenant=tenant, started=started, finished=finished, rc=rc, trigger=trigger, interval=interval_min,
+             changed=changed, ver=INDEXER_VERSION)
+
     def status(self, tenant: str | None) -> list[dict[str, Any]]:
         q = """
             MATCH (s:Snapshot)
@@ -391,7 +404,7 @@ class GraphWriter:
             RETURN s.tenant AS tenant, s.repo AS repo, s.ref AS ref, left(s.commit_sha, 10) AS sha,
                    toString(s.indexed_at) AS indexed_at, count(f) AS files, last.counts AS counts,
                    last.status AS status, s.ephemeral AS ephemeral, last.trigger AS trigger,
-                   duration.between(s.indexed_at, datetime()).minutes AS age_min
+                   duration.inSeconds(s.indexed_at, datetime()).seconds / 60 AS age_min
             ORDER BY tenant, repo, ref
         """
         with self.driver.session(database=self.cfg.database) as s:
