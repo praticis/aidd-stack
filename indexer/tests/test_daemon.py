@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import os
 import random
+import threading
+import time
 
 import pytest
 
@@ -80,3 +82,23 @@ def test_unwritable_state_is_reported_not_fatal(tmp_path, monkeypatch):
         assert daemon.read_status() == {}
     finally:
         ro.chmod(0o700)
+
+
+def test_lock_wait_takes_over_when_the_running_refresh_ends(state):
+    released = threading.Event()
+
+    def hold():
+        with daemon.refresh_lock():
+            released.wait(5)
+
+    t = threading.Thread(target=hold)
+    t.start()
+    time.sleep(0.2)
+    with pytest.raises(daemon.Busy):
+        with daemon.refresh_lock(wait=0):
+            pass
+    threading.Timer(0.5, released.set).start()
+    t0 = time.time()
+    with daemon.refresh_lock(wait=10):              # an on-demand `refresh --repos x --wait 10`
+        assert time.time() - t0 < 5
+    t.join()

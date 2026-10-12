@@ -39,6 +39,7 @@ class Convention:
     """Base class. `id` names the convention in `Violation.convention` and in atlas.yaml."""
 
     id: str = ""
+    architecture: str | None = None     # the layout this repo uses, when the convention knows several (set in prepare)
 
     def configure(self, options: dict[str, Any]) -> None:
         """Options from atlas.yaml (`conventions: [{id: x, options: {...}}]`)."""

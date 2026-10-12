@@ -35,8 +35,8 @@ from .. import INDEXER_VERSION
 from ..core.config import is_test_path, ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
-NO_REFRESH = {"stale": True, "note": "no refresh recorded — the graph only changes when someone runs `aidd index`/`aidd refresh` "
-                                     "(is the refresher service running? `aidd schedule status`)"}
+NO_REFRESH = {"stale": None, "note": "no automatic refresh recorded for this tenant yet (indexed on demand, or the "
+                                     "refresher is not running — `aidd schedule status`)"}
 FORBIDDEN = re.compile(
     r"\b(CREATE|MERGE|DELETE|DETACH|SET|REMOVE|DROP|CALL\s+\{|LOAD\s+CSV|FOREACH|"
     r"apoc\.(create|merge|refactor|periodic|load|export|import|trigger|cypher\.)|"
@@ -248,7 +248,8 @@ def build_server(store: Store | None = None):
         """What atlas knows: indexed repositories, their refs (default branch + active feature
         branches), commit and freshness. Call first; a repo missing here means 'not indexed'.
         `refresh` is the tenant's last automatic update: when `stale` is true the refresher has not run
-        for over two intervals and the graph may lag behind the remotes — say so in your answer.
+        for over two intervals and the graph may lag behind the remotes — say so in your answer
+        (`stale: null` = no automatic run recorded yet, e.g. a tenant just indexed on demand).
         In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
         the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
         if the_store.tenant is None and not tenant:
@@ -266,14 +267,18 @@ def build_server(store: Store | None = None):
         packages it imports, `layers` (files per architectural layer when a convention is configured,
         with their violation count — see `violations`), and `depends_on` / `depended_by`: other services
         of the workspace linked through internal packages declared in manifests (go.mod, .csproj,
-        package.json, pyproject). Use it before reading files — it tells where things live."""
+        package.json, pyproject). With a convention configured: `architecture` (the layout it detected,
+        e.g. `split`), `conventions` applied, and `roles` — what each type is in the pattern
+        (`command-handler`, `validator`, `repository`...), with counts and examples; `find_symbol(role=...)`
+        lists every element of a role. Use it before reading files — it tells where things live."""
         s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref)
         head = s.read("""
             MATCH (r:Repo {tenant: $tenant, name: $repo})-[:HAS_SNAPSHOT]->(snap:Snapshot {ref: $ref})
             RETURN r.stack AS stack, r.area AS area, r.default_ref AS default_ref, r.url AS url,
-                   left(snap.commit_sha, 10) AS sha, toString(snap.indexed_at) AS indexed_at, snap.ephemeral AS ephemeral
+                   left(snap.commit_sha, 10) AS sha, toString(snap.indexed_at) AS indexed_at, snap.ephemeral AS ephemeral,
+                   snap.architecture AS architecture, coalesce(snap.conventions, []) AS conventions
         """, **base)
         head = head[0] if head else {}
         modules = s.read("""
@@ -300,6 +305,12 @@ def build_server(store: Store | None = None):
             MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref})
             RETURN sy.kind AS kind, count(*) AS n ORDER BY n DESC
         """, **base)
+        roles = s.read("""
+            MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref}) WHERE sy.role IS NOT NULL
+            WITH sy ORDER BY sy.name
+            RETURN sy.role AS role, count(*) AS count, collect(sy.name)[..5] AS examples
+            ORDER BY count DESC, role
+        """, **base)
         layers = s.read("""
             MATCH (f:File {tenant: $tenant, repo: $repo, ref: $ref}) WHERE f.layer IS NOT NULL
             OPTIONAL MATCH (f)-[:HAS_VIOLATION]->(v:Violation)
@@ -318,23 +329,39 @@ def build_server(store: Store | None = None):
         """, **base)
         return {**base, **head, "symbol_kinds": {k["kind"]: k["n"] for k in kinds},
                 "modules": modules, "entry_points": entry_points, "external_packages": packages,
-                "layers": layers, "depends_on": depends_on, "depended_by": _collapse_dependents(depended_by)}
+                "roles": roles, "layers": layers, "depends_on": depends_on, "depended_by": _collapse_dependents(depended_by)}
 
     @mcp.tool()
     def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
-                    kind: str | None = None, limit: int = 20, tenant: str | None = None) -> list[dict[str, Any]]:
+                    kind: str | None = None, role: str | None = None, limit: int = 20,
+                    tenant: str | None = None) -> list[dict[str, Any]]:
         """Full-text search over symbol names, qualified names, signatures and docstrings
         (functions, methods, classes, structs, interfaces...), topped up with substring matches on
         the name ('Handler' finds 'Handler', 'HandlerFunc' and 'AuthHandler'). Without `ref`, only default branches are
-        searched; name a `ref` to search a feature branch. `kind` filters e.g. function|method|class|struct|interface."""
+        searched; name a `ref` to search a feature branch. `kind` filters e.g. function|method|class|struct|interface;
+        `role` filters by what a convention says the type is (`command-handler`, `validator`... — see
+        `repo_map.roles`). With a `role`, `query` "*" lists every element of it."""
         s = st(tenant)
         if repo:
             ref = s.resolve_ref(repo, ref)
+        if role and query.strip() in ("", "*"):
+            return s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, role: $role})
+                WHERE ($repo IS NULL OR sy.repo = $repo) AND ($kind IS NULL OR sy.kind = $kind)
+                MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+                WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                       sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
+                       sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 1.0 AS score
+                ORDER BY sy.repo, f.path, sy.line_start LIMIT $limit
+            """, role=role, repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
         rows = s.read("""
             CALL db.index.fulltext.queryNodes('symbol_fulltext', $q) YIELD node AS sy, score
             WHERE sy.tenant = $tenant
               AND ($repo IS NULL OR sy.repo = $repo)
               AND ($kind IS NULL OR sy.kind = $kind)
+              AND ($role IS NULL OR sy.role = $role)
             MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
             WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
             MATCH (f:File)-[:CONTAINS]->(sy)
@@ -342,7 +369,7 @@ def build_server(store: Store | None = None):
                    sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
                    sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, round(score, 2) AS score
             ORDER BY score DESC LIMIT $limit
-        """, q=_fulltext_query(query), repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
+        """, q=_fulltext_query(query), repo=repo, ref=ref, kind=kind, role=role, limit=min(limit, MAX_ROWS))
         # Lucene matches whole terms and prefixes ('Handler' → 'Handler', 'HandlerFunc'), not
         # suffixes ('AuthHandler'). Top up with a case-insensitive substring pass on the name.
         if len(rows) < limit and " " not in query.strip():
@@ -352,6 +379,7 @@ def build_server(store: Store | None = None):
                 WHERE toLower(sy.name) CONTAINS toLower($text)
                   AND ($repo IS NULL OR sy.repo = $repo)
                   AND ($kind IS NULL OR sy.kind = $kind)
+                  AND ($role IS NULL OR sy.role = $role)
                 MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
                 WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
                 MATCH (f:File)-[:CONTAINS]->(sy)
@@ -359,7 +387,7 @@ def build_server(store: Store | None = None):
                        sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
                        sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 0.0 AS score
                 ORDER BY size(sy.name), sy.name LIMIT $limit
-            """, text=query.strip(), repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
+            """, text=query.strip(), repo=repo, ref=ref, kind=kind, role=role, limit=min(limit, MAX_ROWS))
             rows += [r for r in extra if r["id"] not in seen][: limit - len(rows)]
         return rows
 

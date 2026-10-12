@@ -82,10 +82,11 @@ class GraphWriter:
             MERGE (s:Snapshot {id: $id})
             SET s.tenant = $tenant, s.repo = $repo, s.ref = $ref, s.commit_sha = $sha,
                 s.indexed_at = datetime($now), s.indexer_version = $ver, s.ephemeral = $ephemeral,
-                s.provides = $provides, s.requires = $requires
+                s.provides = $provides, s.requires = $requires,
+                s.conventions = $conventions, s.architecture = $architecture
             MERGE (r)-[:HAS_SNAPSHOT]->(s)
         """, id=ids.snapshot(repo.tenant, repo.name, repo.ref), repo_id=ids.repo(repo.tenant, repo.name),
-             ver=INDEXER_VERSION, ephemeral=ephemeral,
+             ver=INDEXER_VERSION, ephemeral=ephemeral, conventions=res.conventions, architecture=res.architecture,
              provides=sorted({p.key() for p in res.provides}),
              requires=sorted({f"{d.key()}@{d.version}" for d in res.requires}), **common)
         counts["provides"], counts["requires"] = len(res.provides), len(res.requires)

@@ -18,6 +18,7 @@ its lock), otherwise in a one-off `indexer` container of the same image.
 aidd plan                     # what atlas.yaml would index, and why
 aidd bootstrap                # index everything (asks first)
 aidd refresh                  # only what changed (+ GC), every tenant; skipped while another refresh runs
+aidd refresh --tenant t --repos x --wait 300   # one repo on demand (the scan skill); waits for a running refresh
 aidd index <repo> --ref feature/x   # one branch on demand — pushed or not
 aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
 aidd schedule install|status|remove|check [--fix]   # the refresher (see below)

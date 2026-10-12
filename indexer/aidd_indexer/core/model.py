@@ -151,6 +151,8 @@ class ExtractionResult:
     provides: list[ManifestProvide] = field(default_factory=list)      # manifests
     requires: list[ManifestDep] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    conventions: list[str] = field(default_factory=list)   # applied, as described (`dotnet-praticis[split]`)
+    architecture: str | None = None                         # layout a convention detected (`split`)
 
     def counts(self) -> dict[str, int]:
         return {

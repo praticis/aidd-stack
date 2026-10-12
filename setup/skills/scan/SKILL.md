@@ -2,6 +2,7 @@
 name: scan
 description: Project conventions and architecture — use ALWAYS before implementing anything new (endpoint, use case, fix, test), even if the request doesn't mention conventions. Instantly retrieves the already-saved mapping (architecture, naming, contracts, tests, decisions), or, the first time in this solution, scans and saves that mapping for future sessions. Uses the `atlas` code graph when available, with a full fallback to reading the tree.
 tenant: auto
+allowed-tools: Bash(~/.aidd/aidd refresh:*), Bash(~/.aidd/aidd index:*)
 ---
 
 # Scan — project reconnaissance
@@ -48,7 +49,7 @@ payload, never in `collection_name`.
 │   ├── shared/                      (reserved — cross-project notes)
 │   └── <current-repo-name>/
 │       └── <current-repo-name>.md   (this skill's file — see below)
-└── refine-business/                 (written by the refine-business skill, not this one)
+└── cards/                           (written by the refine-business skill, not this one)
 ```
 
 `<current-repo-name>.md` is this project's **index page**, not just a
@@ -63,23 +64,47 @@ file actually exists.
 
 0. **Ask the code graph first (`atlas`, with fallback).**
    Call `atlas_status` (with `tenant` in auto mode — see above). Then:
-   - If the call fails, the tool is not listed, or `<current-repo-name>`
-     is not among `repos` → atlas is **unavailable for this repo**.
-     Say so in one line and continue with steps 1–3 exactly as written
-     below (reading the tree yourself). Never block on atlas.
-   - Otherwise call `repo_map` for `<current-repo-name>`. Pass
+   - If the tool is not listed or the server does not answer → atlas is
+     **unavailable**. Say so in one line and continue with steps 1–3
+     exactly as written below (reading the tree yourself). Never block
+     on atlas.
+   - If it answers that the tenant is not in atlas, or
+     `<current-repo-name>` is not among `repos`, **index it now**
+     (seconds for most repos; allow up to 10 minutes for a first, large
+     one) with exactly:
+     `~/.aidd/aidd refresh --tenant <tenant> --repos <current-repo-name> --wait 300`
+     (`<tenant>` as determined above, in both modes). It indexes the
+     default branch and the recently active ones, the same way the
+     automatic refresh will from now on. Then call `atlas_status` again.
+     If the command is missing, fails, or the repo is still not listed,
+     tell the user in one line why — its last lines say it: the repo is
+     outside the workspace or excluded in `~/.aidd/atlas.yaml`, or the
+     tenant is not declared there yet (a tenant folder created after the
+     installation: add it to `~/.aidd/atlas.yaml`, `indexer/atlas.example.yaml`
+     shows the block) — and continue as if atlas were unavailable.
+   - If you are going to work on a branch that is not among the repo's
+     `snapshots` (`git branch --show-current`), index it as it is on
+     disk, uncommitted changes included:
+     `~/.aidd/aidd index <current-repo-name> --tenant <tenant> --ref <current branch> --ephemeral`
+     — optional, but it makes `find_symbol`, `who_calls` and `ref_diff`
+     answer for your branch instead of the default one.
+   - Call `repo_map` for `<current-repo-name>`. Pass
      `ref: "<current branch>"` when `git branch --show-current` is
      listed in that repo's `snapshots`; omit `ref` otherwise (the
      default branch is used). Keep the result as **the structural
      ground truth** for this session: modules and their sizes, entry
      points (HTTP handlers, controllers, commands), external packages,
-     symbol kinds. Do not re-derive that list by walking folders.
+     symbol kinds, and — when a convention is configured for the repo —
+     `architecture` (the layout it detected), `roles` (what each type is
+     in the pattern, with counts and examples) and `layers`. Do not
+     re-derive that by walking folders.
    - Note the snapshot identity from the response (`ref`, `sha`,
      `indexed_at`) — it goes into the vault page (step 3) so staleness
      is visible later. If `sha` differs from `git rev-parse --short HEAD`,
      the graph is a few commits behind (it refreshes every ~15 min):
      still use it, and mention the gap when it matters. If
-     `atlas_status.refresh.stale` is true, the automatic refresh has
+     `atlas_status.refresh.stale` is `true` (not `null`, which only means
+     no automatic run is recorded yet), the automatic refresh has
      stopped — say so in one line (the user can check it with
      `aidd schedule status`) and treat the graph as possibly outdated.
 
@@ -102,7 +127,13 @@ file actually exists.
    - Identified architecture and layers — from `repo_map.modules` and
      `repo_map.entry_points` when atlas is available (confirm with a
      quick look at 2–3 representative files); from the folder
-     structure otherwise
+     structure otherwise. When `repo_map.architecture` is set, name the
+     pattern and layout as the convention reports them (e.g.
+     `dotnet-praticis[split]`) and describe each layer with its files
+     (`repo_map.layers`); list the building blocks from
+     `repo_map.roles` — how many command handlers, validators,
+     repositories… exist and one example of each — since that is the
+     vocabulary new code must follow
    - Naming conventions (classes, files, branches, commits) — read
      representative files; `find_symbol` with `kind` (e.g. `struct`,
      `interface`, `class`) shows naming at scale
@@ -165,7 +196,10 @@ through atlas when it is available — it is faster and more complete
 than grep:
 
 - `find_symbol` to find where something similar already exists (pass
-  the same `ref` as in step 0 when you are on a feature branch);
+  the same `ref` as in step 0 when you are on a feature branch); with a
+  convention configured, `find_symbol(query: "*", role: "<role>")`
+  lists every element of a role (e.g. every `command-handler`) — read
+  the closest one before writing a new one;
 - `symbol_context` on the symbol you are about to change: definition,
   container, what it calls, **who calls it**, what the file imports;
 - `who_calls` to list every caller of a function you are changing —

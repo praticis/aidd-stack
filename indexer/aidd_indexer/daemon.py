@@ -46,17 +46,24 @@ def interval_min() -> int:
 
 
 @contextmanager
-def refresh_lock() -> Iterator[None]:
+def refresh_lock(wait: float = 0) -> Iterator[None]:
+    """Exclusive refresh lock. `wait` > 0 waits up to that many seconds for a running refresh to end
+    (an on-demand `refresh --repos X` from a skill) instead of giving up at once."""
     d = state_dir()
     if d is None:
         yield
         return
     d.mkdir(parents=True, exist_ok=True)
     with open(d / "refresh.lock", "w") as fh:
-        try:
-            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as e:
-            raise Busy("another refresh is still running") from e
+        deadline = time.time() + max(0.0, wait)
+        while True:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError as e:
+                if time.time() >= deadline:
+                    raise Busy("another refresh is still running") from e
+                time.sleep(1)
         try:
             yield
         finally:

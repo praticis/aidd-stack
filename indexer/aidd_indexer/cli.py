@@ -2,7 +2,7 @@
 
   aidd plan      [--tenant T] [--repos a,b] [--config FILE]           what would be indexed, and why
   aidd bootstrap [--tenant T] [--repos a,b] [--yes] [--config FILE]   index everything the plan lists
-  aidd refresh   [--tenant T] [--config FILE]                          re-index only what changed + GC (every tenant)
+  aidd refresh   [--tenant T [--repos a,b]] [--wait S] [--config FILE]  re-index only what changed + GC (every tenant)
   aidd daemon    [--config FILE]                                       refresh every AIDD_REFRESH_INTERVAL_MINUTES (service)
   aidd daemon-health                                                   exit 0 when the refresher is alive (healthcheck)
   aidd index <repo|path> [--ref REF] [--tenant T] [--ephemeral] [--dry-run [--out FILE]]
@@ -322,19 +322,25 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
 
 
 def cmd_refresh(args: argparse.Namespace) -> int:
-    """Refresh one tenant (`--tenant`) or every tenant of the manifest, under the refresh lock."""
+    """Refresh one tenant (`--tenant`) or every tenant of the manifest, under the refresh lock.
+    `--repos a,b` refreshes only those repos (on demand, e.g. the `scan` skill meeting a repo atlas does
+    not have yet): no GC, and it does not count as the refresher's run (status.json, RefreshState)."""
     from .core.manifest import load_manifest
     names = [args.tenant] if args.tenant else list(load_manifest(args.config).tenants)
+    if getattr(args, "repos", None) and len(names) > 1:
+        raise ConfigError("--repos needs --tenant (repo names are only unique inside a tenant)")
     try:
-        with daemon.refresh_lock():
+        with daemon.refresh_lock(wait=getattr(args, "wait", 0) or 0):
             return _refresh_all(args, names)
     except daemon.Busy as e:
         log(f"[refresh] {e} — skipped")
-        return 0
+        return 75 if getattr(args, "repos", None) else 0     # EX_TEMPFAIL: the caller asked for these repos
 
 
 def _refresh_all(args: argparse.Namespace, names: list[str]) -> int:
-    daemon.mark_start(TRIGGER)
+    partial = bool(getattr(args, "repos", None))
+    if not partial:
+        daemon.mark_start(TRIGGER)
     rc, summary = 0, {}
     try:
         gw, _ = open_graph()
@@ -350,15 +356,17 @@ def _refresh_all(args: argparse.Namespace, names: list[str]) -> int:
                     r, info = 2, {"error": str(e)}
                 rc = max(rc, r)
                 summary[name] = info
-                gw.heartbeat(name, started, datetime.now(timezone.utc).isoformat(), r, TRIGGER,
-                             daemon.interval_min(), int(info.get("changed", 0)))
+                if not partial:
+                    gw.heartbeat(name, started, datetime.now(timezone.utc).isoformat(), r, TRIGGER,
+                                 daemon.interval_min(), int(info.get("changed", 0)))
         finally:
             gw.close()
     except Exception:
         rc = max(rc, 3)
         raise
     finally:
-        daemon.mark_end(rc, summary)
+        if not partial:
+            daemon.mark_end(rc, summary)
     return rc
 
 
@@ -369,9 +377,13 @@ def _refresh_tenant(gw, args: argparse.Namespace, tenant_name: str) -> tuple[int
     todo = [it for it in plan.items if indexed.get((it.repo.name, it.ref)) != it.sha]
     log(f"[refresh] {len(todo)} of {len(plan.items)} snapshots changed or new")
     rc = _run_items(gw, tenant, todo, skip_up_to_date=True) if todo else 0
-    gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
-                           keep={(it.repo.name, it.ref) for it in plan.items})
-    log(f"[refresh] ephemeral snapshots removed: {gone}")
+    gone = 0
+    if getattr(args, "repos", None):
+        log("[refresh] partial refresh (--repos): ephemeral GC left to the full refresh")
+    else:
+        gone = gw.gc_ephemeral(tenant.name, tenant.refs.gc_ephemeral_after_days,
+                               keep={(it.repo.name, it.ref) for it in plan.items})
+        log(f"[refresh] ephemeral snapshots removed: {gone}")
     planned = {(it.repo.name, it.ref) for it in plan.items}
     planned_repos = {it.repo.name for it in plan.items}
     outside = sorted(k for k in gw.persistent_snapshots(tenant.name) if k not in planned and k[0] in planned_repos)
@@ -563,7 +575,9 @@ def main(argv: list[str] | None = None) -> int:
     b.set_defaults(fn=cmd_bootstrap)
 
     r = sub.add_parser("refresh", help="re-index snapshots whose commit changed; GC stale ephemeral ones (every tenant unless --tenant)")
-    manifest_args(r, repos=False)
+    manifest_args(r)
+    r.add_argument("--wait", type=int, default=0, metavar="SECONDS",
+                   help="wait up to SECONDS for a running refresh instead of skipping (on-demand use)")
     r.set_defaults(fn=cmd_refresh)
 
     dm = sub.add_parser("daemon", help="refresh every AIDD_REFRESH_INTERVAL_MINUTES until stopped (the `refresher` service)")

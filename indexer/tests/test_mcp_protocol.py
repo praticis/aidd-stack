@@ -27,6 +27,8 @@ class FakeStore(Store):
 
     def read(self, query, **params):
         self.queries.append(query)
+        if "MATCH (sy:Symbol {tenant: $tenant, role: $role})" in query:   # find_symbol role listing
+            return [{"id": "x", "repo": "a", "role": params["role"], "name": "CreateTodoCommandHandler"}]
         if "RETURN sy.id AS id" in query:                       # _symbol
             return [{"id": "t/a@main/sym/pkg.Svc.Do#method", "repo": "a", "ref": "main", "kind": "method", "name": "Do",
                      "qualified_name": "pkg.Svc.Do", "file": "svc.go", "line_start": 1, "line_end": 2, "signature": "func Do()",
@@ -42,6 +44,10 @@ class FakeStore(Store):
             return [{"key": "GET /v1/x", "method": "GET", "path": "/v1/x", "handler": "h", "evidence": "a:r.go:1"}] if params["ref"] == "main" \
                 else [{"key": "GET /v1/x", "method": "GET", "path": "/v1/x", "handler": "h", "evidence": "a:r.go:1"},
                       {"key": "POST /v1/y", "method": "POST", "path": "/v1/y", "handler": "h2", "evidence": "a:r.go:9"}]
+        if "sy.role AS role, count(*) AS count" in query:          # repo_map roles
+            return [{"role": "command-handler", "count": 3, "examples": ["CreateTodoCommandHandler"]}]
+        if "snap.architecture AS architecture" in query:          # repo_map head
+            return [{"stack": ["dotnet"], "architecture": "split", "conventions": ["dotnet-praticis[split]"]}]
         return []
 
 
@@ -127,7 +133,7 @@ def test_atlas_status_reports_refresh_staleness(monkeypatch):
     out = _call(build_server(store=MultiTenantStore()), "atlas_status", {"tenant": "acme"})
     assert out["refresh"]["stale"] is True and out["refresh"]["age_min"] == 45      # > 2 × 15 min
     out = _call(build_server(store=FakeStore()), "atlas_status", {})
-    assert out["refresh"]["stale"] is True and "no refresh recorded" in out["refresh"]["note"]
+    assert out["refresh"]["stale"] is None and "no automatic refresh recorded" in out["refresh"]["note"]
 
 
 def test_rebinding_hosts_and_foreign_origins_are_refused(server):
@@ -141,3 +147,15 @@ def test_rebinding_hosts_and_foreign_origins_are_refused(server):
         assert c.post("/mcp", json=body, headers={**hdrs, "Host": "evil.example:3005"}).status_code in (403, 421)
         assert c.post("/mcp", json=body, headers={**hdrs, "Origin": "http://evil.example"}).status_code == 403
         assert c.post("/mcp", json=body, headers={**hdrs, "Origin": "http://localhost:5173"}).status_code == 200
+
+
+def test_repo_map_reports_layout_and_roles(server):
+    out = _call(server, "repo_map", {"repo": "a"})
+    assert out["architecture"] == "split" and out["conventions"] == ["dotnet-praticis[split]"]
+    assert out["roles"] == [{"role": "command-handler", "count": 3, "examples": ["CreateTodoCommandHandler"]}]
+
+
+def test_find_symbol_lists_a_role(server):
+    rows = asyncio.run(server.call_tool("find_symbol", {"query": "*", "role": "command-handler", "repo": "a"}))
+    content = rows[0] if isinstance(rows, tuple) else rows
+    assert json.loads(content[0].text)["role"] == "command-handler"

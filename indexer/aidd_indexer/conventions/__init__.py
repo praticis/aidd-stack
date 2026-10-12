@@ -12,7 +12,8 @@ conventions:
 
 `load(specs, repo_name)` resolves the specs that apply to a repo; `apply(convs, res, rv)` runs the
 annotation hooks and rules and mutates the ExtractionResult (`File.layer`, `Module.layer`,
-`HttpCall.target_hint`, `Symbol.role`, `Symbol.is_entry_point`, `violations`). With no conventions configured the
+`HttpCall.target_hint`, `Symbol.role`, `Symbol.is_entry_point`, `violations`, and `conventions` /
+`architecture` — what the snapshot records). With no conventions configured the
 result is untouched — the indexer's output is exactly what the language modules produced.
 """
 
@@ -87,6 +88,8 @@ def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:
     ctx = ConventionContext(res=res, rv=rv, files_by_id=files_by_id)
     for c in convs:
         c.prepare(ctx)
+    res.conventions = [c.describe() for c in convs]
+    res.architecture = next((c.architecture for c in convs if c.architecture), None)
     for s in res.symbols:
         f = files_by_id.get(s.file_id)
         if f is None or s.kind not in TYPE_KINDS:

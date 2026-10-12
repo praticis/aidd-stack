@@ -139,3 +139,22 @@ tenants:
     plan = build_plan(load_manifest(str(manifest)).tenant("acme"), do_fetch=False)
     assert [e.split(":")[0] for e in plan.errors] == ["broken-api"]
     assert {it.repo.name for it in plan.items} == {"orders-api"}
+
+
+def test_a_requested_repo_that_is_not_there_is_an_error(world, monkeypatch):
+    tmp, origin, dev = world
+    monkeypatch.setenv("AIDD_MIRROR_DIR", str(tmp / "mirrors"))
+    manifest = tmp / "atlas.yaml"
+    manifest.write_text(f"""
+tenants:
+  acme:
+    sources:
+      - type: local
+        path: {tmp / 'workspace' / 'acme'}
+        exclude: ["orders-api"]
+    refs:
+      always: [main]
+""")
+    plan = build_plan(load_manifest(str(manifest)).tenant("acme"), only_repos=["orders-api"], do_fetch=False)
+    assert plan.items == [] and "excluded in atlas.yaml" in plan.errors[0]
+    assert not (tmp / "mirrors" / "acme" / "orders-api.git").exists()      # filtered before any sync

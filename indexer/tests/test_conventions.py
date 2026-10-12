@@ -224,6 +224,7 @@ def test_roles_and_architectures(tmp_path: Path):
 
     conv, res, layers = run()
     assert conv.architecture == "split" and conv.describe() == "layouts[split]"
+    assert res.architecture == "split" and res.conventions == ["layouts[split]"]      # what the snapshot records
     assert {s.name: s.role for s in res.symbols if s.role} == {
         "OrdersController": "controller", "HandlerBase": "command-handler", "PlaceOrderHandler": "command-handler",
         "RefundHandler": "command-handler", "IOrderQuery": "query", "BillingClient": "client"}

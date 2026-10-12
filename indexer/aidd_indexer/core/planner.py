@@ -78,7 +78,8 @@ def discover_local(source: Source, tenant: TenantConfig) -> list[RepoCandidate]:
 
 
 def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
-                   errors: list[str] | None = None) -> tuple[list[RepoCandidate], list[str]]:
+                   errors: list[str] | None = None,
+                   only: set[str] | None = None) -> tuple[list[RepoCandidate], list[str]]:
     """Repos from every source. For local sources with `fetch: true` (default) the
     remote-tracking refs are refreshed first — the atlas must see what the team pushed,
     not what one developer last fetched. A failed fetch is a note, not an error.
@@ -91,7 +92,7 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
     mroot = mirror_root()
     for s in tenant.sources:
         if s.type == "local":
-            found = discover_local(s, tenant)
+            found = [r for r in discover_local(s, tenant) if not only or r.name in only]   # before any sync/fetch
             if mroot is not None:
                 kept = []
                 for r in found:
@@ -178,13 +179,17 @@ def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = 
 def build_plan(tenant: TenantConfig, only_repos: list[str] | None = None,
                do_fetch: bool = True, progress=None) -> Plan:
     plan = Plan(tenant=tenant.name)
-    repos, notes = discover_repos(tenant, do_fetch=do_fetch, progress=progress, errors=plan.errors)
+    repos, notes = discover_repos(tenant, do_fetch=do_fetch, progress=progress, errors=plan.errors,
+                                  only=set(only_repos) if only_repos else None)
     plan.skipped.extend(notes)
     if only_repos:
         wanted = set(only_repos)
-        missing = wanted - {r.name for r in repos}
+        unreadable = {e.split(":", 1)[0] for e in plan.errors}       # found, but the mirror sync failed
+        missing = wanted - {r.name for r in repos} - unreadable
         if missing:
-            plan.skipped.append(f"requested but not found in any source: {', '.join(sorted(missing))}")
+            # asked for by name (refresh --repos): not finding it is an error, not a footnote
+            plan.errors.append(f"requested but not found in any source of tenant '{tenant.name}' "
+                               f"(not cloned under it, or excluded in atlas.yaml): {', '.join(sorted(missing))}")
         repos = [r for r in repos if r.name in wanted]
     for r in repos:
         items, note = plan_refs(r, tenant)

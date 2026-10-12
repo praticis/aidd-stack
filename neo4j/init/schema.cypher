@@ -23,6 +23,7 @@ CREATE INDEX file_tenant_repo_ref   IF NOT EXISTS FOR (n:File)   ON (n.tenant, n
 CREATE INDEX module_tenant_repo_ref IF NOT EXISTS FOR (n:Module) ON (n.tenant, n.repo, n.ref);
 CREATE INDEX symbol_name            IF NOT EXISTS FOR (n:Symbol) ON (n.name);
 CREATE INDEX symbol_kind            IF NOT EXISTS FOR (n:Symbol) ON (n.kind);
+CREATE INDEX symbol_role            IF NOT EXISTS FOR (n:Symbol) ON (n.tenant, n.role);
 CREATE INDEX file_path              IF NOT EXISTS FOR (n:File)   ON (n.path);
 CREATE INDEX http_method_path       IF NOT EXISTS FOR (n:HttpEndpoint) ON (n.method, n.path);
 CREATE INDEX topic_name             IF NOT EXISTS FOR (n:Topic)  ON (n.name);
