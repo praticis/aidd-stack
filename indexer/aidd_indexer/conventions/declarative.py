@@ -11,8 +11,12 @@ targets:                      # outbound calls made from these files talk to thi
   "internal/adapters/out/billing/**": billing
 entry_points:                 # symbols whose signature contains one of these are entry points
   signature_contains: ["*fiber.Ctx"]
+  members_of:                 # methods of types whose declaration contains one of these (C# base lists)
+    signature_contains: ["ICommandHandler<", "IEventHandler<"]
+    names: ["Handle"]         # optional: only these methods
 rules:
-  - id: domain-is-pure        # File in layer `from` importing a File in one of `to`
+  - id: domain-is-pure        # File in layer `from` importing a File in one of `to` (an import of a
+                              # namespace counts when every file declaring it is in one layer)
     forbid_import: {from: domain, to: [application, adapters-in, adapters-out]}
     severity: error
   - id: routes-in-adapters-in # HttpEndpoint declared outside these layers
@@ -71,6 +75,9 @@ class DeclarativeConvention(Convention):
         self.patterns = ScanPatterns.from_dict(raw)
         ep = raw.get("entry_points") or {}
         self.entry_sig: tuple[str, ...] = tuple(ep.get("signature_contains") or [])
+        members = ep.get("members_of") or {}
+        self.owner_sig: tuple[str, ...] = tuple(members.get("signature_contains") or [])
+        self.owner_methods: frozenset[str] = frozenset(members.get("names") or [])
         self.rules: list[dict[str, Any]] = list(raw.get("rules") or [])
         for i, r in enumerate(self.rules):
             if not isinstance(r, dict) or not any(k in r for k in ("forbid_import", "endpoints_only_in", "http_calls_only_in")):
@@ -97,8 +104,12 @@ class DeclarativeConvention(Convention):
                 return svc
         return None
 
-    def is_entry_point(self, symbol: SymbolInfo, file: FileInfo) -> bool | None:
+    def is_entry_point(self, symbol: SymbolInfo, file: FileInfo, owner: SymbolInfo | None = None) -> bool | None:
         if self.entry_sig and any(h in symbol.signature for h in self.entry_sig):
+            return True
+        if (self.owner_sig and owner is not None and symbol.kind == "method"
+                and (not self.owner_methods or symbol.name in self.owner_methods)
+                and any(h in owner.signature for h in self.owner_sig)):
             return True
         return None
 
@@ -115,18 +126,29 @@ class DeclarativeConvention(Convention):
                 file_id=f.id, line=line, symbol_id=symbol_id, evidence=f"{repo.name}:{f.path}:{line}",
             ))
 
+        def import_target(e) -> tuple[str | None, str] | None:
+            """(layer, shown name) of what an import reaches: the File, or — for an import of a
+            namespace, which targets its Module (C#) — the one layer of the files declaring it."""
+            if e.target_label == "File":
+                t = files.get(e.target_id)
+                return (ctx.file_layer.get(t.id), t.path) if t is not None else None
+            if e.target_label == "Module":
+                layers = {ctx.file_layer.get(fid) for fid in ctx.rv.namespace_files.get(e.spec, ())}
+                if len(layers) == 1:          # a namespace spread over layers says nothing about the dependency
+                    return next(iter(layers)), e.spec
+            return None
+
         for rule in self.rules:
             if "forbid_import" in rule:
                 spec = rule["forbid_import"] or {}
                 src_layer, to = spec.get("from"), set(spec.get("to") or [])
                 for e in ctx.rv.imports:
-                    if e.target_label != "File":
+                    f = files.get(e.file_id)
+                    if f is None or ctx.file_layer.get(f.id) != src_layer:
                         continue
-                    f, t = files.get(e.file_id), files.get(e.target_id)
-                    if f is None or t is None:
-                        continue
-                    if ctx.file_layer.get(f.id) == src_layer and ctx.file_layer.get(t.id) in to:
-                        emit(rule, f, e.line, f"{src_layer} imports {ctx.file_layer[t.id]} ({t.path})")
+                    hit = import_target(e)
+                    if hit is not None and hit[0] in to:
+                        emit(rule, f, e.line, f"{src_layer} imports {hit[0]} ({hit[1]})")
             elif "endpoints_only_in" in rule:
                 allowed = set(rule["endpoints_only_in"] or [])
                 for ep in ctx.res.endpoints:

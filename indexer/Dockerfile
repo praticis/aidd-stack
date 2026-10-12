@@ -17,6 +17,13 @@ COPY aidd_indexer ./aidd_indexer
 COPY git-askpass.sh /app/git-askpass.sh
 RUN pip install . && chmod +x /app/git-askpass.sh
 
+# Convention extensions (ADR-003): every package under conventions/ registers itself in the
+# `aidd.conventions` entry point; atlas.yaml enables one per tenant by id. The build fails if one
+# does not install or does not load.
+COPY conventions ./conventions
+RUN set -e; for d in conventions/*/; do if [ -f "${d}pyproject.toml" ]; then pip install --no-deps "$d"; fi; done \
+ && python -c "from importlib.metadata import entry_points; from aidd_indexer.conventions import load_one; ids = sorted(e.name for e in entry_points(group='aidd.conventions')); [load_one({'id': i}) for i in ids]; print('conventions:', ids)"
+
 # tree-sitter-language-pack ships no grammars: it downloads a prebuilt .so per language from
 # GitHub Releases on first `get_language()`. Every `docker compose run` is a fresh container, so
 # without this step each run would download again — and fail (empty snapshots / rc=4) whenever

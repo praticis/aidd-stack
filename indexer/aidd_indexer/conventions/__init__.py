@@ -109,12 +109,14 @@ def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:
             if t:
                 call.target_hint = t
                 break
+    syms = {s.id: s for s in res.symbols}
     for s in res.symbols:
         f = files_by_id.get(s.file_id)
         if f is None or s.kind not in ("function", "method"):
             continue
+        owner = syms.get(s.parent_id) if s.parent_id else None
         for c in convs:
-            v = c.is_entry_point(s, f)
+            v = c.is_entry_point(s, f, owner)
             if v is not None:
                 s.is_entry_point = v
                 break

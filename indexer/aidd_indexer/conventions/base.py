@@ -58,8 +58,9 @@ class Convention:
         """A better `target_hint` (service name) for an outbound call, or None to keep the heuristic."""
         return None
 
-    def is_entry_point(self, symbol: SymbolInfo, file: FileInfo) -> bool | None:
-        """Override the language heuristic: True/False, or None to keep it."""
+    def is_entry_point(self, symbol: SymbolInfo, file: FileInfo, owner: SymbolInfo | None = None) -> bool | None:
+        """Override the language heuristic: True/False, or None to keep it. `owner` is the enclosing
+        type of a method (its declaration carries the base list: `class X : ICommandHandler<C>`)."""
         return None
 
     # ---- rules

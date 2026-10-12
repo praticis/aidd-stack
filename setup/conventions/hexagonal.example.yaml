@@ -24,7 +24,10 @@ targets:                             # outbound calls from these files talk to t
   "src/Infrastructure/Clients/Catalog/**": catalog
 
 entry_points:                        # extra markers on top of the language heuristics
-  signature_contains: ["*fiber.Ctx", "IRequestHandler"]
+  signature_contains: ["*fiber.Ctx"]  #   on the function/method's own signature
+  members_of:                        #   methods of types whose declaration (base list) contains one of these
+    signature_contains: ["IRequestHandler<"]
+    names: ["Handle"]
 
 route_patterns:                      # route registrars of an internal SDK the generic scanner cannot know
   registrars:                        #   name -> fixed HTTP method, or null when the method is an argument / unknown

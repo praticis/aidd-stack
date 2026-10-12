@@ -76,6 +76,7 @@ class LanguageSupport:
     manifests: dict[str, str] = field(default_factory=dict)          # "go.mod" -> "go-module"
     manifest_suffixes: dict[str, str] = field(default_factory=dict)  # ".csproj" -> "csproj"
     builtin_receivers: frozenset[str] = frozenset()  # `console.log`, `Task.Run` — calls into the runtime, never resolved
+    parent_receivers: frozenset[str] = frozenset()   # keywords naming the base type (C# `base`): if it is not in the repo, don't guess
     ecosystem: str = ""                            # go | npm | pypi | nuget (external Package nodes)
     http_scanner: "type[BaseScanner] | None" = None
     namespace_nodes: frozenset[str] = frozenset()  # tree node types that prefix qualified names (C# namespaces)

@@ -20,6 +20,9 @@
 
 (invocation_expression function: (member_access_expression expression: (_) @receiver name: (identifier) @callee)) @call
 
+;; `this` / `base` are anonymous tokens: `(_)` above does not match them
+(invocation_expression function: (member_access_expression expression: ["this" "base"] @receiver name: (identifier) @callee)) @call
+
 (invocation_expression function: (generic_name (identifier) @callee)) @call
 
 (object_creation_expression type: (identifier) @callee) @call

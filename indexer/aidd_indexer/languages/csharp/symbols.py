@@ -352,7 +352,7 @@ def _ancestors(node: Node):
 LANGUAGES = [
     CSharpSupport(
         id="csharp", grammar="csharp", extensions=(".cs",), query_file=HERE / "queries.scm", stack="dotnet",
-        manifest_suffixes={".csproj": "csproj", ".fsproj": "fsproj"}, builtin_receivers=_BUILTINS, ecosystem="nuget",
+        manifest_suffixes={".csproj": "csproj", ".fsproj": "fsproj"}, builtin_receivers=_BUILTINS, parent_receivers=frozenset({"base"}), ecosystem="nuget",
         http_scanner=CsScanner, namespace_nodes=NAMESPACE_NODES,
         entry_point_hints=("[HttpGet", "[HttpPost", "[HttpPut", "[HttpDelete", "[HttpPatch", "[Route", "IActionResult"),
         decorator_entry=_DECORATOR_ENTRY,

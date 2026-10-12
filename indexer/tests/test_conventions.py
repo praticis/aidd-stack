@@ -109,3 +109,50 @@ def test_convention_route_and_client_patterns(tmp_path: Path):
     hr = _http(root, conventions.load([{"path": str(f)}], root.name))
     assert [(e.method, e.path, e.handler_name, e.framework) for e in hr.endpoints] == [("GET", "/v1/ping", "ping", "convention")]
     assert sorted((c.method, c.path, c.via) for c in hr.calls) == [("ANY", "/v1/health", "gw.Do"), ("POST", "/v1/orders", "gw.DoJSON")]
+
+
+CS_REPO = {
+    "src/Shop.Api/Shop.Api.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
+    "src/Shop.Api/Domain/Order.cs": "using Shop.Api.Infra;\nusing Shop.Api.Shared;\n\nnamespace Shop.Api.Domain;\n\npublic class Order { }\n",
+    "src/Shop.Api/Domain/Money.cs": "namespace Shop.Api.Shared;\n\npublic class Money { }\n",
+    "src/Shop.Api/Infra/Store.cs": "namespace Shop.Api.Infra;\n\npublic class Store { }\n",
+    "src/Shop.Api/Infra/Clock.cs": "namespace Shop.Api.Shared;\n\npublic class Clock { }\n",
+    "src/Shop.Api/Core/PlaceOrderHandler.cs": (
+        "namespace Shop.Api.Core;\n\n"
+        "public class PlaceOrderHandler(IServiceProvider provider) : ICommandHandler<PlaceOrder>\n{\n"
+        "    public Task<bool> Handle(PlaceOrder command, CancellationToken ct) => Task.FromResult(true);\n\n"
+        "    public void Dispose() { }\n}\n"),
+}
+
+
+def test_namespace_imports_and_handler_entry_points(tmp_path: Path):
+    """C# `using X;` targets X's Module; the rule sees the layer of the files declaring X (one layer
+    only), and `members_of` marks `Handle` of a type whose base list names a handler interface."""
+    from aidd_indexer import conventions
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+
+    root = tmp_path / "shop"
+    for rel, text in CS_REPO.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text)
+    spec = {"id": "cs",
+            "layers": {"domain": ["src/*/Domain/**"], "infra": ["src/*/Infra/**"], "core": ["src/*/Core/**"]},
+            "entry_points": {"members_of": {"signature_contains": ["ICommandHandler<"], "names": ["Handle"]}},
+            "rules": [{"id": "domain-is-pure", "forbid_import": {"from": "domain", "to": ["infra"]}, "severity": "error"}]}
+    f = tmp_path / "convention.yaml"
+    f.write_text(yaml.safe_dump(spec))
+    repo = RepoInfo(tenant="t", name="shop", ref="main", commit_sha="x", root=str(root))
+    res, rv = extract_and_resolve(repo, convs=conventions.load([{"path": str(f)}], "shop"))
+
+    assert rv.namespace_files["Shop.Api.Infra"] and len(rv.namespace_files["Shop.Api.Shared"]) == 2
+    paths = {x.id: x.path for x in res.files}
+    # `Shop.Api.Infra` lives only in infra → violation; `Shop.Api.Shared` spans domain and infra → says nothing
+    assert [(v.rule, paths[v.file_id], v.line) for v in res.violations] == [("domain-is-pure", "src/Shop.Api/Domain/Order.cs", 1)]
+    assert "Shop.Api.Infra" in res.violations[0].message
+    eps = {s.name: s.is_entry_point for s in res.symbols if s.kind == "method"}
+    assert eps == {"Handle": True, "Dispose": False}
+
+    res2, _ = extract_and_resolve(repo, convs=[])                    # no convention: language heuristic only
+    assert not any(s.is_entry_point for s in res2.symbols) and res2.violations == []
+

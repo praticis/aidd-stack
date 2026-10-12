@@ -1,3 +1,6 @@
 .DS_Store
 .env
 _docker
+# .NET build output inside test fixtures
+indexer/tests/fixtures/**/bin/
+indexer/tests/fixtures/**/obj/

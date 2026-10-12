@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import languages
@@ -56,6 +56,9 @@ class Resolved:
     packages: dict[str, PackageNode]
     unresolved_calls: int
     unresolved_imports: int
+    # declared namespace -> declaring file ids (C#). Not written to the graph: an import of a namespace
+    # targets its Module, and conventions use this to see which files (hence which layer) it reaches.
+    namespace_files: dict[str, list[str]] = field(default_factory=dict)
 
 
 class Resolver:
@@ -120,6 +123,10 @@ class Resolver:
                     if typed is None and impl_typed is None:
                         unresolved += 1      # the receiver's type is known and it has no such method here (inherited from a package): don't guess
                     continue
+            lang = languages.by_id(caller_file.language) if caller_file is not None else None
+            if c.receiver and lang is not None and c.receiver in lang.parent_receivers:
+                unresolved += 1              # `base.X()` with the base type outside the repo (or implicit): the name fallback would only find the override itself
+                continue
             same_file = [s for s in cands if s.file_id == c.file_id]
             if same_file:
                 chosen, strat = same_file, "same-file"
@@ -186,4 +193,4 @@ class Resolver:
             lang.link_symbols(self.r.symbols, self.files_by_id)
         imports, ui = self.resolve_imports()      # first: populates external_bindings
         calls, uc = self.resolve_calls()
-        return Resolved(calls, imports, self.packages, uc, ui)
+        return Resolved(calls, imports, self.packages, uc, ui, self.ctx.namespaces)
