@@ -12,9 +12,10 @@ tenants:
         path: /workspace/<tenant>
         include: ["*"]
         exclude: []
-        fetch: false           # in-container fetch (server/CI with PATs). Developers: leave false —
-                               # the host wrapper / scheduler fetches with your own credentials.
-      # Remote providers (roadmap F1) — one per tenant, each tenant may differ:
+        fetch: true            # the refresher syncs each repo into its own mirror, then fetches the
+                               # remote with the read-only PAT (~/.aidd/secrets/git-token); false =
+                               # mirrors follow your own fetches only
+      # Remote providers (not implemented yet) — one per tenant, each tenant may differ:
       # - type: github            # github | gitlab | azure-devops | bitbucket
       #   org: <org-or-group>
       #   token_env: GITHUB_TOKEN_<TENANT>
@@ -49,5 +50,6 @@ tenants:
     #  - id: my_company.aidd_conventions:Hexagonal
     #    options: {}
 
-    # Optional: cron for automatic `aidd refresh` (scheduler service — roadmap F1).
+    # Reserved (unused): the refresher service refreshes every tenant every
+    # AIDD_REFRESH_INTERVAL_MINUTES (.env).
     schedule: ""

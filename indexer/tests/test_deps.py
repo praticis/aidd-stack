@@ -1,4 +1,4 @@
-"""F0.5.1: manifests → provides/requires per language, and the DEPENDS_ON join rules."""
+"""Manifests → provides/requires per language, and the DEPENDS_ON join rules."""
 from __future__ import annotations
 
 from pathlib import Path

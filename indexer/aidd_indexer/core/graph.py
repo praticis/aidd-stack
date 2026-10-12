@@ -271,7 +271,7 @@ class GraphWriter:
              ver=INDEXER_VERSION, **common)
         return counts
 
-    # ---- linker (F0.5): HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM ---------------
+    # ---- linker: HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM ---------------
     def link_tenant(self, tenant: str) -> dict[str, int]:
         """Rebuild every CONSUMES / CALLED_FROM edge of the tenant from what is in the graph now.
         Cross-repo by nature (a call in A matches a route of B), so it runs after the snapshots
@@ -310,7 +310,7 @@ class GraphWriter:
         return {"endpoints": len(endpoints), "calls": len(calls)} | result.counts() | deps
 
     def _link_deps(self, tenant: str, now: str) -> dict[str, int]:
-        """`Snapshot.requires` × `Snapshot.provides` → `Service -[:DEPENDS_ON {ref}]-> Service` (F0.5.1).
+        """`Snapshot.requires` × `Snapshot.provides` → `Service -[:DEPENDS_ON {ref}]-> Service`.
         What a repo publishes is the union over its refs; what it requires is per ref."""
         snaps = self._rows("""
             MATCH (s:Snapshot {tenant: $tenant})

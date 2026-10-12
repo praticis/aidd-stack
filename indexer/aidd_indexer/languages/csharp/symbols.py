@@ -54,7 +54,7 @@ class CSharpSupport(LanguageSupport):
                         file_ns = node_text(nm, src)
         return namespaces, file_ns
 
-    # ---- static receiver types (F0.7.2)
+    # ---- static receiver types
     def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
         types: dict[str, dict[str, Any]] = {}
         usings: list[str] = []

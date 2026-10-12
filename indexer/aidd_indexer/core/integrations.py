@@ -1,4 +1,4 @@
-"""Integration candidates (ROADMAP F0.4): HTTP routes a repo EXPOSES and outbound HTTP calls it
+"""Integration candidates: HTTP routes a repo EXPOSES and outbound HTTP calls it
 makes with a literal (or template) path. Deterministic, tree-sitter based, no LLM.
 
 This module only orchestrates: per-directory context (route constants, env-var names) is collected

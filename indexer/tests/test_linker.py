@@ -1,4 +1,4 @@
-"""F0.5 linker: HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM. Unit rules + the fixture pair
+"""Linker: HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM. Unit rules + the fixture pair
 (go-http-mix calls go-billing-api; py-notifications-api also exposes /health)."""
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ def test_fixture_pair_links_end_to_end():
 
 
 def test_dotnet_praticis_pair_links_end_to_end():
-    """F0.4.2: the consumer's typed HttpClient (`Infra/Http/Outbound/TodosApi`) reaches the
+    """The consumer's typed HttpClient (`Infra/Http/Outbound/TodosApi`) reaches the
     provider's controller route `[Route("api/[controller]")]` + `[HttpGet("{todoId:guid}/details")]`."""
     from aidd_indexer.core.paths import path_key
     endpoints, calls = [], []

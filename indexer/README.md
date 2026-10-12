@@ -5,7 +5,7 @@ Loads a repository's **micro graph** into atlas (Neo4j): `Repo`, `Snapshot`, `Mo
 
 v0 uses tree-sitter for every language (Go, TypeScript/TSX/JS, Python, C#) and resolves
 calls **by name inside the repo** (`same-file` → `same-module` → `unique-name`). Precise,
-cross-file resolution via SCIP arrives in roadmap F1.2; the edge property `resolved=false`
+cross-file resolution via SCIP is planned; the edge property `resolved=false`
 marks today's edges so they can be upgraded in place.
 
 ## Run (recommended: the `aidd` client)
@@ -25,7 +25,7 @@ aidd logs [-f]                # the refresher's log
 AIDD_NO_FETCH=1 aidd plan     # no remote fetch (mirrors synced from the workspace only)
 ```
 
-**Refresher (continuous update, D15).** The `refresher` compose service runs `aidd daemon`: a
+**Refresher (continuous update).** The `refresher` compose service runs `aidd daemon`: a
 `refresh` of every tenant in the manifest every `AIDD_REFRESH_INTERVAL_MINUTES` (`.env`, default 15,
 ± 10 % jitter, counted from the end of the previous run). Docker restarts it after reboots on every OS
 — there is no host scheduler (the systemd timer / Task Scheduler / cron of earlier versions are

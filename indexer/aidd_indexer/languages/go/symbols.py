@@ -150,7 +150,7 @@ class GoSupport(LanguageSupport):
         base = re.sub(r"^v\d+$", "", base) or spec.rstrip("/").split("/")[-2]
         return [re.sub(r"[-.].*$", "", base) or base]
 
-    # ---- static receiver types (F0.7.1)
+    # ---- static receiver types
     def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
         structs: dict[str, dict[str, str]] = {}
         embeds: dict[str, list[str]] = {}

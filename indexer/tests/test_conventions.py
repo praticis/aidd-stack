@@ -96,7 +96,7 @@ def _http(root: Path, convs):
 
 def test_convention_route_and_client_patterns(tmp_path: Path):
     """An internal SDK's registrar / client methods are invisible to the generic scanner and
-    visible once a convention declares them (F0.4.5)."""
+    visible once a convention declares them."""
     from aidd_indexer import conventions
     root = _sdk_repo(tmp_path)
     plain = _http(root, [])

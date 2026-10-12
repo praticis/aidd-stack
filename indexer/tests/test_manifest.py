@@ -1,4 +1,4 @@
-"""F0.3.6: per-repo ref policy (`refs.overrides`) on top of the tenant defaults."""
+"""Per-repo ref policy (`refs.overrides`) on top of the tenant defaults."""
 from __future__ import annotations
 
 import pytest

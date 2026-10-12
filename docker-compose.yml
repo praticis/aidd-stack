@@ -5,7 +5,7 @@ name: praticis-aidd
 # the host environment, `--env-file`, a secrets manager, CI variables.
 # Compose aborts before starting any container if one is unset or empty.
 #
-# Exposure (docs/ROADMAP.md, trilha "Segurança e operação"):
+# Exposure:
 #   * every published port binds to AIDD_BIND_ADDRESS (default 127.0.0.1) — nothing is
 #     reachable from the network the laptop is on;
 #   * the MCP servers publish nothing themselves: `mcp-gateway` fronts them on the same
@@ -311,7 +311,7 @@ services:
       - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3004:3000"
 
   # ──────────────────────────────────────────────────────
-  # REFRESHER — keeps atlas current (D15): `aidd daemon` runs `refresh` for
+  # REFRESHER — keeps atlas current: `aidd daemon` runs `refresh` for
   # every tenant of atlas.yaml every AIDD_REFRESH_INTERVAL_MINUTES (± 10 %).
   # Replaces the host schedulers (systemd timer / Task Scheduler / cron):
   # Docker restarts it on every OS. The workspace is mounted READ-ONLY;

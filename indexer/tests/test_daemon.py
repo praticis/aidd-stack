@@ -1,4 +1,4 @@
-"""Refresher service state (D15): lock, status file, health, jitter."""
+"""Refresher service state: lock, status file, health, jitter."""
 from __future__ import annotations
 
 import os

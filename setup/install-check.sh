@@ -132,7 +132,7 @@ echo "$out" | grep -qE '^"?[0-9]+\.[0-9]+' && ok "APOC loaded ($(echo "$out" | t
 
 out="$(cypher 'MATCH (n) RETURN count(n)')"
 n="$(echo "$out" | grep -E '^[0-9]+$' | head -1)"
-if [ "${n:-0}" = "0" ]; then warn "atlas is empty (expected until 'aidd index' exists — roadmap F0.3)"; else ok "atlas has $n nodes"; fi
+if [ "${n:-0}" = "0" ]; then warn "atlas is empty — index the workspace: $AIDD_DIR/aidd bootstrap"; else ok "atlas has $n nodes"; fi
 
 # ------------------------------------------------------------------------------
 # Qdrant

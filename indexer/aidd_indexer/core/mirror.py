@@ -1,4 +1,4 @@
-"""Mirrors the indexer owns (D15): the workspace is read, never written.
+"""Mirrors the indexer owns: the workspace is read, never written.
 
 The developer's clones are mounted read-only. Each repo gets a bare mirror under `$AIDD_MIRROR_DIR`
 (`<tenant>/<repo>.git`), and every git read of the planner and of `index --ref` goes to the mirror:

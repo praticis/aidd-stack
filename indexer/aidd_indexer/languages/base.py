@@ -135,7 +135,7 @@ class LanguageSupport:
         when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
         return None
 
-    # ---- manifests (F0.5.1) -----------------------------------------------------------------
+    # ---- manifests -----------------------------------------------------------------
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """(names this manifest publishes, [(required package name, version)]) for a manifest of
         this language (`manifests` / `manifest_suffixes`). Names come back raw — `core/deps.py`

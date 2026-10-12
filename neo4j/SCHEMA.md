@@ -42,12 +42,12 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Label | Specific props | Notes |
 |---|---|---|
 | `Repo` | `name`, `default_ref`, `stack[]` (`go`,`ts`,`dotnet`,`python`…), `url` | 1 per (tenant, repo) — no `ref` |
-| `Snapshot` | `repo`, `ref`, `commit_sha`, `indexed_at`, `indexer_version`, `ephemeral`, `provides[]` (`<ecosystem>:<package>` the manifests publish — go.mod `module`, `PackageId`, package.json `name`, pyproject `name`), `requires[]` (`<ecosystem>:<package>@<version>` direct dependencies) | 1 per (repo, ref); drives orphan GC (§5); `provides`/`requires` feed `DEPENDS_ON` (F0.5.1) |
-| `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is set by a **convention** (F0.4.4) when all its files agree, else null |
-| `File` | `path`, `language`, `loc`, `layer?`, `last_touched`, `churn_90d`, `authors[]` | `layer` set by a convention's `layers:` globs; git metrics land here (roadmap F1.9) |
+| `Snapshot` | `repo`, `ref`, `commit_sha`, `indexed_at`, `indexer_version`, `ephemeral`, `provides[]` (`<ecosystem>:<package>` the manifests publish — go.mod `module`, `PackageId`, package.json `name`, pyproject `name`), `requires[]` (`<ecosystem>:<package>@<version>` direct dependencies) | 1 per (repo, ref); drives orphan GC (§5); `provides`/`requires` feed `DEPENDS_ON` |
+| `Module` | `name`, `path`, `kind` (`go-package`,`npm-workspace`,`csproj`,`py-package`), `layer?` | build/publish unit; `layer` is set by a **convention** when all its files agree, else null |
+| `File` | `path`, `language`, `loc`, `layer?`, `last_touched`, `churn_90d`, `authors[]` | `layer` set by a convention's `layers:` globs; git metrics land here (planned) |
 | `Symbol` | `name`, `qualified_name`, `kind`, `signature`, `doc`, `visibility`, `line_start`, `line_end`, `scip_symbol?`, `is_entry_point`, `role?` | `kind` ∈ `class, interface, struct, enum, function, method, field, const, type, handler, job`; `role` (types only) comes from a convention's `roles:` — what the element is in the pattern (`command-handler`, `repository`…), independent of where it lives |
-| `Violation` | `convention`, `rule`, `severity` (`error`,`warning`,`info`), `message`, `line`, `evidence` | a convention rule broken at one place (F0.4.4). Micro: per ref, GC'd like `Symbol`. `(File)-[:HAS_VIOLATION]->(Violation)`, `(Symbol)-[:HAS_VIOLATION]->` when attributable |
-| `HttpCall` | `method`, `path` (template), `path_key`, `raw_path`, `via` (callee as written), `target_hint` (package/dir: `outbound/<svc>` → `<svc>`), `env_hints[]` (base-URL env var names seen nearby), `line`, `evidence` | **outbound HTTP call site** with a literal/template path — a `CONSUMES` candidate (F0.4). Micro: per ref, GC'd like `Symbol`. `path_key` = `path` with every placeholder as `{param}` — the join key with `HttpEndpoint.path_key` |
+| `Violation` | `convention`, `rule`, `severity` (`error`,`warning`,`info`), `message`, `line`, `evidence` | a convention rule broken at one place. Micro: per ref, GC'd like `Symbol`. `(File)-[:HAS_VIOLATION]->(Violation)`, `(Symbol)-[:HAS_VIOLATION]->` when attributable |
+| `HttpCall` | `method`, `path` (template), `path_key`, `raw_path`, `via` (callee as written), `target_hint` (package/dir: `outbound/<svc>` → `<svc>`), `env_hints[]` (base-URL env var names seen nearby), `line`, `evidence` | **outbound HTTP call site** with a literal/template path — a `CONSUMES` candidate. Micro: per ref, GC'd like `Symbol`. `path_key` = `path` with every placeholder as `{param}` — the join key with `HttpEndpoint.path_key` |
 
 ### Macro
 
@@ -85,7 +85,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `IN_SNAPSHOT` | File→Snapshot | membership; enables GC by difference |
 | `HAS_SNAPSHOT` | Repo→Snapshot | one per indexed ref |
 | `HAS_RUN` | Snapshot→IndexRun | indexing history |
-| `HAS_VIOLATION` | File \| Symbol→Violation | a convention rule broken here (F0.4.4); rebuilt per commit like the node |
+| `HAS_VIOLATION` | File \| Symbol→Violation | a convention rule broken here; rebuilt per commit like the node |
 | `MAKES_HTTP_CALL` | Symbol \| File→HttpCall | the call site's enclosing symbol (or the file for top-level code); `File-[:CONTAINS]->HttpCall` also holds |
 
 ### Macro (between repo/service and contract)
@@ -95,13 +95,13 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | `DEPLOYS` | Repo→Service | the repo produces the service |
 | `EXPOSES` | Service→HttpEndpoint \| GrpcService | implements the contract. **One edge per `ref`** (`{ref}` is the MERGE key) with `commit_sha`, `evidence`, `line`, `raw_pattern`, `confidence`; edges of a ref not refreshed at the current commit are removed, and an endpoint with no `EXPOSES` and no `CONSUMES` is deleted |
 | `HANDLED_BY` | HttpEndpoint \| GrpcMethod → Symbol | **macro→micro bridge**: the concrete handler (entry of `trace_flow`). One edge per `ref` (`{ref}` key), same lifecycle as `EXPOSES` |
-| `CONSUMES` | Service→HttpEndpoint | outbound HTTP call, **materialized by the linker (F0.5)** from `HttpCall × HttpEndpoint`. One edge per `ref` (`{ref}` key) per (consumer, endpoint): `commit_sha`, `confidence` (`exact` = same `path_key`; `suffix` = one path is a segment suffix of the other **and** a hint names the provider), `hint` (`target_hint` \| `env_hint` \| null — what broke a tie between services), `call_count`, `methods[]`, `evidence[]` (≤10 call sites), `linked_at`. Never links a service to itself; when several services expose the path and no hint picks one, **no edge** (the MCP lists them as `possible_consumers`). Rebuilt for the whole tenant on every `aidd link` / end of index·bootstrap·refresh |
+| `CONSUMES` | Service→HttpEndpoint | outbound HTTP call, **materialized by the linker** from `HttpCall × HttpEndpoint`. One edge per `ref` (`{ref}` key) per (consumer, endpoint): `commit_sha`, `confidence` (`exact` = same `path_key`; `suffix` = one path is a segment suffix of the other **and** a hint names the provider), `hint` (`target_hint` \| `env_hint` \| null — what broke a tie between services), `call_count`, `methods[]`, `evidence[]` (≤10 call sites), `linked_at`. Never links a service to itself; when several services expose the path and no hint picks one, **no edge** (the MCP lists them as `possible_consumers`). Rebuilt for the whole tenant on every `aidd link` / end of index·bootstrap·refresh |
 | `CALLS_GRPC` | Service→GrpcMethod | outbound gRPC call |
 | `CALLED_FROM` | HttpEndpoint \| GrpcMethod → Symbol \| File | **micro→macro bridge**: one edge per linked call site (`{ref, call_id}` key; target = the `HttpCall`'s caller symbol, or the file for top-level code) with `commit_sha`, `line`, `method`, `confidence`, `hint`, `evidence`, `via`. Same lifecycle as `CONSUMES` |
 | `DEFINES_PROTO` | Repo→GrpcService | where the `.proto` lives |
 | `PUBLISHES` / `SUBSCRIBES` | Service→Topic | `event_schema?` |
 | `PRODUCES` / `CONSUMES_EVENT` | Service→EventSchema | when a schema exists |
-| `DEPENDS_ON` | Service→Service | **internal package dependency, materialized by the linker (F0.5.1)** from `Snapshot.requires × Snapshot.provides` of the tenant: one edge per `ref` (`{ref}` key) per (consumer, provider) with `commit_sha`, `packages[]`, `versions[]`, `ecosystems[]`, `linked_at`. Names are normalized (lower-case; pypi `_`→`-`); never self; a package published by two repos links to **neither** (listed as ambiguous in the `aidd link` log). External packages stay `Package` nodes reached by `IMPORTS` |
+| `DEPENDS_ON` | Service→Service | **internal package dependency, materialized by the linker** from `Snapshot.requires × Snapshot.provides` of the tenant: one edge per `ref` (`{ref}` key) per (consumer, provider) with `commit_sha`, `packages[]`, `versions[]`, `ecosystems[]`, `linked_at`. Names are normalized (lower-case; pypi `_`→`-`); never self; a package published by two repos links to **neither** (listed as ambiguous in the `aidd link` log). External packages stay `Package` nodes reached by `IMPORTS` |
 | `PROVIDES` | Repo→Package | the repo publishes the internal package |
 | `READS` / `WRITES` | Symbol→DbTable | via ORM/migrations/SQL |
 | `OWNS_TABLE` | Service→DbTable | inferred: single writer |

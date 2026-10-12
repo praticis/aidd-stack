@@ -1,4 +1,4 @@
-"""Call resolution (F0.7.1): static receiver types in Go and the production→test exclusion."""
+"""Call resolution: static receiver types in Go and the production→test exclusion."""
 from __future__ import annotations
 
 import io

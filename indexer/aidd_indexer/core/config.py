@@ -52,7 +52,7 @@ DEFAULT_EXCLUDES = {
     "coverage", ".terraform", "target", ".gradle",
 }
 
-# Generated code is noise for the graph; extend via .aidd/index.yaml later (F1.1).
+# Generated code is noise for the graph; extend via .aidd/index.yaml later.
 GENERATED_SUFFIXES = (".pb.go", "_pb2.py", "_pb2_grpc.py", ".min.js", ".d.ts", ".g.cs", ".Designer.cs")
 
 # Test code: skipped by the HTTP extractor, and never a call target for production code (resolve.py).

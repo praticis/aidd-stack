@@ -89,7 +89,7 @@ def extract_tree(repo: RepoInfo, patterns=None) -> tuple[ExtractionResult, list]
         res.calls.extend(fx.calls)
         res.imports.extend(fx.imports)
     log(f"[extract]  {len(res.symbols)} symbols, {len(res.calls)} call sites, {len(res.imports)} imports ({time.time()-t0:.1f}s)")
-    # integration candidates (F0.4): routes exposed + outbound HTTP calls with literal paths
+    # integration candidates: routes exposed + outbound HTTP calls with literal paths
     from .core.integrations import extract_http
     t1 = time.time()
     hr = extract_http(repo, extractors, patterns)
@@ -244,7 +244,7 @@ def cmd_index(args: argparse.Namespace) -> int:
 
 
 def _link(gw, tenant: str) -> None:
-    """Rebuild the tenant's CONSUMES / CALLED_FROM (F0.5) and DEPENDS_ON (F0.5.1) edges — after any snapshot changes."""
+    """Rebuild the tenant's CONSUMES / CALLED_FROM and DEPENDS_ON edges — after any snapshot changes."""
     t0 = time.time()
     c = gw.link_tenant(tenant)
     log(f"[link]     {tenant}: {c['linked']} call sites linked ({c['exact']} exact, {c['suffix']} suffix, "

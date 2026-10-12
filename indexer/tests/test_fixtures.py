@@ -54,7 +54,7 @@ def test_fixture(root: Path):
 
 # ---- fixtures of a development pattern: `expected.json` also names the convention that describes it
 # and what it must produce — layers, entry points, the deliberate violation, the CALLS chain the graph
-# must carry (`edges`) and the links it is known not to see yet (`gaps`, F0.7.3 / F1).
+# must carry (`edges`) and the links it is known not to see yet (`gaps`).
 
 CONV_FIXTURES = [p for p in FIXTURES if "convention" in json.loads((p / "expected.json").read_text())]
 

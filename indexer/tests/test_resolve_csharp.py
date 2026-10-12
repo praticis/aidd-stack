@@ -1,4 +1,4 @@
-"""Call resolution in C# (F0.7.2): receiver types from fields/properties/locals, inherited members
+"""Call resolution in C#: receiver types from fields/properties/locals, inherited members
 from in-repo bases, and interface -> unique implementer."""
 from __future__ import annotations
 

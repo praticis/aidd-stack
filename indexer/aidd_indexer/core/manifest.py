@@ -37,7 +37,7 @@ class RefPolicy:
     def for_repo(self, repo: str) -> "RefPolicy":
         """The policy one repo sees: tenant defaults with every matching `overrides` entry applied
         (declaration order; later wins). Lets `<project>@develop` stay out when that branch is dead
-        without touching the tenant-wide `always` (F0.3.6)."""
+        without touching the tenant-wide `always`."""
         pol = RefPolicy(list(self.always), list(self.patterns), ActivePolicy(**self.active.__dict__),
                         self.gc_ephemeral_after_days)
         for pattern, o in self.overrides.items():

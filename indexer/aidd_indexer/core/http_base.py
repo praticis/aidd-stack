@@ -11,7 +11,7 @@ Route vs. client disambiguation (the main source of false positives): a call is 
 registration* when the argument after the path is handler-like (a function literal, or a
 selector/identifier that is not a string/nil/literal); it is an *outbound call* otherwise.
 Test files and e2e/integration folders are skipped. Paths made only of placeholders are dropped.
-Every candidate carries evidence `repo:path:line`; the linker (F0.5) decides which endpoint a call
+Every candidate carries evidence `repo:path:line`; the linker decides which endpoint a call
 hits — here we only record what the code says.
 """
 

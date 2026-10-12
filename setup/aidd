@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# aidd — host-side client for the atlas indexer (D15).
+# aidd — host-side client for the atlas indexer.
 #
 # Everything runs in containers. The `refresher` service (docker-compose.yml) keeps atlas current:
 # it syncs every repo of the workspace into its own mirror (the workspace is mounted read-only),

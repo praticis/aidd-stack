@@ -1,4 +1,4 @@
-"""What a convention adds to the HTTP scanners (F0.4.5) — a plain data module so `conventions/`
+"""What a convention adds to the HTTP scanners — a plain data module so `conventions/`
 can import it without pulling the scanners (and the language registry) in."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ScanPatterns:
-    """What a *convention* adds to the HTTP scanners (F0.4.5): route registrars and HTTP client
+    """What a *convention* adds to the HTTP scanners: route registrars and HTTP client
     methods of the organization's own SDK, which the generic tables cannot know.
 
     * `registrars`: function name -> HTTP method (`"GET"`), or None when the method is an argument

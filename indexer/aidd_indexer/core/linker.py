@@ -1,4 +1,4 @@
-"""Linker (ROADMAP F0.5): `HttpCall` × `HttpEndpoint` → `CONSUMES` / `CALLED_FROM`.
+"""Linker: `HttpCall` × `HttpEndpoint` → `CONSUMES` / `CALLED_FROM`.
 
 Pure functions over rows already in the graph — no Neo4j here, so the rules are unit-testable
 (`tests/test_linker.py`). `GraphWriter.link_tenant` reads the rows, calls `link`, writes the edges.
@@ -13,7 +13,7 @@ Rules, in order of confidence:
              weak: `/documents/{param}/upload` is the tail of many unrelated routes (seen in the
              first portfolio run), so without corroboration the call stays unmatched.
 
-Second join (F0.5.1): `Snapshot.requires` × `Snapshot.provides` — a manifest dependency whose
+Second join: `Snapshot.requires` × `Snapshot.provides` — a manifest dependency whose
 package name another repo of the tenant publishes becomes `Service -[:DEPENDS_ON {ref}]-> Service`.
 Same stance: exact normalized name, never self, two publishers of the same name → no edge.
 
@@ -176,7 +176,7 @@ def called_from_rows(result: LinkResult) -> list[dict]:
     } for e in sorted(result.edges, key=lambda e: (e.endpoint.id, e.call.evidence))]
 
 
-# ---- F0.5.1: manifests → DEPENDS_ON ------------------------------------------------------
+# ---- manifests → DEPENDS_ON ------------------------------------------------------------
 
 @dataclass(frozen=True)
 class ProvideRow:

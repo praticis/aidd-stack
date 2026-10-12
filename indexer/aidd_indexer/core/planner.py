@@ -119,7 +119,7 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
             for r in found:
                 repos.setdefault(r.name, r)
         else:
-            notes.append(f"source '{s.type}' (org {s.org}) not implemented yet — roadmap F1 (remote providers); skipped")
+            notes.append(f"source '{s.type}' (org {s.org}) not implemented yet (remote providers); skipped")
     return list(repos.values()), notes
 
 

@@ -1,4 +1,4 @@
-"""Mirrors (D15): the workspace repo is only read; the planner reads the mirror.
+"""Mirrors: the workspace repo is only read; the planner reads the mirror.
 
 Real git, no network: `origin` is a bare repo on disk. The developer's clone has a branch they never
 pushed and is missing a branch someone else pushed after their last fetch."""

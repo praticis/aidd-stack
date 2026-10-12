@@ -1,4 +1,4 @@
-"""Run state of the refresher service (D15): lock, status file, health, graceful stop.
+"""Run state of the refresher service: lock, status file, health, graceful stop.
 
 The `refresher` compose service runs `aidd daemon`: a loop that runs `refresh` for every tenant of the
 manifest every `AIDD_REFRESH_INTERVAL_MINUTES` (± 10 % jitter, counted from the end of the previous

@@ -1,4 +1,4 @@
-"""Manifests → what a repo publishes and what it requires (ROADMAP F0.5.1).
+"""Manifests → what a repo publishes and what it requires.
 
 Each language parses its own manifest (`LanguageSupport.manifest_deps`); this module only walks the
 repo, normalizes names per ecosystem and de-duplicates. The result lands on the `Snapshot`

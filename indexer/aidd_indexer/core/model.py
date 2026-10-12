@@ -99,7 +99,7 @@ class HttpEndpointInfo:
 @dataclass
 class HttpCallInfo:
     """An outbound HTTP call with a literal (or template) path — a CONSUMES candidate.
-    Micro node (per ref); the linker turns it into CONSUMES/CALLED_FROM (F0.5)."""
+    Micro node (per ref); the linker turns it into CONSUMES/CALLED_FROM."""
     id: str                        # <tenant>/<repo>@<ref>/httpcall/<path>:<line>
     method: str                    # GET | POST | ... | ANY
     path: str                      # normalized template
@@ -115,7 +115,7 @@ class HttpCallInfo:
 
 @dataclass(frozen=True)
 class ManifestDep:
-    """One declared dependency of a build manifest (F0.5.1). `name` is normalized per ecosystem
+    """One declared dependency of a build manifest. `name` is normalized per ecosystem
     (lower-case; pypi `_` → `-`), so two repos naming the same package agree byte for byte."""
     ecosystem: str                 # go | npm | nuget | pypi
     name: str
@@ -147,8 +147,8 @@ class ExtractionResult:
     imports: list[ImportInfo] = field(default_factory=list)
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     http_calls: list[HttpCallInfo] = field(default_factory=list)
-    violations: list["ViolationInfo"] = field(default_factory=list)   # conventions (F0.4.4)
-    provides: list[ManifestProvide] = field(default_factory=list)      # manifests (F0.5.1)
+    violations: list["ViolationInfo"] = field(default_factory=list)   # conventions
+    provides: list[ManifestProvide] = field(default_factory=list)      # manifests
     requires: list[ManifestDep] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 

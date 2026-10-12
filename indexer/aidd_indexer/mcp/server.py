@@ -1,6 +1,6 @@
 """`atlas` MCP server — intent-level, read-only access to the code graph for the skills.
 
-Design (ROADMAP F0.6):
+Design:
   * Every query is scoped to a tenant. Fixed mode (AIDD_TENANT=<name>): server-side, the caller never
     passes one. Multi-tenant mode (AIDD_TENANT=auto, workspace <ws>/<tenant>/<repo>): tools take an
     optional `tenant`; omitted → the only tenant in the graph, or an error listing them.
