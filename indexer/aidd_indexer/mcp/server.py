@@ -297,7 +297,7 @@ def build_server(store: Store | None = None):
             MATCH (f:File)-[:CONTAINS]->(sy)
             RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
                    sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
-                   sy.signature AS signature, sy.is_entry_point AS entry_point, round(score, 2) AS score
+                   sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, round(score, 2) AS score
             ORDER BY score DESC LIMIT $limit
         """, q=_fulltext_query(query), repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
         # Lucene matches whole terms and prefixes ('Handler' → 'Handler', 'HandlerFunc'), not
@@ -314,7 +314,7 @@ def build_server(store: Store | None = None):
                 MATCH (f:File)-[:CONTAINS]->(sy)
                 RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
                        sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
-                       sy.signature AS signature, sy.is_entry_point AS entry_point, 0.0 AS score
+                       sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 0.0 AS score
                 ORDER BY size(sy.name), sy.name LIMIT $limit
             """, text=query.strip(), repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
             rows += [r for r in extra if r["id"] not in seen][: limit - len(rows)]
@@ -334,7 +334,7 @@ def build_server(store: Store | None = None):
             RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
                    sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line_start,
                    sy.line_end AS line_end, sy.signature AS signature, sy.doc AS doc,
-                   sy.visibility AS visibility, sy.is_entry_point AS entry_point
+                   sy.visibility AS visibility, sy.is_entry_point AS entry_point, sy.role AS role
             LIMIT 6
         """, symbol=symbol, repo=repo, ref=ref)
         if not rows:

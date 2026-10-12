@@ -56,6 +56,7 @@ class SymbolInfo:
     content_hash: str
     parent_id: str | None = None   # enclosing symbol (member CONTAINS)
     is_entry_point: bool = False
+    role: str | None = None        # what the element is in the pattern (convention roles: command-handler, ...)
 
 
 @dataclass

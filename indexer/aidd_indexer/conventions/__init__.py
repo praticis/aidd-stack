@@ -12,7 +12,7 @@ conventions:
 
 `load(specs, repo_name)` resolves the specs that apply to a repo; `apply(convs, res, rv)` runs the
 annotation hooks and rules and mutates the ExtractionResult (`File.layer`, `Module.layer`,
-`HttpCall.target_hint`, `Symbol.is_entry_point`, `violations`). With no conventions configured the
+`HttpCall.target_hint`, `Symbol.role`, `Symbol.is_entry_point`, `violations`). With no conventions configured the
 result is untouched — the indexer's output is exactly what the language modules produced.
 """
 
@@ -31,6 +31,7 @@ from ..core.resolve import Resolved
 from .base import Convention, ConventionContext
 
 ENTRY_POINT_GROUP = "aidd.conventions"
+TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
 
 
 def _resolve_class(ref: str) -> type[Convention]:
@@ -84,6 +85,17 @@ def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:
     modules = {m.id: m for m in res.modules}
     files_by_id = {f.id: f for f in res.files}
     ctx = ConventionContext(res=res, rv=rv, files_by_id=files_by_id)
+    for c in convs:
+        c.prepare(ctx)
+    for s in res.symbols:
+        f = files_by_id.get(s.file_id)
+        if f is None or s.kind not in TYPE_KINDS:
+            continue
+        for c in convs:
+            role = c.role_of(s, f)
+            if role:
+                s.role = role
+                break
     for f in res.files:
         for c in convs:
             layer = c.layer_of(f, modules.get(f.module_id))

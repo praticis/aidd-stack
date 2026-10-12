@@ -119,7 +119,7 @@ class GraphWriter:
             SET n.tenant = $tenant, n.repo = $repo, n.ref = $ref, n.commit_sha = $sha, n.indexed_at = datetime($now),
                 n.name = s.name, n.qualified_name = s.qualified_name, n.kind = s.kind, n.signature = s.signature,
                 n.doc = s.doc, n.visibility = s.visibility, n.line_start = s.line_start, n.line_end = s.line_end,
-                n.content_hash = s.content_hash, n.is_entry_point = s.is_entry_point
+                n.content_hash = s.content_hash, n.is_entry_point = s.is_entry_point, n.role = s.role
             WITH n, s
             MATCH (f:File {id: s.file_id})
             MERGE (f)-[:CONTAINS]->(n)

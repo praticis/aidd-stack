@@ -44,6 +44,15 @@ class Convention:
         """Options from atlas.yaml (`conventions: [{id: x, options: {...}}]`)."""
         return None
 
+    def prepare(self, ctx: ConventionContext) -> None:
+        """Called once per repo before the annotation hooks, with the whole extraction — the place to
+        look at the repo as a whole (which layout it uses, what each type is)."""
+        return None
+
+    def describe(self) -> str:
+        """How the convention shows up in logs once prepared (e.g. the detected layout)."""
+        return self.id
+
     # ---- scanner hook (before extraction): what the organization's own SDK adds to the HTTP scanners
     def scan_patterns(self) -> ScanPatterns:
         """Route registrars / HTTP client methods the generic tables cannot know (`srv.Route(...)`,
@@ -51,6 +60,11 @@ class Convention:
         return ScanPatterns()
 
     # ---- annotation hooks (called per element, first non-None answer wins across conventions)
+    def role_of(self, symbol: SymbolInfo, file: FileInfo) -> str | None:
+        """What a type is in the pattern (`command-handler`, `repository`...) → `Symbol.role`. Called for
+        classes, interfaces, structs and records, before `layer_of`."""
+        return None
+
     def layer_of(self, file: FileInfo, module: ModuleInfo | None) -> str | None:
         return None
 

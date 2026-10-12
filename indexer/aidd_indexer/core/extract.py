@@ -92,11 +92,60 @@ def load_language(name: str) -> CompiledLanguage | None:
     return cl
 
 
-_ATTR_PREFIX = re.compile(r"^(\s*(\[[^\]]*\]|@[\w.]+(\([^)]*\))?)\s*)+")
+_DECORATOR = re.compile(r"@[\w.]+(\([^)]*\))?")
+
+
+def _skip_bracket(text: str, i: int) -> int:
+    """Index after the `]` closing the `[` at i (nesting and string/char literals aware), or -1."""
+    depth, n = 0, len(text)
+    while i < n:
+        ch = text[i]
+        if ch == '"':
+            verbatim = i > 0 and text[i - 1] == "@"
+            i += 1
+            while i < n:
+                if verbatim and text[i] == '"' and i + 1 < n and text[i + 1] == '"':
+                    i += 2
+                    continue
+                if not verbatim and text[i] == "\\":
+                    i += 2
+                    continue
+                if text[i] == '"':
+                    break
+                i += 1
+        elif ch == "'" and i + 2 < n:
+            i += 3 if text[i + 1] == "\\" else 2          # '[' / '\''
+        elif ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return -1
+
+
+def strip_attributes(text: str) -> str:
+    """Drop leading C# attributes (`[Route("api/[controller]")]`, regex literals inside) and decorators."""
+    i, n, stripped = 0, len(text), False
+    while True:
+        j = i
+        while j < n and text[j].isspace():
+            j += 1
+        if j < n and text[j] == "[":
+            k = _skip_bracket(text, j)
+        elif j < n and text[j] == "@" and (m := _DECORATOR.match(text, j)):
+            k = m.end()
+        else:
+            break
+        if k < 0:
+            break
+        i, stripped = k, True
+    return text[i:].lstrip() if stripped else text
 
 
 def _first_line(node: Node, src: bytes, limit: int = 200) -> str:
-    t = _ATTR_PREFIX.sub("", _text(node, src))
+    t = strip_attributes(_text(node, src))
     for stop in ("{", "\n"):
         i = t.find(stop)
         if i > 0:

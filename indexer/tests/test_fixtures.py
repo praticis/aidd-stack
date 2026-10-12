@@ -6,7 +6,7 @@ makes. Precision and recall must both be 100 % on fixtures — they are controll
 
 A fixture that reproduces a development pattern also names its convention (`"convention"`: a yaml
 path relative to the fixture, or an id / `module:Class` — extensions under indexer/conventions/ are on
-sys.path, see conftest.py) and lists what it must produce: `layers` (every file), `entry_points`
+sys.path, see conftest.py) and lists what it must produce: `architecture` (the layout detected), `roles` (type name → role), `layers` (every file), `entry_points`
 (`Class.Method`), `violations` (the deliberate one), `edges` (CALLS the graph must carry, with the
 strategy) and `gaps` (links known to be missing — xfail until they appear, then the test fails
 asking to move them to `edges`).
@@ -76,7 +76,7 @@ def _resolved(root: Path):
     convs = conventions.load([spec], root.name)
     repo = RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
     res, rv = extract_and_resolve(repo, convs=convs)
-    return expected, res, rv
+    return expected, res, rv, convs
 
 
 def _symbols(res, name: str) -> set[str]:
@@ -92,7 +92,13 @@ def _edges(rv, res, frm: str, to: str) -> set[str]:
 
 @pytest.mark.parametrize("root", CONV_FIXTURES, ids=[p.name for p in CONV_FIXTURES])
 def test_fixture_convention(root: Path):
-    expected, res, rv = _resolved(root)
+    expected, res, rv, convs = _resolved(root)
+    if "architecture" in expected:
+        assert [getattr(c, "architecture", None) for c in convs] == [expected["architecture"]]
+    if "roles" in expected:
+        got_roles = {s.name: s.role for s in res.symbols if s.role}
+        assert got_roles == expected["roles"], {n: (got_roles.get(n), expected["roles"].get(n))
+                                                 for n in got_roles.keys() | expected["roles"].keys() if got_roles.get(n) != expected["roles"].get(n)}
     paths = {f.path for f in res.files}
     assert set(expected["layers"]) <= paths, set(expected["layers"]) - paths
     got_layers = {f.path: f.layer for f in res.files if f.layer}
@@ -119,7 +125,7 @@ GAPS = [(p, g) for p in CONV_FIXTURES for g in json.loads((p / "expected.json").
 @pytest.mark.parametrize("root,gap", GAPS, ids=[f"{p.name}:{g['from']}->{g['to']}" for p, g in GAPS])
 def test_fixture_known_gap(root: Path, gap: dict):
     """Links the graph does not carry yet. When one starts to appear, move it to `edges`."""
-    _, res, rv = _resolved(root)
+    _, res, rv, _ = _resolved(root)
     if _edges(rv, res, gap["from"], gap["to"]):
         pytest.fail(f"gap closed ({gap['why']}): move {gap['from']} -> {gap['to']} to `edges` in expected.json")
     pytest.xfail(gap["why"])

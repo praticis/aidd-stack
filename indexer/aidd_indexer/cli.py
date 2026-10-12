@@ -121,7 +121,7 @@ def extract_and_resolve(repo: RepoInfo, convs: list | None = None) -> tuple[Extr
         t0 = time.time()
         conventions.apply(convs, res, rv)
         layered = sum(1 for f in res.files if f.layer)
-        log(f"[conv]     {', '.join(c.id for c in convs)}: {layered} files layered, "
+        log(f"[conv]     {', '.join(c.describe() for c in convs)}: {layered} files layered, "
             f"{len(res.violations)} violations ({time.time()-t0:.1f}s)")
     for w in res.warnings[:10]:
         log(f"[warn]     {w}")
