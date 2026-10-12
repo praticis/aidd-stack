@@ -42,13 +42,13 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `languages/<lang>/queries.scm` | padrões `def.<kind>`, `call`, `import` — compilados padrão a padrão (um inválido é pulado com warning) |
 | `languages/<lang>/symbols.py` | a subclasse de `LanguageSupport` + `LANGUAGES = [...]` (typescript registra `typescript`, `tsx`, `javascript`). Go e C# implementam também `file_facts`, `call_receiver` e `resolve_receiver` (Go: receiver do método, parâmetro, `x := T{}`, `x := pkg.New()` inclusive retorno múltiplo, campos de struct e campos promovidos por embedding; C#: campos/propriedades/parâmetros/locais/`base.`, membros herdados) e C# ainda `supertypes` + `implementations` (interface → implementador único) |
 | `languages/<lang>/http.py` | o scanner HTTP da linguagem (`GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`) e suas tabelas de registradores |
-| `conventions/base.py` | contrato `Convention` (`layer_of`, `target_of`, `is_entry_point(symbol, file, owner)`, `check`) e `ConventionContext` (`rv.namespace_files`: namespace C# → arquivos que o declaram) |
-| `conventions/declarative.py` | `convention.yaml` → `Convention` (camadas por glob, alvos, entry points por assinatura ou por tipo dono — `members_of` —, regras `forbid_import` / `endpoints_only_in` / `http_calls_only_in`; `using` de namespace conta pela camada dos arquivos que o declaram) |
+| `conventions/base.py` | contrato `Convention` (`prepare(ctx)`, `role_of`, `layer_of`, `target_of`, `is_entry_point(symbol, file, owner)`, `check`, `describe`) e `ConventionContext` (`rv.namespace_files`: namespace C# → arquivos que o declaram) |
+| `conventions/declarative.py` | `convention.yaml` → `Convention` (**papéis** por forma da declaração — `roles:` com `extends`/`name`/`declares`, inclusive bases do próprio repo → `Symbol.role`; **arquiteturas** — `architectures:` com `layers` por layout e `detect` pelos módulos, `together: ["{svc}.Api", "{svc}.Core"]`, ou forçada por `options.architecture`; camadas por glob, e arquivo que o layout não posiciona herda a camada dos seus papéis; alvos, entry points por assinatura, por tipo dono — `members_of` — ou por papel — `entry_points.roles` —, regras `forbid_import` / `endpoints_only_in` / `http_calls_only_in` / `roles_in`; `using` de namespace conta pela camada dos arquivos que o declaram) |
 | `conventions/__init__.py` | `load(specs, repo)` (arquivo, entry point `aidd.conventions` ou `pacote.modulo:Classe`) e `apply()` |
-| `../conventions/<nome>/` (em `indexer/`) | extensões de convenção empacotadas (`pyproject` + entry point `aidd.conventions`), instaladas pelo `Dockerfile` |
+| `../conventions/<nome>/` (em `indexer/`) | extensões de convenção empacotadas (`pyproject` + entry point `aidd.conventions`), instaladas pelo `Dockerfile`; hoje `dotnet-praticis` |
 | `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, impact_of, ref_diff, violations, cypher_readonly` — perguntas douradas em `docs/golden-questions.md` |
 | `scripts/http_corpus.py` | corpus público de calibração do extrator HTTP (§5) |
-| `tests/` | fixtures golden (HTTP; e, nas que reproduzem um padrão, camadas/entry points/violações/`CALLS`/gaps pela convenção) + `test_conventions.py` (costura das convenções) + `test_linker.py` (regras + par de fixtures `go-http-mix` → `go-billing-api`) + `test_mcp_protocol.py` (tools do MCP com store fake); `conftest.py` põe as extensões de `indexer/conventions/*` no `sys.path` |
+| `tests/` | fixtures golden (HTTP; e, nas que reproduzem um padrão, camadas/entry points/violações/`CALLS`/gaps pela convenção) + `test_conventions.py` (costura das convenções) + `test_linker.py` (regras + pares `go-http-mix` → `go-billing-api` e `csharp-praticis-reports` → `csharp-praticis-todos`) + `test_mcp_protocol.py` (tools do MCP com store fake); `conftest.py` põe as extensões de `indexer/conventions/*` no `sys.path` |
 
 Pipeline de um repo (`cli.extract_tree` → `extract_and_resolve`): `list_files` → `discover_modules` →
 `build_files` → para cada arquivo parseável `FileExtractor.run()` → `extract_http(repo, extractors)` →
@@ -91,6 +91,7 @@ Regras aprendidas no corpus (não regredir):
 | `SendAsync(msg)` duplicando `new HttpRequestMessage` | `SendAsync` com variável local que é `HttpRequestMessage` é ignorado |
 | Flurl: URL é o *receiver* (`url.AppendPathSegment("x").GetJsonAsync()`) | `_flurl_path` percorre a cadeia antes do verbo; checado **antes** do early-return de args vazios |
 | C# `this.X()` / `base.X()` nunca viravam call site | `this`/`base` são tokens anônimos na gramática: padrão próprio em `queries.scm`; `base.X()` com base fora do repo (ou implícita) não cai no fallback por nome (`LanguageSupport.parent_receivers`) — seria auto-aresta do override |
+| Assinatura de classe C# com `[Route("api/[controller]")]` gravada como `")]` (e atributos com regex em string) | `strip_attributes` (core/extract.py) pula atributos com colchetes aninhados e literais de string; a convenção lê o cabeçalho da declaração (bases em várias linhas) com a mesma função |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
 arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
@@ -117,9 +118,13 @@ inspecionar o que o extrator viu num repo específico.
 - **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
   padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
   `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `ts-express-nest`, `csharp-httpclients`
-  (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers).
+  (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers) e o par **`csharp-praticis-todos` /
+  `csharp-praticis-reports`** (+ `csharp-praticis-projects`) — o padrão .NET do autor em domínio genérico, uma
+  fixture por layout (`flat`, `split`, `layered`) (Contracts + controller →
+  `ServiceBus.SendAsync(command)` → `ICommandHandler`, validators, consumers `IEventHandler<ContractEvent>`,
+  processors em decorator, `HttpClient` tipado em `Infra/Http/Outbound/<Svc>Api`), com a convenção `dotnet-praticis`.
   Fixtures que reproduzem um padrão de desenvolvimento declaram no `expected.json` a convenção (`convention`: yaml
-  ao lado da fixture, id ou `module:Class`) e o que ela produz: `layers`, `entry_points`, `violations` (uma
+  ao lado da fixture, id ou `module:Class`) e o que ela produz: `architecture` (layout detectado), `roles`, `layers`, `entry_points`, `violations` (uma
   proposital por fixture), `edges` (`CALLS` com estratégia) e `gaps` (ligações que o grafo ainda não vê — xfail até
   aparecerem; quando aparecem, o teste pede para movê-las a `edges`). Regenerar `expected.json` só depois de
   conferir cada linha na fonte — nunca a partir da saída do extrator sem revisão.
@@ -170,6 +175,15 @@ inspecionar o que o extrator viu num repo específico.
   ativa por id (`conventions: [{id: <nome>}]`, ou `AIDD_CONVENTIONS=<nome>`). Em C# um `using X;` vira `IMPORTS`
   para o **Module** (o `.csproj`); a regra `forbid_import` usa a camada dos arquivos que declaram `X` — se eles
   estão em mais de uma camada, o import não diz nada e não gera violação.
+  **Padrão × arquitetura** — duas perguntas diferentes, no mesmo `convention.yaml`: `roles:` diz *o que* cada tipo
+  é, pela forma da declaração (bases do SDK/framework, nome, cabeçalho), em qualquer pasta → `Symbol.role`, entry
+  points por papel e a camada de arquivos que o layout não posiciona; `architectures:` diz *onde* cada coisa mora
+  em cada layout (globs por arquitetura, detectada pelos módulos do repo ou forçada por repo). As regras falam de
+  camadas (mesmos nomes em todos os layouts) e `roles_in` cruza os dois: "command handler mora em `core`" vale
+  igual num serviço de um projeto ou de cinco. Exemplo: `indexer/conventions/dotnet-praticis/` — 13 papéis,
+  3 arquiteturas (`flat`: tudo no `.Api`; `split`: `.Api` + `.Core`; `layered`: `.Api` + `.Application` + `.Core` +
+  `.Domain` + `.Infra`), 8 regras; validado nos repos de referência (todos os arquivos dos serviços com camada,
+  0 violações, monorepo com biblioteca `*.Shared.Bus.Core` corretamente não confundido com `split`).
 
 ## 8. O que vem depois do extrator (para não invadir)
 
