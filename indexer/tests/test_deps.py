@@ -75,3 +75,15 @@ def test_link_deps_unique_provider_never_self_never_ambiguous():
     rows = depends_on_rows(r)
     assert rows[0] == {"repo": "bff", "provider": "billing", "ref": "dev", "commit_sha": "s2",
                        "packages": ["example.com/billing"], "versions": ["v1.1.0"], "ecosystems": ["go"]}
+
+
+def test_dotnet_praticis_pair_depends_on_the_contracts_package():
+    """The consumer references the provider's `.Contracts` NuGet package (events it consumes)."""
+    tx, reports = _repo("csharp-praticis-todos"), _repo("csharp-praticis-reports")
+    provides, _ = collect_manifest_deps(tx, list_files(Path(tx.root)))
+    _, requires = collect_manifest_deps(reports, list_files(Path(reports.root)))
+    assert "nuget:acme.todos.contracts" in [p.key() for p in provides]
+    r = link_deps([DepRow(reports.name, "main", "x", d.key(), d.version) for d in requires],
+                  [ProvideRow(tx.name, p.key()) for p in provides])
+    assert [(e.dep.repo, e.provider, e.dep.key, e.dep.version) for e in r.edges] == [
+        ("csharp-praticis-reports", "csharp-praticis-todos", "nuget:acme.todos.contracts", "1.0.0")]

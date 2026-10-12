@@ -1,0 +1,121 @@
+# dotnet-praticis — the Praticis .NET pattern: CQRS over an in-house service bus (mediator).
+#
+# The pattern is the same in every service; the solution layout grows with the service:
+#
+#   flat      src/<Org>.<Svc>.Api/{Controllers,Consumers,Application,Core,Domain,Infra,Extensions}
+#             + src/<Org>.<Svc>.Contracts/
+#   split     .Api (Controllers, Consumers, Extensions, Program.cs)
+#             + .Core (Application, Domain, Infra/{Data,Http}, handlers/processors) + .Contracts
+#   layered   .Api + .Application (Commands, Validators, Queries) + .Core (handlers, processors)
+#             + .Domain + .Infra (Data, Http) + .Contracts
+#
+# Two parts, on purpose:
+#   roles          WHAT an element is, recognized by its declaration (base types of the SDK/framework)
+#                  wherever it lives: command, command handler, validator, controller, repository...
+#                  → Symbol.role, handler entry points, and the layer of files the layout does not place.
+#   architectures  WHERE elements live in each layout (layers by path), detected from the projects in
+#                  the repo (or forced per repo: `options: {architecture: split}` in atlas.yaml).
+# The rules are written against layer names, which are the same in the three layouts, plus `roles_in`
+# (a command handler must live in `core`, ...), so a handler moved to the wrong project is flagged.
+#
+# Loaded by `aidd_conventions_dotnet_praticis.DotnetPraticis`, registered under the `aidd.conventions`
+# entry point as `dotnet-praticis` (see ../README.md). Golden fixtures: indexer/tests/fixtures/
+# csharp-praticis-{todos (flat), reports (split), projects (layered)}. Format: aidd_indexer/conventions/declarative.py
+
+id: dotnet-praticis
+
+roles:                               # first match wins; `extends` = names in the base list (also through in-repo bases)
+  controller:      {extends: [InternalControllerBase, ControllerBase, Controller], layer: api}
+  command-handler: {extends: [ICommandHandler, IRequestHandler], layer: core}
+  event-handler:   {extends: [IEventHandler, INotificationHandler], layer: core}
+  command:         {extends: [Command, ICommand], layer: application}
+  event:           {extends: [Event, IEvent], layer: application}
+  validator:       {extends: [AbstractValidator], layer: application}
+  query:           {name: ["I*Query"], layer: application}
+  model:           {extends: [BaseModel], layer: domain}
+  repository:      {extends: [BaseRepository, BaseReadRepository], layer: infra}   # before -port: classes also reach
+  repository-port: {extends: [IBaseRepository, IBaseReadRepository], layer: domain}  # IBaseRepository via their interface
+  mapping:         {extends: [IEntityTypeConfiguration], layer: infra}
+  data-context:    {extends: [DbContext], layer: infra}
+  outbound-client: {declares: ["(HttpClient "], layer: outbound}     # typed HttpClient: `class X(HttpClient http)`
+
+architectures:                       # the first whose `detect` matches a module wins; the one without `detect` is the default
+  layered:
+    detect: {together: ["{svc}.Api", "{svc}.Application"]}   # projects of the same service
+    layers:
+      contracts:   ["**/*.Contracts/**"]
+      api:         ["**/*.Api/Controllers/**"]
+      consumers:   ["**/*.Api/Consumers/**"]
+      bootstrap:   ["**/*.Api/Extensions/**", "**/*.Api/Program.cs"]
+      application: ["**/*.Application/**"]
+      core:        ["**/*.Core/**"]
+      domain:      ["**/*.Domain/**"]
+      outbound:    ["**/*.Infra/Http/**"]
+      infra:       ["**/*.Infra/**"]
+  split:
+    detect: {together: ["{svc}.Api", "{svc}.Core"]}
+    layers:
+      contracts:   ["**/*.Contracts/**"]
+      api:         ["**/*.Api/Controllers/**"]
+      consumers:   ["**/*.Api/Consumers/**"]
+      bootstrap:   ["**/*.Api/Extensions/**", "**/*.Api/Program.cs"]
+      application: ["**/*.Core/Application/**"]
+      domain:      ["**/*.Core/Domain/**"]
+      outbound:    ["**/*.Core/Infra/Http/**"]
+      infra:       ["**/*.Core/Infra/**"]
+      core:        ["**/*.Core/**"]
+  flat:
+    layers:                          # `**/` = any depth (src/X.Api or a monorepo's src/<area>/<svc>/X.Api)
+      contracts:   ["**/*.Contracts/**"]
+      api:         ["**/*.Api/Controllers/**"]
+      consumers:   ["**/*.Api/Consumers/**"]
+      application: ["**/*.Api/Application/**"]
+      core:        ["**/*.Api/Core/**"]
+      domain:      ["**/*.Api/Domain/**"]
+      outbound:    ["**/*.Api/Infra/Http/Outbound/**"]
+      infra:       ["**/*.Api/Infra/**"]
+      bootstrap:   ["**/*.Api/Extensions/**", "**/*.Api/Program.cs"]
+
+entry_points:
+  roles:                             # Handle of command/event handlers: reached through the bus, not by a call
+    command-handler: [Handle]
+    event-handler: [Handle]
+
+rules:
+  - id: contracts-are-standalone     # the package other services consume cannot drag the implementation along
+    forbid_import: {from: contracts, to: [api, consumers, application, core, domain, outbound, infra, bootstrap]}
+    severity: error
+  - id: domain-is-pure
+    forbid_import: {from: domain, to: [api, consumers, application, core, outbound, infra, bootstrap]}
+    severity: error
+  - id: application-is-abstract      # commands, validators and queries know the domain, not who implements it
+    forbid_import: {from: application, to: [api, consumers, core, outbound, infra]}
+    severity: error
+  - id: controllers-dispatch-through-bus
+    forbid_import: {from: api, to: [core, infra, outbound]}
+    severity: error
+  - id: consumers-dispatch-to-core   # a consumer hands the event to Core; it does not talk HTTP or storage itself
+    forbid_import: {from: consumers, to: [api, infra, outbound]}
+    severity: warning
+  - id: elements-live-in-their-layer # the layout says where each kind of element goes
+    roles_in:
+      controller: [api]
+      command-handler: [core]
+      event-handler: [core, consumers]
+      command: [application, contracts]
+      event: [application, contracts]
+      validator: [application]
+      query: [application]
+      model: [domain]
+      repository-port: [domain]
+      repository: [infra]
+      mapping: [infra]
+      data-context: [infra]
+      outbound-client: [outbound]
+    severity: warning
+  - id: routes-live-in-controllers
+    endpoints_only_in: [api]
+    severity: warning
+  - id: clients-live-in-outbound
+    http_calls_only_in: [outbound]
+    severity: warning

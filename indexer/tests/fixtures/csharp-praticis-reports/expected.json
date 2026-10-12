@@ -1,0 +1,162 @@
+{
+  "endpoints": [
+    {"method": "GET", "path": "/api/summaries", "handler": "GetAsync"},
+    {"method": "PUT", "path": "/api/summaries/{summaryDay}/reset", "handler": "ResetAsync"}
+  ],
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/todos/{param}/details",
+      "via": "httpClient.GetAsync",
+      "target_hint": "TodosApi",
+      "line": 10,
+      "caller": "TodosApiClient.GetTodoDetailsAsync"
+    }
+  ],
+  "convention": "aidd_conventions_dotnet_praticis:DotnetPraticis",
+  "architecture": "split",
+  "layers": {
+    "src/Acme.Reports.Contracts/Objects/SummaryObject.cs": "contracts",
+    "src/Acme.Reports.Api/Controllers/SummariesController.cs": "api",
+    "src/Acme.Reports.Api/Consumers/TodoWasCreatedEventHandler.cs": "consumers",
+    "src/Acme.Reports.Api/Consumers/ActivityWasCreatedEventHandler.cs": "consumers",
+    "src/Acme.Reports.Api/Extensions/HttpClientsExtension.cs": "bootstrap",
+    "src/Acme.Reports.Api/Extensions/KafkaExtension.cs": "bootstrap",
+    "src/Acme.Reports.Api/Extensions/ProcessorExtension.cs": "bootstrap",
+    "src/Acme.Reports.Api/Extensions/ServiceCollectionExtension.cs": "bootstrap",
+    "src/Acme.Reports.Api/Program.cs": "bootstrap",
+    "src/Acme.Reports.Core/Application/Commands/SummaryCommands/InitializeSummaryCommand.cs": "application",
+    "src/Acme.Reports.Core/Application/Commands/SummaryCommands/ResetSummaryCommand.cs": "application",
+    "src/Acme.Reports.Core/Application/Events/ActivityEvents/ActivityWasCommittedEvent.cs": "application",
+    "src/Acme.Reports.Core/Application/Validators/SummaryValidators/_SummaryValidationErrors.cs": "application",
+    "src/Acme.Reports.Core/Domain/Enums/TodoStatus.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/ITodoReadRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/ITodoRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/ITimelineReadRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/ITimelineRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/ISummaryRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/IActivityReadRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Interfaces/IActivityRepository.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Models/TodoModel.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Models/TimelineModel.cs": "domain",
+    "src/Acme.Reports.Core/Domain/Models/ActivityModel.cs": "domain",
+    "src/Acme.Reports.Core/Domain/ValueObjects/Summary.cs": "domain",
+    "src/Acme.Reports.Core/Infra/Http/Outbound/TodosApi/TodoDetails.cs": "outbound",
+    "src/Acme.Reports.Core/Infra/Http/Outbound/TodosApi/ITodosApiClient.cs": "outbound",
+    "src/Acme.Reports.Core/Infra/Http/Outbound/TodosApi/TodosApiClient.cs": "outbound",
+    "src/Acme.Reports.Core/Infra/Data/Context/ReportsContext.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Context/_Collections.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/TodoReadRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/TodoRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/TimelineReadRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/TimelineRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/SummaryRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/ActivityReadRepository.cs": "infra",
+    "src/Acme.Reports.Core/Infra/Data/Repositories/ActivityRepository.cs": "infra",
+    "src/Acme.Reports.Core/CommandHandlers/SummaryCommandHandlers/InitializeSummaryCommandHandler.cs": "core",
+    "src/Acme.Reports.Core/CommandHandlers/SummaryCommandHandlers/ResetSummaryCommandHandler.cs": "core",
+    "src/Acme.Reports.Core/EventHandlers/ActivityEventHandlers/ProcessTodoHandler.cs": "core",
+    "src/Acme.Reports.Core/EventHandlers/ActivityEventHandlers/ProcessTagHandler.cs": "core",
+    "src/Acme.Reports.Core/Processors/ActivityProcessors/RegisterActivityProcessor/CheckTodoStep.cs": "core",
+    "src/Acme.Reports.Core/Processors/ActivityProcessors/RegisterActivityProcessor/CommitActivityStep.cs": "core",
+    "src/Acme.Reports.Core/Processors/ActivityProcessors/RegisterActivityProcessor/UpdateCacheStep.cs": "core",
+    "src/Acme.Reports.Core/Processors/ActivityProcessors/RegisterActivityProcessor/_IRegisterActivityProcessor.cs": "core",
+    "src/Acme.Reports.Core/Processors/ActivityProcessors/RegisterActivityProcessor/_RegisterActivityTransfer.cs": "core"
+  },
+  "roles": {
+    "SummariesController": "controller",
+    "TodoWasCreatedEventHandler": "event-handler",
+    "ActivityWasCreatedEventHandler": "event-handler",
+    "InitializeSummaryCommandHandler": "command-handler",
+    "ResetSummaryCommandHandler": "command-handler",
+    "ProcessTodoHandler": "event-handler",
+    "ProcessTagHandler": "event-handler",
+    "InitializeSummaryCommand": "command",
+    "ResetSummaryCommand": "command",
+    "ActivityWasCommittedEvent": "event",
+    "TodoModel": "model",
+    "TimelineModel": "model",
+    "ActivityModel": "model",
+    "ITodoReadRepository": "repository-port",
+    "ITodoRepository": "repository-port",
+    "ITimelineReadRepository": "repository-port",
+    "ITimelineRepository": "repository-port",
+    "IActivityReadRepository": "repository-port",
+    "IActivityRepository": "repository-port",
+    "TodoReadRepository": "repository",
+    "TodoRepository": "repository",
+    "TimelineReadRepository": "repository",
+    "TimelineRepository": "repository",
+    "ActivityReadRepository": "repository",
+    "ActivityRepository": "repository",
+    "ReportsContext": "data-context",
+    "TodosApiClient": "outbound-client"
+  },
+  "entry_points": [
+    "SummariesController.GetAsync",
+    "SummariesController.ResetAsync",
+    "TodoWasCreatedEventHandler.Handle",
+    "ActivityWasCreatedEventHandler.Handle",
+    "InitializeSummaryCommandHandler.Handle",
+    "ResetSummaryCommandHandler.Handle",
+    "ProcessTodoHandler.Handle",
+    "ProcessTagHandler.Handle"
+  ],
+  "violations": [
+    {
+      "rule": "controllers-dispatch-through-bus",
+      "file": "src/Acme.Reports.Api/Controllers/SummariesController.cs",
+      "line": 3
+    }
+  ],
+  "edges": [
+    {"from": "CheckTodoStep.ProcessAsync", "to": "ITodosApiClient.GetTodoDetailsAsync", "strategy": "receiver-type"},
+    {"from": "CheckTodoStep.ProcessAsync", "to": "TodosApiClient.GetTodoDetailsAsync", "strategy": "receiver-type-impl"},
+    {"from": "ActivityWasCreatedEventHandler.Handle", "to": "IRegisterActivityProcessor.ProcessAsync", "strategy": "receiver-type"},
+    {"from": "SummariesController.ResetAsync", "to": "SummaryRepository.LoadAsync", "strategy": "receiver-type-impl"},
+    {"from": "ProcessTodoHandler.Handle", "to": "ITodoRepository.UpdateProgressAsync", "strategy": "receiver-type"},
+    {"from": "ProcessTodoHandler.Handle", "to": "TodoRepository.UpdateProgressAsync", "strategy": "receiver-type-impl"},
+    {"from": "ProcessTagHandler.Handle", "to": "TimelineRepository.SaveAsync", "strategy": "receiver-type-impl"}
+  ],
+  "gaps": [
+    {
+      "from": "SummariesController.ResetAsync",
+      "to": "ResetSummaryCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "CommitActivityStep.ProcessAsync",
+      "to": "ProcessTodoHandler.Handle",
+      "why": "in-process event: PublishAsync(event) -> IEventHandler<event> (F0.7.3)"
+    },
+    {
+      "from": "ActivityWasCreatedEventHandler.Handle",
+      "to": "CheckTodoStep.ProcessAsync",
+      "why": "decorator chain registered with Scrutor Decorate<>: interface with several implementers"
+    },
+    {
+      "from": "TodoWasCreatedEventHandler.Handle",
+      "to": "ITodoRepository",
+      "methods": ["CreateAsync"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    },
+    {
+      "from": "CheckTodoStep.ProcessAsync",
+      "to": "ITodoRepository",
+      "methods": ["Exists"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    },
+    {
+      "from": "CommitActivityStep.ProcessAsync",
+      "to": "IActivityRepository",
+      "methods": ["Exists", "CreateAsync", "SaveAsync"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    },
+    {
+      "from": "ProcessTagHandler.Handle",
+      "to": "ITimelineRepository",
+      "methods": ["SaveAsync"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/todos",
+      "handler": "CreateAsync"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/todos/{todoId}",
+      "handler": "ChangeAsync"
+    },
+    {
+      "method": "GET",
+      "path": "/api/todos",
+      "handler": "ListAsync"
+    },
+    {
+      "method": "GET",
+      "path": "/api/todos/{todoId}/details",
+      "handler": "FindByIdAsync"
+    },
+    {
+      "method": "POST",
+      "path": "/api/activities",
+      "handler": "RegisterActivityAsync"
+    }
+  ],
+  "calls": [],
+  "convention": "aidd_conventions_dotnet_praticis:DotnetPraticis",
+  "architecture": "flat",
+  "roles": {
+    "ActivitiesController": "controller",
+    "ActivityModel": "model",
+    "ActivityReadRepository": "repository",
+    "ActivityRepository": "repository",
+    "ActivityWasCreatedEvent": "event",
+    "CreateActivityCommandHandler": "command-handler",
+    "CreateTodoCommand": "command",
+    "CreateTodoCommandHandler": "command-handler",
+    "CreateTodoCommandValidator": "validator",
+    "IActivityQuery": "query",
+    "IActivityReadRepository": "repository-port",
+    "IActivityRepository": "repository-port",
+    "ITodoQuery": "query",
+    "ITodoReadRepository": "repository-port",
+    "ITodoRepository": "repository-port",
+    "RegisterActivityCommand": "command",
+    "RegisterActivityCommandValidator": "validator",
+    "TodoModel": "model",
+    "TodoReadRepository": "repository",
+    "TodoRepository": "repository",
+    "TodoWasCreatedEvent": "event",
+    "TodosContext": "data-context",
+    "TodosController": "controller",
+    "UpdateTodoCommand": "command",
+    "UpdateTodoCommandHandler": "command-handler"
+  },
+  "layers": {
+    "src/Acme.Todos.Contracts/Enums/TodoStatus.cs": "contracts",
+    "src/Acme.Todos.Contracts/Events/TodoEvents/TodoWasCreatedEvent.cs": "contracts",
+    "src/Acme.Todos.Contracts/Events/ActivityEvents/ActivityWasCreatedEvent.cs": "contracts",
+    "src/Acme.Todos.Contracts/Objects/TodoObject.cs": "contracts",
+    "src/Acme.Todos.Contracts/Objects/ActivityObject.cs": "contracts",
+    "src/Acme.Todos.Contracts/Requests/TodoRequests/CreateTodoRequest.cs": "contracts",
+    "src/Acme.Todos.Contracts/Requests/TodoRequests/UpdateTodoRequest.cs": "contracts",
+    "src/Acme.Todos.Contracts/Requests/ActivityRequests/RegisterActivityRequest.cs": "contracts",
+    "src/Acme.Todos.Contracts/Responses/TodoResponses/CreateTodoResponse.cs": "contracts",
+    "src/Acme.Todos.Contracts/Responses/TodoResponses/FindTodoByIdResponse.cs": "contracts",
+    "src/Acme.Todos.Contracts/Responses/TodoResponses/ListTodoResponse.cs": "contracts",
+    "src/Acme.Todos.Contracts/Responses/ActivityResponses/RegisterActivityResponse.cs": "contracts",
+    "src/Acme.Todos.Api/Controllers/TodosController.cs": "api",
+    "src/Acme.Todos.Api/Controllers/ActivitiesController.cs": "api",
+    "src/Acme.Todos.Api/Application/Commands/TodoCommands/CreateTodoCommand.cs": "application",
+    "src/Acme.Todos.Api/Application/Commands/TodoCommands/UpdateTodoCommand.cs": "application",
+    "src/Acme.Todos.Api/Application/Commands/ActivityCommands/RegisterActivityCommand.cs": "application",
+    "src/Acme.Todos.Api/Application/Queries/ITodoQuery.cs": "application",
+    "src/Acme.Todos.Api/Application/Queries/IActivityQuery.cs": "application",
+    "src/Acme.Todos.Api/Application/Validators/TodoValidators/CreateTodoCommandValidator.cs": "application",
+    "src/Acme.Todos.Api/Application/Validators/TodoValidators/_TodoValidationErrors.cs": "application",
+    "src/Acme.Todos.Api/Application/Validators/ActivityValidators/RegisterActivityCommandValidator.cs": "application",
+    "src/Acme.Todos.Api/Application/Validators/ActivityValidators/_ActivityValidationErrors.cs": "application",
+    "src/Acme.Todos.Api/Core/CommandHandlers/TodoCommandHandlers/CreateTodoCommandHandler.cs": "core",
+    "src/Acme.Todos.Api/Core/CommandHandlers/TodoCommandHandlers/UpdateTodoCommandHandler.cs": "core",
+    "src/Acme.Todos.Api/Core/CommandHandlers/ActivityCommandHandlers/CreateActivityCommandHandler.cs": "core",
+    "src/Acme.Todos.Api/Domain/Enums/TodoStatus.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Interfaces/Repositories/ITodoReadRepository.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Interfaces/Repositories/ITodoRepository.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Interfaces/Repositories/IActivityReadRepository.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Interfaces/Repositories/IActivityRepository.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Models/TodoModel.cs": "domain",
+    "src/Acme.Todos.Api/Domain/Models/ActivityModel.cs": "domain",
+    "src/Acme.Todos.Api/Infra/Data/Context/TodosContext.cs": "infra",
+    "src/Acme.Todos.Api/Infra/Data/Context/_Collections.cs": "infra",
+    "src/Acme.Todos.Api/Infra/Data/Repositories/TodoReadRepository.cs": "infra",
+    "src/Acme.Todos.Api/Infra/Data/Repositories/TodoRepository.cs": "infra",
+    "src/Acme.Todos.Api/Infra/Data/Repositories/ActivityReadRepository.cs": "infra",
+    "src/Acme.Todos.Api/Infra/Data/Repositories/ActivityRepository.cs": "infra",
+    "src/Acme.Todos.Api/Extensions/DatabaseExtension.cs": "bootstrap",
+    "src/Acme.Todos.Api/Extensions/KafkaExtension.cs": "bootstrap",
+    "src/Acme.Todos.Api/Extensions/ServiceCollectionExtension.cs": "bootstrap",
+    "src/Acme.Todos.Api/Program.cs": "bootstrap"
+  },
+  "entry_points": [
+    "TodosController.CreateAsync",
+    "TodosController.ChangeAsync",
+    "TodosController.ListAsync",
+    "TodosController.FindByIdAsync",
+    "ActivitiesController.RegisterActivityAsync",
+    "CreateTodoCommandHandler.Handle",
+    "UpdateTodoCommandHandler.Handle",
+    "CreateActivityCommandHandler.Handle"
+  ],
+  "violations": [
+    {
+      "rule": "domain-is-pure",
+      "file": "src/Acme.Todos.Api/Domain/Models/ActivityModel.cs",
+      "line": 3
+    }
+  ],
+  "edges": [
+    {
+      "from": "TodosController.CreateAsync",
+      "to": "CreateTodoCommand",
+      "strategy": "same-module"
+    },
+    {
+      "from": "UpdateTodoCommandHandler.Handle",
+      "to": "TodoModel.ChangeName",
+      "strategy": "same-module"
+    },
+    {
+      "from": "TodosController.FindByIdAsync",
+      "to": "ITodoQuery.FindByIdAsync",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "TodosController.FindByIdAsync",
+      "to": "TodoReadRepository.FindByIdAsync",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "TodosController.ListAsync",
+      "to": "ITodoQuery.ObtainsAllAsync",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "TodosController.ListAsync",
+      "to": "TodoReadRepository.ObtainsAllAsync",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "TodoRepository.FindByNameAsync",
+      "to": "ITodoReadRepository.FindByNameAsync",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "TodoRepository.FindByNameAsync",
+      "to": "TodoReadRepository.FindByNameAsync",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "TodoRepository.Exists",
+      "to": "ITodoReadRepository.Exists",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "TodoRepository.Exists",
+      "to": "TodoReadRepository.Exists",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "TodoRepository.NotExists",
+      "to": "ITodoReadRepository.NotExists",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "TodoRepository.NotExists",
+      "to": "TodoReadRepository.NotExists",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "TodoReadRepository.NotExists",
+      "to": "TodoReadRepository.Exists",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "ActivityRepository.IsUniqueKey",
+      "to": "IActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type"
+    }
+  ],
+  "gaps": [
+    {
+      "from": "TodosController.CreateAsync",
+      "to": "CreateTodoCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "TodosController.ChangeAsync",
+      "to": "UpdateTodoCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "ActivitiesController.RegisterActivityAsync",
+      "to": "CreateActivityCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "CreateTodoCommandHandler.Handle",
+      "to": "ITodoRepository",
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "methods": [
+        "CreateAsync"
+      ]
+    },
+    {
+      "from": "UpdateTodoCommandHandler.Handle",
+      "to": "ITodoRepository",
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "methods": [
+        "FindByIdAsync"
+      ]
+    },
+    {
+      "from": "UpdateTodoCommandHandler.Handle",
+      "to": "ITodoRepository",
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "methods": [
+        "UpdateAsync"
+      ]
+    },
+    {
+      "from": "CreateActivityCommandHandler.Handle",
+      "to": "IActivityRepository",
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "methods": [
+        "CreateAsync"
+      ]
+    }
+  ]
+}

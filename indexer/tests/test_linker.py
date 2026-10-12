@@ -96,3 +96,21 @@ def test_fixture_pair_links_end_to_end():
         ("/v1/users/{param}/sessions", "go-billing-api", "/v1/users/{param}/sessions", "exact", None),
     ]
     assert not r.unmatched and not r.ambiguous
+
+
+def test_dotnet_praticis_pair_links_end_to_end():
+    """F0.4.2: the consumer's typed HttpClient (`Infra/Http/Outbound/TodosApi`) reaches the
+    provider's controller route `[Route("api/[controller]")]` + `[HttpGet("{todoId:guid}/details")]`."""
+    from aidd_indexer.core.paths import path_key
+    endpoints, calls = [], []
+    for name in ("csharp-praticis-reports", "csharp-praticis-projects", "csharp-praticis-todos"):
+        hr = _extract(name)
+        endpoints += [EndpointRow(e.id, name, e.method, path_key(e.path)) for e in hr.endpoints]
+        calls += [CallRow(c.id, name, "main", "x", c.method, path_key(c.path), c.target_hint, tuple(c.env_hints),
+                          c.caller_id, c.evidence, c.via, c.line) for c in hr.calls]
+    r = link(calls, endpoints)
+    assert sorted((e.call.repo, e.endpoint.service, e.endpoint.method, e.endpoint.path_key, e.confidence) for e in r.edges) == [
+        ("csharp-praticis-projects", "csharp-praticis-todos", "GET", "/api/todos/{param}/details", "exact"),   # layered layout
+        ("csharp-praticis-reports", "csharp-praticis-todos", "GET", "/api/todos/{param}/details", "exact")]    # split layout
+    assert all(e.call.caller_id.endswith(".TodosApiClient.GetTodoDetailsAsync#method") for e in r.edges)
+    assert not r.unmatched and not r.ambiguous

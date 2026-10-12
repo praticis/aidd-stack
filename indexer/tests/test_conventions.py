@@ -158,6 +158,18 @@ def test_namespace_imports_and_handler_entry_points(tmp_path: Path):
     assert not any(s.is_entry_point for s in res2.symbols) and res2.violations == []
 
 
+def test_dotnet_praticis_extension_is_registered():
+    """The packaged convention publishes itself as `dotnet-praticis` in `aidd.conventions` and loads
+    its bundled convention.yaml (no path in atlas.yaml)."""
+    import tomllib
+    from aidd_indexer import conventions
+    pkg = Path(__file__).resolve().parents[1] / "conventions" / "dotnet-praticis"
+    eps = tomllib.loads((pkg / "pyproject.toml").read_text())["project"]["entry-points"]["aidd.conventions"]
+    assert eps == {"dotnet-praticis": "aidd_conventions_dotnet_praticis:DotnetPraticis"}
+    conv = conventions.load_one({"id": eps["dotnet-praticis"]})
+    assert conv.id == "dotnet-praticis" and [a[0] for a in conv.architectures] == ["layered", "split", "flat"]
+
+
 ROLE_REPO = {
     "src/Shop.Api/Shop.Api.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
     "src/Shop.Api/Controllers/OrdersController.cs": (
