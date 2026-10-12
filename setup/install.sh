@@ -22,9 +22,14 @@ set -eo pipefail
 # ------------------------------------------------------------------------------
 REPO_URL="https://github.com/praticis/aidd-stack.git"
 
-_candidate_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
+# Piped (`curl ... | bash`) there is no script file: BASH_SOURCE is empty, and the current directory
+# must not be mistaken for a checkout (~/.aidd itself has a git/ folder).
+_candidate_script_dir=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  _candidate_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+fi
 
-if [ -n "$_candidate_script_dir" ] && [ -d "$_candidate_script_dir/../git" ]; then
+if [ -n "$_candidate_script_dir" ] && [ -d "$_candidate_script_dir/../git" ] && [ -d "$_candidate_script_dir/skills" ]; then
   # Real checkout: install.sh has its sibling folders (git/, obsidian/,
   # qdrant/, skills/) right there on disk. Use it as-is.
   SCRIPT_DIR="$_candidate_script_dir"
@@ -768,7 +773,7 @@ main() {
   # Under sudo, AIDD_UID becomes 0 and new directories belong to root — the containers then
   # cannot write to them (Docker Desktop writes as you).
   if [ "$(id -u)" = "0" ] && [ "${AIDD_ALLOW_ROOT:-0}" != "1" ]; then
-    error "Do not run install.sh as root/sudo — run it as your user: ${0}  (docker must work without sudo; on Linux add yourself to the 'docker' group). A root-only host: AIDD_ALLOW_ROOT=1."
+    error "Do not run install.sh as root/sudo — run it again as your user, without sudo (docker must work without sudo; on Linux add yourself to the 'docker' group). A root-only host: AIDD_ALLOW_ROOT=1."
   fi
   # Upgrade vs first install: an existing ~/.aidd/.env means the stack was configured before,
   # so the interactive steps default to "keep / skip" instead of "configure / index".
