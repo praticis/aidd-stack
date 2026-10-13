@@ -732,6 +732,23 @@ run_continuous_update() {
 # ------------------------------------------------------------------------------
 # 6. MCP Config Distribution Module
 # ------------------------------------------------------------------------------
+# Copy one .mcp.json. A copy left by a run under sudo is owned by root and cannot be overwritten, but
+# the folder is the user's: replace it. Never abort the installation over one project's file.
+copy_mcp_config() {
+  local src="$1" dest="$2" label="$3" owner
+  if cp "$src" "$dest" 2>/dev/null; then
+    printf "  ${GREEN}[copied]${NC} .mcp.json -> %s%s\n" "$dest" "$label"
+    return 0
+  fi
+  owner="$(ls -ld "$dest" 2>/dev/null | awk '{print $3}')"
+  if rm -f "$dest" 2>/dev/null && cp "$src" "$dest" 2>/dev/null; then
+    printf "  ${YELLOW}[replaced]${NC} .mcp.json -> %s%s (the old copy belonged to %s)\n" "$dest" "$label" "${owner:-another user}"
+  else
+    warn "could not write $dest (owner: ${owner:-unknown}) — fix: sudo chown $(id -un) \"$dest\" and re-run"
+  fi
+  return 0
+}
+
 distribute_mcp_config() {
   local mcp_source="$SCRIPT_DIR/.mcp.json"
   if [ ! -f "$mcp_source" ]; then
@@ -771,15 +788,13 @@ distribute_mcp_config() {
   # need a cross-project view, not a single-project one), and Claude
   # Code only reads .mcp.json from the exact directory it's launched
   # from — it does not search upward through parent directories.
-  cp "$mcp_source" "$workspace_path/.mcp.json"
-  printf "  ${GREEN}[copied]${NC} .mcp.json -> %s/.mcp.json (workspace root)\n" "$workspace_path"
+  copy_mcp_config "$mcp_source" "$workspace_path/.mcp.json" " (workspace root)"
 
   find "$search_base" -maxdepth 3 -type d -name ".git" 2>/dev/null | while read -r git_dir; do
     local proj_dir
     proj_dir="$(dirname "$git_dir")"
 
-    cp "$mcp_source" "$proj_dir/.mcp.json"
-    printf "  ${GREEN}[copied]${NC} .mcp.json -> %s/.mcp.json\n" "$proj_dir"
+    copy_mcp_config "$mcp_source" "$proj_dir/.mcp.json" ""
   done
 
   success ".mcp.json files distributed across git projects successfully."

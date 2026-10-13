@@ -62,6 +62,8 @@ for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-qdrant aidd-mcp-obsidian aidd
   state="$(container_state "$c")"; health="$(container_health "$c")"
   if [ "$state" = "running" ] && { [ "$health" = "healthy" ] || [ "$health" = "n/a" ]; }; then
     ok "$c running${health:+ ($health)}"
+  elif [ "$state" = "running" ] && [ "$health" = "starting" ]; then
+    warn "$c running, health check still starting (just (re)created) — re-run this check in a minute"
   else
     fail "$c state=$state health=$health  → docker logs $c"
   fi
