@@ -145,7 +145,11 @@ blocks.
    adapter, a new external dependency), rewrite the `aidd:scan` block of
    the index page (step 3, "Write the index page") and re-store the
    summary in qdrant. Refresh the `aidd:policy` block whenever it
-   differs from `policy_for`. Otherwise do not repeat step 3.
+   differs from `policy_for`. If the index page has no `aidd:` markers
+   yet (written before them) or does not exist, write it now from the
+   saved mapping and the `repo_map` — as described in step 3, "Write the
+   index page", including the migration of an old page. Otherwise do not
+   repeat step 3.
 
 3. **If it doesn't exist (first time opening this solution)**: produce
    an objective summary covering:
