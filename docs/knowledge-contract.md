@@ -3,8 +3,8 @@
 What the stages of the process (`scan`, `refine-business`, `refine-tech`, `implement`) write about a
 project, where, and in which shape, so that one stage's output is the next one's input and a person
 can open the vault and find the way in. The **knowledge service** (`insights_for`, `record_insight`,
-`policy_for`) implements the deterministic half of this contract; skills supply the judgement (what
-is worth recording, with which evidence).
+`refresh_index`, `policy_for`) implements the deterministic half of this contract; skills supply the
+judgement (what is worth recording, with which evidence).
 
 Contract version: **1**.
 
@@ -100,7 +100,9 @@ _Effective policy for this repo — change it in `policy.yaml`, not here._
 
 ### `aidd:knowledge`
 
-Regenerated after every `record_insight` that touches the repo (and by the aging job). One heading
+Regenerated after every `record_insight` that touches the repo, by `refresh_index(repo)` (which
+`scan` calls after writing the page, so a new page lists what was already recorded) and by the
+aging job. One heading
 per topic that has live insights, in vocabulary order; inside a topic, by status (`enforced`,
 `accepted`, `recurring`, `observed`), then by `occurrences` descending, then `last_seen` descending.
 `archived` insights are not listed. Shared insights that apply to the repo are listed under their

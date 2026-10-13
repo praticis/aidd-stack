@@ -10,7 +10,8 @@ allowed-tools: Bash(~/.aidd/aidd refresh:*), Bash(~/.aidd/aidd index:*)
 You have access to five MCP tools: `atlas` (the code graph — repos,
 modules, files, symbols, calls, imports; read-only), `knowledge`
 (the process policy and what was learned about each project —
-`policy_for`, `insights_for`, `record_insight`), `obsidian`
+`policy_for`, `insights_for`, `record_insight`, `refresh_index`),
+`obsidian`
 (spec/ADR vault), `qdrant` (semantic memory of conventions and
 lessons), and `git` (repository operations).
 
@@ -246,6 +247,9 @@ as they are. The conversation itself stays in the person's language.
    - Never touch the `aidd:knowledge` block or anything outside the
      markers. If a `patch_note` fails because the block changed since
      you read it, read the page again and retry once.
+   - Then call `knowledge.refresh_index(repo: "<current-repo-name>")`:
+     the service writes its `aidd:knowledge` block (a new page has none
+     until then) from the insights already recorded for the repo.
 
    And:
    - Save the same summary to `qdrant` (the conventions summary that

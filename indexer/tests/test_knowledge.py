@@ -126,6 +126,20 @@ def test_index_block_only_touches_its_markers(svc):
     assert text.count("aidd:knowledge:start") == 1 and human in text and text != before
 
 
+def test_refresh_index_fills_a_page_written_after_the_insights(svc):
+    record(svc)
+    page = svc.layout.root / "acme/knowledge/orders-api/orders-api.md"
+    page.write_text("---\ntype: project-index\nproject: orders-api\n---\n\n# orders-api\n\n"
+                    "<!-- aidd:scan:start -->\nscan text\n<!-- aidd:scan:end -->\n\n"
+                    "<!-- aidd:policy:start -->\npolicy\n<!-- aidd:policy:end -->\n")       # scan rewrote it from zero
+    out = svc.refresh_index("orders-api")
+    text = page.read_text()
+    assert out == {"tenant": "acme", "repo": "orders-api", "page": "acme/knowledge/orders-api/orders-api.md",
+                   "rewritten": True, "insights": 1}
+    assert text.index("aidd:policy:end") < text.index("aidd:knowledge:start") and "observed · 1×" in text
+    assert svc.refresh_index("orders-api")["rewritten"] is False                     # already current
+
+
 def test_insights_for_splits_rules_and_context_and_filters(svc):
     a = record(svc, applies_to={"roles": ["command-handler"]})
     b = record(svc, summary="Statement export duplicates rows when the page size is zero", topic="quality",
@@ -202,7 +216,7 @@ def test_mcp_tools(svc):
     from aidd_indexer.knowledge.server import build_server
     srv = build_server(service=svc)
     names = {t.name for t in asyncio.run(srv.list_tools())}
-    assert {"policy_for", "insights_for", "record_insight"} <= names
+    assert {"policy_for", "insights_for", "record_insight", "refresh_index"} <= names
     res = asyncio.run(srv.call_tool("record_insight", {
         "repo": "orders-api", "topic": "review", "summary": "Handlers validate commands first",
         "what_happened": "x", "what_to_do": "y", "severity": "low", "evidence": [{"source": "session"}]}))

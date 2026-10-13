@@ -106,6 +106,15 @@ def build_server(service: KnowledgeService | None = None):
         return svc.record_insight(repo, topic, summary, what_happened, what_to_do, severity, evidence,
                                   applies_to, scope, same_as, new, tenant)
 
+    @mcp.tool()
+    def refresh_index(repo: str, tenant: str | None = None) -> dict[str, Any]:
+        """Rewrite the `aidd:knowledge` block of the repo's index page (<tenant>/knowledge/<repo>/<repo>.md)
+        from the insight notes. Call it right after writing the page (a new page has no block until
+        then) or after a person edited notes by hand. Touches only that block; creates the page when
+        there is none. Returns the page path, `rewritten` (false: already current) and the number of
+        live insights listed."""
+        return svc.refresh_index(repo, tenant)
+
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_: Request) -> JSONResponse:
         vault_ok = os.access(svc.layout.root, os.W_OK)

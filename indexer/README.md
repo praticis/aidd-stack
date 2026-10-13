@@ -140,7 +140,7 @@ aidd_indexer/
     vault.py                safe names, frontmatter, owned `aidd:` blocks, atomic writes
     insights.py             insight notes, lifecycle data, the index's knowledge block
     vectors.py              FastEmbed (mcp-qdrant's model) + the Qdrant mirror
-    service.py server.py    record_insight / insights_for / policy_for, and the MCP server
+    service.py server.py    record_insight / insights_for / refresh_index / policy_for, and the MCP server
 ```
 
 ## Adding a language
