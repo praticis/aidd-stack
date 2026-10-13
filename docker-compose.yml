@@ -39,6 +39,7 @@ x-indexer: &indexer
     WORKSPACE_PATH: /workspace
     AIDD_TENANT: ${AIDD_TENANT:?}
     AIDD_CONFIG: /app/atlas.yaml
+    AIDD_POLICY: /app/policy.yaml
     AIDD_TRIGGER: ${AIDD_TRIGGER:-manual}       # recorded on IndexRun: manual | scheduled | bootstrap
     AIDD_MIRROR_DIR: /var/lib/aidd/mirrors
     AIDD_STATE_DIR: /var/lib/aidd/state
@@ -55,6 +56,7 @@ x-indexer: &indexer
   volumes:
     - ${WORKSPACE_PATH:?}:/workspace:ro
     - ./atlas.yaml:/app/atlas.yaml:ro
+    - ./policy.yaml:/app/policy.yaml:ro
     - ./mirrors:/var/lib/aidd/mirrors
     - ./state:/var/lib/aidd/state
 

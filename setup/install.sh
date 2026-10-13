@@ -351,6 +351,25 @@ migrate_atlas_manifest() {
   printf "  ${GREEN}[migrated]${NC} atlas.yaml: local sources fetch into the refresher mirrors (fetch: true)\n"
 }
 
+# Process policy (~/.aidd/policy.yaml): bind-mounted like atlas.yaml, so it must exist before the first
+# `docker compose up`. Written once from the example (built-in defaults, commented); never overwritten.
+ensure_policy() {
+  local policy="$AIDD_DIR/policy.yaml"
+  if [ -d "$policy" ]; then
+    warn "$policy is a DIRECTORY (created by docker compose before the file existed)."
+    warn "Fix: cd $AIDD_DIR && docker compose down && rmdir policy.yaml && re-run this script."
+    return 0
+  fi
+  [ -e "$policy" ] && return 0
+  local example="$AIDD_DIR/indexer/policy.example.yaml"
+  if [ -f "$example" ]; then
+    cp "$example" "$policy"
+  else
+    printf 'version: 1\n' > "$policy"
+  fi
+  printf "  ${GREEN}[created]${NC} policy.yaml (process policy: built-in defaults — see ~/.aidd/aidd policy show)\n"
+}
+
 ensure_env_defaults() {
   local env_file="$1"
   local key value current
@@ -482,6 +501,7 @@ EOF
   # into the indexer as a file, and Docker turns a missing bind source into a directory.
   write_atlas_manifest
   migrate_atlas_manifest
+  ensure_policy
   ensure_runtime_dirs
 
   # Named volumes outlive ~/.aidd. A brand-new .env carries a brand-new Neo4j

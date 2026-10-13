@@ -207,6 +207,15 @@ if ("$AIDD_DIR/aidd" selftest 2>&1 | sed 's/^/         /'; exit "${PIPESTATUS[0]
 else
   fail "indexer self-test failed — rebuild: cd $AIDD_DIR && docker compose --profile tools build --no-cache indexer"
 fi
+if [ -d "$AIDD_DIR/policy.yaml" ]; then
+  fail "policy.yaml is a directory (docker created it before the file existed) — cd $AIDD_DIR && docker compose down && rmdir policy.yaml && re-run setup/install.sh"
+elif [ ! -f "$AIDD_DIR/policy.yaml" ]; then
+  warn "no $AIDD_DIR/policy.yaml — built-in process defaults apply; re-run setup/install.sh to create it"
+elif policy_out="$("$AIDD_DIR/aidd" policy check 2>&1)"; then
+  ok "policy.yaml valid"
+else
+  fail "policy.yaml: $(printf '%s' "$policy_out" | tail -1)"
+fi
 if command -v cypher >/dev/null 2>&1 || true; then
   empty="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
     'MATCH (s:Snapshot) WHERE NOT (s)<-[:IN_SNAPSHOT]-(:File)-[:CONTAINS]->(:Symbol) RETURN count(s)' 2>/dev/null | grep -E '^[0-9]+$' | head -1)"

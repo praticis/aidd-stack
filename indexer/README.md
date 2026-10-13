@@ -23,6 +23,8 @@ aidd index <repo> --ref feature/x   # one branch on demand — pushed or not
 aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
 aidd schedule install|status|remove|check [--fix]   # the refresher (see below)
 aidd logs [-f]                # the refresher's log
+aidd policy show [repo]       # effective process policy (policy.yaml) and where each value came from
+aidd policy check             # validate ~/.aidd/policy.yaml
 AIDD_NO_FETCH=1 aidd plan     # no remote fetch (mirrors synced from the workspace only)
 ```
 
@@ -108,9 +110,10 @@ the fastest way to inspect what a language query extracts.
 
 ```
 aidd_indexer/
-  cli.py                    aidd plan / bootstrap / refresh / index / link / status / wipe / selftest / serve
+  cli.py                    aidd plan / bootstrap / refresh / index / link / status / policy / wipe / selftest / serve
   core/                     language-agnostic pipeline — never names a language
     config.py manifest.py   env + atlas.yaml (tenants, sources, refs, areas, conventions)
+    policy.py               policy.yaml: process policy in layers (built-in → defaults → tenant → area → repo)
     planner.py gitinfo.py   sources → (repo, ref, sha) items; git plumbing
     discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
     extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
