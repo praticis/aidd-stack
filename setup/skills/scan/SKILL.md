@@ -235,7 +235,9 @@ blocks.
    - **Page written before the markers existed** (no `aidd:` markers,
      sections `## Identified conventions` / `## Source`) → migrate it
      once: replace those generated sections with the two blocks; leave
-     every other line as it is.
+     every other line as it is. Set `type: project-index` and
+     `contract: 1` in its frontmatter as well (it said `type:
+     conventions`); keep the other keys.
    - Never touch the `aidd:knowledge` block or anything outside the
      markers. If a `patch_note` fails because the block changed since
      you read it, read the page again and retry once.
