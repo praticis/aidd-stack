@@ -69,6 +69,11 @@ Everything **outside** the markers belongs to people (decisions, links,
 notes): never change, move or delete it. You write only inside your two
 blocks.
 
+Everything you write to the vault — the blocks and insights — is in the
+tenant's knowledge language: `policy_for` → `knowledge.language`
+(default `en`). Translate what the person said; keep code identifiers
+as they are. The conversation itself stays in the person's language.
+
 ## Always run at the start of the session
 
 0. **Ask the code graph first (`atlas`, with fallback).**
@@ -317,6 +322,14 @@ the note, and mirrors it to qdrant):
 - `evidence`: at least `{source: "session", location: "<file:line>",
   note: "<one line>"}` — add `ref`/`sha`, or `link` to the PR or ticket
 - `applies_to`: the `files` globs, `roles` and `symbols` where it bites
+
+Write `summary`, `what_happened` and `what_to_do` in `knowledge.language`
+even when the person dictated the words in another language (translate
+them; say so in one line). When the result is `needs_decision`, nothing
+was written: read the `candidates`. If one is the same insight said
+differently, call `record_insight` again with the same arguments plus
+`same_as: "<its id>"`; if none is, call again with `new: true`. When you
+cannot tell, show the person the candidate summaries and ask.
 
 Tell the user the result in one line (`created` or `updated`, with
 occurrences and the note path). Do not record trivia (a typo, a

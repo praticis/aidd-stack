@@ -208,3 +208,40 @@ def test_mcp_tools(svc):
         "what_happened": "x", "what_to_do": "y", "severity": "low", "evidence": [{"source": "session"}]}))
     content = res[0] if isinstance(res, tuple) else res
     assert json.loads(content[0].text)["result"] == "created"
+
+
+def _notes(svc):
+    return sorted(p.name for p in svc.layout.root.rglob("insights/*.md"))
+
+
+def test_unsure_matches_go_back_to_the_agent(tmp_path: Path, monkeypatch):
+    """Between the candidate and the match thresholds nothing is written: the agent decides."""
+    monkeypatch.delenv("AIDD_POLICY", raising=False)
+    s = KnowledgeService(tmp_path / "v", FakeMirror(), "acme", policy_path=str(tmp_path / "none.yaml"),
+                         manifest_path=str(tmp_path / "x.yaml"), threshold=0.9, candidate_threshold=0.3)
+    first = record(s)
+    # the same insight in other words (another language, in real life): close, not close enough
+    again = dict(summary="Refund command reaches the repository without validation in the handler",
+                 what_to_do="Run the command validator first.")
+    out = record(s, **again)
+    assert out["result"] == "needs_decision" and out["recorded"] is False
+    assert out["candidates"][0]["id"] == first["id"] and out["candidates"][0]["why"] == "similar text"
+    assert "same_as" in out["next"] and len(_notes(s)) == 1                              # nothing written
+
+    same = record(s, **again, same_as=first["id"])
+    assert same["result"] == "updated" and same["occurrences"] == 2 and same["matched"] == "same_as"
+    assert len(_notes(s)) == 1
+
+    different = record(s, **again, new=True)
+    assert different["result"] == "created" and len(_notes(s)) == 2
+
+    with pytest.raises(KnowledgeError, match="no insight 'acme/orders-api/nope' applies"):
+        record(s, **again, same_as="acme/orders-api/nope")
+
+
+def test_same_symbols_make_a_candidate_even_when_the_text_differs(svc):
+    sym = {"symbols": ["Orders.Refund.CreateRefundHandler"]}
+    first = record(svc, applies_to=sym)
+    out = record(svc, summary="Totally unrelated wording about something", applies_to=sym)
+    assert out["result"] == "needs_decision"
+    assert out["candidates"][0]["id"] == first["id"] and out["candidates"][0]["why"] == "same symbols/files"

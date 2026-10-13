@@ -82,10 +82,16 @@ def build_server(service: KnowledgeService | None = None):
     @mcp.tool()
     def record_insight(repo: str, topic: str, summary: str, what_happened: str, what_to_do: str,
                        severity: str, evidence: list[dict[str, Any]], applies_to: dict[str, list[str]] | None = None,
-                       scope: str = "repo", tenant: str | None = None) -> dict[str, Any]:
-        """Record something non-obvious the process learned, so it does not happen again. The service
-        decides whether it repeats an existing insight (then it counts one more occurrence and may become
-        `recurring`) or is new (a note in the vault, status `observed`). Only a person makes it a rule.
+                       scope: str = "repo", same_as: str | None = None, new: bool = False,
+                       tenant: str | None = None) -> dict[str, Any]:
+        """Record something non-obvious the process learned, so it does not happen again. Write it in the
+        tenant's knowledge language (policy_for → knowledge.language, default en) — translate what the
+        person said; repeats are recognized by comparing texts in that language. The service decides
+        whether it repeats an existing insight (it counts one more occurrence and may become `recurring`)
+        or is new (a note in the vault, status `observed`). When unsure it writes nothing and returns
+        `result: needs_decision` with `candidates`: read them and call again with the same arguments plus
+        `same_as: <candidate id>` (the same insight) or `new: true` (a different one). Only a person makes
+        an insight a rule.
           topic: architecture | review | quality | security | incident | decision | business (+ the
                  tenant's own, see policy_for → knowledge.topics)
           summary: ONE sentence — the problem and what to do instead (≤ 200 chars)
@@ -96,9 +102,9 @@ def build_server(service: KnowledgeService | None = None):
                     pr-review | review | harness | sarif | sonar | incident | session | scan
           applies_to: {files: [globs], roles: [convention roles], symbols: [qualified names]} — where it bites
           scope: repo (default) or shared (holds for several repos of the tenant)
-        Returns `result` (created | updated), the note path, status and occurrences."""
+        Returns `result` (created | updated | needs_decision), the note path, status and occurrences."""
         return svc.record_insight(repo, topic, summary, what_happened, what_to_do, severity, evidence,
-                                  applies_to, scope, tenant)
+                                  applies_to, scope, same_as, new, tenant)
 
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_: Request) -> JSONResponse:

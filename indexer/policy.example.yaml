@@ -32,6 +32,8 @@ defaults:
     archive_after_days: 180 # an insight not seen again for this long is archived
     topics: []              # extra insight topics, added to: architecture, review, quality, security,
                             # incident, decision, business (lowercase slugs, e.g. performance)
+    language: en            # what the vault's project knowledge is written in (en, pt-BR, ...): skills
+                            # translate before recording, so repeats are recognized and pages read as one
 
 # tenants:
 #   acme:

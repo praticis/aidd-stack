@@ -79,6 +79,7 @@ def test_effective_values_are_copies(tmp_path: Path):
     ("defaults:\n  review: {spec_approval: maybe}\n", "must be one of required, optional"),
     ("defaults:\n  review: {adr_when: [new-thing]}\n", "a list of ADR triggers"),
     ("defaults:\n  knowledge: {topics: [Perf Stuff]}\n", "lowercase topic slugs"),
+    ("defaults:\n  knowledge: {language: Portuguese}\n", "a language tag"),
     ("tenants:\n  acme:\n    overrides: [x]\n", "overrides: must be a mapping"),
     ("tenants:\n  acme:\n    areas:\n      payments:\n        coverage: {min: -1}\n", "tenants.acme.areas.payments.coverage.min"),
     ("version: 2\n", "version 2 is not supported"),

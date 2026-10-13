@@ -23,6 +23,9 @@ from .vault import CONTRACT, KnowledgeError, safe_name, slugify, write_atomic
 # cosine similarity (bge-small, summary + rule) above which two insights are the same one. Measured:
 # paraphrases of one insight 0.85–0.96; different insights of the same area up to 0.81
 DEFAULT_THRESHOLD = 0.83
+# below the threshold but this close (or touching the same symbols/files), the agent decides: the
+# vector cannot tell a repeat said differently — another language, other words — from a neighbour
+DEFAULT_CANDIDATE_THRESHOLD = 0.65
 
 
 def _norm(text: str) -> str:
@@ -32,12 +35,15 @@ def _norm(text: str) -> str:
 class KnowledgeService:
     def __init__(self, vault: Path, mirror: Any, fixed_tenant: str | None,
                  policy_path: str | None = None, manifest_path: str | None = None,
-                 threshold: float | None = None, clock: Callable[[], str] = today):
+                 threshold: float | None = None, candidate_threshold: float | None = None,
+                 clock: Callable[[], str] = today):
         self.layout = Layout(vault)
         self.mirror = mirror
         self.fixed_tenant = fixed_tenant
         self.policy_path, self.manifest_path = policy_path, manifest_path
         self.threshold = threshold if threshold is not None else float(os.getenv("KNOWLEDGE_MATCH_THRESHOLD", DEFAULT_THRESHOLD))
+        self.candidate_threshold = candidate_threshold if candidate_threshold is not None else \
+            float(os.getenv("KNOWLEDGE_CANDIDATE_THRESHOLD", DEFAULT_CANDIDATE_THRESHOLD))
         self.clock = clock
         self._lock = threading.Lock()          # one writer at a time: notes, index pages, mirror
 
@@ -100,7 +106,8 @@ class KnowledgeService:
     # -- record_insight ------------------------------------------------------------------------
     def record_insight(self, repo: str, topic: str, summary: str, what_happened: str, what_to_do: str,
                        severity: str, evidence: list[dict[str, Any]], applies_to: dict[str, list[str]] | None = None,
-                       scope: str = "repo", tenant: str | None = None) -> dict[str, Any]:
+                       scope: str = "repo", same_as: str | None = None, new: bool = False,
+                       tenant: str | None = None) -> dict[str, Any]:
         t, r = self.tenant(tenant), self.repo(repo)
         eff = self.effective(t, r)
         topics = eff.get("knowledge.topics")
@@ -123,7 +130,20 @@ class KnowledgeService:
             raise KnowledgeError("Qdrant is not configured for the knowledge service — nothing recorded")
 
         with self._lock:
-            match, score = self._match(t, r, topic, summary, f"{summary}\n\n{what_to_do.strip()}")
+            if same_as:
+                match, score = self._by_id(t, r, same_as), None
+                if match is None:
+                    raise KnowledgeError(f"no insight {same_as!r} applies to {r} — pass the `id` of one of the "
+                                         "candidates record_insight returned")
+            else:
+                match, score, near = self._match(t, r, topic, summary, f"{summary}\n\n{what_to_do.strip()}", applies)
+                if match is None and near and not new:
+                    return {"result": "needs_decision", "recorded": False,
+                            "candidates": [dict(i.view(), score=sc, why=why) for sc, why, i in near],
+                            "next": "Nothing was written. Read the candidates: if one is the same insight (said in other "
+                                    "words or another language), call record_insight again with the same arguments and "
+                                    "same_as=<its id> — it counts one more occurrence. If it is a different insight, "
+                                    "call again with new=true."}
             if match is not None:
                 self._update(match, r, ev, applies, severity, eff)
                 result = "updated"
@@ -140,23 +160,42 @@ class KnowledgeService:
                "occurrences": match.meta["occurrences"], "index_pages": pages}
         if score is not None:
             out["matched_score"] = round(score, 3)
+        if same_as:
+            out["matched"] = "same_as"
         return out
 
-    def _match(self, tenant: str, repo: str, topic: str, summary: str, text: str) -> tuple[Insight | None, float | None]:
+    def _by_id(self, tenant: str, repo: str, ref: str) -> Insight | None:
+        """An insight that applies to the repo, by `id` (or note path)."""
+        return next((i for i in self._applicable(tenant, repo) if ref in (i.meta.get("id"), i.rel)), None)
+
+    def _match(self, tenant: str, repo: str, topic: str, summary: str, text: str,
+               applies: dict[str, list[str]]) -> tuple[Insight | None, float | None, list[tuple[float | None, str, Insight]]]:
+        """(the insight it repeats, its score, near ones the agent should look at). Same topic only."""
         candidates = [i for i in self._applicable(tenant, repo) if i.meta.get("topic") == topic]
         key = _norm(summary)
         for i in candidates:                                    # same sentence: no need to ask the vectors
             if _norm(str(i.meta.get("summary", ""))) == key:
-                return i, 1.0
+                return i, 1.0, []
         try:
-            hits = self.mirror.similar(tenant, text, topic, [repo, SHARED])
+            hits = self.mirror.similar(tenant, text, topic, [repo, SHARED], limit=5)
         except Exception as e:  # noqa: BLE001
             raise KnowledgeError(f"Qdrant unavailable ({type(e).__name__}: {e}) — not recorded, to avoid a duplicate") from None
         by_rel = {i.rel: i for i in candidates}
-        for s, rel in hits:
-            if s >= self.threshold and rel in by_rel:
-                return by_rel[rel], s
-        return None, None
+        scores = {rel: sc for sc, rel in hits if rel in by_rel}
+        for rel, sc in sorted(scores.items(), key=lambda kv: -kv[1]):
+            if sc >= self.threshold:
+                return by_rel[rel], sc, []
+        near: list[tuple[float | None, str, Insight]] = []
+        mine = {(k, x) for k in ("symbols", "files") for x in applies.get(k, [])}
+        for i in candidates:
+            sc = scores.get(i.rel)
+            theirs = {(k, x) for k in ("symbols", "files") for x in (i.meta.get("applies_to") or {}).get(k, [])}
+            if sc is not None and sc >= self.candidate_threshold:
+                near.append((round(sc, 3), "similar text", i))
+            elif mine & theirs:
+                near.append((round(sc, 3) if sc is not None else None, "same symbols/files", i))
+        near.sort(key=lambda x: -(x[0] or 0))
+        return None, None, near[:5]
 
     def _create(self, tenant: str, repo: str, topic: str, summary: str, what_happened: str, what_to_do: str,
                 severity: str, ev: list[dict[str, str]], applies: dict[str, list[str]], scope: str) -> Insight:

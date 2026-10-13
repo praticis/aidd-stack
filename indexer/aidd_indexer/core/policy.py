@@ -38,7 +38,7 @@ BUILTIN: dict[str, Any] = {
     "coverage": {"min": 70, "new_code_min": 80},
     "harness": {"max_attempts": 3},
     "review": {"spec_approval": "required", "adr_when": ["new-integration", "new-module"]},
-    "knowledge": {"recurring_after": 3, "archive_after_days": 180, "topics": []},
+    "knowledge": {"recurring_after": 3, "archive_after_days": 180, "topics": [], "language": "en"},
 }
 
 _SLUG = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -78,13 +78,17 @@ def _slug(v: Any) -> str | None:
     return None if isinstance(v, str) and _SLUG.match(v) else "a lowercase slug"
 
 
+def _language(v: Any) -> str | None:
+    return None if isinstance(v, str) and re.match(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$", v) else "a language tag (en, pt-BR, es...)"
+
+
 SPEC: dict[str, dict[str, Callable[[Any], str | None]]] = {
     "coverage": {"min": _number(0, 100), "new_code_min": _number(0, 100)},
     "harness": {"max_attempts": _integer(1, 20)},
     "review": {"spec_approval": _one_of("required", "optional"),
                "adr_when": _list_of(_one_of(*ADR_TRIGGERS), f"ADR triggers ({', '.join(ADR_TRIGGERS)})")},
     "knowledge": {"recurring_after": _integer(2, 100), "archive_after_days": _integer(1, 3650),
-                  "topics": _list_of(_slug, "lowercase topic slugs")},
+                  "topics": _list_of(_slug, "lowercase topic slugs"), "language": _language},
 }
 
 

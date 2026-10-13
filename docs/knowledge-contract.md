@@ -216,12 +216,29 @@ observed ──► recurring ──► accepted ──────────�
 ## Matching (dedup)
 
 `record_insight` looks for an existing insight with the same `topic` among the ones that apply to the
-repo (its own notes and the tenant's shared notes): first the same summary sentence (normalized),
-then semantic closeness — cosine similarity of the `document` below ≥ 0.83 (`KNOWLEDGE_MATCH_THRESHOLD`;
-measured with the model: paraphrases of one insight score 0.85–0.96, different insights of the same
-area up to 0.81). A match increments it; otherwise a new note is created. The result says which
-(`created` | `updated`, with the note path and the `matched_score`) so the skill can tell the person.
-When Qdrant cannot be reached nothing is recorded (a new note would risk a duplicate).
+repo (its own notes and the tenant's shared notes):
+
+1. the same summary sentence (normalized) → **updated**;
+2. cosine similarity of the `document` below ≥ 0.83 (`KNOWLEDGE_MATCH_THRESHOLD`) → **updated**.
+   Measured with the model, in English: paraphrases of one insight 0.85–0.96, different insights of
+   the same area up to 0.81;
+3. otherwise, insights with similarity ≥ 0.65 (`KNOWLEDGE_CANDIDATE_THRESHOLD`) or naming the same
+   `applies_to` symbols/files → **needs_decision**: nothing is written and the candidates go back to
+   the skill, which calls again with `same_as: <id>` (the same insight — one more occurrence) or
+   `new: true`. The vector cannot tell a repeat said differently from a neighbour — measured: the
+   same insight written in Portuguese scored 0.75 against its English note, two different insights
+   sharing class names 0.79; the agent reading both texts can;
+4. nothing close → **created**.
+
+The result says which (`created` | `updated` | `needs_decision`, with the note path, `matched_score`
+or the candidates) so the skill can tell the person. When Qdrant cannot be reached nothing is
+recorded (a new note would risk a duplicate).
+
+### Language
+
+Insights and index blocks are written in the tenant's knowledge language — `knowledge.language` in
+`policy.yaml`, default `en`. Skills translate what the person dictated (identifiers stay as they
+are), so the vault reads as one and repeats are compared like with like.
 
 ## Qdrant mirror
 
