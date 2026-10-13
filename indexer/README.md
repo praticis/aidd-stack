@@ -25,6 +25,7 @@ aidd schedule install|status|remove|check [--fix]   # the refresher (see below)
 aidd logs [-f]                # the refresher's log
 aidd policy show [repo]       # effective process policy (policy.yaml) and where each value came from
 aidd policy check             # validate ~/.aidd/policy.yaml
+aidd knowledge serve          # the `knowledge` MCP server (the mcp-knowledge service runs it)
 AIDD_NO_FETCH=1 aidd plan     # no remote fetch (mirrors synced from the workspace only)
 ```
 
@@ -135,6 +136,11 @@ aidd_indexer/
     declarative.py          convention.yaml → Convention (no Python needed)
     __init__.py             registry: path | entry point `aidd.conventions` | `module:Class`; apply()
   mcp/server.py             MCP `atlas` (read-only tools over the graph)
+  knowledge/                MCP `knowledge` (docs/knowledge-contract.md) — image stage `knowledge`
+    vault.py                safe names, frontmatter, owned `aidd:` blocks, atomic writes
+    insights.py             insight notes, lifecycle data, the index's knowledge block
+    vectors.py              FastEmbed (mcp-qdrant's model) + the Qdrant mirror
+    service.py server.py    record_insight / insights_for / policy_for, and the MCP server
 ```
 
 ## Adding a language

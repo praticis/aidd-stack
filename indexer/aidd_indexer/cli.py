@@ -510,6 +510,19 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return serve(host=args.host, port=args.port)
 
 
+def cmd_knowledge(args: argparse.Namespace) -> int:
+    """The `knowledge` MCP server (project knowledge + process policy for the skills)."""
+    from .knowledge.server import serve
+    from .knowledge.vault import KnowledgeError
+    log(f"knowledge MCP · tenant={os.getenv('AIDD_TENANT', '?')} · vault={os.getenv('AIDD_VAULT_DIR', '/vault')} · "
+        f"qdrant={os.getenv('QDRANT_URL', '?')} · model={os.getenv('EMBEDDING_MODEL', 'BAAI/bge-small-en-v1.5')}")
+    try:
+        return serve(host=args.host, port=args.port)
+    except KnowledgeError as e:
+        log(f"error: {e}")
+        return 2
+
+
 def cmd_policy(args: argparse.Namespace) -> int:
     """`policy check`: validate policy.yaml. `policy show [repo]`: the effective policy of a tenant (or one
     of its repos) and the layer each value came from — what the skills receive."""
@@ -649,6 +662,12 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("status", help="list indexed snapshots")
     s.add_argument("--tenant")
     s.set_defaults(fn=cmd_status)
+
+    kn = sub.add_parser("knowledge", help="run the `knowledge` MCP server (insights + process policy for the skills)")
+    kn.add_argument("action", choices=["serve"])
+    kn.add_argument("--host", default=None)
+    kn.add_argument("--port", type=int, default=None)
+    kn.set_defaults(fn=cmd_knowledge)
 
     po = sub.add_parser("policy", help="process policy (policy.yaml): validate it, or show the effective policy of a repo")
     po.add_argument("action", choices=["show", "check"])

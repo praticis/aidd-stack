@@ -104,19 +104,20 @@ Regenerated after every `record_insight` that touches the repo (and by the aging
 per topic that has live insights, in vocabulary order; inside a topic, by status (`enforced`,
 `accepted`, `recurring`, `observed`), then by `occurrences` descending, then `last_seen` descending.
 `archived` insights are not listed. Shared insights that apply to the repo are listed under their
-topic with a `(shared)` mark.
+topic with a `(shared)` mark. Links are vault-absolute (Obsidian resolves them from anywhere) with
+the summary as the alias; rules (`accepted`, `enforced`) are in bold.
 
 ```markdown
 <!-- aidd:knowledge:start -->
 ## Knowledge
-_Generated from `insights/` — do not edit here._
+_Generated from the insight notes — do not edit here._
 
 ### Security
-- [[insights/sql-built-by-concatenation]] — **enforced** · 3× · last 2026-10-02
-- [[../shared/insights/secrets-in-logs|secrets-in-logs]] (shared) — accepted · 2× · last 2026-09-20
+- [[acme/knowledge/orders-api/insights/sql-built-by-concatenation|SQL built by concatenation in repositories; use parameters]] — **enforced** · 3× · last 2026-10-02
+- [[acme/knowledge/shared/insights/secrets-in-logs|Secrets reach the logs; mask them in the logger]] (shared) — **accepted** · 2× · last 2026-09-20
 
 ### Review
-- [[insights/handler-without-validator]] — recurring · 3× · last 2026-10-11
+- [[acme/knowledge/orders-api/insights/handler-without-validator|Handlers call the repository before validating the command]] — recurring · 3× · last 2026-10-11
 <!-- aidd:knowledge:end -->
 ```
 
@@ -136,7 +137,7 @@ never changed afterwards (links point to it). A collision within the folder appe
 | `id` | string | service | `<tenant>/<scope-repo-or-shared>/<slug>` — stable identity |
 | `tenant` | string | service | |
 | `scope` | `repo` \| `shared` | service | `shared`: lives in `knowledge/shared/`, applies to the repos in `repos` (empty = every repo of the tenant) |
-| `repos` | list | service | repos it applies to (`[<repo>]` for scope `repo`) |
+| `repos` | list | service | repos it applies to: `[<repo>]` for scope `repo`; for `shared`, empty (every repo of the tenant) unless a person narrows it |
 | `topic` | slug | skill | one of the topic vocabulary (below) |
 | `summary` | string ≤ 200 | skill | one sentence: the problem and what to do instead |
 | `severity` | `low` \| `medium` \| `high` \| `critical` | skill | impact when it happens again |
@@ -214,10 +215,13 @@ observed ──► recurring ──► accepted ──────────�
 
 ## Matching (dedup)
 
-`record_insight` looks for an existing insight with the same `topic` in the same scope (the repo's
-notes, then the tenant's shared notes) whose summary is semantically close (Qdrant similarity on the
-`document` below). A match increments it; otherwise a new note is created. The result says which
-(`created` | `updated`, with the note path) so the skill can tell the person.
+`record_insight` looks for an existing insight with the same `topic` among the ones that apply to the
+repo (its own notes and the tenant's shared notes): first the same summary sentence (normalized),
+then semantic closeness — cosine similarity of the `document` below ≥ 0.83 (`KNOWLEDGE_MATCH_THRESHOLD`;
+measured with the model: paraphrases of one insight score 0.85–0.96, different insights of the same
+area up to 0.81). A match increments it; otherwise a new note is created. The result says which
+(`created` | `updated`, with the note path and the `matched_score`) so the skill can tell the person.
+When Qdrant cannot be reached nothing is recorded (a new note would risk a duplicate).
 
 ## Qdrant mirror
 

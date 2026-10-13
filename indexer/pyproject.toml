@@ -13,6 +13,14 @@ dependencies = [
   "mcp>=1.10,<2",
 ]
 
+[project.optional-dependencies]
+# the `knowledge` service (mcp-knowledge): same FastEmbed and Qdrant client as mcp-server-qdrant 0.8.1,
+# so the insights it embeds are found by `qdrant-find` and vice versa
+knowledge = [
+  "fastembed==0.9.0",
+  "qdrant-client==1.19.1",
+]
+
 [project.scripts]
 aidd = "aidd_indexer.cli:main"
 

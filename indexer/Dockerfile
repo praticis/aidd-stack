@@ -1,5 +1,7 @@
 # Base image pinned to the patch release — bump deliberately (python deps: pyproject.toml).
-FROM python:3.12.15-slim
+# Stages: `base` (indexer + atlas MCP), `knowledge` (adds the embedding stack for mcp-knowledge) and
+# `indexer` — the default (last) stage, what the refresher and mcp-atlas run: no embedding model in it.
+FROM python:3.12.15-slim AS base
 
 # git: read refs / archive trees of the mounted repositories.
 # openssh-client + ca-certificates: `git fetch` over ssh:// and https://
@@ -50,3 +52,20 @@ RUN python -c "import tree_sitter_language_pack as t, aidd_indexer.languages as 
 ENV WORKSPACE_PATH=/workspace
 ENTRYPOINT ["aidd"]
 CMD ["--help"]
+
+# ── knowledge service (mcp-knowledge) ─────────────────────────────────────────────────────────────
+# FastEmbed + the embedding model mcp-qdrant uses, baked in (like the grammars): the service embeds
+# insights for the same Qdrant collections the skills search with `qdrant-find`. No download at
+# runtime, and the model must load for any uid (compose runs it as the host user).
+FROM base AS knowledge
+ENV FASTEMBED_CACHE_PATH=/opt/fastembed-cache \
+    EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+RUN pip install "/app[knowledge]" \
+ && python -c "from aidd_indexer.knowledge.vectors import FastEmbedder; e = FastEmbedder(); print('embedding model:', e.model, e.size)" \
+ && chmod -R a+rX /opt/fastembed-cache
+ENV HF_HUB_OFFLINE=1
+RUN setpriv --reuid=65534 --regid=65534 --clear-groups env HOME=/tmp \
+      python -c "from aidd_indexer.knowledge.vectors import FastEmbedder; FastEmbedder()"
+
+# ── default: the indexer (refresher, on-demand runs, mcp-atlas) ───────────────────────────────────
+FROM base AS indexer
