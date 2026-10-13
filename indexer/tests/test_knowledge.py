@@ -58,9 +58,9 @@ def test_first_record_creates_note_index_and_point(svc):
     out = record(svc, applies_to={"roles": ["command-handler"]})
     assert out["result"] == "created" and out["status"] == "observed" and out["occurrences"] == 1
     note = svc.layout.root / out["note"]
-    assert out["note"] == "acme/knowledge/orders-api/insights/refund-handler-must-validate-the-command-before-calling-the.md"
+    assert out["note"] == "acme/knowledge/orders-api/insights/refund-handler-must-validate-the-command-before-calling-the-repository.md"
     meta, body = split_frontmatter(note.read_text())
-    assert meta["id"] == "acme/orders-api/refund-handler-must-validate-the-command-before-calling-the"
+    assert meta["id"] == "acme/orders-api/refund-handler-must-validate-the-command-before-calling-the-repository"
     assert meta["evidence"][0]["source"] == "pr-review" and meta["evidence"][0]["repo"] == "orders-api"
     assert "## What to do instead\nRun the command validator first" in body
     index = (svc.layout.root / "acme/knowledge/orders-api/orders-api.md").read_text()
@@ -78,7 +78,10 @@ def test_repeats_count_and_become_recurring(svc):
     meta, _ = split_frontmatter((svc.layout.root / out["note"]).read_text())
     assert [e["source"] for e in meta["evidence"]] == ["pr-review", "review", "pr-review"]   # newest first
     assert str(meta["first_seen"]) == "2026-10-01" and str(meta["last_seen"]) == "2026-10-03"
-    assert "first_seen: 2026-10-01" in (svc.layout.root / out["note"]).read_text()        # a YAML date, unquoted
+    text = (svc.layout.root / out["note"]).read_text()
+    assert "first_seen: 2026-10-01" in text                                            # a YAML date, unquoted
+    first = record(svc, summary="Statement export duplicates rows when the page size is zero", topic="quality")
+    assert "&id" not in (svc.layout.root / first["note"]).read_text()               # same date twice: no YAML alias
     assert ((svc.layout.root / out["note"]).stat().st_mode & 0o777) == 0o644
 
 

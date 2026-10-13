@@ -125,7 +125,7 @@ An index with no live insight renders the heading and `_No insights recorded yet
 
 ## Insight note — `insights/<slug>.md`
 
-`<slug>`: lowercase, `[a-z0-9-]`, ≤ 60 chars, derived from the summary when the note is created and
+`<slug>`: lowercase, `[a-z0-9-]`, ≤ 80 chars, derived from the summary when the note is created and
 never changed afterwards (links point to it). A collision within the folder appends `-2`, `-3`...
 
 ### Frontmatter

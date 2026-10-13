@@ -31,7 +31,7 @@ def safe_name(value: str, what: str) -> str:
     return value
 
 
-def slugify(text: str, limit: int = 60) -> str:
+def slugify(text: str, limit: int = 80) -> str:
     s = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
     if len(s) > limit:
@@ -50,8 +50,17 @@ def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     return (data if isinstance(data, dict) else {}), text[m.end():]
 
 
+class _PlainDumper(yaml.SafeDumper):
+    """No anchors/aliases (`first_seen: &id001 …` / `last_seen: *id001` when two keys hold the same
+    object): valid YAML, but not what a person or Obsidian's properties panel expects."""
+
+    def ignore_aliases(self, data: Any) -> bool:
+        return True
+
+
 def join_frontmatter(data: dict[str, Any], body: str) -> str:
-    head = yaml.safe_dump(data, sort_keys=False, allow_unicode=True, default_flow_style=False, width=1000).rstrip("\n")
+    head = yaml.dump(data, Dumper=_PlainDumper, sort_keys=False, allow_unicode=True, default_flow_style=False,
+                     width=1000).rstrip("\n")
     return f"---\n{head}\n---\n{body}"
 
 
