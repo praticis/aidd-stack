@@ -124,6 +124,7 @@ class GraphWriter:
             WITH n, s
             MATCH (f:File {id: s.file_id})
             MERGE (f)-[:CONTAINS]->(n)
+            SET n.path = f.path
         """, [s.__dict__ for s in res.symbols], **common)
 
         members = [{"child": s.id, "parent": s.parent_id} for s in res.symbols if s.parent_id]
@@ -393,6 +394,20 @@ class GraphWriter:
                 h.indexer_version = $ver
         """, tenant=tenant, started=started, finished=finished, rc=rc, trigger=trigger, interval=interval_min,
              changed=changed, ver=INDEXER_VERSION)
+
+    def record_remote_sync(self, tenant: str, results: dict[str, str]) -> None:
+        """Whether each repo's last refresh reached its git remote ("ok" or the failure). When it did
+        not, the snapshots follow the developer's own fetches and feature branches can lag behind —
+        `atlas_status` says so per repo."""
+        if not results:
+            return
+        self._run("""
+            UNWIND $rows AS x
+            MATCH (r:Repo {tenant: $tenant, name: x.repo})
+            SET r.sync_checked_at = datetime(),
+                r.sync_note = CASE WHEN x.result = 'ok' THEN null ELSE x.result END,
+                r.remote_synced_at = CASE WHEN x.result = 'ok' THEN datetime() ELSE r.remote_synced_at END
+        """, tenant=tenant, rows=[{"repo": k, "result": v} for k, v in results.items()])
 
     def status(self, tenant: str | None) -> list[dict[str, Any]]:
         q = """

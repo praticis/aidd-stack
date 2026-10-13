@@ -100,6 +100,11 @@ class LanguageSupport:
     def adjust_kind(self, kind: str, parent: "SymbolInfo | None") -> str:
         return kind
 
+    def def_node(self, node: Node) -> Node:
+        """The node a definition is recorded on (signature, doc, lines) — by default the one the
+        query captured. Go records a lone spec on its declaration (`type X struct`)."""
+        return node
+
     def scope_chain(self, dnode: Node, src: bytes, chain: list[str], kind: str, file_namespace: str | None) -> list[str]:
         """Chance to replace the syntactic scope (Go receivers, C# file-scoped namespaces)."""
         return chain

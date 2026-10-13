@@ -28,6 +28,7 @@ class RepoCandidate:
     url: str = ""
     default_ref: str = ""
     area: str | None = None
+    remote: str | None = None  # last fetch from the git remote: "ok", the failure, or None (not attempted)
 
 
 @dataclass
@@ -104,8 +105,10 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
                     except RuntimeError as e:
                         (errors if errors is not None else notes).append(f"{r.name}: {e} — skipped")
                         continue
-                    if not ok and do_fetch and s.fetch:
-                        notes.append(f"{r.name}: {msg}")
+                    if do_fetch and s.fetch:
+                        r.remote = "ok" if ok else msg
+                        if not ok:
+                            notes.append(f"{r.name}: {msg}")
                     r.url = remote_url(r.path)
                     r.path = mp
                     kept.append(r)
@@ -115,8 +118,9 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
                     if progress:
                         progress(f"[fetch] {r.name}")
                     ok, msg = fetch(r.path)
+                    r.remote = "ok" if ok else f"git fetch failed ({msg}) — planned on local refs"
                     if not ok:
-                        notes.append(f"{r.name}: git fetch failed ({msg}) — planned on local refs")
+                        notes.append(f"{r.name}: {r.remote}")
             for r in found:
                 repos.setdefault(r.name, r)
         else:

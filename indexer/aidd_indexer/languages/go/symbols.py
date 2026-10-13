@@ -109,6 +109,10 @@ _GO_MODULE_LINE = re.compile(r"^module\s+(\S+)", re.M)
 _GO_REQUIRE_LINE = re.compile(r"^\s*(?:require\s+)?([a-zA-Z0-9.\-_~/]+\.[a-zA-Z0-9.\-_~/]+)\s+(v[^\s/]+)(?:\s*//.*)?$", re.M)
 
 
+_SPECS = frozenset({"type_spec", "type_alias", "const_spec", "var_spec"})
+_DECLS = frozenset({"type_declaration", "const_declaration", "var_declaration"})
+
+
 class GoSupport(LanguageSupport):
     # ---- discovery: every directory with .go files is a package — the unit imports point at
     def discover_modules(self, repo: RepoInfo, rel_files: list[str], modules: dict[str, ModuleInfo]) -> None:
@@ -138,6 +142,15 @@ class GoSupport(LanguageSupport):
             if recv:
                 return [recv]
         return chain
+
+    def def_node(self, node: Node) -> Node:
+        # `type X struct{}` / `const X = 1`: the declaration holds the doc comment and the keyword;
+        # inside a block (`const ( A ...; B ... )`) each spec is a definition of its own
+        p = node.parent
+        if node.type in _SPECS and p is not None and p.type in _DECLS \
+                and sum(1 for c in p.named_children if c.type in _SPECS) == 1:
+            return p
+        return node
 
     def visibility(self, name: str, node: Node, src: bytes, first_line: str) -> str:
         return "public" if name[:1].isupper() else "private"

@@ -243,7 +243,7 @@ class FileExtractor:
         self.repo, self.file, self.src, self.cl = repo, file, src, cl
         self.lang: LanguageSupport = languages.by_id(file.language)  # type: ignore[assignment]
         self.tree = cl.parser.parse(src)
-        self.defs: dict[int, tuple[str, Node]] = {}   # def node id -> (kind, name node)
+        self.defs: dict[tuple[int, int], tuple[str, Node]] = {}   # (def node id, name node id) -> (kind, name node)
         self.symbol_by_node: dict[int, SymbolInfo] = {}
         self.symbols: list[SymbolInfo] = []
         self.calls: list[CallInfo] = []
@@ -261,11 +261,19 @@ class FileExtractor:
                 def_key = next((k for k in caps if k.startswith("def.")), None)
                 if def_key:
                     kind = def_key.split(".", 1)[1]
-                    dnode, nnode = caps[def_key][0], caps["name"][0]
-                    # a more specific pattern (struct/interface) wins over generic `type`
-                    prev = self.defs.get(dnode.id)
-                    if prev is None or (prev[0] == "type" and kind != "type"):
-                        self.defs[dnode.id] = (kind, nnode)
+                    captured, nnode = caps[def_key][0], caps["name"][0]
+                    dnode = self.lang.def_node(captured)
+                    # one declaration can define several names (`const A, B = 1, 2`) and the query
+                    # engine does not always yield a match per name: take every `name` field
+                    names = captured.children_by_field_name("name")
+                    if not any(n.id == nnode.id for n in names):
+                        names = [nnode]
+                    for nm in names:
+                        # keyed by name too; a more specific pattern (struct/interface) wins over generic `type`
+                        key = (dnode.id, nm.id)
+                        prev = self.defs.get(key)
+                        if prev is None or (prev[0] == "type" and kind != "type"):
+                            self.defs[key] = (kind, nm)
                     continue
                 if "call" in caps:
                     raw_calls.append((caps["call"][0], caps["callee"][0], caps.get("receiver", [None])[0]))
@@ -283,7 +291,7 @@ class FileExtractor:
         self.facts = self.lang.file_facts(self.tree.root_node, self.src)
 
         # materialize symbols outer-first so parents exist before children
-        for dnode_id, (kind, nnode) in sorted(self.defs.items(), key=lambda kv: kv[1][1].start_byte):
+        for (dnode_id, _), (kind, nnode) in sorted(self.defs.items(), key=lambda kv: kv[1][1].start_byte):
             dnode = self._node_by_id(dnode_id, nnode)
             self._make_symbol(dnode, kind, nnode)
 

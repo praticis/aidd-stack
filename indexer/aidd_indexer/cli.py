@@ -393,6 +393,7 @@ def _refresh_tenant(gw, args: argparse.Namespace, tenant_name: str) -> tuple[int
             + f" — remove with: aidd wipe <repo> --ref <ref>")
     if todo or gone:
         _link(gw, tenant.name)
+    gw.record_remote_sync(tenant.name, {r.name: r.remote for r in plan.repos() if r.remote is not None})
     for e in plan.errors:
         log(f"[error]    {e}")
     if plan.errors:

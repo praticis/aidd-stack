@@ -118,7 +118,10 @@ tenants:
     assert {it.repo.path for it in plan.items} == {tmp / "mirrors" / "acme" / "orders-api.git"}
     assert {it.ref for it in plan.items} == {"main", "feature/pushed-later"}     # remote view; local-only is on demand
     assert all(it.repo.url == str(origin) for it in plan.items)
+    assert all(it.repo.remote == "ok" for it in plan.items)                     # recorded on Repo by refresh
     assert not (dev / ".git" / "FETCH_HEAD").exists()
+    local = build_plan(tenant, do_fetch=False)
+    assert all(it.repo.remote is None for it in local.items)                    # not attempted: nothing to say
 
 
 def test_a_repo_that_cannot_be_mirrored_is_an_error_not_a_note(world, monkeypatch):

@@ -148,6 +148,11 @@ class Store:
             MATCH (r:Repo {tenant: $tenant})
             OPTIONAL MATCH (r)-[:HAS_SNAPSHOT]->(s:Snapshot)
             RETURN r.name AS repo, r.default_ref AS default_ref, r.stack AS stack, r.area AS area,
+                   CASE WHEN r.sync_checked_at IS NULL THEN null ELSE {
+                       ok: r.sync_note IS NULL, note: r.sync_note,
+                       last_success_at: toString(r.remote_synced_at),
+                       success_age_min: duration.inSeconds(r.remote_synced_at, datetime()).seconds / 60
+                   } END AS remote,
                    collect({ref: s.ref, sha: left(s.commit_sha, 10), ephemeral: s.ephemeral,
                             indexed_at: toString(s.indexed_at),
                             age_min: duration.inSeconds(s.indexed_at, datetime()).seconds / 60}) AS snapshots
@@ -168,6 +173,21 @@ class Store:
         if chosen not in refs:
             raise AtlasError(f"ref '{chosen}' of '{repo}' is not indexed. Available: {', '.join(sorted(refs))}")
         return chosen
+
+
+def _word_pattern(word: str) -> str:
+    """Regex (Neo4j `=~`, whole name) for `word` as a whole word of an identifier: camelCase,
+    PascalCase, snake_case or ACRONYM parts — 'backoff' finds RetryBackoff, backoffDelay and
+    retry_backoff, not Backoffice."""
+    if not re.fullmatch(r"[A-Za-z0-9]+", word):
+        raise AtlasError("match='word' takes a single identifier word (letters and digits); use match='regex' otherwise")
+    low, cap, up = word.lower(), word[:1].upper() + word[1:].lower(), word.upper()
+    return ("(?s)(?:"
+            f"{low}(?:[A-Z0-9_].*)?"                     # leading lower word: backoffDelay, backoff_x
+            f"|.*{cap}(?:[A-Z0-9_].*)?"                  # PascalCase part: RetryBackoff, BackoffDelay
+            f"|(?:.*[^A-Z])?{up}(?:[^a-z].*)?"           # acronym part: HTTPClient, NewHTTP
+            f"|(?i:(?:.*_)?{low}(?:_.*)?)"               # snake_case part: retry_backoff
+            ")")
 
 
 def _fulltext_query(text: str) -> str:
@@ -250,6 +270,10 @@ def build_server(store: Store | None = None):
         `refresh` is the tenant's last automatic update: when `stale` is true the refresher has not run
         for over two intervals and the graph may lag behind the remotes — say so in your answer
         (`stale: null` = no automatic run recorded yet, e.g. a tenant just indexed on demand).
+        `remote` per repo: whether the last refresh reached its git remote. `ok: false` means the
+        snapshots follow the developer's own `git fetch` (the service token cannot read that remote —
+        `note` says why), so a feature branch or PR can lag behind what was pushed: say so, and after a
+        `git fetch` run `~/.aidd/aidd refresh --tenant <tenant> --repos <repo>` to catch up.
         In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
         the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
         if the_store.tenant is None and not tenant:
@@ -334,16 +358,51 @@ def build_server(store: Store | None = None):
     @mcp.tool()
     def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
                     kind: str | None = None, role: str | None = None, limit: int = 20,
-                    tenant: str | None = None) -> list[dict[str, Any]]:
-        """Full-text search over symbol names, qualified names, signatures and docstrings
-        (functions, methods, classes, structs, interfaces...), topped up with substring matches on
-        the name ('Handler' finds 'Handler', 'HandlerFunc' and 'AuthHandler'). Without `ref`, only default branches are
-        searched; name a `ref` to search a feature branch. `kind` filters e.g. function|method|class|struct|interface;
-        `role` filters by what a convention says the type is (`command-handler`, `validator`... — see
-        `repo_map.roles`). With a `role`, `query` "*" lists every element of it."""
+                    match: str = "fuzzy", tenant: str | None = None) -> list[dict[str, Any]]:
+        """Search symbols (functions, methods, types, constants, package variables...).
+        `match` picks how `query` is compared:
+          fuzzy (default) — full text over names, qualified names, signatures and docstrings, topped up
+                  with substring matches on the name: broad, good to discover ('backoff' also brings
+                  'Backoffice')
+          word  — `query` is a whole word of the name, camelCase/snake_case aware ('backoff' finds
+                  RetryBackoff and retry_backoff, not Backoffice)
+          exact — name or qualified name equals `query`
+          regex — Java regex searched in the name (`^`/`$` anchor it): '^Err[A-Z]', 'Pix(Devolution|Refund)'
+        Without `ref`, only default branches are searched; name a `ref` to search a feature branch.
+        `kind` filters e.g. function|method|struct|interface|const|var; `role` filters by what a
+        convention says the type is (`command-handler`, `validator`... — see `repo_map.roles`). With a
+        `role`, `query` "*" lists every element of it."""
         s = st(tenant)
         if repo:
             ref = s.resolve_ref(repo, ref)
+        if match not in ("fuzzy", "word", "exact", "regex"):
+            raise AtlasError(f"unknown match '{match}' — use fuzzy, word, exact or regex")
+        if match != "fuzzy" and query.strip() not in ("", "*"):
+            text = query.strip()
+            if match == "word":
+                cond, pattern = "sy.name =~ $pattern", _word_pattern(text)
+            elif match == "regex":
+                try:
+                    re.compile(text)
+                except re.error as e:
+                    raise AtlasError(f"invalid regex: {e}") from None
+                cond, pattern = "sy.name =~ $pattern", f"(?s).*(?:{text}).*"
+            else:
+                cond, pattern = "(sy.name = $text OR sy.qualified_name = $text)", None
+            return s.read(f"""
+                MATCH (sy:Symbol {{tenant: $tenant}})
+                WHERE {cond}
+                  AND ($repo IS NULL OR sy.repo = $repo)
+                  AND ($kind IS NULL OR sy.kind = $kind)
+                  AND ($role IS NULL OR sy.role = $role)
+                MATCH (snap:Snapshot {{tenant: $tenant, repo: sy.repo, ref: sy.ref}})
+                WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                       sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
+                       sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 1.0 AS score
+                ORDER BY size(sy.name), sy.repo, f.path, sy.line_start LIMIT $limit
+            """, text=text, pattern=pattern, repo=repo, ref=ref, kind=kind, role=role, limit=min(limit, MAX_ROWS))
         if role and query.strip() in ("", "*"):
             return s.read("""
                 MATCH (sy:Symbol {tenant: $tenant, role: $role})
@@ -605,11 +664,15 @@ def build_server(store: Store | None = None):
                 "consumer_repos": sorted({c["repo"] for c in consumers})}
 
     @mcp.tool()
-    def ref_diff(repo: str, ref: str, base: str | None = None, tenant: str | None = None) -> dict[str, Any]:
+    def ref_diff(repo: str, ref: str, base: str | None = None, limit: int = 100,
+                 tenant: str | None = None) -> dict[str, Any]:
         """What a branch adds or removes compared to another indexed ref of the same repo (default:
         the repo's default branch): HTTP routes exposed (`endpoints_added` / `endpoints_removed`),
         entry-point symbols (handlers, controllers, commands — `entry_points_added` / `_removed`, by
-        qualified name) and outbound HTTP calls (`http_calls_added` / `_removed`, by method+path).
+        qualified name), outbound HTTP calls (`http_calls_added` / `_removed`, by method+path) and
+        every symbol (`symbols_added` / `_removed` / `_changed` — changed = same qualified name, different
+        body; struct fields are left out, a field change shows as its struct changing; at most `limit`
+        each, `summary` counts them all).
         Useful to review a feature branch's surface before it merges, or to explain why
         `who_consumes` shows a route only in some refs. `snapshots` gives the indexed sha of each
         ref — compare with `git rev-parse` before trusting a diff on a branch you just merged into."""
@@ -650,6 +713,26 @@ def build_server(store: Store | None = None):
             out[f"{kind}_added"] = [a[kind][k] for k in sorted(set(a[kind]) - set(b[kind]))]
             out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
         out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
+
+        def symbols(r: str) -> dict[tuple[str, str], dict[str, Any]]:
+            by: dict[tuple[str, str], dict[str, Any]] = {}
+            for row in s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref}) WHERE sy.kind <> 'field'
+                RETURN sy.qualified_name AS qualified_name, sy.kind AS kind, sy.path AS file, sy.line_start AS line,
+                       sy.content_hash AS hash
+            """, repo=repo, ref=r):
+                digest = row.pop("hash")
+                key = (row["qualified_name"], row["kind"])
+                by.setdefault(key, {"row": row, "hashes": set()})["hashes"].add(digest)   # overloads share a name
+            return by
+
+        sa, sb = symbols(ref), symbols(base)
+        changes = {"symbols_added": [sa[k]["row"] for k in sorted(set(sa) - set(sb))],
+                   "symbols_removed": [sb[k]["row"] for k in sorted(set(sb) - set(sa))],
+                   "symbols_changed": [sa[k]["row"] for k in sorted(set(sa) & set(sb)) if sa[k]["hashes"] != sb[k]["hashes"]]}
+        for k, v in changes.items():
+            out["summary"][k] = len(v)
+            out[k] = v[:limit]
         return out
 
     @mcp.tool()
@@ -657,9 +740,11 @@ def build_server(store: Store | None = None):
                    layer: str | None = None, limit: int = 100, tenant: str | None = None) -> dict[str, Any]:
         """Convention violations recorded for a repository at a ref (default: its default branch):
         which rule, where (file:line, symbol), severity and message — e.g. a domain file importing an
-        adapter, a route declared outside the inbound layer. Empty when no convention is configured for
-        the tenant (`atlas.yaml: conventions`). Filter by `severity` (error|warning|info), `rule` id or
-        the `layer` of the offending file; `summary` counts per rule regardless of `limit`."""
+        adapter, a route declared outside the inbound layer. `checked` says whether any convention
+        applied to this snapshot (`conventions`): when false, nothing was checked and an empty list
+        says nothing about the code — conventions are configured in `atlas.yaml: conventions`.
+        Filter by `severity` (error|warning|info), `rule` id or the `layer` of the offending file;
+        `summary` counts per rule regardless of `limit`."""
         s = st(tenant)
         ref = s.resolve_ref(repo, ref)
         base = dict(repo=repo, ref=ref, severity=severity, rule=rule, layer=layer)
@@ -680,16 +765,40 @@ def build_server(store: Store | None = None):
             RETURN v.convention AS convention, v.rule AS rule, v.severity AS severity, count(*) AS n
             ORDER BY n DESC
         """, **base)
-        return {"repo": repo, "ref": ref, "total": sum(r["n"] for r in summary), "summary": summary, "violations": rows}
+        applied = s.read("MATCH (sn:Snapshot {tenant: $tenant, repo: $repo, ref: $ref}) RETURN sn.conventions AS c",
+                         repo=repo, ref=ref)
+        conventions = (applied[0]["c"] if applied else None) or []
+        out = {"repo": repo, "ref": ref, "checked": bool(conventions), "conventions": conventions,
+               "total": sum(r["n"] for r in summary), "summary": summary, "violations": rows}
+        if not conventions:
+            out["note"] = ("no convention applies to this repo, so nothing was checked — zero violations does not "
+                           "mean the code follows its architecture (configure one in atlas.yaml: conventions)")
+        return out
 
     raw_cypher = the_store.tenant is not None or not _off("ATLAS_RAW_CYPHER")
 
     @(mcp.tool() if raw_cypher else (lambda f: f))
     def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:
-        """Run a read-only Cypher query against atlas (schema in neo4j/SCHEMA.md: Repo, Snapshot,
-        Module, File, Symbol, Package; edges HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS).
+        """Run a read-only Cypher query against atlas, for what the other tools do not answer.
         `$tenant` is always bound — filter on it: MATCH (s:Symbol {tenant: $tenant, repo: 'x'}) ...
-        Writes are refused. At most 200 rows are returned; add LIMIT yourself for big scans."""
+        Writes are refused. At most 200 rows are returned; add LIMIT yourself for big scans.
+
+        Schema (micro nodes carry tenant, repo, ref, commit_sha):
+          (:Repo {name, default_ref, stack})-[:HAS_SNAPSHOT]->(:Snapshot {ref, commit_sha, indexed_at,
+              ephemeral, architecture, conventions})          default branches: ephemeral = false
+          (:Module {name, path, kind, layer})-[:CONTAINS]->(:File {path, language, loc, layer})
+              -[:CONTAINS]->(:Symbol)
+          (:Symbol {name, qualified_name, kind, signature, doc, visibility, path, line_start, line_end,
+              is_entry_point, role})  kind: function|method|struct|interface|class|enum|type|const|var|field
+          (:Symbol)-[:CONTAINS]->(:Symbol)                       members
+          (:Symbol|File)-[:CALLS {line, strategy}]->(:Symbol)    same repo and ref only
+          (:File)-[:IMPORTS {spec, line}]->(:File|Module|Package {name, ecosystem, internal})
+          (:File|Symbol)-[:HAS_VIOLATION]->(:Violation {convention, rule, severity, message, line})
+          (:Symbol|File)-[:MAKES_HTTP_CALL]->(:HttpCall {method, path, path_key, raw_path, line})
+          (:Repo)-[:DEPLOYS]->(:Service {name})-[:EXPOSES {ref}]->(:HttpEndpoint {method, path, path_key})
+          (:HttpEndpoint)-[:HANDLED_BY {ref}]->(:Symbol)
+          (:Service)-[:CONSUMES {ref, confidence}]->(:HttpEndpoint)
+          (:Service)-[:DEPENDS_ON {ref}]->(:Service)            internal packages (manifests)"""
         if FORBIDDEN.search(query):
             raise AtlasError("refused: only read-only Cypher is allowed through atlas (no CREATE/MERGE/SET/DELETE/CALL{}/apoc writers)")
         s = st(tenant)

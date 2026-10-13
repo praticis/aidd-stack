@@ -107,6 +107,9 @@ file actually exists.
      no automatic run is recorded yet), the automatic refresh has
      stopped — say so in one line (the user can check it with
      `aidd schedule status`) and treat the graph as possibly outdated.
+     If the repo's `remote.ok` is `false`, atlas cannot read its git
+     remote (`remote.note` says why) and follows your own `git fetch`:
+     branches pushed by others may be missing or behind — mention it.
 
 1. Use `qdrant-find` with `collection_name: "<tenant>"` (the tenant
    value determined above — re-check it if you're unsure), filtering
@@ -154,12 +157,14 @@ file actually exists.
      Before changing a function, `impact_of(symbol)` gives the blast radius
      across repositories (routes that reach it and who consumes them);
      `ref_diff(repo, ref)` lists what the current branch adds to the
-     service's surface compared with the default branch.
+     service's surface compared with the default branch, and every symbol
+     it adds, removes or changes.
      `repo_map.depends_on` / `depended_by` are the services linked through
      internal packages (manifests), `repo_map.layers` the files per
      architectural layer when a convention is configured, and
      `violations(repo)` the convention rules broken (file:line, rule,
-     severity) — empty means no convention, not a clean repo
+     severity) — when `checked` is `false` no convention applies and
+     nothing was verified: never report that as a clean repo
 
    Then:
    - Save this summary to the vault via `obsidian`, at the path
@@ -196,7 +201,10 @@ through atlas when it is available — it is faster and more complete
 than grep:
 
 - `find_symbol` to find where something similar already exists (pass
-  the same `ref` as in step 0 when you are on a feature branch); with a
+  the same `ref` as in step 0 when you are on a feature branch). The
+  default search is broad (`backoff` also brings `Backoffice`); use
+  `match: "word"` for a whole word of the name, `"exact"` for a known
+  name, `"regex"` for a pattern (`^Err[A-Z]`). With a
   convention configured, `find_symbol(query: "*", role: "<role>")`
   lists every element of a role (e.g. every `command-handler`) — read
   the closest one before writing a new one;

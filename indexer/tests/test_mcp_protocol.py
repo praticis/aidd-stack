@@ -27,6 +27,8 @@ class FakeStore(Store):
 
     def read(self, query, **params):
         self.queries.append(query)
+        if "sy.name =~ $pattern" in query or "sy.name = $text OR" in query:   # find_symbol precise modes
+            return [{"id": "x", "name": params["text"], "pattern": params["pattern"]}]
         if "MATCH (sy:Symbol {tenant: $tenant, role: $role})" in query:   # find_symbol role listing
             return [{"id": "x", "repo": "a", "role": params["role"], "name": "CreateTodoCommandHandler"}]
         if "RETURN sy.id AS id" in query:                       # _symbol
@@ -48,6 +50,15 @@ class FakeStore(Store):
             return [{"role": "command-handler", "count": 3, "examples": ["CreateTodoCommandHandler"]}]
         if "snap.architecture AS architecture" in query:          # repo_map head
             return [{"stack": ["dotnet"], "architecture": "split", "conventions": ["dotnet-praticis[split]"]}]
+        if "RETURN sn.conventions AS c" in query:                 # violations: conventions applied
+            return [{"c": ["dotnet-praticis[split]"] if params["repo"] == "a" else None}]
+        if "sy.content_hash AS hash" in query:                    # ref_diff symbols
+            base = [{"qualified_name": "pkg.Keep", "kind": "function", "file": "k.go", "line": 1, "hash": "1"},
+                    {"qualified_name": "pkg.Edit", "kind": "function", "file": "e.go", "line": 1, "hash": "2"},
+                    {"qualified_name": "pkg.Gone", "kind": "const", "file": "g.go", "line": 1, "hash": "3"}]
+            if params["ref"] == "main":
+                return base
+            return [base[0], dict(base[1], hash="2b"), {"qualified_name": "pkg.New", "kind": "var", "file": "n.go", "line": 4, "hash": "4"}]
         return []
 
 
@@ -159,3 +170,54 @@ def test_find_symbol_lists_a_role(server):
     rows = asyncio.run(server.call_tool("find_symbol", {"query": "*", "role": "command-handler", "repo": "a"}))
     content = rows[0] if isinstance(rows, tuple) else rows
     assert json.loads(content[0].text)["role"] == "command-handler"
+
+
+def test_violations_say_whether_anything_was_checked(server):
+    out = _call(server, "violations", {"repo": "a"})
+    assert out["checked"] is True and out["conventions"] == ["dotnet-praticis[split]"] and "note" not in out
+    out = _call(server, "violations", {"repo": "b"})
+    assert out["checked"] is False and out["total"] == 0 and "nothing was checked" in out["note"]
+
+
+def test_ref_diff_lists_symbols_added_removed_changed(server):
+    out = _call(server, "ref_diff", {"repo": "a", "ref": "feature/y"})
+    assert [r["qualified_name"] for r in out["symbols_added"]] == ["pkg.New"]
+    assert [r["qualified_name"] for r in out["symbols_removed"]] == ["pkg.Gone"]
+    assert [r["qualified_name"] for r in out["symbols_changed"]] == ["pkg.Edit"]
+    assert out["summary"]["symbols_changed"] == 1 and "hash" not in out["symbols_added"][0]
+
+
+def test_find_symbol_precise_modes(server):
+    def call(args):
+        rows = asyncio.run(server.call_tool("find_symbol", args))
+        content = rows[0] if isinstance(rows, tuple) else rows
+        return json.loads(content[0].text)
+    assert call({"query": "Backoff", "match": "word"})["pattern"].startswith("(?s)")
+    assert call({"query": "pkg.Do", "match": "exact"})["pattern"] is None
+    assert call({"query": "^Err[A-Z]", "match": "regex"})["pattern"] == "(?s).*(?:^Err[A-Z]).*"
+    for bad in ({"query": "retry backoff", "match": "word"}, {"query": "a(", "match": "regex"}, {"query": "x", "match": "nope"}):
+        with pytest.raises(Exception):
+            _call(server, "find_symbol", bad)
+
+
+@pytest.mark.parametrize("name,hit", [
+    ("RetryBackoff", True), ("backoffDelay", True), ("retry_backoff", True), ("BACKOFF_MAX", True),
+    ("Backoff", True), ("backoff", True), ("NewBACKOFF", True),
+    ("Backoffice", False), ("BackofficeService", False), ("backoffice_user", False), ("myBackoffice", False),
+])
+def test_word_pattern_is_camel_and_snake_aware(name, hit):
+    import re
+    from aidd_indexer.mcp.server import _word_pattern
+    assert bool(re.fullmatch(_word_pattern("backoff"), name)) is hit       # Neo4j `=~` matches the whole name
+
+
+def test_atlas_status_reports_remote_sync_per_repo(monkeypatch):
+    class Remote(FakeStore):
+        def read(self, query, **params):
+            if "AS remote" in query:
+                return [{"repo": "a", "remote": {"ok": False, "note": "remote fetch failed (404)", "last_success_at": None,
+                                                 "success_age_min": None}, "snapshots": []}]
+            return super().read(query, **params)
+    monkeypatch.setenv("AIDD_TENANT", "t")
+    out = _call(build_server(store=Remote()), "atlas_status", {})
+    assert out["repos"][0]["remote"]["ok"] is False and "404" in out["repos"][0]["remote"]["note"]
