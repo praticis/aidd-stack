@@ -1,0 +1,722 @@
+"""`atlas` MCP server — intent-level, read-only access to the code graph for the skills.
+
+Design:
+  * Every query is scoped to a tenant. Fixed mode (AIDD_TENANT=<name>): server-side, the caller never
+    passes one. Multi-tenant mode (AIDD_TENANT=auto, workspace <ws>/<tenant>/<repo>): tools take an
+    optional `tenant`; omitted → the only tenant in the graph, or an error listing them.
+  * `ref` defaults to the repo's default branch; ephemeral (feature-branch) snapshots
+    are searched only when a `ref` is named explicitly.
+  * Results are compact JSON, sized for an LLM context (limits everywhere).
+  * `cypher_readonly` runs inside a READ transaction — the server rejects writes — and
+    additionally refuses obvious mutation keywords before sending anything. Tenant scoping of raw
+    Cypher cannot be enforced (a query may simply not filter on `$tenant`): in multi-tenant mode it
+    can read every tenant. Offered by default; `ATLAS_RAW_CYPHER=off` withdraws it in multi-tenant mode
+    when the tenants must not see each other (e.g. several client organizations on one machine).
+  * DNS-rebinding protection: only `Host` values in ATLAS_ALLOWED_HOSTS (default localhost,
+    127.0.0.1, [::1] and the compose service name, any port) and browser `Origin`s on those hosts are
+    accepted — a web page cannot reach the server through a rebinding domain.
+
+Transport: streamable HTTP, stateless, JSON responses — `POST /mcp` works with a plain
+curl `initialize` (install-check.sh) as well as with Claude Code / Cursor / Antigravity.
+`GET /healthz` answers 200 when Neo4j is reachable.
+
+Run: `aidd serve [--host 0.0.0.0] [--port 3000]`  (docker-compose service `mcp-atlas`).
+"""
+
+from __future__ import annotations
+
+import os
+import re
+from typing import Any
+
+from neo4j import GraphDatabase
+
+from .. import INDEXER_VERSION
+from ..core.config import is_test_path, ConfigError, Neo4jConfig
+
+MAX_ROWS = 200
+NO_REFRESH = {"stale": None, "note": "no automatic refresh recorded for this tenant yet (indexed on demand, or the "
+                                     "refresher is not running — `aidd schedule status`)"}
+FORBIDDEN = re.compile(
+    r"\b(CREATE|MERGE|DELETE|DETACH|SET|REMOVE|DROP|CALL\s+\{|LOAD\s+CSV|FOREACH|"
+    r"apoc\.(create|merge|refactor|periodic|load|export|import|trigger|cypher\.)|"
+    r"db\.(create|drop|index\.fulltext\.(create|drop))|dbms\.)",
+    re.IGNORECASE,
+)
+LUCENE_SPECIAL = re.compile(r'([+\-!(){}\[\]^"~*?:\\/]|&&|\|\|)')
+
+
+class AtlasError(RuntimeError):
+    """Raised for user-facing errors (unknown repo/ref, refused query). Surfaces as a tool error."""
+
+
+def _off(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in ("0", "off", "false", "no")
+
+
+def transport_security():
+    from mcp.server.transport_security import TransportSecuritySettings
+    hosts = [h.strip() for h in os.getenv("ATLAS_ALLOWED_HOSTS", "").split(",") if h.strip()] or \
+        ["localhost", "127.0.0.1", "[::1]", "mcp-atlas"]
+    with_port = [h if ":" in h.replace("[::1]", "") else f"{h}:*" for h in hosts]
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=sorted(set(hosts + with_port)),
+        allowed_origins=sorted({f"{scheme}://{h}" for h in with_port for scheme in ("http", "https")}),
+    )
+
+
+def _tenant() -> str | None:
+    """Fixed tenant from AIDD_TENANT, or None for multi-tenant mode (`AIDD_TENANT=auto`: the
+    workspace is laid out as <workspace>/<tenant>/<repo> and the graph may hold several tenants;
+    tools then take an optional `tenant` argument, resolved by the skill from the repo path)."""
+    t = os.getenv("AIDD_TENANT", "").strip()
+    if not t:
+        raise ConfigError("AIDD_TENANT must be set (a tenant name, or 'auto' for multi-tenant mode)")
+    return None if t == "auto" else t
+
+
+class Store:
+    """Thin read-only Neo4j accessor. One driver per server process; `scoped(tenant)` returns a
+    view bound to one tenant (every query is parameterized with `$tenant`)."""
+
+    def __init__(self, cfg: Neo4jConfig, tenant: str | None, driver=None):
+        self.cfg = cfg
+        self.tenant = tenant                     # None = multi-tenant mode, resolve per call
+        self.driver = driver or GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password), notifications_min_severity="OFF")
+
+    def close(self) -> None:
+        self.driver.close()
+
+    def scoped(self, tenant: str) -> "Store":
+        view = Store.__new__(Store)
+        view.cfg, view.tenant, view.driver = self.cfg, tenant, self.driver
+        return view
+
+    def read(self, query: str, **params: Any) -> list[dict[str, Any]]:
+        if self.tenant is not None:
+            params.setdefault("tenant", self.tenant)
+        with self.driver.session(database=self.cfg.database, default_access_mode="READ") as s:
+            return s.execute_read(lambda tx: [r.data() for r in tx.run(query, **params)])
+
+    def tenants(self) -> list[str]:
+        return [r["t"] for r in self.read("MATCH (r:Repo) RETURN DISTINCT r.tenant AS t ORDER BY t")]
+
+    def resolve_tenant(self, tenant: str | None) -> "Store":
+        """Fixed mode: the server's tenant wins (a different explicit one is an error, not silently
+        ignored). Multi-tenant mode: the argument, or the only tenant in the graph, or an error listing them."""
+        if self.tenant is not None:
+            if tenant and tenant != self.tenant:
+                raise AtlasError(f"this atlas serves tenant '{self.tenant}' only (AIDD_TENANT); got '{tenant}'")
+            return self
+        if tenant:
+            known = self.tenants()
+            if tenant not in known:
+                raise AtlasError(f"tenant '{tenant}' is not in atlas. Indexed tenants: {', '.join(known) or '(none)'}")
+            return self.scoped(tenant)
+        known = self.tenants()
+        if len(known) == 1:
+            return self.scoped(known[0])
+        raise AtlasError("multi-tenant atlas (AIDD_TENANT=auto): pass `tenant` — the workspace folder right below "
+                         f"WORKSPACE_PATH for this repo. Indexed tenants: {', '.join(known) or '(none)'}")
+
+    def refresh_state(self) -> dict[str, Any] | None:
+        """Last refresh of this tenant (written by every `aidd refresh`, even when nothing changed).
+        `stale`: no refresh within 2 intervals — the graph may lag behind the remotes."""
+        rows = self.read("""
+            MATCH (h:RefreshState {tenant: $tenant})
+            RETURN toString(h.last_finished_at) AS last_finished_at, h.last_rc AS last_rc, h.trigger AS trigger,
+                   h.interval_min AS interval_min, h.changed AS changed,
+                   duration.inSeconds(h.last_finished_at, datetime()).seconds / 60 AS age_min
+        """)
+        if not rows:
+            return None
+        r = rows[0]
+        r["stale"] = r["age_min"] is not None and r["age_min"] > 2 * int(r["interval_min"] or 15)
+        return r
+
+    def ping(self) -> bool:
+        try:
+            self.read("RETURN 1 AS ok")
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
+    # -- helpers -------------------------------------------------------------------------
+    def repos(self) -> list[dict[str, Any]]:
+        return self.read("""
+            MATCH (r:Repo {tenant: $tenant})
+            OPTIONAL MATCH (r)-[:HAS_SNAPSHOT]->(s:Snapshot)
+            RETURN r.name AS repo, r.default_ref AS default_ref, r.stack AS stack, r.area AS area,
+                   collect({ref: s.ref, sha: left(s.commit_sha, 10), ephemeral: s.ephemeral,
+                            indexed_at: toString(s.indexed_at),
+                            age_min: duration.inSeconds(s.indexed_at, datetime()).seconds / 60}) AS snapshots
+            ORDER BY repo
+        """)
+
+    def resolve_ref(self, repo: str, ref: str | None) -> str:
+        rows = self.read("""
+            MATCH (r:Repo {tenant: $tenant, name: $repo})
+            OPTIONAL MATCH (r)-[:HAS_SNAPSHOT]->(s:Snapshot)
+            RETURN r.default_ref AS default_ref, collect(s.ref) AS refs
+        """, repo=repo)
+        if not rows:
+            known = [r["repo"] for r in self.repos()]
+            raise AtlasError(f"repo '{repo}' is not in atlas. Indexed repos: {', '.join(known) or '(none)'}")
+        default_ref, refs = rows[0]["default_ref"], rows[0]["refs"]
+        chosen = ref or default_ref
+        if chosen not in refs:
+            raise AtlasError(f"ref '{chosen}' of '{repo}' is not indexed. Available: {', '.join(sorted(refs))}")
+        return chosen
+
+
+def _fulltext_query(text: str) -> str:
+    """Lucene query for `symbol_fulltext`: exact term OR prefix, special chars escaped."""
+    terms = [LUCENE_SPECIAL.sub(r"\\\1", t) for t in text.split() if t]
+    if not terms:
+        raise AtlasError("empty query")
+    parts = []
+    for t in terms:
+        parts.append(f"{t}")
+        parts.append(f"{t}*")
+    return " OR ".join(parts)
+
+
+# ------------------------------------------------------------------------------------------
+def _collapse_dependents(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One line per dependent service: packages (union over refs) and the refs that declare them."""
+    by: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        e = by.setdefault(r["service"], {"service": r["service"], "packages": set(), "refs": set()})
+        e["packages"].update(r["packages"] or ())
+        e["refs"].update(r["refs"] or ())
+    return [{"service": k, "packages": sorted(v["packages"]), "refs": sorted(v["refs"])} for k, v in sorted(by.items())]
+
+
+def _collapse_refs(consumers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per (repo, caller) with the refs it appears in — a call site indexed on 13 branches
+    is one consumer, not thirteen. `evidence` is taken from the first ref in sorted order (the
+    default branch sorts first in practice: 'main' < 'feature/...' is not guaranteed, so refs are listed)."""
+    groups: dict[tuple[str, str], dict[str, Any]] = {}
+    for c in consumers:
+        key = (c["repo"], c.get("caller") or "")
+        g = groups.setdefault(key, {**{k: v for k, v in c.items() if k != "ref"}, "refs": []})
+        g["refs"].append(c["ref"])
+    out = []
+    for g in groups.values():
+        g["refs"] = sorted(set(g["refs"]), key=lambda r: (r not in ("main", "master", "develop"), r))
+        g["ref_count"] = len(g["refs"])
+        out.append(g)
+    return sorted(out, key=lambda g: (g["repo"], g.get("caller") or ""))
+
+
+def build_server(store: Store | None = None):
+    from mcp.server.fastmcp import FastMCP
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+
+    # One driver for the process lifetime. (FastMCP's `lifespan` is entered per session — per
+    # request in stateless mode — so it is the wrong place for a connection pool.)
+    the_store = store or Store(Neo4jConfig.from_env(), _tenant())
+
+    mcp = FastMCP(
+        "atlas",
+        instructions=(
+            "Read-only access to the aidd code graph (micro level: repos, modules, files, symbols, "
+            "calls, imports). Start with atlas_status to see what is indexed; use repo_map for an "
+            "overview of one repository, find_symbol / who_calls / symbol_context to navigate code, "
+            "http_map / who_consumes for HTTP integrations between repositories, impact_of for the "
+            "cross-repo blast radius of a symbol, ref_diff for what a branch adds to a repo's surface, "
+            "and cypher_readonly for anything else (schema: neo4j/SCHEMA.md; filter on $tenant). If a repo or ref is "
+            "not indexed the tool says so — fall back to reading the source tree. In multi-tenant mode "
+            "(AIDD_TENANT=auto) every tool accepts `tenant` = the workspace folder right below WORKSPACE_PATH "
+            "for the current repo; omit it when the graph holds a single tenant."
+        ),
+        host=os.getenv("ATLAS_MCP_HOST", "0.0.0.0"),
+        port=int(os.getenv("ATLAS_MCP_PORT", "3000")),
+        stateless_http=True,
+        json_response=True,
+        transport_security=transport_security(),
+    )
+
+    def st(tenant: str | None = None) -> Store:
+        return the_store.resolve_tenant(tenant)
+
+    # ---- tools ---------------------------------------------------------------------------
+    @mcp.tool()
+    def atlas_status(tenant: str | None = None) -> dict[str, Any]:
+        """What atlas knows: indexed repositories, their refs (default branch + active feature
+        branches), commit and freshness. Call first; a repo missing here means 'not indexed'.
+        `refresh` is the tenant's last automatic update: when `stale` is true the refresher has not run
+        for over two intervals and the graph may lag behind the remotes — say so in your answer
+        (`stale: null` = no automatic run recorded yet, e.g. a tenant just indexed on demand).
+        In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
+        the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
+        if the_store.tenant is None and not tenant:
+            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION,
+                    "tenants": [{"tenant": t, "refresh": the_store.scoped(t).refresh_state() or NO_REFRESH,
+                                 "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
+        s = st(tenant)
+        return {"mode": "fixed" if the_store.tenant else "multi-tenant", "tenant": s.tenant,
+                "indexer_version": INDEXER_VERSION, "refresh": s.refresh_state() or NO_REFRESH, "repos": s.repos()}
+
+    @mcp.tool()
+    def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
+        """Overview of one repository at a ref (default: its default branch): stack, modules with
+        file/symbol counts, entry points (HTTP handlers, controllers, commands), the external
+        packages it imports, `layers` (files per architectural layer when a convention is configured,
+        with their violation count — see `violations`), and `depends_on` / `depended_by`: other services
+        of the workspace linked through internal packages declared in manifests (go.mod, .csproj,
+        package.json, pyproject). With a convention configured: `architecture` (the layout it detected,
+        e.g. `split`), `conventions` applied, and `roles` — what each type is in the pattern
+        (`command-handler`, `validator`, `repository`...), with counts and examples; `find_symbol(role=...)`
+        lists every element of a role. Use it before reading files — it tells where things live."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = dict(repo=repo, ref=ref)
+        head = s.read("""
+            MATCH (r:Repo {tenant: $tenant, name: $repo})-[:HAS_SNAPSHOT]->(snap:Snapshot {ref: $ref})
+            RETURN r.stack AS stack, r.area AS area, r.default_ref AS default_ref, r.url AS url,
+                   left(snap.commit_sha, 10) AS sha, toString(snap.indexed_at) AS indexed_at, snap.ephemeral AS ephemeral,
+                   snap.architecture AS architecture, coalesce(snap.conventions, []) AS conventions
+        """, **base)
+        head = head[0] if head else {}
+        modules = s.read("""
+            MATCH (m:Module {tenant: $tenant, repo: $repo, ref: $ref})
+            OPTIONAL MATCH (m)-[:CONTAINS]->(f:File)
+            OPTIONAL MATCH (f)-[:CONTAINS]->(sy:Symbol)
+            RETURN m.name AS name, m.path AS path, m.kind AS kind, count(DISTINCT f) AS files,
+                   count(DISTINCT sy) AS symbols, sum(f.loc) AS loc
+            ORDER BY files DESC, path
+        """, **base)
+        entry_points = s.read("""
+            MATCH (f:File {tenant: $tenant, repo: $repo, ref: $ref})-[:CONTAINS]->(sy:Symbol {is_entry_point: true})
+            RETURN sy.id AS id, sy.qualified_name AS qualified_name, sy.kind AS kind, f.path AS file,
+                   sy.line_start AS line, sy.signature AS signature
+            ORDER BY file, line LIMIT $limit
+        """, limit=max_entry_points, **base)
+        packages = s.read("""
+            MATCH (f:File {tenant: $tenant, repo: $repo, ref: $ref})-[:IMPORTS]->(p:Package)
+            WHERE coalesce(p.stdlib, false) = false
+            RETURN p.name AS name, p.ecosystem AS ecosystem, count(DISTINCT f) AS files
+            ORDER BY files DESC, name LIMIT 40
+        """, **base)
+        kinds = s.read("""
+            MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref})
+            RETURN sy.kind AS kind, count(*) AS n ORDER BY n DESC
+        """, **base)
+        roles = s.read("""
+            MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref}) WHERE sy.role IS NOT NULL
+            WITH sy ORDER BY sy.name
+            RETURN sy.role AS role, count(*) AS count, collect(sy.name)[..5] AS examples
+            ORDER BY count DESC, role
+        """, **base)
+        layers = s.read("""
+            MATCH (f:File {tenant: $tenant, repo: $repo, ref: $ref}) WHERE f.layer IS NOT NULL
+            OPTIONAL MATCH (f)-[:HAS_VIOLATION]->(v:Violation)
+            RETURN f.layer AS layer, count(DISTINCT f) AS files, count(DISTINCT v) AS violations
+            ORDER BY layer
+        """, **base)
+        depends_on = s.read("""
+            MATCH (:Service {tenant: $tenant, name: $repo})-[d:DEPENDS_ON {ref: $ref}]->(b:Service)
+            RETURN b.name AS service, d.packages AS packages, d.versions AS versions, d.ecosystems AS ecosystems
+            ORDER BY service
+        """, **base)
+        depended_by = s.read("""
+            MATCH (a:Service)-[d:DEPENDS_ON]->(:Service {tenant: $tenant, name: $repo})
+            RETURN a.name AS service, d.packages AS packages, collect(DISTINCT d.ref) AS refs
+            ORDER BY service
+        """, **base)
+        return {**base, **head, "symbol_kinds": {k["kind"]: k["n"] for k in kinds},
+                "modules": modules, "entry_points": entry_points, "external_packages": packages,
+                "roles": roles, "layers": layers, "depends_on": depends_on, "depended_by": _collapse_dependents(depended_by)}
+
+    @mcp.tool()
+    def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
+                    kind: str | None = None, role: str | None = None, limit: int = 20,
+                    tenant: str | None = None) -> list[dict[str, Any]]:
+        """Full-text search over symbol names, qualified names, signatures and docstrings
+        (functions, methods, classes, structs, interfaces...), topped up with substring matches on
+        the name ('Handler' finds 'Handler', 'HandlerFunc' and 'AuthHandler'). Without `ref`, only default branches are
+        searched; name a `ref` to search a feature branch. `kind` filters e.g. function|method|class|struct|interface;
+        `role` filters by what a convention says the type is (`command-handler`, `validator`... — see
+        `repo_map.roles`). With a `role`, `query` "*" lists every element of it."""
+        s = st(tenant)
+        if repo:
+            ref = s.resolve_ref(repo, ref)
+        if role and query.strip() in ("", "*"):
+            return s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, role: $role})
+                WHERE ($repo IS NULL OR sy.repo = $repo) AND ($kind IS NULL OR sy.kind = $kind)
+                MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+                WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                       sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
+                       sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 1.0 AS score
+                ORDER BY sy.repo, f.path, sy.line_start LIMIT $limit
+            """, role=role, repo=repo, ref=ref, kind=kind, limit=min(limit, MAX_ROWS))
+        rows = s.read("""
+            CALL db.index.fulltext.queryNodes('symbol_fulltext', $q) YIELD node AS sy, score
+            WHERE sy.tenant = $tenant
+              AND ($repo IS NULL OR sy.repo = $repo)
+              AND ($kind IS NULL OR sy.kind = $kind)
+              AND ($role IS NULL OR sy.role = $role)
+            MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+            WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+            MATCH (f:File)-[:CONTAINS]->(sy)
+            RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                   sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
+                   sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, round(score, 2) AS score
+            ORDER BY score DESC LIMIT $limit
+        """, q=_fulltext_query(query), repo=repo, ref=ref, kind=kind, role=role, limit=min(limit, MAX_ROWS))
+        # Lucene matches whole terms and prefixes ('Handler' → 'Handler', 'HandlerFunc'), not
+        # suffixes ('AuthHandler'). Top up with a case-insensitive substring pass on the name.
+        if len(rows) < limit and " " not in query.strip():
+            seen = {r["id"] for r in rows}
+            extra = s.read("""
+                MATCH (sy:Symbol {tenant: $tenant})
+                WHERE toLower(sy.name) CONTAINS toLower($text)
+                  AND ($repo IS NULL OR sy.repo = $repo)
+                  AND ($kind IS NULL OR sy.kind = $kind)
+                  AND ($role IS NULL OR sy.role = $role)
+                MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+                WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                       sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line,
+                       sy.signature AS signature, sy.is_entry_point AS entry_point, sy.role AS role, 0.0 AS score
+                ORDER BY size(sy.name), sy.name LIMIT $limit
+            """, text=query.strip(), repo=repo, ref=ref, kind=kind, role=role, limit=min(limit, MAX_ROWS))
+            rows += [r for r in extra if r["id"] not in seen][: limit - len(rows)]
+        return rows
+
+    def _symbol(s: Store, symbol: str, repo: str | None, ref: str | None) -> dict[str, Any]:
+        """Resolve `symbol` (id, qualified_name or bare name) to exactly one Symbol node."""
+        if repo:
+            ref = s.resolve_ref(repo, ref)
+        rows = s.read("""
+            MATCH (sy:Symbol {tenant: $tenant})
+            WHERE (sy.id = $symbol OR sy.qualified_name = $symbol OR sy.name = $symbol)
+              AND ($repo IS NULL OR sy.repo = $repo)
+            MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+            WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
+            MATCH (f:File)-[:CONTAINS]->(sy)
+            RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
+                   sy.qualified_name AS qualified_name, f.path AS file, sy.line_start AS line_start,
+                   sy.line_end AS line_end, sy.signature AS signature, sy.doc AS doc,
+                   sy.visibility AS visibility, sy.is_entry_point AS entry_point, sy.role AS role
+            LIMIT 6
+        """, symbol=symbol, repo=repo, ref=ref)
+        if not rows:
+            raise AtlasError(f"symbol '{symbol}' not found" + (f" in {repo}@{ref}" if repo else "") +
+                             " — try find_symbol first, or name the repo/ref")
+        if len(rows) > 1:
+            opts = "; ".join(f"{r['id']}" for r in rows)
+            raise AtlasError(f"'{symbol}' is ambiguous ({len(rows)} matches). Use one of the ids: {opts}")
+        return rows[0]
+
+    @mcp.tool()
+    def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50, tenant: str | None = None) -> dict[str, Any]:
+        """Incoming calls: which symbols (and files) call `symbol`. `symbol` may be a symbol id from
+        find_symbol, a qualified name (pkg.Type.Method) or a bare name when unambiguous. Calls are
+        resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven."""
+        s = st(tenant)
+        target = _symbol(s, symbol, repo, ref)
+        callers = s.read("""
+            MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
+            OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
+            RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
+                   caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+            ORDER BY file, line LIMIT $limit
+        """, id=target["id"], limit=min(limit, MAX_ROWS))
+        return {"symbol": target, "callers": callers, "caller_count": len(callers)}
+
+    @mcp.tool()
+    def symbol_context(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 30, tenant: str | None = None) -> dict[str, Any]:
+        """Everything the graph knows around one symbol: definition (file, lines, signature, doc),
+        its container (class/struct) and members, what it calls, who calls it, and what its file
+        imports. The right tool before editing a function or estimating impact."""
+        s = st(tenant)
+        sy = _symbol(s, symbol, repo, ref)
+        base = dict(id=sy["id"], limit=min(limit, MAX_ROWS))
+        parent = s.read("MATCH (p:Symbol)-[:CONTAINS]->(:Symbol {id: $id}) RETURN p.id AS id, p.kind AS kind, p.qualified_name AS qualified_name", **base)
+        members = s.read("MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id, m.kind AS kind, m.name AS name, m.signature AS signature ORDER BY m.line_start LIMIT $limit", **base)
+        callees = s.read("""
+            MATCH (:Symbol {id: $id})-[c:CALLS]->(t:Symbol)
+            MATCH (f:File)-[:CONTAINS]->(t)
+            RETURN t.id AS id, t.kind AS kind, t.qualified_name AS qualified_name, f.path AS file, c.line AS line, c.strategy AS strategy
+            ORDER BY line LIMIT $limit
+        """, **base)
+        callers = s.read("""
+            MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
+            OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
+            RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
+                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+            ORDER BY file, line LIMIT $limit
+        """, **base)
+        imports = s.read("""
+            MATCH (f:File)-[:CONTAINS]->(:Symbol {id: $id})
+            MATCH (f)-[i:IMPORTS]->(t)
+            RETURN labels(t)[0] AS type, coalesce(t.name, t.path) AS target, i.spec AS spec
+            ORDER BY type, target LIMIT $limit
+        """, **base)
+        return {"symbol": sy, "parent": parent[0] if parent else None, "members": members,
+                "calls": callees, "called_by": callers, "file_imports": imports}
+
+    @mcp.tool()
+    def http_map(repo: str, ref: str | None = None, tenant: str | None = None) -> dict[str, Any]:
+        """HTTP surface of one repository at a ref: the routes it EXPOSES (method, path template,
+        framework, handler symbol) and the outbound HTTP calls it makes with a literal path
+        (method, path template, where in the code, which package/env var hints at the target
+        service, and `linked_to`: the endpoint of another service the linker matched it to, or
+        null). Extracted deterministically from the source — no runtime data."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = dict(repo=repo, ref=ref)
+        exposes = s.read("""
+            MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+            OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            OPTIONAL MATCH (consumer:Service)-[:CONSUMES]->(e)
+            RETURN e.id AS id, e.method AS method, e.path AS path, e.framework AS framework,
+                   h.id AS handler_id, h.qualified_name AS handler, x.evidence AS evidence,
+                   collect(DISTINCT consumer.name) AS consumer_repos
+            ORDER BY path, method
+        """, **base)
+        calls = s.read("""
+            MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+            OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
+            OPTIONAL MATCH (target:HttpEndpoint)-[cf:CALLED_FROM {call_id: c.id}]->()
+            WITH c, caller, collect(DISTINCT CASE WHEN target IS NULL THEN null ELSE
+                 {service: target.service, method: target.method, path: target.path, confidence: cf.confidence, hint: cf.hint}
+                 END) AS targets
+            RETURN c.id AS id, c.method AS method, c.path AS path, c.via AS via, c.target_hint AS target_hint,
+                   c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence,
+                   [t IN targets WHERE t IS NOT NULL] AS targets
+            ORDER BY target_hint, path, method
+        """, **base)
+        for c in calls:                          # one row per call site; a call linked to several endpoints lists them all
+            targets = c.pop("targets") or []
+            c["linked_to"] = targets[0] if targets else None
+            if len(targets) > 1:
+                c["also_linked_to"] = targets[1:]
+        by_target: dict[str, int] = {}
+        for c in calls:
+            by_target[c["target_hint"] or "?"] = by_target.get(c["target_hint"] or "?", 0) + 1
+        linked = sum(1 for c in calls if c["linked_to"])
+        return {**base, "exposes": exposes, "outbound_calls": calls, "outbound_by_target_hint": by_target,
+                "outbound_linked": linked, "outbound_unlinked": len(calls) - linked}
+
+    @mcp.tool()
+    def who_consumes(path: str, method: str | None = None, repo: str | None = None, tenant: str | None = None) -> dict[str, Any]:
+        """Which repositories call an HTTP route, and from where. `path` is a route template as
+        exposed ('/v1/users/{id}' — placeholder names do not matter) or a prefix; `repo` narrows
+        to the service exposing it. Returns each matching endpoint with its handler, its
+        `consumers` (materialized CONSUMES/CALLED_FROM edges, one per repo × caller symbol with the
+        `refs` where the call site exists, file:line evidence, confidence exact|suffix and which
+        hint broke a tie) and `possible_consumers`: outbound
+        calls with the same path that the linker did NOT link — usually because several services
+        expose that path and nothing (target_hint, env var name, convention `targets:`) picks one.
+        Consumers come from outbound calls with a literal/template path in the consumer's code;
+        URLs assembled dynamically are invisible."""
+        s = st(tenant)
+        key = re.sub(r"\{[^}]*\}", "{param}", path.rstrip("/") or "/")
+        rows = s.read("""
+            MATCH (svc:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
+            WHERE ($repo IS NULL OR svc.name = $repo)
+              AND ($method IS NULL OR e.method = toUpper($method) OR e.method = 'ANY')
+              AND (e.path_key = $key OR e.path_key STARTS WITH $key + '/')
+            WITH DISTINCT svc, e
+            OPTIONAL MATCH (e)-[:HANDLED_BY]->(h:Symbol)
+            WITH svc, e, collect(DISTINCT {ref: h.ref, symbol: h.qualified_name})[0..3] AS handlers
+            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
+            WITH svc, e, handlers, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            WITH svc, e, handlers,
+                 [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
+                    {repo: caller.repo, ref: cf.ref, method: cf.method, caller: coalesce(caller.qualified_name, caller.path),
+                     evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
+            OPTIONAL MATCH (c:HttpCall {tenant: $tenant, path_key: e.path_key})
+            WHERE (c.method = e.method OR e.method = 'ANY' OR c.method = 'ANY') AND c.repo <> svc.name
+              AND NOT EXISTS { MATCH (e)-[x:CALLED_FROM]->() WHERE x.call_id = c.id }
+            OPTIONAL MATCH (pc)-[:MAKES_HTTP_CALL]->(c)
+            WITH svc, e, handlers, consumers, c, pc ORDER BY c.repo, c.ref, c.line
+            RETURN svc.name AS service, e.id AS endpoint_id, e.method AS method, e.path AS path, handlers, consumers,
+                   [x IN collect(CASE WHEN c IS NULL THEN null ELSE
+                        {repo: c.repo, ref: c.ref, method: c.method, path: c.path,
+                         caller: coalesce(pc.qualified_name, pc.path), evidence: c.evidence,
+                         target_hint: c.target_hint, env_hints: c.env_hints} END) WHERE x IS NOT NULL][0..20] AS possible_consumers
+            ORDER BY service, path, method LIMIT 50
+        """, key=key, method=method, repo=repo)
+        for r in rows:
+            r["consumers"] = _collapse_refs(r["consumers"])
+            r["consumer_repos"] = sorted({c["repo"] for c in r["consumers"]})
+        return {"query": {"path": path, "method": method, "repo": repo}, "endpoints": rows}
+
+    @mcp.tool()
+    def impact_of(symbol: str, repo: str | None = None, ref: str | None = None, max_depth: int = 6,
+                  tenant: str | None = None) -> dict[str, Any]:
+        """Blast radius of changing one symbol, across repositories. Walks incoming CALLS inside the
+        symbol's repo/ref (up to `max_depth` hops) to the HTTP handlers that reach it, then the
+        routes those handlers serve (HANDLED_BY) and the services that consume them (CONSUMES /
+        CALLED_FROM, materialized by the linker). Returns: `internal_callers` (symbols in the same
+        repo that reach it, with hop distance), `exposed_through` (routes whose handler reaches it),
+        `consumers` (other repos: service, route, caller symbol, file:line, confidence). Each internal
+        caller carries `test: true|false` (file under a test path) and the counts are split into
+        `production_caller_count` / `test_caller_count` — read the production ones first. An empty
+        `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
+        app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
+        `-ambiguous` are likely, not proven."""
+        s = st(tenant)
+        sy = _symbol(s, symbol, repo, ref)
+        depth = max(1, min(max_depth, 10))
+        callers = s.read(f"""
+            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(:Symbol {{id: $id}})
+            WHERE h.ref = $ref AND h.repo = $repo
+            WITH h, min(length(p)) AS hops, collect(DISTINCT [r IN relationships(p) | r.strategy]) AS strategies
+            MATCH (f:File)-[:CONTAINS]->(h)
+            RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file, hops,
+                   h.is_entry_point AS entry_point,
+                   any(st IN reduce(acc = [], x IN strategies | acc + x) WHERE st ENDS WITH 'ambiguous') AS via_ambiguous
+            ORDER BY hops, qualified_name LIMIT $limit
+        """, id=sy["id"], ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
+        for c in callers:
+            c["test"] = is_test_path(c["file"])
+        production = [c for c in callers if not c["test"]]
+        reach_ids = [sy["id"]] + [c["id"] for c in callers]
+        exposed = s.read("""
+            MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            WHERE h.id IN $ids
+            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
+            WITH e, h, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            RETURN e.id AS endpoint_id, e.service AS service, e.method AS method, e.path AS path,
+                   h.qualified_name AS handler,
+                   [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
+                        {repo: caller.repo, ref: cf.ref, caller: coalesce(caller.qualified_name, caller.path),
+                         evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
+            ORDER BY path, method
+        """, ref=sy["ref"], ids=reach_ids)
+        consumers = []
+        for e in exposed:
+            for c in _collapse_refs(e.pop("consumers")):
+                consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
+        return {"symbol": sy, "internal_callers": callers, "internal_caller_count": len(callers),
+                "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
+                "exposed_through": exposed, "consumers": consumers,
+                "consumer_repos": sorted({c["repo"] for c in consumers})}
+
+    @mcp.tool()
+    def ref_diff(repo: str, ref: str, base: str | None = None, tenant: str | None = None) -> dict[str, Any]:
+        """What a branch adds or removes compared to another indexed ref of the same repo (default:
+        the repo's default branch): HTTP routes exposed (`endpoints_added` / `endpoints_removed`),
+        entry-point symbols (handlers, controllers, commands — `entry_points_added` / `_removed`, by
+        qualified name) and outbound HTTP calls (`http_calls_added` / `_removed`, by method+path).
+        Useful to review a feature branch's surface before it merges, or to explain why
+        `who_consumes` shows a route only in some refs. `snapshots` gives the indexed sha of each
+        ref — compare with `git rev-parse` before trusting a diff on a branch you just merged into."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = s.resolve_ref(repo, base)
+        if ref == base:
+            raise AtlasError(f"ref and base are the same ({ref}) — pass a different `base`")
+
+        def surface(r: str) -> dict[str, Any]:
+            eps = s.read("""
+                MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+                OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+                RETURN e.method + ' ' + e.path AS key, e.method AS method, e.path AS path, h.qualified_name AS handler, x.evidence AS evidence
+            """, repo=repo, ref=r)
+            syms = s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref, is_entry_point: true})
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.qualified_name AS key, sy.kind AS kind, f.path AS file, sy.line_start AS line
+            """, repo=repo, ref=r)
+            calls = s.read("""
+                MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+                RETURN DISTINCT c.method + ' ' + c.path AS key, c.method AS method, c.path AS path, c.target_hint AS target_hint
+            """, repo=repo, ref=r)
+            return {"endpoints": {r["key"]: r for r in eps}, "entry_points": {r["key"]: r for r in syms},
+                    "http_calls": {r["key"]: r for r in calls}}
+
+        a, b = surface(ref), surface(base)
+        snaps = {r["ref"]: r for r in s.read("""
+            MATCH (sn:Snapshot {tenant: $tenant, repo: $repo}) WHERE sn.ref IN [$ref, $base]
+            RETURN sn.ref AS ref, left(sn.commit_sha, 10) AS sha, toString(sn.indexed_at) AS indexed_at
+        """, repo=repo, ref=ref, base=base)}
+        out: dict[str, Any] = {"repo": repo, "ref": ref, "base": base,
+                               "snapshots": snaps,
+                               "note": "compares the INDEXED commits above (remote-tracking refs). A local merge or "
+                                       "unpushed commits are not in the graph until they are pushed and refreshed."}
+        for kind in ("endpoints", "entry_points", "http_calls"):
+            out[f"{kind}_added"] = [a[kind][k] for k in sorted(set(a[kind]) - set(b[kind]))]
+            out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
+        out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
+        return out
+
+    @mcp.tool()
+    def violations(repo: str, ref: str | None = None, severity: str | None = None, rule: str | None = None,
+                   layer: str | None = None, limit: int = 100, tenant: str | None = None) -> dict[str, Any]:
+        """Convention violations recorded for a repository at a ref (default: its default branch):
+        which rule, where (file:line, symbol), severity and message — e.g. a domain file importing an
+        adapter, a route declared outside the inbound layer. Empty when no convention is configured for
+        the tenant (`atlas.yaml: conventions`). Filter by `severity` (error|warning|info), `rule` id or
+        the `layer` of the offending file; `summary` counts per rule regardless of `limit`."""
+        s = st(tenant)
+        ref = s.resolve_ref(repo, ref)
+        base = dict(repo=repo, ref=ref, severity=severity, rule=rule, layer=layer)
+        where = ("WHERE ($severity IS NULL OR v.severity = $severity) AND ($rule IS NULL OR v.rule = $rule) "
+                 "AND ($layer IS NULL OR f.layer = $layer)")
+        rows = s.read(f"""
+            MATCH (f:File {{tenant: $tenant, repo: $repo, ref: $ref}})-[:HAS_VIOLATION]->(v:Violation)
+            {where}
+            OPTIONAL MATCH (sy:Symbol)-[:HAS_VIOLATION]->(v)
+            RETURN v.convention AS convention, v.rule AS rule, v.severity AS severity, v.message AS message,
+                   f.path AS file, f.layer AS layer, v.line AS line, sy.qualified_name AS symbol, v.evidence AS evidence
+            ORDER BY CASE v.severity WHEN 'error' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END, f.path, v.line
+            LIMIT $limit
+        """, limit=limit, **base)
+        summary = s.read(f"""
+            MATCH (f:File {{tenant: $tenant, repo: $repo, ref: $ref}})-[:HAS_VIOLATION]->(v:Violation)
+            {where}
+            RETURN v.convention AS convention, v.rule AS rule, v.severity AS severity, count(*) AS n
+            ORDER BY n DESC
+        """, **base)
+        return {"repo": repo, "ref": ref, "total": sum(r["n"] for r in summary), "summary": summary, "violations": rows}
+
+    raw_cypher = the_store.tenant is not None or not _off("ATLAS_RAW_CYPHER")
+
+    @(mcp.tool() if raw_cypher else (lambda f: f))
+    def cypher_readonly(query: str, params: dict[str, Any] | None = None, tenant: str | None = None) -> dict[str, Any]:
+        """Run a read-only Cypher query against atlas (schema in neo4j/SCHEMA.md: Repo, Snapshot,
+        Module, File, Symbol, Package; edges HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS).
+        `$tenant` is always bound — filter on it: MATCH (s:Symbol {tenant: $tenant, repo: 'x'}) ...
+        Writes are refused. At most 200 rows are returned; add LIMIT yourself for big scans."""
+        if FORBIDDEN.search(query):
+            raise AtlasError("refused: only read-only Cypher is allowed through atlas (no CREATE/MERGE/SET/DELETE/CALL{}/apoc writers)")
+        s = st(tenant)
+        p = dict(params or {})
+        p["tenant"] = s.tenant
+        rows = s.read(query, **p)
+        truncated = len(rows) > MAX_ROWS
+        return {"rows": rows[:MAX_ROWS], "row_count": min(len(rows), MAX_ROWS), "truncated": truncated}
+
+    # ---- plain HTTP health for docker/compose and install-check ---------------------------
+    @mcp.custom_route("/healthz", methods=["GET"])
+    async def healthz(_: Request) -> JSONResponse:
+        ok = the_store.ping()            # process-wide store: no tenant resolution here (auto → tenant null)
+        return JSONResponse({"status": "ok" if ok else "degraded", "neo4j": ok, "tenant": the_store.tenant,
+                             "version": INDEXER_VERSION}, status_code=200 if ok else 503)
+
+    return mcp
+
+
+def serve(host: str | None = None, port: int | None = None) -> int:
+    if host:
+        os.environ["ATLAS_MCP_HOST"] = host
+    if port:
+        os.environ["ATLAS_MCP_PORT"] = str(port)
+    # fail fast on a broken contract instead of serving 500s
+    Neo4jConfig.from_env()
+    _tenant()
+    mcp = build_server()
+    mcp.run(transport="streamable-http")
+    return 0

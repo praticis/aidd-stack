@@ -1,0 +1,128 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/rollups",
+   "handler": "GetAsync"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/rollups/{rollupDay}/reset",
+   "handler": "ResetAsync"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "_httpClient.GetAsync",
+   "target_hint": "Accounts",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "_httpClient.GetFromJsonAsync",
+   "target_hint": "Accounts",
+   "line": 13
+  },
+  {
+   "method": "POST",
+   "path": "/api/transactions",
+   "via": "new HttpRequestMessage",
+   "target_hint": "Accounts",
+   "line": 16
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "client.GetAsync",
+   "target_hint": "Accounts",
+   "line": 22
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "client.GetStringAsync",
+   "target_hint": "Accounts",
+   "line": 24
+  },
+  {
+   "method": "POST",
+   "path": "/api/groups",
+   "via": "client.PostAsJsonAsync",
+   "target_hint": "Accounts",
+   "line": 25
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories/{param}",
+   "via": "_httpClient.GetAsync",
+   "target_hint": "Accounts",
+   "line": 26
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{id}/details",
+   "via": "_httpClient.GetAsync",
+   "target_hint": "Accounts",
+   "line": 27
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{accountId}/details",
+   "via": "refit",
+   "target_hint": "Accounts",
+   "line": 33
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "flurl.GetJsonAsync",
+   "target_hint": "Accounts",
+   "line": 40
+  },
+  {
+   "method": "POST",
+   "path": "/api/groups",
+   "via": "flurl.PostJsonAsync",
+   "target_hint": "Accounts",
+   "line": 41
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories",
+   "via": "flurl.GetAsync",
+   "target_hint": "Accounts",
+   "line": 42
+  },
+  {
+   "method": "GET",
+   "path": "/api/accounts/{param}/details",
+   "via": "new RestRequest",
+   "target_hint": "Accounts",
+   "line": 46
+  },
+  {
+   "method": "POST",
+   "path": "/api/groups",
+   "via": "refit",
+   "target_hint": "Accounts",
+   "line": 52
+  },
+  {
+   "method": "OPTIONS",
+   "path": "/api/groups",
+   "via": "refit",
+   "target_hint": "Accounts",
+   "line": 53
+  },
+  {
+   "method": "PUT",
+   "path": "/api/groups/{id}/logo",
+   "via": "refit",
+   "target_hint": "Accounts",
+   "line": 54
+  }
+ ]
+}

@@ -1,0 +1,200 @@
+# Guia de evolução do indexador (`indexer/`)
+
+> Documento de trabalho em PT (como o ROADMAP). Público: quem vai **melhorar a extração** — símbolos,
+> chamadas, e principalmente os **candidatos de integração HTTP** (`core/integrations.py` + `languages/<lang>/http.py`). Os handoffs
+> em `docs/handoffs/` apontam para cá; leia este primeiro.
+
+## 1. O que o indexador é e o que não é
+
+- Transforma repositórios em um grafo (Neo4j, database `atlas`): micro (Repo → Module → File → Symbol,
+  `CALLS`, `IMPORTS`) e macro (Service → `HttpEndpoint`, `HttpCall` → futuro `CONSUMES`). Esquema:
+  `neo4j/SCHEMA.md`. Ids determinísticos: `aidd_indexer/core/ids.py`.
+- **Determinístico**: tree-sitter + heurísticas. LLM nunca é parser (princípio no ROADMAP). Se um padrão não
+  dá para reconhecer estaticamente, a resposta certa é *registrar a limitação*, não chutar.
+- Tudo que o indexador grava carrega `tenant/repo/ref/commit_sha/indexed_at` e, no macro, `evidence`
+  (`repo:arquivo:linha`) e `confidence`. Nada de valor de segredo; só nome de env var.
+- Roda dentro da imagem `aidd-indexer` (Docker), com as gramáticas pré-baixadas
+  (`TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=/opt/tslp-cache`, `AIDD_GRAMMAR_OFFLINE=1`). O `refresh`
+  agendado reindexa a cada 15 min e **reindexa tudo quando `INDEXER_VERSION` muda**.
+
+## 2. Mapa do código
+
+Organização por [ADR-003](adr/ADR-003-language-modules.md): **`core/`** (pipeline genérico, nunca
+pergunta "qual linguagem?"), **`languages/<lang>/`** (o que é específico de cada linguagem, atrás do
+contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de desenvolvimento, plugáveis).
+
+| Arquivo | Papel |
+|---|---|
+| `cli.py` | comandos `plan / bootstrap / refresh / index / status / wipe / selftest / serve`; `extract_tree()` é o pipeline por repo; `extract_and_resolve()` aplica as convenções |
+| `core/discovery.py` | quais arquivos entram; linguagem por extensão via `languages.by_extension()`; módulos por manifesto (declarados em cada `LanguageSupport.manifests`) + `discover_modules()` de cada linguagem (pacotes Go) |
+| `core/extract.py` | `FileExtractor`: parse tree-sitter + `queries.scm` → `SymbolInfo`, `CallInfo`, `ImportInfo`; delega a `LanguageSupport` nomes qualificados, visibilidade, docstrings, bindings de import e marcadores de entry point; `load_language()` com `GRAMMAR_ERRORS` |
+| `core/resolve.py` | `CALLS`: candidatos pelo nome do callee, **código de produção nunca aponta para símbolo de teste**, depois tipo estático do receiver (`LanguageSupport.resolve_receiver` → método no tipo ou em `supertypes` do repo = `receiver-type`; interface com `implementations` único = `receiver-type-impl`; tipo conhecido sem o método = **sem aresta**) → same-file → same-module → unique-name (`-ambiguous` quando sobra mais de um); `IMPORTS` via `resolve_import()` → File/Module/Package; `link_symbols()` por linguagem |
+| `core/deps.py` | manifestos → `provides`/`requires` por repo (`LanguageSupport.manifest_deps`: go.mod, .csproj, package.json, pyproject/requirements), nomes normalizados por ecossistema; vão para o `Snapshot` e o linker cruza por tenant em `DEPENDS_ON` (Service→Service) — F0.5.1 |
+| `core/integrations.py` | orquestra os **candidatos HTTP**: contexto por diretório → `LanguageSupport.http_scanner` de cada arquivo — ver §3 |
+| `core/http_base.py` | `BaseScanner` (as peças reutilizáveis de §3), `PackageContext`, `TEST_FILE`, tabela `OUTBOUND`; `convention_call()` aplica os `ScanPatterns` da convenção (`route_patterns`/`client_patterns`, em `core/scan_patterns.py`) antes das tabelas genéricas; handler embrulhado em middleware/opções resolve pelo argumento mais interno que é função do repo; objetos de request (`Request{Method:, Path:}`) e `url.JoinPath` viram caminho |
+| `core/paths.py` | `normalize_path`, `path_key`, `unquote`, regexes de path — usados pelo extrator, pelo `graph.py` e pelo MCP |
+| `core/linker.py` | **F0.5**: `link(calls, endpoints)` puro (exact → suffix → desempate por hint → ambíguo = nada) + `consumes_rows`/`called_from_rows`; `GraphWriter.link_tenant` lê/grava |
+| `core/model.py` | dataclasses de tudo + `ExtractionResult` (inclui `violations`) |
+| `core/graph.py` | `GraphWriter.write()`: MERGE idempotente, `EXPOSES{ref}`/`HANDLED_BY{ref}`, `Violation`/`HAS_VIOLATION`, GC de órfãos por `commit_sha`, `IndexRun` |
+| `core/planner.py` / `core/manifest.py` / `core/gitinfo.py` | `atlas.yaml` (tenants, sources, refs, areas, **conventions**) → plano de (repo, ref, sha); `git archive` por ref |
+| `languages/__init__.py` | registro: `REGISTRY`, `by_id`, `by_extension`, `parseable()`, `grammars()`; `_MODULES` lista as pastas |
+| `languages/base.py` | contrato `LanguageSupport` (identidade · descoberta · símbolos · resolução · http) e `ResolveContext` |
+| `languages/<lang>/queries.scm` | padrões `def.<kind>`, `call`, `import` — compilados padrão a padrão (um inválido é pulado com warning) |
+| `languages/<lang>/symbols.py` | a subclasse de `LanguageSupport` + `LANGUAGES = [...]` (typescript registra `typescript`, `tsx`, `javascript`). Go e C# implementam também `file_facts`, `call_receiver` e `resolve_receiver` (Go: receiver do método, parâmetro, `x := T{}`, `x := pkg.New()` inclusive retorno múltiplo, campos de struct e campos promovidos por embedding; C#: campos/propriedades/parâmetros/locais/`base.`, membros herdados) e C# ainda `supertypes` + `implementations` (interface → implementador único) |
+| `languages/<lang>/http.py` | o scanner HTTP da linguagem (`GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`) e suas tabelas de registradores |
+| `conventions/base.py` | contrato `Convention` (`prepare(ctx)`, `role_of`, `layer_of`, `target_of`, `is_entry_point(symbol, file, owner)`, `check`, `describe`) e `ConventionContext` (`rv.namespace_files`: namespace C# → arquivos que o declaram) |
+| `conventions/declarative.py` | `convention.yaml` → `Convention` (**papéis** por forma da declaração — `roles:` com `extends`/`name`/`declares`, inclusive bases do próprio repo → `Symbol.role`; **arquiteturas** — `architectures:` com `layers` por layout e `detect` pelos módulos, `together: ["{svc}.Api", "{svc}.Core"]`, ou forçada por `options.architecture`; camadas por glob, e arquivo que o layout não posiciona herda a camada dos seus papéis; alvos, entry points por assinatura, por tipo dono — `members_of` — ou por papel — `entry_points.roles` —, regras `forbid_import` / `endpoints_only_in` / `http_calls_only_in` / `roles_in`; `using` de namespace conta pela camada dos arquivos que o declaram) |
+| `conventions/__init__.py` | `load(specs, repo)` (arquivo, entry point `aidd.conventions` ou `pacote.modulo:Classe`) e `apply()` |
+| `../conventions/<nome>/` (em `indexer/`) | extensões de convenção empacotadas (`pyproject` + entry point `aidd.conventions`), instaladas pelo `Dockerfile`; hoje `dotnet-praticis` |
+| `mcp/server.py` | MCP `atlas` (leitura): `atlas_status, repo_map, find_symbol, who_calls, symbol_context, http_map, who_consumes, impact_of, ref_diff, violations, cypher_readonly` (este só com tenant fixo, ou `ATLAS_RAW_CYPHER=on`: Cypher livre não fica preso a um tenant); `atlas_status.refresh` diz quando o refresher parou — perguntas douradas em `docs/golden-questions.md` |
+| `scripts/http_corpus.py` | corpus público de calibração do extrator HTTP (§5) |
+| `tests/` | fixtures golden (HTTP; e, nas que reproduzem um padrão, camadas/entry points/violações/`CALLS`/gaps pela convenção) + `test_conventions.py` (costura das convenções) + `test_linker.py` (regras + pares `go-http-mix` → `go-billing-api` e `csharp-praticis-reports` → `csharp-praticis-todos`) + `test_mcp_protocol.py` (tools do MCP com store fake); `conftest.py` põe as extensões de `indexer/conventions/*` no `sys.path` |
+
+Pipeline de um repo (`cli.extract_tree` → `extract_and_resolve`): `list_files` → `discover_modules` →
+`build_files` → para cada arquivo parseável `FileExtractor.run()` → `extract_http(repo, extractors)` →
+`Resolver.run()` → `conventions.apply()` (se houver) → `GraphWriter.write()`.
+
+## 3. Como o extrator HTTP decide
+
+Dois passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_enclosing_symbol()`):
+
+1. **Contexto por diretório** (`PackageContext`): constantes/vars de rota (`const routeX = "/v1/x"`,
+   `ORDERS_PATH = '/v1/orders'`) e nomes de env var que parecem base URL (`*_URL`, `*_HOST`, `*_ENDPOINT`).
+2. **Scanner por linguagem** (`languages/<lang>/http.py`: `GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`),
+   todos herdando de `core/http_base.BaseScanner`, que concentra as peças reutilizáveis:
+   - `path_of(node, lenient)`: transforma uma expressão em template de path — literal, constante do
+     pacote, **variável local** (`resolve_local`: última atribuição anterior no mesmo escopo),
+     concatenação, `Sprintf`/f-string/`$""`/`` `${}` ``, `path.Join`. `lenient=True` (só em contexto de
+     cliente HTTP) aceita `items/{id}` e `{base}catalogBrands`.
+   - `is_handler_like(node)`: **a regra que separa rota de chamada de saída** — o argumento depois do
+     path é função/seletor/identificador (rota) ou dado/string/nil (cliente).
+   - `method_from_args`, `resolve_handler` (nome → `Symbol` do mesmo arquivo), `add_endpoint`,
+     `add_call` (descarta path sem segmento literal), `_record_group` (prefixos de `Group/MapGroup/APIRouter(prefix=)`).
+   - `normalize_path`: `:id`, `{id:int}`, `<int:id>`, `%s`, `${x}`, `[controller]` → `{param}`-style;
+     remove base URL, query string, barra final. `path_key` = tudo vira `{param}` (chave de join do linker).
+
+Regras aprendidas no corpus (não regredir):
+
+| Sintoma | Regra |
+|---|---|
+| `auth.Post("/login", h)` lido como chamada de saída | rota se o 2º arg é handler-like **ou** receiver é var de grupo/router |
+| decorator `@Get(':id')` contado como chamada | `call_expression` dentro de `decorator` é ignorado |
+| `cache.get(key)`, `map.delete(k)` | verbo minúsculo só é HTTP com receiver cliente (`CLIENT_RECEIVER`) |
+| `post(ctx, client, "application/json", body)` | MIME/heads em `_NOT_A_PATH_HEAD` não são path |
+| ``fetch(`${base}${path}`)`` | path só de placeholders é descartado (`_has_literal_segment`) |
+| `var uri = $"{base}items/{id}"; GetFromJsonAsync(uri)` | `resolve_local` + `lenient` |
+| `vApi.MapGroup("api/catalog").HasApiVersion(1,0)` | procurar o `MapGroup` **interno** da cadeia |
+| supertest `request(app).get('/x')` em `e2e/` | `TEST_FILE` + filtro por `getHttpServer/supertest` |
+| `Execute`, `Call`, `Send`, `Do` genéricos | `GENERIC_OUTBOUND` exige receiver cliente |
+| C# `GetAsync($"api/x/{id}")` não detectado | `_interpolated` ignora `interpolation_start`/aspas — só texto + `{param}` |
+| `new Uri($"api/x", UriKind.Relative)`, `string.Format("api/x/{0}")`, `Routes.X.Replace(..)` | `path_of` desce em `object_creation_expression(Uri)`, `Format`, `Replace/Trim*` |
+| `SendAsync(msg)` duplicando `new HttpRequestMessage` | `SendAsync` com variável local que é `HttpRequestMessage` é ignorado |
+| Flurl: URL é o *receiver* (`url.AppendPathSegment("x").GetJsonAsync()`) | `_flurl_path` percorre a cadeia antes do verbo; checado **antes** do early-return de args vazios |
+| C# `this.X()` / `base.X()` nunca viravam call site | `this`/`base` são tokens anônimos na gramática: padrão próprio em `queries.scm`; `base.X()` com base fora do repo (ou implícita) não cai no fallback por nome (`LanguageSupport.parent_receivers`) — seria auto-aresta do override |
+| Assinatura de classe C# com `[Route("api/[controller]")]` gravada como `")]` (e atributos com regex em string) | `strip_attributes` (core/extract.py) pula atributos com colchetes aninhados e literais de string; a convenção lê o cabeçalho da declaração (bases em várias linhas) com a mesma função |
+
+Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
+arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
+rotas por convenção de nome (`MapGet(GetTodoItems)`), URL montada em runtime sem literal, gRPC/proto,
+mensageria. O prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é
+problema do **linker** (match por sufixo + `target_hint`/`env_hints`), não do extrator.
+
+## 4. Como rodar localmente (sem Neo4j)
+
+```bash
+cd indexer && pip install -e .                    # ou dentro da imagem: docker compose run --rm indexer ...
+export TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=~/.cache/tslp   # 1ª vez baixa as 6 gramáticas
+python -c "import tree_sitter_language_pack as t; t.prefetch(['go','typescript','tsx','javascript','python','csharp'])"
+aidd selftest                                     # gramáticas + queries
+AIDD_TENANT=t WORKSPACE_PATH=/path aidd index <repo> --dry-run --out /tmp/x.json   # payload completo, sem banco
+python scripts/http_corpus.py --json /tmp/corpus-out            # corpus público (clona em /tmp/aidd-corpus)
+```
+
+O `--dry-run --out` inclui `endpoints`, `http_calls`, `symbols`, `calls`, `warnings` — é a forma de
+inspecionar o que o extrator viu num repo específico.
+
+## 5. Como medir (sem se enganar)
+
+- **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
+  padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
+  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `ts-express-nest`, `csharp-httpclients`
+  (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers) e o par **`csharp-praticis-todos` /
+  `csharp-praticis-reports`** (+ `csharp-praticis-projects`) — o padrão .NET do autor em domínio genérico, uma
+  fixture por layout (`flat`, `split`, `layered`) (Contracts + controller →
+  `ServiceBus.SendAsync(command)` → `ICommandHandler`, validators, consumers `IEventHandler<ContractEvent>`,
+  processors em decorator, `HttpClient` tipado em `Infra/Http/Outbound/<Svc>Api`), com a convenção `dotnet-praticis`.
+  Fixtures que reproduzem um padrão de desenvolvimento declaram no `expected.json` a convenção (`convention`: yaml
+  ao lado da fixture, id ou `module:Class`) e o que ela produz: `architecture` (layout detectado), `roles`, `layers`, `entry_points`, `violations` (uma
+  proposital por fixture), `edges` (`CALLS` com estratégia) e `gaps` (ligações que o grafo ainda não vê — xfail até
+  aparecerem; quando aparecem, o teste pede para movê-las a `edges`). Regenerar `expected.json` só depois de
+  conferir cada linha na fonte — nunca a partir da saída do extrator sem revisão.
+- **Corpus público** (`scripts/http_corpus.py`): ordem de grandeza por repo documentada no docstring; um
+  desvio grande em qualquer repo é sinal de regressão ou de melhoria — em ambos os casos, olhar o JSON.
+- **Amostragem manual**: sortear 10–20 itens por repo e conferir na fonte (`evidence` aponta linha).
+  Anotar falsos positivos/negativos na tabela de regras (§3). Precisão importa mais que recall no
+  extrator: o linker só liga o que casa; ruído vira aresta errada no grafo.
+- Quando existir *ground truth* (apps de referência do H1, ou OpenAPI de um repo do corpus), calcular
+  precisão/recall de verdade: `esperado × extraído` por `(method, path_key)`.
+
+## 6. Checklist para mudar o extrator
+
+1. Reproduzir o caso numa fixture pequena antes de mexer na heurística.
+2. Mudar o scanner da linguagem (`languages/<lang>/http.py`) ou, se for regra comum a todas, `core/http_base.py`;
+   rodar fixture + corpus; comparar contagens com o docstring do script.
+3. Se a **semântica dos nós** mudou (novo campo, novo tipo de nó, path normalizado diferente): bump em
+   `INDEXER_VERSION` (`aidd_indexer/__init__.py`) e em `pyproject.toml` → o `refresh` reindexa tudo.
+   Novo label/índice → `neo4j/init/schema.cypher` (idempotente; `neo4j-init` reaplica no `up`) e `neo4j/SCHEMA.md`.
+4. Se o MCP precisa expor o dado novo → `mcp/server.py` (ferramenta nova ou campo em `http_map`/`repo_map`);
+   validar com o teste de protocolo (`build_server(store=Fake)`) — não precisa de Neo4j.
+5. Atualizar a tabela de regras (§3), o docstring do módulo alterado e o ROADMAP ("Onde estamos" + item F0.x).
+6. Nunca gravar nomes de projetos/tenant/tickets reais em docs ou código do repo (open-source): usar
+   `<project-a>`, `<tenant>`, `<ticket>`.
+
+## 7. Adicionar uma linguagem, um framework ou uma convenção
+
+- **Linguagem nova**: `languages/<lang>/` com `queries.scm` (`def.*`/`call`/`import`), `symbols.py`
+  (subclasse de `LanguageSupport` sobrescrevendo só o que difere — nomes qualificados, visibilidade,
+  bindings de import, `resolve_import`; opcionalmente `file_facts`/`call_receiver`/`resolve_receiver` para
+  resolver chamadas pelo tipo estático do receiver); exportar `LANGUAGES = [instância]` com `id`, `grammar`,
+  `extensions`, `query_file`, `stack`, `manifests`) e, se houver HTTP, `http.py` (subclasse de
+  `BaseScanner`, `http_scanner=` na instância). Registrar a pasta em `languages/__init__.py:_MODULES`.
+  O `Dockerfile` e o `selftest` leem o registro — nada mais a editar. Fixture em `tests/fixtures/`.
+- **Framework novo numa linguagem existente**: primeiro **veja a árvore** (`get_parser(lang).parse(src)` e
+  imprima os `type`s), depois adicione o padrão ao scanner da linguagem e uma linha na fixture. Preferir
+  reconhecer pela *forma* (verbo + path literal + handler) a por nome de biblioteca; o nome entra só
+  como `framework` informativo.
+- **Convenção** (regras do seu padrão — camadas, dependências permitidas, qual pasta de cliente fala
+  com qual serviço): escreva um `convention.yaml` a partir de `setup/conventions/hexagonal.example.yaml`
+  e aponte-o em `atlas.yaml` (`tenants.<t>.conventions: [{path: ..., repos: [...]}]`). O que o YAML não
+  expressa vira uma classe `Convention` (`aidd_indexer/conventions/base.py`) num pacote seu, publicada
+  no entry point `aidd.conventions` ou referenciada como `pacote.modulo:Classe`. Convenção nunca muda a
+  extração: anota (`File.layer`, `Module.layer`, `HttpCall.target_hint`, `Symbol.is_entry_point`) e emite
+  `Violation`. Regra de ouro: nada específico de uma organização entra em `core/` ou `languages/`.
+  **Extensão empacotada** (ADR-003): `indexer/conventions/<nome>/` com `pyproject.toml` que publica uma classe no
+  entry point `aidd.conventions`; o `Dockerfile` instala todas e falha o build se alguma não carrega; o tenant
+  ativa por id (`conventions: [{id: <nome>}]`, ou `AIDD_CONVENTIONS=<nome>`). Em C# um `using X;` vira `IMPORTS`
+  para o **Module** (o `.csproj`); a regra `forbid_import` usa a camada dos arquivos que declaram `X` — se eles
+  estão em mais de uma camada, o import não diz nada e não gera violação.
+  **Padrão × arquitetura** — duas perguntas diferentes, no mesmo `convention.yaml`: `roles:` diz *o que* cada tipo
+  é, pela forma da declaração (bases do SDK/framework, nome, cabeçalho), em qualquer pasta → `Symbol.role`, entry
+  points por papel e a camada de arquivos que o layout não posiciona; `architectures:` diz *onde* cada coisa mora
+  em cada layout (globs por arquitetura, detectada pelos módulos do repo ou forçada por repo). As regras falam de
+  camadas (mesmos nomes em todos os layouts) e `roles_in` cruza os dois: "command handler mora em `core`" vale
+  igual num serviço de um projeto ou de cinco. Exemplo: `indexer/conventions/dotnet-praticis/` — 13 papéis,
+  3 arquiteturas (`flat`: tudo no `.Api`; `split`: `.Api` + `.Core`; `layered`: `.Api` + `.Application` + `.Core` +
+  `.Domain` + `.Infra`), 8 regras; validado nos repos de referência (todos os arquivos dos serviços com camada,
+  0 violações, monorepo com biblioteca `*.Shared.Bus.Core` corretamente não confundido com `split`).
+
+## 8. O que vem depois do extrator (para não invadir)
+
+- **F0.5 linker (feito)**: `core/linker.py` — `HttpCall × HttpEndpoint` por `path_key` + método →
+  `CONSUMES` (Service→HttpEndpoint) e `CALLED_FROM` (HttpEndpoint→Symbol); `exact` antes de `suffix`,
+  desempate por `target_hint`/`env_hints`, ambíguo não grava. Roda por tenant inteiro ao fim de
+  `index`/`bootstrap`/`refresh` e em `aidd link`. Se uma chamada não liga, a pergunta é sempre "o que
+  falta no extrator ou na convenção (`targets:`)?" — não "o linker deveria chutar?".
+- **F0.5.1 `DEPENDS_ON` (feito)**: segunda junção do linker — `Snapshot.requires × Snapshot.provides`
+  (pacotes internos declarados nos manifestos) → `Service -[:DEPENDS_ON {ref}]-> Service`, mesma postura
+  (nome exato normalizado, nunca a si mesmo, dois publicadores → nenhuma aresta). `repo_map` devolve
+  `depends_on`/`depended_by`. É a dependência que o scan HTTP não enxerga (contratos, SDKs internos).
+- **F0.7 perguntas douradas**: `who_consumes('/v1/<rota>')` respondida pelo grafo no par piloto.
+- F1: SCIP para `CALLS` resolvidos, gRPC/proto, mensageria, Qdrant.

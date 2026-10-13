@@ -1,0 +1,55 @@
+# atlas.yaml — what the aidd indexer feeds into atlas. Written by setup/install.sh;
+# edit freely, then `aidd plan` to preview and `aidd refresh` to apply.
+# Rules: tenants are always explicit (no defaults); tokens are referenced by the
+# NAME of an environment variable, never by value.
+
+tenants:
+  <tenant>:
+    sources:
+      # Repositories already cloned in the developer workspace (inside the
+      # container WORKSPACE_PATH is mounted at /workspace).
+      - type: local
+        path: /workspace/<tenant>
+        include: ["*"]
+        exclude: []
+        fetch: true            # the refresher syncs each repo into its own mirror, then fetches the
+                               # remote with the read-only PAT (~/.aidd/secrets/git-token); false =
+                               # mirrors follow your own fetches only
+      # Remote providers (not implemented yet) — one per tenant, each tenant may differ:
+      # - type: github            # github | gitlab | azure-devops | bitbucket
+      #   org: <org-or-group>
+      #   token_env: GITHUB_TOKEN_<TENANT>
+      #   include: ["*"]
+      #   exclude: ["*-archive", "poc-*"]
+      #   skip_archived: true
+
+    refs:
+      always: ["main", "master", "develop"]   # indexed when they exist
+      patterns: []                             # e.g. ["release/*"]
+      active:                                  # recently active branches -> ephemeral snapshots
+        max_age_days: 14
+        max_per_repo: 5
+        exclude: ["dependabot/*", "renovate/*", "docs/*", "ci/*", "cd/*", "pipeline/*"]
+      gc_ephemeral_after_days: 30
+
+    # Optional: business areas (bounded contexts). Values are repo names or globs.
+    # Used to group `aidd plan` output and stored as Repo.area.
+    areas: {}
+    #  checkout: ["orders-*", "payments-api"]
+    #  catalog: ["catalog-api", "search"]
+
+    # Optional: conventions of your development pattern (layers, allowed dependencies, which
+    # client folder talks to which service). See setup/conventions/hexagonal.example.yaml.
+    # Each entry is a declarative file (`path`) or a Python class (`id`: entry point in the
+    # `aidd.conventions` group, or `package.module:Class`); `repos` restricts it to some repos.
+    conventions: []
+    #  - id: dotnet-praticis                       # bundled in the image (indexer/conventions/)
+    #    repos: ["*-api"]
+    #  - path: /workspace/<tenant>/.aidd/convention.yaml
+    #    repos: ["*"]
+    #  - id: my_company.aidd_conventions:Hexagonal
+    #    options: {}
+
+    # Reserved (unused): the refresher service refreshes every tenant every
+    # AIDD_REFRESH_INTERVAL_MINUTES (.env).
+    schedule: ""

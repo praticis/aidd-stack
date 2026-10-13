@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Acme.Shared.Bus.Abstractions" Version="1.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Acme.Projects.Application\Acme.Projects.Application.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Domain\Acme.Projects.Domain.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Infra\Acme.Projects.Infra.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Contracts\Acme.Projects.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

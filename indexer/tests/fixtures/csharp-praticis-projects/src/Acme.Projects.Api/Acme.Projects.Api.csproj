@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>acme-projects-api</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Acme.Shared.Api.Response" Version="1.0.0" />
+      <PackageReference Include="Acme.Shared.Bus.Core" Version="1.0.0" />
+      <PackageReference Include="Acme.Shared.Bus.Kafka" Version="1.0.0" />
+      <PackageReference Include="Acme.Shared.Interop" Version="1.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Acme.Projects.Application\Acme.Projects.Application.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Core\Acme.Projects.Core.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Infra\Acme.Projects.Infra.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Contracts\Acme.Projects.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

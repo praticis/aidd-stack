@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
+        <PackageReference Include="Acme.Shared.Bus.Abstractions" Version="1.0.0" />
+        <PackageReference Include="Acme.Shared.Data.EntityFramework" Version="1.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Acme.Projects.Application\Acme.Projects.Application.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Domain\Acme.Projects.Domain.csproj" />
+      <ProjectReference Include="..\Acme.Projects.Contracts\Acme.Projects.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

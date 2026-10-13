@@ -1,3 +1,13 @@
 .DS_Store
 .env
 _docker
+# .NET build output inside test fixtures
+indexer/tests/fixtures/**/bin/
+indexer/tests/fixtures/**/obj/
+# runtime state when compose runs from the checkout (installs keep these in ~/.aidd)
+/mirrors/
+/state/
+/secrets/
+
+# MCP client config copied into each repo by setup/install.sh (template: setup/.mcp.json)
+/.mcp.json

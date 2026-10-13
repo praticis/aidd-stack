@@ -1,8 +1,8 @@
-FROM node:24-alpine
+FROM node:24.21.0-alpine
 
 RUN apk add --no-cache git openssh-client
 
-RUN npm install -g @cyanheads/git-mcp-server --quiet
+RUN npm install -g @cyanheads/git-mcp-server@2.15.3 --quiet
 
 EXPOSE 3000
 
@@ -11,7 +11,8 @@ ENV MCP_HTTP_PORT=3000
 ENV MCP_HTTP_HOST=0.0.0.0
 ENV GIT_BASE_DIR=/workspace
 
-# Restricts operations to the /workspace tree (all cloned repositories).
-# Commit identity comes from the mounted ~/.gitconfig; optionally, it can be
+# Restricts operations to the /workspace tree (all cloned repositories). No credentials are
+# mounted (docker-compose.yml): local operations only — remotes are your terminal's business.
+# Commit identity comes from the mounted ~/.gitconfig (as /etc/gitconfig); optionally, it can be
 # set via GIT_USERNAME/GIT_EMAIL in .env if you prefer not to rely on the mount.
 CMD ["git-mcp-server"]

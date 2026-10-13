@@ -1,0 +1,112 @@
+{
+  "endpoints": [
+    {"method": "POST", "path": "/api/projects", "handler": "CreateAsync"},
+    {"method": "PUT", "path": "/api/projects/{projectId}/archive", "handler": "ArchiveAsync"},
+    {"method": "GET", "path": "/api/projects/{projectId}/details", "handler": "FindByIdAsync"}
+  ],
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/todos/{param}/details",
+      "via": "httpClient.GetAsync",
+      "target_hint": "TodosApi",
+      "line": 10,
+      "caller": "TodosApiClient.GetTodoDetailsAsync"
+    }
+  ],
+  "convention": "aidd_conventions_dotnet_praticis:DotnetPraticis",
+  "architecture": "layered",
+  "layers": {
+    "src/Acme.Projects.Contracts/Requests/ProjectRequests/CreateProjectRequest.cs": "contracts",
+    "src/Acme.Projects.Contracts/Responses/ProjectResponses/CreateProjectResponse.cs": "contracts",
+    "src/Acme.Projects.Contracts/Responses/ProjectResponses/FindProjectByIdResponse.cs": "contracts",
+    "src/Acme.Projects.Contracts/Events/ProjectEvents/ProjectWasCreatedEvent.cs": "contracts",
+    "src/Acme.Projects.Api/Controllers/ProjectsController.cs": "api",
+    "src/Acme.Projects.Api/Extensions/ServiceCollectionExtension.cs": "bootstrap",
+    "src/Acme.Projects.Api/Program.cs": "bootstrap",
+    "src/Acme.Projects.Application/Commands/ProjectCommands/CreateProjectCommand.cs": "application",
+    "src/Acme.Projects.Application/Commands/ProjectCommands/ArchiveProjectCommand.cs": "application",
+    "src/Acme.Projects.Application/Validators/ProjectValidators/CreateProjectCommandValidator.cs": "application",
+    "src/Acme.Projects.Application/Validators/ProjectValidators/_ProjectValidationErrors.cs": "application",
+    "src/Acme.Projects.Application/Queries/IProjectQuery.cs": "application",
+    "src/Acme.Projects.Application/CommandHandlers/ProjectCommandHandlers/ArchiveProjectCommandHandler.cs": "application",
+    "src/Acme.Projects.Core/CommandHandlers/ProjectCommandHandlers/CreateProjectCommandHandler.cs": "core",
+    "src/Acme.Projects.Domain/Models/ProjectModel.cs": "domain",
+    "src/Acme.Projects.Domain/Interfaces/IProjectRepository.cs": "domain",
+    "src/Acme.Projects.Domain/Interfaces/IProjectReadRepository.cs": "domain",
+    "src/Acme.Projects.Infra/Data/Context/ProjectsContext.cs": "infra",
+    "src/Acme.Projects.Infra/Data/Mappings/ProjectMapping.cs": "infra",
+    "src/Acme.Projects.Infra/Data/Repositories/ProjectRepository.cs": "infra",
+    "src/Acme.Projects.Infra/Data/Repositories/ProjectReadRepository.cs": "infra",
+    "src/Acme.Projects.Infra/Http/Outbound/TodosApi/ITodosApiClient.cs": "outbound",
+    "src/Acme.Projects.Infra/Http/Outbound/TodosApi/TodoDetails.cs": "outbound",
+    "src/Acme.Projects.Infra/Http/Outbound/TodosApi/TodosApiClient.cs": "outbound"
+  },
+  "roles": {
+    "ProjectsController": "controller",
+    "CreateProjectCommandHandler": "command-handler",
+    "ArchiveProjectCommandHandler": "command-handler",
+    "CreateProjectCommand": "command",
+    "ArchiveProjectCommand": "command",
+    "ProjectWasCreatedEvent": "event",
+    "CreateProjectCommandValidator": "validator",
+    "IProjectQuery": "query",
+    "ProjectModel": "model",
+    "IProjectRepository": "repository-port",
+    "IProjectReadRepository": "repository-port",
+    "ProjectRepository": "repository",
+    "ProjectReadRepository": "repository",
+    "ProjectMapping": "mapping",
+    "ProjectsContext": "data-context",
+    "TodosApiClient": "outbound-client"
+  },
+  "entry_points": [
+    "ProjectsController.CreateAsync",
+    "ProjectsController.ArchiveAsync",
+    "ProjectsController.FindByIdAsync",
+    "CreateProjectCommandHandler.Handle",
+    "ArchiveProjectCommandHandler.Handle"
+  ],
+  "violations": [
+    {
+      "rule": "elements-live-in-their-layer",
+      "file": "src/Acme.Projects.Application/CommandHandlers/ProjectCommandHandlers/ArchiveProjectCommandHandler.cs",
+      "line": 8
+    }
+  ],
+  "edges": [
+    {"from": "CreateProjectCommandHandler.Handle", "to": "ITodosApiClient.GetTodoDetailsAsync", "strategy": "receiver-type"},
+    {"from": "CreateProjectCommandHandler.Handle", "to": "TodosApiClient.GetTodoDetailsAsync", "strategy": "receiver-type-impl"},
+    {"from": "ProjectsController.FindByIdAsync", "to": "IProjectQuery.FindByIdAsync", "strategy": "receiver-type"},
+    {"from": "ProjectsController.FindByIdAsync", "to": "ProjectReadRepository.FindByIdAsync", "strategy": "receiver-type-impl"},
+    {"from": "ProjectsController.CreateAsync", "to": "CreateProjectCommand", "strategy": "unique-name"},
+    {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommand", "strategy": "unique-name"},
+    {"from": "ArchiveProjectCommandHandler.Handle", "to": "ProjectModel.Archive", "strategy": "unique-name"},
+    {"from": "ProjectRepository.Exists", "to": "IProjectReadRepository.Exists", "strategy": "receiver-type"},
+    {"from": "ProjectRepository.Exists", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"}
+  ],
+  "gaps": [
+    {
+      "from": "ProjectsController.CreateAsync",
+      "to": "CreateProjectCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "ProjectsController.ArchiveAsync",
+      "to": "ArchiveProjectCommandHandler.Handle",
+      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+    },
+    {
+      "from": "CreateProjectCommandHandler.Handle",
+      "to": "IProjectRepository",
+      "methods": ["CreateAsync"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    },
+    {
+      "from": "ArchiveProjectCommandHandler.Handle",
+      "to": "IProjectRepository",
+      "methods": ["FindByIdAsync", "UpdateAsync"],
+      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
+    }
+  ]
+}

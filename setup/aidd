@@ -1,0 +1,246 @@
+#!/usr/bin/env bash
+#
+# aidd — host-side client for the atlas indexer.
+#
+# Everything runs in containers. The `refresher` service (docker-compose.yml) keeps atlas current:
+# it syncs every repo of the workspace into its own mirror (the workspace is mounted read-only),
+# fetches the remotes with the read-only PAT in ~/.aidd/secrets/git-token when there is one, and
+# re-indexes what changed, every AIDD_REFRESH_INTERVAL_MINUTES. Docker restarts it on any OS —
+# there is no host scheduler (systemd timer / Task Scheduler / cron / launchd) any more.
+#
+#   aidd plan | bootstrap | refresh | index <repo> [--ref R] | status | link | wipe ...
+#                         run in the refresher (`docker compose exec`, shares its lock) or, when it
+#                         is not running, in a one-off `indexer` container
+#   aidd schedule install | remove | status | check [--fix]
+#                         start / stop the refresher, show its last run, verify the prerequisites
+#                         (`install`/`--fix` also remove schedulers left by older versions)
+#   aidd logs [-f]        the refresher's log
+#
+# Portable: bash 3.2 (macOS) and Linux/WSL; needs only docker.
+#
+# Environment / .env keys:
+#   AIDD_DIR                       install dir (default ~/.aidd)
+#   AIDD_NO_FETCH=1                no remote fetch (mirrors are synced from the workspace only)
+#   AIDD_TRIGGER=manual            recorded on each IndexRun
+#   AIDD_GIT_TOKEN_FILE            .env: the read-only PAT (default ~/.aidd/secrets/git-token)
+#   AIDD_REFRESH_INTERVAL_MINUTES  .env: refresher interval (default 15)
+
+set -uo pipefail
+
+AIDD_DIR="${AIDD_DIR:-$HOME/.aidd}"
+ENV_FILE="$AIDD_DIR/.env"
+MANIFEST="$AIDD_DIR/atlas.yaml"
+STATE_DIR="$AIDD_DIR/state"
+
+GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'
+log()  { printf "${GREEN}[aidd]${NC} %s\n" "$1" >&2; }
+warn() { printf "${YELLOW}[aidd]${NC} %s\n" "$1" >&2; }
+die()  { printf "${RED}[aidd]${NC} %s\n" "$1" >&2; exit 1; }
+
+env_get() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d'=' -f2- | tr -d '"'; }
+
+[ -f "$ENV_FILE" ] || die ".env not found at $ENV_FILE — run setup/install.sh first"
+[ -f "$MANIFEST" ] || die "atlas.yaml not found at $MANIFEST — run setup/install.sh first"
+command -v docker >/dev/null 2>&1 || die "docker not found in PATH"
+
+TOKEN_FILE="${AIDD_GIT_TOKEN_FILE:-$(env_get AIDD_GIT_TOKEN_FILE)}"
+TOKEN_FILE="${TOKEN_FILE:-$AIDD_DIR/secrets/git-token}"
+export AIDD_TRIGGER="${AIDD_TRIGGER:-manual}"
+
+interval_min() { local v; v="$(env_get AIDD_REFRESH_INTERVAL_MINUTES)"; echo "${v:-15}"; }
+has_token() { [ -s "$TOKEN_FILE" ]; }
+
+# Bind-mount sources must exist before compose runs, owned by you: Docker would create them as
+# root (Linux) — and an absent secret file aborts compose. An empty token file is valid.
+ensure_dirs() {
+  local d
+  for d in "$AIDD_DIR/mirrors" "$STATE_DIR"; do
+    if [ -d "$d" ] && [ ! -O "$d" ]; then
+      rmdir "$d" 2>/dev/null || warn "$d is not owned by you — the containers cannot write to it: sudo chown -R $(id -u):$(id -g) $d"
+    fi
+  done
+  [ "$(env_get AIDD_UID)" = "0" ] && [ "$(id -u)" != "0" ] && \
+    warn "AIDD_UID=0 in $ENV_FILE (install.sh ran under sudo?) — set AIDD_UID=$(id -u) and AIDD_GID=$(id -g), then: aidd schedule install"
+  mkdir -p "$AIDD_DIR/mirrors" "$STATE_DIR" "$(dirname "$TOKEN_FILE")"
+  chmod 700 "$(dirname "$TOKEN_FILE")" 2>/dev/null || true
+  if [ ! -e "$TOKEN_FILE" ]; then
+    : > "$TOKEN_FILE" && chmod 600 "$TOKEN_FILE"
+  fi
+}
+
+dc() { (cd "$AIDD_DIR" && docker compose "$@"); }
+
+refresher_running() {
+  [ "$(docker inspect -f '{{.State.Running}}' aidd-refresher 2>/dev/null)" = "true" ]
+}
+
+# run an indexer command: inside the refresher when it runs (same lock, warm container),
+# else in a one-off container of the same image
+run_indexer() {
+  ensure_dirs
+  local tty=()
+  [ -t 0 ] && [ -t 1 ] || tty=(-T)
+  if refresher_running; then
+    dc exec ${tty[@]+"${tty[@]}"} -e AIDD_TRIGGER="$AIDD_TRIGGER" refresher aidd "$@"
+  else
+    dc run --rm ${tty[@]+"${tty[@]}"} -e AIDD_TRIGGER="$AIDD_TRIGGER" indexer "$@"
+  fi
+}
+
+with_fetch_flag() {   # AIDD_NO_FETCH=1 → --no-fetch for the commands that fetch
+  if [ "${AIDD_NO_FETCH:-0}" = "1" ]; then echo "--no-fetch"; fi
+}
+
+# ---------------------------------------------------------------------------
+# status.json (written by the refresher) — parsed without jq
+# ---------------------------------------------------------------------------
+status_field() {   # status_field <key>  → raw JSON value (string unquoted)
+  local f="$STATE_DIR/status.json"
+  [ -f "$f" ] || return 1
+  grep -E "^  \"$1\": " "$f" | head -1 | sed -E 's/^  "[^"]+": //; s/,$//; s/^"//; s/"$//'
+}
+
+age_text() {       # age_text <epoch>
+  local e="$1" now; now="$(date +%s)"
+  [ -n "$e" ] || { echo "never"; return; }
+  echo "$(( (now - e) / 60 )) min ago"
+}
+
+# ---------------------------------------------------------------------------
+# schedulers left by older versions (host fetch + systemd timer / Task Scheduler / cron)
+# ---------------------------------------------------------------------------
+TASK_NAME="aidd-atlas-refresh"
+AUTOSTART_TASK="aidd-wsl-autostart"
+is_wsl() { grep -qi microsoft /proc/version 2>/dev/null; }
+
+legacy_schedulers() {   # prints one line per leftover
+  [ -f "$HOME/.config/systemd/user/aidd-refresh.timer" ] && echo "systemd user timer aidd-refresh.timer"
+  command -v crontab >/dev/null 2>&1 && crontab -l 2>/dev/null | grep -q "# $TASK_NAME" && echo "crontab entry '# $TASK_NAME'"
+  if is_wsl && command -v schtasks.exe >/dev/null 2>&1 && schtasks.exe /Query /TN "$TASK_NAME" >/dev/null 2>&1; then
+    echo "Windows task '$TASK_NAME'"
+  fi
+  return 0
+}
+
+remove_legacy() {
+  if [ -f "$HOME/.config/systemd/user/aidd-refresh.timer" ]; then
+    systemctl --user disable --now aidd-refresh.timer >/dev/null 2>&1 || true
+    rm -f "$HOME/.config/systemd/user/aidd-refresh."{service,timer}
+    systemctl --user daemon-reload >/dev/null 2>&1 || true
+    log "removed the systemd user timer (the refresher container replaces it)"
+  fi
+  if command -v crontab >/dev/null 2>&1 && crontab -l 2>/dev/null | grep -q "# $TASK_NAME"; then
+    crontab -l 2>/dev/null | grep -v "# $TASK_NAME" | crontab - 2>/dev/null && log "removed the crontab entry"
+  fi
+  if is_wsl && command -v schtasks.exe >/dev/null 2>&1; then
+    schtasks.exe /Delete /F /TN "$TASK_NAME" >/dev/null 2>&1 && log "removed Windows task '$TASK_NAME'"
+    schtasks.exe /Delete /F /TN "$AUTOSTART_TASK" >/dev/null 2>&1 && log "removed Windows task '$AUTOSTART_TASK'"
+    if command -v cmd.exe >/dev/null 2>&1; then
+      local appdata vbs
+      appdata="$(cmd.exe /c 'echo %APPDATA%' 2>/dev/null | tr -d '\r\n')"
+      vbs="$(wslpath -u "$appdata" 2>/dev/null)/Microsoft/Windows/Start Menu/Programs/Startup/${AUTOSTART_TASK}.vbs"
+      [ -f "$vbs" ] && rm -f "$vbs" && log "removed Startup script ${AUTOSTART_TASK}.vbs"
+    fi
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# schedule
+# ---------------------------------------------------------------------------
+schedule_install() {
+  ensure_dirs
+  remove_legacy
+  dc up -d refresher || die "could not start the refresher (cd $AIDD_DIR && docker compose up -d refresher)"
+  log "refresher running — every $(interval_min) min; fetch auth: $(has_token && echo 'read-only PAT' || echo 'none (mirrors follow your own fetches)')"
+  log "Docker restarts it after reboots as long as Docker itself starts at login (Docker Desktop: Settings → General → Start when you sign in)."
+}
+
+schedule_remove() {
+  remove_legacy
+  dc stop refresher >/dev/null 2>&1 && log "refresher stopped (start again: aidd schedule install)" || warn "refresher was not running"
+}
+
+schedule_status() {
+  echo "interval: $(interval_min) min   fetch auth: $(has_token && echo "read-only PAT ($TOKEN_FILE)" || echo 'none — mirrors follow your own fetches')"
+  local state health
+  state="$(docker inspect -f '{{.State.Status}}' aidd-refresher 2>/dev/null || echo missing)"
+  health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' aidd-refresher 2>/dev/null)"
+  echo "refresher: $state${health:+ ($health)}"
+  if [ -f "$STATE_DIR/status.json" ]; then
+    if [ "$(status_field running)" = "true" ]; then
+      echo "last refresh: running since $(age_text "$(status_field last_started_epoch)")"
+    fi
+    echo "last finished: $(status_field last_finished_at) ($(age_text "$(status_field last_finished_epoch)")), rc=$(status_field last_rc), trigger=$(status_field trigger)"
+  else
+    echo "last refresh: never ($STATE_DIR/status.json not written yet)"
+  fi
+  local left; left="$(legacy_schedulers)"
+  [ -z "$left" ] || { echo "leftover host schedulers (remove: aidd schedule check --fix):"; echo "$left" | sed 's/^/  - /'; }
+}
+
+c_ok()   { printf "  ${GREEN}[OK]${NC}   %s\n" "$1"; }
+c_fail() { printf "  ${RED}[FAIL]${NC} %s\n" "$1"; CHECK_FAILS=$((CHECK_FAILS + 1)); }
+c_warn() { printf "  ${YELLOW}[WARN]${NC} %s\n" "$1"; }
+
+schedule_check() {
+  local fix="${1:-}"; CHECK_FAILS=0
+  echo "refresher prerequisites (interval $(interval_min) min):"
+  docker info >/dev/null 2>&1 && c_ok "docker daemon reachable" || { c_fail "docker daemon not reachable — start Docker"; return 1; }
+
+  if has_token; then c_ok "read-only PAT present ($TOKEN_FILE)"
+  else c_warn "no PAT — the mirrors follow your own fetches only (paste one into $TOKEN_FILE, then: aidd schedule install)"; fi
+
+  local left; left="$(legacy_schedulers)"
+  if [ -z "$left" ]; then c_ok "no leftover host scheduler"
+  elif [ "$fix" = "--fix" ]; then remove_legacy; c_ok "leftover host schedulers removed"
+  else c_warn "leftover host schedulers would double-run: $(echo "$left" | tr '\n' ';') — aidd schedule check --fix"; fi
+
+  if refresher_running; then
+    local health; health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' aidd-refresher 2>/dev/null)"
+    case "$health" in
+      healthy|starting) c_ok "refresher running ($health)" ;;
+      *) c_fail "refresher unhealthy — $(docker exec aidd-refresher aidd daemon-health 2>&1 | tail -1) (aidd logs)" ;;
+    esac
+  elif [ "$fix" = "--fix" ]; then
+    schedule_install && c_ok "refresher started"
+  else
+    c_fail "refresher not running — aidd schedule install"
+  fi
+
+  if [ -f "$STATE_DIR/status.json" ]; then
+    local rc; rc="$(status_field last_rc)"
+    [ "$rc" = "0" ] && c_ok "last refresh succeeded ($(age_text "$(status_field last_finished_epoch)"))" \
+                    || c_warn "last refresh rc=$rc ($(age_text "$(status_field last_finished_epoch)")) — aidd logs"
+  else
+    c_warn "no refresh recorded yet (the first one starts with the container)"
+  fi
+  [ "$CHECK_FAILS" -eq 0 ] && echo "all refresher prerequisites met." || { echo "$CHECK_FAILS prerequisite(s) failing."; return 1; }
+}
+
+# ---------------------------------------------------------------------------
+cmd="${1:-}"
+[ -n "$cmd" ] || { run_indexer --help; exit $?; }
+shift
+
+case "$cmd" in
+  plan|bootstrap|refresh)
+    run_indexer "$cmd" $(with_fetch_flag) "$@" ;;
+  index)
+    [ -n "${1:-}" ] || die "usage: aidd index <repo> [--ref R] [--ephemeral]"
+    run_indexer index "$@" $(with_fetch_flag) ;;
+  fetch)
+    log "fetching happens inside the refresher now (per-repo mirrors; your clones are never written)."
+    log "to pick up what was pushed right away: aidd refresh" ;;
+  logs)
+    dc logs --tail 200 "$@" refresher ;;
+  schedule)
+    case "${1:-status}" in
+      install) schedule_install ;;
+      remove)  schedule_remove ;;
+      status)  schedule_status ;;
+      check)   schedule_check "${2:-}" ;;
+      *) die "usage: aidd schedule install|remove|status|check [--fix]" ;;
+    esac ;;
+  *)  run_indexer "$cmd" "$@" ;;
+esac
