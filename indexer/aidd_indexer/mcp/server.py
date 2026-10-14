@@ -635,24 +635,29 @@ def build_server(store: Store | None = None):
         `production_caller_count` / `test_caller_count` — read the production ones first. An empty
         `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
         app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
-        `-ambiguous` are likely, not proven."""
+        `-ambiguous` are likely, not proven. On a type (class/interface/struct) the calls to its members
+        count too (`members_included`): changing the class affects whoever calls its methods."""
         s = st(tenant)
         sy = _symbol(s, symbol, repo, ref)
         depth = max(1, min(max_depth, 10))
+        members = [r["id"] for r in s.read(
+            "MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id", id=sy["id"])]
+        targets = [sy["id"]] + members
         callers = s.read(f"""
-            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(:Symbol {{id: $id}})
-            WHERE h.ref = $ref AND h.repo = $repo
+            MATCH (t:Symbol) WHERE t.id IN $targets
+            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(t)
+            WHERE h.ref = $ref AND h.repo = $repo AND NOT h.id IN $targets
             WITH h, min(length(p)) AS hops, collect(DISTINCT [r IN relationships(p) | r.strategy]) AS strategies
             MATCH (f:File)-[:CONTAINS]->(h)
             RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file, hops,
                    h.is_entry_point AS entry_point,
                    any(st IN reduce(acc = [], x IN strategies | acc + x) WHERE st ENDS WITH 'ambiguous') AS via_ambiguous
             ORDER BY hops, qualified_name LIMIT $limit
-        """, id=sy["id"], ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
+        """, targets=targets, ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
         for c in callers:
             c["test"] = is_test_path(c["file"])
         production = [c for c in callers if not c["test"]]
-        reach_ids = [sy["id"]] + [c["id"] for c in callers]
+        reach_ids = targets + [c["id"] for c in callers]
         exposed = s.read("""
             MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
             WHERE h.id IN $ids
@@ -669,7 +674,7 @@ def build_server(store: Store | None = None):
         for e in exposed:
             for c in _collapse_refs(e.pop("consumers")):
                 consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
-        return {"symbol": sy, "internal_callers": callers, "internal_caller_count": len(callers),
+        return {"symbol": sy, "members_included": len(members), "internal_callers": callers, "internal_caller_count": len(callers),
                 "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
                 "exposed_through": exposed, "consumers": consumers,
                 "consumer_repos": sorted({c["repo"] for c in consumers})}

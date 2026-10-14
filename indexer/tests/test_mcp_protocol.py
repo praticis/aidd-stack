@@ -245,3 +245,22 @@ def test_a_class_method_tail_finds_the_symbol(monkeypatch):
     assert out["symbol"]["qualified_name"] == "Acme.Core.CreateTodoCommandHandler.Handle"
     with pytest.raises(Exception, match="this says nothing about how the file was parsed"):
         _call(srv, "who_calls", {"symbol": "Nope.Handle"})
+
+
+def test_impact_of_a_type_counts_the_callers_of_its_members(monkeypatch):
+    """Changing a class affects whoever calls its methods: the walk starts from the type and its members,
+    and members calling each other are not reported as callers."""
+    class TypeStore(FakeStore):
+        def read(self, query, **params):
+            if "-[:CONTAINS]->(m:Symbol) RETURN m.id AS id" in query:
+                self.queries.append(query)
+                return [{"id": "t/a@main/sym/pkg.Repo.Find#method"}]
+            if "CALLS*1.." in query:
+                self.queries.append(query)
+                assert params["targets"] == ["t/a@main/sym/pkg.Svc.Do#method", "t/a@main/sym/pkg.Repo.Find#method"]
+                assert "NOT h.id IN $targets" in query
+            return super().read(query, **params)
+
+    monkeypatch.setenv("AIDD_TENANT", "t")
+    out = _call(build_server(store=TypeStore()), "impact_of", {"symbol": "pkg.Svc.Do"})
+    assert out["members_included"] == 1 and out["internal_caller_count"] == 1
