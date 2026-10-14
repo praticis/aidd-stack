@@ -452,14 +452,29 @@ def build_server(store: Store | None = None):
         return rows
 
     def _symbol(s: Store, symbol: str, repo: str | None, ref: str | None) -> dict[str, Any]:
-        """Resolve `symbol` (id, qualified_name or bare name) to exactly one Symbol node."""
+        """Resolve `symbol` (id, qualified_name, the tail of one — `Class.Method` — or bare name) to exactly
+        one Symbol node. The tail is tried only when nothing matches exactly."""
         if repo:
             ref = s.resolve_ref(repo, ref)
-        rows = s.read("""
-            MATCH (sy:Symbol {tenant: $tenant})
-            WHERE (sy.id = $symbol OR sy.qualified_name = $symbol OR sy.name = $symbol)
+        rows = _symbol_rows(s, symbol, repo, ref, "sy.id = $symbol OR sy.qualified_name = $symbol OR sy.name = $symbol")
+        if not rows and "." in symbol:            # `CreateTodoCommandHandler.Handle`: a tail on a `.`/`:` boundary
+            rows = _symbol_rows(s, symbol, repo, ref,
+                                "sy.qualified_name ENDS WITH '.' + $symbol OR sy.qualified_name ENDS WITH ':' + $symbol")
+        if not rows:
+            raise AtlasError(f"symbol '{symbol}' not found" + (f" in {repo}@{ref}" if repo else "") +
+                             " as an id, a qualified name, its `Class.Method` tail or a bare name — this says nothing about"
+                             " how the file was parsed: look it up with find_symbol (match: word), or name the repo/ref")
+        if len(rows) > 1:
+            opts = "; ".join(f"{r['id']}" for r in rows)
+            raise AtlasError(f"'{symbol}' is ambiguous ({len(rows)} matches). Use one of the ids: {opts}")
+        return rows[0]
+
+    def _symbol_rows(s: Store, symbol: str, repo: str | None, ref: str | None, match: str) -> list[dict[str, Any]]:
+        return s.read(f"""
+            MATCH (sy:Symbol {{tenant: $tenant}})
+            WHERE ({match})
               AND ($repo IS NULL OR sy.repo = $repo)
-            MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+            MATCH (snap:Snapshot {{tenant: $tenant, repo: sy.repo, ref: sy.ref}})
             WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
             MATCH (f:File)-[:CONTAINS]->(sy)
             RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
@@ -468,18 +483,11 @@ def build_server(store: Store | None = None):
                    sy.visibility AS visibility, sy.is_entry_point AS entry_point, sy.role AS role
             LIMIT 6
         """, symbol=symbol, repo=repo, ref=ref)
-        if not rows:
-            raise AtlasError(f"symbol '{symbol}' not found" + (f" in {repo}@{ref}" if repo else "") +
-                             " — try find_symbol first, or name the repo/ref")
-        if len(rows) > 1:
-            opts = "; ".join(f"{r['id']}" for r in rows)
-            raise AtlasError(f"'{symbol}' is ambiguous ({len(rows)} matches). Use one of the ids: {opts}")
-        return rows[0]
 
     @mcp.tool()
     def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50, tenant: str | None = None) -> dict[str, Any]:
         """Incoming calls: which symbols (and files) call `symbol`. `symbol` may be a symbol id from
-        find_symbol, a qualified name (pkg.Type.Method) or a bare name when unambiguous. Calls are
+        find_symbol, a qualified name (pkg.Type.Method), its `Type.Method` tail or a bare name when unambiguous. Calls are
         resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven.
         On a type (class/interface/struct), `inherited` callers use a method it gets from a package base
         (`method` says which: `repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>`)."""

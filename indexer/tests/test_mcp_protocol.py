@@ -221,3 +221,27 @@ def test_atlas_status_reports_remote_sync_per_repo(monkeypatch):
     monkeypatch.setenv("AIDD_TENANT", "t")
     out = _call(build_server(store=Remote()), "atlas_status", {})
     assert out["repos"][0]["remote"]["ok"] is False and "404" in out["repos"][0]["remote"]["note"]
+
+
+def test_a_class_method_tail_finds_the_symbol(monkeypatch):
+    """Agents write `CreateTodoCommandHandler.Handle`, not the namespace: when nothing matches exactly the
+    tail is tried on a `.`/`:` boundary; a miss says so without suggesting a parsing problem."""
+    class TailStore(FakeStore):
+        def read(self, query, **params):
+            if "RETURN sy.id AS id" in query:
+                self.queries.append(query)
+                if "ENDS WITH" not in query:
+                    return []
+                return [] if params["symbol"] == "Nope.Handle" else [{
+                    "id": "t/a@main/sym/Acme.Core.CreateTodoCommandHandler.Handle#method", "repo": "a", "ref": "main",
+                    "kind": "method", "name": "Handle", "qualified_name": "Acme.Core.CreateTodoCommandHandler.Handle",
+                    "file": "h.cs", "line_start": 1, "line_end": 2, "signature": "", "doc": "", "visibility": "public",
+                    "entry_point": True}]
+            return super().read(query, **params)
+
+    monkeypatch.setenv("AIDD_TENANT", "t")
+    srv = build_server(store=TailStore())
+    out = _call(srv, "who_calls", {"symbol": "CreateTodoCommandHandler.Handle"})
+    assert out["symbol"]["qualified_name"] == "Acme.Core.CreateTodoCommandHandler.Handle"
+    with pytest.raises(Exception, match="this says nothing about how the file was parsed"):
+        _call(srv, "who_calls", {"symbol": "Nope.Handle"})
