@@ -113,14 +113,15 @@ class CSharpSupport(LanguageSupport):
             bl = next((c for c in cls.children if c.type == "base_list"), None)
             base = next((t for t in (_type_text(c, src) for c in (bl.children if bl is not None else []) if c.is_named) if t), None)
             return (base, tuple(chain)) if base else None
+        if n.type == "invocation_expression":                              # provider.GetRequiredService<T>().X()
+            resolved = _service_type(n, src)
+            return (resolved, tuple(chain)) if resolved else None
         if n.type != "identifier":
             return None
         ident = node_text(n, src)
-        scope = _enclosing(call, _FUNC_NODES)
-        if scope is not None:
-            local = _local_type(ident, scope, src, call.start_byte)
-            if local:
-                return (local, tuple(chain))
+        local = _scoped_type(ident, call, src)
+        if local:
+            return (local, tuple(chain))
         if cls is not None and cls_name and ident in _members(cls, src):   # a field/property of the enclosing type
             return (cls_name, (ident, *chain))
         if ident[:1].isupper():
@@ -136,8 +137,7 @@ class CSharpSupport(LanguageSupport):
         made = _new_type(expr, src)
         if made or expr.type != "identifier":
             return made
-        scope = _enclosing(call, _FUNC_NODES)
-        return _local_type(node_text(expr, src), scope, src, call.start_byte, prefer_new=True) if scope is not None else None
+        return _scoped_type(node_text(expr, src), call, src, prefer_new=True)
 
     def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
                          handler_bases: frozenset[str]) -> list[str]:
@@ -265,6 +265,10 @@ class CSharpSupport(LanguageSupport):
         return (pkg("nuget", spec, root in FRAMEWORK_ROOTS), "Package")
 
 
+# Microsoft.Extensions.DependencyInjection: `provider.GetRequiredService<T>()` returns a T
+_DI_RESOLVERS = frozenset({"GetRequiredService", "GetService", "GetRequiredKeyedService", "GetKeyedService"})
+_CLOSURES = ("lambda_expression", "anonymous_method_expression", "local_function_statement")
+
 _TYPE_NODES = ("identifier", "qualified_name", "generic_name", "nullable_type", "array_type", "predefined_type")
 _FUNC_NODES = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
                "anonymous_method_expression", "property_declaration", "accessor_declaration")
@@ -285,6 +289,35 @@ def _type_text(node: Node | None, src: bytes) -> str | None:
         return node_text(n, src).split(".")[-1]
     if n.type == "identifier":
         return node_text(n, src)
+    return None
+
+
+def _service_type(expr: Node, src: bytes) -> str | None:
+    """`provider.GetRequiredService<T>()` / `GetService<T>()` (DI) → T."""
+    if expr.type != "invocation_expression":
+        return None
+    fn = expr.child_by_field_name("function")
+    if fn is not None and fn.type == "member_access_expression":
+        fn = fn.child_by_field_name("name")
+    if fn is None or fn.type != "generic_name":
+        return None
+    name = next((c for c in fn.children if c.type == "identifier"), None)
+    targs = next((c for c in fn.children if c.type == "type_argument_list"), None)
+    if name is None or targs is None or node_text(name, src) not in _DI_RESOLVERS:
+        return None
+    return _type_text(next((c for c in targs.children if c.is_named), None), src)
+
+
+def _scoped_type(name: str, at: Node, src: bytes, prefer_new: bool = False) -> str | None:
+    """Type of a parameter/local visible at `at`: its own function first, then — from a lambda, anonymous
+    method or local function — the functions around it (`.Must(x => repo.NotExists(x))` sees the
+    constructor's `var repo`)."""
+    scope = _enclosing(at, _FUNC_NODES)
+    while scope is not None:
+        found = _local_type(name, scope, src, at.start_byte, prefer_new)
+        if found or scope.type not in _CLOSURES:
+            return found
+        scope = _enclosing(scope, _FUNC_NODES)
     return None
 
 
@@ -424,7 +457,7 @@ def _local_type(name: str, scope: Node, src: bytes, before: int, prefer_new: boo
                 tt = _type_text(ty, src)
                 if tt is None or prefer_new:
                     init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-                    made = (_new_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
+                    made = (_new_type(init, src) or _service_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
                     tt = made or tt
                 best = tt
     return best

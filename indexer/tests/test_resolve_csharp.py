@@ -41,6 +41,21 @@ def test_property_and_inherited_base_member():
     assert _edges()[(19, "CountAsync")] == [("Shop.Api.Infra.BaseReadRepository.CountAsync", "receiver-type")]
 
 
+def test_services_resolved_from_the_container_and_closures():
+    """`var q = provider.GetRequiredService<T>()`, `GetRequiredService<T>().M()` and a lambda using a local
+    of the enclosing method all know the receiver's type (validators resolve repositories this way)."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {(e.line, sym[e.callee_id].qualified_name, e.strategy) for e in rv.calls
+           if e.caller_id in sym and sym[e.caller_id].name == "Lookup" and sym[e.callee_id].name == "FindByIdAsync"}
+    assert got == {(n, q, s) for n in (31, 32) for q, s in (("Shop.Api.Queries.IAccountQuery.FindByIdAsync", "receiver-type"),
+                                                          ("Shop.Api.Infra.AccountReadRepository.FindByIdAsync", "receiver-type-impl"))}
+
+
 def test_local_new_picks_the_right_homonym():
     assert _edges()[(21, "Describe")] == [("Shop.Api.Infra.GroupReadRepository.Describe", "receiver-type")]
 

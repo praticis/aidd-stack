@@ -85,7 +85,9 @@
     {"from": "ProjectRepository.Exists", "to": "IProjectReadRepository.Exists", "strategy": "receiver-type"},
     {"from": "ProjectRepository.Exists", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"},
     {"from": "ProjectsController.CreateAsync", "to": "CreateProjectCommandHandler.Handle", "strategy": "dispatch"},
-    {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommandHandler.Handle", "strategy": "dispatch"}
+    {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "CreateProjectCommandValidator.CreateProjectCommandValidator", "to": "IProjectReadRepository.Exists", "strategy": "receiver-type"},
+    {"from": "CreateProjectCommandValidator.CreateProjectCommandValidator", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"}
   ],
   "gaps": [
     {

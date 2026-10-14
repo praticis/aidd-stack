@@ -203,6 +203,21 @@
       "from": "ActivitiesController.RegisterActivityAsync",
       "to": "CreateActivityCommandHandler.Handle",
       "strategy": "dispatch"
+    },
+    {
+      "from": "CreateTodoCommandValidator.CreateTodoCommandValidator",
+      "to": "ITodoReadRepository.NotExists",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "CreateTodoCommandValidator.CreateTodoCommandValidator",
+      "to": "TodoReadRepository.NotExists",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "RegisterActivityCommandValidator.RegisterActivityCommandValidator",
+      "to": "IActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type"
     }
   ],
   "gaps": [
