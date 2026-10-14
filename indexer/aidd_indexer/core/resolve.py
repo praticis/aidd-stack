@@ -134,7 +134,7 @@ class Resolver:
                 qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
                 if qtype:
                     typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
-                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name)
+                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
                     impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
                     for found, strategy in ((typed, "receiver-type"), (impl_typed, "receiver-type-impl")):
                         # overloads the argument count cannot tell apart: all of them, marked ambiguous
@@ -191,13 +191,20 @@ class Resolver:
             return []                    # declared in the repo (overloads: no single target) — not a package method
         caller_test = self.test_file.get(c.file_id, False)
         out = []
-        impl = None if impl_found else lang.implementation_target(self.ctx, qtype, c.callee_name)   # found: receiver-type-impl
+        impl = None if impl_found else lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
         for target, strategy in ((qtype, "inherited"), (impl, "inherited-impl")):
             t = self.type_by_q.get(target) if target else None
             if t is None or self._inside(c.caller_id, t.id) or (not caller_test and self.test_file.get(t.file_id, False)):
                 continue                 # its own type (`this.ResponseAsync()` in a controller) says nothing new
             out.append(CallEdge(c.caller_id, t.id, c.line, strategy, c.callee_name))
         return out
+
+    def _owner(self, symbol_id: str) -> str | None:
+        """Qualified name of the type a symbol is declared in (the caller's own type), if any."""
+        s = self.sym_by_id.get(symbol_id)
+        while s is not None and s.kind not in TYPE_KINDS:
+            s = self.sym_by_id.get(s.parent_id) if s.parent_id else None
+        return s.qualified_name if s is not None else None
 
     def _inside(self, symbol_id: str, type_id: str) -> bool:
         s = self.sym_by_id.get(symbol_id)

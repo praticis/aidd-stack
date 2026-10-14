@@ -147,3 +147,42 @@ def test_package_base_methods_keep_the_dependency_on_the_type(tmp_path):
         ("App.ITodoRepository", None, 10, "inherited", "CreateAsync"),
         ("App.TodoRepository", None, 10, "inherited-impl", "CreateAsync"),
     }
+
+
+def test_di_registrations_pick_the_implementation_and_walk_decorators(tmp_path):
+    """`AddScoped<I, Base>(); Decorate<I, Outer>()`: a call on I reaches Outer, and Outer's call on the instance
+    it wraps reaches Base. An interface with two implementers is settled by its registration — unless it is
+    registered in two files (which one runs cannot be told)."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    files = {
+        "src/App/App.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
+        "src/App/IStep.cs": "namespace App;\n\npublic interface IStep { void Run(); }\n",
+        "src/App/Base.cs": "namespace App;\n\npublic class Base : IStep { public void Run() { } }\n",
+        "src/App/Outer.cs": "namespace App;\n\npublic class Outer(IStep inner) : IStep { public void Run() => inner.Run(); }\n",
+        "src/App/IStore.cs": "namespace App;\n\npublic interface IStore { void Save(); }\n",
+        "src/App/Store.cs": "namespace App;\n\npublic class Store : IStore { public void Save() { } }\n",
+        "src/App/Cache.cs": "namespace App;\n\npublic class Cache : IStore { public void Save() { } }\n",
+        "src/App/IClock.cs": "namespace App;\n\npublic interface IClock { void Now(); }\n",
+        "src/App/Wall.cs": "namespace App;\n\npublic class Wall : IClock { public void Now() { } }\n",
+        "src/App/Fixed.cs": "namespace App;\n\npublic class Fixed : IClock { public void Now() { } }\n",
+        "src/App/Setup.cs": ("namespace App;\n\npublic static class Setup\n{\n    public static void Add(IServiceCollection services)\n    {\n"
+                             "        services.AddScoped<IStep, Base>();\n        services.Decorate<IStep, Outer>();\n"
+                             "        services.AddScoped<IStore, Store>();\n        services.AddSingleton<IClock, Wall>();\n    }\n}\n"),
+        "src/App/OtherSetup.cs": ("namespace App;\n\npublic static class OtherSetup\n{\n    public static void Add(IServiceCollection services)\n"
+                                  "        => services.AddSingleton<IClock, Fixed>();\n}\n"),
+        "src/App/Use.cs": ("namespace App;\n\npublic class Use(IStep step, IStore store, IClock clock)\n{\n"
+                           "    public void Go() { step.Run(); store.Save(); clock.Now(); }\n}\n"),
+    }
+    root = tmp_path / "app"
+    for rel, text in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text)
+    repo = RepoInfo(tenant="t", name="app", ref="main", commit_sha="x", root=str(root))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {(sym[e.caller_id].qualified_name, sym[e.callee_id].qualified_name) for e in rv.calls if e.strategy == "receiver-type-impl"}
+    assert got == {("App.Use.Go", "App.Outer.Run"),           # outermost decorator
+                   ("App.Outer.Run", "App.Base.Run"),         # the decorator's inner instance
+                   ("App.Use.Go", "App.Store.Save")}          # two implementers, one registered; IClock: two files, none

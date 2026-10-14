@@ -427,7 +427,8 @@ class GoSupport(LanguageSupport):
             return False
         return False
 
-    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
         cache = ctx.extra.setdefault("go_impl", {})
         if qualified_type not in cache:
             prefix, _, name = qualified_type.rpartition(".")

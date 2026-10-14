@@ -14,6 +14,7 @@ from typing import Any
 
 from tree_sitter import Node
 
+from ...core.config import is_test_path
 from ...core.dispatch import DispatchRule
 from ...core.model import FileInfo
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
@@ -87,10 +88,24 @@ class CSharpSupport(LanguageSupport):
                 types[node_text(name, src)] = {"kind": n.type.split("_")[0], "ns": ns, "bases": bases,
                                                "generic_bases": _generic_bases(bl, src),
                                                "members": _members(n, src), "explicit": _explicit_impls(n, src)}
+        registrations: list[tuple[str, list[str]]] = []          # `services.AddScoped<I, Impl>()` / `Decorate<I, D>()`
+        for n in walk(root):
+            if n.type != "invocation_expression":
+                continue
+            fn = n.child_by_field_name("function")
+            fn = fn.child_by_field_name("name") if fn is not None and fn.type == "member_access_expression" else fn
+            if fn is None or fn.type != "generic_name":
+                continue
+            name = next((c for c in fn.children if c.type == "identifier"), None)
+            targs = next((c for c in fn.children if c.type == "type_argument_list"), None)
+            if name is not None and targs is not None and node_text(name, src) in _REGISTRARS:
+                args = [_type_text(a, src) or "" for a in targs.children if a.is_named]
+                if len(args) == 2 and all(args):
+                    registrations.append((node_text(name, src), args))
         _, file_ns = self.file_scope(root, src)
         for t in types.values():                       # file-scoped namespace: declarations are siblings, not children
             t["ns"] = t["ns"] or file_ns
-        return {"types": types, "usings": usings, "file_ns": file_ns}
+        return {"types": types, "usings": usings, "file_ns": file_ns, "registrations": registrations}
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
         chain: list[str] = []
@@ -245,6 +260,32 @@ class CSharpSupport(LanguageSupport):
                 for b in t["bases"]:
                     impl.setdefault(b, []).append(q)
         ctx.extra["cs_implementers"] = impl
+        ctx.extra["cs_di_chains"] = self._di_chains(ctx)
+
+    def _di_chains(self, ctx: ResolveContext) -> dict[str, list[str]]:
+        """interface → what the container builds, innermost first: `[UpdateCacheStep, CommitActivityStep, CheckTodoStep]`
+        for `AddScoped<I, UpdateCacheStep>(); Decorate<I, CommitActivityStep>(); Decorate<I, CheckTodoStep>()`. An
+        interface registered in more than one file (environments, tests) is left out: which one runs cannot be told."""
+        found: dict[str, list[list[str]]] = {}
+        for fid, facts in ctx.facts.items():
+            f = ctx.files_by_id.get(fid)
+            if f is None or f.language != self.id or is_test_path(f.path):
+                continue
+            here: dict[str, list[str]] = {}
+            for method, (iface, impl) in facts.get("registrations") or []:
+                qi, qt = self._lookup_type(ctx, f, iface), self._lookup_type(ctx, f, impl)
+                if qi is None or qt is None:
+                    continue
+                if method == "Decorate":
+                    if qi[0] in here:
+                        here[qi[0]].append(qt[0])
+                elif qi[0] in here and len(here[qi[0]]) == 1:
+                    here[qi[0]] = [""]                  # registered twice for one interface: no single base
+                else:
+                    here[qi[0]] = [qt[0]]
+            for qi, chain in here.items():
+                found.setdefault(qi, []).append(chain)
+        return {qi: chains[0] for qi, chains in found.items() if len(chains) == 1 and "" not in chains[0]}
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         out: list[str] = []
@@ -276,12 +317,23 @@ class CSharpSupport(LanguageSupport):
                     return True
         return False
 
-    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
         iface = qualified_type.split(".")[-1]
-        impls = sorted(set(ctx.extra.get("cs_implementers", {}).get(iface, [])))
-        if len(impls) != 1:
-            return None
-        impl = impls[0]
+        chain = ctx.extra.get("cs_di_chains", {}).get(qualified_type)
+        if chain:
+            if from_type in chain:                       # a decorator calling the instance it wraps: the next one inward
+                i = chain.index(from_type)
+                impl = chain[i - 1] if i > 0 else None
+            else:
+                impl = chain[-1]                         # anyone else gets the outermost
+            if impl is None:
+                return None
+        else:
+            impls = sorted(set(ctx.extra.get("cs_implementers", {}).get(iface, [])))
+            if len(impls) != 1:
+                return None
+            impl = impls[0]
         for facts in ctx.facts.values():
             t = (facts.get("types") or {}).get(impl.split(".")[-1])
             if t and ((t["ns"] + "." if t["ns"] else "") + impl.split(".")[-1]) == impl:
@@ -301,6 +353,9 @@ class CSharpSupport(LanguageSupport):
         return (pkg("nuget", spec, root in FRAMEWORK_ROOTS), "Package")
 
 
+# Microsoft.Extensions.DependencyInjection registrations (+ Scrutor's `Decorate`): which implementation the container hands out
+_REGISTRARS = frozenset({"AddScoped", "AddTransient", "AddSingleton", "TryAddScoped", "TryAddTransient", "TryAddSingleton",
+                         "AddKeyedScoped", "AddKeyedTransient", "AddKeyedSingleton", "Decorate"})
 # Microsoft.Extensions.DependencyInjection: `provider.GetRequiredService<T>()` returns a T
 _DI_RESOLVERS = frozenset({"GetRequiredService", "GetService", "GetRequiredKeyedService", "GetKeyedService"})
 _CLOSURES = ("lambda_expression", "anonymous_method_expression", "local_function_statement")

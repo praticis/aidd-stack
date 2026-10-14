@@ -243,6 +243,16 @@
       "methods": [
         "CreateAsync"
       ]
+    },
+    {
+      "from": "RegisterActivityCommandValidator.RegisterActivityCommandValidator",
+      "to": "ActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "ActivityRepository.IsUniqueKey",
+      "to": "ActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type-impl"
     }
   ],
   "gaps": []

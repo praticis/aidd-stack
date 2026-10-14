@@ -125,9 +125,10 @@
     {"from": "TodoWasCreatedEventHandler.Handle", "to": "ITodoRepository", "strategy": "inherited", "methods": ["CreateAsync"]},
     {"from": "CheckTodoStep.ProcessAsync", "to": "ITodoRepository", "strategy": "inherited", "methods": ["Exists"]},
     {"from": "CommitActivityStep.ProcessAsync", "to": "IActivityRepository", "strategy": "inherited", "methods": ["Exists", "CreateAsync", "SaveAsync"]},
-    {"from": "ProcessTagHandler.Handle", "to": "ITimelineRepository", "strategy": "inherited", "methods": ["SaveAsync"]}
+    {"from": "ProcessTagHandler.Handle", "to": "ITimelineRepository", "strategy": "inherited", "methods": ["SaveAsync"]},
+    {"from": "ActivityWasCreatedEventHandler.Handle", "to": "CheckTodoStep.ProcessAsync", "strategy": "receiver-type-impl"},
+    {"from": "CheckTodoStep.ProcessAsync", "to": "CommitActivityStep.ProcessAsync", "strategy": "receiver-type-impl"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "UpdateCacheStep.ProcessAsync", "strategy": "receiver-type-impl"}
   ],
-  "gaps": [
-    {"from": "ActivityWasCreatedEventHandler.Handle", "to": "CheckTodoStep.ProcessAsync", "why": "decorator chain registered with Scrutor Decorate<>: interface with several implementers"}
-  ]
+  "gaps": []
 }

@@ -193,12 +193,14 @@ class LanguageSupport:
         of a package). Lets the resolver keep the dependency on the type (strategy `inherited`)."""
         return False
 
-    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
-        """Qualified name of the single concrete type that implements `qualified_type` *and* can
-        serve `method` for it — None when there are zero or several implementers, or when the
-        implementer's `method` is an explicit implementation of another interface. A call on the
-        interface then also links to the implementation (strategy `receiver-type-impl`), the usual
-        DI case in C#."""
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
+        """Qualified name of the concrete type a call on `qualified_type` reaches — the single implementer, or
+        the one the DI registrations say (C#: `AddScoped<I, Impl>()`, and a `Decorate<I, D>()` chain, where
+        `from_type` — the caller's own type — picks the next one inward) — and that can serve `method` for
+        it. None when it cannot be told, or when the implementer's `method` is an explicit implementation
+        of another interface. A call on the interface then also links to the implementation (strategy
+        `receiver-type-impl`)."""
         return None
 
     def message_handlers(self, ctx: ResolveContext, file: "FileInfo", message_type: str,
