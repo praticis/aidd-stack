@@ -128,6 +128,30 @@ class CSharpSupport(LanguageSupport):
             return (ident, tuple(chain))                                   # static access: `Foo.Bar()` → type Foo
         return (cls_name, (ident, *chain)) if cls_name else None          # inherited member of an in-repo base, maybe
 
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        pl = node.child_by_field_name("parameters") or next((c for c in node.children if c.type == "parameter_list"), None)
+        if pl is None:
+            return None
+        required = optional = 0
+        variadic = False
+        for prm in pl.children:
+            if prm.type == "params":                        # `params int[] rest`: any number more
+                variadic = True
+            elif prm.type == "parameter":
+                if any(m.type == "modifier" and node_text(m, src) == "this" for m in prm.children):
+                    continue                                # extension method: the receiver, not an argument
+                if any(c.type == "=" for c in prm.children):
+                    optional += 1
+                else:
+                    required += 1
+        return (required, None if variadic else required + optional)
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        args = call.child_by_field_name("arguments")
+        if args is None:
+            return None
+        return sum(1 for a in args.children if a.type == "argument")
+
     def call_argument_type(self, call: Node, src: bytes) -> str | None:
         args = call.child_by_field_name("arguments") if call.type == "invocation_expression" else None
         first = next((a for a in (args.children if args is not None else []) if a.type == "argument"), None)

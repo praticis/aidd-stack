@@ -237,6 +237,24 @@ class GoSupport(LanguageSupport):
         return {"structs": structs, "embeds": embeds, "funcs": funcs, "imports": imports,
                 "interfaces": interfaces, "methods": methods}
 
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        pl = node.child_by_field_name("parameters")
+        if pl is None:
+            return None
+        n, variadic = 0, False
+        for pd in pl.children:
+            if pd.type == "parameter_declaration":
+                n += max(1, sum(1 for c in pd.children if c.type == "identifier"))   # `a, b int` = 2
+            elif pd.type == "variadic_parameter_declaration":
+                variadic = True
+        return (n, None if variadic else n)
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        args = call.child_by_field_name("arguments")
+        if args is None or any(a.type == "variadic_argument" for a in args.children):
+            return None                                     # `f(xs...)`: unknown
+        return sum(1 for a in args.children if a.is_named and a.type != "comment")
+
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
         # receiver = `uc.policy` (selector chain) or `p` (identifier); anything else (call results,
         # index expressions) is not followed.

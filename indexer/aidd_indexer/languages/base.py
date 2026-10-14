@@ -144,6 +144,15 @@ class LanguageSupport:
         when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
         return None
 
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        """(required, max) arguments a call to this function/method passes — optional parameters and
+        defaults widen the range, a variadic one makes max None. None = unknown (no overload filtering)."""
+        return None
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        """How many arguments the call passes; None when unknown (a spread)."""
+        return None
+
     def call_argument_type(self, call: Node, src: bytes) -> str | None:
         """Static type of the call's first argument as written — `new T(..)`, or a parameter/local
         (preferring the type it was created with over the declared one: `IEvent e = new T()` → T).

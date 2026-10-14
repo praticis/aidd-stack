@@ -57,6 +57,8 @@ class SymbolInfo:
     parent_id: str | None = None   # enclosing symbol (member CONTAINS)
     is_entry_point: bool = False
     role: str | None = None        # what the element is in the pattern (convention roles: command-handler, ...)
+    arity: tuple[int, int | None] | None = None   # functions/methods: (required, max — None = variadic) arguments a call
+                                                  # passes; picks the overload (resolver only, not in the graph). None = unknown
 
 
 @dataclass
@@ -69,6 +71,7 @@ class CallInfo:
     receiver_type: str | None = None       # static type of the receiver's base variable as written (`*Complete`, `pw.Policy`,
                                            # or `call:pw.NewPolicy` when it comes from a constructor) — language hook
     receiver_path: tuple[str, ...] = ()    # field chain after the base variable: `uc.policy.Validate` -> ("policy",)
+    arg_count: int | None = None           # arguments passed (None = unknown, e.g. a spread) — picks among overloads
     arg_type: str | None = None            # static type of the first argument, as written — only for the bus methods
                                            # a convention declares (`dispatch`), see core/dispatch.py
 

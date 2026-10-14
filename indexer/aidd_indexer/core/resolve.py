@@ -65,6 +65,15 @@ class Resolved:
     namespace_files: dict[str, list[str]] = field(default_factory=dict)
 
 
+def _fitting(syms: list[SymbolInfo], argc: int | None) -> list[SymbolInfo]:
+    """The symbols a call with `argc` arguments can reach (overloads by arity); unchanged when the count or the
+    arities are unknown, or when none fits."""
+    if argc is None or len(syms) < 2:
+        return syms
+    fit = [s for s in syms if s.arity is None or (s.arity[0] <= argc and (s.arity[1] is None or argc <= s.arity[1]))]
+    return fit or syms
+
+
 class Resolver:
     def __init__(self, result: ExtractionResult, extractors: list[FileExtractor], dispatch: list[DispatchRule] | None = None):
         self.r = result
@@ -124,19 +133,19 @@ class Resolver:
                 lang = languages.by_id(caller_file.language)
                 qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
                 if qtype:
-                    typed = self._method_on(cands, c.callee_name, qtype, lang)
+                    typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
                     impl = lang.implementation_target(self.ctx, qtype, c.callee_name)
-                    impl_typed = self._method_on(cands, c.callee_name, impl, lang) if impl else None
-                    if typed is not None:
-                        edges.append(CallEdge(c.caller_id, typed.id, c.line, "receiver-type"))
-                    if impl_typed is not None:
-                        edges.append(CallEdge(c.caller_id, impl_typed.id, c.line, "receiver-type-impl"))
-                    if typed is None:
+                    impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
+                    for found, strategy in ((typed, "receiver-type"), (impl_typed, "receiver-type-impl")):
+                        # overloads the argument count cannot tell apart: all of them, marked ambiguous
+                        suffix = "-ambiguous" if len(found) > 1 else ""
+                        edges.extend(CallEdge(c.caller_id, s.id, c.line, strategy + suffix) for s in found[:3])
+                    if not typed:
                         # the receiver's type does not declare the method: never guess a homonym. When the type has a
                         # base outside the repo the method comes from there — record the dependency on the type
-                        inherited = self._inherited(c, qtype, lang, impl_found=impl_typed is not None)
+                        inherited = self._inherited(c, qtype, lang, impl_found=bool(impl_typed))
                         edges.extend(inherited)
-                        if impl_typed is None and not inherited:
+                        if not impl_typed and not inherited:
                             unresolved += 1
                     continue
             if not cands:
@@ -164,8 +173,9 @@ class Resolver:
                 methods = [s for s in chosen if s.kind == "method"] or chosen
                 chosen = methods
             if len(chosen) > 1:
+                # homonyms found by name: the argument count trims the guesses, it does not make one of them proven
                 strat += "-ambiguous"
-                chosen = chosen[:3]
+                chosen = _fitting(chosen, c.arg_count)[:3]
             for s in chosen:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
@@ -213,13 +223,18 @@ class Resolver:
                     out.setdefault(target.id, CallEdge(c.caller_id, target.id, c.line, "dispatch"))
         return list(out.values())
 
-    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
-        """The candidate declared on `qtype` or, failing that, on its nearest in-repo supertype."""
+    def _methods_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang, argc: int | None = None) -> list[SymbolInfo]:
+        """The method declared on `qtype` or, failing that, on its nearest in-repo supertype — the overloads that
+        accept `argc` arguments (all of them when none does: the arity read may be incomplete)."""
         for t in [qtype] + lang.supertypes(self.ctx, qtype):
             hit = [s for s in cands if s.qualified_name == f"{t}.{name}"]
-            if len(hit) == 1:
-                return hit[0]
-        return None
+            if hit:
+                return _fitting(hit, argc)
+        return []
+
+    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
+        hit = self._methods_on(cands, name, qtype, lang)
+        return hit[0] if len(hit) == 1 else None
 
     # -- imports ---------------------------------------------------------------------
     def _pkg(self, ecosystem: str, name: str, stdlib: bool = False) -> str:

@@ -311,6 +311,7 @@ class FileExtractor:
                 file_id=self.file.id,
                 receiver_type=typed[0] if typed else None,
                 receiver_path=typed[1] if typed else (),
+                arg_count=self.lang.call_arg_count(cnode, self.src),
                 arg_type=self.lang.call_argument_type(cnode, self.src) if name in self.dispatch_calls else None,
             ))
 
@@ -369,6 +370,7 @@ class FileExtractor:
             content_hash=hashlib.sha1(self.src[dnode.start_byte:dnode.end_byte]).hexdigest(),
             parent_id=parent.id if parent else None,
             is_entry_point=_entry_point(dnode, self.src, signature, lang) if kind in ("function", "method") else False,
+            arity=lang.arity(dnode, self.src) if kind in ("function", "method") else None,
         )
         self.symbols.append(sym)
         self.symbol_by_node[dnode.id] = sym
