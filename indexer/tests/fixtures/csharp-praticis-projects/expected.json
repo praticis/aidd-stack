@@ -87,20 +87,11 @@
     {"from": "ProjectsController.CreateAsync", "to": "CreateProjectCommandHandler.Handle", "strategy": "dispatch"},
     {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommandHandler.Handle", "strategy": "dispatch"},
     {"from": "CreateProjectCommandValidator.CreateProjectCommandValidator", "to": "IProjectReadRepository.Exists", "strategy": "receiver-type"},
-    {"from": "CreateProjectCommandValidator.CreateProjectCommandValidator", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"}
+    {"from": "CreateProjectCommandValidator.CreateProjectCommandValidator", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"},
+    {"from": "CreateProjectCommandHandler.Handle", "to": "IProjectRepository", "strategy": "inherited", "methods": ["CreateAsync"]},
+    {"from": "ArchiveProjectCommandHandler.Handle", "to": "IProjectRepository", "strategy": "inherited", "methods": ["FindByIdAsync", "UpdateAsync"]}
   ],
   "gaps": [
-    {
-      "from": "CreateProjectCommandHandler.Handle",
-      "to": "IProjectRepository",
-      "methods": ["CreateAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "ArchiveProjectCommandHandler.Handle",
-      "to": "IProjectRepository",
-      "methods": ["FindByIdAsync", "UpdateAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    }
+
   ]
 }

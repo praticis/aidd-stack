@@ -389,6 +389,26 @@ class GoSupport(LanguageSupport):
             return out
         return None
 
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str, depth: int = 0) -> bool:
+        """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
+        if depth > 4:
+            return False
+        prefix, _, name = qualified_type.rpartition(".")
+        for f in self._files_in(ctx, prefix):
+            facts = ctx.facts.get(f.id) or {}
+            iface = facts.get("interfaces", {}).get(name)
+            embedded = facts.get("embeds", {}).get(name, []) if name in facts.get("structs", {}) else (iface or {}).get("embeds") or []
+            if name not in facts.get("structs", {}) and iface is None:
+                continue
+            for emb in embedded:
+                inner = self._resolve_type(ctx, f, emb)
+                if inner is None or not any(self._files_in(ctx, inner[0])):
+                    return True
+                if self.has_external_base(ctx, f"{inner[0]}.{inner[1]}" if inner[0] else inner[1], depth + 1):
+                    return True
+            return False
+        return False
+
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
         cache = ctx.extra.setdefault("go_impl", {})
         if qualified_type not in cache:

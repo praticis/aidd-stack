@@ -240,6 +240,18 @@ class CSharpSupport(LanguageSupport):
                         seen.add(bt[0]); out.append(bt[0]); queue.append(bt[0])
         return out
 
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        for q in [qualified_type] + self.supertypes(ctx, qualified_type):
+            simple = q.split(".")[-1]
+            for fid, facts in ctx.facts.items():
+                t = (facts.get("types") or {}).get(simple)
+                f = ctx.files_by_id.get(fid)
+                if t is None or f is None or ((t["ns"] + "." if t["ns"] else "") + simple) != q:
+                    continue
+                if any(self._lookup_type(ctx, f, b) is None for b in t["bases"]):
+                    return True
+        return False
+
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
         iface = qualified_type.split(".")[-1]
         impls = sorted(set(ctx.extra.get("cs_implementers", {}).get(iface, [])))

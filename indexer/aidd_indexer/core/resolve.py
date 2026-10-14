@@ -21,6 +21,8 @@ from .dispatch import DispatchRule
 from .extract import CALLABLE_KINDS, FileExtractor
 from .model import ExtractionResult, FileInfo, SymbolInfo
 
+TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
+
 # receivers that are runtime builtins in some language — a call on them never targets repo code
 BUILTIN_RECEIVERS: frozenset[str] = frozenset().union(*(l.builtin_receivers for l in languages.all()))
 
@@ -30,7 +32,8 @@ class CallEdge:
     caller_id: str
     callee_id: str
     line: int
-    strategy: str          # receiver-type | receiver-type-impl | dispatch | same-file | same-module | unique-name (+ "-ambiguous")
+    strategy: str          # receiver-type | receiver-type-impl | dispatch | inherited | inherited-impl | same-file | same-module | unique-name (+ "-ambiguous")
+    method: str | None = None   # inherited*: the method called, which the repo does not declare (it comes from a package base)
 
 
 @dataclass
@@ -76,6 +79,7 @@ class Resolver:
             if s.kind in CALLABLE_KINDS:
                 self.by_name[s.name].append(s)
         self.sym_by_id = {s.id: s for s in result.symbols}
+        self.type_by_q = {s.qualified_name: s for s in result.symbols if s.kind in TYPE_KINDS}
         namespaces: dict[str, list[str]] = defaultdict(list)
         for fx in extractors:
             for ns in fx.namespaces:
@@ -98,8 +102,8 @@ class Resolver:
                 if sent:
                     edges.extend(sent)
                     continue
-            cands = self.by_name.get(c.callee_name)
-            if not cands:
+            cands = self.by_name.get(c.callee_name, [])
+            if not cands and not c.receiver_type:   # typed receivers go on: the method may come from a package base
                 unresolved += 1
                 continue
             if c.receiver:
@@ -111,7 +115,7 @@ class Resolver:
             # production code never targets test code: drop fakes/mocks from the candidate set
             if not self.test_file.get(c.file_id, False):
                 prod = [s for s in cands if not self.test_file.get(s.file_id, False)]
-                if not prod:
+                if not prod and not c.receiver_type:
                     unresolved += 1
                     continue
                 cands = prod
@@ -127,9 +131,17 @@ class Resolver:
                         edges.append(CallEdge(c.caller_id, typed.id, c.line, "receiver-type"))
                     if impl_typed is not None:
                         edges.append(CallEdge(c.caller_id, impl_typed.id, c.line, "receiver-type-impl"))
-                    if typed is None and impl_typed is None:
-                        unresolved += 1      # the receiver's type is known and it has no such method here (inherited from a package): don't guess
+                    if typed is None:
+                        # the receiver's type does not declare the method: never guess a homonym. When the type has a
+                        # base outside the repo the method comes from there — record the dependency on the type
+                        inherited = self._inherited(c, qtype, lang, impl_found=impl_typed is not None)
+                        edges.extend(inherited)
+                        if impl_typed is None and not inherited:
+                            unresolved += 1
                     continue
+            if not cands:
+                unresolved += 1
+                continue
             lang = languages.by_id(caller_file.language) if caller_file is not None else None
             if c.receiver and lang is not None and c.receiver in lang.parent_receivers:
                 unresolved += 1              # `base.X()` with the base type outside the repo (or implicit): the name fallback would only find the override itself
@@ -157,6 +169,33 @@ class Resolver:
             for s in chosen:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
+
+    def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
+        """`repo.CreateAsync(x)` where `repo: ITodoRepository : IBaseRepository<T>` (a package): CALLS to the
+        type itself and to its single implementer, carrying the method name (strategies `inherited` /
+        `inherited-impl`) — who uses this repository stays visible without inventing the method."""
+        if not lang.has_external_base(self.ctx, qtype):
+            return []
+        owners = {qtype, *lang.supertypes(self.ctx, qtype)}
+        if any(s.qualified_name.rsplit(".", 1)[0] in owners for s in self.by_name.get(c.callee_name, [])):
+            return []                    # declared in the repo (overloads: no single target) — not a package method
+        caller_test = self.test_file.get(c.file_id, False)
+        out = []
+        impl = None if impl_found else lang.implementation_target(self.ctx, qtype, c.callee_name)   # found: receiver-type-impl
+        for target, strategy in ((qtype, "inherited"), (impl, "inherited-impl")):
+            t = self.type_by_q.get(target) if target else None
+            if t is None or self._inside(c.caller_id, t.id) or (not caller_test and self.test_file.get(t.file_id, False)):
+                continue                 # its own type (`this.ResponseAsync()` in a controller) says nothing new
+            out.append(CallEdge(c.caller_id, t.id, c.line, strategy, c.callee_name))
+        return out
+
+    def _inside(self, symbol_id: str, type_id: str) -> bool:
+        s = self.sym_by_id.get(symbol_id)
+        while s is not None:
+            if s.id == type_id:
+                return True
+            s = self.sym_by_id.get(s.parent_id) if s.parent_id else None
+        return False
 
     def _dispatched(self, c) -> list[CallEdge]:
         """`bus.SendAsync(new X(..))` → `Handle` of every type that handles X (core/dispatch.py)."""

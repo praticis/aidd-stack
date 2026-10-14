@@ -121,37 +121,13 @@
     {"from": "ResetSummaryCommandHandler.Handle", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
     {"from": "UpdateCacheStep.ProcessAsync", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
     {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTodoHandler.Handle", "strategy": "dispatch"},
-    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTagHandler.Handle", "strategy": "dispatch"}
+    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTagHandler.Handle", "strategy": "dispatch"},
+    {"from": "TodoWasCreatedEventHandler.Handle", "to": "ITodoRepository", "strategy": "inherited", "methods": ["CreateAsync"]},
+    {"from": "CheckTodoStep.ProcessAsync", "to": "ITodoRepository", "strategy": "inherited", "methods": ["Exists"]},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "IActivityRepository", "strategy": "inherited", "methods": ["Exists", "CreateAsync", "SaveAsync"]},
+    {"from": "ProcessTagHandler.Handle", "to": "ITimelineRepository", "strategy": "inherited", "methods": ["SaveAsync"]}
   ],
   "gaps": [
-    {
-      "from": "ActivityWasCreatedEventHandler.Handle",
-      "to": "CheckTodoStep.ProcessAsync",
-      "why": "decorator chain registered with Scrutor Decorate<>: interface with several implementers"
-    },
-    {
-      "from": "TodoWasCreatedEventHandler.Handle",
-      "to": "ITodoRepository",
-      "methods": ["CreateAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "CheckTodoStep.ProcessAsync",
-      "to": "ITodoRepository",
-      "methods": ["Exists"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "CommitActivityStep.ProcessAsync",
-      "to": "IActivityRepository",
-      "methods": ["Exists", "CreateAsync", "SaveAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "ProcessTagHandler.Handle",
-      "to": "ITimelineRepository",
-      "methods": ["SaveAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    }
+    {"from": "ActivityWasCreatedEventHandler.Handle", "to": "CheckTodoStep.ProcessAsync", "why": "decorator chain registered with Scrutor Decorate<>: interface with several implementers"}
   ]
 }

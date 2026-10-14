@@ -480,14 +480,16 @@ def build_server(store: Store | None = None):
     def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50, tenant: str | None = None) -> dict[str, Any]:
         """Incoming calls: which symbols (and files) call `symbol`. `symbol` may be a symbol id from
         find_symbol, a qualified name (pkg.Type.Method) or a bare name when unambiguous. Calls are
-        resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven."""
+        resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven.
+        On a type (class/interface/struct), `inherited` callers use a method it gets from a package base
+        (`method` says which: `repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>`)."""
         s = st(tenant)
         target = _symbol(s, symbol, repo, ref)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
             OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
             RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
-                   caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+                   caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY file, line LIMIT $limit
         """, id=target["id"], limit=min(limit, MAX_ROWS))
         return {"symbol": target, "callers": callers, "caller_count": len(callers)}
@@ -505,14 +507,14 @@ def build_server(store: Store | None = None):
         callees = s.read("""
             MATCH (:Symbol {id: $id})-[c:CALLS]->(t:Symbol)
             MATCH (f:File)-[:CONTAINS]->(t)
-            RETURN t.id AS id, t.kind AS kind, t.qualified_name AS qualified_name, f.path AS file, c.line AS line, c.strategy AS strategy
+            RETURN t.id AS id, t.kind AS kind, t.qualified_name AS qualified_name, f.path AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY line LIMIT $limit
         """, **base)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
             OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
             RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
-                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY file, line LIMIT $limit
         """, **base)
         imports = s.read("""
@@ -792,7 +794,7 @@ def build_server(store: Store | None = None):
           (:Symbol {name, qualified_name, kind, signature, doc, visibility, path, line_start, line_end,
               is_entry_point, role})  kind: function|method|struct|interface|class|enum|type|const|var|field
           (:Symbol)-[:CONTAINS]->(:Symbol)                       members
-          (:Symbol|File)-[:CALLS {line, strategy}]->(:Symbol)    same repo and ref only
+          (:Symbol|File)-[:CALLS {line, strategy, method}]->(:Symbol)    same repo and ref only
           (:File)-[:IMPORTS {spec, line}]->(:File|Module|Package {name, ecosystem, internal})
           (:File|Symbol)-[:HAS_VIOLATION]->(:Violation {convention, rule, severity, message, line})
           (:Symbol|File)-[:MAKES_HTTP_CALL]->(:HttpCall {method, path, path_key, raw_path, line})

@@ -178,6 +178,12 @@ class LanguageSupport:
         from a base class declared in this repo still resolves by receiver type."""
         return []
 
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        """Whether the type (or one of its in-repo bases) extends/embeds a type declared outside the repo —
+        so a method the repo does not declare may come from there (`ITodoRepository : IBaseRepository<T>`
+        of a package). Lets the resolver keep the dependency on the type (strategy `inherited`)."""
+        return False
+
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
         """Qualified name of the single concrete type that implements `qualified_type` *and* can
         serve `method` for it — None when there are zero or several implementers, or when the

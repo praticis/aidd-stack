@@ -79,3 +79,24 @@ def test_interface_calls_reach_the_single_production_implementer():
         ("Execute", "internal.adapters.outbound.store.MemRepo.Save", "receiver-type-impl"),   # uc.repo Repo
         ("Keep", "internal.adapters.outbound.store.MemRepo.Save", "receiver-type-impl"),      # Store embeds Repo
     }                                                     # r.clock.Now(): System and Fixed both implement Clock
+
+
+def test_methods_promoted_from_an_embedded_package_type(tmp_path):
+    """`s.cache.Lock()` where `Cache` embeds `sync.Mutex`: the repo has no Lock, the dependency on Cache
+    is kept (strategy `inherited`, method Lock); a type with no outside base still gets no edge."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    root = tmp_path / "svc"
+    (root / "internal" / "cache").mkdir(parents=True)
+    (root / "go.mod").write_text("module example.com/svc\n\ngo 1.22\n")
+    (root / "internal" / "cache" / "cache.go").write_text(
+        "package cache\n\nimport \"sync\"\n\ntype Cache struct {\n\tsync.Mutex\n\titems map[string]string\n}\n\n"
+        "type Plain struct{ n int }\n\n"
+        "type Svc struct {\n\tcache *Cache\n\tplain Plain\n}\n\n"
+        "func (s *Svc) Put(k, v string) {\n\ts.cache.Lock()\n\ts.cache.items[k] = v\n\ts.plain.Reset()\n}\n")
+    repo = RepoInfo(tenant="t", name="svc", ref="main", commit_sha="x", root=str(root))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    assert {(sym[e.caller_id].name, sym[e.callee_id].qualified_name, e.strategy, e.method) for e in rv.calls} == {
+        ("Put", "internal.cache.Cache", "inherited", "Lock")}          # Plain.Reset: nothing outside, no edge

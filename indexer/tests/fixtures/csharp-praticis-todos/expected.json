@@ -218,13 +218,11 @@
       "from": "RegisterActivityCommandValidator.RegisterActivityCommandValidator",
       "to": "IActivityReadRepository.IsUniqueKey",
       "strategy": "receiver-type"
-    }
-  ],
-  "gaps": [
+    },
     {
       "from": "CreateTodoCommandHandler.Handle",
       "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
         "CreateAsync"
       ]
@@ -232,26 +230,20 @@
     {
       "from": "UpdateTodoCommandHandler.Handle",
       "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
-        "FindByIdAsync"
-      ]
-    },
-    {
-      "from": "UpdateTodoCommandHandler.Handle",
-      "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
-      "methods": [
+        "FindByIdAsync",
         "UpdateAsync"
       ]
     },
     {
       "from": "CreateActivityCommandHandler.Handle",
       "to": "IActivityRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
         "CreateAsync"
       ]
     }
-  ]
+  ],
+  "gaps": []
 }

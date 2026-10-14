@@ -8,7 +8,7 @@ A fixture that reproduces a development pattern also names its convention (`"con
 path relative to the fixture, or an id / `module:Class` — extensions under indexer/conventions/ are on
 sys.path, see conftest.py) and lists what it must produce: `architecture` (the layout detected), `roles` (type name → role), `layers` (every file), `entry_points`
 (`Class.Method`), `violations` (the deliberate one), `edges` (CALLS the graph must carry, with the
-strategy) and `gaps` (links known to be missing — xfail until they appear, then the test fails
+strategy — and, for `inherited`, the package `methods` the calls use) and `gaps` (links known to be missing — xfail until they appear, then the test fails
 asking to move them to `edges`).
 
     cd indexer && pip install -e . && pytest -q tests/
@@ -117,6 +117,10 @@ def test_fixture_convention(root: Path):
     for e in expected["edges"]:
         strategies = _edges(rv, res, e["from"], e["to"])
         assert e["strategy"] in strategies, f"{e['from']} -> {e['to']}: want {e['strategy']}, got {strategies or 'no edge'}"
+        if "methods" in e:                   # `inherited`: the package method each call uses, kept on the edge
+            a, b = _symbols(res, e["from"]), _symbols(res, e["to"])
+            got = {x.method for x in rv.calls if x.caller_id in a and x.callee_id in b and x.strategy == e["strategy"]}
+            assert set(e["methods"]) == got, f"{e['from']} -> {e['to']}: methods {sorted(got)}, want {sorted(e['methods'])}"
 
 
 GAPS = [(p, g) for p in CONV_FIXTURES for g in json.loads((p / "expected.json").read_text()).get("gaps", [])]

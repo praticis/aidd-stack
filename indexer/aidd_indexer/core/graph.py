@@ -144,7 +144,7 @@ class GraphWriter:
             UNWIND $rows AS c
             MATCH (a:Symbol|File {id: c.caller_id}), (b:Symbol {id: c.callee_id})
             MERGE (a)-[e:CALLS {line: c.line}]->(b)
-            SET e.resolved = false, e.strategy = c.strategy
+            SET e.resolved = false, e.strategy = c.strategy, e.method = c.method
         """, [c.__dict__ for c in rv.calls])
 
         counts["packages"] = self._batched("""

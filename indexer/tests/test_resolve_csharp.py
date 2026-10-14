@@ -100,3 +100,35 @@ def test_base_call_without_base_list_is_not_a_self_edge(tmp_path: Path):
     with contextlib.redirect_stderr(io.StringIO()):
         _, rv = extract_and_resolve(RepoInfo(tenant="t", name="app", ref="main", commit_sha="x", root=str(root)), convs=[])
     assert rv.calls == []
+
+
+def test_package_base_methods_keep_the_dependency_on_the_type(tmp_path):
+    """`repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>` (a package): CALLS to the interface and its
+    single implementer with the method name (`inherited` / `inherited-impl`). An overloaded method of the
+    repo is not inherited, and a type without outside bases gets no edge."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    files = {
+        "src/App/App.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
+        "src/App/ITodoRepository.cs": "namespace App;\n\npublic interface ITodoRepository : IBaseRepository<Todo, Guid> { }\n",
+        "src/App/TodoRepository.cs": "namespace App;\n\npublic class TodoRepository : BaseRepository<Todo, Guid>, ITodoRepository { }\n",
+        "src/App/Todo.cs": ("namespace App;\n\npublic class Todo : BaseModel\n{\n"
+                            "    public static Todo Create(string name) => new();\n"
+                            "    public static Todo Create(Guid id, string name) => new();\n}\n"),
+        "src/App/Plain.cs": "namespace App;\n\npublic class Plain { }\n",
+        "src/App/Handler.cs": ("namespace App;\n\npublic class Handler(ITodoRepository repo, Plain plain)\n{\n"
+                               "    public async Task Handle(string name)\n    {\n"
+                               "        var todo = Todo.Create(name);\n"
+                               "        await repo.CreateAsync(todo);\n"
+                               "        plain.Missing();\n    }\n}\n"),
+    }
+    root = tmp_path / "app"
+    for rel, text in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text)
+    repo = RepoInfo(tenant="t", name="app", ref="main", commit_sha="x", root=str(root))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {(sym[e.callee_id].qualified_name, e.strategy, e.method) for e in rv.calls if sym.get(e.caller_id) and sym[e.caller_id].name == "Handle"}
+    assert got == {("App.ITodoRepository", "inherited", "CreateAsync"), ("App.TodoRepository", "inherited-impl", "CreateAsync")}
