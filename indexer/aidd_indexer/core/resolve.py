@@ -17,6 +17,7 @@ from .. import languages
 from ..languages.base import ResolveContext
 from . import ids
 from .config import is_test_path
+from .dispatch import DispatchRule
 from .extract import CALLABLE_KINDS, FileExtractor
 from .model import ExtractionResult, FileInfo, SymbolInfo
 
@@ -29,7 +30,7 @@ class CallEdge:
     caller_id: str
     callee_id: str
     line: int
-    strategy: str          # receiver-type | receiver-type-impl | same-file | same-module | unique-name (+ "-ambiguous")
+    strategy: str          # receiver-type | receiver-type-impl | dispatch | same-file | same-module | unique-name (+ "-ambiguous")
 
 
 @dataclass
@@ -62,8 +63,9 @@ class Resolved:
 
 
 class Resolver:
-    def __init__(self, result: ExtractionResult, extractors: list[FileExtractor]):
+    def __init__(self, result: ExtractionResult, extractors: list[FileExtractor], dispatch: list[DispatchRule] | None = None):
         self.r = result
+        self.dispatch = dispatch or []
         self.root = Path(result.repo.root)
         self.files_by_path = {f.path: f for f in result.files}
         self.files_by_id = {f.id: f for f in result.files}
@@ -91,6 +93,11 @@ class Resolver:
         edges: list[CallEdge] = []
         unresolved = 0
         for c in self.r.calls:
+            if c.arg_type:                       # a bus method of a convention's `dispatch`: link to the handlers
+                sent = self._dispatched(c)
+                if sent:
+                    edges.extend(sent)
+                    continue
             cands = self.by_name.get(c.callee_name)
             if not cands:
                 unresolved += 1
@@ -150,6 +157,22 @@ class Resolver:
             for s in chosen:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
+
+    def _dispatched(self, c) -> list[CallEdge]:
+        """`bus.SendAsync(new X(..))` → `Handle` of every type that handles X (core/dispatch.py)."""
+        f = self.files_by_id.get(c.file_id)
+        lang = languages.by_id(f.language) if f is not None else None
+        if lang is None:
+            return []
+        out: dict[str, CallEdge] = {}
+        for rule in [*self.dispatch, *lang.dispatch]:          # the conventions' bus, then the language's (MediatR)
+            if c.callee_name not in rule.calls:
+                continue
+            for handler in lang.message_handlers(self.ctx, f, c.arg_type, rule.handlers):
+                target = self._method_on(self.by_name.get(rule.method, []), rule.method, handler, lang)
+                if target is not None and (self.test_file.get(c.file_id, False) or not self.test_file.get(target.file_id, False)):
+                    out.setdefault(target.id, CallEdge(c.caller_id, target.id, c.line, "dispatch"))
+        return list(out.values())
 
     def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
         """The candidate declared on `qtype` or, failing that, on its nearest in-repo supertype."""

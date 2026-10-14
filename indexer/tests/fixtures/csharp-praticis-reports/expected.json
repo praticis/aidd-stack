@@ -116,19 +116,14 @@
     {"from": "SummariesController.ResetAsync", "to": "SummaryRepository.LoadAsync", "strategy": "receiver-type-impl"},
     {"from": "ProcessTodoHandler.Handle", "to": "ITodoRepository.UpdateProgressAsync", "strategy": "receiver-type"},
     {"from": "ProcessTodoHandler.Handle", "to": "TodoRepository.UpdateProgressAsync", "strategy": "receiver-type-impl"},
-    {"from": "ProcessTagHandler.Handle", "to": "TimelineRepository.SaveAsync", "strategy": "receiver-type-impl"}
+    {"from": "ProcessTagHandler.Handle", "to": "TimelineRepository.SaveAsync", "strategy": "receiver-type-impl"},
+    {"from": "SummariesController.ResetAsync", "to": "ResetSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "ResetSummaryCommandHandler.Handle", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "UpdateCacheStep.ProcessAsync", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTodoHandler.Handle", "strategy": "dispatch"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTagHandler.Handle", "strategy": "dispatch"}
   ],
   "gaps": [
-    {
-      "from": "SummariesController.ResetAsync",
-      "to": "ResetSummaryCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
-    },
-    {
-      "from": "CommitActivityStep.ProcessAsync",
-      "to": "ProcessTodoHandler.Handle",
-      "why": "in-process event: PublishAsync(event) -> IEventHandler<event> (F0.7.3)"
-    },
     {
       "from": "ActivityWasCreatedEventHandler.Handle",
       "to": "CheckTodoStep.ProcessAsync",

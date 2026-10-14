@@ -69,6 +69,8 @@ class CallInfo:
     receiver_type: str | None = None       # static type of the receiver's base variable as written (`*Complete`, `pw.Policy`,
                                            # or `call:pw.NewPolicy` when it comes from a constructor) — language hook
     receiver_path: tuple[str, ...] = ()    # field chain after the base variable: `uc.policy.Validate` -> ("policy",)
+    arg_type: str | None = None            # static type of the first argument, as written — only for the bus methods
+                                           # a convention declares (`dispatch`), see core/dispatch.py
 
 
 @dataclass

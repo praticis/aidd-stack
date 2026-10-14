@@ -26,6 +26,8 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from tree_sitter import Node
 
+from ..core.dispatch import DispatchRule
+
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
     from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
@@ -82,6 +84,8 @@ class LanguageSupport:
     namespace_nodes: frozenset[str] = frozenset()  # tree node types that prefix qualified names (C# namespaces)
     entry_point_hints: tuple[str, ...] = ()        # substrings of the signature that mark an entry point
     decorator_entry: re.Pattern | None = None      # regex over leading decorators/attributes
+    dispatch: tuple[DispatchRule, ...] = ()         # mediators of public libraries (MediatR), always on; an organization's
+                                                   # own bus is declared by its convention (`dispatch:`, core/dispatch.py)
 
     # ---- discovery ------------------------------------------------------------------------
     def discover_modules(self, repo: "RepoInfo", rel_files: list[str], modules: dict[str, "ModuleInfo"]) -> None:
@@ -140,6 +144,12 @@ class LanguageSupport:
         when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
         return None
 
+    def call_argument_type(self, call: Node, src: bytes) -> str | None:
+        """Static type of the call's first argument as written — `new T(..)`, or a parameter/local
+        (preferring the type it was created with over the declared one: `IEvent e = new T()` → T).
+        Asked only for the bus methods of a convention's `dispatch` rules. None = unknown."""
+        return None
+
     # ---- manifests -----------------------------------------------------------------
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """(names this manifest publishes, [(required package name, version)]) for a manifest of
@@ -175,6 +185,13 @@ class LanguageSupport:
         interface then also links to the implementation (strategy `receiver-type-impl`), the usual
         DI case in C#."""
         return None
+
+    def message_handlers(self, ctx: ResolveContext, file: "FileInfo", message_type: str,
+                         handler_bases: frozenset[str]) -> list[str]:
+        """Qualified names of the types whose base list has one of `handler_bases` with `message_type`
+        (as seen from `file`) as its first type argument — who receives a message sent through a
+        mediator (core/dispatch.py). Empty when the language has no generics or none matches."""
+        return []
 
     def link_symbols(self, symbols: list["SymbolInfo"], files_by_id: dict[str, "FileInfo"]) -> None:
         """Repo-wide post-processing (Go: methods → receiver struct as parent)."""

@@ -23,6 +23,7 @@ from tree_sitter_language_pack import get_language, get_parser
 from .. import languages
 from ..languages.base import LanguageSupport, node_text as _text, walk as _walk
 from . import ids
+from .dispatch import call_names
 from .model import CallInfo, FileInfo, ImportInfo, RepoInfo, SymbolInfo
 
 # Symbol kinds that a call can target.
@@ -239,9 +240,12 @@ def _import_bindings(inode: Node, spec: str, src: bytes, lang: LanguageSupport) 
 
 
 class FileExtractor:
-    def __init__(self, repo: RepoInfo, file: FileInfo, src: bytes, cl: CompiledLanguage):
+    def __init__(self, repo: RepoInfo, file: FileInfo, src: bytes, cl: CompiledLanguage,
+                 dispatch_calls: frozenset[str] = frozenset()):
         self.repo, self.file, self.src, self.cl = repo, file, src, cl
         self.lang: LanguageSupport = languages.by_id(file.language)  # type: ignore[assignment]
+        # bus methods whose first argument's type is recorded: the conventions' and the language's own (core/dispatch.py)
+        self.dispatch_calls = dispatch_calls | call_names(list(self.lang.dispatch))
         self.tree = cl.parser.parse(src)
         self.defs: dict[tuple[int, int], tuple[str, Node]] = {}   # (def node id, name node id) -> (kind, name node)
         self.symbol_by_node: dict[int, SymbolInfo] = {}
@@ -298,14 +302,16 @@ class FileExtractor:
         for cnode, callee, receiver in raw_calls:
             caller = self._enclosing_symbol(cnode)
             typed = self.lang.call_receiver(cnode, receiver, self.src) if receiver is not None else None
+            name = _text(callee, self.src)
             self.calls.append(CallInfo(
                 caller_id=caller.id if caller else self.file.id,
-                callee_name=_text(callee, self.src),
+                callee_name=name,
                 receiver=(_text(receiver, self.src)[:80] if receiver is not None else None),
                 line=cnode.start_point[0] + 1,
                 file_id=self.file.id,
                 receiver_type=typed[0] if typed else None,
                 receiver_path=typed[1] if typed else (),
+                arg_type=self.lang.call_argument_type(cnode, self.src) if name in self.dispatch_calls else None,
             ))
 
     def _node_by_id(self, node_id: int, hint: Node) -> Node:
@@ -368,12 +374,13 @@ class FileExtractor:
         self.symbol_by_node[dnode.id] = sym
 
 
-def extract_file(repo: RepoInfo, file: FileInfo) -> tuple[FileExtractor | None, list[str]]:
+def extract_file(repo: RepoInfo, file: FileInfo,
+                 dispatch_calls: frozenset[str] = frozenset()) -> tuple[FileExtractor | None, list[str]]:
     cl = load_language(file.language)
     if cl is None:
         return None, [f"{file.path}: no grammar for {file.language} ({GRAMMAR_ERRORS.get(file.language, 'unknown error')})"]
     src = (Path(repo.root) / file.path).read_bytes()
-    fx = FileExtractor(repo, file, src, cl)
+    fx = FileExtractor(repo, file, src, cl, dispatch_calls)
     try:
         fx.run()
     except Exception as e:  # noqa: BLE001 — one bad file must not abort the run

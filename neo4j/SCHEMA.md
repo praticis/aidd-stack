@@ -77,7 +77,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 |---|---|---|
 | `CONTAINS` | Repo→Module, Module→File, File→Symbol, Symbol→Symbol (member) | |
 | `IMPORTS` | File→File \| Module \| Package | `spec` (as written), `line`. Go imports target the package `Module`; unresolved specs become external `Package` nodes (`stdlib` flag) |
-| `CALLS` | Symbol \| File→Symbol | `line`, `resolved` (bool: SCIP vs. name match), `strategy` (`same-file`, `same-module`, `unique-name`, `*-ambiguous`); a `File` source means a top-level call |
+| `CALLS` | Symbol \| File→Symbol | `line`, `resolved` (bool: SCIP vs. name match), `strategy` (`receiver-type`: method of the receiver's static type; `receiver-type-impl`: the single production implementer of an interface receiver; `dispatch`: a mediator call reaching the handler of the message's type, declared by a convention; `same-file`, `same-module`, `unique-name`, `*-ambiguous`: name match); a `File` source means a top-level call |
 | `REFERENCES` | Symbol→Symbol | read/write without a call (types, fields) |
 | `IMPLEMENTS` | Symbol→Symbol | class/struct → interface |
 | `EXTENDS` | Symbol→Symbol | inheritance |

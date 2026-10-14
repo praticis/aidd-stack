@@ -83,19 +83,11 @@
     {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommand", "strategy": "unique-name"},
     {"from": "ArchiveProjectCommandHandler.Handle", "to": "ProjectModel.Archive", "strategy": "unique-name"},
     {"from": "ProjectRepository.Exists", "to": "IProjectReadRepository.Exists", "strategy": "receiver-type"},
-    {"from": "ProjectRepository.Exists", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"}
+    {"from": "ProjectRepository.Exists", "to": "ProjectReadRepository.Exists", "strategy": "receiver-type-impl"},
+    {"from": "ProjectsController.CreateAsync", "to": "CreateProjectCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "ProjectsController.ArchiveAsync", "to": "ArchiveProjectCommandHandler.Handle", "strategy": "dispatch"}
   ],
   "gaps": [
-    {
-      "from": "ProjectsController.CreateAsync",
-      "to": "CreateProjectCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
-    },
-    {
-      "from": "ProjectsController.ArchiveAsync",
-      "to": "ArchiveProjectCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
-    },
     {
       "from": "CreateProjectCommandHandler.Handle",
       "to": "IProjectRepository",

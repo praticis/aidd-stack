@@ -55,7 +55,7 @@ def test_multi_value_helper_types_the_local():
 
 def test_test_code_can_target_its_own_fakes():
     _, _, edges = _resolve()
-    assert edges[(16, "TestExecute")] == ("internal.app.usecases.fakePolicy.Validate", "receiver-type")
+    assert edges[(20, "TestExecute")] == ("internal.app.usecases.fakePolicy.Validate", "receiver-type")
 
 
 def test_production_calls_never_resolve_to_test_symbols():
@@ -68,7 +68,14 @@ def test_production_calls_never_resolve_to_test_symbols():
             assert not files[sym[e.callee_id].file_id].endswith("_test.go"), (caller_file, sym[e.callee_id].qualified_name)
 
 
-def test_interface_calls_stay_unresolved():
+def test_interface_calls_reach_the_single_production_implementer():
+    """Interface methods are not symbols in Go: a call on one reaches the one production type whose
+    method set covers the interface (fakes in _test.go don't count), and nothing when there are two."""
     res, rv, _ = _resolve()
     sym = {s.id: s for s in res.symbols}
-    assert not any(sym[e.callee_id].name == "Save" for e in rv.calls)      # Repo.Save is an interface method: no edge
+    got = {(sym[e.caller_id].name, sym[e.callee_id].qualified_name, e.strategy) for e in rv.calls
+           if sym[e.callee_id].name in ("Save", "Now")}
+    assert got == {
+        ("Execute", "internal.adapters.outbound.store.MemRepo.Save", "receiver-type-impl"),   # uc.repo Repo
+        ("Keep", "internal.adapters.outbound.store.MemRepo.Save", "receiver-type-impl"),      # Store embeds Repo
+    }                                                     # r.clock.Now(): System and Fixed both implement Clock

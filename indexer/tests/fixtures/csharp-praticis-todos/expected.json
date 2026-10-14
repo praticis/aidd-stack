@@ -188,24 +188,24 @@
       "from": "ActivityRepository.IsUniqueKey",
       "to": "IActivityReadRepository.IsUniqueKey",
       "strategy": "receiver-type"
-    }
-  ],
-  "gaps": [
+    },
     {
       "from": "TodosController.CreateAsync",
       "to": "CreateTodoCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+      "strategy": "dispatch"
     },
     {
       "from": "TodosController.ChangeAsync",
       "to": "UpdateTodoCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+      "strategy": "dispatch"
     },
     {
       "from": "ActivitiesController.RegisterActivityAsync",
       "to": "CreateActivityCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
-    },
+      "strategy": "dispatch"
+    }
+  ],
+  "gaps": [
     {
       "from": "CreateTodoCommandHandler.Handle",
       "to": "ITodoRepository",
