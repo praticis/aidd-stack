@@ -19,6 +19,10 @@
     "atlas": {
       "type": "http",
       "url": "http://localhost:3005/mcp"
+    },
+    "knowledge": {
+      "type": "http",
+      "url": "http://localhost:3006/mcp"
     }
   }
 }

@@ -23,6 +23,9 @@ aidd index <repo> --ref feature/x   # one branch on demand — pushed or not
 aidd status                   # snapshots with age and trigger (manual | scheduled | bootstrap)
 aidd schedule install|status|remove|check [--fix]   # the refresher (see below)
 aidd logs [-f]                # the refresher's log
+aidd policy show [repo]       # effective process policy (policy.yaml) and where each value came from
+aidd policy check             # validate ~/.aidd/policy.yaml
+aidd knowledge serve          # the `knowledge` MCP server (the mcp-knowledge service runs it)
 AIDD_NO_FETCH=1 aidd plan     # no remote fetch (mirrors synced from the workspace only)
 ```
 
@@ -108,9 +111,10 @@ the fastest way to inspect what a language query extracts.
 
 ```
 aidd_indexer/
-  cli.py                    aidd plan / bootstrap / refresh / index / link / status / wipe / selftest / serve
+  cli.py                    aidd plan / bootstrap / refresh / index / link / status / policy / wipe / selftest / serve
   core/                     language-agnostic pipeline — never names a language
     config.py manifest.py   env + atlas.yaml (tenants, sources, refs, areas, conventions)
+    policy.py               policy.yaml: process policy in layers (built-in → defaults → tenant → area → repo)
     planner.py gitinfo.py   sources → (repo, ref, sha) items; git plumbing
     discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
     extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
@@ -132,6 +136,11 @@ aidd_indexer/
     declarative.py          convention.yaml → Convention (no Python needed)
     __init__.py             registry: path | entry point `aidd.conventions` | `module:Class`; apply()
   mcp/server.py             MCP `atlas` (read-only tools over the graph)
+  knowledge/                MCP `knowledge` (docs/knowledge-contract.md) — image stage `knowledge`
+    vault.py                safe names, frontmatter, owned `aidd:` blocks, atomic writes
+    insights.py             insight notes, lifecycle data, the index's knowledge block
+    vectors.py              FastEmbed (mcp-qdrant's model) + the Qdrant mirror
+    service.py server.py    record_insight / insights_for / refresh_index / policy_for, and the MCP server
 ```
 
 ## Adding a language

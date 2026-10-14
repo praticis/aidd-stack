@@ -9,7 +9,7 @@ name: praticis-aidd
 #   * every published port binds to AIDD_BIND_ADDRESS (default 127.0.0.1) — nothing is
 #     reachable from the network the laptop is on;
 #   * the MCP servers publish nothing themselves: `mcp-gateway` fronts them on the same
-#     ports as before (3001/3002/3003/3005) and refuses any request whose Host or browser
+#     ports as before (3001/3002/3003/3005, + 3006 knowledge) and refuses any request whose Host or browser
 #     Origin is not localhost — the defense against DNS rebinding from a web page;
 #   * Qdrant requires QDRANT_API_KEY, Neo4j its password; images and packages are pinned.
 # Containers that touch host files run as the host user (AIDD_UID/AIDD_GID, written by
@@ -39,6 +39,7 @@ x-indexer: &indexer
     WORKSPACE_PATH: /workspace
     AIDD_TENANT: ${AIDD_TENANT:?}
     AIDD_CONFIG: /app/atlas.yaml
+    AIDD_POLICY: /app/policy.yaml
     AIDD_TRIGGER: ${AIDD_TRIGGER:-manual}       # recorded on IndexRun: manual | scheduled | bootstrap
     AIDD_MIRROR_DIR: /var/lib/aidd/mirrors
     AIDD_STATE_DIR: /var/lib/aidd/state
@@ -55,6 +56,7 @@ x-indexer: &indexer
   volumes:
     - ${WORKSPACE_PATH:?}:/workspace:ro
     - ./atlas.yaml:/app/atlas.yaml:ro
+    - ./policy.yaml:/app/policy.yaml:ro
     - ./mirrors:/var/lib/aidd/mirrors
     - ./state:/var/lib/aidd/state
 
@@ -168,11 +170,13 @@ services:
       - mcp-qdrant
       - mcp-git
       - mcp-atlas
+      - mcp-knowledge
     ports:
       - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3001:3001"
       - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3002:3002"
       - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3003:3003"
       - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3005:3005"
+      - "${AIDD_BIND_ADDRESS:-127.0.0.1}:3006:3006"
     volumes:
       - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
@@ -284,6 +288,47 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  # ──────────────────────────────────────────────────────
+  # MCP KNOWLEDGE — project knowledge + process policy for the
+  # skills (docs/knowledge-contract.md): insights_for, record_insight,
+  # policy_for. Writes insight notes and the index's knowledge block in
+  # the vault, mirrors insights in Qdrant with mcp-qdrant's model.
+  # mcp-gateway at http://localhost:3006/mcp  ·  health: /healthz
+  # Image: the indexer's `knowledge` stage (adds FastEmbed + the model).
+  # ──────────────────────────────────────────────────────
+  mcp-knowledge:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+      target: knowledge
+    image: aidd-knowledge:local
+    container_name: aidd-mcp-knowledge
+    restart: unless-stopped
+    user: "${AIDD_UID:-1000}:${AIDD_GID:-1000}"
+    <<: *hardened
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    command: ["knowledge", "serve", "--host", "0.0.0.0", "--port", "3000"]
+    environment:
+      - AIDD_TENANT=${AIDD_TENANT:?}
+      - AIDD_VAULT_DIR=/vault
+      - AIDD_POLICY=/app/policy.yaml
+      - AIDD_CONFIG=/app/atlas.yaml
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY:?}
+      - HOME=/tmp
+    volumes:
+      - ${OBSIDIAN_VAULT_PATH:?}:/vault
+      - ./policy.yaml:/app/policy.yaml:ro
+      - ./atlas.yaml:/app/atlas.yaml:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:3000/healthz', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   # ──────────────────────────────────────────────────────
   # MCP NEO4J — raw Cypher access to the graph (Neo4j Labs), for

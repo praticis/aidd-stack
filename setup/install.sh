@@ -351,6 +351,25 @@ migrate_atlas_manifest() {
   printf "  ${GREEN}[migrated]${NC} atlas.yaml: local sources fetch into the refresher mirrors (fetch: true)\n"
 }
 
+# Process policy (~/.aidd/policy.yaml): bind-mounted like atlas.yaml, so it must exist before the first
+# `docker compose up`. Written once from the example (built-in defaults, commented); never overwritten.
+ensure_policy() {
+  local policy="$AIDD_DIR/policy.yaml"
+  if [ -d "$policy" ]; then
+    warn "$policy is a DIRECTORY (created by docker compose before the file existed)."
+    warn "Fix: cd $AIDD_DIR && docker compose down && rmdir policy.yaml && re-run this script."
+    return 0
+  fi
+  [ -e "$policy" ] && return 0
+  local example="$AIDD_DIR/indexer/policy.example.yaml"
+  if [ -f "$example" ]; then
+    cp "$example" "$policy"
+  else
+    printf 'version: 1\n' > "$policy"
+  fi
+  printf "  ${GREEN}[created]${NC} policy.yaml (process policy: built-in defaults — see ~/.aidd/aidd policy show)\n"
+}
+
 ensure_env_defaults() {
   local env_file="$1"
   local key value current
@@ -482,6 +501,7 @@ EOF
   # into the indexer as a file, and Docker turns a missing bind source into a directory.
   write_atlas_manifest
   migrate_atlas_manifest
+  ensure_policy
   ensure_runtime_dirs
 
   # Named volumes outlive ~/.aidd. A brand-new .env carries a brand-new Neo4j
@@ -712,6 +732,23 @@ run_continuous_update() {
 # ------------------------------------------------------------------------------
 # 6. MCP Config Distribution Module
 # ------------------------------------------------------------------------------
+# Copy one .mcp.json. A copy left by a run under sudo is owned by root and cannot be overwritten, but
+# the folder is the user's: replace it. Never abort the installation over one project's file.
+copy_mcp_config() {
+  local src="$1" dest="$2" label="$3" owner
+  if cp "$src" "$dest" 2>/dev/null; then
+    printf "  ${GREEN}[copied]${NC} .mcp.json -> %s%s\n" "$dest" "$label"
+    return 0
+  fi
+  owner="$(ls -ld "$dest" 2>/dev/null | awk '{print $3}')"
+  if rm -f "$dest" 2>/dev/null && cp "$src" "$dest" 2>/dev/null; then
+    printf "  ${YELLOW}[replaced]${NC} .mcp.json -> %s%s (the old copy belonged to %s)\n" "$dest" "$label" "${owner:-another user}"
+  else
+    warn "could not write $dest (owner: ${owner:-unknown}) — fix: sudo chown $(id -un) \"$dest\" and re-run"
+  fi
+  return 0
+}
+
 distribute_mcp_config() {
   local mcp_source="$SCRIPT_DIR/.mcp.json"
   if [ ! -f "$mcp_source" ]; then
@@ -751,15 +788,13 @@ distribute_mcp_config() {
   # need a cross-project view, not a single-project one), and Claude
   # Code only reads .mcp.json from the exact directory it's launched
   # from — it does not search upward through parent directories.
-  cp "$mcp_source" "$workspace_path/.mcp.json"
-  printf "  ${GREEN}[copied]${NC} .mcp.json -> %s/.mcp.json (workspace root)\n" "$workspace_path"
+  copy_mcp_config "$mcp_source" "$workspace_path/.mcp.json" " (workspace root)"
 
   find "$search_base" -maxdepth 3 -type d -name ".git" 2>/dev/null | while read -r git_dir; do
     local proj_dir
     proj_dir="$(dirname "$git_dir")"
 
-    cp "$mcp_source" "$proj_dir/.mcp.json"
-    printf "  ${GREEN}[copied]${NC} .mcp.json -> %s/.mcp.json\n" "$proj_dir"
+    copy_mcp_config "$mcp_source" "$proj_dir/.mcp.json" ""
   done
 
   success ".mcp.json files distributed across git projects successfully."

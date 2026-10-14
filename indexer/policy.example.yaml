@@ -1,0 +1,50 @@
+# policy.yaml — what the development process requires (~/.aidd/policy.yaml).
+#
+# atlas.yaml says how to read the code; this file says what the process demands of it. Every key is
+# optional: what is not declared falls back to the built-in default shown below. Layers, each
+# overriding only the keys it declares (later wins):
+#
+#   built-in → defaults → tenants.<t> → tenants.<t>.areas.<area> → tenants.<t>.overrides.<repo|glob>
+#
+# Areas are the ones declared in atlas.yaml (`areas:`). Overrides match repo names with globs, in the
+# order written. Check what a repo ends up with — and where each value came from:
+#
+#   ~/.aidd/aidd policy show <repo> [--tenant <t>]
+#   ~/.aidd/aidd policy check
+#
+# Skills read the effective policy; they never merge these layers themselves.
+
+version: 1
+
+defaults:
+  coverage:
+    min: 70                 # % line coverage of the whole repo (0–100)
+    new_code_min: 80        # % coverage of the lines a change adds
+  harness:
+    max_attempts: 3         # implement: fix → test loops before escalating to a person / stronger model
+  review:
+    spec_approval: required # refine-tech: a person approves the spec before implement starts (required | optional)
+    adr_when:               # ask for an ADR when a change does one of these
+      - new-integration     # (new-integration, new-module, new-dependency, contract-change, data-migration)
+      - new-module
+  knowledge:
+    recurring_after: 3      # occurrences before an observed insight becomes `recurring`
+    archive_after_days: 180 # an insight not seen again for this long is archived
+    topics: []              # extra insight topics, added to: architecture, review, quality, security,
+                            # incident, decision, business (lowercase slugs, e.g. performance)
+    language: en            # what the vault's project knowledge is written in (en, pt-BR, ...): skills
+                            # translate before recording, so repeats are recognized and pages read as one
+
+# tenants:
+#   acme:
+#     coverage:
+#       min: 80
+#     areas:
+#       payments:
+#         coverage: {min: 85, new_code_min: 90}
+#         review: {adr_when: [new-integration, new-module, contract-change, data-migration]}
+#     overrides:
+#       legacy-*:
+#         coverage: {min: 40}
+#       billing-api:
+#         harness: {max_attempts: 5}

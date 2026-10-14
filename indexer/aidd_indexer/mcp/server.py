@@ -54,10 +54,11 @@ def _off(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in ("0", "off", "false", "no")
 
 
-def transport_security():
+def transport_security(service: str = "mcp-atlas", env: str = "ATLAS_ALLOWED_HOSTS"):
+    """Host/Origin allowlist (DNS-rebinding protection): localhost, plus the service's compose name."""
     from mcp.server.transport_security import TransportSecuritySettings
-    hosts = [h.strip() for h in os.getenv("ATLAS_ALLOWED_HOSTS", "").split(",") if h.strip()] or \
-        ["localhost", "127.0.0.1", "[::1]", "mcp-atlas"]
+    hosts = [h.strip() for h in os.getenv(env, "").split(",") if h.strip()] or \
+        ["localhost", "127.0.0.1", "[::1]", service]
     with_port = [h if ":" in h.replace("[::1]", "") else f"{h}:*" for h in hosts]
     return TransportSecuritySettings(
         enable_dns_rebinding_protection=True,

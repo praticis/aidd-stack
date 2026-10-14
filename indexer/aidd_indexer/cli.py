@@ -510,6 +510,54 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return serve(host=args.host, port=args.port)
 
 
+def cmd_knowledge(args: argparse.Namespace) -> int:
+    """The `knowledge` MCP server (project knowledge + process policy for the skills)."""
+    from .knowledge.server import serve
+    from .knowledge.vault import KnowledgeError
+    log(f"knowledge MCP · tenant={os.getenv('AIDD_TENANT', '?')} · vault={os.getenv('AIDD_VAULT_DIR', '/vault')} · "
+        f"qdrant={os.getenv('QDRANT_URL', '?')} · model={os.getenv('EMBEDDING_MODEL', 'BAAI/bge-small-en-v1.5')}")
+    try:
+        return serve(host=args.host, port=args.port)
+    except KnowledgeError as e:
+        log(f"error: {e}")
+        return 2
+
+
+def cmd_policy(args: argparse.Namespace) -> int:
+    """`policy check`: validate policy.yaml. `policy show [repo]`: the effective policy of a tenant (or one
+    of its repos) and the layer each value came from — what the skills receive."""
+    from .core.manifest import load_manifest
+    from .core.policy import load_policy
+    pol = load_policy(args.policy)
+    if args.action == "check":
+        where = str(pol.path) if pol.path else "no policy.yaml (built-in defaults)"
+        log(f"policy OK — {where}; tenants: {', '.join(pol.tenants) or '(none: defaults apply to every tenant)'}")
+        return 0
+    try:
+        manifest = load_manifest(args.config)
+    except ConfigError:
+        manifest = None                     # the policy does not need atlas.yaml; only areas come from it
+    tenant = args.tenant or (os.getenv("AIDD_TENANT", "").strip() if os.getenv("AIDD_TENANT", "").strip() != "auto" else "")
+    if not tenant and manifest is not None:
+        tenant = manifest.tenant(None).name           # one tenant declared, or an error asking for --tenant
+    if not tenant:
+        raise ConfigError("which tenant? pass --tenant (AIDD_TENANT is 'auto' or unset)")
+    area = None
+    if args.repo and manifest is not None and tenant in manifest.tenants:
+        area = manifest.tenants[tenant].area_of(args.repo)
+    eff = pol.effective(tenant, args.repo, area)
+    if args.json:
+        print(json.dumps(eff.as_dict(), indent=2))
+        return 0
+    scope = f"{tenant}/{args.repo}" if args.repo else tenant
+    log(f"policy for {scope}" + (f" (area {area})" if area else "") + f" — {eff.path or 'no policy.yaml: built-in defaults'}")
+    for section, keys in eff.values.items():
+        for key, value in keys.items():
+            shown = ", ".join(map(str, value)) if isinstance(value, list) else value
+            print(f"  {section + '.' + key:<28} {str(shown):<44} {eff.origin.get(section + '.' + key, 'built-in')}")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     gw, _ = open_graph()
     try:
@@ -614,6 +662,21 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("status", help="list indexed snapshots")
     s.add_argument("--tenant")
     s.set_defaults(fn=cmd_status)
+
+    kn = sub.add_parser("knowledge", help="run the `knowledge` MCP server (insights + process policy for the skills)")
+    kn.add_argument("action", choices=["serve"])
+    kn.add_argument("--host", default=None)
+    kn.add_argument("--port", type=int, default=None)
+    kn.set_defaults(fn=cmd_knowledge)
+
+    po = sub.add_parser("policy", help="process policy (policy.yaml): validate it, or show the effective policy of a repo")
+    po.add_argument("action", choices=["show", "check"])
+    po.add_argument("repo", nargs="?", help="show: repo whose effective policy to print (default: the tenant's)")
+    po.add_argument("--tenant", help="tenant (default: AIDD_TENANT, or the only tenant of atlas.yaml)")
+    po.add_argument("--policy", help="policy path (default: $AIDD_POLICY or /app/policy.yaml)")
+    po.add_argument("--config", help="manifest path, for the repo's area (default: $AIDD_CONFIG or /app/atlas.yaml)")
+    po.add_argument("--json", action="store_true", help="show: machine-readable output")
+    po.set_defaults(fn=cmd_policy)
 
     w = sub.add_parser("wipe", help="delete everything indexed for a repo")
     w.add_argument("repo")

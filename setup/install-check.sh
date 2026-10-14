@@ -58,10 +58,12 @@ container_state() { docker inspect -f '{{.State.Status}}' "$1" 2>/dev/null || ec
 container_health() { docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}n/a{{end}}' "$1" 2>/dev/null || echo "missing"; }
 container_exit() { docker inspect -f '{{.State.ExitCode}}' "$1" 2>/dev/null || echo "?"; }
 
-for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-atlas aidd-mcp-gateway aidd-refresher; do
+for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-atlas aidd-mcp-knowledge aidd-mcp-gateway aidd-refresher; do
   state="$(container_state "$c")"; health="$(container_health "$c")"
   if [ "$state" = "running" ] && { [ "$health" = "healthy" ] || [ "$health" = "n/a" ]; }; then
     ok "$c running${health:+ ($health)}"
+  elif [ "$state" = "running" ] && [ "$health" = "starting" ]; then
+    warn "$c running, health check still starting (just (re)created) — re-run this check in a minute"
   else
     fail "$c state=$state health=$health  → docker logs $c"
   fi
@@ -90,7 +92,7 @@ for c in aidd-core-qdrant aidd-core-neo4j aidd-mcp-gateway; do
   elif [ "$bind" != "127.0.0.1" ]; then warn "$c publishes on all interfaces (AIDD_BIND_ADDRESS=$bind)"
   else fail "$c publishes on all interfaces: $(echo "$open" | tr '\n' ' ') — recreate: cd $AIDD_DIR && docker compose up -d"; fi
 done
-for c in aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-atlas; do
+for c in aidd-mcp-qdrant aidd-mcp-obsidian aidd-mcp-git aidd-mcp-atlas aidd-mcp-knowledge; do
   [ -z "$(docker port "$c" 2>/dev/null)" ] && ok "$c not published (reached through the gateway)" || fail "$c publishes its own port — bypasses the gateway"
 done
 code="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:3005/mcp -H 'Host: rebind.example:3005' --max-time 5)"
@@ -174,6 +176,13 @@ mcp_check "obsidian" "http://localhost:3001/mcp"
 mcp_check "qdrant"   "http://localhost:3002/mcp/"
 mcp_check "git"      "http://localhost:3003/mcp"
 mcp_check "atlas"    "http://localhost:3005/mcp"
+mcp_check "knowledge" "http://localhost:3006/mcp"
+k_health="$(curl -s --max-time 5 http://localhost:3006/healthz || true)"
+case "$k_health" in
+  *'"status":"ok"'*) ok "knowledge /healthz ok (vault writable, qdrant reachable)";;
+  "")                fail "knowledge /healthz unreachable";;
+  *)                 fail "knowledge /healthz: $k_health — vault mounted read-only or owned by another user? qdrant key?";;
+esac
 
 # atlas is ours: go one step further and call a real tool (stateless transport → a plain POST works).
 atlas_body="$(curl -s -X POST http://localhost:3005/mcp \
@@ -206,6 +215,15 @@ if ("$AIDD_DIR/aidd" selftest 2>&1 | sed 's/^/         /'; exit "${PIPESTATUS[0]
   ok "all tree-sitter grammars load inside the indexer image"
 else
   fail "indexer self-test failed — rebuild: cd $AIDD_DIR && docker compose --profile tools build --no-cache indexer"
+fi
+if [ -d "$AIDD_DIR/policy.yaml" ]; then
+  fail "policy.yaml is a directory (docker created it before the file existed) — cd $AIDD_DIR && docker compose down && rmdir policy.yaml && re-run setup/install.sh"
+elif [ ! -f "$AIDD_DIR/policy.yaml" ]; then
+  warn "no $AIDD_DIR/policy.yaml — built-in process defaults apply; re-run setup/install.sh to create it"
+elif policy_out="$("$AIDD_DIR/aidd" policy check 2>&1)"; then
+  ok "policy.yaml valid"
+else
+  fail "policy.yaml: $(printf '%s' "$policy_out" | tail -1)"
 fi
 if command -v cypher >/dev/null 2>&1 || true; then
   empty="$(docker exec aidd-core-neo4j cypher-shell -u "$NEO4J_USER" -p "$NEO4J_PASSWORD" -d "$NEO4J_DATABASE" --format plain \
