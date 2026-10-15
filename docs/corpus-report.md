@@ -608,3 +608,69 @@ sample as it was, including the items that left it.
 
 New baseline: `2026-10-15-v2-baseline-2`.
 
+## Update: the mount graph, step 1 — inside a file (2026-10-15)
+
+The first step of the mount graph covers everything a single file says about where its routes live. Nothing
+here holds trees of other files, which is the constraint F1.13 (large repositories) puts on the next steps.
+
+- **Closure regions.** A registration made inside a closure that a router call scopes takes that call's prefix,
+  and nested regions add up. The calls are:
+  - chi/fiber `r.Route("/x", func(r chi.Router) {...})`;
+  - chi `r.Group(func(r) {...})`, which adds no prefix;
+  - gitea's `m.Group("/x", func() { m.Get(...) })`, where the closure registers on the same router;
+  - fastify `register(fn, { prefix })`.
+- **Mounts in the same file.** These record an edge between two routers:
+  - express `app.use('/api', router)`;
+  - Hono `app.route('/book', book)` and `basePath('/api')`;
+  - chi `r.Mount("/admin", sub)`, including a router that a function of the file returns;
+  - `include_router(router, prefix=)` and `register_blueprint(bp, url_prefix=)`.
+
+  A router is identified by the scope that binds its name and the name, so a closure's `r` is not the outer
+  `r`. At the end of the file, every route registered on a router gets every chain of mounts above it.
+  chi's `articleRouter()`, mounted under `/v1`, `/v2` and `/v3`, gives three routes.
+- **A sub-router's root** is no longer dropped at once. It becomes the route of its prefix when the file mounts
+  the router (`GET /admin`), and is dropped as before when it does not.
+- **`r.With(mw).Get(...)`** is a registration on `r`.
+
+Diff against `2026-10-15-v2-baseline-2`, judged:
+
+- chi, fastify, Hono and NodeBB: every changed route is right, or lacks only a prefix from another file
+  (chi's `todos` resource mounted in `main.go`).
+- Ghost: the admin routes gain `/members/metafields` and `/apps` and still lack the admin API mount, which
+  lives in another file.
+- gitea: −440 +970. Closures were the whole prefix of its web routes, and that router is mounted at `/`, so
+  those routes are now complete. The sampled web routes are right, except two registered in helper closures
+  called inside other groups (`router-as-param`).
+
+  In the `/api/v1` scope, 247 of the 282 extracted routes match the spec once `/api/v1` is prepended (16 before
+  this step). That prefix comes from `r.Mount("/api/v1", apiv1.Routes())` in `routers/init.go`, so 231 expected
+  items move from `prefix-scope-and-file` to `prefix-other-file`. Against the expected list they are still
+  wrong: the scope's precision stays at 0 % with 282 routes instead of 129, which is why Go precision against
+  the lists drops from 21.1 % to 18.4 % (H2-D14). The remaining 35 come from helpers that receive the router
+  (`addProjectRoutes(m)`).
+- One v1 judgment was wrong and was corrected: chi `router-walk` `PUT /ping`, a top-level route of the main
+  router, had been judged as missing a closure prefix.
+
+| Repository (routes) | P/R expected before | P/R expected now |
+|---|---|---|
+| chi | 14.3 % / 4.5 % | 75.0 % / 54.5 % |
+| fastify | 75.0 % / 50.0 % | 100 % / 83.3 % |
+| hono-examples | 70.8 % / 54.8 % | 77.8 % / 67.7 % |
+| NodeBB | 0 % / 0 % | 40.0 % / 3.2 % |
+
+| Language (routes) | P sampled before → now | R expected before → now |
+|---|---|---|
+| Go | 62.1 % → 68.5 % (150/219) | 9.8 % → 10.6 % |
+| TS/JS | 28.8 % → 31.9 % (52/163) | 2.0 % → 3.7 % |
+
+- `prefix-other-scope` (13 missed, 15 wrong) and `mount-same-scope` (16, 4) are gone. `prefix-scope-and-file`
+  is down to 2 missed.
+- What the mount graph still misses is across files or functions:
+  - `prefix-other-file`: 1385 missed in 12 repositories;
+  - `global-prefix`: 238 (immich's `setGlobalPrefix`);
+  - `router-as-param`: 102;
+  - `const-other-file`: 42;
+  - `prefix-as-param`: 15.
+
+New baseline: `2026-10-15-v2-baseline-3`.
+

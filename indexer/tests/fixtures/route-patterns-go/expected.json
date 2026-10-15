@@ -74,6 +74,46 @@
    "method": "GET",
    "path": "/metrics",
    "handler": "metrics"
+  },
+  {
+   "method": "GET",
+   "path": "/admin",
+   "handler": "adminHome"
+  },
+  {
+   "method": "GET",
+   "path": "/articles",
+   "handler": "listArticles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/search",
+   "handler": "searchArticles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleID}/comments",
+   "handler": "showArticle"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/api/version",
+   "handler": "version"
+  },
+  {
+   "method": "GET",
+   "path": "/user/login",
+   "handler": "login"
+  },
+  {
+   "method": "POST",
+   "path": "/user/settings/avatar/delete",
+   "handler": "deleteAvatar"
   }
  ],
  "calls": [

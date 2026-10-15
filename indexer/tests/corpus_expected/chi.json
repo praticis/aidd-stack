@@ -1,6 +1,118 @@
 {
  "source": "manual",
  "sha": "60755706125129a9f9dfb99ac22f7ba016a1b60c",
+ "scope": {
+  "endpoints": [
+   "_examples/rest/main.go",
+   "_examples/router-walk/main.go",
+   "_examples/todos-resource/todos.go"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/admin"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/accounts"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/users/{userId}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles"
+  },
+  {
+   "method": "POST",
+   "path": "/articles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "PUT",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleSlug}"
+  },
+  {
+   "method": "GET",
+   "path": "/panic",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/ping",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "PUT",
+   "path": "/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/road/left"
+  },
+  {
+   "method": "POST",
+   "path": "/road/right"
+  },
+  {
+   "method": "GET",
+   "path": "/todos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/todos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/todos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/todos/{id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/todos/{id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}/sync",
+   "category": "prefix-other-file"
+  }
+ ],
+ "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo).",
  "checked": {
   "endpoints": [
    {
@@ -48,42 +160,47 @@
    {
     "evidence": "chi:_examples/rest/main.go:225",
     "method": "GET",
-    "path": "/accounts",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "path": "/admin/accounts",
+    "raw": "/accounts",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:_examples/rest/main.go:82",
     "method": "GET",
-    "path": "/search",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "path": "/articles/search",
+    "raw": "/search",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:_examples/router-walk/main.go:18",
     "method": "GET",
-    "path": "/left",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "path": "/road/left",
+    "raw": "/left",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:_examples/router-walk/main.go:21",
     "method": "POST",
-    "path": "/right",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "path": "/road/right",
+    "raw": "/right",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:_examples/router-walk/main.go:26",
     "method": "PUT",
     "path": "/ping",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:_examples/todos-resource/todos.go:25",
     "method": "GET",
-    "path": "/sync",
+    "path": "/{id}/sync",
+    "raw": "/sync",
     "ok": false,
     "category": "prefix-other-file"
    },
@@ -180,129 +297,5 @@
    }
   ]
  },
- "checked_seed": "1",
- "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo).",
- "scope": {
-  "endpoints": [
-   "_examples/rest/main.go",
-   "_examples/router-walk/main.go",
-   "_examples/todos-resource/todos.go"
-  ]
- },
- "endpoints": [
-  {
-   "method": "GET",
-   "path": "/",
-   "category": "multi-app-repo"
-  },
-  {
-   "method": "GET",
-   "path": "/ping",
-   "category": "multi-app-repo"
-  },
-  {
-   "method": "GET",
-   "path": "/panic",
-   "category": "multi-app-repo"
-  },
-  {
-   "method": "GET",
-   "path": "/articles",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "POST",
-   "path": "/articles",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/articles/search",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/articles/{articleID}",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "PUT",
-   "path": "/articles/{articleID}",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "DELETE",
-   "path": "/articles/{articleID}",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/articles/{articleSlug}",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/admin",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/admin/accounts",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/admin/users/{userId}",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/road/left",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "POST",
-   "path": "/road/right",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "PUT",
-   "path": "/ping"
-  },
-  {
-   "method": "GET",
-   "path": "/todos",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/todos",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/todos",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/todos/{id}/sync",
-   "category": "prefix-other-file"
-  }
- ]
+ "checked_seed": "1"
 }

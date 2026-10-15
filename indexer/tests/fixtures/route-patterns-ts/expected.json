@@ -24,6 +24,36 @@
    "method": "GET",
    "path": "/files/{name}.{ext}",
    "handler": "getFile"
+  },
+  {
+   "method": "GET",
+   "path": "/orders",
+   "handler": "listOrders"
+  },
+  {
+   "method": "GET",
+   "path": "/english/hello",
+   "handler": "hello"
+  },
+  {
+   "method": "POST",
+   "path": "/api/hello",
+   "handler": "helloHono"
+  },
+  {
+   "method": "GET",
+   "path": "/api/book",
+   "handler": "listBooks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/book/{id}",
+   "handler": "showBook"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/config",
+   "handler": "getConfig"
   }
  ],
  "calls": [

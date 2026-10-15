@@ -39,7 +39,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
         if scanner is None:
             continue
         try:
-            scanner(repo, fx, ctx, out).run()
+            scanner(repo, fx, ctx, out).scan()
         except Exception as e:  # noqa: BLE001 — a weird file must not stop the repo
             out.warnings.append(f"{fx.file.path}: http candidates skipped ({type(e).__name__}: {e})")
     _dedupe(out)

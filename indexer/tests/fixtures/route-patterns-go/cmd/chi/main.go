@@ -14,7 +14,7 @@ func main() {
 	http.ListenAndServe(":3333", r)
 }
 
-// A router built and returned by a function is mounted elsewhere: its "/" is not the application root.
+// A router built and returned by a function: its "/" is where main mounts it (GET /admin).
 func adminRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", adminHome)

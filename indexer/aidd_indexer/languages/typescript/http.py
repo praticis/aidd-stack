@@ -38,10 +38,49 @@ class TsScanner(BaseScanner):
         if name is None or val is None or name.type != "identifier":
             return
         txt = text(val, self.src)
+        nm = text(name, self.src)
+        base = re.search(r"\.basePath\(\s*['\"`]([^'\"`]*)['\"`]\s*\)", txt)      # Hono: new Hono().basePath('/api')
+        if base:
+            self.router_vars.add(nm)
+            src = re.match(r"^([A-Za-z_$][\w$]*)\.basePath", txt)                   # api = app.basePath('/api')
+            self.group_prefix[nm] = ((self.prefix_for(src.group(1), n) or "") if src else "").rstrip("/") + base.group(1)
+            if src:
+                self.mount(nm, n, src.group(1), n, "", derived=True)
+            return
         if re.search(r"\b(express|Router|Fastify|fastify|Koa|new Hono|Hono|new Elysia|Elysia)\s*\(", txt) or re.search(r"\.(Router|router)\(\)", txt):
-            self.router_vars.add(text(name, self.src))
+            self.router_vars.add(nm)
             if re.match(r"^(express|fastify|Fastify)\s*\(", txt):           # the application, not an express.Router()
-                self.mark_app(text(name, self.src), n)
+                self.mark_app(nm, n)
+
+    def _mount(self, n: Node, name: str, recv_last: str, arg_nodes: list[Node]) -> bool:
+        """express/koa `app.use('/api', router)`, Hono `app.route('/book', book)`: a router of this file under a prefix."""
+        if name not in ("use", "route") or len(arg_nodes) < 2 or not recv_last:
+            return False
+        p = self.path_of(arg_nodes[0])
+        if p is None or not p.startswith("/"):
+            return False
+        children = [a for a in arg_nodes[1:] if a.type == "identifier" and text(a, self.src) in self.router_vars]
+        if name == "route" and (len(arg_nodes) != 2 or not children):
+            return False                                           # express app.route('/x').get(h)
+        for c in children:
+            self.mount(text(c, self.src), c, recv_last, n, p)
+        return bool(children)
+
+    def region_of(self, call: Node, fn: Node) -> tuple[str, str, bool] | None:
+        """fastify `instance.register(function (child) {...}, { prefix: '/v1' })`: the plugin's routes under the prefix."""
+        callee = call.child_by_field_name("function")
+        args = call.child_by_field_name("arguments")
+        if callee is None or args is None or callee.type != "member_expression":
+            return None
+        if text(callee.child_by_field_name("property"), self.src) != "register":
+            return None
+        p = ""
+        for a in args.children:
+            if a.type == "object":
+                for key, val in self._keyed_fields(a):
+                    if key == "prefix":
+                        p = self.path_of(val) or ""
+        return text(callee.child_by_field_name("object"), self.src).split(".")[-1], p, False
 
     def _decorator(self, n: Node, controller_prefix: dict[int, str]) -> None:
         txt = text(n, self.src)
@@ -84,6 +123,8 @@ class TsScanner(BaseScanner):
             return                                                  # supertest-style test clients
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
+        if self._mount(n, name, recv_last, arg_nodes):
+            return
         if recv_last in JQUERY:                                     # browser code: `$.get(url, cb)` is a request, cb is no handler
             p = self.path_of(arg_nodes[0], lenient=True) if name in JQUERY_VERBS else None
             if p is not None:
@@ -95,7 +136,8 @@ class TsScanner(BaseScanner):
                     and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):   # `const api = express.Router()`
                 if name == "route":                                  # app.route('/x').get(h) — take the verb from the chain
                     return
-                self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1])
+                self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1],
+                                  prefix=self.prefix_for(recv_last, n) or "", router=recv_last)
                 return
         if name in OUTBOUND or name in TS_VERB_ALIASES:
             verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES

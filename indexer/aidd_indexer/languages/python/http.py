@@ -102,7 +102,8 @@ class PyScanner(BaseScanner):
                 continue
             framework = "flask" if verb == "route" or recv in ("bp", "blueprint") else "fastapi"
             for m in methods:
-                self.add_endpoint(d, m, p, framework, None, prefix=self.group_prefix.get(recv, ""), handler_name=hname, handler_id=hid)
+                self.add_endpoint(d, m, p, framework, None, prefix=self.prefix_for(recv, d) or "", handler_name=hname,
+                                  handler_id=hid, router=recv)
 
     def _aiohttp(self, n: Node, fn: Node, args: Node) -> bool:
         """aiohttp: `app.router.add_get('/x', h)`, `router.add_route('*', '/x', h)`, and the bound method
@@ -133,12 +134,29 @@ class PyScanner(BaseScanner):
         self.add_endpoint(n, method, p, "aiohttp", arg_nodes[1])
         return True
 
+    def _mount(self, n: Node, fn: Node, args: Node) -> bool:
+        """`app.include_router(router, prefix="/v1")`, `app.register_blueprint(bp, url_prefix="/admin")` with a router of
+        this file."""
+        verb = text(fn.child_by_field_name("attribute"), self.src)
+        if verb not in ("include_router", "register_blueprint"):
+            return False
+        parent = text(fn.child_by_field_name("object"), self.src).split(".")[-1]
+        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
+        p = ""
+        for a in args.children:
+            if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) in ("prefix", "url_prefix"):
+                p = self.path_of(a.child_by_field_name("value")) or ""
+        if not pos or pos[0].type != "identifier" or text(pos[0], self.src) not in self.router_vars:
+            return True
+        self.mount(text(pos[0], self.src), pos[0], parent, n, p)
+        return True
+
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        if self._aiohttp(n, fn, args) or fn.type != "attribute":
+        if self._aiohttp(n, fn, args) or fn.type != "attribute" or self._mount(n, fn, args):
             return
         callee = re.sub(r"\s+", "", text(fn, self.src))
         name = callee.split(".")[-1]

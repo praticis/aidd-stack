@@ -4,7 +4,7 @@ const app = express();
 app.get('/', home);                // the application itself: GET /
 app.get('/users/:id?', getUser);   // an optional parameter: GET /users/{id}
 
-// A sub-router is mounted elsewhere: its "/" is not the application root.
+// A sub-router's "/" is where the file mounts it: GET /orders.
 const orders = express.Router();
 orders.get('/', listOrders);
 app.use('/orders', orders);

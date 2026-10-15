@@ -17,16 +17,18 @@
   (24 novos, apps reais), 38 gabaritos, relatório v2. Nos apps reais o recall de rotas despenca fora do C#
   (Go 8,7 %, TS/JS 1,7 %, Python 1,0 %; C# 73 %) e o grafo de montagem aparece em 23 dos 38 repos. **Item 3 da
   Fase 4 fechado (2026-10-15), antes do 2:** os 15 defeitos baratos do v2 + 3 achados no julgamento; nenhuma das
-  categorias sobra no ranking. H2-D9 e H2-D10 decididos (itens 6 e 7).
-- **Incremento atual:** H2b — Fase 4, item 2 (grafo de montagem), na ordem revista pelo v2.
+  categorias sobra no ranking. H2-D9 e H2-D10 decididos (itens 6 e 7). **Item 2 em curso:** etapa 1 (dentro do
+  arquivo: closures e montagens do mesmo arquivo) feita em 2026-10-15 — chi 14 → 75 % de precisão, fastify,
+  Hono e NodeBB sobem; `prefix-other-scope` e `mount-same-scope` saem do ranking.
+- **Incremento atual:** H2b — Fase 4, item 2 (grafo de montagem), etapa 2: entre arquivos e funções.
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-2/` — corpus v2, 39 repos, depois dos
-  defeitos baratos do v2 (a `2026-10-15-v2-baseline` é o v2 com o extrator da Fase 3; a de 2026-10-14 fica como
-  referência do v1).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-3/` — corpus v2, 39 repos, com a etapa 1
+  do grafo de montagem (a `-2` é a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é o v2 com o extrator da
+  Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
@@ -40,8 +42,11 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** Fase 4, item 2 — grafo de montagem, começando pelo mesmo escopo e mesmo arquivo, com resumo
-  por arquivo entre arquivos (restrição do F1.13).
+- **Próximo passo:** Fase 4, item 2, etapa 2 — entre arquivos (`prefix-other-file`, 1385 em 12 repos: o router
+  exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1", apiv1.Routes())`),
+  prefixo global (`setGlobalPrefix`, 238) e helpers que recebem o router (`router-as-param`, 102). Cada arquivo
+  deixa um **resumo** (routers que exporta, montagens com o nome importado, rotas por router) e um passo depois
+  do scan compõe os resumos — nunca as árvores (F1.13).
 
 ## Decisões
 
@@ -134,7 +139,13 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     convencional do ASP.NET — fixtures `route-patterns-{go,ts,py,cs}`
   - [x] *(2026-10-15, 2ª rodada)* `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`,
     `verb-alias` (`Del`) e `nested-generic-callee` (C# `<List<T>>`, achado no caminho)
-- [ ] **2. Grafo de montagem** — no v2 aparece em 23 dos 38 repos com gabarito (200 wrong, 1837 missed). Ordem:
+- [ ] **2. Grafo de montagem** — no v2 aparece em 23 dos 38 repos com gabarito (200 wrong, 1837 missed).
+  - [x] *(2026-10-15)* etapa 1, dentro do arquivo: regiões de closure (`Route`/`Group` com func, `register(fn,
+    {prefix})`), montagens do mesmo arquivo (`use`, `route`, `Mount`, `include_router`, `register_blueprint`,
+    `basePath`), raiz de sub-router montado, `With`/`Use` — fixtures `route-patterns-*/…/mounts`
+  - [ ] etapa 2: entre arquivos e funções (resumo por arquivo), prefixo global
+
+  Ordem original:
   mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
   `r.Route`/`m.Group(..., func)`, `register(fn, {prefix})`) → prefixo global (`setGlobalPrefix`) → entre arquivos
   (imports, constantes/enums, campos de struct, funções-helper chamadas dentro de grupos, `include_router(prefix=)`).
@@ -286,3 +297,14 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   (gabarito): chamadas C# P 62 → 84 %, R 48 → 64 %; chamadas Go R 24 → 32 %; chamadas TS/JS R 22 → 31 %; rotas
   Python P 27 → 38 %. Decisões H2-D9 e H2-D10 aceitas (itens 6 e 7 da Fase 4). Item novo no ROADMAP: **F1.13**
   (repos grandes). Nova baseline `2026-10-15-v2-baseline-2`.
+- **2026-10-15** — H2b, Fase 4 item 2, etapa 1 (dentro do arquivo). `prefix_for` (região de closure via o gancho
+  `region_of` de cada linguagem, senão o grupo), routers identificados por (escopo que liga o nome, nome), arestas de
+  montagem do arquivo e `finish()` no fim de cada arquivo (cadeias de montagem; a raiz de sub-router fica pendente
+  — `MountedRoot` — e só vira rota se montada). Diff julgado contra `2026-10-15-v2-baseline-2`: chi, fastify, Hono e
+  NodeBB certos (ou só sem prefixo de outro arquivo); Ghost ganha o prefixo dos sub-routers do arquivo; gitea
+  −440 +970, com as rotas web completas (o router web é montado em `/`) e, na API, 247 de 282 batendo com a spec se
+  somado o `/api/v1` que vem de `routers/init.go` — 231 itens do gabarito passam de `prefix-scope-and-file` a
+  `prefix-other-file`; a precisão Go contra os gabaritos cai de 21,1 % para 18,4 % só por isso (H2-D14). Achado no
+  caminho: `r.With(mw).Get(...)` é registro no próprio `r`. Julgamento do v1 corrigido: chi `router-walk` `PUT /ping`
+  estava certo. Nova baseline `2026-10-15-v2-baseline-3`.
+

@@ -407,8 +407,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/categories/{cid}/moderators",
-   "category": "mount-same-scope"
+   "path": "/api/categories/{cid}/moderators"
   },
   {
    "method": "GET",
@@ -432,8 +431,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/config",
-   "category": "mount-same-scope"
+   "path": "/api/config"
   },
   {
    "method": "GET",
@@ -532,8 +530,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/post/upload",
-   "category": "mount-same-scope"
+   "path": "/api/post/upload"
   },
   {
    "method": "GET",
@@ -547,8 +544,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/recent/posts/{term}",
-   "category": "mount-same-scope"
+   "path": "/api/recent/posts/{term}"
   },
   {
    "method": "GET",
@@ -582,8 +578,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/self",
-   "category": "mount-same-scope"
+   "path": "/api/self"
   },
   {
    "method": "GET",
@@ -602,18 +597,15 @@
   },
   {
    "method": "GET",
-   "path": "/api/topic/pagination/{topic_id}",
-   "category": "mount-same-scope"
+   "path": "/api/topic/pagination/{topic_id}"
   },
   {
    "method": "GET",
-   "path": "/api/topic/teaser/{topic_id}",
-   "category": "mount-same-scope"
+   "path": "/api/topic/teaser/{topic_id}"
   },
   {
    "method": "POST",
-   "path": "/api/topic/thumb/upload",
-   "category": "mount-same-scope"
+   "path": "/api/topic/thumb/upload"
   },
   {
    "method": "GET",
@@ -642,23 +634,19 @@
   },
   {
    "method": "GET",
-   "path": "/api/unread/total",
-   "category": "mount-same-scope"
+   "path": "/api/unread/total"
   },
   {
    "method": "GET",
-   "path": "/api/user/email/{email}",
-   "category": "mount-same-scope"
+   "path": "/api/user/email/{email}"
   },
   {
    "method": "GET",
-   "path": "/api/user/uid/{uid}",
-   "category": "mount-same-scope"
+   "path": "/api/user/uid/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/user/username/{username}",
-   "category": "mount-same-scope"
+   "path": "/api/user/username/{username}"
   },
   {
    "method": "GET",
@@ -2025,26 +2013,26 @@
    {
     "evidence": "nodebb:src/routes/api.js:16",
     "method": "GET",
-    "path": "/user/uid/{uid}",
+    "path": "/api/user/uid/{uid}",
     "raw": "/user/uid/:uid",
-    "ok": false,
-    "category": "mount-same-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "nodebb:src/routes/api.js:23",
     "method": "GET",
-    "path": "/topic/teaser/{topic_id}",
+    "path": "/api/topic/teaser/{topic_id}",
     "raw": "/topic/teaser/:topic_id",
-    "ok": false,
-    "category": "mount-same-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "nodebb:src/routes/api.js:38",
     "method": "POST",
-    "path": "/user/{userslug}/uploadpicture",
+    "path": "/api/user/{userslug}/uploadpicture",
     "raw": "/user/:userslug/uploadpicture",
-    "ok": false,
-    "category": "mount-same-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "nodebb:src/routes/feeds.js:34",

@@ -392,8 +392,7 @@
   },
   {
    "method": "GET",
-   "path": "/suite/passport/oauth/userinfo",
-   "category": "url-in-var"
+   "path": "/suite/passport/oauth/userinfo"
   },
   {
    "method": "POST",

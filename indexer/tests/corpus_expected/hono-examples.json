@@ -18,8 +18,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/hello",
-   "category": "mount-same-scope"
+   "path": "/api/hello"
   },
   {
    "method": "GET",
@@ -74,18 +73,15 @@
   },
   {
    "method": "GET",
-   "path": "/book",
-   "category": "mount-same-scope"
+   "path": "/book"
   },
   {
    "method": "POST",
-   "path": "/book",
-   "category": "mount-same-scope"
+   "path": "/book"
   },
   {
    "method": "GET",
-   "path": "/book/{id}",
-   "category": "mount-same-scope"
+   "path": "/book/{id}"
   },
   {
    "method": "GET",
@@ -275,10 +271,10 @@
    {
     "evidence": "hono-examples:nextjs-stack/pages/api/[...route].ts:16",
     "method": "POST",
-    "path": "/hello",
+    "path": "/api/hello",
     "raw": "/hello",
-    "ok": false,
-    "category": "mount-same-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",

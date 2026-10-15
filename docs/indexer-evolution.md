@@ -75,6 +75,15 @@ Dois passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_
      path é função/seletor/identificador (rota) ou dado/string/nil (cliente).
    - `method_from_args`, `resolve_handler` (nome → `Symbol` do mesmo arquivo), `add_endpoint`,
      `add_call` (descarta path sem segmento literal), `_record_group` (prefixos de `Group/MapGroup/APIRouter(prefix=)`).
+   - **Grafo de montagem do arquivo** (H2b, Fase 4 item 2, etapa 1): `prefix_for(receiver, nó)` = prefixo da região
+     de closure que envolve o registro (`region_of`, gancho por linguagem: chi/fiber `Route("/x", func(r) {})`,
+     chi `Group(func(r) {})`, gitea `m.Group("/x", func() { m.Get(..) })`, fastify `register(fn, {prefix})`) ou
+     do grupo. Montagens do arquivo (`app.use('/api', router)`, Hono `route('/x', sub)`, chi `Mount("/x", sub)`
+     — inclusive o router que uma função do arquivo devolve —, `include_router(r, prefix=)`,
+     `register_blueprint(bp, url_prefix=)`) viram arestas entre routers identificados por (escopo que liga o
+     nome, nome); `finish()` prefixa, no fim do arquivo, o que foi registrado em cada router com cada cadeia de
+     montagens acima dele. A raiz de um sub-router fica pendente (`MountedRoot`) e só vira rota se o arquivo o
+     monta com prefixo. Entre arquivos ainda não (próxima etapa: resumo por arquivo, sem árvores — F1.13).
    - `normalize_path`: `:id`, `{id:int}`, `<int:id>`, `%s`, `${x}`, `[controller]` → `{param}`-style;
      remove base URL, query string, barra final. `path_key` = tudo vira `{param}` (chave de join do linker).
 
@@ -122,10 +131,14 @@ Regras aprendidas no corpus (não regredir):
 | `routes.Get("/metrics", append(mid, h)...)` lido como chamada GET | argumento espalhado (`h...`, `...h`) é desembrulhado antes de decidir se é handler |
 | `g.Group("/user").Use(mw).POST("", h)` perdia o `/user` | o prefixo atravessa a cadeia `Group`/`Use`/`With` do receiver |
 | aiohttp `app.router.add_get('/x', h)`, `add_route('*', '/x', h)` (e `add_route = app.router.add_route`) não eram lidos | registrars do aiohttp em receiver `*.router`; a raiz conta (é o router da aplicação) |
+| `r.Route("/articles", func(r chi.Router) { r.Get("/search", h) })`, `m.Group("/user", func() { m.Get("/login", h) })`, `fastify.register(fn, {prefix: '/v1'})`: a rota perdia o prefixo da closure | região de prefixo (`region_of`): o registro no parâmetro da closure (ou, no `Group` do gitea, no mesmo router) leva o prefixo; regiões aninhadas somam |
+| `app.use('/api', router)` / Hono `app.route('/book', book)` / chi `r.Mount("/admin", adminRouter())` / `include_router(r, prefix=)` no mesmo arquivo: as rotas do router ficavam sem o prefixo, e a raiz dele era descartada | aresta de montagem + `finish()`; a raiz do sub-router montado vira a rota do prefixo (`GET /admin`) |
+| `r.With(paginate).Get("/", h)` dentro de um `Route`: o receiver era a cadeia, não o `r` da closure | cadeia só de `With`/`Use` é registro no próprio router |
 | bundle de build commitado (`static/assets/main-OdxfRQdf.js`) repetia rotas e chamadas da fonte | `.js` com nome de hash e linha > 500, ou com linha > 2000 e média > 200 por linha, fica fora da extração HTTP |
 
-Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
-arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
+Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro arquivo ou em
+outra função (`include_router(users.router, prefix=)` com o router importado, `r.Mount("/api/v1", apiv1.Routes())`,
+helper que recebe o router — `addProjectRoutes(m)` — e `setGlobalPrefix`),
 rotas por convenção de nome (`MapGet(GetTodoItems)`), URL montada em runtime sem literal, gRPC/proto,
 mensageria. O prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é
 problema do **linker** (match por sufixo + `target_hint`/`env_hints`), não do extrator.

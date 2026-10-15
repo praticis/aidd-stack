@@ -1,6 +1,39 @@
 {
  "source": "manual",
  "sha": "e222f53aa267080b349eacdeaff03ea9a061e8c7",
+ "scope": {
+  "endpoints": [
+   "examples/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "category": "app-not-recognized"
+  },
+  {
+   "method": "GET",
+   "path": "/await"
+  },
+  {
+   "method": "GET",
+   "path": "/english/hello"
+  },
+  {
+   "method": "GET",
+   "path": "/italian/hello"
+  },
+  {
+   "method": "POST",
+   "path": "/ping/{bar}"
+  }
+ ],
+ "notes": "Precision: all 6 routes checked. route-prefix.js registers inside fastify.register(fn, { prefix: \"/english\" }) — the prefix comes from the register options (prefix-other-scope), and the /italian twin is merged with it. integration/server.js is the framework's own integration-test server (test-app-folder). Recall scope: examples/ (every example read): almost all routes are \"/\", dropped because the path has no literal segment (root-route-dropped). Calls: the single call (fetch HEAD to the GitHub API in scripts/) is correct.",
  "checked": {
   "endpoints": [
    {
@@ -13,9 +46,10 @@
    {
     "evidence": "fastify:examples/route-prefix.js:20",
     "method": "GET",
-    "path": "/hello",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "path": "/english/hello",
+    "raw": "/hello",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify:examples/typescript-server.ts:59",
@@ -56,40 +90,5 @@
    }
   ]
  },
- "checked_seed": "1",
- "notes": "Precision: all 6 routes checked. route-prefix.js registers inside fastify.register(fn, { prefix: \"/english\" }) — the prefix comes from the register options (prefix-other-scope), and the /italian twin is merged with it. integration/server.js is the framework's own integration-test server (test-app-folder). Recall scope: examples/ (every example read): almost all routes are \"/\", dropped because the path has no literal segment (root-route-dropped). Calls: the single call (fetch HEAD to the GitHub API in scripts/) is correct.",
- "scope": {
-  "endpoints": [
-   "examples/"
-  ]
- },
- "endpoints": [
-  {
-   "method": "GET",
-   "path": "/"
-  },
-  {
-   "method": "POST",
-   "path": "/",
-   "category": "app-not-recognized"
-  },
-  {
-   "method": "GET",
-   "path": "/await"
-  },
-  {
-   "method": "GET",
-   "path": "/english/hello",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "GET",
-   "path": "/italian/hello",
-   "category": "prefix-other-scope"
-  },
-  {
-   "method": "POST",
-   "path": "/ping/{bar}"
-  }
- ]
+ "checked_seed": "1"
 }

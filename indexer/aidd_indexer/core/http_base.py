@@ -19,7 +19,7 @@ hits — here we only record what the code says.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import PurePosixPath
 
 from tree_sitter import Node
@@ -66,6 +66,10 @@ HANDLER_NODES = {"func_literal", "arrow_function", "function_expression", "funct
 NON_HANDLER_NODES = STRING_NODES | {"nil", "null", "none", "number", "int_literal", "integer", "float_literal", "true", "false",
                                     "composite_literal", "object", "array", "dictionary", "list", "object_creation_expression",
                                     "unary_expression", "boolean_literal", "null_literal", "character_literal"}
+
+
+class MountedRoot(str):
+    """`"/"` registered on a sub-router: a route only if this file mounts the router under a prefix (`finish`)."""
 
 
 @dataclass
@@ -130,6 +134,14 @@ def target_hint(file_path: str) -> str:
     return parts[-1] if parts else ""
 
 CONCAT_NODES = {"binary_expression", "binary_operator"}
+
+
+class _End:
+    """A position after every node: `_assigned_before(scope, _END, name)` asks whether the scope binds `name` at all."""
+    start_byte = 1 << 62
+
+
+_END = _End()
 
 
 def collect_constants(fx, ctx: PackageContext) -> None:
@@ -220,6 +232,15 @@ class BaseScanner:
         self.group_prefix: dict[str, str] = {}   # router/group variable -> path prefix
         self.router_vars: set[str] = set()       # identifiers known to be routers/groups/apps
         self.app_vars: set[tuple[int, str]] = set()   # (scope, name) of the application itself, not a sub-router
+        # the mount graph of this file: a router is (scope that binds it, name); `finish` prefixes what was
+        # registered on a router with every chain of mounts above it
+        self.mount_edges: list[tuple[tuple[int, str], tuple[int, str], str]] = []   # (child, parent, prefix)
+        self.on_router: list[tuple[int, tuple[int, str]]] = []                    # (endpoint index, router)
+        self._binding_cache: dict[tuple[int, str], bool] = {}
+
+    def scan(self) -> None:
+        self.run()
+        self.finish()
 
     def scope_of(self, n: Node) -> int:
         p = n.parent
@@ -234,6 +255,84 @@ class BaseScanner:
     def is_app(self, name: str, at: Node) -> bool:
         return (self.scope_of(at), name) in self.app_vars
 
+    # -- prefixes: groups, closures, mounts ------------------------------------------------------
+    def region_of(self, call: Node, fn: Node) -> tuple[str, str, bool] | None:
+        """Language hook: `fn` is an argument of `call`. When the call scopes the routes registered inside `fn` under
+        a prefix — chi `r.Route("/x", func(r chi.Router) {...})`, fastify `register(fn, {prefix})` — return (outer
+        receiver, prefix, whether a registration on the outer receiver itself counts, as in gitea's `m.Group("/x",
+        func() { m.Get(...) })`)."""
+        return None
+
+    def prefix_for(self, receiver: str, at: Node) -> str | None:
+        """Prefix of a registration on `receiver` at `at`: the enclosing closure region's, else the group variable's;
+        None when the receiver is neither (a plain router, the application)."""
+        f = at.parent
+        while f is not None:
+            if f.type in HANDLER_NODES and f.parent is not None and f.parent.parent is not None \
+                    and f.parent.parent.type in ("call_expression", "invocation_expression", "call"):
+                hit = self.region_of(f.parent.parent, f)
+                if hit is not None:
+                    outer, p, same_name = hit
+                    if self._is_parameter(f, receiver) or (same_name and receiver == outer):
+                        base = self.prefix_for(outer, f.parent.parent) or ""
+                        return base.rstrip("/") + p
+            f = f.parent
+        return self.group_prefix.get(receiver)
+
+    def router_key(self, name: str, at: Node) -> tuple[int, str]:
+        """(id of the function that binds `name` — a parameter or a local —, name); 0 for module level."""
+        scope = at.parent
+        while scope is not None:
+            if scope.type in FUNCTION_SCOPES and self._binds(scope, name):
+                return scope.id, name
+            scope = scope.parent
+        return 0, name
+
+    def _binds(self, scope: Node, name: str) -> bool:
+        key = (scope.id, name)
+        if key not in self._binding_cache:
+            self._binding_cache[key] = self._is_parameter(scope, name) or self._assigned_before(scope, _END, name) is not None
+        return self._binding_cache[key]
+
+    def mount(self, child: str, child_at: Node, parent: str, at: Node, prefix: str, derived: bool = False) -> None:
+        """`parent.use('/api', child)`, `parent.Mount("/x", child)`, `parent.include_router(child, prefix=...)`: the
+        edge carries the parent's own group/closure prefix too. `derived`: `child := parent.Group("/x")`, whose
+        prefix already holds the parent's — the edge only carries the mounts above the parent."""
+        if not derived:
+            prefix = (self.prefix_for(parent, at) or "").rstrip("/") + prefix
+        self.mount_edges.append((self.router_key(child, child_at), self.router_key(parent, at), prefix))
+
+    def finish(self) -> None:
+        """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted."""
+        up: dict[tuple[int, str], list[tuple[tuple[int, str], str]]] = {}
+        for child, parent, p in self.mount_edges:
+            up.setdefault(child, []).append((parent, p))
+
+        def chains(key: tuple[int, str], seen: frozenset) -> list[str]:
+            if key in seen or key not in up:
+                return [""]
+            return [pp.rstrip("/") + p for parent, p in up[key] for pp in chains(parent, seen | {key})]
+
+        drop: list[int] = []
+        extra: list[HttpEndpointInfo] = []
+        for idx, key in self.on_router:
+            ep = self.out.endpoints[idx]
+            prefixes = [c for c in dict.fromkeys(chains(key, frozenset())) if c]
+            if not prefixes:
+                if isinstance(ep.raw_pattern, MountedRoot):
+                    drop.append(idx)
+                continue
+            moved = []
+            for pre in prefixes:
+                path = normalize_path(pre.rstrip("/") + "/" + ep.path.lstrip("/"))
+                moved.append(replace(ep, path=path, raw_pattern=str(ep.raw_pattern),
+                                     id=ids.http_endpoint(self.repo.tenant, self.repo.name, ep.method, path_key(path))))
+            self.out.endpoints[idx] = moved[0]
+            extra.extend(moved[1:])
+        for idx in sorted(drop, reverse=True):
+            del self.out.endpoints[idx]
+        self.out.endpoints.extend(extra)
+
     def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
         """Pattern of a route registration on `receiver` (the call is `at`): what `path_of` accepts, plus what
         only a route pattern can be —
@@ -243,19 +342,20 @@ class BaseScanner:
           `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`, `:id?`);
         - on a group, a pattern without the leading slash (`v1.GET("users")`, `api.MapGet("{orderId:int}")`) — only where
           the framework joins them (`relative_on_groups`): Flask, Starlette and Express require the slash."""
+        pre = self.prefix_for(receiver, at)
         p = self.path_of(n)
         if p is not None:
-            return "/" + p if self.relative_on_groups and not p.startswith(("/", "http")) and receiver in self.group_prefix else p
+            return "/" + p if self.relative_on_groups and not p.startswith(("/", "http")) and pre is not None else p
         if n.type not in STRING_NODES or n.type == "interpolated_string_expression" \
                 or any(c.type in ("interpolation", "template_substitution") for c in n.children):
             return None
         lit = unquote(text(n, self.src)).strip()
         if lit in ("", "/"):
-            return "/" if self.group_prefix.get(receiver) or self.is_app(receiver, at) else None
+            return "/" if pre or self.is_app(receiver, at) else MountedRoot("/")
         masked = mask_placeholders(lit)
         if PATH_LITERAL.match(masked):
             return lit
-        if self.relative_on_groups and receiver in self.group_prefix and PATH_LITERAL.match("/" + masked):
+        if self.relative_on_groups and pre is not None and PATH_LITERAL.match("/" + masked):
             return "/" + lit
         return None
 
@@ -651,7 +751,13 @@ class BaseScanner:
         return name, (sym.id if sym else None)
 
     def add_endpoint(self, node: Node, method: str, raw_pattern: str, framework: str, handler_node: Node | None,
-                     prefix: str = "", handler_name: str | None = None, handler_id: str | None = None) -> None:
+                     prefix: str = "", handler_name: str | None = None, handler_id: str | None = None,
+                     router: str | None = None) -> None:
+        """`router`: the receiver the route is registered on, so that a mount later in the file prefixes it."""
+        if router is not None:
+            self.on_router.append((len(self.out.endpoints), self.router_key(router, node)))
+        elif isinstance(raw_pattern, MountedRoot):
+            return
         pat = (raw_pattern or "").strip()
         m = re.match(r"^([A-Z]+)\s+(/.*)$", pat)
         if m and m.group(1) in HTTP_METHODS:
@@ -662,7 +768,7 @@ class BaseScanner:
             handler_name, handler_id = self.resolve_handler(handler_node)
         self.out.endpoints.append(HttpEndpointInfo(
             id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path_key(path)),
-            method=method or "ANY", path=path, raw_pattern=raw_pattern, framework=framework,
+            method=method or "ANY", path=path, raw_pattern=raw_pattern if isinstance(raw_pattern, MountedRoot) else str(raw_pattern), framework=framework,
             file_id=self.fx.file.id, line=node.start_point[0] + 1,
             handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
         ))
@@ -682,11 +788,13 @@ class BaseScanner:
 
     # -- shared: `x := r.Group("/v1")` style prefix tracking -------------------------------
     def _record_group(self, names: list[str], call: Node, fn_text: str, arg_nodes: list[Node]) -> None:
-        recv = fn_text.rsplit(".", 1)[0] if "." in fn_text else ""
-        base = self.group_prefix.get(recv.split(".")[-1], "")
+        recv = (fn_text.rsplit(".", 1)[0] if "." in fn_text else "").split(".")[-1]
+        base = self.prefix_for(recv, call) or ""
         p = self.path_of(arg_nodes[0]) if arg_nodes else None
         p = p if p is not None else ""
         for nm in names:
             self.group_prefix[nm] = (base.rstrip("/") + p) if p else base
             self.router_vars.add(nm)
+            if recv:                                  # the group follows its parent wherever the file mounts it
+                self.mount(nm, call, recv, call, "", derived=True)
 

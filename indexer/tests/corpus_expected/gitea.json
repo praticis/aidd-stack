@@ -19,57 +19,57 @@
   {
    "method": "GET",
    "path": "/api/v1/admin/actions/jobs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/actions/runners",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/actions/runners/registration-token",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/actions/runs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/cron",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/cron/{task}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/emails",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/emails/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -99,37 +99,37 @@
   {
    "method": "GET",
    "path": "/api/v1/admin/orgs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/packages",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/unadopted",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/admin/unadopted/{owner}/{repo}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/unadopted/{owner}/{repo}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/users",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -144,42 +144,42 @@
   {
    "method": "DELETE",
    "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users/{username}/keys",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/admin/users/{username}/keys/{id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users/{username}/orgs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users/{username}/rename",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/admin/users/{username}/repos",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -239,7 +239,7 @@
   {
    "method": "GET",
    "path": "/api/v1/notifications/new",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -359,37 +359,37 @@
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/activities/feeds",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/orgs/{org}/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/orgs/{org}/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/blocks",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -419,12 +419,12 @@
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/labels",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/orgs/{org}/labels",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -444,7 +444,7 @@
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/members",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -539,7 +539,7 @@
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/public_members",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -559,7 +559,7 @@
   {
    "method": "POST",
    "path": "/api/v1/orgs/{org}/rename",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -579,77 +579,77 @@
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/teams",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/orgs/{org}/teams",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/teams/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/packages/{owner}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/packages/{owner}/{type}/{name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/packages/{owner}/{type}/{name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/packages/{owner}/{type}/{name}/-/latest",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/packages/{owner}/{type}/{name}/-/link/{repo_name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/packages/{owner}/{type}/{name}/-/unlink",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/packages/{owner}/{type}/{name}/{version}/files",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/issues/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/migrate",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -669,22 +669,22 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -694,12 +694,12 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -734,67 +734,67 @@
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/approve",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/artifacts",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}/jobs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/cancel",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/force-cancel",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/logs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun-failed-jobs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -814,7 +814,7 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/tasks",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -844,37 +844,37 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/activities/feeds",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -884,87 +884,87 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/assignees",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/assignees/{assignee}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections/priority",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/branches",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/branches",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/collaborators",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -984,12 +984,12 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}/permission",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/commits",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1009,52 +1009,52 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/compare/{basehead}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/contents",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/contents",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/contents-ext/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/diffpatch",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/editorconfig/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1079,42 +1079,42 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/blobs/{sha}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}.{diffType}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/notes/{sha}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/refs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/refs/{ref}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/tags/{sha}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/git/trees/{sha}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1164,22 +1164,22 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}/tests",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issue_config",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issue_config/validate",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issue_templates",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1194,7 +1194,7 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/comments",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1254,7 +1254,7 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/pinned",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1309,7 +1309,7 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees/{assignee}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1389,7 +1389,7 @@
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels/{id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1414,7 +1414,7 @@
   {
    "method": "PATCH",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin/{position}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1434,42 +1434,42 @@
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/delete",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/start",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/stop",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/check",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/timeline",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1489,7 +1489,7 @@
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times/{id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1504,7 +1504,7 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/keys/tokens",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1544,22 +1544,22 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/languages",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/licenses",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/media/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/merge-upstream",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1589,12 +1589,12 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/mirror-sync",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/new_pin_allowed",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1699,22 +1699,22 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/resolve",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/unresolve",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/pinned",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{base}/{head}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1734,17 +1734,17 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/comments/{id}/replies",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/commits",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/files",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1804,17 +1804,17 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/dismissals",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/undismissals",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/update",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1829,7 +1829,7 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/push_mirrors-sync",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -1844,7 +1844,7 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/raw/{filepath}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1914,22 +1914,22 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/reviewers",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/signing-key.gpg",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/signing-key.pub",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/stargazers",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1944,22 +1944,22 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/subscribers",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -1989,27 +1989,27 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/tags",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/tags",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/teams",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2059,22 +2059,22 @@
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/transfer",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/transfer/accept",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/transfer/reject",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/wiki/new",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2094,17 +2094,17 @@
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/wiki/pages",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/wiki/revisions/{pageName}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{template_owner}/{template_repo}/generate",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -2114,22 +2114,22 @@
   {
    "method": "GET",
    "path": "/api/v1/settings/api",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/settings/attachment",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/settings/repository",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/settings/ui",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -2149,7 +2149,7 @@
   {
    "method": "GET",
    "path": "/api/v1/teams/{id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
@@ -2159,12 +2159,12 @@
   {
    "method": "GET",
    "path": "/api/v1/teams/{id}/activities/feeds",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/teams/{id}/members",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2184,7 +2184,7 @@
   {
    "method": "GET",
    "path": "/api/v1/teams/{id}/repos",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2214,47 +2214,47 @@
   {
    "method": "GET",
    "path": "/api/v1/topics/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/actions/jobs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/actions/runners",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/user/actions/runners/registration-token",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/actions/runs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2269,7 +2269,7 @@
   {
    "method": "GET",
    "path": "/api/v1/user/actions/variables",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2319,32 +2319,32 @@
   {
    "method": "DELETE",
    "path": "/api/v1/user/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/user/avatar",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/blocks",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
@@ -2364,37 +2364,37 @@
   {
    "method": "GET",
    "path": "/api/v1/user/followers",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/following",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/user/following/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/following/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/user/following/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/gpg_key_token",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/user/gpg_key_verify",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -2559,127 +2559,127 @@
   {
    "method": "GET",
    "path": "/api/v1/user/settings",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/api/v1/user/settings",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/starred",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/stopwatches",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/subscriptions",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/teams",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/user/times",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/search",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/activities/feeds",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/followers",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/following",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/following/{target}",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/gpg_keys",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/heatmap",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/keys",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/orgs",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/orgs/{org}/permissions",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/projects",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/repos",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/starred",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users/{username}/subscriptions",
-   "category": "prefix-scope-and-file"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -2785,87 +2785,87 @@
    {
     "evidence": "gitea:routers/api/packages/api.go:201",
     "method": "GET",
-    "path": "/files/{package}/{version}/{filename}",
+    "path": "/{username}/composer/files/{package}/{version}/{filename}",
     "raw": "/files/{package}/{version}/{filename}",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:218",
     "method": "POST",
-    "path": "/upload_urls",
+    "path": "/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/upload_urls",
     "raw": "/upload_urls",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:221",
     "method": "POST",
-    "path": "/delete",
+    "path": "/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/packages/delete",
     "raw": "/delete",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:360",
     "method": "GET",
-    "path": "/index.yaml",
+    "path": "/{username}/helm/index.yaml",
     "raw": "/index.yaml",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:472",
     "method": "GET",
-    "path": "/info/{packagename}",
+    "path": "/{username}/rubygems/info/{packagename}",
     "raw": "/info/{packagename}",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1327",
     "method": "GET",
-    "path": "/{job_id}/logs",
+    "path": "/repos/{username}/{reponame}/actions/jobs/{job_id}/logs",
     "raw": "/{job_id}/logs",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1458",
     "method": "GET",
-    "path": "/stargazers",
+    "path": "/repos/{username}/{reponame}/stargazers",
     "raw": "/stargazers",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1502",
     "method": "POST",
-    "path": "/comments/{id}/resolve",
+    "path": "/repos/{username}/{reponame}/pulls/comments/{id}/resolve",
     "raw": "/comments/{id}/resolve",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1767",
     "method": "POST",
-    "path": "/unlink",
+    "path": "/packages/{username}/{type}/{name}/-/unlink",
     "raw": "/unlink",
     "ok": false,
-    "category": "prefix-scope-and-file"
+    "category": "prefix-other-file"
    },
    {
     "evidence": "gitea:routers/web/web.go:1226",
     "method": "POST",
-    "path": "/test",
+    "path": "/{username}/{reponame}/settings/hooks/{id}/test",
     "raw": "/test",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:1315",
     "method": "GET",
-    "path": "/attachments/{uuid}",
+    "path": "/{index}/attachments/{uuid}",
     "raw": "/attachments/{uuid}",
     "ok": false,
     "category": "router-as-param"
@@ -2873,7 +2873,7 @@
    {
     "evidence": "gitea:routers/web/web.go:1362",
     "method": "POST",
-    "path": "/viewed-files",
+    "path": "/{username}/{reponame}/{index}/viewed-files",
     "raw": "/viewed-files",
     "ok": false,
     "category": "router-as-param"
@@ -2881,66 +2881,66 @@
    {
     "evidence": "gitea:routers/web/web.go:1473",
     "method": "POST",
-    "path": "/commit/{rest}",
+    "path": "/{username}/{reponame}/branches/_new/commit/{rest}",
     "raw": "/commit/*",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:634",
     "method": "POST",
-    "path": "/avatar/delete",
+    "path": "/user/settings/avatar/delete",
     "raw": "/avatar/delete",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:644",
     "method": "POST",
-    "path": "/hidden_comments",
+    "path": "/user/settings/appearance/hidden_comments",
     "raw": "/hidden_comments",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:662",
     "method": "POST",
-    "path": "/register",
+    "path": "/user/settings/security/webauthn/register",
     "raw": "/register",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:751",
     "method": "GET",
-    "path": "/activate",
+    "path": "/user/activate",
     "raw": "/activate",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:753",
     "method": "ANY",
-    "path": "/activate_email",
+    "path": "/user/activate_email",
     "raw": "/activate_email",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:818",
     "method": "POST",
-    "path": "/{userid}/orgs/{org_id}/remove",
+    "path": "/-/admin/users/{userid}/orgs/{org_id}/remove",
     "raw": "/{userid}/orgs/{org_id}/remove",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:851",
     "method": "POST",
-    "path": "/cleanup",
+    "path": "/-/admin/packages/cleanup",
     "raw": "/cleanup",
-    "ok": false,
-    "category": "prefix-other-scope"
+    "ok": true,
+    "category": null
    }
   ],
   "calls": [

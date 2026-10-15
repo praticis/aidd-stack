@@ -59,6 +59,21 @@
    "method": "POST",
    "path": "/predict",
    "handler": "predict"
+  },
+  {
+   "method": "GET",
+   "path": "/users",
+   "handler": "list_users"
+  },
+  {
+   "method": "GET",
+   "path": "/users/{user_id}",
+   "handler": "get_user"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard",
+   "handler": "dashboard"
   }
  ],
  "calls": [

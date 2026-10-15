@@ -73,12 +73,21 @@ class GoScanner(BaseScanner):
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
         operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
-        chain = self._chain_prefix(operand) if operand is not None else None
+        base = self._middleware_base(operand) if operand is not None else None
+        if base is not None:                                        # r.With(paginate).Get("/", h): a route on r
+            recv_last = base
+        chain = self._chain_prefix(operand) if operand is not None and base is None else None
         if chain is not None:                                       # g.Group("/user").Use(mw).POST("", h)
             recv_last = text(operand, self.src)
             self.group_prefix[recv_last] = chain
             self.router_vars.add(recv_last)
         default_mux = recv == "http" and name in ("Handle", "HandleFunc")   # http.Handle("/x", h): the default ServeMux
+        if name == "Mount" and len(arg_nodes) >= 2 and recv_last:        # chi: r.Mount("/admin", adminRouter())
+            p = self.path_of(arg_nodes[0])
+            child = self._router_of(arg_nodes[1])
+            if p is not None and child is not None:
+                self.mount_edges.append((child, self.router_key(recv_last, n), (self.prefix_for(recv_last, n) or "").rstrip("/") + p))
+                return
 
         # ---- exposed routes ---------------------------------------------------------------
         # a receiver this file built as a router/group is one, whatever its name (`api := r.Group("/api")`)
@@ -103,7 +112,8 @@ class GoScanner(BaseScanner):
                         gm = self._gorilla_methods(n)
                         if gm:
                             method, framework = gm, "gorilla"
-                    self.add_endpoint(n, method or "ANY", lit, framework, handler, prefix=self.group_prefix.get(recv_last, ""))
+                    self.add_endpoint(n, method or "ANY", lit, framework, handler, prefix=self.prefix_for(recv_last, n) or "",
+                                      router=recv_last)
                     return
 
         # ---- outbound calls ---------------------------------------------------------------
@@ -119,6 +129,17 @@ class GoScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _middleware_base(self, n: Node) -> str | None:
+        """`r.With(mw).Use(mw2)` — only middleware on a variable: that variable's name (None for any other receiver)."""
+        if n.type != "call_expression":
+            return None
+        while n.type == "call_expression":
+            fn = n.child_by_field_name("function")
+            if fn is None or fn.type != "selector_expression" or text(fn.child_by_field_name("field"), self.src) not in ("Use", "With"):
+                return None
+            n = fn.child_by_field_name("operand")
+        return text(n, self.src) if n.type == "identifier" else None
 
     def _chain_prefix(self, n: Node) -> str | None:
         """The prefix a receiver chain carries — `g.Group("/user").Use(mw)` → "/user" (plus g's own); None when the
@@ -142,8 +163,43 @@ class GoScanner(BaseScanner):
         if p is None:
             return None
         inner = self._chain_prefix(operand)
-        base = inner if inner is not None else self.group_prefix.get(text(operand, self.src).split(".")[-1], "")
+        base = inner if inner is not None else (self.prefix_for(text(operand, self.src).split(".")[-1], n) or "")
         return base.rstrip("/") + p
+
+    def region_of(self, call: Node, fn: Node) -> tuple[str, str, bool] | None:
+        """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and gitea's
+        `m.Group("/x", func() { m.Get(...) })` — the closure's routes live under the prefix."""
+        callee = call.child_by_field_name("function")
+        args = call.child_by_field_name("arguments")
+        if callee is None or args is None or callee.type != "selector_expression":
+            return None
+        verb = text(callee.child_by_field_name("field"), self.src)
+        if verb not in ("Route", "Group"):
+            return None
+        outer = text(callee.child_by_field_name("operand"), self.src).split(".")[-1]
+        arg_nodes = [c for c in args.children if c.is_named]
+        first = arg_nodes[0] if arg_nodes else None
+        p = "" if first is fn else self.path_of(first) if first is not None else None
+        if p is None:
+            return None
+        return outer, p, verb == "Group"
+
+    def _router_of(self, n: Node) -> tuple[int, str] | None:
+        """The router a Mount argument names: a variable, or the variable a function of this file returns."""
+        if n.type == "identifier":
+            return self.router_key(text(n, self.src), n)
+        if n.type != "call_expression" or n.child_by_field_name("function") is None:
+            return None
+        fname = text(n.child_by_field_name("function"), self.src)
+        for d in walk(self.fx.tree.root_node):
+            if d.type == "function_declaration" and text(d.child_by_field_name("name"), self.src) == fname:
+                for r in walk(d):
+                    if r.type == "return_statement":
+                        ids_ = [c for c in walk(r) if c.type == "identifier"]
+                        if len(ids_) == 1:
+                            return self.router_key(text(ids_[0], self.src), ids_[0])
+                return None
+        return None
 
     def _in_main(self, n: Node) -> bool:
         p = n.parent

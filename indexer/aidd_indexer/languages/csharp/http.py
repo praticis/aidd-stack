@@ -159,7 +159,8 @@ class CsScanner(BaseScanner):
                 method = CS_MAP[name]
                 if name == "MapMethods":
                     method = self.method_from_args(arg_nodes[1:2]) or "ANY"
-                self.add_endpoint(n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], prefix=self.group_prefix.get(recv_last, ""))
+                self.add_endpoint(n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], prefix=self.prefix_for(recv_last, n) or "",
+                                  router=recv_last)
                 return
         if name in OUTBOUND and name.endswith("Async"):
             if name == "SendAsync" and arg_nodes and arg_nodes[0].type == "identifier":
