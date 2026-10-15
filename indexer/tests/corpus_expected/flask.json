@@ -1,0 +1,181 @@
+{
+ "source": "manual",
+ "sha": "d086db856be187255b8ec61ef409357393020f32",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "flask:examples/celery/src/task_app/views.py:21",
+    "method": "POST",
+    "path": "/tasks/add",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/celery/src/task_app/views.py:29",
+    "method": "POST",
+    "path": "/tasks/block",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/celery/src/task_app/views.py:35",
+    "method": "POST",
+    "path": "/tasks/process",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/javascript/js_example/views.py:14",
+    "method": "POST",
+    "path": "/add",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/__init__.py:26",
+    "method": "GET",
+    "path": "/hello",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/auth.py:112",
+    "method": "GET",
+    "path": "/auth/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/auth.py:46",
+    "method": "GET",
+    "path": "/auth/register",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/auth.py:46",
+    "method": "POST",
+    "path": "/auth/register",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/auth.py:84",
+    "method": "GET",
+    "path": "/auth/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/auth.py:84",
+    "method": "POST",
+    "path": "/auth/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/blog.py:60",
+    "method": "GET",
+    "path": "/create",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "flask:examples/tutorial/flaskr/blog.py:60",
+    "method": "POST",
+    "path": "/create",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Precision: all 12 routes checked, all correct (Blueprint url_prefix applied). Recall scope: examples/tutorial/flaskr/, examples/celery/src/task_app/ and examples/javascript/js_example/, read whole. Misses: every path with a converter (<int:id>, <id>, <any(xhr, jquery, fetch):js>) is rejected by the path literal check (route-constraint-syntax), and the \"/\" roots are dropped (root-route-dropped).",
+ "scope": {
+  "endpoints": [
+   "examples/tutorial/flaskr/",
+   "examples/celery/src/task_app/",
+   "examples/javascript/js_example/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/hello"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/register"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/register"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/login"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/login"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "root-route-dropped"
+  },
+  {
+   "method": "GET",
+   "path": "/create"
+  },
+  {
+   "method": "POST",
+   "path": "/create"
+  },
+  {
+   "method": "GET",
+   "path": "/{id}/update",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/{id}/update",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/{id}/delete",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/tasks/result/{id}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/tasks/add"
+  },
+  {
+   "method": "POST",
+   "path": "/tasks/block"
+  },
+  {
+   "method": "POST",
+   "path": "/tasks/process"
+  },
+  {
+   "method": "GET",
+   "path": "/{js}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/add"
+  }
+ ]
+}

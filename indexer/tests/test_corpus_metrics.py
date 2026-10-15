@@ -52,11 +52,28 @@ def test_score_matches_by_path_key_and_any():
     assert s.precision == 3 / 4 and s.recall == 4 / 5
 
 
+def test_miss_categories_come_from_the_expected_entries():
+    gab = {"endpoints": [{"method": "DELETE", "path": "/v1/items/{id}", "category": "verb-alias"},
+                         {"method": "PUT", "path": "/v1/items/{itemId}"},
+                         {"method": "PUT", "path": "/v1/items/{id}", "category": "route-constraint-syntax"},
+                         {"method": "GET", "path": "/health"}]}
+    s = M.score(RUN, gab, "endpoints")
+    assert M.miss_categories(gab, "endpoints", s) == {("DELETE", "/v1/items/{param}"): "verb-alias",
+                                                      ("PUT", "/v1/items/{param}"): "route-constraint-syntax"}
+
+
 def test_scope_limits_extracted_and_absent_kind_is_not_measured():
     gab = {"scope": ["api/"], "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"}]}
     s = M.score(RUN, gab, "endpoints")
     assert (s.precision, s.recall) == (1.0, 1.0)
     assert M.score(RUN, gab, "calls") is None
+
+
+def test_scope_per_kind():
+    gab = {"scope": {"endpoints": ["api/"], "calls": ["nowhere/"]},
+           "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"}], "calls": []}
+    assert M.score(RUN, gab, "endpoints").extracted == 2
+    assert M.score(RUN, gab, "calls").extracted == 0
 
 
 def test_calls_are_counted_as_distinct_pairs():

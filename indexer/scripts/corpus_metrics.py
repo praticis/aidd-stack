@@ -6,11 +6,12 @@ writes) — no tree-sitter, no network.
 
 Gabarito, one per repo:
 
-    {"source": "openapi" | "routes-dump" | "manual",
+    {"source": "openapi" | "routes-dump" | "manual",     # or per kind, like scope
      "sha": "<pinned commit it was read from>",
-     "spec": "openapi.yaml",                            # optional: where the expected routes came from
-     "scope": ["src/Catalog.API/"],                     # optional: only extracted items under these count
-     "endpoints": [{"method": "GET", "path": "/api/items/{id}"}],
+     "spec": ["openapi.yaml"],                          # optional: where the expected routes came from
+     "scope": ["src/Catalog.API/"],                     # optional: only extracted items under these count —
+                                                        # or per kind: {"endpoints": [...], "calls": [...]}
+     "endpoints": [{"method": "GET", "path": "/api/items/{id}", "category": null}],   # category: why it is missed
      "calls":     [{"method": "GET", "path": "/api/items/{id}"}],   # literal/template paths only, as written
      "checked":   {"endpoints": [{"evidence": "repo:file:line", "method": "GET", "path": "/x", "ok": true,
                                   "category": null}], "calls": [...]},
@@ -21,7 +22,7 @@ extracted ANY matches every method of the same path (and the other way round). A
 from the gabarito is not measured; present and empty means nothing is expected. `checked` is the
 manual sample of extracted items over the whole repo (H2-D6): precision = ok / checked with a verdict.
 
-    python scripts/corpus_metrics.py from-openapi spec.yaml [--prefix /api] [--scope dir/] [--sha X]
+    python scripts/corpus_metrics.py from-openapi spec.yaml [more.yaml ...] [--prefix /api] [--scope dir/] [--sha X]
 """
 from __future__ import annotations
 
@@ -93,11 +94,22 @@ class Score:
 def score(run: dict, gabarito: dict, kind: str) -> Score | None:
     if kind not in gabarito:
         return None
-    scope = tuple(gabarito.get("scope") or ())
+    scope = gabarito.get("scope") or ()
+    scope = tuple((scope.get(kind) or ()) if isinstance(scope, dict) else scope)
     x = {item_key(i) for i in run.get(kind, []) if not scope or evidence_file(i["evidence"]).startswith(scope)}
     e = {item_key(i) for i in gabarito[kind]}
     return Score(len(x), len(e), sorted(k for k in x if not any(_matches(k, j) for j in e)),
                  sorted(k for k in e if not any(_matches(k, j) for j in x)))
+
+
+def miss_categories(gabarito: dict, kind: str, sc: Score) -> dict[tuple[str, str], str | None]:
+    """Each false negative → the `category` its expected entry records (why it is missed), if any."""
+    cats: dict[tuple[str, str], str | None] = {}
+    for item in gabarito.get(kind, []):
+        key = item_key(item)
+        if key in sc.false_negatives and not cats.get(key):
+            cats[key] = item.get("category")
+    return {k: cats.get(k) for k in sc.false_negatives}
 
 
 def _check_id(item: dict) -> tuple[str, str, str]:
@@ -166,13 +178,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     oa = sub.add_parser("from-openapi", help="print a gabarito with the routes an OpenAPI/Swagger spec declares")
-    oa.add_argument("spec", type=Path)
+    oa.add_argument("spec", type=Path, nargs="+", help="several specs (API versions) → their union")
     oa.add_argument("--prefix", default=None, help="override the basePath/servers prefix ('' for none)")
     oa.add_argument("--scope", action="append", default=[], help="file prefix the extracted routes must be under")
     oa.add_argument("--sha", default="")
     args = ap.parse_args()
-    spec = load_spec(args.spec)
-    gab = {"source": "openapi", "sha": args.sha, "spec": args.spec.name, "endpoints": from_openapi(spec, args.prefix)}
+    routes = {(r["method"], r["path"]): r for sp in args.spec for r in from_openapi(load_spec(sp), args.prefix)}
+    gab = {"source": "openapi", "sha": args.sha, "spec": [str(sp) for sp in args.spec],
+           "endpoints": [routes[k] for k in sorted(routes, key=lambda t: (t[1], t[0]))]}
     if args.scope:
         gab["scope"] = args.scope
     json.dump(gab, sys.stdout, indent=1)

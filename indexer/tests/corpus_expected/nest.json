@@ -1,0 +1,187 @@
+{
+ "source": "manual",
+ "sha": "fa152aff7ecdc6995f139a3a579f09c63b6aba22",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "nest:integration/file-upload/src/upload.module.ts:138",
+    "method": "POST",
+    "path": "/none",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/file-upload/src/upload.module.ts:247",
+    "method": "POST",
+    "path": "/hash",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/hello-world/src/errors/errors.controller.ts:15",
+    "method": "GET",
+    "path": "/unexpected-error",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/hello-world/src/hello/hello.controller.ts:10",
+    "method": "GET",
+    "path": "/hello",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/inspector/src/database/database.controller.ts:18",
+    "method": "POST",
+    "path": "/database",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/inspector/src/database/database.controller.ts:33",
+    "method": "PATCH",
+    "path": "/database/{id}",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/inspector/src/dogs/dogs.controller.ts:33",
+    "method": "PATCH",
+    "path": "/dogs/{id}",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/microservices/src/kafka-concurrent/kafka-concurrent.controller.ts:60",
+    "method": "POST",
+    "path": "/mathSumSyncNumberWait",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/microservices/src/kafka/kafka.controller.ts:164",
+    "method": "POST",
+    "path": "/business",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/nest-application/global-prefix/src/app.controller.ts:20",
+    "method": "GET",
+    "path": "/test",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/nest-application/observable-response/src/app.controller.ts:103",
+    "method": "GET",
+    "path": "/slow-intercepted",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/nest-application/observable-response/src/app.controller.ts:70",
+    "method": "GET",
+    "path": "/observable",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/route-conflict/src/versioned-wildcard/users-wildcard.controller.ts:12",
+    "method": "GET",
+    "path": "/profile",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/security/src/app.controller.ts:51",
+    "method": "GET",
+    "path": "/error",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/send-files/src/app.controller.ts:35",
+    "method": "GET",
+    "path": "/file/not/exist",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/versioning/src/neutral-middleware.controller.ts:8",
+    "method": "GET",
+    "path": "/neutral",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:integration/versioning/src/override-partial.controller.ts:7",
+    "method": "GET",
+    "path": "/override-partial",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "nest:sample/29-file-upload/src/app.controller.ts:24",
+    "method": "POST",
+    "path": "/file",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "nest:sample/38-webhooks/src/partner-webhooks/webhook-deliveries.controller.ts:47",
+    "method": "GET",
+    "path": "/partner/webhook-deliveries/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "nest:sample/39-file-storage/src/files/files.controller.ts:17",
+    "method": "GET",
+    "path": "/files",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "nest:sample/38-webhooks/scripts/send-webhook.ts:52",
+    "method": "POST",
+    "path": "/webhooks/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Precision: 20 of 195 sampled (seed 1); 157 of the 195 come from integration/, the framework's own test apps (test-app-folder) — on sample/ alone the 3 sampled are correct. Recall scope: sample/01-cats-app/src and sample/24-serve-static/src: the cats routes exist only with the evidence of an integration/ app that registered them first (multi-app-repo), and app.setGlobalPrefix(\"api\") is never applied (global-prefix). Calls: the single call (fetch POST in sample/38-webhooks/scripts) is correct.",
+ "scope": {
+  "endpoints": [
+   "sample/01-cats-app/src/",
+   "sample/24-serve-static/src/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/cats",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/cats",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/cats/{id}",
+   "category": "multi-app-repo"
+  }
+ ]
+}

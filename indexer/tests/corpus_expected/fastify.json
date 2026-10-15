@@ -1,0 +1,96 @@
+{
+ "source": "manual",
+ "sha": "e222f53aa267080b349eacdeaff03ea9a061e8c7",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "fastify:examples/asyncawait.js:24",
+    "method": "GET",
+    "path": "/await",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastify:examples/route-prefix.js:20",
+    "method": "GET",
+    "path": "/hello",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "fastify:examples/typescript-server.ts:59",
+    "method": "POST",
+    "path": "/ping/{bar}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastify:integration/server.js:16",
+    "method": "POST",
+    "path": "/post/{id}",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "fastify:integration/server.js:21",
+    "method": "PUT",
+    "path": "/put/{id}",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "fastify:integration/server.js:26",
+    "method": "DELETE",
+    "path": "/delete/{id}",
+    "ok": false,
+    "category": "test-app-folder"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "fastify:scripts/validate-ecosystem-links.js:69",
+    "method": "HEAD",
+    "path": "/repos/{param}/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Precision: all 6 routes checked. route-prefix.js registers inside fastify.register(fn, { prefix: \"/english\" }) — the prefix comes from the register options (prefix-other-scope), and the /italian twin is merged with it. integration/server.js is the framework's own integration-test server (test-app-folder). Recall scope: examples/ (every example read): almost all routes are \"/\", dropped because the path has no literal segment (root-route-dropped). Calls: the single call (fetch HEAD to the GitHub API in scripts/) is correct.",
+ "scope": {
+  "endpoints": [
+   "examples/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "root-route-dropped"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "category": "root-route-dropped"
+  },
+  {
+   "method": "GET",
+   "path": "/await"
+  },
+  {
+   "method": "GET",
+   "path": "/english/hello",
+   "category": "prefix-other-scope"
+  },
+  {
+   "method": "GET",
+   "path": "/italian/hello",
+   "category": "prefix-other-scope"
+  },
+  {
+   "method": "POST",
+   "path": "/ping/{bar}"
+  }
+ ]
+}

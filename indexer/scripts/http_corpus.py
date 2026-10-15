@@ -62,6 +62,11 @@ CORPUS = {                                                    # pinned 2026-10-1
 }
 
 
+LANGUAGE = {"chi": "Go", "fiber-recipes": "Go", "gin-examples": "Go", "gin-realworld": "Go", "alertmanager": "Go", "gorilla-mux": "Go",
+            "nest": "TS/JS", "express": "TS/JS", "express-realworld": "TS/JS", "fastify": "TS/JS",
+            "eshop": "C#", "clean-arch-dotnet": "C#", "fastapi": "Python", "fastapi-template": "Python", "flask": "Python"}
+
+
 def checkout(dest: Path, slug: str, sha: str) -> None:
     """Shallow clone of exactly `sha` (re-fetches when the pin changed)."""
     def git(*a: str) -> subprocess.CompletedProcess:
@@ -112,6 +117,10 @@ def report_baseline(name: str, run: dict, baseline: Path, show: int) -> bool:
     return True
 
 
+CATEGORIES: dict[tuple[str, str], collections.Counter] = collections.defaultdict(collections.Counter)
+POOLED: dict[str, dict[str, collections.Counter]] = collections.defaultdict(lambda: {k: collections.Counter() for k in M.KINDS})
+
+
 def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | None:
     f = expected / f"{name}.json"
     if not f.exists():
@@ -120,17 +129,29 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
     if gab.get("sha") and gab["sha"] != run["sha"]:
         print(f"  expected: gabarito read at {gab['sha'][:10]}, run at {run['sha'][:10]} — re-check it before trusting P/R")
     out = {}
+    pool = POOLED[LANGUAGE.get(name, "?")]
     for k in M.KINDS:
         sc, ck = M.score(run, gab, k), M.checked_precision(run, gab, k)
         if sc is not None:
-            print(f"  expected {k:9} ({gab.get('source', '?')}): P {_pct(sc.precision)} R {_pct(sc.recall)} "
+            src = gab.get("source", "?")
+            print(f"  expected {k:9} ({src.get(k, '?') if isinstance(src, dict) else src}): P {_pct(sc.precision)} R {_pct(sc.recall)} "
                   f"| extracted {sc.extracted} expected {sc.expected} fp {len(sc.false_positives)} fn {len(sc.false_negatives)}")
             _items("fp", sc.false_positives, show)
-            _items("fn", sc.false_negatives, show)
+            misses = M.miss_categories(gab, k, sc)
+            _items("fn", [f"{m} {p}" + (f" [{c}]" if c else "") for (m, p), c in misses.items()], show)
+            for c in misses.values():
+                CATEGORIES[(k, c or "uncategorized")]["fn"] += 1
         if ck is not None:
             print(f"  checked  {k:9}: P {_pct(ck.precision)} ({ck.ok}/{ck.judged}, {ck.pending} pending, {len(ck.stale)} stale)")
             _items("wrong", [f"{i['evidence']} {i['method']} {i['path']} [{i.get('category')}]" for i in ck.wrong], show)
+            for i in ck.wrong:
+                CATEGORIES[(k, i.get("category") or "uncategorized")]["wrong"] += 1
             _items("stale", [f"{i['evidence']} {i['method']} {i['path']}" for i in ck.stale], show)
+        if sc is not None:
+            pool[k].update(extracted=sc.extracted, tp_x=sc.extracted - len(sc.false_positives),
+                           expected=sc.expected, tp_e=sc.expected - len(sc.false_negatives))
+        if ck is not None:
+            pool[k].update(judged=ck.judged, ok=ck.ok)
         out[k] = (sc, ck)
     return out
 
@@ -189,6 +210,19 @@ def main() -> int:
         print(f"\nbaseline {args.baseline}: {len(changed)} repo(s) differ" + (f" — {', '.join(changed)}" if changed else ""))
     if args.expected:
         print(f"\nexpected {args.expected}: {len(measured)} repo(s) with a gabarito" + (f" — {', '.join(measured)}" if measured else ""))
+        if POOLED:
+            ratio = lambda a, b: _pct(a / b if b else None)
+            print(f"\n{'language':8} {'kind':10} {'P checked':>16} {'P gabarito':>16} {'R gabarito':>16}")
+            for lang, kinds in sorted(POOLED.items()):
+                for k, c in kinds.items():
+                    if c:
+                        print(f"{lang:8} {k:10} {ratio(c['ok'], c['judged'])} {c['ok']:>4}/{c['judged']:<4} "
+                              f"{ratio(c['tp_x'], c['extracted'])} {c['tp_x']:>4}/{c['extracted']:<4} "
+                              f"{ratio(c['tp_e'], c['expected'])} {c['tp_e']:>4}/{c['expected']:<4}")
+        if CATEGORIES:
+            print(f"\n{'kind':10} {'category':28} {'wrong':>5} {'fn':>4}   (wrong: checked items judged wrong · fn: distinct expected pairs missed)")
+            for (k, c), n in sorted(CATEGORIES.items(), key=lambda kv: (kv[0][0], -(kv[1]["wrong"] + kv[1]["fn"]), kv[0][1])):
+                print(f"{k:10} {c:28} {n['wrong']:5} {n['fn']:4}")
     return 0
 
 
