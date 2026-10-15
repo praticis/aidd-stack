@@ -149,12 +149,12 @@
   {
    "method": "GET",
    "path": "/api/v1/items",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/items",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
@@ -199,17 +199,17 @@
   {
    "method": "POST",
    "path": "/api/v1/private/users",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/api/v1/users",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/api/v1/users",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",

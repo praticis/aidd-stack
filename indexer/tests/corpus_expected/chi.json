@@ -193,7 +193,7 @@
   {
    "method": "GET",
    "path": "/",
-   "category": "root-route-dropped"
+   "category": "multi-app-repo"
   },
   {
    "method": "GET",
@@ -208,12 +208,12 @@
   {
    "method": "GET",
    "path": "/articles",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "POST",
    "path": "/articles",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "GET",
@@ -223,27 +223,27 @@
   {
    "method": "GET",
    "path": "/articles/{articleID}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "PUT",
    "path": "/articles/{articleID}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "DELETE",
    "path": "/articles/{articleID}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "GET",
    "path": "/articles/{articleSlug}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "GET",
    "path": "/admin",
-   "category": "root-route-dropped"
+   "category": "prefix-other-scope"
   },
   {
    "method": "GET",
@@ -272,32 +272,32 @@
   {
    "method": "GET",
    "path": "/todos",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/todos",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/todos",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/todos/{id}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "PUT",
    "path": "/todos/{id}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/todos/{id}",
-   "category": "root-route-dropped"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",

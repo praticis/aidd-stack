@@ -101,7 +101,7 @@
   {
    "method": "POST",
    "path": "/api/users",
-   "category": "root-route-dropped"
+   "category": "router-as-param"
   },
   {
    "method": "POST",
@@ -111,12 +111,12 @@
   {
    "method": "GET",
    "path": "/api/user",
-   "category": "root-route-dropped"
+   "category": "router-as-param"
   },
   {
    "method": "PUT",
    "path": "/api/user",
-   "category": "root-route-dropped"
+   "category": "router-as-param"
   },
   {
    "method": "GET",
@@ -136,7 +136,7 @@
   {
    "method": "GET",
    "path": "/api/articles",
-   "category": "root-route-dropped"
+   "category": "router-as-param"
   },
   {
    "method": "GET",
@@ -191,7 +191,7 @@
   {
    "method": "GET",
    "path": "/api/tags",
-   "category": "root-route-dropped"
+   "category": "router-as-param"
   }
  ]
 }

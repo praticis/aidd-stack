@@ -158,28 +158,23 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/v1/users",
-   "category": "no-leading-slash"
+   "path": "/v1/users"
   },
   {
    "method": "POST",
-   "path": "/v1/users/add",
-   "category": "no-leading-slash"
+   "path": "/v1/users/add"
   },
   {
    "method": "GET",
-   "path": "/v2/users",
-   "category": "no-leading-slash"
+   "path": "/v2/users"
   },
   {
    "method": "POST",
-   "path": "/v2/users/add",
-   "category": "no-leading-slash"
+   "path": "/v2/users/add"
   },
   {
    "method": "GET",
-   "path": "/api",
-   "category": "root-route-dropped"
+   "path": "/api"
   },
   {
    "method": "GET",
@@ -192,8 +187,7 @@
   },
   {
    "method": "POST",
-   "path": "/admin",
-   "category": "no-leading-slash"
+   "path": "/admin"
   },
   {
    "method": "GET",

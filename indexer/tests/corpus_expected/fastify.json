@@ -66,13 +66,12 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/",
-   "category": "root-route-dropped"
+   "path": "/"
   },
   {
    "method": "POST",
    "path": "/",
-   "category": "root-route-dropped"
+   "category": "app-not-recognized"
   },
   {
    "method": "GET",

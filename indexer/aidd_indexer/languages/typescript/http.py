@@ -37,6 +37,8 @@ class TsScanner(BaseScanner):
         txt = text(val, self.src)
         if re.search(r"\b(express|Router|Fastify|fastify|Koa|new Hono|Hono|new Elysia|Elysia)\s*\(", txt) or re.search(r"\.(Router|router)\(\)", txt):
             self.router_vars.add(text(name, self.src))
+            if re.match(r"^(express|fastify|Fastify)\s*\(", txt):           # the application, not an express.Router()
+                self.mark_app(text(name, self.src), n)
 
     def _decorator(self, n: Node, controller_prefix: dict[int, str]) -> None:
         txt = text(n, self.src)
@@ -80,9 +82,9 @@ class TsScanner(BaseScanner):
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
         if name in TS_REGISTRARS and len(arg_nodes) >= 2:
-            p = self.path_of(arg_nodes[0])
+            p = self.route_path(arg_nodes[0], recv_last, n)
             if p is not None and p.startswith("/") and (self.is_handler_like(arg_nodes[-1]) or recv_last in self.router_vars) \
-                    and not CLIENT_RECEIVER.search(recv_last):
+                    and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):   # `const api = express.Router()`
                 if name == "route":                                  # app.route('/x').get(h) — take the verb from the chain
                     return
                 self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1])

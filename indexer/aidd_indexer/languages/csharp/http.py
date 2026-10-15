@@ -21,6 +21,7 @@ FLURL_VERBS = {"GetAsync": "GET", "GetJsonAsync": "GET", "GetStringAsync": "GET"
 
 class CsScanner(BaseScanner):
     """ASP.NET Core: attribute-routed controllers + minimal APIs; HttpClient / Refit outbound."""
+    relative_on_groups = True
 
     def run(self) -> None:
         for n in walk(self.fx.tree.root_node):
@@ -82,6 +83,8 @@ class CsScanner(BaseScanner):
             hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind == "method"), None)
             for method, lit, a in routes:
                 tmpl = lit if lit is not None else (extra[0] if extra else "")
+                if not prefixes and not tmpl:
+                    continue                    # conventional routing ({controller}/{action}): no path of its own here
                 full = tmpl if (tmpl.startswith("/") or tmpl.startswith("~/")) else (prefix.rstrip("/") + "/" + tmpl).rstrip("/")
                 full = full.replace("~/", "/")
                 full = re.sub(r"\[controller\]", controller.lower(), full, flags=re.I)
@@ -125,6 +128,7 @@ class CsScanner(BaseScanner):
                 self._record_group([text(kids[0], self.src)], grp, fn_text, arg_nodes)
         elif re.search(r"\b(WebApplication|CreateBuilder|Build)\s*\(", txt):
             self.router_vars.add(text(kids[0], self.src))
+            self.mark_app(text(kids[0], self.src), n)
 
     def _invocation(self, n: Node) -> None:
         kids = [c for c in n.children if c.is_named]
@@ -149,7 +153,7 @@ class CsScanner(BaseScanner):
         if not arg_nodes:
             return
         if name in CS_MAP and len(arg_nodes) >= 2:
-            p = self.path_of(arg_nodes[0])
+            p = self.route_path(arg_nodes[0], recv_last, n)
             if p is not None and (self.is_handler_like(arg_nodes[-1]) or True):
                 method = CS_MAP[name]
                 if name == "MapMethods":

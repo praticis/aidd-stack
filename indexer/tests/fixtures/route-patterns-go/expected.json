@@ -1,0 +1,40 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "index"
+  },
+  {
+   "method": "GET",
+   "path": "/v1",
+   "handler": "listUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/{id}",
+   "handler": "getUser"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/reports",
+   "handler": "runReport"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "submit"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{slug}",
+   "handler": "getArticle"
+  },
+  {
+   "method": "GET",
+   "path": "/api/health",
+   "handler": "health"
+  }
+ ],
+ "calls": []
+}

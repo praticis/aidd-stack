@@ -140,6 +140,49 @@ read.
 Calls are thin in this corpus (24 extracted, 27 expected in scope). H2b needs repositories with real
 service-to-service clients before any call figure means much.
 
+## Update: the cheap fixes (2026-10-15)
+
+The first H2b step. It covers the three cheap, high-yield categories, plus two found while doing them. Each
+case is reproduced in the fixtures `route-patterns-{go,ts,py,cs}`, together with the counter-examples that must
+not become routes.
+
+- **Root routes** (`root-route-dropped`): `"/"` and `""` become a route only when the full path is known. That
+  is the case when the receiver is the application itself or a group with a prefix of its own. The root of a
+  sub-router is wherever it gets mounted, so it stays out.
+- **Constraints and converters** (`route-constraint-syntax`): placeholders are masked before the literal check,
+  and an optional `?` is removed before the query is cut. That cut also fixed `{id:int?}` → `{id{int}`.
+- **Relative patterns on a group** (`no-leading-slash`): only where the framework joins them (Go groups,
+  ASP.NET `MapGroup`).
+- **A router named like a client** (new, `client-named-router`): `api := r.Group("/api")` and
+  `const api = express.Router()` were rejected because `api` matched the client-name heuristic.
+- **Conventional routing** (the `route-by-name-convention` false positive): a template-less action of a
+  controller without `[Route]` is no longer recorded as `GET /`.
+
+Every change was judged against the baseline diff:
+
+- **74 routes added.** 68 are correct. The other 6 are wrong for the reason their sibling routes already were:
+  the prefix is lost in another scope or file (`/{articleSlug}` inside a chi `r.Route` closure, the four
+  router roots of `fastapi-template` without `/api/v1`, a gin group received as a parameter).
+- **2 routes removed.** Both were false positives (`AccountController`).
+
+| Language | P expected v1 → now | R expected v1 → now |
+|---|---|---|
+| Go | 17.4 % → 32.3 % (10/31) | 6.1 % → 15.2 % (10/66) |
+| TS/JS | 9.1 % → 13.0 % (3/23) | 5.9 % → 8.8 % (3/34) |
+| C# | 100 % → 100 % (27/27) | 48.6 % → 73.0 % (27/37) |
+| Python | 44.1 % → 47.7 % (21/44) | 30.6 % → 42.9 % (21/49) |
+
+- eShop routes reach P 100 % / R 100 % on the measured APIs (27/27), and flask reaches 100 % / 100 % (18/18).
+- gin-examples goes from P 33 % / R 8 % to P 70 % / R 58 %.
+- One repository lost precision against its expected list: chi, 16.7 % → 14.3 %. The cause is a regex route
+  inside an `r.Route("/articles", ...)` closure, extracted exactly as written and missing its closure prefix.
+- `root-route-dropped`, `route-constraint-syntax` and `no-leading-slash` no longer appear. What they hid is now
+  counted where it belongs (`prefix-other-file`, `prefix-other-scope`, `router-as-param`, `multi-app-repo`), plus
+  a new `app-not-recognized`: `require('fastify')()` is not recognized as the application, so its root stays out.
+
+The tables above this section are v1 (2026-10-14) and are kept as they were. Run `--expected` for the current
+figures.
+
 ## Two open decisions, measured
 
 - **Generated clients (H2-D9).** Two in the corpus: the openapi-ts client of `fastapi-template`
@@ -154,7 +197,8 @@ service-to-service clients before any call figure means much.
 
 ## What H2b should do, in order
 
-1. **Cheap, general fixes**, each with a fixture and a corpus diff:
+1. **Cheap, general fixes**, each with a fixture and a corpus diff. The first three were done on 2026-10-15
+   (see the update above); the rest are still open:
    - accept `"/"`/`""` as route patterns (`root-route-dropped`, 35 misses);
    - accept constraint/converter syntax inside placeholders (`route-constraint-syntax`, 9);
    - accept relative patterns on route registrations (`no-leading-slash`, 6);

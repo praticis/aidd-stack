@@ -10,7 +10,8 @@ and which are outbound requests — see `docs/indexer-evolution.md` for the rule
 Route vs. client disambiguation (the main source of false positives): a call is a *route
 registration* when the argument after the path is handler-like (a function literal, or a
 selector/identifier that is not a string/nil/literal); it is an *outbound call* otherwise.
-Test files and e2e/integration folders are skipped. Paths made only of placeholders are dropped.
+Test files and e2e/integration folders are skipped. Outbound paths made only of placeholders are dropped;
+a route pattern goes through `route_path` (the root, constraints and converters, relative patterns on a group).
 Every candidate carries evidence `repo:path:line`; the linker decides which endpoint a call
 hits — here we only record what the code says.
 """
@@ -29,7 +30,7 @@ from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / i
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
 from .paths import (ENV_URL_NAME, path_key, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, VERB_BY_NAME,
-                    has_literal_segment, looks_like_rel_path, normalize_path, unquote)
+                    has_literal_segment, looks_like_rel_path, mask_placeholders, normalize_path, unquote)
 
 
 # --- outbound callee names -> method (None = look at the arguments) ---------------------------
@@ -54,6 +55,12 @@ CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|
 
 STRING_NODES = {"interpreted_string_literal", "raw_string_literal", "string", "string_literal", "template_string",
                 "verbatim_string_literal", "interpolated_string_expression"}
+# What delimits the scope of a local variable — an application object is recognised per (scope, name), so a
+# `r` that is the application in `main` is not taken for the `r` a helper builds and returns.
+FUNCTION_SCOPES = {"function_declaration", "method_declaration", "func_literal", "function_definition", "arrow_function",
+                   "function_expression", "function", "method_definition", "generator_function_declaration",
+                   "local_function_statement", "lambda_expression", "anonymous_method_expression", "lambda",
+                   "constructor_declaration"}
 HANDLER_NODES = {"func_literal", "arrow_function", "function_expression", "function", "lambda_expression",
                  "anonymous_method_expression", "lambda", "method_reference"}
 NON_HANDLER_NODES = STRING_NODES | {"nil", "null", "none", "number", "int_literal", "integer", "float_literal", "true", "false",
@@ -140,6 +147,7 @@ def first_string(n: Node, src: bytes) -> str | None:
 # ------------------------------------------------------------------------------------------
 class BaseScanner:
     framework_default = "unknown"
+    relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
 
     def __init__(self, repo: RepoInfo, fx, ctx: PackageContext, out: HttpResult):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
@@ -149,6 +157,45 @@ class BaseScanner:
             self.symbols_by_name.setdefault(s.name, []).append(s)
         self.group_prefix: dict[str, str] = {}   # router/group variable -> path prefix
         self.router_vars: set[str] = set()       # identifiers known to be routers/groups/apps
+        self.app_vars: set[tuple[int, str]] = set()   # (scope, name) of the application itself, not a sub-router
+
+    def scope_of(self, n: Node) -> int:
+        p = n.parent
+        while p is not None and p.type not in FUNCTION_SCOPES:
+            p = p.parent
+        return p.id if p is not None else 0
+
+    def mark_app(self, name: str, at: Node) -> None:
+        """`name`, assigned at `at`, is the application (`gin.Default()`, `express()`, `FastAPI()`, `builder.Build()`)."""
+        self.app_vars.add((self.scope_of(at), name))
+
+    def is_app(self, name: str, at: Node) -> bool:
+        return (self.scope_of(at), name) in self.app_vars
+
+    def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
+        """Pattern of a route registration on `receiver` (the call is `at`): what `path_of` accepts, plus what
+        only a route pattern can be —
+        - the root (`"/"`, `""`) when its full path is known: the receiver is the application itself or a group
+          with a prefix of its own. A sub-router's root is wherever it gets mounted, so it is not a route here;
+        - placeholders with constraints, converters or optional markers (`{id:int?}`, `{name:minlength(1)}`,
+          `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`, `:id?`);
+        - on a group, a pattern without the leading slash (`v1.GET("users")`, `api.MapGet("{orderId:int}")`) — only where
+          the framework joins them (`relative_on_groups`): Flask, Starlette and Express require the slash."""
+        p = self.path_of(n)
+        if p is not None:
+            return "/" + p if self.relative_on_groups and not p.startswith(("/", "http")) and receiver in self.group_prefix else p
+        if n.type not in STRING_NODES or n.type == "interpolated_string_expression" \
+                or any(c.type in ("interpolation", "template_substitution") for c in n.children):
+            return None
+        lit = unquote(text(n, self.src)).strip()
+        if lit in ("", "/"):
+            return "/" if self.group_prefix.get(receiver) or self.is_app(receiver, at) else None
+        masked = mask_placeholders(lit)
+        if PATH_LITERAL.match(masked):
+            return lit
+        if self.relative_on_groups and receiver in self.group_prefix and PATH_LITERAL.match("/" + masked):
+            return "/" + lit
+        return None
 
     def evidence(self, node: Node) -> str:
         return f"{self.repo.name}:{self.fx.file.path}:{node.start_point[0] + 1}"

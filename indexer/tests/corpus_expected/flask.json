@@ -125,8 +125,7 @@
   },
   {
    "method": "GET",
-   "path": "/",
-   "category": "root-route-dropped"
+   "path": "/"
   },
   {
    "method": "GET",
@@ -138,23 +137,19 @@
   },
   {
    "method": "GET",
-   "path": "/{id}/update",
-   "category": "route-constraint-syntax"
+   "path": "/{id}/update"
   },
   {
    "method": "POST",
-   "path": "/{id}/update",
-   "category": "route-constraint-syntax"
+   "path": "/{id}/update"
   },
   {
    "method": "POST",
-   "path": "/{id}/delete",
-   "category": "route-constraint-syntax"
+   "path": "/{id}/delete"
   },
   {
    "method": "GET",
-   "path": "/tasks/result/{id}",
-   "category": "route-constraint-syntax"
+   "path": "/tasks/result/{id}"
   },
   {
    "method": "POST",
@@ -170,8 +165,7 @@
   },
   {
    "method": "GET",
-   "path": "/{js}",
-   "category": "route-constraint-syntax"
+   "path": "/{js}"
   },
   {
    "method": "POST",

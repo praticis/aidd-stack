@@ -27,6 +27,16 @@ def unquote(s: str) -> str:
     return s
 
 
+PLACEHOLDER = re.compile(r"\{[^{}]*\}|<[^<>]*>")
+
+
+def mask_placeholders(pattern: str) -> str:
+    """Every placeholder → `{p}`, so that what a route placeholder may hold — constraints and converters
+    (`{id:int?}`, `{name:minlength(1)}`, `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`) and optional
+    markers (`:id?`) — does not make the literal check reject the whole pattern."""
+    return re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", PLACEHOLDER.sub("{p}", pattern))
+
+
 def path_key(path: str) -> str:
     """Comparison key: every placeholder becomes {param} — `/v1/users/{id}` == `/v1/users/{param}`."""
     return re.sub(r"\{[^}]*\}", "{param}", path)
@@ -38,12 +48,14 @@ def normalize_path(path: str) -> str:
     m = URL_LITERAL.match(p)
     if m:
         p = m.group(1) or "/"
+    p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split
+    p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", p)        # optional :id? (express, gin)
     p = p.split("?", 1)[0].split("#", 1)[0]
     p = re.sub(r"%[sdvq]", "{param}", p)                          # Sprintf verbs
     p = re.sub(r"\$\{[^}]*\}", "{param}", p)                      # JS template literals
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:[^}]*\}", r"{\1}", p)   # {id:int} (ASP.NET) → {id}
     p = re.sub(r"\{\*+([A-Za-z_][A-Za-z0-9_]*)\}", r"{\1}", p)   # {*rest} (ASP.NET catch-all)
-    p = re.sub(r"<(?:[a-z_]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id> (Flask)
+    p = re.sub(r"<(?:[^<>:]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id>, <any(a, b):page> (Flask/Werkzeug)
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)      # :id (gin, express, echo)
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)(\.\.\.)?\}", r"{\1}", p)  # {id...} → {id}
     p = re.sub(r"\{\d+\}", "{param}", p)                             # string.Format("{0}")

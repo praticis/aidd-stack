@@ -38,6 +38,8 @@ class PyScanner(BaseScanner):
         if fname in ("APIRouter", "Blueprint", "FastAPI", "Flask", "Starlette", "Router", "Sanic", "Quart"):
             name = text(left, self.src)
             self.router_vars.add(name)
+            if fname in ("FastAPI", "Flask", "Starlette", "Sanic", "Quart"):                # the application itself
+                self.mark_app(name, n)
             args = right.child_by_field_name("arguments")
             prefix = ""
             if args is not None:
@@ -69,7 +71,7 @@ class PyScanner(BaseScanner):
             arg_nodes = [c for c in args.children if c.is_named]
             if not arg_nodes:
                 continue
-            p = self.path_of(arg_nodes[0]) if arg_nodes[0].type == "string" else None
+            p = self.route_path(arg_nodes[0], recv, d) if arg_nodes[0].type == "string" else None
             if p is None or not p.startswith("/"):
                 continue
             methods = [VERB_BY_NAME[verb]] if verb in VERB_BY_NAME else ["ANY"]

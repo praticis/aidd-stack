@@ -13,9 +13,12 @@ from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NAME)      # net/http, gorilla, chi, gin, echo, fiber
 GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter"}                       # prefix carriers
+GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
+GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
 
 
 class GoScanner(BaseScanner):
+    relative_on_groups = True
     def run(self) -> None:
         for n in walk(self.fx.tree.root_node):
             if n.type in ("short_var_declaration", "assignment_statement", "var_spec"):
@@ -43,8 +46,13 @@ class GoScanner(BaseScanner):
             if last in GO_MOUNTS:
                 self._record_group(names, r, fname, arg_nodes)
             elif last in ("NewServeMux", "NewRouter", "New", "Default", "NewMux") and re.search(r"\b(http|mux|chi|gin|echo|fiber|httprouter)\b", fname):
+                # gin/echo/fiber build the application; a chi/gorilla router is the application only when main
+                # builds it — a helper that builds one returns it to be mounted somewhere else.
+                is_app = bool(GO_APPS.match(fname)) or (bool(GO_ROUTERS.match(fname)) and self._in_main(n))
                 for nm in names:
                     self.router_vars.add(nm)
+                    if is_app:
+                        self.mark_app(nm, n)
 
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
@@ -62,13 +70,14 @@ class GoScanner(BaseScanner):
             return
 
         # ---- exposed routes ---------------------------------------------------------------
-        if name in GO_REGISTRARS and len(arg_nodes) >= 2 and not CLIENT_RECEIVER.search(recv_last):
+        # a receiver this file built as a router/group is one, whatever its name (`api := r.Group("/api")`)
+        if name in GO_REGISTRARS and len(arg_nodes) >= 2 and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):
             first = arg_nodes[0]
             raw_first = unquote(text(first, self.src)) if first.type in STRING_NODES else None
-            lit = raw_first if raw_first and re.match(r"^[A-Z]+ /", raw_first) else self.path_of(first)
+            lit = raw_first if raw_first and re.match(r"^[A-Z]+ /", raw_first) else self.route_path(first, recv_last, n)
             method = VERB_BY_NAME.get(name) if name in VERB_BY_NAME else (None if name in ("HandleFunc", "Handle", "Match") else "ANY")
             if name == "Match" and len(arg_nodes) >= 3:                 # gin: r.Match([]string{...}, "/x", h)
-                lit = self.path_of(arg_nodes[1])
+                lit = self.route_path(arg_nodes[1], recv_last, n)
             if lit and (lit.startswith("/") or re.match(r"^[A-Z]+ /", lit)):
                 handler = arg_nodes[-1]
                 if self.is_handler_like(handler) or recv_last in self.router_vars or name in ("HandleFunc", "Handle"):
@@ -97,6 +106,13 @@ class GoScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _in_main(self, n: Node) -> bool:
+        p = n.parent
+        while p is not None and p.type not in ("function_declaration", "method_declaration", "func_literal"):
+            p = p.parent
+        name = p.child_by_field_name("name") if p is not None and p.type == "function_declaration" else None
+        return name is not None and text(name, self.src) == "main"
 
     def _gorilla_methods(self, call: Node) -> str | None:
         """`r.HandleFunc("/x", h).Methods("GET")` — `call` is the operand of `.Methods(...)`."""

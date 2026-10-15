@@ -10,16 +10,18 @@
 
 ## Onde estamos
 
-- **Estado:** **H2a concluído (2026-10-14)** — instrumento pronto, gabaritos em 14 dos 15 repos e
-  `docs/corpus-report.md` v1 publicado; F0.4.3a marcado no ROADMAP. Extrator ainda intocado.
-- **Incremento atual:** H2b — Fase 3 (ampliar o corpus) e Fase 4 (evoluir o extrator).
+- **Estado:** H2a concluído (2026-10-14). **H2b iniciado (2026-10-15)**: as três correções baratas de maior
+  efeito (raiz, restrições/conversores, padrão relativo em grupo) + router com nome de cliente + o FP do
+  roteamento convencional, com fixtures `route-patterns-{go,ts,py,cs}`. Recall pelos gabaritos: C# 49 → 73 %,
+  Go 6 → 15 %, Python 31 → 43 %, TS/JS 6 → 9 %.
+- **Incremento atual:** H2b — Fase 4, item 1 (restam as correções baratas menores), depois Fase 3.
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-14-baseline/` (15 JSONs, com `repo` e `sha`),
-  gerada a partir da f854509 nos SHAs fixados em `CORPUS`. É idêntica, id a id, à de 2026-10-13 (8069b56).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-baseline/` — depois das correções baratas
+  (a de 2026-10-14 fica como referência do v1).
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
 
@@ -32,10 +34,9 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** começar o H2b pelas correções baratas da ordem do relatório (Fase 4, item 1),
-  porque elas já movem os números do corpus atual: `"/"`/`""` como rota, sintaxe de restrição dentro do
-  placeholder, padrão relativo em registro de rota, query antes de validar o template de chamada, `fetch` =
-  GET, `TestClient`. Ampliar o corpus (Fase 3) logo depois, antes do grafo de montagem.
+- **Próximo passo:** fechar o item 1 da Fase 4 com as correções baratas menores
+  (`query-in-template`, `method-default`, `test-client-in-source`, `optional-segment-syntax`, `verb-alias`) e
+  partir para a Fase 3 (ampliar o corpus) antes do grafo de montagem.
 
 ## Decisões
 
@@ -54,6 +55,7 @@
 | H2-D11 | 2026-10-13 | Precisão > recall: regra nova que sobe recall e derruba precisão em algum repo não entra | Um FP vira aresta errada no grafo depois do linker |
 | H2-D12 | 2026-10-14 | Rota **ou chamada** com path incompleto — prefixo que o código tem (grupo, mount, `include_router`, campo/constante interpolado) e se perdeu — conta como **erro**; prefixo vindo de config/env (`BaseAddress`, `*_URL`) não conta (é do linker) | O path é a chave do linker; path errado vira ligação errada ou nenhuma |
 | H2-D13 | 2026-10-14 | Medir **o que o grafo recebe** (depois do `_dedupe`), sem contornar a fusão de rotas iguais entre apps do mesmo repo | A fusão é um defeito real (evidência e handler de outro app), não um artefato da medição — vira a categoria `multi-app-repo` |
+| H2-D14 | 2026-10-15 | O H2-D11 julga o erro **que a regra introduz**. Item novo errado só porque herda um defeito já categorizado dos irmãos do mesmo router (prefixo perdido em outro escopo/arquivo) é contado, mas não bloqueia a regra | Nas correções baratas, 6 das 74 rotas novas erraram assim (a regra extraiu exatamente o que está escrito); recusar a regra deixaria de fora 68 corretas e o defeito continua sendo do grafo de montagem, que corrige todas juntas |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -111,9 +113,12 @@ ao menos um monólito grande e um serviço "de empresa". Candidatos **a confirma
 Por categoria: fixture → mudança em `languages/<lang>/http.py` (ou `core/http_base.py` se for comum) →
 `pytest` → corpus `--baseline` (nenhum repo pode regredir, H2-D11) → tabela §3 do guia → nova baseline.
 Um commit por categoria. Ordem definida pelo relatório v1 (wrong + missed no corpus atual):
-- [ ] **1. Correções baratas e gerais:** `root-route-dropped` (35 FN — `path_of` rejeita literal de 1 caractere),
-  `route-constraint-syntax` (9 — `PATH_LITERAL` sem `<>()?+`), `no-leading-slash` (6 — só em registro de rota),
-  `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`, `verb-alias` (`Del`)
+- [ ] **1. Correções baratas e gerais**
+  - [x] *(2026-10-15)* `root-route-dropped` (raiz só com path completo conhecido: app ou grupo com prefixo),
+    `route-constraint-syntax` (placeholder mascarado na validação; `?` opcional antes da query), `no-leading-slash`
+    (`relative_on_groups` em Go/C#), `client-named-router` (router do arquivo vence o nome) e o FP do roteamento
+    convencional do ASP.NET — fixtures `route-patterns-{go,ts,py,cs}`
+  - [ ] `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`, `verb-alias` (`Del`)
 - [ ] **2. Grafo de montagem** (132 wrong + missed): `prefix-other-scope` no mesmo arquivo primeiro (closure
   `r.Route`, `Group`, `register(fn, {prefix})`), depois `prefix-other-file`/`router-as-param`/`global-prefix` entre
   arquivos (imports, constantes/settings, chamadas `Register(v1.Group("/x"))`): passo pós-scan em `integrations.py`,
@@ -146,6 +151,9 @@ Categorias previstas e ainda não vistas no corpus (aparecerão com os repos do 
 | `base-url-in-config` | `BaseAddress = new Uri(...)`, `*_URL` | linker F0.5 |
 
 ## Números
+
+Tabela do **v1** (2026-10-14), mantida como referência; os números atuais saem do `--expected` e a
+comparação v1 → correções baratas está no relatório ("Update: the cheap fixes").
 
 Referência 2026-09 = ordem de grandeza do docstring antigo, medida no HEAD de então (SHA desconhecido). Baseline = 2026-10-13 nos
 SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extrator, então não serve como regressão.
@@ -202,3 +210,12 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   Achados principais: 67 das 103 rotas erradas só perderam o prefixo; `"/"` nunca vira rota (`path_of`); restrições
   de rota derrubam a rota inteira; o id do endpoint por repo funde apps (`multi-app-repo`); clientes gerados não são
   vistos (H2-D9). H2-D12 estendido às chamadas. `docs/corpus-report.md` v1 e F0.4.3a no ROADMAP.
+- **2026-10-15** — H2b, Fase 4 item 1 (parte). `route_path` no `BaseScanner` (raiz só com path conhecido — app
+  reconhecido por (escopo, nome) —, placeholders mascarados, padrão relativo em grupo onde o framework aceita) e
+  `mask_placeholders`/`normalize_path` em `core/paths.py`; router do arquivo vence `CLIENT_RECEIVER`; ação sem
+  template em controller sem `[Route]` não vira `GET /`. Diff contra a baseline julgado item a item: 74 rotas
+  novas (68 certas; 6 erradas só pelo prefixo perdido dos irmãos) e 2 FPs a menos. Um erro da própria regra
+  apareceu e foi corrigido no caminho (padrão relativo em `APIRouter` de callback OpenAPI → `relative_on_groups`
+  só em Go/C#). Gabaritos: `category` limpo nos itens encontrados e reclassificado nos que faltam; categorias
+  novas `client-named-router` e `app-not-recognized`. Sem bump de `INDEXER_VERSION`: a impressão digital do
+  build já reindexa. Nova baseline `2026-10-15-baseline`. H2-D14 confirmado.

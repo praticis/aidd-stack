@@ -92,6 +92,11 @@ Regras aprendidas no corpus (não regredir):
 | Flurl: URL é o *receiver* (`url.AppendPathSegment("x").GetJsonAsync()`) | `_flurl_path` percorre a cadeia antes do verbo; checado **antes** do early-return de args vazios |
 | C# `this.X()` / `base.X()` nunca viravam call site | `this`/`base` são tokens anônimos na gramática: padrão próprio em `queries.scm`; `base.X()` com base fora do repo (ou implícita) não cai no fallback por nome (`LanguageSupport.parent_receivers`) — seria auto-aresta do override |
 | Assinatura de classe C# com `[Route("api/[controller]")]` gravada como `")]` (e atributos com regex em string) | `strip_attributes` (core/extract.py) pula atributos com colchetes aninhados e literais de string; a convenção lê o cabeçalho da declaração (bases em várias linhas) com a mesma função |
+| `r.GET("/", h)`, `@app.route("/")`, `group.MapGet("/")`, `router.GET("", h)` nunca viravam rota (`path_of` rejeita literal de 1 caractere) — 35 rotas faltando no corpus | `route_path` (core/http_base.py): a raiz vira rota **só quando o path completo é conhecido** — o receiver é a própria aplicação (`gin.Default/New`, `echo.New`, `fiber.New`, `http.NewServeMux`, `chi/mux.NewRouter` construído no `main`, `express()`, `fastify()`, `FastAPI()`, `Flask()`, `builder.Build()`; reconhecida por (escopo, nome), já que o `r` de `main` não é o `r` que um helper devolve) ou um grupo com prefixo próprio. Raiz de sub-router (`express.Router()`, `APIRouter()` sem prefixo, grupo recebido por parâmetro, router devolvido por função) fica de fora: o lugar dela é onde for montada |
+| `{name:minlength(1)}`, `{brandId?}`, `{id:int?}`, `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`, `:id?` derrubavam a rota inteira (`PATH_LITERAL` sem `<>()?+`) | `mask_placeholders` (core/paths.py) troca cada placeholder por `{p}` só para validar o literal; `normalize_path` remove o `?` de placeholder opcional **antes** de cortar a query (`{id:int?}` virava `{id{int}`) e aceita conversor Werkzeug com argumentos |
+| `v1.GET("users", h)`, `api.MapGet("{orderId:int}", h)` ignorados (padrão sem `/` inicial) | `relative_on_groups` (Go, C#): num grupo conhecido o padrão relativo é juntado ao prefixo, como o framework faz. Python e Express exigem a barra — num `APIRouter` de callbacks OpenAPI `"{$callback_url}/invoices/..."` virava rota |
+| `api := r.Group("/api")` / `const api = express.Router()`: todo `api.GET(...)` descartado porque `api` casa com `CLIENT_RECEIVER` | receiver que o arquivo construiu como router/grupo (`router_vars`) é rota, qualquer que seja o nome |
+| `[HttpGet]` sem template num controller sem `[Route]` gravado como `GET /` (roteamento convencional `{controller}/{action}`) | ação sem template num controller sem prefixo não tem path próprio: não é gravada |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
 arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
@@ -117,7 +122,7 @@ inspecionar o que o extrator viu num repo específico.
 
 - **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
   padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
-  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `ts-express-nest`, `csharp-httpclients`
+  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `route-patterns-{go,ts,py,cs}` (raiz só com path conhecido, restrições/conversores, padrão relativo em grupo, router com nome de cliente — e os contra-exemplos que não podem virar rota), `ts-express-nest`, `csharp-httpclients`
   (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers) e o par **`csharp-praticis-todos` /
   `csharp-praticis-reports`** (+ `csharp-praticis-projects`) — o padrão .NET do autor em domínio genérico, uma
   fixture por layout (`flat`, `split`, `layered`) (Contracts + controller →
