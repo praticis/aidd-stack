@@ -7,9 +7,9 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, HANDLER_NODES, OUTBOUND, STRING_NODES,
-                               first_string, text, walk)
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, Region, split_callee,
+                               text, walk)
+from ...core.paths import VERB_BY_NAME
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, NodeBB's api module
@@ -66,7 +66,7 @@ class TsScanner(BaseScanner):
             self.mount(text(c, self.src), c, recv_last, n, p)
         return bool(children)
 
-    def region_of(self, call: Node, fn: Node) -> tuple[str, str, bool] | None:
+    def region_of(self, call: Node, fn: Node) -> Region | None:
         """fastify `instance.register(function (child) {...}, { prefix: '/v1' })`: the plugin's routes under the prefix."""
         callee = call.child_by_field_name("function")
         args = call.child_by_field_name("arguments")
@@ -80,7 +80,7 @@ class TsScanner(BaseScanner):
                 for key, val in self._keyed_fields(a):
                     if key == "prefix":
                         p = self.path_of(val) or ""
-        return text(callee.child_by_field_name("object"), self.src).split(".")[-1], p, False
+        return Region(text(callee.child_by_field_name("object"), self.src).split(".")[-1], p, same_router=False)
 
     def _decorator(self, n: Node, controller_prefix: dict[int, str]) -> None:
         txt = text(n, self.src)
@@ -112,10 +112,8 @@ class TsScanner(BaseScanner):
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        callee = re.sub(r"\s+", "", text(fn, self.src))          # `requests\n  .put(...)`
-        name = callee.split(".")[-1]
-        recv = callee.rsplit(".", 1)[0] if "." in callee else ""
-        recv_last = recv.split(".")[-1]
+        callee = self.callee_of(fn)
+        name, recv, recv_last = split_callee(callee)
         arg_nodes = [c for c in args.children if c.is_named]
         if not arg_nodes:
             return
@@ -136,8 +134,7 @@ class TsScanner(BaseScanner):
                     and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):   # `const api = express.Router()`
                 if name == "route":                                  # app.route('/x').get(h) — take the verb from the chain
                     return
-                self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1],
-                                  prefix=self.prefix_for(recv_last, n) or "", router=recv_last)
+                self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1], router=recv_last)
                 return
         if name in OUTBOUND or name in TS_VERB_ALIASES:
             verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES

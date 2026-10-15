@@ -241,12 +241,14 @@ def main() -> int:
             t0 = time.time()
             with contextlib.redirect_stderr(io.StringIO()):
                 res, extractors = extract_tree(repo)
+                t1 = time.time()
                 hr = extract_http(repo, extractors)
             fw = collections.Counter(e.framework for e in hr.endpoints)
             via = collections.Counter(c.via.split(".")[-1] for c in hr.calls)
             with_handler = sum(1 for e in hr.endpoints if e.handler_id)
             print(f"{name:20} {len(res.files):5} files | routes {len(hr.endpoints):4} (handler {with_handler:4}) {dict(fw)} "
-                  f"| calls {len(hr.calls):4} {dict(via.most_common(5))} | warn {len(hr.warnings)} | {time.time()-t0:.1f}s")
+                  f"| calls {len(hr.calls):4} {dict(via.most_common(5))} | warn {len(hr.warnings)} | {time.time()-t0:.1f}s"
+                  f" (http {time.time()-t1:.1f}s)")
             run = {"repo": slug, "sha": sha, "endpoints": [e.__dict__ for e in hr.endpoints], "calls": [c.__dict__ for c in hr.calls],
                    "warnings": hr.warnings}
         if args.json:

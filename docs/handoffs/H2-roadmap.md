@@ -19,8 +19,10 @@
   Fase 4 fechado (2026-10-15), antes do 2:** os 15 defeitos baratos do v2 + 3 achados no julgamento; nenhuma das
   categorias sobra no ranking. H2-D9 e H2-D10 decididos (itens 6 e 7). **Item 2 em curso:** etapa 1 (dentro do
   arquivo: closures e montagens do mesmo arquivo) feita em 2026-10-15 — chi 14 → 75 % de precisão, fastify,
-  Hono e NodeBB sobem; `prefix-other-scope` e `mount-same-scope` saem do ranking.
-- **Incremento atual:** H2b — Fase 4, item 2 (grafo de montagem), etapa 2: entre arquivos e funções.
+  Hono e NodeBB sobem; `prefix-other-scope` e `mount-same-scope` saem do ranking. **Reciclagem antes da etapa 2
+  (2026-10-15):** escopos, expressões de path, grafo de montagem e tipos de nó saíram do `http_base.py` para
+  módulos próprios; corpus idêntico nos 39 repos. Prioridade do portfólio registrada (H2-D18).
+- **Incremento atual:** H2b — Fase 4, ordem a confirmar sob o H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
@@ -42,11 +44,16 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** Fase 4, item 2, etapa 2 — entre arquivos (`prefix-other-file`, 1385 em 12 repos: o router
-  exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1", apiv1.Routes())`),
-  prefixo global (`setGlobalPrefix`, 238) e helpers que recebem o router (`router-as-param`, 102). Cada arquivo
-  deixa um **resumo** (routers que exporta, montagens com o nome importado, rotas por router) e um passo depois
-  do scan compõe os resumos — nunca as árvores (F1.13).
+- **Próximo passo (proposto sob o H2-D18, a confirmar):** primeiro o que falta no .NET — item 6 (`[Route]` herdado:
+  9 errados + 9 faltando no jellyfin; classes de endpoint: 20 em 2 repos; `route-by-name-convention`: 10), as
+  chamadas C# do item 5 (`client-wrapper` 11, `field-in-interpolation` 8 + 4 errados) e o NSwag do item 7. Depois
+  o item 2, etapa 2, que é o maior ganho de Go e Python — entre arquivos (`prefix-other-file`: Go 863, Python 230:
+  o router exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1",
+  apiv1.Routes())`) e helpers que recebem o router (`router-as-param`, Go 102) —, com o `route-chain` do Go (216)
+  logo atrás. Cada arquivo deixa um **resumo** (routers que exporta, montagens com o nome importado, rotas por
+  router) e um passo depois do scan compõe os resumos — nunca as árvores (F1.13). TS por último (`global-prefix`
+  238, `custom-registrar` 353, `prefix-in-client-wrapper`). O corpus tem só 7 repos C# de 39 (144 rotas esperadas,
+  contra 1495 de Go): para o .NET pesar o que pesa no portfólio, ampliar a fatia C# com apps reais junto do item 6.
 
 ## Decisões
 
@@ -69,6 +76,7 @@
 | H2-D15 | 2026-10-15 | Gabarito com spec = **spec + rotas conferidas no código**: rota que só existe na spec (sem registro no código) sai; rota real fora da spec, achada ao conferir um item extraído, entra | A spec documenta a API pública, não tudo o que o código serve; sem isso a precisão contra o gabarito pune rotas certas (UI, redirects, health) |
 | H2-D16 | 2026-10-15 | Item que precisa de mais de uma correção recebe **uma** categoria: a mais específica além do grafo de montagem (`m.Combo("/x").Get(h)` dentro de closure = `route-chain`; closure + mount em outro arquivo = `prefix-scope-and-file`) | O ranking diz qual regra destrava o quê; o grafo de montagem aparece em quase tudo e esconderia as outras |
 | H2-D17 | 2026-10-15 | No resumo por linguagem, item da amostra conta na linguagem **do seu arquivo**, e o gabarito declara `language` por tipo quando difere da do repo (a UI React de um servidor Go). Cada categoria traz o **nº de repos** em que aparece | Repos mistos (backend + UI) misturavam linguagens; um repo grande (netbox, 1256 operações) não pode ranquear uma categoria sozinho |
+| H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo, TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -143,6 +151,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - [x] *(2026-10-15)* etapa 1, dentro do arquivo: regiões de closure (`Route`/`Group` com func, `register(fn,
     {prefix})`), montagens do mesmo arquivo (`use`, `route`, `Mount`, `include_router`, `register_blueprint`,
     `basePath`), raiz de sub-router montado, `With`/`Use` — fixtures `route-patterns-*/…/mounts`
+  - [x] *(2026-10-15)* reciclagem antes da etapa 2, sem mudar comportamento: `core/http_scope.py` (escopos e
+    ligações de nomes), `core/http_expr.py` (expressões de path), `core/http_mounts.py` (o grafo de montagem do
+    arquivo, a peça que a etapa 2 compõe entre arquivos), `core/http_nodes.py` (tipos de nó); `http_base.py` fica
+    com o scanner e os ganchos por linguagem
   - [ ] etapa 2: entre arquivos e funções (resumo por arquivo), prefixo global
 
   Ordem original:
@@ -172,6 +184,14 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
 ### Fase 5 — fechamento
 - [ ] ROADMAP: F0.4.3b `[x]`; gaps encaminhados (base URL → F0.5 linker; spec como fonte → F2.1; resto → F1 ou limitação)
 - [ ] Guia: §3 (regras novas com o sintoma) e §5 (como usar `--expected`/`--baseline`)
+- [ ] Dívidas registradas na reciclagem de 2026-10-15 (nenhuma bloqueia a Fase 4):
+  - catálogo de frameworks como dado (verbos, nomes de registro, receptores de cliente), extensível pelas
+    convenções do projeto — junto dos itens 7/8, quando entrar o primeiro reconhecedor novo
+  - os scanners leem `CLIENT_RECEIVER` direto em vez de pedir o cliente às convenções
+  - limiares fixos no `built_bundle` (detecção de artefato de build)
+  - um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
+  - na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda
+  - custo do HTTP no netbox: 49 s de 107 s, com 0 rotas e 0 chamadas (zulip 17 s de 47 s) — perfilar junto do F1.13
 
 ## Taxonomia de erros
 
@@ -308,3 +328,12 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   caminho: `r.With(mw).Get(...)` é registro no próprio `r`. Julgamento do v1 corrigido: chi `router-walk` `PUT /ping`
   estava certo. Nova baseline `2026-10-15-v2-baseline-3`.
 
+- **2026-10-15** — H2b, reciclagem antes da etapa 2 do item 2 (sem mudança de comportamento). O `http_base.py`
+  (800 → 392 linhas) foi dividido: `http_scope.py` (`Scopes`: ligação de um nome do escopo mais interno para fora, sem
+  entrar em outras funções, com cache de `binding_scope`), `http_expr.py` (`PathExpressions`: `path_of` despachando
+  por tipo de nó), `http_mounts.py` (`MountGraph`: arestas, rotas por router, `prefixes` e `apply`) e
+  `http_nodes.py` (os tipos de nó comuns). Os scanners passaram a usar `callee_of`/`split_callee` e
+  `add_endpoint(..., router=...)`, que acha o prefixo e registra a rota no grafo sozinho. `pytest` 164 passed,
+  corpus idêntico a `2026-10-15-v2-baseline-3` nos 39 repos (ids, handlers e callers); a saída do corpus agora
+  mostra o tempo do HTTP por repo (`(http Xs)`). Prioridade do portfólio registrada como H2-D18 (.NET > Go/Python >
+  TS), com a ordem da Fase 4 proposta em "Próximo passo". Dívidas adiadas na Fase 5. A baseline não muda.

@@ -7,8 +7,7 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, HANDLER_NODES, OUTBOUND, STRING_NODES,
-                               first_string, text, walk)
+from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
@@ -102,8 +101,7 @@ class PyScanner(BaseScanner):
                 continue
             framework = "flask" if verb == "route" or recv in ("bp", "blueprint") else "fastapi"
             for m in methods:
-                self.add_endpoint(d, m, p, framework, None, prefix=self.prefix_for(recv, d) or "", handler_name=hname,
-                                  handler_id=hid, router=recv)
+                self.add_endpoint(d, m, p, framework, None, handler_name=hname, handler_id=hid, router=recv)
 
     def _aiohttp(self, n: Node, fn: Node, args: Node) -> bool:
         """aiohttp: `app.router.add_get('/x', h)`, `router.add_route('*', '/x', h)`, and the bound method
@@ -115,7 +113,7 @@ class PyScanner(BaseScanner):
         attr, obj = target.child_by_field_name("attribute"), target.child_by_field_name("object")
         if attr is None or obj is None or text(attr, self.src) not in AIOHTTP:
             return False
-        recv = re.sub(r"\s+", "", text(obj, self.src))
+        recv = self.callee_of(obj)
         if not recv.split(".")[-1].endswith("router"):
             return False
         arg_nodes = [c for c in args.children if c.is_named and c.type != "keyword_argument"]
@@ -158,9 +156,8 @@ class PyScanner(BaseScanner):
             return
         if self._aiohttp(n, fn, args) or fn.type != "attribute" or self._mount(n, fn, args):
             return
-        callee = re.sub(r"\s+", "", text(fn, self.src))
-        name = callee.split(".")[-1]
-        recv_last = callee.rsplit(".", 1)[0].split(".")[-1]
+        callee = self.callee_of(fn)
+        name, _, recv_last = split_callee(callee)
         if name not in OUTBOUND or name not in VERB_BY_NAME and name != "request":
             return
         if recv_last in self.router_vars or recv_last in ("app", "router", "bp", "blueprint", "api"):

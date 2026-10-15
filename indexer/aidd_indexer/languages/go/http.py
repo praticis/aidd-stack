@@ -7,9 +7,9 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, HANDLER_NODES, OUTBOUND, STRING_NODES,
-                               first_string, text, walk)
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, STRING_NODES, Region,
+                               split_callee, text, walk)
+from ...core.paths import VERB_BY_NAME, unquote
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NAME) | set(GO_VERB_ALIASES)   # net/http, gorilla, chi, gin, echo, fiber
@@ -22,6 +22,7 @@ class GoScanner(BaseScanner):
     relative_on_groups = True
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
+        self._functions: dict[str, Node] | None = None
         for n in walk(self.fx.tree.root_node):
             if n.type in ("short_var_declaration", "assignment_statement", "var_spec"):
                 self._maybe_group(n)
@@ -63,10 +64,8 @@ class GoScanner(BaseScanner):
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        callee = re.sub(r"\s+", "", text(fn, self.src))          # `client.\n\tGet(...)`
-        name = callee.split(".")[-1]
-        recv = callee.rsplit(".", 1)[0] if "." in callee else ""
-        recv_last = recv.split(".")[-1]
+        callee = self.callee_of(fn)
+        name, recv, recv_last = split_callee(callee)
         arg_nodes = [c for c in args.children if c.is_named]
         if not arg_nodes:
             return
@@ -86,7 +85,7 @@ class GoScanner(BaseScanner):
             p = self.path_of(arg_nodes[0])
             child = self._router_of(arg_nodes[1])
             if p is not None and child is not None:
-                self.mount_edges.append((child, self.router_key(recv_last, n), (self.prefix_for(recv_last, n) or "").rstrip("/") + p))
+                self.mounts.mount(child, self.router_key(recv_last, n), (self.prefix_for(recv_last, n) or "").rstrip("/") + p)
                 return
 
         # ---- exposed routes ---------------------------------------------------------------
@@ -112,8 +111,7 @@ class GoScanner(BaseScanner):
                         gm = self._gorilla_methods(n)
                         if gm:
                             method, framework = gm, "gorilla"
-                    self.add_endpoint(n, method or "ANY", lit, framework, handler, prefix=self.prefix_for(recv_last, n) or "",
-                                      router=recv_last)
+                    self.add_endpoint(n, method or "ANY", lit, framework, handler, router=recv_last)
                     return
 
         # ---- outbound calls ---------------------------------------------------------------
@@ -166,7 +164,7 @@ class GoScanner(BaseScanner):
         base = inner if inner is not None else (self.prefix_for(text(operand, self.src).split(".")[-1], n) or "")
         return base.rstrip("/") + p
 
-    def region_of(self, call: Node, fn: Node) -> tuple[str, str, bool] | None:
+    def region_of(self, call: Node, fn: Node) -> Region | None:
         """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and gitea's
         `m.Group("/x", func() { m.Get(...) })` — the closure's routes live under the prefix."""
         callee = call.child_by_field_name("function")
@@ -182,7 +180,7 @@ class GoScanner(BaseScanner):
         p = "" if first is fn else self.path_of(first) if first is not None else None
         if p is None:
             return None
-        return outer, p, verb == "Group"
+        return Region(outer, p, same_router=verb == "Group")
 
     def _router_of(self, n: Node) -> tuple[int, str] | None:
         """The router a Mount argument names: a variable, or the variable a function of this file returns."""
@@ -190,14 +188,15 @@ class GoScanner(BaseScanner):
             return self.router_key(text(n, self.src), n)
         if n.type != "call_expression" or n.child_by_field_name("function") is None:
             return None
-        fname = text(n.child_by_field_name("function"), self.src)
-        for d in walk(self.fx.tree.root_node):
-            if d.type == "function_declaration" and text(d.child_by_field_name("name"), self.src) == fname:
-                for r in walk(d):
-                    if r.type == "return_statement":
-                        ids_ = [c for c in walk(r) if c.type == "identifier"]
-                        if len(ids_) == 1:
-                            return self.router_key(text(ids_[0], self.src), ids_[0])
+        if self._functions is None:
+            self._functions = {text(d.child_by_field_name("name"), self.src): d for d in walk(self.fx.tree.root_node)
+                               if d.type == "function_declaration"}
+        d = self._functions.get(text(n.child_by_field_name("function"), self.src))
+        for r in walk(d) if d is not None else ():
+            if r.type == "return_statement":
+                ids_ = [c for c in walk(r) if c.type == "identifier"]
+                if len(ids_) == 1:
+                    return self.router_key(text(ids_[0], self.src), ids_[0])
                 return None
         return None
 

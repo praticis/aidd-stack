@@ -7,8 +7,7 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, HANDLER_NODES, OUTBOUND, STRING_NODES,
-                               first_string, text, walk)
+from ...core.http_base import BaseScanner, OUTBOUND, STRING_NODES, first_string, split_callee, text, walk
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
@@ -135,11 +134,10 @@ class CsScanner(BaseScanner):
         if len(kids) < 2 or kids[-1].type != "argument_list":
             return
         fn, args = kids[0], kids[-1]
-        callee = re.sub(r"\s+", "", text(fn, self.src))          # `factory.CreateClient()\n    .SendAsync(...)`
+        callee = self.callee_of(fn)
         while "<" in callee and re.search(r"<[^<>]*>", callee):   # GetFromJsonAsync<T>, GetFromJsonAsync<List<T>>
             callee = re.sub(r"<[^<>]*>", "", callee)
-        name = callee.split(".")[-1]
-        recv_last = (callee.rsplit(".", 1)[0] if "." in callee else "").split(".")[-1]
+        name, _, recv_last = split_callee(callee)
         arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named]
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
@@ -159,8 +157,7 @@ class CsScanner(BaseScanner):
                 method = CS_MAP[name]
                 if name == "MapMethods":
                     method = self.method_from_args(arg_nodes[1:2]) or "ANY"
-                self.add_endpoint(n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], prefix=self.prefix_for(recv_last, n) or "",
-                                  router=recv_last)
+                self.add_endpoint(n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], router=recv_last)
                 return
         if name in OUTBOUND and name.endswith("Async"):
             if name == "SendAsync" and arg_nodes and arg_nodes[0].type == "identifier":
