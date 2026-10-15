@@ -7,6 +7,12 @@ heuristics do not drift towards one team's style. Needs network + the grammars c
 (run inside the indexer image, or with TREE_SITTER_LANGUAGE_PACK_CACHE_DIR set).
 
     python scripts/http_corpus.py [--dir ~/.cache/aidd-corpus/repos] [--json out/] [repo-name ...]
+        [--baseline runs/<earlier>/]   # per repo: ids (method path_key evidence) removed/added, handler changes
+        [--expected [dir]]             # precision/recall against tests/corpus_expected/<repo>.json
+        [--sample N [--seed S]]        # N routes + N calls per repo, reproducible, to check by hand
+        [--show K]                     # list up to K items behind each number (default 10, 0 = none)
+
+The measuring is in `corpus_metrics.py` (gabarito format, matching rules).
 
 Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is comparable with an
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
@@ -31,6 +37,11 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import corpus_metrics as M  # noqa: E402
+
+EXPECTED_DIR = Path(__file__).resolve().parents[1] / "tests" / "corpus_expected"
 
 CORPUS = {                                                    # pinned 2026-10-13
     "chi": ("go-chi/chi", "60755706125129a9f9dfb99ac22f7ba016a1b60c"),
@@ -70,10 +81,70 @@ def checkout(dest: Path, slug: str, sha: str) -> None:
     git("-c", "advice.detachedHead=false", "checkout", "-q", "-f", "FETCH_HEAD")
 
 
+def _pct(v: float | None) -> str:
+    return "  —  " if v is None else f"{v:5.1%}"
+
+
+def _items(label: str, rows: list, show: int) -> None:
+    for r in rows[:show]:
+        print(f"      {label} {' '.join(map(str, r)) if isinstance(r, tuple) else r}")
+    if len(rows) > show > 0:
+        print(f"      … {len(rows) - show} more")
+
+
+def report_baseline(name: str, run: dict, baseline: Path, show: int) -> bool:
+    f = baseline / f"{name}.json"
+    if not f.exists():
+        print(f"  baseline: none for {name}")
+        return True
+    old = json.loads(f.read_text())
+    if old.get("sha") and old["sha"] != run["sha"]:
+        print(f"  baseline: taken at {old['sha'][:10]}, run at {run['sha'][:10]} — ids may differ for that reason alone")
+    diffs = {k: M.diff_runs(old, run, k) for k in M.KINDS}
+    if not any(diffs.values()):
+        print("  baseline: identical")
+        return False
+    print("  baseline: " + " | ".join(f"{k} -{len(d.removed)} +{len(d.added)} ~{len(d.resolution)}" for k, d in diffs.items()))
+    for k, d in diffs.items():
+        _items(f"{k} -", d.removed, show)
+        _items(f"{k} +", d.added, show)
+        _items(f"{k} ~{M.SECONDARY[k]}", d.resolution, show)
+    return True
+
+
+def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | None:
+    f = expected / f"{name}.json"
+    if not f.exists():
+        return None
+    gab = json.loads(f.read_text())
+    if gab.get("sha") and gab["sha"] != run["sha"]:
+        print(f"  expected: gabarito read at {gab['sha'][:10]}, run at {run['sha'][:10]} — re-check it before trusting P/R")
+    out = {}
+    for k in M.KINDS:
+        sc, ck = M.score(run, gab, k), M.checked_precision(run, gab, k)
+        if sc is not None:
+            print(f"  expected {k:9} ({gab.get('source', '?')}): P {_pct(sc.precision)} R {_pct(sc.recall)} "
+                  f"| extracted {sc.extracted} expected {sc.expected} fp {len(sc.false_positives)} fn {len(sc.false_negatives)}")
+            _items("fp", sc.false_positives, show)
+            _items("fn", sc.false_negatives, show)
+        if ck is not None:
+            print(f"  checked  {k:9}: P {_pct(ck.precision)} ({ck.ok}/{ck.judged}, {ck.pending} pending, {len(ck.stale)} stale)")
+            _items("wrong", [f"{i['evidence']} {i['method']} {i['path']} [{i.get('category')}]" for i in ck.wrong], show)
+            _items("stale", [f"{i['evidence']} {i['method']} {i['path']}" for i in ck.stale], show)
+        out[k] = (sc, ck)
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("AIDD_CORPUS_DIR", str(Path.home() / ".cache/aidd-corpus/repos")))
     ap.add_argument("--json", default=None, help="directory to dump per-repo candidates as JSON")
+    ap.add_argument("--baseline", type=Path, default=None, help="directory of an earlier --json run to diff against")
+    ap.add_argument("--expected", type=Path, nargs="?", const=EXPECTED_DIR, default=None,
+                    help=f"gabarito directory (default {EXPECTED_DIR.relative_to(Path(__file__).resolve().parents[1])})")
+    ap.add_argument("--sample", type=int, default=0, help="print N sampled routes and N calls per repo")
+    ap.add_argument("--seed", default="0")
+    ap.add_argument("--show", type=int, default=10)
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
     os.environ.setdefault("AIDD_TENANT", "corpus")
@@ -83,6 +154,7 @@ def main() -> int:
 
     base = Path(args.dir)
     base.mkdir(parents=True, exist_ok=True)
+    changed, measured = [], {}
     for name in args.repos or sorted(CORPUS):
         slug, sha = CORPUS[name]
         dest = base / name
@@ -97,11 +169,26 @@ def main() -> int:
         with_handler = sum(1 for e in hr.endpoints if e.handler_id)
         print(f"{name:20} {len(res.files):5} files | routes {len(hr.endpoints):4} (handler {with_handler:4}) {dict(fw)} "
               f"| calls {len(hr.calls):4} {dict(via.most_common(5))} | warn {len(hr.warnings)} | {time.time()-t0:.1f}s")
+        run = {"repo": slug, "sha": sha, "endpoints": [e.__dict__ for e in hr.endpoints], "calls": [c.__dict__ for c in hr.calls],
+               "warnings": hr.warnings}
         if args.json:
             Path(args.json).mkdir(parents=True, exist_ok=True)
-            (Path(args.json) / f"{name}.json").write_text(json.dumps(
-                {"repo": slug, "sha": sha, "endpoints": [e.__dict__ for e in hr.endpoints], "calls": [c.__dict__ for c in hr.calls], "warnings": hr.warnings},
-                indent=1, default=str))
+            (Path(args.json) / f"{name}.json").write_text(json.dumps(run, indent=1, default=str))
+        if args.baseline and report_baseline(name, run, args.baseline, args.show):
+            changed.append(name)
+        if args.expected and (m := report_expected(name, run, args.expected, args.show)):
+            measured[name] = m
+        if args.sample:
+            for k in M.KINDS:
+                picked = M.sample(run, k, args.sample, args.seed, name)
+                if picked:
+                    print(f"  sample {k} (seed {args.seed}):")
+                    for item in picked:
+                        print("    " + json.dumps(item, ensure_ascii=False) + ",")
+    if args.baseline:
+        print(f"\nbaseline {args.baseline}: {len(changed)} repo(s) differ" + (f" — {', '.join(changed)}" if changed else ""))
+    if args.expected:
+        print(f"\nexpected {args.expected}: {len(measured)} repo(s) with a gabarito" + (f" — {', '.join(measured)}" if measured else ""))
     return 0
 
 

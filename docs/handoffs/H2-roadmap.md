@@ -10,8 +10,9 @@
 
 ## Onde estamos
 
-- **Estado:** Fase 0 concluída (2026-10-13) — corpus fixado por SHA e baseline gerada; extrator intocado.
-- **Incremento atual:** H2a — Fase 1 (instrumento).
+- **Estado:** Fases 0 e 1 concluídas (2026-10-14) — corpus fixado por SHA, baseline gerada e instrumento
+  pronto (`--baseline`, `--expected`, `--sample`, `from-openapi`); extrator intocado.
+- **Incremento atual:** H2a — Fase 2 (relatório v1).
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
@@ -26,8 +27,11 @@
     --entrypoint python aidd-indexer:local /src/scripts/http_corpus.py \
     --dir /corpus/repos --json /corpus/runs/<data>-<rótulo>
   ```
-- **Próximo passo:** Fase 1 — `--baseline <dir>` (diff de ids) e verificar que rodar contra a própria
-  baseline dá diff vazio.
+- **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
+  --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
+  usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
+- **Próximo passo:** Fase 2 — descobrir quais dos 15 repos têm spec commitada e gerar os gabaritos `openapi`
+  com `scripts/corpus_metrics.py from-openapi`.
 
 ## Decisões
 
@@ -55,18 +59,23 @@
 - [x] **Baseline** antes de qualquer mudança no extrator: `--json ~/.cache/aidd-corpus/runs/<data>-baseline/`; anotar em "Onde estamos" e preencher a tabela "Números"
 
 ### Fase 1 — instrumento (`indexer/scripts/http_corpus.py`; o extrator não muda nesta fase)
-- [ ] `--baseline <dir>`: diff de ids `method path_key evidence` por repo (entrou/saiu), rotas e chamadas separadas
-- [ ] Formato do gabarito em `indexer/tests/corpus_expected/<repo>.json`:
+- [x] `--baseline <dir>`: diff de ids `method path_key evidence` por repo (entrou/saiu), rotas e chamadas separadas
+- [x] Formato do gabarito em `indexer/tests/corpus_expected/<repo>.json`:
       `{source: openapi|routes-dump|sample, sha, endpoints: [{method, path}], calls: [{method, path}], sampled_fp: [...], notes}`
-- [ ] `--expected <dir>`: P/R por `(method, path_key)`, rotas e chamadas separadas (H2-D5)
-- [ ] Conversor OpenAPI/Swagger → gabarito, com `servers`/`basePath` como prefixo (reaproveitável no F2.1)
-- [ ] `--sample N --seed S`: amostra reprodutível com `evidence` para conferência na fonte
-- [ ] Teste unitário da função de métrica (sem rede)
+- [x] `--expected <dir>`: P/R por `(method, path_key)`, rotas e chamadas separadas (H2-D5)
+- [x] Conversor OpenAPI/Swagger → gabarito, com `servers`/`basePath` como prefixo (reaproveitável no F2.1)
+- [x] `--sample N --seed S`: amostra reprodutível com `evidence` para conferência na fonte
+- [x] Teste unitário da função de métrica (sem rede)
 - **Pronto quando:** rodar o corpus contra a baseline dá diff vazio, e um gabarito de brinquedo produz P/R conferido à mão.
+  ✅ 2026-10-14: 0 de 15 repos com diferença; gabarito de brinquedo do gin-realworld (escopo `articles/`) deu
+  P 2/9 e R 2/3, igual à conta à mão, e a amostra `checked` deu 2/3 com 1 pendente e 1 stale.
 
 ### Fase 2 — relatório v1 (15 repos)
 - [ ] Identificar quais dos 15 têm spec commitada (o ROADMAP fala em 2) → gabarito `source: openapi`
 - [ ] Nos demais: 20 rotas + 20 chamadas sorteadas do extraído (precisão) e rotas/chamadas listadas a partir de arquivos sorteados da fonte (recall) (H2-D6)
+  - Precisão: `--sample 20 --seed <n>` imprime entradas `checked` prontas para colar no gabarito; preencher `ok`/`category`.
+  - Recall: sortear arquivos que registram rotas ou fazem chamadas (grep do framework por linguagem), listar à mão tudo o
+    que eles têm e gravar com `scope` = esses arquivos. Se o grep virar rotina, transformar em `--sample-files`.
 - [ ] Cada erro com **categoria** da taxonomia abaixo (criar categoria nova quando nenhuma servir, e registrar aqui)
 - [ ] Medir H2-D9 (clientes gerados) e H2-D10 (`[Route]` herdado)
 - [ ] `docs/corpus-report.md` (EN): tabela repo × rotas × chamadas × P/R por linguagem; gaps por categoria com o que cada uma exigiria do extrator e o destino (extrator / linker F0.5 / OpenAPI F2.1 / limitação)
@@ -159,3 +168,10 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   aviso sobre as linhas do ROADMAP deixou de valer). Baseline regenerada (`2026-10-14-baseline`) e idêntica
   à de 2026-10-13 em método, `path_key`, evidência e `handler_id` nos 15 repos: o dispatch não tocou na
   extração HTTP.
+- **2026-10-14** — Fase 1. `scripts/corpus_metrics.py` (novo, funções puras): ids `method path_key evidence`
+  e diff entre execuções (removidos, adicionados e `~` para mudança de `handler_id`/`caller_id` no mesmo id);
+  P/R por pares distintos `(method, path_key)`, com ANY casando qualquer método e `scope` limitando o extraído;
+  precisão manual por `checked`, que acusa itens stale; amostra com seed por repo e tipo; `from-openapi` com o
+  prefixo de `basePath`/`servers[0].url` (ou `--prefix`). `http_corpus.py` ganhou `--baseline`, `--expected
+  [dir]` (padrão `tests/corpus_expected/`), `--sample/--seed` e `--show`, e avisa quando o SHA do gabarito ou
+  da baseline difere do pin. `tests/test_corpus_metrics.py`: 10 testes; a suíte inteira passa (157 ok, 2 skipped).
