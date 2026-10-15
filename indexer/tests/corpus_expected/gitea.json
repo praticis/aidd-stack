@@ -2779,7 +2779,7 @@
    "category": "client-wrapper"
   }
  ],
- "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, scope routers/api/v1/. Nothing comes out right: every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver, and the router is mounted at /api/v1 in routers/init.go. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs besides the mount graph): route-chain = m.Combo(\"/x\").Get(h).Put(h) (207, verbs chained on a path builder, also needs the prefixes); prefix-scope-and-file = plain m.Get inside closures, also needs the /api/v1 mount (233); prefix-other-file = the extractor already has the route and only /api/v1 is missing (16); router-as-param = helper funcs addActionsRoutes/addProjectRoutes(m, ...) called inside several groups (78); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5).",
+ "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, scope routers/api/v1/. Nothing comes out right: every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver, and the router is mounted at /api/v1 in routers/init.go. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs besides the mount graph): route-chain = m.Combo(\"/x\").Get(h).Put(h) (207, verbs chained on a path builder, also needs the prefixes); prefix-scope-and-file = plain m.Get inside closures, also needs the /api/v1 mount (233); prefix-other-file = the extractor already has the route and only /api/v1 is missing (16); router-as-param = helper funcs addActionsRoutes/addProjectRoutes(m, ...) called inside several groups (78); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5). Since the v2 cheap fixes (2026-10-15): a spread handler list (append(mid, h)...) makes a route, not a call.",
  "checked": {
   "endpoints": [
    {
@@ -2967,30 +2967,6 @@
     "raw": "https://challenges.cloudflare.com/turnstile/v0/siteverify",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "gitea:routers/web/web.go:289",
-    "method": "GET",
-    "path": "/metrics",
-    "raw": "/metrics",
-    "ok": false,
-    "category": "route-taken-for-call"
-   },
-   {
-    "evidence": "gitea:routers/web/web.go:293",
-    "method": "GET",
-    "path": "/-/actions/artifacts/{artifact_id}/{expires}/{signature}/{rest}",
-    "raw": "/-/actions/artifacts/{artifact_id}/{expires}/{signature}/*",
-    "ok": false,
-    "category": "route-taken-for-call"
-   },
-   {
-    "evidence": "gitea:routers/web/web.go:305",
-    "method": "GET",
-    "path": "/api/swagger",
-    "raw": "/api/swagger",
-    "ok": false,
-    "category": "route-taken-for-call"
    }
   ]
  },

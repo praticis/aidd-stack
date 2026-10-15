@@ -587,7 +587,7 @@
   {
    "method": "PUT",
    "path": "/api/v1/account/password",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
@@ -597,7 +597,7 @@
   {
    "method": "POST",
    "path": "/api/v1/account/{name}/token",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "DELETE",
@@ -617,12 +617,12 @@
   {
    "method": "GET",
    "path": "/api/v1/projects",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "POST",
    "path": "/api/v1/projects",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "DELETE",
@@ -637,7 +637,7 @@
   {
    "method": "PUT",
    "path": "/api/v1/projects/{name}",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
@@ -647,7 +647,7 @@
   {
    "method": "GET",
    "path": "/api/v1/projects/{name}/events",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
@@ -657,22 +657,22 @@
   {
    "method": "GET",
    "path": "/api/v1/projects/{name}/links",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
    "path": "/api/v1/projects/{name}/syncwindows",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "POST",
    "path": "/api/v1/projects/{project}/roles/{role}/token",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/projects/{project}/roles/{role}/token/{iat}",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "DELETE",
@@ -682,7 +682,7 @@
   {
    "method": "POST",
    "path": "/api/v1/session",
-   "category": "multiline-receiver"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
@@ -700,7 +700,7 @@
    "category": "prefix-in-client-wrapper"
   }
  ],
- "notes": "Endpoints: the committed swagger (assets/swagger.json, /api/v1) is served by grpc-gateway generated code (pkg/apiclient/**/*.pb.gw.go) mounted with mux.Handle(\"/api/\", handler) — nothing the extractor can see (generated-server, recall ~0 by design). The hand-written net/http routes in server/ were added after reading the source; mux.Handle(\"/api/\", gw) and mux.Handle(\"/\"+root+\"/\", StripPrefix(...)) are subtree mounts that come out as routes (mount-as-route), and registerDownloadHandlers(mux, base) builds paths from a string parameter (prefix-as-param). Calls: the React UI goes through ui/src/app/shared/services/requests.ts, whose get/post/put/delete prepend apiRoot() = /api/v1 — the paths come out without it (prefix-in-client-wrapper, H2-D12: the prefix is in the code). Calls written as requests\\n    .put(\"/x\") (receiver on the previous line) are not extracted at all (multiline-receiver). Expected calls = every requests.* call in five sampled service files. s.symlinksState.Get(key) is a cache lookup taken for an HTTP GET (non-http-verb).",
+ "notes": "Endpoints: the committed swagger (assets/swagger.json, /api/v1) is served by grpc-gateway generated code (pkg/apiclient/**/*.pb.gw.go) mounted with mux.Handle(\"/api/\", handler) — nothing the extractor can see (generated-server, recall ~0 by design). The hand-written net/http routes in server/ were added after reading the source; mux.Handle(\"/api/\", gw) and mux.Handle(\"/\"+root+\"/\", StripPrefix(...)) are subtree mounts that come out as routes (mount-as-route), and registerDownloadHandlers(mux, base) builds paths from a string parameter (prefix-as-param). Calls: the React UI goes through ui/src/app/shared/services/requests.ts, whose get/post/put/delete prepend apiRoot() = /api/v1 — the paths come out without it (prefix-in-client-wrapper, H2-D12: the prefix is in the code). Calls written as requests\\n    .put(\"/x\") (receiver on the previous line) are not extracted at all (multiline-receiver). Expected calls = every requests.* call in five sampled service files. s.symlinksState.Get(key) is a cache lookup taken for an HTTP GET (non-http-verb). Since the v2 cheap fixes (2026-10-15): calls with the receiver on the line above are read, and like their siblings they lack the /api/v1 the requests wrapper prepends (prefix-in-client-wrapper); the subtree mounts and the cache Get are gone.",
  "checked": {
   "endpoints": [
    {
@@ -710,30 +710,6 @@
     "raw": "/api/webhook",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "argo-cd:cmd/argocd-repo-server/commands/argocd_repo_server.go:213",
-    "method": "ANY",
-    "path": "/metrics",
-    "raw": "/metrics",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "argo-cd:server/server.go:1186",
-    "method": "ANY",
-    "path": "/{param}",
-    "raw": "/{param}/",
-    "ok": false,
-    "category": "mount-as-route"
-   },
-   {
-    "evidence": "argo-cd:server/server.go:1277",
-    "method": "ANY",
-    "path": "/api",
-    "raw": "/api/",
-    "ok": false,
-    "category": "mount-as-route"
    },
    {
     "evidence": "argo-cd:server/server.go:1290",
@@ -848,14 +824,6 @@
     "raw": "https://api.github.com/repos/argoproj/argocd-example-apps/forks?per_page=100&page=%v",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "argo-cd:reposerver/repository/repository.go:634",
-    "method": "GET",
-    "path": "/{param}/{param}/,",
-    "raw": "/{param}//{param}/,",
-    "ok": false,
-    "category": "non-http-verb"
    },
    {
     "evidence": "argo-cd:ui/src/app/shared/services/accounts-service.ts:10",

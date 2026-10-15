@@ -887,26 +887,9 @@
    "category": "request-config-object"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source).",
+ "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source). Since the v2 cheap fixes (2026-10-15): $.get is a call, never a route, and a parameter is no longer resolved to another function's variable.",
  "checked": {
-  "endpoints": [
-   {
-    "evidence": "zulip:web/src/portico/signup.ts:229",
-    "method": "GET",
-    "path": "/json/realm/subdomain",
-    "raw": "/json/realm/subdomain/",
-    "ok": false,
-    "category": "call-taken-for-route"
-   },
-   {
-    "evidence": "zulip:web/src/portico/slack-import.ts:99",
-    "method": "GET",
-    "path": "/json/realm/import/status/{param}",
-    "raw": "/json/realm/import/status/{param}",
-    "ok": false,
-    "category": "call-taken-for-route"
-   }
-  ],
+  "endpoints": [],
   "calls": [
    {
     "evidence": "zulip:tools/droplets/add_mentor.py:35",
@@ -923,22 +906,6 @@
     "raw": "https://api.digitalocean.com/v2/1-clicks",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "zulip:web/src/emojisets.ts:36",
-    "method": "GET",
-    "path": "/json/users",
-    "raw": "/json/users/",
-    "ok": false,
-    "category": "variable-other-scope"
-   },
-   {
-    "evidence": "zulip:web/src/portico/signup.ts:391",
-    "method": "GET",
-    "path": "/json/realm/subdomain",
-    "raw": "/json/realm/subdomain/",
-    "ok": false,
-    "category": "variable-other-scope"
    },
    {
     "evidence": "zulip:zerver/data_import/slack.py:1933",

@@ -154,7 +154,7 @@
    "path": "/reset_password/{data}"
   }
  ],
- "notes": "Manual: recall from two files read whole — the challenges REST namespace (CTFd/api/v1/challenges.py) and the auth blueprint (CTFd/auth.py). Flask blueprints without url_prefix (auth, views, admin, challenges) come out right, methods=[...] included. The REST API is flask-restx: @challenges_namespace.route(\"/<challenge_id>/solves\") on a Resource class whose methods are def get/post/patch/delete, the namespace added with CTFd_API_v1.add_namespace(ns, \"/challenges\") on a Blueprint with url_prefix=\"/api/v1\" — routes come out as GET without /api/v1/<namespace>, and the other methods of each Resource are lost (restx-resource). The themes commit their built, minified bundles (themes/*/static/assets/*.js): calls in them are right but duplicated, and two minified $.get-like calls became routes (build-artifact). Calls: CTFd.fetch(\"/api/v1/...\", {method}) with the full path written out — right; a method held in a local variable (let method = \"PATCH\") comes out ANY (method-variable).",
+ "notes": "Manual: recall from two files read whole — the challenges REST namespace (CTFd/api/v1/challenges.py) and the auth blueprint (CTFd/auth.py). Flask blueprints without url_prefix (auth, views, admin, challenges) come out right, methods=[...] included. The REST API is flask-restx: @challenges_namespace.route(\"/<challenge_id>/solves\") on a Resource class whose methods are def get/post/patch/delete, the namespace added with CTFd_API_v1.add_namespace(ns, \"/challenges\") on a Blueprint with url_prefix=\"/api/v1\" — routes come out as GET without /api/v1/<namespace>, and the other methods of each Resource are lost (restx-resource). The themes commit their built, minified bundles (themes/*/static/assets/*.js): calls in them are right but duplicated, and two minified $.get-like calls became routes (build-artifact). Calls: CTFd.fetch(\"/api/v1/...\", {method}) with the full path written out — right; a method held in a local variable (let method = \"PATCH\") comes out ANY (method-variable). Since the v2 cheap fixes (2026-10-15): the committed bundles (themes/*/static/assets/*-<hash>.js) are left out, a method or a path held in a local variable (let method, target +=) is read, and $.get is a call.",
  "checked": {
   "endpoints": [
    {
@@ -286,22 +286,6 @@
     "category": null
    },
    {
-    "evidence": "ctfd:CTFd/themes/admin/static/assets/pages/main-OdxfRQdf.js:92",
-    "method": "GET",
-    "path": "/api/v1/awards",
-    "raw": "/api/v1/awards/",
-    "ok": false,
-    "category": "build-artifact"
-   },
-   {
-    "evidence": "ctfd:CTFd/themes/core/static/assets/echarts.128204f2.js:29",
-    "method": "GET",
-    "path": "/api/v1/scoreboard",
-    "raw": "/api/v1/scoreboard",
-    "ok": false,
-    "category": "build-artifact"
-   },
-   {
     "evidence": "ctfd:CTFd/views.py:272",
     "method": "POST",
     "path": "/setup/integrations",
@@ -345,9 +329,9 @@
    },
    {
     "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/editor.js:30",
-    "method": "ANY",
-    "path": "/api/v1/pages",
-    "raw": "/api/v1/pages",
+    "method": "PATCH",
+    "path": "/api/v1/pages/{param}",
+    "raw": "/api/v1/pages/{param}",
     "ok": true,
     "category": null
    },
@@ -424,30 +408,6 @@
     "category": null
    },
    {
-    "evidence": "ctfd:CTFd/themes/admin/static/assets/pages/configs-BYbmEHix.js:1",
-    "method": "PATCH",
-    "path": "/api/v1/configs/fields/{param}",
-    "raw": "/api/v1/configs/fields/{param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "ctfd:CTFd/themes/admin/static/assets/pages/module-YAUlAXJe.js:1",
-    "method": "POST",
-    "path": "/api/v1/modules",
-    "raw": "/api/v1/modules",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "ctfd:CTFd/themes/admin/static/assets/pages/statistics-8IMWcF-M.js:1",
-    "method": "GET",
-    "path": "/api/v1/statistics/progression/matrix",
-    "raw": "/api/v1/statistics/progression/matrix",
-    "ok": true,
-    "category": null
-   },
-   {
     "evidence": "ctfd:CTFd/themes/core-deprecated/assets/js/pages/teams/private.js:20",
     "method": "POST",
     "path": "/api/v1/teams/me/members",
@@ -457,25 +417,17 @@
    },
    {
     "evidence": "ctfd:CTFd/themes/core-deprecated/assets/js/pages/teams/private.js:95",
-    "method": "ANY",
+    "method": "PATCH",
     "path": "/api/v1/teams/me",
     "raw": "/api/v1/teams/me",
-    "ok": false,
-    "category": "method-variable"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "ctfd:CTFd/themes/core/assets/js/notifications.js:9",
     "method": "GET",
     "path": "/api/v1/notifications",
     "raw": "/api/v1/notifications?since_id={param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "ctfd:CTFd/themes/core/static/assets/challenges.ab32d0a0.js:1",
-    "method": "POST",
-    "path": "/api/v1/shares",
-    "raw": "/api/v1/shares",
     "ok": true,
     "category": null
    }

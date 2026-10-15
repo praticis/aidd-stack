@@ -34,6 +34,31 @@
    "method": "GET",
    "path": "/items/{item_id}",
    "handler": "get_item"
+  },
+  {
+   "method": "ANY",
+   "path": "/",
+   "handler": "IndexView"
+  },
+  {
+   "method": "GET",
+   "path": "/polls",
+   "handler": "index"
+  },
+  {
+   "method": "POST",
+   "path": "/poll/{question_id}/vote",
+   "handler": "vote"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphql",
+   "handler": "graphql"
+  },
+  {
+   "method": "POST",
+   "path": "/predict",
+   "handler": "predict"
   }
  ],
  "calls": [
@@ -41,6 +66,11 @@
    "method": "GET",
    "path": "/v1/stock",
    "line": 17
+  },
+  {
+   "method": "POST",
+   "path": "/v1/flag/configuration",
+   "line": 19
   }
  ]
 }

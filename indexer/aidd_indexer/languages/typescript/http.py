@@ -12,6 +12,9 @@ from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, H
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
+TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, NodeBB's api module
+JQUERY = {"$", "jQuery"}
+JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
 
 
 class TsScanner(BaseScanner):
@@ -70,7 +73,7 @@ class TsScanner(BaseScanner):
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        callee = text(fn, self.src)
+        callee = re.sub(r"\s+", "", text(fn, self.src))          # `requests\n  .put(...)`
         name = callee.split(".")[-1]
         recv = callee.rsplit(".", 1)[0] if "." in callee else ""
         recv_last = recv.split(".")[-1]
@@ -81,6 +84,11 @@ class TsScanner(BaseScanner):
             return                                                  # supertest-style test clients
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
+        if recv_last in JQUERY:                                     # browser code: `$.get(url, cb)` is a request, cb is no handler
+            p = self.path_of(arg_nodes[0], lenient=True) if name in JQUERY_VERBS else None
+            if p is not None:
+                self.add_call(n, JQUERY_VERBS[name], p, callee)
+            return
         if name in TS_REGISTRARS and len(arg_nodes) >= 2:
             p = self.route_path(arg_nodes[0], recv_last, n)
             if p is not None and p.startswith("/") and (self.is_handler_like(arg_nodes[-1]) or recv_last in self.router_vars) \
@@ -89,14 +97,15 @@ class TsScanner(BaseScanner):
                     return
                 self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1])
                 return
-        if name in OUTBOUND:
-            if name in VERB_BY_NAME and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]):
+        if name in OUTBOUND or name in TS_VERB_ALIASES:
+            verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES
+            if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]):
                 return
             if name in GENERIC_OUTBOUND and not CLIENT_RECEIVER.search(recv_last):
                 return
-            if name in VERB_BY_NAME and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this")):
-                return                                                  # cache.get(key), map.delete(k) ...
-            method = OUTBOUND[name] or self.method_from_args(arg_nodes)
+            if verb and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this")):
+                return                                                  # cache.get(key), map.delete(k), redis.del(k) ...
+            method = OUTBOUND.get(name) or TS_VERB_ALIASES.get(name) or self.method_from_args(arg_nodes)
             if method is None and name in ("fetch", "$fetch", "ofetch") \
                     and not any(re.search(r"\bmethod\s*:", text(a, self.src)) for a in arg_nodes[1:]):
                 method = "GET"                                      # fetch(url) / fetch(url, { headers }) is a GET

@@ -46,8 +46,7 @@
   },
   {
    "method": "ANY",
-   "path": "/count",
-   "category": "default-mux-function"
+   "path": "/count"
   },
   {
    "method": "POST",
@@ -120,8 +119,7 @@
   },
   {
    "method": "ANY",
-   "path": "/uppercase",
-   "category": "default-mux-function"
+   "path": "/uppercase"
   }
  ],
  "calls": [
@@ -181,7 +179,7 @@
    "category": "url-object-builder"
   }
  ],
- "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None is extracted.",
+ "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None is extracted. Since the v2 cheap fixes (2026-10-15): http.Handle on the default mux is a route, and a ServeMux pattern ending in / is a mount, not a route.",
  "checked": {
   "endpoints": [
    {
@@ -287,30 +285,6 @@
     "raw": "/handling/v1/incidents",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "go-kit-examples:shipping/main.go:139",
-    "method": "ANY",
-    "path": "/booking/v1",
-    "raw": "/booking/v1/",
-    "ok": false,
-    "category": "mount-as-route"
-   },
-   {
-    "evidence": "go-kit-examples:shipping/main.go:140",
-    "method": "ANY",
-    "path": "/tracking/v1",
-    "raw": "/tracking/v1/",
-    "ok": false,
-    "category": "mount-as-route"
-   },
-   {
-    "evidence": "go-kit-examples:shipping/main.go:141",
-    "method": "ANY",
-    "path": "/handling/v1",
-    "raw": "/handling/v1/",
-    "ok": false,
-    "category": "mount-as-route"
    },
    {
     "evidence": "go-kit-examples:shipping/tracking/transport.go:34",

@@ -13,118 +13,95 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/",
-   "category": "aiohttp-router"
+   "path": "/"
   },
   {
    "method": "POST",
-   "path": "/add_message",
-   "category": "aiohttp-router"
+   "path": "/add_message"
   },
   {
    "method": "GET",
-   "path": "/create",
-   "category": "aiohttp-router"
+   "path": "/create"
   },
   {
    "method": "POST",
-   "path": "/create",
-   "category": "aiohttp-router"
+   "path": "/create"
   },
   {
    "method": "ANY",
-   "path": "/graphiql",
-   "category": "aiohttp-router"
+   "path": "/graphiql"
   },
   {
    "method": "ANY",
-   "path": "/graphql",
-   "category": "aiohttp-router"
+   "path": "/graphql"
   },
   {
    "method": "POST",
-   "path": "/listen",
-   "category": "aiohttp-router"
+   "path": "/listen"
   },
   {
    "method": "GET",
-   "path": "/login",
-   "category": "aiohttp-router"
+   "path": "/login"
   },
   {
    "method": "POST",
-   "path": "/login",
-   "category": "aiohttp-router"
+   "path": "/login"
   },
   {
    "method": "POST",
-   "path": "/logout",
-   "category": "aiohttp-router"
+   "path": "/logout"
   },
   {
    "method": "POST",
-   "path": "/moderate",
-   "category": "aiohttp-router"
+   "path": "/moderate"
   },
   {
    "method": "GET",
-   "path": "/poll/{question_id}",
-   "category": "aiohttp-router"
+   "path": "/poll/{question_id}"
   },
   {
    "method": "GET",
-   "path": "/poll/{question_id}/results",
-   "category": "aiohttp-router"
+   "path": "/poll/{question_id}/results"
   },
   {
    "method": "POST",
-   "path": "/poll/{question_id}/vote",
-   "category": "aiohttp-router"
+   "path": "/poll/{question_id}/vote"
   },
   {
    "method": "POST",
-   "path": "/predict",
-   "category": "aiohttp-router"
+   "path": "/predict"
   },
   {
    "method": "GET",
-   "path": "/public",
-   "category": "aiohttp-router"
+   "path": "/public"
   },
   {
    "method": "GET",
-   "path": "/register",
-   "category": "aiohttp-router"
+   "path": "/register"
   },
   {
    "method": "POST",
-   "path": "/register",
-   "category": "aiohttp-router"
+   "path": "/register"
   },
   {
    "method": "POST",
-   "path": "/shortify",
-   "category": "aiohttp-router"
+   "path": "/shortify"
   },
   {
    "method": "ANY",
-   "path": "/subscriptions",
-   "category": "aiohttp-router"
+   "path": "/subscriptions"
   },
   {
    "method": "GET",
-   "path": "/{short_id}",
-   "category": "aiohttp-router"
+   "path": "/{short_id}"
   },
   {
    "method": "POST",
-   "path": "/{username}/follow",
-   "category": "aiohttp-router"
+   "path": "/{username}/follow"
   },
   {
    "method": "POST",
-   "path": "/{username}/unfollow",
-   "category": "aiohttp-router"
+   "path": "/{username}/unfollow"
   }
  ],
  "calls": [
@@ -138,17 +115,9 @@
    "category": "url-object-builder"
   }
  ],
- "notes": "Manual, every demo app (one aiohttp app per folder; keys shared across apps, multi-app-repo). aiohttp registers routes with app.router.add_get('/poll/{question_id}', handler), router.add_post(...) and add_route('GET', '/', handler) — no scanner covers aiohttp, nothing is extracted (aiohttp-router). Static mounts (add_static) not listed. Calls: the moderator UI's fetch(\"/moderate\", {method: \"POST\"}) is right, twice — once in the committed production bundle (static/App.*.js); the Giphy client joins paths onto a yarl URL (self.base_url / part — url-object-builder).",
+ "notes": "Manual, every demo app (one aiohttp app per folder; keys shared across apps, multi-app-repo). aiohttp registers routes with app.router.add_get('/poll/{question_id}', handler), router.add_post(...) and add_route('GET', '/', handler) — no scanner covers aiohttp, nothing is extracted (aiohttp-router). Static mounts (add_static) not listed. Calls: the moderator UI's fetch(\"/moderate\", {method: \"POST\"}) is right, twice — once in the committed production bundle (static/App.*.js); the Giphy client joins paths onto a yarl URL (self.base_url / part — url-object-builder). Since the v2 cheap fixes (2026-10-15) the aiohttp registrars are read: every listed route is extracted, and the committed bundle (static/App.*.js) is left out as a build artifact.",
  "checked": {
   "calls": [
-   {
-    "evidence": "aiohttp-demos:demos/moderator/static/App.083d307f.js:19",
-    "method": "POST",
-    "path": "/moderate",
-    "raw": "/moderate",
-    "ok": true,
-    "category": null
-   },
    {
     "evidence": "aiohttp-demos:demos/moderator/ui/App/index.js:32",
     "method": "POST",

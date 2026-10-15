@@ -444,6 +444,8 @@ already described in v1 keep their v1 description.
   `/{Controller}`, and their template-less actions are dropped. eShopOnWeb has a `BaseApiController` with
   `[Route]` that nothing derives from. Recommendation: follow one level of base class for `[Route]` (base classes
   in the same project, found by name), with a fixture of both cases.
+- **Decided 2026-10-15:** both recommendations accepted. Generated clients become their own H2b item, and
+  `[Route]` inheritance joins the C# item (one level; an ambiguous base name inherits nothing).
 
 ### What H2b should do, in order (v2)
 
@@ -476,5 +478,133 @@ Outside the extractor:
 
 - **Conventions (ADR-003):** `custom-registrar` (NodeBB, gitea), `prefix-in-client-wrapper` and
   `client-wrapper`, `request-encoder`.
-- **Elsewhere:** `generated-server` → F2.1. `multi-app-repo` → F1. Memory on large repositories (grafana) → F1.4,
-  together with incremental indexing.
+- **Elsewhere:** `generated-server` → F2.1. `multi-app-repo` → F1. Memory on large repositories (grafana) → F1.13
+  (scale of the extraction: release trees early, batch by module, per-repo scoping), which F1.4's incremental
+  indexing builds on.
+
+## Update: the cheap defects of v2 (2026-10-15)
+
+Item 2 of the v2 order, done before the mount graph: the fifteen cheap categories v2 exposed, plus three defects
+found while judging the diff. Each case is in the `route-patterns-{go,ts,py,cs}` fixtures, next to the
+counter-example that must not change.
+
+Precision:
+
+- `variable-other-scope`: only module- and class-level constants count as constants of the directory. A name is
+  looked up in the enclosing functions first, and a parameter ends the search. Before, `fetch(url)` with `url`
+  a parameter took the value of a local `url` of another function (zulip, mattermost; jellyfin's
+  `SendAsync(message)`).
+- `call-taken-for-route`: a `$`/`jQuery` receiver is a client. `$.get`, `$.post` and `$.getJSON` are calls,
+  never routes.
+- `mount-as-route`: on a `ServeMux` (or the default mux), a `Handle` pattern ending in `/` is a subtree mount,
+  not a route.
+- `route-taken-for-call`: a spread handler argument (`append(mid, h)...`, `...handlers`) is unwrapped before
+  deciding whether it is a handler.
+- `build-artifact`: a committed bundle is left out of the HTTP extraction. That means a `.js` file with a hashed
+  name and a line over 500 characters, or with a line over 2000 characters and more than 200 per line on
+  average.
+- `non-http-verb`: a path needs a segment with a letter or digit, so `root + "/" + v + "/" + strings.Join(xs,
+  ",")` passed to a cache `Get` is no call.
+
+Recall:
+
+- `const-concat`: a constant built with `+` from other constants resolves on first use, across the files of
+  the directory.
+- `const-base-url`: a constant holding an absolute URL keeps its path (`/20141201`).
+- `multiline-receiver`: whitespace is removed from the callee.
+- `mime-like-head`: only a real MIME type (two tokens, no placeholder) is rejected, so `application/{id}` is a
+  path. `base + 'message'` reads like the template `${base}message`.
+- `method-keyword` and `method-variable`: the method comes from `method="POST"` and from a `method` key whose
+  value is a local variable.
+- `verb-alias`: `del` is DELETE in TS (`api.del`).
+- `default-mux-function`: `http.Handle` and `http.HandleFunc` register routes.
+- `group-chain`: the prefix is carried through `Group(...).Use(...)`.
+- `aiohttp-router`: `app.router.add_get/add_post/add_route/add_view`, including the bound
+  `add_route = app.router.add_route`.
+
+Found on the way:
+
+- **The name on the right is the earlier value.** In `` url = `${url}?notify=true` `` (CTFd) the call was lost
+  once locals stopped leaking. A local variable inside a template is now resolved, as in a concatenation. A
+  module constant inside a template is not: in alertmanager's generic `` `${pathPrefix}/${API_PATH}${path}` ``
+  that would make a path out of a base. Constants inside templates stay with `field-in-interpolation`.
+- **`x += e`.** It is the earlier value plus `e`, so path and method come from the same last assignments
+  (CTFd: `target += "/" + id; method = "PATCH"` gives `PATCH /api/v1/pages/{id}`, not `PATCH /api/v1/pages`).
+  When the base comes from a call, the appended part counts if it has a named segment: argo-cd's
+  `urlStr += fmt.Sprintf("/repositories/%s/...")` does, chi's `path += "/"` onto a parameter does not.
+
+Diff against `2026-10-15-v2-baseline`, every item judged:
+
+- **Routes, 37 removed.** All of them are right to go:
+  - 8 subtree mounts (alertmanager, argo-cd, go-kit);
+  - 10 jQuery calls, which are now calls (CTFd, NodeBB, zulip);
+  - 5 routes from CTFd bundles;
+  - 13 kratos routes, replaced by their resolved paths;
+  - 1 route whose evidence moved to another registration of the same route.
+- **Routes, 49 added.**
+  - aiohttp-demos: 24, all right (P/R 100 %).
+  - gitea: 3, right (a spread handler list).
+  - go-kit: 2, right (the default mux).
+  - gotify: 1, right (a group chain).
+  - argo-cd: 2 default-mux routes, right as written, plus the moved one.
+  - kratos: 16. 9 are right. 7 lack `/admin`: the admin router type prepends it, or `AdminPrefix` comes from
+    another package. That is the defect their siblings already have (H2-D14).
+- **Calls, 54 removed:**
+  - 28 from bundles;
+  - 7 false positives (a parameter resolved to another function's variable, cache keys);
+  - 3 gitea route registrations, now routes;
+  - the rest replaced at the same line by a better path or method.
+- **Calls, 186 added.**
+  - 127 lack the wrapper prefix: argo-cd's 78 calls with the receiver on the line above and NodeBB's 49
+    `api.del`. Their paths are as written, and like their already-judged siblings they lack the `/api/v1` or
+    `/api/v3` that the project's request wrapper prepends (`prefix-in-client-wrapper`, H2-D14).
+  - The other 59 are right as written:
+    - gotify: 10;
+    - jellyfin: 10, with `/20141201`;
+    - CTFd, NodeBB and zulip: 15 `$.get`;
+    - the rest: calls to external APIs through URL constants (GitHub, Opsgenie, HIBP, LinkedIn, Lark, two
+      `raw.githubusercontent.com` fetches), methods read from variables, and NodeBB's `` `/api/${url}` ``.
+  - Four `$.get` calls carry a runtime piece glued to a segment (`/json{param}/billing/...`, `/api{param}`).
+    The code builds them that way (`runtime-url`, outside the metric).
+  - eShopOnWeb's `ApiBase + "catalog-items"` lacks the `/api/` that comes from configuration, which belongs to
+    the linker (H2-D12).
+
+Gabaritos changed with what the judging showed:
+
+- Six real calls were missing from two lists and were added:
+  - gotify's `axios\n.delete(...)`, which the listing grep missed for the same reason the extractor did;
+  - kratos' LinkedIn `/v2/me` and `/v2/emailAddress`.
+- Items still missed for a different reason were re-categorized (`multiline-receiver` and `verb-alias` →
+  `prefix-in-client-wrapper`, kratos `const-concat` → `prefix-in-router-type`).
+- Sampled items that are no longer extracted left the samples.
+- Sampled items extracted differently at the same line were judged again.
+- alertmanager's `mux.Handle(prefix+"/api/v1/", ...)` had been judged right in v1, as a catch-all route. It is a
+  mount under the v2 reading.
+
+| Language | P expected before → now | R expected before → now | P sampled before → now |
+|---|---|---|---|
+| Go routes | 19.2 % → 21.1 % | 9.0 % → 9.8 % | 59.6 % → 62.1 % (136/219) |
+| Go calls | 100 % → 100 % (12/12) | 23.7 % → 31.6 % | 75.0 % → 93.8 % (15/16) |
+| TS/JS routes | 3.1 % → 3.1 % | 2.0 % → 2.0 % | 27.8 % → 28.8 % (47/163) |
+| TS/JS calls | 44.6 % → 44.3 % | 22.5 % → 31.5 % | 57.6 % → 57.6 % (83/144) |
+| C# calls | 62.2 % → 84.1 % | 48.3 % → 63.8 % | 72.2 % → 92.5 % (49/53) |
+| Python routes | 26.8 % → 37.7 % | 2.1 % → 3.5 % | 49.5 % → 49.5 % (45/91) |
+
+C# routes and Python calls did not change. The "before" columns of the expected lists are the old baseline
+scored against the final lists, so the six added calls count on both sides. A sampled "before" counts the
+sample as it was, including the items that left it.
+
+- None of the fifteen categories is left in the ranking.
+- TS/JS call precision against the lists moves by one item. The 78 + 49 new calls of argo-cd and NodeBB are
+  scored against lists that hold the prefixed paths.
+- Per repository, nothing lost precision except those two, under H2-D14:
+  - jellyfin calls: 0 % → 100 %/100 %;
+  - kratos routes: P 70 → 82.5 %, R 54.5 → 67.5 %;
+  - go-kit routes: P 82 → 100 %;
+  - gotify calls: R 60 → 93 %;
+  - aiohttp-demos: 0 → 100 %/100 %.
+- One item is left from these categories: gotify's `axios.put(url, app)`, recorded as `data-taken-for-handler`.
+  A variable named `app` as the second argument looks like a handler; it is one call in one repository.
+
+New baseline: `2026-10-15-v2-baseline-2`.
+

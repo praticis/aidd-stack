@@ -135,7 +135,7 @@ class CsScanner(BaseScanner):
         if len(kids) < 2 or kids[-1].type != "argument_list":
             return
         fn, args = kids[0], kids[-1]
-        callee = text(fn, self.src)
+        callee = re.sub(r"\s+", "", text(fn, self.src))          # `factory.CreateClient()\n    .SendAsync(...)`
         while "<" in callee and re.search(r"<[^<>]*>", callee):   # GetFromJsonAsync<T>, GetFromJsonAsync<List<T>>
             callee = re.sub(r"<[^<>]*>", "", callee)
         name = callee.split(".")[-1]

@@ -15,8 +15,9 @@ REL_PATH_LITERAL = re.compile(r"^(api|v\d+)/[A-Za-z0-9_\-./{}:%$*\[\]?=&]*$")   
 URL_LITERAL = re.compile(r"^https?://[^/\s]+(/.*)?$")
 ENV_URL_NAME = re.compile(r"^[A-Z][A-Z0-9_]*(URL|HOST|ENDPOINT|BASE_URL|ADDR|BASEURL)$")
 
-_NOT_A_PATH_HEAD = {"application", "text", "image", "multipart", "audio", "video", "message", "font", "model",
-                    "http", "https", "utf", "bearer", "basic", "true", "false"}
+_NOT_A_PATH_HEAD = {"http", "https", "utf", "bearer", "basic", "true", "false"}
+# `application/json`, `image/svg+xml`: a MIME type is two tokens — `application/{id}` and `message/{id}/read` are paths
+MIME_TYPE = re.compile(r"^(application|text|image|multipart|audio|video|message|font|model)/[A-Za-z0-9.+\-]+$", re.I)
 
 
 def unquote(s: str) -> str:
@@ -73,12 +74,13 @@ def normalize_path(path: str) -> str:
 
 
 def looks_like_rel_path(s: str) -> bool:
-    """`items/{id}`, `catalog/brands?x=1` — but not `application/json` or `a/b.txt`."""
+    """`items/{id}`, `catalog/brands?x=1`, `application/{id}` — but not `application/json` or `a/b.txt`."""
     if not re.match(r"^[A-Za-z][A-Za-z0-9_\-]*/[A-Za-z0-9_\-./{}?=&:%]*$", s):
         return False
     head = s.split("/", 1)[0].lower()
-    return head not in _NOT_A_PATH_HEAD and not re.search(r"\.(json|xml|txt|html|js|css|png|jpg|svg|ya?ml|csv|pdf)$", s, re.I)
+    return head not in _NOT_A_PATH_HEAD and not MIME_TYPE.match(s) and not re.search(r"\.(json|xml|txt|html|js|css|png|jpg|svg|ya?ml|csv|pdf)$", s, re.I)
 
 
 def has_literal_segment(path: str) -> bool:
-    return any(seg and not seg.startswith("{") for seg in path.split("/"))
+    """A segment with a name in it — `/{param}/{param}/,` (a cache key joined with commas) has none."""
+    return any(seg and not seg.startswith("{") and re.search(r"[A-Za-z0-9]", seg) for seg in path.split("/"))

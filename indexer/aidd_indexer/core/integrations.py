@@ -5,9 +5,12 @@ This module only orchestrates: per-directory context (route constants, env-var n
 for every file, then each parseable file is handed to the scanner its language module registers
 (`LanguageSupport.http_scanner`). What each language recognizes lives in
 `languages/<lang>/http.py`; the shared expression → path machinery in `core/http_base.py`.
+A committed build bundle (a minified or hash-named `.js`) is left out: its routes and calls repeat the source's.
 """
 
 from __future__ import annotations
+
+import re
 
 from .. import languages
 from .http_base import TEST_FILE, HttpResult, PackageContext, ScanPatterns, collect_constants, dir_of
@@ -19,6 +22,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
     tenant's conventions add to the scanners (route registrars / client methods of an internal SDK)."""
     out = HttpResult()
     by_dir: dict[str, PackageContext] = {}
+    extractors = [fx for fx in extractors if not built_bundle(fx.file.path, fx.src)]
     for fx in extractors:
         ctx = by_dir.setdefault(dir_of(fx.file.path), PackageContext(patterns))
         collect_constants(fx, ctx)
@@ -40,6 +44,21 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
             out.warnings.append(f"{fx.file.path}: http candidates skipped ({type(e).__name__}: {e})")
     _dedupe(out)
     return out
+
+
+BUILD_HASH = re.compile(r"[.-](?=[A-Za-z0-9_-]{0,7}[0-9A-Z])[A-Za-z0-9_-]{8}\.[cm]?js$")   # main-OdxfRQdf.js, echarts.128204f2.js
+
+
+def built_bundle(path: str, src: bytes) -> bool:
+    """A bundler's output committed to the repo: a hash-named `.js` with long lines, or any `.js` that is mostly
+    very long lines (minified, or a dev bundle of eval'd modules)."""
+    if not path.endswith((".js", ".mjs", ".cjs")) or not src:
+        return False
+    lines = src.split(b"\n")
+    longest = max(len(line) for line in lines)
+    if BUILD_HASH.search(path) and longest > 500:
+        return True
+    return longest > 2000 and len(src) / len(lines) > 200
 
 
 def _dedupe(out: HttpResult) -> None:

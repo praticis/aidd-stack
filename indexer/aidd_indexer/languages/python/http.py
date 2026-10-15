@@ -12,6 +12,8 @@ from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, H
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
+AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": "PATCH", "add_delete": "DELETE",
+           "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
 
 
 class PyScanner(BaseScanner):
@@ -102,12 +104,43 @@ class PyScanner(BaseScanner):
             for m in methods:
                 self.add_endpoint(d, m, p, framework, None, prefix=self.group_prefix.get(recv, ""), handler_name=hname, handler_id=hid)
 
+    def _aiohttp(self, n: Node, fn: Node, args: Node) -> bool:
+        """aiohttp: `app.router.add_get('/x', h)`, `router.add_route('*', '/x', h)`, and the bound method
+        `add_route = app.router.add_route` called afterwards. The receiver is an application's router, so its
+        root is a route; True = recorded."""
+        target = self.resolve_local(fn) if fn.type == "identifier" else fn
+        if target is None or target.type != "attribute":
+            return False
+        attr, obj = target.child_by_field_name("attribute"), target.child_by_field_name("object")
+        if attr is None or obj is None or text(attr, self.src) not in AIOHTTP:
+            return False
+        recv = re.sub(r"\s+", "", text(obj, self.src))
+        if not recv.split(".")[-1].endswith("router"):
+            return False
+        arg_nodes = [c for c in args.children if c.is_named and c.type != "keyword_argument"]
+        method = AIOHTTP[text(attr, self.src)]
+        if method is None:                                          # add_route(method, path, handler)
+            verb = unquote(text(arg_nodes[0], self.src)).upper() if arg_nodes and arg_nodes[0].type == "string" else ""
+            method = "ANY" if verb == "*" else verb if verb in HTTP_METHODS else None
+            if method is None:
+                return False
+            arg_nodes = arg_nodes[1:]
+        if len(arg_nodes) < 2 or arg_nodes[0].type != "string":
+            return False
+        p = "/" if unquote(text(arg_nodes[0], self.src)).strip() == "/" else self.route_path(arg_nodes[0], recv, n)
+        if p is None or not p.startswith("/"):
+            return False
+        self.add_endpoint(n, method, p, "aiohttp", arg_nodes[1])
+        return True
+
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
-        if fn is None or args is None or fn.type != "attribute":
+        if fn is None or args is None:
             return
-        callee = text(fn, self.src)
+        if self._aiohttp(n, fn, args) or fn.type != "attribute":
+            return
+        callee = re.sub(r"\s+", "", text(fn, self.src))
         name = callee.split(".")[-1]
         recv_last = callee.rsplit(".", 1)[0].split(".")[-1]
         if name not in OUTBOUND or name not in VERB_BY_NAME and name != "request":

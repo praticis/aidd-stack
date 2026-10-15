@@ -46,6 +46,16 @@
    "method": "GET",
    "path": "/api/catalog/brands",
    "line": 9
+  },
+  {
+   "method": "POST",
+   "path": "/20141201/schedules",
+   "line": 15
+  },
+  {
+   "method": "GET",
+   "path": "/20141201/lineups",
+   "line": 21
   }
  ]
 }

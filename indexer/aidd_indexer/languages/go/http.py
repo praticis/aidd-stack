@@ -21,6 +21,7 @@ GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")          
 class GoScanner(BaseScanner):
     relative_on_groups = True
     def run(self) -> None:
+        self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
         for n in walk(self.fx.tree.root_node):
             if n.type in ("short_var_declaration", "assignment_statement", "var_spec"):
                 self._maybe_group(n)
@@ -54,13 +55,15 @@ class GoScanner(BaseScanner):
                     self.router_vars.add(nm)
                     if is_app:
                         self.mark_app(nm, n)
+                    if fname == "http.NewServeMux":
+                        self.servemux_vars.add(nm)
 
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        callee = text(fn, self.src)
+        callee = re.sub(r"\s+", "", text(fn, self.src))          # `client.\n\tGet(...)`
         name = callee.split(".")[-1]
         recv = callee.rsplit(".", 1)[0] if "." in callee else ""
         recv_last = recv.split(".")[-1]
@@ -69,16 +72,25 @@ class GoScanner(BaseScanner):
             return
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
+        operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
+        chain = self._chain_prefix(operand) if operand is not None else None
+        if chain is not None:                                       # g.Group("/user").Use(mw).POST("", h)
+            recv_last = text(operand, self.src)
+            self.group_prefix[recv_last] = chain
+            self.router_vars.add(recv_last)
+        default_mux = recv == "http" and name in ("Handle", "HandleFunc")   # http.Handle("/x", h): the default ServeMux
 
         # ---- exposed routes ---------------------------------------------------------------
         # a receiver this file built as a router/group is one, whatever its name (`api := r.Group("/api")`)
-        if name in GO_REGISTRARS and len(arg_nodes) >= 2 and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):
+        if name in GO_REGISTRARS and len(arg_nodes) >= 2 and (recv_last in self.router_vars or default_mux or not CLIENT_RECEIVER.search(recv_last)):
             first = arg_nodes[0]
             raw_first = unquote(text(first, self.src)) if first.type in STRING_NODES else None
             lit = raw_first if raw_first and re.match(r"^[A-Z]+ /", raw_first) else self.route_path(first, recv_last, n)
             method = VERB_BY_NAME.get(name) or GO_VERB_ALIASES.get(name) or (None if name in ("HandleFunc", "Handle", "Match") else "ANY")
             if name == "Match" and len(arg_nodes) >= 3:                 # gin: r.Match([]string{...}, "/x", h)
                 lit = self.route_path(arg_nodes[1], recv_last, n)
+            if name == "Handle" and (default_mux or recv_last in self.servemux_vars) and lit and len(lit) > 1 and lit.endswith("/"):
+                return                                                  # mux.Handle("/booking/v1/", sub): a mount, not a route
             if lit and (lit.startswith("/") or re.match(r"^[A-Z]+ /", lit)):
                 handler = arg_nodes[-1]
                 if self.is_handler_like(handler) or recv_last in self.router_vars or name in ("HandleFunc", "Handle"):
@@ -107,6 +119,31 @@ class GoScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _chain_prefix(self, n: Node) -> str | None:
+        """The prefix a receiver chain carries — `g.Group("/user").Use(mw)` → "/user" (plus g's own); None when the
+        chain holds no group."""
+        if n.type != "call_expression":
+            return None
+        fn = n.child_by_field_name("function")
+        args = n.child_by_field_name("arguments")
+        if fn is None or args is None or fn.type != "selector_expression":
+            return None
+        field, operand = fn.child_by_field_name("field"), fn.child_by_field_name("operand")
+        if field is None or operand is None:
+            return None
+        verb = text(field, self.src)
+        if verb in ("Use", "With"):                                     # middleware: same prefix
+            return self._chain_prefix(operand)
+        if verb != "Group":
+            return None
+        arg_nodes = [c for c in args.children if c.is_named]
+        p = self.path_of(arg_nodes[0]) if arg_nodes else None
+        if p is None:
+            return None
+        inner = self._chain_prefix(operand)
+        base = inner if inner is not None else self.group_prefix.get(text(operand, self.src).split(".")[-1], "")
+        return base.rstrip("/") + p
 
     def _in_main(self, n: Node) -> bool:
         p = n.parent

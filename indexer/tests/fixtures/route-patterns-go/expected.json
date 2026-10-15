@@ -44,6 +44,36 @@
    "method": "DELETE",
    "path": "/silence/{sid}",
    "handler": "deleteSilence"
+  },
+  {
+   "method": "GET",
+   "path": "/identities/{id}",
+   "handler": "getIdentity"
+  },
+  {
+   "method": "DELETE",
+   "path": "/identities/{id}/credentials/{type}",
+   "handler": "deleteCredential"
+  },
+  {
+   "method": "POST",
+   "path": "/user",
+   "handler": "createUser"
+  },
+  {
+   "method": "ANY",
+   "path": "/uppercase",
+   "handler": "uppercaseHandler"
+  },
+  {
+   "method": "ANY",
+   "path": "/count",
+   "handler": "count"
+  },
+  {
+   "method": "GET",
+   "path": "/metrics",
+   "handler": "metrics"
   }
  ],
  "calls": [
@@ -51,6 +81,11 @@
    "method": "GET",
    "path": "/v1/invoices",
    "line": 18
+  },
+  {
+   "method": "GET",
+   "path": "/repositories/{param}/{param}/src",
+   "line": 53
   }
  ]
 }

@@ -15,15 +15,18 @@
   no C#, com fixtures `route-patterns-{go,ts,py,cs}`. Recall de rotas pelos gabaritos: C# 49 → 73 %, Go 6 → 15 %,
   Python 31 → 43 %, TS/JS 6 → 9 %; chamadas C# 19 → 24 %. **Fase 3 fechada (2026-10-15):** corpus v2 com 39 repos
   (24 novos, apps reais), 38 gabaritos, relatório v2. Nos apps reais o recall de rotas despenca fora do C#
-  (Go 8,7 %, TS/JS 1,7 %, Python 1,0 %; C# 73 %) e o grafo de montagem aparece em 23 dos 38 repos.
+  (Go 8,7 %, TS/JS 1,7 %, Python 1,0 %; C# 73 %) e o grafo de montagem aparece em 23 dos 38 repos. **Item 3 da
+  Fase 4 fechado (2026-10-15), antes do 2:** os 15 defeitos baratos do v2 + 3 achados no julgamento; nenhuma das
+  categorias sobra no ranking. H2-D9 e H2-D10 decididos (itens 6 e 7).
 - **Incremento atual:** H2b — Fase 4, item 2 (grafo de montagem), na ordem revista pelo v2.
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline/` — corpus v2, 39 repos (os 15 do v1
-  idênticos à `2026-10-15-baseline-2`, a das correções baratas; a de 2026-10-14 fica como referência do v1).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-2/` — corpus v2, 39 repos, depois dos
+  defeitos baratos do v2 (a `2026-10-15-v2-baseline` é o v2 com o extrator da Fase 3; a de 2026-10-14 fica como
+  referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
@@ -37,9 +40,8 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** Fase 4, item 2 — grafo de montagem, começando pelo mesmo escopo e mesmo arquivo; antes
-  dele, decidir H2-D9/H2-D10 (recomendações no relatório) e se os defeitos baratos de precisão do v2 (item 3)
-  passam na frente.
+- **Próximo passo:** Fase 4, item 2 — grafo de montagem, começando pelo mesmo escopo e mesmo arquivo, com resumo
+  por arquivo entre arquivos (restrição do F1.13).
 
 ## Decisões
 
@@ -53,8 +55,8 @@
 | H2-D6 | 2026-10-13 | A amostragem mede precisão sorteando **do extraído** e recall sorteando **da fonte** (arquivos que registram rotas e fazem chamadas) | Sortear só do extraído nunca mostra um falso negativo |
 | H2-D7 | 2026-10-13 | **tRPC fora de escopo** (registrar como limitação) | São procedures, não rotas REST por path |
 | H2-D8 | 2026-10-13 | **Java/Kotlin fora**: não são linguagem parseável do indexer | Entra só se o ROADMAP adicionar a linguagem |
-| H2-D9 | 2026-10-13 | Clientes gerados (NSwag, openapi-generator, openapi-fetch): **só medir** no H2a; decidir no H2b com os números | Sem dado não há como saber se vale `via: generated-client` |
-| H2-D10 | 2026-10-13 | `[Route]` herdado de classe base no ASP.NET: **medir a frequência** antes de decidir se segue herança | Custo alto, frequência desconhecida |
+| H2-D9 | 2026-10-13 · **decidida 2026-10-15** | Clientes gerados (NSwag, openapi-generator, openapi-fetch, oazapfts): só medir no H2a e decidir com os números. **Decisão: extrair** como `HttpCall` com `via: generated-client`, um reconhecedor por gerador | v2: 371 operações em 4 clientes, 0 extraídas; no immich o SDK gerado é o único caminho do web ao servidor. Cada gerador escreve sempre a mesma forma, então o risco de FP é baixo |
+| H2-D10 | 2026-10-13 · **decidida 2026-10-15** | `[Route]` herdado de classe base no ASP.NET: medir a frequência antes de decidir. **Decisão: seguir um nível** de herança — classe base do mesmo repo achada pelo nome; nome ambíguo (duas classes) não herda | v2: 26 de 60 controllers do jellyfin herdam `[Route("[controller]")]` (128 rotas sem prefixo, ações sem template perdidas); custo baixo |
 | H2-D11 | 2026-10-13 | Precisão > recall: regra nova que sobe recall e derruba precisão em algum repo não entra | Um FP vira aresta errada no grafo depois do linker |
 | H2-D12 | 2026-10-14 | Rota **ou chamada** com path incompleto — prefixo que o código tem (grupo, mount, `include_router`, campo/constante interpolado) e se perdeu — conta como **erro**; prefixo vindo de config/env (`BaseAddress`, `*_URL`) não conta (é do linker) | O path é a chave do linker; path errado vira ligação errada ou nenhuma |
 | H2-D13 | 2026-10-14 | Medir **o que o grafo recebe** (depois do `_dedupe`), sem contornar a fusão de rotas iguais entre apps do mesmo repo | A fusão é um defeito real (evidência e handler de outro app), não um artefato da medição — vira a categoria `multi-app-repo` |
@@ -115,7 +117,7 @@ ao menos um monólito grande e um serviço "de empresa". Lista confirmada e fixa
 
 Fora: hashicorp/vault (licença BUSL; o fork openbao não tem spec commitada) e **grafana**, que era
 candidato e não roda: a extração do repo inteiro (24 mil arquivos) é morta por memória a 7,7 GB no Docker
-Desktop — achado de escala do indexer, registrado no relatório.
+Desktop — achado de escala do indexer, registrado no relatório e no ROADMAP como **F1.13** (repos grandes).
 
 - [x] Selecionar e confirmar a lista; fixar SHAs; gabaritos onde houver spec — e lista à mão nos demais
 - [x] Rodar e estender `corpus-report.md` (seção v2)
@@ -136,18 +138,25 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
   `r.Route`/`m.Group(..., func)`, `register(fn, {prefix})`) → prefixo global (`setGlobalPrefix`) → entre arquivos
   (imports, constantes/enums, campos de struct, funções-helper chamadas dentro de grupos, `include_router(prefix=)`).
-  Passo pós-scan em `integrations.py`, `confidence: heuristic` → bump `INDEXER_VERSION` e `SCHEMA.md` se o nó ganhar campo
-- [ ] **3. Defeitos baratos do v2** — precisão primeiro: `variable-other-scope`, `call-taken-for-route` (jQuery
-  `$.get(url, cb)`), `mount-as-route`, `route-taken-for-call`, `build-artifact`, `non-http-verb`; depois recall:
-  `const-concat`, `multiline-receiver`, `mime-like-head`, `const-base-url`, `method-keyword`/`method-variable`,
-  `verb-alias` (`del`), `default-mux-function`, `group-chain`, `aiohttp-router`
+  Passo pós-scan em `integrations.py`, `confidence: heuristic` → bump `INDEXER_VERSION` e `SCHEMA.md` se o nó ganhar campo.
+  Entre arquivos, trabalhar com um **resumo por arquivo** (quem monta o quê, com que prefixo), não com as árvores de
+  outros diretórios — restrição do F1.13 (repos grandes)
+- [x] **3. Defeitos baratos do v2** *(2026-10-15, feito antes do item 2)* — precisão: `variable-other-scope`,
+  `call-taken-for-route` (jQuery `$.get(url, cb)`), `mount-as-route`, `route-taken-for-call`, `build-artifact`,
+  `non-http-verb`; recall: `const-concat`, `multiline-receiver`, `mime-like-head`, `const-base-url`,
+  `method-keyword`/`method-variable`, `verb-alias` (`del`), `default-mux-function`, `group-chain`,
+  `aiohttp-router`; achados no julgamento: variável interpolada que lê o próprio valor anterior, `x += e`, e o
+  contraexemplo do wrapper genérico (constante de módulo em template fica placeholder). Sobra 1 item
+  (`data-taken-for-handler`, gotify)
 - [ ] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`)
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
-- [ ] **6. C#:** herança de `[Route]` (se o H2-D10 for aceito) e classes de endpoint (FastEndpoints, ApiEndpoints)
-- [ ] **7. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
-  rotas por arquivo do Next.js, flask-restx, clientes gerados (H2-D9: 371 operações em 4 clientes, 0 extraídas)
-- [ ] **8. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
-- [ ] Decidir H2-D9 e H2-D10 — medidos no v2, recomendação no relatório ("The two open decisions, with v2 numbers")
+- [ ] **6. C#:** herança de `[Route]` (H2-D10, aceito: um nível) e classes de endpoint (FastEndpoints, ApiEndpoints)
+- [ ] **7. Clientes gerados** (H2-D9, aceito): oazapfts (immich), openapi-generator Go/TS (kratos), NSwag e
+  openapi-fetch (v1) — `via: generated-client`, fixture por gerador
+- [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
+  rotas por arquivo do Next.js, flask-restx
+- [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
+- [x] Decidir H2-D9 e H2-D10 — *(2026-10-15)* as duas recomendações do relatório aceitas (itens 6 e 7)
 
 ### Fase 5 — fechamento
 - [ ] ROADMAP: F0.4.3b `[x]`; gaps encaminhados (base URL → F0.5 linker; spec como fonte → F2.1; resto → F1 ou limitação)
@@ -261,3 +270,19 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   `[Route("[controller]")]` (128 rotas sem prefixo). Correção de datas: o trabalho registrado como 2026-10-16 foi
   feito em 2026-10-15 (2ª rodada); a baseline passou a se chamar `2026-10-15-baseline-2`. Nova baseline
   `2026-10-15-v2-baseline`.
+- **2026-10-15** — H2b, Fase 4 item 3 fechado (antes do item 2). Os 15 defeitos baratos do v2, cada um com caso
+  nas fixtures `route-patterns-*`: constantes só do módulo/classe e nome procurado da função mais interna para
+  fora (parâmetro encerra), constante montada por `+` e com URL absoluta, `$`/`jQuery` como cliente, padrão com
+  `/` final no `ServeMux` como montagem, argumento espalhado desembrulhado, bundle de build fora da extração HTTP,
+  segmento sem nome não é path, callee sem espaços, MIME só com dois tokens, método de keyword e de variável,
+  `del`, mux padrão, prefixo pela cadeia `Group().Use()`, aiohttp. O julgamento do diff achou 3 defeitos das
+  próprias regras e os corrigiu no caminho: a chamada do CTFd que lia o próprio valor anterior em template (variável
+  local interpolada passou a ser resolvida — constante de módulo não, contraexemplo do alertmanager), `x += e`
+  (path e método do mesmo ramo; com base desconhecida só vale o trecho com segmento nomeado — chi `FileServer`).
+  Diff contra `2026-10-15-v2-baseline` julgado item a item: rotas −37 +49, chamadas −54 +186; o que errou
+  entre os novos só herda defeito já categorizado das irmãs (7 rotas do kratos sem `/admin`, 127 chamadas de
+  argo-cd e NodeBB sem o prefixo do wrapper — H2-D14). Gabaritos: 6 chamadas reais que faltavam (gotify,
+  kratos), recategorização dos que mudaram de causa, amostras sincronizadas e julgadas de novo. Por linguagem
+  (gabarito): chamadas C# P 62 → 84 %, R 48 → 64 %; chamadas Go R 24 → 32 %; chamadas TS/JS R 22 → 31 %; rotas
+  Python P 27 → 38 %. Decisões H2-D9 e H2-D10 aceitas (itens 6 e 7 da Fase 4). Item novo no ROADMAP: **F1.13**
+  (repos grandes). Nova baseline `2026-10-15-v2-baseline-2`.

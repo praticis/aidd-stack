@@ -73,51 +73,42 @@
  "calls": [
   {
    "method": "GET",
-   "path": "/20141201/available/countries",
-   "category": "const-base-url"
+   "path": "/20141201/available/countries"
   },
   {
    "method": "GET",
-   "path": "/20141201/headends",
-   "category": "const-base-url"
+   "path": "/20141201/headends"
   },
   {
    "method": "GET",
-   "path": "/20141201/lineups",
-   "category": "const-base-url"
+   "path": "/20141201/lineups"
   },
   {
    "method": "GET",
-   "path": "/20141201/lineups/{id}",
-   "category": "const-base-url"
+   "path": "/20141201/lineups/{id}"
   },
   {
    "method": "PUT",
-   "path": "/20141201/lineups/{id}",
-   "category": "const-base-url"
+   "path": "/20141201/lineups/{id}"
   },
   {
    "method": "POST",
-   "path": "/20141201/metadata/programs",
-   "category": "const-base-url"
+   "path": "/20141201/metadata/programs"
   },
   {
    "method": "POST",
-   "path": "/20141201/programs",
-   "category": "const-base-url"
+   "path": "/20141201/programs"
   },
   {
    "method": "POST",
-   "path": "/20141201/schedules",
-   "category": "const-base-url"
+   "path": "/20141201/schedules"
   },
   {
    "method": "POST",
-   "path": "/20141201/token",
-   "category": "const-base-url"
+   "path": "/20141201/token"
   }
  ],
- "notes": "Manual, no committed spec (the OpenAPI is generated in CI). Recall from three controllers read whole (Backup, Devices, ItemUpdate); precision from the sample over the repo. H2-D10 measured: BaseJellyfinApiController carries [Route(\"[controller]\")], and 26 of the 60 controllers declare no [Route] of their own — their 128 extracted routes all miss /{Controller} (/Features instead of /Channels/Features) and their template-less actions ([HttpGet]) are dropped (inherited-route-attr). The other controllers declare [Route(\"\")] or [Route(\"System\")] and come out right. Calls (recall: SchedulesDirect.cs): ApiUrl = \"https://json.schedulesdirect.org/20141201\" is dropped as a base URL together with the /20141201 path it holds (const-base-url, H2-D12; same for AudioDb's BaseUrl with /api/v1/json/{key}); SendAsync(message) inside Request<T>(HttpRequestMessage message, ...) is resolved to a `message` variable of another method (variable-other-scope).",
+ "notes": "Manual, no committed spec (the OpenAPI is generated in CI). Recall from three controllers read whole (Backup, Devices, ItemUpdate); precision from the sample over the repo. H2-D10 measured: BaseJellyfinApiController carries [Route(\"[controller]\")], and 26 of the 60 controllers declare no [Route] of their own — their 128 extracted routes all miss /{Controller} (/Features instead of /Channels/Features) and their template-less actions ([HttpGet]) are dropped (inherited-route-attr). The other controllers declare [Route(\"\")] or [Route(\"System\")] and come out right. Calls (recall: SchedulesDirect.cs): ApiUrl = \"https://json.schedulesdirect.org/20141201\" is dropped as a base URL together with the /20141201 path it holds (const-base-url, H2-D12; same for AudioDb's BaseUrl with /api/v1/json/{key}); SendAsync(message) inside Request<T>(HttpRequestMessage message, ...) is resolved to a `message` variable of another method (variable-other-scope). Since the v2 cheap fixes (2026-10-15): a constant holding an absolute URL keeps its path (/20141201, /api/v1/json/{key}), and a parameter is no longer resolved to another method's variable.",
  "checked": {
   "endpoints": [
    {
@@ -285,10 +276,10 @@
    {
     "evidence": "jellyfin:MediaBrowser.Providers/Plugins/AudioDb/AudioDbAlbumProvider.cs:191",
     "method": "GET",
-    "path": "/album-mb.php",
-    "raw": "/album-mb.php?i={param}",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/api/v1/json/{param}/album-mb.php",
+    "raw": "https://www.theaudiodb.com/api/v1/json/{param}/album-mb.php?i={param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:MediaBrowser.Providers/Plugins/ListenBrainz/Api/ListenBrainzLabsClient.cs:64",
@@ -301,82 +292,74 @@
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:1052",
     "method": "GET",
-    "path": "/lineups/{param}",
-    "raw": "/lineups/{param}",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/lineups/{param}",
+    "raw": "https://json.schedulesdirect.org/20141201/lineups/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:129",
     "method": "POST",
-    "path": "/schedules",
-    "raw": "/schedules",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/schedules",
+    "raw": "https://json.schedulesdirect.org/20141201/schedules",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:140",
     "method": "POST",
-    "path": "/programs",
-    "raw": "/programs",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/programs",
+    "raw": "https://json.schedulesdirect.org/20141201/programs",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:502",
     "method": "POST",
-    "path": "/metadata/programs",
-    "raw": "/metadata/programs/",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/metadata/programs",
+    "raw": "https://json.schedulesdirect.org/20141201/metadata/programs/",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:559",
     "method": "GET",
-    "path": "/headends",
-    "raw": "/headends?country={param}&postalcode={param}",
-    "ok": false,
-    "category": "const-base-url"
-   },
-   {
-    "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:681",
-    "method": "ANY",
-    "path": "/lineups",
-    "raw": "/lineups/",
-    "ok": false,
-    "category": "variable-other-scope"
+    "path": "/20141201/headends",
+    "raw": "https://json.schedulesdirect.org/20141201/headends?country={param}&postalcode={param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:775",
     "method": "POST",
-    "path": "/token",
-    "raw": "/token",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/token",
+    "raw": "https://json.schedulesdirect.org/20141201/token",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:801",
     "method": "PUT",
-    "path": "/lineups/{param}",
-    "raw": "/lineups/{param}",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/lineups/{param}",
+    "raw": "https://json.schedulesdirect.org/20141201/lineups/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:826",
     "method": "GET",
-    "path": "/lineups",
-    "raw": "/lineups",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/lineups",
+    "raw": "https://json.schedulesdirect.org/20141201/lineups",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/Listings/SchedulesDirect.cs:872",
     "method": "GET",
-    "path": "/available/countries",
-    "raw": "/available/countries",
-    "ok": false,
-    "category": "const-base-url"
+    "path": "/20141201/available/countries",
+    "raw": "https://json.schedulesdirect.org/20141201/available/countries",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:src/Jellyfin.LiveTv/TunerHosts/HdHomerun/HdHomerunHost.cs:124",

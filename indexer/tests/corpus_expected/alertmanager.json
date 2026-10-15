@@ -7,6 +7,16 @@
  "spec": [
   "api/v2/openapi.yaml"
  ],
+ "scope": {
+  "endpoints": [
+   "api/v2/"
+  ],
+  "calls": [
+   "notify/opsgenie/",
+   "notify/wechat/",
+   "notify/rocketchat/"
+  ]
+ },
  "endpoints": [
   {
    "method": "GET",
@@ -54,40 +64,46 @@
    "category": "generated-server"
   }
  ],
- "scope": {
-  "endpoints": [
-   "api/v2/"
-  ],
-  "calls": [
-   "notify/opsgenie/",
-   "notify/wechat/",
-   "notify/rocketchat/"
-  ]
- },
- "notes": "Recall only: the spec covers /api/v2, served by the go-swagger generated server (api/v2/restapi) mounted with mux.Handle(apiPrefix+\"/api/v2/\", ...) in api/api.go — nothing under api/v2/ registers routes the extractor can see (category generated-server). The other routes of the repo (v1 deprecation, /-/healthy, ui) are not in the spec, so precision comes from the manual sample. Precision: all 22 extracted routes checked. The 7 v1 routes are registered on r.WithPrefix(\"/api/v1\") passed into V1DeprecationRouter.Register and come out without the prefix (router-as-param); DELETE /api/v1/silence/:sid uses r.Del (verb-alias) and is missed. Also missed outside the spec: GET / (ui/web.go — a path with no literal segment is dropped) and GET /ui/ (normalized into /ui, merged). Calls: the notifiers take the host from config and append a literal path to a net/url value (u.Path += \"v2/alerts\", fmt.Sprintf into .Path, APIURL.JoinPath(\"api/v1/chat.postMessage\")) and send u.String() later — none extracted (url-object-builder). Measured on opsgenie, wechat and rocketchat, where method and path are unambiguous; jira does the same with JoinPath(\"/search\") and issue/{key}/transitions.",
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/v1/chat.postMessage",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/gettoken",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "POST",
+   "path": "/message/send",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts/{alias}/close",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "PUT",
+   "path": "/v2/alerts/{alias}/description",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "PUT",
+   "path": "/v2/alerts/{alias}/message",
+   "category": "url-object-builder"
+  }
+ ],
+ "notes": "Recall only: the spec covers /api/v2, served by the go-swagger generated server (api/v2/restapi) mounted with mux.Handle(apiPrefix+\"/api/v2/\", ...) in api/api.go — nothing under api/v2/ registers routes the extractor can see (category generated-server). The other routes of the repo (v1 deprecation, /-/healthy, ui) are not in the spec, so precision comes from the manual sample. Precision: all 22 extracted routes checked. The 7 v1 routes are registered on r.WithPrefix(\"/api/v1\") passed into V1DeprecationRouter.Register and come out without the prefix (router-as-param); DELETE /api/v1/silence/:sid uses r.Del (verb-alias) and is missed. Also missed outside the spec: GET / (ui/web.go — a path with no literal segment is dropped) and GET /ui/ (normalized into /ui, merged). Calls: the notifiers take the host from config and append a literal path to a net/url value (u.Path += \"v2/alerts\", fmt.Sprintf into .Path, APIURL.JoinPath(\"api/v1/chat.postMessage\")) and send u.String() later — none extracted (url-object-builder). Measured on opsgenie, wechat and rocketchat, where method and path are unambiguous; jira does the same with JoinPath(\"/search\") and issue/{key}/transitions. Since the v2 cheap fixes (2026-10-15): the mux.Handle(prefix+\"/api/v1/\", ...) subtree mounts are no longer routes (they were judged right in v1 as catch-all routes; v2 counts them as mounts, mount-as-route).",
  "checked": {
   "endpoints": [
-   {
-    "evidence": "alertmanager:api/api.go:275",
-    "method": "ANY",
-    "path": "/api/v1",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "alertmanager:api/api.go:277",
-    "method": "ANY",
-    "path": "/api/v2",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "alertmanager:api/api.go:295",
-    "method": "ANY",
-    "path": "/api",
-    "ok": true,
-    "category": null
-   },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:36",
     "method": "GET",
@@ -223,42 +239,5 @@
    }
   ]
  },
- "checked_seed": "1",
- "calls": [
-  {
-   "method": "POST",
-   "path": "/v2/alerts/{alias}/close",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "POST",
-   "path": "/v2/alerts",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "PUT",
-   "path": "/v2/alerts/{alias}/message",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "PUT",
-   "path": "/v2/alerts/{alias}/description",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "GET",
-   "path": "/gettoken",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "POST",
-   "path": "/message/send",
-   "category": "url-object-builder"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/chat.postMessage",
-   "category": "url-object-builder"
-  }
- ]
+ "checked_seed": "1"
 }

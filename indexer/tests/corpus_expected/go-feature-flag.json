@@ -107,7 +107,7 @@
    "path": "/v1/flag/configuration"
   }
  ],
- "notes": "Endpoints: the relay proxy swagger (cmd/relayproxy/docs/swagger.yaml, basePath /) plus /swagger/* and the editor API (cmd/editor). Echo groups created in the same function (g := e.Group(\"/v1\")) resolve; the only miss is /debug/pprof, registered by a library helper, pprof.Register(e) (library-registrar). Calls: the Python OpenFeature provider uses self._http.request(method=\"POST\", url=url) — the path is found, the method keyword is not read (ANY, judged wrong in the sample: method-keyword; the gabarito match accepts ANY). The Go retrievers call through shared.CallHTTPAPI(ctx, url, method, ...) (client-wrapper; bitbucket listed, github/gitlab build the URL in a helper). The other providers (Kotlin, PHP, Ruby, Swift) are not parseable languages.",
+ "notes": "Endpoints: the relay proxy swagger (cmd/relayproxy/docs/swagger.yaml, basePath /) plus /swagger/* and the editor API (cmd/editor). Echo groups created in the same function (g := e.Group(\"/v1\")) resolve; the only miss is /debug/pprof, registered by a library helper, pprof.Register(e) (library-registrar). Calls: the Python OpenFeature provider uses self._http.request(method=\"POST\", url=url) — the path is found, the method keyword is not read (ANY, judged wrong in the sample: method-keyword; the gabarito match accepts ANY). The Go retrievers call through shared.CallHTTPAPI(ctx, url, method, ...) (client-wrapper; bitbucket listed, github/gitlab build the URL in a helper). The other providers (Kotlin, PHP, Ruby, Swift) are not parseable languages. Since the v2 cheap fixes (2026-10-15): the method keyword is read (POST).",
  "checked": {
   "endpoints": [
    {
@@ -258,19 +258,19 @@
   "calls": [
    {
     "evidence": "go-feature-flag:openfeature/providers/python-provider/gofeatureflag_python_provider/services/api.py:121",
-    "method": "ANY",
+    "method": "POST",
     "path": "/v1/flag/configuration",
     "raw": "//v1/flag/configuration",
-    "ok": false,
-    "category": "method-keyword"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "go-feature-flag:openfeature/providers/python-provider/gofeatureflag_python_provider/services/api.py:222",
-    "method": "ANY",
+    "method": "POST",
     "path": "/v1/data/collector",
     "raw": "//v1/data/collector",
-    "ok": false,
-    "category": "method-keyword"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "go-feature-flag:website/src/hooks/useGitHubStars.js:21",

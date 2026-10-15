@@ -46,6 +46,51 @@
    "method": "GET",
    "path": "/api/users",
    "line": 25
+  },
+  {
+   "method": "GET",
+   "path": "/json/realm/subdomain/{param}",
+   "line": 8
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{param}",
+   "line": 12
+  },
+  {
+   "method": "DELETE",
+   "path": "/message",
+   "line": 16
+  },
+  {
+   "method": "PUT",
+   "path": "/account/password",
+   "line": 24
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/plugins/{param}",
+   "line": 30
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/teams/me",
+   "line": 36
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users",
+   "line": 44
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{param}/members",
+   "line": 50
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/pages/{param}",
+   "line": 66
   }
  ]
 }

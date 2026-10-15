@@ -1920,7 +1920,7 @@
   {
    "method": "DELETE",
    "path": "/api/v3/admin/plugins/{id}",
-   "category": "verb-alias"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "POST",
@@ -1945,7 +1945,7 @@
   {
    "method": "DELETE",
    "path": "/api/v3/admin/tokens/{token}",
-   "category": "verb-alias"
+   "category": "prefix-in-client-wrapper"
   },
   {
    "method": "GET",
@@ -1963,7 +1963,7 @@
    "category": "prefix-in-client-wrapper"
   }
  ],
- "notes": "Endpoints: the committed multi-file OpenAPI specs (public/openapi/read.yaml for /api/*, write.yaml for /api/v3 with servers /api/v3; path items are $ref to other files, which from-openapi now follows), scope = the files that register those APIs (src/routes/write/, api.js, admin.js). Nothing comes out right: the write API registers through a helper, setupApiRoute(router, 'post', '/x', mws, handler), and the read API through setupPageRoute(app, '/x', ...) which also creates the /api twin (custom-registrar, 365); admin.js builds paths from a parameter, router.get(`/api/${name}/config`) (prefix-as-param, 13); api.js does const router = express.Router(); app.use('/api', router) in the same function and the routes still come out without /api (mount-same-scope, 12). The precision sample (whole repo) adds: jQuery $.get(url, callback) in the browser code is taken for a route registration (call-taken-for-route). The ActivityPub, feeds and meta routes are on the root router and are right. Calls: the browser api module (public/src/modules/api.js) prepends /api/v3 unless the route already starts with /api, so api.put('/admin/tokens/x') comes out without it (prefix-in-client-wrapper); api.del() is not read as DELETE (verb-alias); $.ajax(url, {...}) is not seen (request-config-object). Expected calls = every call in two sampled admin files.",
+ "notes": "Endpoints: the committed multi-file OpenAPI specs (public/openapi/read.yaml for /api/*, write.yaml for /api/v3 with servers /api/v3; path items are $ref to other files, which from-openapi now follows), scope = the files that register those APIs (src/routes/write/, api.js, admin.js). Nothing comes out right: the write API registers through a helper, setupApiRoute(router, 'post', '/x', mws, handler), and the read API through setupPageRoute(app, '/x', ...) which also creates the /api twin (custom-registrar, 365); admin.js builds paths from a parameter, router.get(`/api/${name}/config`) (prefix-as-param, 13); api.js does const router = express.Router(); app.use('/api', router) in the same function and the routes still come out without /api (mount-same-scope, 12). The precision sample (whole repo) adds: jQuery $.get(url, callback) in the browser code is taken for a route registration (call-taken-for-route). The ActivityPub, feeds and meta routes are on the root router and are right. Calls: the browser api module (public/src/modules/api.js) prepends /api/v3 unless the route already starts with /api, so api.put('/admin/tokens/x') comes out without it (prefix-in-client-wrapper); api.del() is not read as DELETE (verb-alias); $.ajax(url, {...}) is not seen (request-config-object). Expected calls = every call in two sampled admin files. Since the v2 cheap fixes (2026-10-15): api.del is DELETE — and like the other api.* calls lacks the /api/v3 the module prepends (prefix-in-client-wrapper); $.get is a call, never a route.",
  "checked": {
   "endpoints": [
    {
@@ -1973,22 +1973,6 @@
     "raw": "/testdb",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "nodebb:public/src/client/account/settings.js:29",
-    "method": "GET",
-    "path": "/{param}",
-    "raw": "/{param}",
-    "ok": false,
-    "category": "call-taken-for-route"
-   },
-   {
-    "evidence": "nodebb:public/src/client/infinitescroll.js:98",
-    "method": "GET",
-    "path": "/api",
-    "raw": "/api",
-    "ok": false,
-    "category": "call-taken-for-route"
    },
    {
     "evidence": "nodebb:src/routes/activitypub.js:37",

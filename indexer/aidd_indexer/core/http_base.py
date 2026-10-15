@@ -80,10 +80,29 @@ class PackageContext:
     """Per directory (Go package / TS folder / C# namespace dir): route constants and env-var names."""
 
     def __init__(self, patterns: "ScanPatterns | None" = None) -> None:
-        self.route_consts: dict[str, str] = {}     # name -> raw path
+        self.route_consts: dict[str, str] = {}     # name -> raw path (or base URL)
+        self.const_parts: dict[str, list[tuple[str, str | None]]] = {}   # name -> `A + "/x"` as ("ref", "A"), ("lit", "/x")
         self.env_hints: set[str] = set()
         self.patterns = patterns or ScanPatterns()
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
+
+    def route_const(self, name: str, _seen: tuple[str, ...] = ()) -> str | None:
+        """Raw path of a module-level constant; one built from others (`RouteItem = RouteCollection + "/{id}"`)
+        is resolved on first use, since the constants it names may live in another file of the directory."""
+        if name in self.route_consts:
+            return self.route_consts[name]
+        parts = self.const_parts.get(name)
+        if parts is None or name in _seen or len(_seen) > 4:
+            return None
+        raw = ""
+        for kind, v in parts:
+            r = v if kind == "lit" else (self.route_const(v, _seen + (name,)) if kind == "ref" and v else None)
+            raw += r if r is not None else "{param}"
+        raw = re.sub(r"^\{param\}(?=/)", "", raw)
+        if len(raw) < 2 or not (PATH_LITERAL.match(mask_placeholders(raw)) or REL_PATH_LITERAL.match(raw) or URL_LITERAL.match(raw)):
+            return None
+        self.route_consts[name] = raw
+        return raw
 
 
 def dir_of(file_path: str) -> str:
@@ -110,7 +129,12 @@ def target_hint(file_path: str) -> str:
         return m.group(1)
     return parts[-1] if parts else ""
 
+CONCAT_NODES = {"binary_expression", "binary_operator"}
+
+
 def collect_constants(fx, ctx: PackageContext) -> None:
+    """Module- and class-level constants holding a path or a base URL. A function's locals are not constants of the
+    directory: a `url` parameter elsewhere would take the value of this function's `url` (resolve_local reads them)."""
     src = fx.src
     for n in walk(fx.tree.root_node):
         name = val = None
@@ -120,16 +144,54 @@ def collect_constants(fx, ctx: PackageContext) -> None:
                 kids = [c for c in n.children if c.is_named]
                 if len(kids) >= 2:
                     name, val = kids[0], kids[-1]
-        elif n.type == "assignment" and n.parent is not None and n.parent.type in ("module", "expression_statement"):  # Python module-level
+        elif n.type == "assignment" and n.parent is not None and n.parent.type in ("module", "expression_statement"):  # Python
             name, val = n.child_by_field_name("left"), n.child_by_field_name("right")
-        if name is not None and val is not None and name.type in ("identifier", "property_identifier"):
-            lit = first_string(val, src)
-            if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit)) and len(lit) > 1:
-                ctx.route_consts[text(name, src)] = lit
+        if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
+            while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
+                val = val.named_children[0]
+            parts = _concat_parts(val, src) if val.type in CONCAT_NODES else None
+            if parts:
+                ctx.const_parts[text(name, src)] = parts
+            else:
+                lit = first_string(val, src)
+                if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or URL_LITERAL.match(lit)) and len(lit) > 1:
+                    ctx.route_consts[text(name, src)] = lit
         if n.type in STRING_NODES:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
                 ctx.env_hints.add(lit)
+
+
+def in_function(n: Node) -> bool:
+    p = n.parent
+    while p is not None:
+        if p.type in FUNCTION_SCOPES:
+            return True
+        p = p.parent
+    return False
+
+
+def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
+    """`A + "/x" + B.C` → [("ref", "A"), ("lit", "/x"), ("ref", "C")]; None unless a `+` with a literal in it."""
+    op = n.child_by_field_name("operator")
+    if op is None or text(op, src) != "+":
+        return None
+    parts: list[tuple[str, str | None]] = []
+    for c in (n.child_by_field_name("left"), n.child_by_field_name("right")):
+        if c is None:
+            return None
+        if c.type == n.type:
+            sub = _concat_parts(c, src)
+            if sub is None:
+                return None
+            parts += sub
+        elif c.type in STRING_NODES and not any(k.type in ("interpolation", "template_substitution") for k in c.children):
+            parts.append(("lit", unquote(text(c, src))))
+        elif c.type in ("identifier", "selector_expression", "member_expression", "member_access_expression", "attribute"):
+            parts.append(("ref", text(c, src).split(".")[-1]))
+        else:
+            parts.append(("unk", None))
+    return parts if any(k == "lit" for k, _ in parts) else None
 
 
 def first_string(n: Node, src: bytes) -> str | None:
@@ -226,11 +288,19 @@ class BaseScanner:
         return False
 
     # -- template of an interpolated string (Python f"", C# $"", JS `${}`) ------------------
-    def _interpolated(self, n: Node) -> str:
+    def _interpolated(self, n: Node, lenient: bool = False, _depth: int = 0) -> str:
+        """Template text with each substitution as `{param}` — except a local variable holding a path, read as in a
+        concatenation (`url = `${url}?notify=true``). A module constant stays a placeholder: in a generic wrapper
+        (`${prefix}/${API_PATH}${path}`) it would make a path out of what is only a base."""
         parts = []
         for c in n.children:
             if c.type in ("interpolation", "template_substitution"):
-                parts.append("{param}")
+                inner = [k for k in c.children if k.is_named]
+                v = None
+                if len(inner) == 1 and inner[0].type == "identifier":
+                    bound, val = self.local_binding(inner[0])
+                    v = self.path_of(val, lenient, _depth + 1) if bound and val is not None else None
+                parts.append(v if v is not None else "{param}")
             elif c.type in ("string_content", "string_fragment", "interpolated_string_text", "escape_sequence"):
                 parts.append(text(c, self.src))
             # interpolation_start ($"), string_start/end, quotes: structural, no text
@@ -238,22 +308,57 @@ class BaseScanner:
         return re.sub(r"\{[^}]*\}", "{param}", raw) if n.type == "interpolated_string_expression" else raw
 
     # -- local variables: `uri := base + "/v1/x"` two lines above the call ----------------------
-    _FUNC_NODES = {"function_declaration", "method_declaration", "func_literal", "arrow_function", "function_expression",
-                   "method_definition", "function_definition", "local_function_statement", "lambda_expression", "constructor_declaration"}
+    _FUNC_NODES = FUNCTION_SCOPES
 
-    def resolve_local(self, ident: Node, depth: int = 0) -> Node | None:
-        """Value expression of the closest preceding assignment to this identifier in the enclosing function."""
-        if depth > 3:
-            return None
+    def resolve_local(self, ident: Node) -> Node | None:
+        """Value expression of the closest preceding assignment to this identifier in its scope (see `local_binding`)."""
+        return self.local_binding(ident)[1]
+
+    def local_binding(self, ident: Node) -> tuple[bool, Node | None]:
+        """Where a name is bound, from the enclosing function outward: (True, value) for an assignment that
+        precedes it, (True, None) for a parameter — the caller's value, unknown here — and (False, None) when no
+        enclosing function binds it (a module-level constant, then). Code at module level reads the module."""
         name = text(ident, self.src)
         scope = ident.parent
-        while scope is not None and scope.type not in self._FUNC_NODES:
+        while True:
+            while scope is not None and scope.type not in self._FUNC_NODES:
+                scope = scope.parent
+            if scope is None:
+                if in_function(ident):
+                    return False, None
+                val = self._assigned_before(self.fx.tree.root_node, ident, name)
+                return val is not None, val
+            val = self._assigned_before(scope, ident, name)
+            if val is not None:
+                return True, val
+            if self._is_parameter(scope, name):
+                return True, None
             scope = scope.parent
-        scope = scope or self.fx.tree.root_node
+
+    def _is_parameter(self, scope: Node, name: str) -> bool:
+        for field_name in ("parameters", "parameter", "receiver"):
+            params = scope.child_by_field_name(field_name)
+            if params is not None and any(d.type == "identifier" and text(d, self.src) == name for d in walk(params)):
+                return True
+        return False
+
+    def _assigned_before(self, scope: Node, ident: Node, name: str) -> Node | None:
+        """Value of the last assignment to `name` before `ident` in `scope`, leaving out the bodies of other functions."""
         best: Node | None = None
-        for d in walk(scope):
+        stack = [scope]
+        while stack:
+            d = stack.pop()
             if d.start_byte >= ident.start_byte:
-                break
+                continue
+            inside = d.start_byte <= ident.start_byte < d.end_byte
+            if d is not scope and d.type in self._FUNC_NODES and not inside:
+                continue
+            stack.extend(reversed(d.children))
+            if inside:
+                continue                     # `url = `${url}?x`` — the name on the right is the earlier value
+            if self._appends_to(d, name):
+                best = d                     # `url += "/" + id`: read by path_of as the earlier value plus this
+                continue
             if d.type in ("short_var_declaration", "assignment_statement", "assignment", "assignment_expression", "variable_declarator", "var_spec"):
                 left = d.child_by_field_name("left") or d.child_by_field_name("name")
                 right = d.child_by_field_name("right") or d.child_by_field_name("value")
@@ -269,9 +374,16 @@ class BaseScanner:
                 lefts = [c for c in left.children if c.is_named] if left.type == "expression_list" else [left]
                 rights = [c for c in right.children if c.is_named] if right.type == "expression_list" else [right]
                 for i, l in enumerate(lefts):
-                    if text(l, self.src) == name and i < len(rights):
+                    if text(l, self.src) == name and i < len(rights) and (best is None or d.start_byte > best.start_byte):
                         best = rights[i]
         return best
+
+    def _appends_to(self, d: Node, name: str) -> bool:
+        """`name += expr` (JS/Python/C# augmented assignment, Go `+=` assignment statement)."""
+        if d.type not in ("augmented_assignment_expression", "augmented_assignment", "assignment_statement", "assignment_expression"):
+            return False
+        op, left = d.child_by_field_name("operator"), d.child_by_field_name("left")
+        return op is not None and left is not None and text(op, self.src) == "+=" and text(left, self.src) == name
 
     # -- assembling a path from an expression ---------------------------------------------
     def path_of(self, n: Node, lenient: bool = False, _depth: int = 0) -> str | None:
@@ -283,7 +395,7 @@ class BaseScanner:
             return None
         if t in STRING_NODES:
             has_interp = any(c.type in ("interpolation", "template_substitution") for c in n.children)
-            lit = self._interpolated(n) if has_interp or t == "interpolated_string_expression" else unquote(text(n, src))
+            lit = self._interpolated(n, lenient, _depth) if has_interp or t == "interpolated_string_expression" else unquote(text(n, src))
             lit = re.sub(r"\$\{[^}]*\}", "{param}", lit)
             m = re.match(r"^\{param\}(/?)(.*)$", lit)              # leading base-URL placeholder
             if m:
@@ -299,16 +411,14 @@ class BaseScanner:
                 return "/" + lit
             return None
         if t in ("identifier", "selector_expression", "member_expression", "property_identifier", "member_access_expression", "attribute"):
-            name = text(n, src).split(".")[-1]
-            if name in self.ctx.route_consts:
-                return self.ctx.route_consts[name]
             if t == "identifier":
-                val = self.resolve_local(n)
-                if val is not None:
-                    return self.path_of(val, lenient, _depth + 1)
-            return None
+                bound, val = self.local_binding(n)
+                if bound:
+                    return self.path_of(val, lenient, _depth + 1) if val is not None else None
+            return self.ctx.route_const(text(n, src).split(".")[-1])
         if t in ("binary_expression", "concatenated_string", "binary_operator"):   # base + "/v1/x" + id
             raw = ""
+            lead = False                                 # an unknown first operand: a base URL
             operands: list[Node] = []                    # flatten `a + b + c + ...` (left-nested) into one list
             stack = [c for c in reversed(n.children) if c.is_named]
             while stack:
@@ -322,10 +432,12 @@ class BaseScanner:
                 if verb and verb.group(1).upper() in HTTP_METHODS:
                     raw += verb.group(1).upper()
                     continue
-                p = self.path_of(c, lenient, _depth + 1) if c.type not in STRING_NODES else (self._interpolated(c) if any(k.type in ("interpolation", "template_substitution") for k in c.children) else unquote(text(c, src)))
+                p = self.path_of(c, lenient, _depth + 1) if c.type not in STRING_NODES else (self._interpolated(c, lenient, _depth + 1) if any(k.type in ("interpolation", "template_substitution") for k in c.children) else unquote(text(c, src)))
                 if p is None:
                     if raw:
                         raw += "{param}"
+                    else:
+                        lead = True
                     continue
                 raw += p
             raw = re.sub(r"^\{param\}(?=/)", "", raw)
@@ -333,6 +445,8 @@ class BaseScanner:
                 return None
             if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw) or re.match(r"^[A-Z]+ /", raw):
                 return raw                                           # "PUT " + base + "/x" is a net/http 1.22 pattern
+            if lenient and lead and re.match(r"^[A-Za-z][A-Za-z0-9_\-]{2,}(\?.*)?$", raw):
+                return "/" + raw                                     # base + 'message' (gotify)
             return ("/" + raw) if lenient and "/" in raw and not raw.startswith("{") else None
         if t in ("call_expression", "invocation_expression", "call"):     # fmt.Sprintf("/v1/%s", id), "...".format(), path.Join
             fn = n.child_by_field_name("function")
@@ -373,6 +487,17 @@ class BaseScanner:
                 arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named] if args else []
                 return self.path_of(arg_nodes[0], lenient, _depth + 1) if arg_nodes else None
             return None
+        if t in ("augmented_assignment_expression", "augmented_assignment", "assignment_statement", "assignment_expression"):
+            left, right = n.child_by_field_name("left"), n.child_by_field_name("right")      # `url += "/" + id`
+            if left is None or right is None or not self._appends_to(n, text(left, src)):
+                return None
+            left, right = (x.named_children[0] if x.type == "expression_list" and x.named_child_count == 1 else x for x in (left, right))
+            base = self.path_of(left, lenient, _depth + 1)
+            tail = self.path_of(right, lenient, _depth + 1) if right.type not in STRING_NODES else unquote(text(right, src))
+            if base is None:                                # base URL from a call: the appended path is what we know —
+                ok = tail is not None and tail.startswith("/") and has_literal_segment(normalize_path(tail))
+                return tail if ok else None                 # not a bare "/" onto a parameter (chi FileServer)
+            return base + (tail if tail is not None else "{param}")
         if t in ("parenthesized_expression", "await_expression", "unary_expression"):
             inner = [c for c in n.children if c.is_named]
             return self.path_of(inner[0], lenient, _depth + 1) if inner else None
@@ -396,12 +521,18 @@ class BaseScanner:
         return out
 
     def _unwrap_arg(self, n: Node) -> Node:
-        if n.type == "argument":            # C#: argument -> expression
+        if n.type in ("argument", "variadic_argument", "spread_element"):   # C# argument, Go `h...`, JS `...h`
             inner = [c for c in n.children if c.is_named]
             return inner[-1] if inner else n
         return n
 
     def method_from_args(self, arg_nodes: list[Node]) -> str | None:
+        for a in arg_nodes:                                  # request(method="POST", url=...)
+            nm = a.child_by_field_name("name") if a.type == "keyword_argument" else None
+            if nm is not None and text(nm, self.src) == "method":
+                v = self._method_value(a.child_by_field_name("value"))
+                if v:
+                    return v
         for a in arg_nodes[:4]:
             txt = text(a, self.src)
             if a.type in STRING_NODES and unquote(txt).upper() in HTTP_METHODS:
@@ -417,6 +548,32 @@ class BaseScanner:
                     v = (mm.group(1) or mm.group(2) or mm.group(3) or "").upper()
                     if v in HTTP_METHODS:
                         return v
+                for key, val in self._keyed_fields(a):         # {method: method}, the verb in a local
+                    if key == "method":
+                        v = self._method_value(val)
+                        if v:
+                            return v
+                for c in a.children:                          # {method}
+                    if c.type == "shorthand_property_identifier" and text(c, self.src) == "method":
+                        v = self._method_value(c)
+                        if v:
+                            return v
+        return None
+
+    def _method_value(self, n: Node | None, depth: int = 0) -> str | None:
+        """The HTTP verb an expression holds: a literal, `http.MethodPost` / `HttpMethod.Post`, or a local holding one."""
+        if n is None or depth > 2:
+            return None
+        txt = text(n, self.src)
+        if n.type in STRING_NODES:
+            v = unquote(txt).upper()
+            return v if v in HTTP_METHODS else None
+        m = re.match(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$", txt)
+        if m:
+            v = (m.group(1) or m.group(2) or "").upper()
+            return v if v in HTTP_METHODS else None
+        if n.type in ("identifier", "shorthand_property_identifier"):
+            return self._method_value(self.resolve_local(n), depth + 1)
         return None
 
     def is_handler_like(self, n: Node | None) -> bool:

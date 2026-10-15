@@ -58,14 +58,19 @@ Pipeline de um repo (`cli.extract_tree` → `extract_and_resolve`): `list_files`
 
 Dois passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_enclosing_symbol()`):
 
-1. **Contexto por diretório** (`PackageContext`): constantes/vars de rota (`const routeX = "/v1/x"`,
-   `ORDERS_PATH = '/v1/orders'`) e nomes de env var que parecem base URL (`*_URL`, `*_HOST`, `*_ENDPOINT`).
+1. **Contexto por diretório** (`PackageContext`): constantes de rota **do módulo ou da classe** (`const routeX = "/v1/x"`,
+   `ORDERS_PATH = '/v1/orders'`, base URL com path `"https://host/v1"`, e as montadas de outras —
+   `RouteItem = RouteCollection + "/{id}"`, resolvidas no primeiro uso por `route_const`) e nomes de env var que
+   parecem base URL (`*_URL`, `*_HOST`, `*_ENDPOINT`). Locais de função não entram: são lidas por `local_binding`.
 2. **Scanner por linguagem** (`languages/<lang>/http.py`: `GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`),
    todos herdando de `core/http_base.BaseScanner`, que concentra as peças reutilizáveis:
-   - `path_of(node, lenient)`: transforma uma expressão em template de path — literal, constante do
-     pacote, **variável local** (`resolve_local`: última atribuição anterior no mesmo escopo),
-     concatenação, `Sprintf`/f-string/`$""`/`` `${}` ``, `path.Join`. `lenient=True` (só em contexto de
-     cliente HTTP) aceita `items/{id}` e `{base}catalogBrands`.
+   - `path_of(node, lenient)`: transforma uma expressão em template de path — literal, **variável**
+     (`local_binding`: última atribuição anterior, da função mais interna para fora, sem entrar no corpo de outras
+     funções; um parâmetro para a busca — o valor é do chamador), constante do diretório, concatenação,
+     `Sprintf`/f-string/`$""`/`` `${}` `` (uma variável local interpolada é resolvida como na concatenação; constante
+     do módulo interpolada fica placeholder), `x += e` (o valor anterior mais `e`),
+     `path.Join`. `lenient=True` (só em contexto de cliente HTTP) aceita `items/{id}`, `{base}catalogBrands` e
+     `base + 'message'`.
    - `is_handler_like(node)`: **a regra que separa rota de chamada de saída** — o argumento depois do
      path é função/seletor/identificador (rota) ou dado/string/nil (cliente).
    - `method_from_args`, `resolve_handler` (nome → `Symbol` do mesmo arquivo), `add_endpoint`,
@@ -80,8 +85,8 @@ Regras aprendidas no corpus (não regredir):
 | `auth.Post("/login", h)` lido como chamada de saída | rota se o 2º arg é handler-like **ou** receiver é var de grupo/router |
 | decorator `@Get(':id')` contado como chamada | `call_expression` dentro de `decorator` é ignorado |
 | `cache.get(key)`, `map.delete(k)` | verbo minúsculo só é HTTP com receiver cliente (`CLIENT_RECEIVER`) |
-| `post(ctx, client, "application/json", body)` | MIME/heads em `_NOT_A_PATH_HEAD` não são path |
-| ``fetch(`${base}${path}`)`` | path só de placeholders é descartado (`_has_literal_segment`) |
+| `post(ctx, client, "application/json", body)` | MIME (`MIME_TYPE`: dois tokens, sem placeholder) e heads em `_NOT_A_PATH_HEAD` não são path — `` `${url}application/${id}` `` é (gotify) |
+| ``fetch(`${base}${path}`)``, `cache.Get(root + "/" + v + "/" + strings.Join(xs, ","))` | path sem segmento com nome é descartado (`has_literal_segment` exige letra ou dígito) |
 | `var uri = $"{base}items/{id}"; GetFromJsonAsync(uri)` | `resolve_local` + `lenient` |
 | `vApi.MapGroup("api/catalog").HasApiVersion(1,0)` | procurar o `MapGroup` **interno** da cadeia |
 | supertest `request(app).get('/x')` em `e2e/` | `TEST_FILE` + filtro por `getHttpServer/supertest` |
@@ -103,6 +108,21 @@ Regras aprendidas no corpus (não regredir):
 | Express 5 `'/search/{:query}'`, `'/files/:name{.:ext}'` normalizados em `{{query}}`, `{.{ext}}` | grupo opcional com parâmetro (`{:x}`, `{.:x}`, `{/:x}`) vira o parâmetro, antes das demais regras |
 | `r.Del("/silence/:sid", h)` (lib `route` da Prometheus) não era verbo | `GO_VERB_ALIASES = {"Del": "DELETE"}` |
 | `GetFromJsonAsync<List<T>>(uri)` e todo genérico aninhado: o callee virava `GetFromJsonAsync<List` e a chamada sumia | os argumentos de tipo são removidos até estabilizar |
+| `fetch(url)` com `url` parâmetro ganhava o valor do `url` local de **outra** função do diretório (zulip, mattermost; `SendAsync(message)` no jellyfin) | constantes só do módulo/classe; o nome é procurado primeiro nos escopos que o envolvem e um parâmetro encerra a busca |
+| `RouteItem = RouteCollection + "/{id}"` gravado como `/{id}` (`first_string` pegava o primeiro literal) | constante montada por `+` vira partes e é resolvida no uso, inclusive com constantes de outro arquivo do diretório (kratos) |
+| `ApiUrl + "/schedules"` com `ApiUrl = "https://host/20141201"` perdia o `/20141201` | constante com URL absoluta entra no contexto; o host sai na normalização |
+| `` url = `${url}?notify=true` `` / `url = url + "/x"`: o nome à direita é o valor anterior | a atribuição que contém o nome não é a ligação dele; variável local interpolada é resolvida — constante do módulo não: num wrapper genérico (`` `${prefix}/${API_PATH}${path}` ``, alertmanager) faria um path do que é só a base |
+| `target += "/" + id; method = "PATCH"` lido como `PATCH /api/v1/pages` (o método do ramo, o path de antes) | `x += e` é o valor anterior mais `e`, então path e método saem das mesmas últimas atribuições; com base desconhecida (`urlStr := c.base(); urlStr += fmt.Sprintf("/repos/%s", ..)`) vale o trecho acrescentado, se tiver segmento com nome — `path += "/"` num parâmetro não é rota (chi `FileServer`) |
+| `requests\n  .put('/x')` (TS), `client.\n\tGet(...)` (Go): o receiver não casava | espaços removidos do callee em todas as linguagens |
+| `fetch(url, {method: method})`, `request(method="POST", url=...)` gravados como `ANY` | o método vem de chave do objeto resolvida como variável (inclusive `{method}`) e de keyword argument |
+| `api.del(...)` (NodeBB, superagent) não era DELETE | `TS_VERB_ALIASES = {"del": "DELETE"}`, com a mesma exigência de receiver cliente dos verbos |
+| `$.get(url, cb)` do jQuery virava **rota** (o callback parecia handler) | receiver `$`/`jQuery` é cliente: `get`/`post`/`getJSON` são chamadas de saída, nunca rota |
+| `mux.Handle("/booking/v1/", sub)` gravado como rota `ANY /booking/v1` | num `ServeMux` (ou no mux padrão) o padrão com `/` final é uma subárvore: montagem, não rota |
+| `http.Handle("/x", h)` no mux padrão ignorado (`http` casa com `CLIENT_RECEIVER`) | `http.Handle`/`http.HandleFunc` são registro de rota |
+| `routes.Get("/metrics", append(mid, h)...)` lido como chamada GET | argumento espalhado (`h...`, `...h`) é desembrulhado antes de decidir se é handler |
+| `g.Group("/user").Use(mw).POST("", h)` perdia o `/user` | o prefixo atravessa a cadeia `Group`/`Use`/`With` do receiver |
+| aiohttp `app.router.add_get('/x', h)`, `add_route('*', '/x', h)` (e `add_route = app.router.add_route`) não eram lidos | registrars do aiohttp em receiver `*.router`; a raiz conta (é o router da aplicação) |
+| bundle de build commitado (`static/assets/main-OdxfRQdf.js`) repetia rotas e chamadas da fonte | `.js` com nome de hash e linha > 500, ou com linha > 2000 e média > 200 por linha, fica fora da extração HTTP |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
 arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),
@@ -128,7 +148,7 @@ inspecionar o que o extrator viu num repo específico.
 
 - **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
   padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
-  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `route-patterns-{go,ts,py,cs}` (raiz só com path conhecido, restrições/conversores, padrão relativo em grupo, router com nome de cliente — e os contra-exemplos que não podem virar rota), `ts-express-nest`, `csharp-httpclients`
+  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `route-patterns-{go,ts,py,cs}` (raiz só com path conhecido, restrições/conversores, padrão relativo em grupo, router com nome de cliente — e os contra-exemplos que não podem virar rota; desde os defeitos do corpus v2 também constantes montadas e com URL, escopo de variáveis, jQuery, mounts do `ServeMux`, aiohttp, método em variável e bundle de build), `ts-express-nest`, `csharp-httpclients`
   (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers) e o par **`csharp-praticis-todos` /
   `csharp-praticis-reports`** (+ `csharp-praticis-projects`) — o padrão .NET do autor em domínio genérico, uma
   fixture por layout (`flat`, `split`, `layered`) (Contracts + controller →
