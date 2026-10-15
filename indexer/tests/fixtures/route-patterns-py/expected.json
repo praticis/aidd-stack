@@ -1,12 +1,46 @@
 {
  "endpoints": [
-  {"method": "GET", "path": "/", "handler": "index"},
-  {"method": "GET", "path": "/posts/{post_id}/edit", "handler": "edit_post"},
-  {"method": "POST", "path": "/posts/{post_id}/edit", "handler": "edit_post"},
-  {"method": "GET", "path": "/{page}", "handler": "static_page"},
-  {"method": "GET", "path": "/admin", "handler": "admin_index"},
-  {"method": "GET", "path": "/items", "handler": "list_items"},
-  {"method": "GET", "path": "/items/{item_id}", "handler": "get_item"}
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "index"
+  },
+  {
+   "method": "GET",
+   "path": "/posts/{post_id}/edit",
+   "handler": "edit_post"
+  },
+  {
+   "method": "POST",
+   "path": "/posts/{post_id}/edit",
+   "handler": "edit_post"
+  },
+  {
+   "method": "GET",
+   "path": "/{page}",
+   "handler": "static_page"
+  },
+  {
+   "method": "GET",
+   "path": "/admin",
+   "handler": "admin_index"
+  },
+  {
+   "method": "GET",
+   "path": "/items",
+   "handler": "list_items"
+  },
+  {
+   "method": "GET",
+   "path": "/items/{item_id}",
+   "handler": "get_item"
+  }
  ],
- "calls": []
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/v1/stock",
+   "line": 17
+  }
+ ]
 }

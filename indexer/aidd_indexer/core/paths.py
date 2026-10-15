@@ -48,6 +48,7 @@ def normalize_path(path: str) -> str:
     m = URL_LITERAL.match(p)
     if m:
         p = m.group(1) or "/"
+    p = re.sub(r"\{([./]?):([A-Za-z_][A-Za-z0-9_]*)\}", r"\1{\2}", p)   # Express 5 optional group {:q}, {.:ext}, {/:id} → its parameter
     p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", p)        # optional :id? (express, gin)
     p = p.split("?", 1)[0].split("#", 1)[0]

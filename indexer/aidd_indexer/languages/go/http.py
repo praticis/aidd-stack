@@ -11,7 +11,8 @@ from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, H
                                first_string, text, walk)
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
-GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NAME)      # net/http, gorilla, chi, gin, echo, fiber
+GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
+GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NAME) | set(GO_VERB_ALIASES)   # net/http, gorilla, chi, gin, echo, fiber
 GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter"}                       # prefix carriers
 GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
 GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
@@ -75,7 +76,7 @@ class GoScanner(BaseScanner):
             first = arg_nodes[0]
             raw_first = unquote(text(first, self.src)) if first.type in STRING_NODES else None
             lit = raw_first if raw_first and re.match(r"^[A-Z]+ /", raw_first) else self.route_path(first, recv_last, n)
-            method = VERB_BY_NAME.get(name) if name in VERB_BY_NAME else (None if name in ("HandleFunc", "Handle", "Match") else "ANY")
+            method = VERB_BY_NAME.get(name) or GO_VERB_ALIASES.get(name) or (None if name in ("HandleFunc", "Handle", "Match") else "ANY")
             if name == "Match" and len(arg_nodes) >= 3:                 # gin: r.Match([]string{...}, "/x", h)
                 lit = self.route_path(arg_nodes[1], recv_last, n)
             if lit and (lit.startswith("/") or re.match(r"^[A-Z]+ /", lit)):
@@ -84,7 +85,7 @@ class GoScanner(BaseScanner):
                     framework = "net/http"
                     if name in ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "Any", "Match"):
                         framework = "gin/echo"
-                    elif name in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All"):
+                    elif name in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All") or name in GO_VERB_ALIASES:
                         framework = "chi/fiber"
                     if method is None:
                         gm = self._gorilla_methods(n)

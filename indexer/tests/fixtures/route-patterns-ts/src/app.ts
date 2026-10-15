@@ -13,7 +13,21 @@ app.use('/orders', orders);
 const api = express.Router();
 api.get('/status', status);
 
+// Express 5 optional groups.
+app.get('/search/{:query}', search);
+app.get('/files/:name{.:ext}', getFile);
+
+// fetch without a method is a GET; with a method it is that one; with one we cannot read, it stays unknown.
+export async function load(verb: string) {
+  await fetch('/api/orders');
+  await fetch('/api/orders', { method: 'POST' });
+  await fetch('/api/items', { method: verb });
+  await fetch(`/api/users?active=${true}`);
+}
+
 function home(req: Request, res: Response) {}
+function search(req: Request, res: Response) {}
+function getFile(req: Request, res: Response) {}
 function getUser(req: Request, res: Response) {}
 function listOrders(req: Request, res: Response) {}
 function status(req: Request, res: Response) {}

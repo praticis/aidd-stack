@@ -97,6 +97,12 @@ Regras aprendidas no corpus (não regredir):
 | `v1.GET("users", h)`, `api.MapGet("{orderId:int}", h)` ignorados (padrão sem `/` inicial) | `relative_on_groups` (Go, C#): num grupo conhecido o padrão relativo é juntado ao prefixo, como o framework faz. Python e Express exigem a barra — num `APIRouter` de callbacks OpenAPI `"{$callback_url}/invoices/..."` virava rota |
 | `api := r.Group("/api")` / `const api = express.Router()`: todo `api.GET(...)` descartado porque `api` casa com `CLIENT_RECEIVER` | receiver que o arquivo construiu como router/grupo (`router_vars`) é rota, qualquer que seja o nome |
 | `[HttpGet]` sem template num controller sem `[Route]` gravado como `GET /` (roteamento convencional `{controller}/{action}`) | ação sem template num controller sem prefixo não tem path próprio: não é gravada |
+| `$"{base}items/{id}?api-version=2.0"`, `` `/api/users?active=${x}` `` rejeitados: a query literal falhava na validação do template | `path_of` valida o template **sem a query** (e com os placeholders mascarados); `normalize_path` já a removia depois |
+| `fetch(url)` sem opções gravado como `ANY` | `fetch`/`$fetch`/`ofetch` sem a chave `method` é GET; com `method` que não se resolve, continua `ANY` |
+| `client.get("/items/foo")` de um `TestClient(app)` em tutorial (fora de pasta de teste) virava chamada de saída | nomes ligados a `TestClient(...)` / `app.test_client()` (atribuição ou `with ... as`) não fazem chamada de saída |
+| Express 5 `'/search/{:query}'`, `'/files/:name{.:ext}'` normalizados em `{{query}}`, `{.{ext}}` | grupo opcional com parâmetro (`{:x}`, `{.:x}`, `{/:x}`) vira o parâmetro, antes das demais regras |
+| `r.Del("/silence/:sid", h)` (lib `route` da Prometheus) não era verbo | `GO_VERB_ALIASES = {"Del": "DELETE"}` |
+| `GetFromJsonAsync<List<T>>(uri)` e todo genérico aninhado: o callee virava `GetFromJsonAsync<List` e a chamada sumia | os argumentos de tipo são removidos até estabilizar |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro escopo ou
 arquivo (`r.Route("/admin", func(r){...})`, `include_router(prefix=)`, `Handle("/api/v1", sub)`),

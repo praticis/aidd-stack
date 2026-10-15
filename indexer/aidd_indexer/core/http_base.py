@@ -292,9 +292,10 @@ class BaseScanner:
                     lit = "/" + rest.lstrip("/")
                 else:
                     return None
-            if URL_LITERAL.match(lit) or PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit):
-                return lit if len(lit) > 1 else None
-            if lenient and looks_like_rel_path(lit):
+            check = mask_placeholders(lit).split("?", 1)[0].split("#", 1)[0]    # `items/{id}?api-version=2.0`: the query is not the path
+            if URL_LITERAL.match(lit) or PATH_LITERAL.match(check) or REL_PATH_LITERAL.match(lit):
+                return lit if len(check) > 1 else None
+            if lenient and looks_like_rel_path(check):
                 return "/" + lit
             return None
         if t in ("identifier", "selector_expression", "member_expression", "property_identifier", "member_access_expression", "attribute"):

@@ -1,12 +1,51 @@
 {
  "endpoints": [
-  {"method": "GET", "path": "/", "handler": "Home"},
-  {"method": "GET", "path": "/items/by/{name}", "handler": "GetByName"},
-  {"method": "GET", "path": "/items/type/{typeId}/brand/{brandId}", "handler": "GetByBrand"},
-  {"method": "GET", "path": "/api/orders", "handler": "ListOrders"},
-  {"method": "GET", "path": "/api/orders/{orderId}", "handler": "GetOrder"},
-  {"method": "GET", "path": "/api/reports", "handler": "List"},
-  {"method": "GET", "path": "/api/reports/{id}", "handler": "Get"}
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "Home"
+  },
+  {
+   "method": "GET",
+   "path": "/items/by/{name}",
+   "handler": "GetByName"
+  },
+  {
+   "method": "GET",
+   "path": "/items/type/{typeId}/brand/{brandId}",
+   "handler": "GetByBrand"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "handler": "ListOrders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders/{orderId}",
+   "handler": "GetOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reports",
+   "handler": "List"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reports/{id}",
+   "handler": "Get"
+  }
  ],
- "calls": []
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/items/{param}",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/brands",
+   "line": 9
+  }
+ ]
 }

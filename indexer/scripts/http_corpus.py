@@ -18,10 +18,10 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-15, after the cheap fixes of docs/corpus-report.md): alertmanager
-23 routes · chi 27 · fiber-recipes 150 + 5 calls · gin-examples 39 · gin-realworld 13 · express 32 ·
+Baseline at the pinned commits (2026-10-16, after the cheap fixes of docs/corpus-report.md): alertmanager
+24 routes · chi 27 · fiber-recipes 150 + 5 calls · gin-examples 39 · gin-realworld 13 · express 32 ·
 express-realworld 20 · fastify 7 + 1 call · nest 195 + 1 call (157 of them in the framework's own integration/
-test apps) · eShop 30 + 6 calls · fastapi docs 86 + 11 calls · fastapi-template 23 · flask examples 18 ·
+test apps) · eShop 30 + 15 calls · fastapi docs 86 + 7 calls · fastapi-template 23 · flask examples 18 ·
 CleanArchitecture 1 (routes derived from class names by reflection — a convention's job) · gorilla-mux 0
 (library only). Precision/recall per repo: docs/corpus-report.md.
 """

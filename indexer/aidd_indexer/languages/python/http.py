@@ -18,9 +18,14 @@ class PyScanner(BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
 
     def run(self) -> None:
+        self.test_clients: set[str] = set()
         for n in walk(self.fx.tree.root_node):
             if n.type == "assignment":
                 self._maybe_router(n)
+                self._maybe_test_client(n.child_by_field_name("left"), n.child_by_field_name("right"))
+            elif n.type == "as_pattern":                            # with TestClient(app) as client:
+                named = [c for c in n.children if c.is_named]
+                self._maybe_test_client(named[-1] if len(named) > 1 else None, named[0] if named else None)
         for n in walk(self.fx.tree.root_node):
             if n.type == "decorated_definition":
                 self._decorated(n)
@@ -48,6 +53,15 @@ class PyScanner(BaseScanner):
                         v = a.child_by_field_name("value")
                         prefix = unquote(text(v, self.src)) if v is not None and v.type == "string" else ""
             self.group_prefix[name] = prefix
+
+    def _maybe_test_client(self, target: Node | None, value: Node | None) -> None:
+        """`TestClient(app)` / `app.test_client()`: requests through it exercise this app, they are not outbound."""
+        if target is None or value is None or value.type != "call":
+            return
+        fn = value.child_by_field_name("function")
+        name = text(fn, self.src).split(".")[-1] if fn is not None else ""
+        if name in ("TestClient", "test_client"):
+            self.test_clients.add(text(target, self.src).split(".")[-1])
 
     def _decorated(self, n: Node) -> None:
         func = next((c for c in n.children if c.type in ("function_definition", "class_definition")), None)
@@ -100,6 +114,8 @@ class PyScanner(BaseScanner):
             return
         if recv_last in self.router_vars or recv_last in ("app", "router", "bp", "blueprint", "api"):
             return                                                  # app.get(...) used imperatively
+        if recv_last in self.test_clients:
+            return
         if not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("requests", "httpx", "session", "client", "urllib3", "http")):
             return
         arg_nodes = [c for c in args.children if c.is_named]

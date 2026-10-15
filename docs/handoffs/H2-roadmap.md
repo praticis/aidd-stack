@@ -10,17 +10,17 @@
 
 ## Onde estamos
 
-- **Estado:** H2a concluído (2026-10-14). **H2b iniciado (2026-10-15)**: as três correções baratas de maior
-  efeito (raiz, restrições/conversores, padrão relativo em grupo) + router com nome de cliente + o FP do
-  roteamento convencional, com fixtures `route-patterns-{go,ts,py,cs}`. Recall pelos gabaritos: C# 49 → 73 %,
-  Go 6 → 15 %, Python 31 → 43 %, TS/JS 6 → 9 %.
-- **Incremento atual:** H2b — Fase 4, item 1 (restam as correções baratas menores), depois Fase 3.
+- **Estado:** H2a concluído (2026-10-14). H2b: **item 1 da Fase 4 fechado (2026-10-15 e 2026-10-16)** — todas as
+  correções baratas do relatório + router com nome de cliente, FP do roteamento convencional e genérico aninhado
+  no C#, com fixtures `route-patterns-{go,ts,py,cs}`. Recall de rotas pelos gabaritos: C# 49 → 73 %, Go 6 → 15 %,
+  Python 31 → 43 %, TS/JS 6 → 9 %; chamadas C# 19 → 24 %.
+- **Incremento atual:** H2b — Fase 3 (ampliar o corpus).
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-baseline/` — depois das correções baratas
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-baseline/` — depois de todas as correções baratas
   (a de 2026-10-14 fica como referência do v1).
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
@@ -34,9 +34,8 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** fechar o item 1 da Fase 4 com as correções baratas menores
-  (`query-in-template`, `method-default`, `test-client-in-source`, `optional-segment-syntax`, `verb-alias`) e
-  partir para a Fase 3 (ampliar o corpus) antes do grafo de montagem.
+- **Próximo passo:** Fase 3 — confirmar e fixar os repos candidatos (preferência por spec commitada), gerar
+  os gabaritos e estender o relatório; só então o grafo de montagem (Fase 4, item 2), medido no corpus ampliado.
 
 ## Decisões
 
@@ -113,12 +112,13 @@ ao menos um monólito grande e um serviço "de empresa". Candidatos **a confirma
 Por categoria: fixture → mudança em `languages/<lang>/http.py` (ou `core/http_base.py` se for comum) →
 `pytest` → corpus `--baseline` (nenhum repo pode regredir, H2-D11) → tabela §3 do guia → nova baseline.
 Um commit por categoria. Ordem definida pelo relatório v1 (wrong + missed no corpus atual):
-- [ ] **1. Correções baratas e gerais**
+- [x] **1. Correções baratas e gerais**
   - [x] *(2026-10-15)* `root-route-dropped` (raiz só com path completo conhecido: app ou grupo com prefixo),
     `route-constraint-syntax` (placeholder mascarado na validação; `?` opcional antes da query), `no-leading-slash`
     (`relative_on_groups` em Go/C#), `client-named-router` (router do arquivo vence o nome) e o FP do roteamento
     convencional do ASP.NET — fixtures `route-patterns-{go,ts,py,cs}`
-  - [ ] `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`, `verb-alias` (`Del`)
+  - [x] *(2026-10-16)* `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`,
+    `verb-alias` (`Del`) e `nested-generic-callee` (C# `<List<T>>`, achado no caminho)
 - [ ] **2. Grafo de montagem** (132 wrong + missed): `prefix-other-scope` no mesmo arquivo primeiro (closure
   `r.Route`, `Group`, `register(fn, {prefix})`), depois `prefix-other-file`/`router-as-param`/`global-prefix` entre
   arquivos (imports, constantes/settings, chamadas `Register(v1.Group("/x"))`): passo pós-scan em `integrations.py`,
@@ -219,3 +219,12 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   só em Go/C#). Gabaritos: `category` limpo nos itens encontrados e reclassificado nos que faltam; categorias
   novas `client-named-router` e `app-not-recognized`. Sem bump de `INDEXER_VERSION`: a impressão digital do
   build já reindexa. Nova baseline `2026-10-15-baseline`. H2-D14 confirmado.
+- **2026-10-16** — H2b, Fase 4 item 1 fechado. As cinco correções baratas menores (query fora da validação do
+  template, `fetch` = GET, `TestClient` não é chamada de saída, grupo opcional do Express 5, `Del`) e uma achada no
+  caminho: genérico aninhado no callee C# (`GetFromJsonAsync<List<T>>`) fazia a chamada sumir — e tinha escondido
+  `GET /api/webhooks` também do gabarito do eShop (o grep da listagem tinha o mesmo ponto cego); gabarito corrigido.
+  Diff julgado item a item: 4 FPs de `TestClient` a menos, 1 método corrigido, 3 rotas normalizadas, 1 rota nova
+  (`DELETE` do alertmanager, sem `/api/v1` como as irmãs) e 10 chamadas novas no eShop (2 certas; as do catálogo
+  sem o `api/catalog/` do campo interpolado, como as irmãs) — H2-D14: precisão de chamadas C# no gabarito
+  50 → 40 %, recall 19 → 24 %. Amostra: itens que deixaram de ser extraídos saíram; os do mesmo local com path ou
+  método corrigido foram atualizados. Nova baseline `2026-10-16-baseline`.

@@ -34,7 +34,23 @@
    "method": "GET",
    "path": "/api/health",
    "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/status",
+   "handler": "status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/silence/{sid}",
+   "handler": "deleteSilence"
   }
  ],
- "calls": []
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/v1/invoices",
+   "line": 18
+  }
+ ]
 }

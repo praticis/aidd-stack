@@ -183,6 +183,37 @@ Every change was judged against the baseline diff:
 The tables above this section are v1 (2026-10-14) and are kept as they were. Run `--expected` for the current
 figures.
 
+## Update: the remaining cheap fixes (2026-10-16)
+
+This closes item 1 of the H2b order: the five smaller categories, plus one found on the way. Each case is in
+the `route-patterns-*` fixtures, next to its counter-example (`fetch` with a `method` that cannot be read stays
+ANY; a real `httpx.get` next to a `TestClient` stays a call).
+
+- `query-in-template`: the template is validated without its query string.
+- `method-default`: `fetch(url)` with no `method` key is a GET.
+- `test-client-in-source`: names bound to `TestClient(...)` or `app.test_client()` make no outbound calls.
+- `optional-segment-syntax`: Express 5 optional groups (`{:q}`, `{.:ext}`) normalize to their parameter.
+- `verb-alias`: `Del` is DELETE.
+- **New, `nested-generic-callee`:** `GetFromJsonAsync<List<T>>(...)` lost the call entirely, because only the
+  innermost type argument was stripped from the callee. It also hid a call from the v1 expected list, which was
+  built with a grep that had the same blind spot. `GET /api/webhooks` was added there.
+
+Diff against the 2026-10-15 baseline, every item judged:
+
+- 4 false-positive calls removed (TestClient).
+- 1 call method corrected (ANY → GET).
+- 3 routes normalized correctly.
+- 1 route added: `DELETE /silence/{sid}`. It is right but lacks `/api/v1`, like its siblings (router-as-param).
+- 10 eShop calls added. Two are right (`GET /api/webhooks`, plus the method fix above). The catalog calls of
+  WebAppComponents and HybridApp have the right path but lack the `api/catalog/` prefix that the client class
+  keeps in a field interpolated into the URL. That is `field-in-interpolation`, the defect their already-judged
+  siblings have.
+
+This is why the precision of C# calls against the expected list drops from 50 % to 40 % (4/10) while their
+recall goes from 18.8 % to 23.5 % (4/17). Under H2-D14 that does not block the rule: the rule now extracts what
+is written. `field-in-interpolation` (6 missed) and `url-object-builder` (7) are now the main gaps on calls.
+Sampled precision of calls: Go 5/5, Python 7/7.
+
 ## Two open decisions, measured
 
 - **Generated clients (H2-D9).** Two in the corpus: the openapi-ts client of `fastapi-template`
@@ -197,8 +228,8 @@ figures.
 
 ## What H2b should do, in order
 
-1. **Cheap, general fixes**, each with a fixture and a corpus diff. The first three were done on 2026-10-15
-   (see the update above); the rest are still open:
+1. **Cheap, general fixes**, each with a fixture and a corpus diff. Done on 2026-10-15 and 2026-10-16 (see the
+   updates above):
    - accept `"/"`/`""` as route patterns (`root-route-dropped`, 35 misses);
    - accept constraint/converter syntax inside placeholders (`route-constraint-syntax`, 9);
    - accept relative patterns on route registrations (`no-leading-slash`, 6);

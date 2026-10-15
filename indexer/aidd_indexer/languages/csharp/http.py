@@ -136,7 +136,8 @@ class CsScanner(BaseScanner):
             return
         fn, args = kids[0], kids[-1]
         callee = text(fn, self.src)
-        callee = re.sub(r"<[^<>]*>", "", callee)                   # GetFromJsonAsync<T>
+        while "<" in callee and re.search(r"<[^<>]*>", callee):   # GetFromJsonAsync<T>, GetFromJsonAsync<List<T>>
+            callee = re.sub(r"<[^<>]*>", "", callee)
         name = callee.split(".")[-1]
         recv_last = (callee.rsplit(".", 1)[0] if "." in callee else "").split(".")[-1]
         arg_nodes = [self._unwrap_arg(c) for c in args.children if c.is_named]

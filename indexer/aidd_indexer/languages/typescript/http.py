@@ -97,6 +97,9 @@ class TsScanner(BaseScanner):
             if name in VERB_BY_NAME and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this")):
                 return                                                  # cache.get(key), map.delete(k) ...
             method = OUTBOUND[name] or self.method_from_args(arg_nodes)
+            if method is None and name in ("fetch", "$fetch", "ofetch") \
+                    and not any(re.search(r"\bmethod\s*:", text(a, self.src)) for a in arg_nodes[1:]):
+                method = "GET"                                      # fetch(url) / fetch(url, { headers }) is a GET
             lenient = name in ("fetch", "$fetch", "ofetch") or bool(CLIENT_RECEIVER.search(recv_last))
             for a in arg_nodes:
                 p = self.path_of(a, lenient=lenient)

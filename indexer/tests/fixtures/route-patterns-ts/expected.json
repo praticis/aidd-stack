@@ -14,7 +14,38 @@
    "method": "GET",
    "path": "/status",
    "handler": "status"
+  },
+  {
+   "method": "GET",
+   "path": "/search/{query}",
+   "handler": "search"
+  },
+  {
+   "method": "GET",
+   "path": "/files/{name}.{ext}",
+   "handler": "getFile"
   }
  ],
- "calls": []
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "line": 22
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders",
+   "line": 23
+  },
+  {
+   "method": "ANY",
+   "path": "/api/items",
+   "line": 24
+  },
+  {
+   "method": "GET",
+   "path": "/api/users",
+   "line": 25
+  }
+ ]
 }

@@ -146,34 +146,6 @@
   ],
   "calls": [
    {
-    "evidence": "fastapi:docs_src/app_testing/tutorial003_py310.py:22",
-    "method": "GET",
-    "path": "/items/foo",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "fastapi:docs_src/app_testing/tutorial004_py310.py:34",
-    "method": "GET",
-    "path": "/items/foo",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "fastapi:docs_src/dependency_testing/tutorial001_an_py310.py:34",
-    "method": "GET",
-    "path": "/items",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "fastapi:docs_src/dependency_testing/tutorial001_py310.py:32",
-    "method": "GET",
-    "path": "/items",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
     "evidence": "fastapi:scripts/playwright/cookie_param_models/image01.py:32",
     "method": "GET",
     "path": "/docs",
@@ -225,7 +197,7 @@
   ]
  },
  "checked_seed": "1",
- "notes": "Precision: 20 of 84 sampled (seed 1), all correct — single-file tutorials. docs_src holds hundreds of tutorials repeating the same routes, so most collapse into one endpoint (multi-app-repo); 84 is what survives the dedupe. Recall scope: docs_src/bigger_applications/app_an_py310/ — the items routes exist only with another tutorial's evidence (multi-app-repo), POST /admin needs the prefix from app.include_router(admin.router, prefix=\"/admin\") in main.py (prefix-other-file) and GET / is dropped (root-route-dropped). Calls: all 11 checked. The 4 under docs_src/app_testing and docs_src/dependency_testing are TestClient requests inside test functions of tutorial files, outside any test folder (test-client-in-source); the 7 httpx.get calls in scripts/playwright are real.",
+ "notes": "Precision: 20 of 84 sampled (seed 1), all correct — single-file tutorials. docs_src holds hundreds of tutorials repeating the same routes, so most collapse into one endpoint (multi-app-repo); 84 is what survives the dedupe. Recall scope: docs_src/bigger_applications/app_an_py310/ — the items routes exist only with another tutorial's evidence (multi-app-repo), POST /admin needs the prefix from app.include_router(admin.router, prefix=\"/admin\") in main.py (prefix-other-file) and GET / is dropped (root-route-dropped). Calls: all 11 checked. The 4 under docs_src/app_testing and docs_src/dependency_testing are TestClient requests inside test functions of tutorial files, outside any test folder (test-client-in-source); the 7 httpx.get calls in scripts/playwright are real. 2026-10-16: the four TestClient requests left the calls sample — they are no longer extracted (they were its only wrong calls).",
  "scope": {
   "endpoints": [
    "docs_src/bigger_applications/app_an_py310/"
