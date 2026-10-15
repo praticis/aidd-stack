@@ -15,6 +15,8 @@ Gabarito, one per repo:
      "calls":     [{"method": "GET", "path": "/api/items/{id}"}],   # literal/template paths only, as written
      "checked":   {"endpoints": [{"evidence": "repo:file:line", "method": "GET", "path": "/x", "ok": true,
                                   "category": null}], "calls": [...]},
+     "language": {"calls": "TS/JS"},                     # optional: a kind written in another language than the
+                                                        # repo's (a Go server's React UI) — for the per-language summary
      "notes": "..."}
 
 Matching is by `(method, path_key)` over distinct pairs: placeholder names do not matter, and an
@@ -156,13 +158,17 @@ def openapi_prefix(spec: dict) -> str:
     return urlparse(url).path if "://" in url else url
 
 
-def from_openapi(spec: dict, prefix: str | None = None) -> list[dict]:
-    """Every `(method, path)` the spec declares, with the server prefix applied."""
+def from_openapi(spec: dict, prefix: str | None = None, base: Path | None = None) -> list[dict]:
+    """Every `(method, path)` the spec declares, with the server prefix applied. A path item that is a
+    `$ref` to another file (`/ping: {$ref: 'write/ping.yaml'}`) is read from `base`, the spec's folder."""
     pre = openapi_prefix(spec) if prefix is None else prefix
     pre = "/" + pre.strip("/") if pre.strip("/") else ""
-    out = {(m.upper(), normalize_path(pre + p))
-           for p, ops in (spec.get("paths") or {}).items() if isinstance(ops, dict)
-           for m in ops if m.upper() in HTTP_METHODS}
+    out = set()
+    for p, ops in (spec.get("paths") or {}).items():
+        if isinstance(ops, dict) and base is not None and str(ops.get("$ref", "#")).split("#")[0]:
+            ops = load_spec(base / ops["$ref"].split("#")[0])
+        if isinstance(ops, dict):
+            out |= {(m.upper(), normalize_path(pre + p)) for m in ops if m.upper() in HTTP_METHODS}
     return [{"method": m, "path": p} for m, p in sorted(out, key=lambda t: (t[1], t[0]))]
 
 
@@ -183,7 +189,7 @@ def main() -> int:
     oa.add_argument("--scope", action="append", default=[], help="file prefix the extracted routes must be under")
     oa.add_argument("--sha", default="")
     args = ap.parse_args()
-    routes = {(r["method"], r["path"]): r for sp in args.spec for r in from_openapi(load_spec(sp), args.prefix)}
+    routes = {(r["method"], r["path"]): r for sp in args.spec for r in from_openapi(load_spec(sp), args.prefix, sp.parent)}
     gab = {"source": "openapi", "sha": args.sha, "spec": [str(sp) for sp in args.spec],
            "endpoints": [routes[k] for k in sorted(routes, key=lambda t: (t[1], t[0]))]}
     if args.scope:

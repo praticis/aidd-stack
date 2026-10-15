@@ -1,0 +1,480 @@
+{
+ "source": "manual",
+ "sha": "e625db923ca2cc62542de17c59738ca638ccfa5d",
+ "scope": {
+  "endpoints": [
+   "src/Api/Dirt/Controllers/HibpController.cs",
+   "src/Api/Platform/Push/Controllers/PushController.cs",
+   "src/Api/Auth/Controllers/EmergencyAccessController.cs"
+  ],
+  "calls": [
+   "src/Core/Dirt/Services/Implementations/SlackService.cs",
+   "src/Core/Dirt/Services/Implementations/TeamsService.cs"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/emergency-access/granted"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/invite"
+  },
+  {
+   "method": "GET",
+   "path": "/emergency-access/trusted"
+  },
+  {
+   "method": "DELETE",
+   "path": "/emergency-access/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/emergency-access/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/emergency-access/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/accept"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/approve"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/confirm"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/delete"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/initiate"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/password"
+  },
+  {
+   "method": "GET",
+   "path": "/emergency-access/{id}/policies"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/reinvite"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/reject"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/takeover"
+  },
+  {
+   "method": "POST",
+   "path": "/emergency-access/{id}/view"
+  },
+  {
+   "method": "GET",
+   "path": "/emergency-access/{id}/{cipherId}/attachment/{attachmentId}"
+  },
+  {
+   "method": "GET",
+   "path": "/hibp/breach"
+  },
+  {
+   "method": "PUT",
+   "path": "/push/add-organization"
+  },
+  {
+   "method": "POST",
+   "path": "/push/delete"
+  },
+  {
+   "method": "PUT",
+   "path": "/push/delete-organization"
+  },
+  {
+   "method": "POST",
+   "path": "/push/register"
+  },
+  {
+   "method": "POST",
+   "path": "/push/send"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/chat.postMessage"
+  },
+  {
+   "method": "POST",
+   "path": "/common/oauth2/v2.0/token"
+  },
+  {
+   "method": "GET",
+   "path": "/conversations.list",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "POST",
+   "path": "/conversations.open"
+  },
+  {
+   "method": "GET",
+   "path": "/me/joinedTeams"
+  },
+  {
+   "method": "POST",
+   "path": "/oauth.v2.access"
+  },
+  {
+   "method": "GET",
+   "path": "/users.lookupByEmail"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/teams/{teamId}/conversations"
+  }
+ ],
+ "notes": "Manual, no committed spec. A large ASP.NET service (Api, Identity, Admin, Billing, Events, Notifications, Sso and the commercial bitwarden_license apps — multi-app-repo). Controllers declare [Route(\"organizations\")] on the class and relative templates on the actions, or absolute templates with no class route (Secrets Manager): every sampled route is right, and the three controllers read whole (Hibp, Push, EmergencyAccess) come out complete. Calls: typed clients and services with base URLs from GlobalSettings and literal paths — all sampled calls right (k6 load scripts in perf/ included); the relay push client posts to /push/send, the same repo's PushController route. Recall of calls in the Slack and Teams services: one URL goes through a UriBuilder (url-object-builder). License: AGPL for src/, a commercial license for bitwarden_license/ — only read for measurement.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "bitwarden:src/Admin/Billing/Controllers/BusinessUnitConversionController.cs:65",
+    "method": "POST",
+    "path": "/organizations/billing/{organizationId}/business-unit",
+    "raw": "organizations/billing/{organizationId:guid}/business-unit",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Admin/Billing/Controllers/OrganizationPlanMigrationCohortsController.cs:115",
+    "method": "GET",
+    "path": "/migration-cohorts/{id}",
+    "raw": "migration-cohorts/{id:guid}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/AdminConsole/Controllers/OrganizationDomainController.cs:114",
+    "method": "POST",
+    "path": "/organizations/{orgId}/domain",
+    "raw": "organizations/{orgId}/domain",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/AdminConsole/Controllers/OrganizationInviteLinksController.cs:113",
+    "method": "PUT",
+    "path": "/organizations/{orgId}/invite-link/support-confirm",
+    "raw": "organizations/{orgId}/invite-link/support-confirm",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/AdminConsole/Controllers/OrganizationsController.cs:207",
+    "method": "POST",
+    "path": "/organizations/create-without-payment",
+    "raw": "organizations/create-without-payment",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/AdminConsole/Controllers/OrganizationsController.cs:550",
+    "method": "PUT",
+    "path": "/organizations/{id}/collection-management",
+    "raw": "organizations/{id}/collection-management",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/AdminConsole/Controllers/ProviderUsersController.cs:69",
+    "method": "POST",
+    "path": "/providers/{providerId}/users/reinvite",
+    "raw": "providers/{providerId:guid}/users/reinvite",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Auth/Controllers/AccountsController.cs:208",
+    "method": "POST",
+    "path": "/accounts/verify-email",
+    "raw": "accounts/verify-email",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Auth/Controllers/EmergencyAccessController.cs:154",
+    "method": "POST",
+    "path": "/emergency-access/{id}/approve",
+    "raw": "emergency-access/{id}/approve",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Auth/Controllers/TwoFactorController.cs:490",
+    "method": "POST",
+    "path": "/two-factor/email",
+    "raw": "two-factor/email",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Billing/Controllers/OrganizationSponsorshipsController.cs:302",
+    "method": "GET",
+    "path": "/organization/sponsorship/{sponsoringOrgId}/sync-status",
+    "raw": "organization/sponsorship/{sponsoringOrgId}/sync-status",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Billing/Controllers/PreviewInvoiceController.cs:22",
+    "method": "POST",
+    "path": "/billing/preview-invoice/organizations/subscriptions/purchase",
+    "raw": "billing/preview-invoice/organizations/subscriptions/purchase",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Billing/Controllers/PreviewInvoiceController.cs:57",
+    "method": "POST",
+    "path": "/billing/preview-invoice/premium/subscriptions/purchase",
+    "raw": "billing/preview-invoice/premium/subscriptions/purchase",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Billing/Controllers/VNext/ProviderBillingVNextController.cs:70",
+    "method": "GET",
+    "path": "/providers/{providerId}/billing/vnext/payment-method",
+    "raw": "providers/{providerId:guid}/billing/vnext/payment-method",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Controllers/SelfHosted/SelfHostedOrganizationSponsorshipsController.cs:56",
+    "method": "POST",
+    "path": "/organization/sponsorship/self-hosted/{sponsoringOrgId}/families-for-enterprise",
+    "raw": "organization/sponsorship/self-hosted/{sponsoringOrgId}/families-for-enterprise",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Dirt/Controllers/HibpController.cs:45",
+    "method": "GET",
+    "path": "/hibp/breach",
+    "raw": "hibp/breach",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Platform/Push/Controllers/PushController.cs:82",
+    "method": "POST",
+    "path": "/push/send",
+    "raw": "push/send",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/SecretsManager/Controllers/AccessPoliciesController.cs:86",
+    "method": "GET",
+    "path": "/organizations/{id}/access-policies/service-accounts/potential-grantees",
+    "raw": "/organizations/{id}/access-policies/service-accounts/potential-grantees",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/SecretsManager/Controllers/CountsController.cs:61",
+    "method": "GET",
+    "path": "/projects/{projectId}/sm-counts",
+    "raw": "/projects/{projectId}/sm-counts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Api/Vault/Controllers/CiphersController.cs:1130",
+    "method": "POST",
+    "path": "/ciphers/{id}/delete-admin",
+    "raw": "ciphers/{id}/delete-admin",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "bitwarden:perf/load/config.js:58",
+    "method": "GET",
+    "path": "/config",
+    "raw": "/config",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:perf/load/groups.js:125",
+    "method": "PUT",
+    "path": "/public/groups/{param}",
+    "raw": "/public/groups/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:perf/load/groups.js:99",
+    "method": "GET",
+    "path": "/public/groups/{param}",
+    "raw": "/public/groups/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:perf/load/helpers/auth.js:62",
+    "method": "POST",
+    "path": "/connect/token",
+    "raw": "/connect/token",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:perf/load/sync.js:61",
+    "method": "GET",
+    "path": "/sync",
+    "raw": "/sync?excludeDomains={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Admin/Controllers/HomeController.cs:56",
+    "method": "GET",
+    "path": "/version.json",
+    "raw": "https://selfhost.bitwarden.com/version.json",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Billing/Organizations/Queries/GetSelfHostedOrganizationLicenseQuery.cs:59",
+    "method": "GET",
+    "path": "/licenses/organization/{param}",
+    "raw": "/licenses/organization/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Billing/Pricing/PricingClient.cs:34",
+    "method": "GET",
+    "path": "/plans/organization/{param}",
+    "raw": "/plans/organization/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Billing/Pricing/PricingClient.cs:68",
+    "method": "GET",
+    "path": "/plans/organization",
+    "raw": "/plans/organization",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Dirt/Services/Implementations/SlackService.cs:100",
+    "method": "POST",
+    "path": "/oauth.v2.access",
+    "raw": "/oauth.v2.access",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Dirt/Services/Implementations/SlackService.cs:137",
+    "method": "POST",
+    "path": "/chat.postMessage",
+    "raw": "/chat.postMessage",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Dirt/Services/Implementations/SlackService.cs:190",
+    "method": "POST",
+    "path": "/conversations.open",
+    "raw": "/conversations.open",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Dirt/Services/Implementations/TeamsService.cs:119",
+    "method": "GET",
+    "path": "/v3/teams/{param}/conversations",
+    "raw": "/v3/teams/{param}/conversations",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Dirt/Services/Implementations/TeamsService.cs:97",
+    "method": "GET",
+    "path": "/me/joinedTeams",
+    "raw": "/me/joinedTeams",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/OrganizationFeatures/OrganizationSponsorships/FamiliesForEnterprise/SelfHosted/SelfHostedSyncSponsorshipsCommand.cs:72",
+    "method": "POST",
+    "path": "/organization/sponsorship/sync",
+    "raw": "/organization/sponsorship/sync",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Platform/Push/Engines/RelayPushEngine.cs:76",
+    "method": "POST",
+    "path": "/push/send",
+    "raw": "/push/send",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Platform/PushRegistration/RelayPushRegistrationService.cs:58",
+    "method": "POST",
+    "path": "/push/delete",
+    "raw": "/push/delete",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Core/Platform/PushRegistration/RelayPushRegistrationService.cs:82",
+    "method": "PUT",
+    "path": "/push/delete-organization",
+    "raw": "/push/delete-organization",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:src/Identity/Controllers/SsoController.cs:60",
+    "method": "GET",
+    "path": "/Account/PreValidate",
+    "raw": "/Account/PreValidate?domainHint={param}&culture={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "bitwarden:util/Setup/Program.cs:397",
+    "method": "GET",
+    "path": "/installations/{param}",
+    "raw": "/installations/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

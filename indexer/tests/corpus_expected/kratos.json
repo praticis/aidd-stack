@@ -1,0 +1,653 @@
+{
+ "source": {
+  "endpoints": "openapi + manual",
+  "calls": "manual"
+ },
+ "sha": "b86338da04a040247a07f46100a86dcfb3875909",
+ "spec": [
+  "/corpus/repos/kratos/spec/api.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "identity/",
+   "session/",
+   "selfservice/",
+   "courier/handler.go",
+   "schema/",
+   "x/",
+   "oryx/healthx/",
+   "driver/config/"
+  ],
+  "calls": [
+   "selfservice/strategy/oidc/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/.well-known/change-password"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/ory/webauthn.js"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/courier/messages",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/courier/messages/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/health/config",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/identities",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/identities",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities/by/external/{externalID}",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/identities/{id}/credentials/{type}",
+   "category": "const-concat"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/identities/{id}/sessions",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities/{id}/sessions",
+   "category": "const-concat"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/recovery/code",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/recovery/link",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/sessions",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/sessions",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/sessions/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/sessions/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/sessions/{id}/extend",
+   "category": "const-concat"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/test-login-flows",
+   "category": "prefix-in-router-type"
+  },
+  {
+   "method": "GET",
+   "path": "/health/alive"
+  },
+  {
+   "method": "GET",
+   "path": "/health/ready"
+  },
+  {
+   "method": "GET",
+   "path": "/identities"
+  },
+  {
+   "method": "POST",
+   "path": "/identities"
+  },
+  {
+   "method": "GET",
+   "path": "/identities/by/external/{externalID}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "PATCH",
+   "path": "/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "PUT",
+   "path": "/identities/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "DELETE",
+   "path": "/identities/{id}/credentials/{type}",
+   "category": "const-concat"
+  },
+  {
+   "method": "POST",
+   "path": "/recovery/code"
+  },
+  {
+   "method": "POST",
+   "path": "/recovery/link"
+  },
+  {
+   "method": "GET",
+   "path": "/schemas",
+   "category": "const-in-format"
+  },
+  {
+   "method": "GET",
+   "path": "/schemas/{id}",
+   "category": "const-in-format"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/errors"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/login"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/login"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/login/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/login/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/login/flows"
+  },
+  {
+   "method": "DELETE",
+   "path": "/self-service/login/test"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/logout"
+  },
+  {
+   "method": "DELETE",
+   "path": "/self-service/logout/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/logout/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/methods/oidc/callback",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/methods/oidc/callback/{provider}",
+   "category": "const-concat"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/methods/oidc/callback/{provider}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/recovery"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/recovery"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/recovery/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/recovery/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/recovery/flows"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/registration"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/registration"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/registration/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/registration/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/registration/flows"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/settings"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/settings/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/settings/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/settings/flows"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/verification"
+  },
+  {
+   "method": "POST",
+   "path": "/self-service/verification"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/verification/api"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/verification/browser"
+  },
+  {
+   "method": "GET",
+   "path": "/self-service/verification/flows"
+  },
+  {
+   "method": "DELETE",
+   "path": "/sessions"
+  },
+  {
+   "method": "GET",
+   "path": "/sessions"
+  },
+  {
+   "method": "GET",
+   "path": "/sessions/token-exchange",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/sessions/whoami",
+   "category": "route-in-loop"
+  },
+  {
+   "method": "DELETE",
+   "path": "/sessions/{id}",
+   "category": "const-concat"
+  },
+  {
+   "method": "GET",
+   "path": "/version"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/oauth2/v2/identity"
+  },
+  {
+   "method": "GET",
+   "path": "/idshub/userinfo",
+   "category": "url-in-field"
+  },
+  {
+   "method": "GET",
+   "path": "/info"
+  },
+  {
+   "method": "GET",
+   "path": "/me",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/method/users.get"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/userinfo",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/services/oauth2/userinfo",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/suite/passport/oauth/userinfo",
+   "category": "url-in-var"
+  },
+  {
+   "method": "POST",
+   "path": "/token",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/user/profile",
+   "category": "url-in-field"
+  },
+  {
+   "method": "GET",
+   "path": "/userinfo",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "GET",
+   "path": "/v1.0/contact/users/me"
+  },
+  {
+   "method": "GET",
+   "path": "/v1.0/me"
+  },
+  {
+   "method": "POST",
+   "path": "/v1.0/oauth2/userAccessToken",
+   "category": "url-in-field"
+  }
+ ],
+ "notes": "Endpoints: the committed OpenAPI 3 spec (spec/api.json) plus routes verified in the code while checking extracted items (public redirect twins of the admin routes, GET on the self-service submit paths, the OIDC callbacks, /admin/health/config); the two /self-service/fed-cm routes are only in the spec (no registration in this code) and were removed. Scope: the packages that register the public/admin APIs. Findings: (1) const-concat — a route constant built from another constant, RouteItem = RouteCollection + \"/{id}\", keeps only the literal tail (/{id}); this is an extractor defect, not a missing feature. (2) prefix-in-router-type — RegisterAdminRoutes(admin *httprouterx.RouterAdmin): the admin router type prepends /admin (AdminPrefix, in the vendored ory/x) to everything it registers. (3) const-in-format: fmt.Sprintf(\"/%s/{id}\", SchemasPath). (4) route-in-loop: public.Handle(m+\" \"+RouteWhoami, h) for m in a list of methods. When a route needs const-concat and the /admin prefix, it is counted as const-concat. Test helpers outside _test files (pkg/testhelpers, courier/template/testhelpers) register routes (test-app-folder). Calls: the OIDC providers (selfservice/strategy/oidc/), literal URLs only — the ones built on url.Parse(issuer) + u.Path = path.Join(...) are url-object-builder, URLs kept in struct fields set by the constructor are url-in-field, a package var is url-in-var. pkg/httpclient is an openapi-generator Go client (localVarPath := localBasePath + \"/self-service/...\"), not measured here (H2-D9).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "kratos:courier/handler.go:50",
+    "method": "GET",
+    "path": "/messages",
+    "raw": "/messages",
+    "ok": false,
+    "category": "const-concat"
+   },
+   {
+    "evidence": "kratos:courier/template/testhelpers/testhelpers.go:97",
+    "method": "GET",
+    "path": "/{filename}",
+    "raw": "GET /{filename}",
+    "ok": false,
+    "category": "test-app-folder"
+   },
+   {
+    "evidence": "kratos:identity/handler.go:88",
+    "method": "GET",
+    "path": "/identities/by/external/{externalID}",
+    "raw": "/identities/by/external/{externalID}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:identity/handler.go:92",
+    "method": "PUT",
+    "path": "/{id}",
+    "raw": "/{id}",
+    "ok": false,
+    "category": "const-concat"
+   },
+   {
+    "evidence": "kratos:identity/handler.go:93",
+    "method": "PATCH",
+    "path": "/{id}",
+    "raw": "/{id}",
+    "ok": false,
+    "category": "const-concat"
+   },
+   {
+    "evidence": "kratos:selfservice/flow/login/handler.go:88",
+    "method": "GET",
+    "path": "/self-service/login/api",
+    "raw": "/self-service/login/api",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/login/handler.go:89",
+    "method": "GET",
+    "path": "/self-service/login/flows",
+    "raw": "/self-service/login/flows",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/login/handler.go:91",
+    "method": "POST",
+    "path": "/self-service/login",
+    "raw": "/self-service/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/login/handler.go:92",
+    "method": "GET",
+    "path": "/self-service/login",
+    "raw": "/self-service/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/login/handler.go:94",
+    "method": "DELETE",
+    "path": "/self-service/login/test",
+    "raw": "/self-service/login/test",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/recovery/handler.go:83",
+    "method": "POST",
+    "path": "/self-service/recovery",
+    "raw": "/self-service/recovery",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/registration/handler.go:89",
+    "method": "GET",
+    "path": "/self-service/registration",
+    "raw": "/self-service/registration",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/settings/handler.go:121",
+    "method": "GET",
+    "path": "/self-service/settings/flows",
+    "raw": "/self-service/settings/flows",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/verification/handler.go:76",
+    "method": "GET",
+    "path": "/self-service/verification/api",
+    "raw": "/self-service/verification/api",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/flow/verification/handler.go:80",
+    "method": "GET",
+    "path": "/self-service/verification",
+    "raw": "/self-service/verification",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/code/strategy_recovery_admin.go:38",
+    "method": "POST",
+    "path": "/recovery/code",
+    "raw": "/recovery/code",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/strategy.go:210",
+    "method": "GET",
+    "path": "/callback/{provider}",
+    "raw": "/callback/{provider}",
+    "ok": false,
+    "category": "const-concat"
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/strategy.go:223",
+    "method": "POST",
+    "path": "/callback/{provider}",
+    "raw": "/callback/{provider}",
+    "ok": false,
+    "category": "const-concat"
+   },
+   {
+    "evidence": "kratos:session/handler.go:105",
+    "method": "POST",
+    "path": "/sessions",
+    "raw": "/sessions",
+    "ok": false,
+    "category": "prefix-in-router-type"
+   },
+   {
+    "evidence": "kratos:x/webauthnx/handler.go:49",
+    "method": "GET",
+    "path": "/.well-known/ory/webauthn.js",
+    "raw": "/.well-known/ory/webauthn.js",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/provider_dingtalk.go:132",
+    "method": "GET",
+    "path": "/v1.0/contact/users/me",
+    "raw": "https://api.dingtalk.com/v1.0/contact/users/me",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/provider_microsoft.go:94",
+    "method": "GET",
+    "path": "/v1.0/me",
+    "raw": "https://graph.microsoft.com/v1.0/me",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/provider_patreon.go:89",
+    "method": "GET",
+    "path": "/api/oauth2/v2/identity",
+    "raw": "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/provider_vk.go:71",
+    "method": "GET",
+    "path": "/method/users.get",
+    "raw": "https://api.vk.com/method/users.get?fields=photo_200,nickname,bdate,sex&access_token={param}&v=5.103",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/oidc/provider_yandex.go:69",
+    "method": "GET",
+    "path": "/info",
+    "raw": "https://login.yandex.ru/info?format=json&oauth_token={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kratos:selfservice/strategy/password/validator.go:128",
+    "method": "GET",
+    "path": "/range/{param}",
+    "raw": "https://%s/range/%s",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

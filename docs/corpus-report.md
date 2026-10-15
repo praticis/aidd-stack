@@ -1,10 +1,11 @@
-# HTTP extractor — corpus report v1
+# HTTP extractor — corpus report
 
 Precision and recall of the HTTP integration extractor (`core/integrations.py` + `languages/<lang>/http.py`)
-on the public calibration corpus. This is v1 (F0.4.3a, handoff H2a): the 15 repositories the extractor was
-calibrated on, pinned to fixed commits and measured against an expected list per repository. H2b (F0.4.3b)
-widens the corpus and changes the extractor in the order this report sets. Plan, decisions and status are in
-`docs/handoffs/H2-roadmap.md`.
+on the public calibration corpus. v1 (F0.4.3a, handoff H2a) measured the 15 repositories the extractor was
+calibrated on, pinned to fixed commits and measured against an expected list per repository. The two
+"Update" sections record the cheap fixes that followed. **v2** (the last part of this report) widens the corpus
+to 39 repositories, most of them real applications, and resets the order of H2b (F0.4.3b). Plan, decisions and
+status are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -183,7 +184,7 @@ Every change was judged against the baseline diff:
 The tables above this section are v1 (2026-10-14) and are kept as they were. Run `--expected` for the current
 figures.
 
-## Update: the remaining cheap fixes (2026-10-16)
+## Update: the remaining cheap fixes (2026-10-15, second round)
 
 This closes item 1 of the H2b order: the five smaller categories, plus one found on the way. Each case is in
 the `route-patterns-*` fixtures, next to its counter-example (`fetch` with a `method` that cannot be read stays
@@ -226,9 +227,9 @@ Sampled precision of calls: Go 5/5, Python 7/7.
 - **Inherited `[Route]` (H2-D10).** Zero occurrences: no C# repository of v1 uses attribute routing with
   `[Route]` at all. Undecided until H2b brings controller-based services (eShopOnWeb and similar).
 
-## What H2b should do, in order
+## What H2b should do, in order (v1; revised by v2 below)
 
-1. **Cheap, general fixes**, each with a fixture and a corpus diff. Done on 2026-10-15 and 2026-10-16 (see the
+1. **Cheap, general fixes**, each with a fixture and a corpus diff. Done on 2026-10-15, in two rounds (see the
    updates above):
    - accept `"/"`/`""` as route patterns (`root-route-dropped`, 35 misses);
    - accept constraint/converter syntax inside placeholders (`route-constraint-syntax`, 9);
@@ -246,3 +247,234 @@ Sampled precision of calls: Go 5/5, Python 7/7.
 Outside the extractor: `multi-app-repo` (endpoint identity per deployable) → F1. `generated-server` (spec as a
 route source) → F2.1. `route-by-name-convention` and `client-wrapper` → conventions (ADR-003). Base URLs from
 config → linker (F0.5).
+
+## v2: the widened corpus (2026-10-15)
+
+H2b, phase 3. 24 repositories were added, 39 in all, chosen to bring what v1 lacked: real applications and
+company-style services next to the examples, a large monolith per language, and committed specs where possible.
+The extractor did not change for v2. The 15 v1 repositories come out identical (ids and handlers) to the
+baseline of the second round of cheap fixes, so every v2 figure is about the new code, not about a new rule. Baseline:
+`~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline/`.
+
+| Repo | Lang | What it brings | Expected list |
+|---|---|---|---|
+| gitea | Go | monolith; chi-style `m.Group("/x", func() {...})` closures, `m.Combo` chains | OpenAPI `/api/v1` (537 operations); browser calls |
+| mattermost | Go | large service; gorilla subrouters kept in struct fields | OpenAPI fragments `/api/v4` (608) |
+| kratos | Go | identity service; httprouter behind router types (`RouterAdmin`) | OpenAPI + routes verified in code; OIDC provider calls |
+| argo-cd | Go | grpc-gateway API plus hand-written net/http | OpenAPI + `server/` routes; five UI service files |
+| gotify | Go | gin service with a React UI | OpenAPI + code-only routes; every UI call |
+| go-feature-flag | Go | echo relay proxy | swagger + editor API; Python provider, Bitbucket retriever |
+| go-kit-examples | Go | go-kit services and clients | every app, by hand |
+| immich | TS | NestJS server of a large product | OpenAPI `/api` (279) |
+| NodeBB | JS | Express monolith with its own registration helpers | OpenAPI read + write (378, multi-file); two admin files |
+| Ghost | JS | Express monolith (`lazyUse`) | the Admin and Content API route files (256) |
+| express-boilerplate | JS | routers mounted from a table | the whole API |
+| fastify-demo | TS | Fastify official demo, `@fastify/autoload` | the whole app |
+| hono-examples | TS | Hono apps | every example app |
+| taxonomy | TS | Next.js App Router (`app/api/**/route.ts`) and its UI | the whole app, routes and calls |
+| eShopOnWeb | C# | MVC controllers, minimal-API endpoints, Blazor client | the whole solution |
+| eShopSupport | C# | minimal APIs and typed HttpClients between services | the whole solution |
+| ardalis/CleanArchitecture | C# | FastEndpoints | the template's three apps |
+| jellyfin | C# | large controller-based API | three controllers; SchedulesDirect client |
+| bitwarden/server | C# | company service, several apps | three controllers; Slack and Teams clients |
+| zulip | Python | Django monolith | OpenAPI `/api/v1` (164); three web files |
+| netbox | Python | Django REST Framework | OpenAPI (1256) |
+| dispatch | Python | FastAPI with `include_router(prefix=)` across files, Vue UI | OpenAPI (207); one UI API module |
+| aiohttp-demos | Python | aiohttp apps | every demo |
+| CTFd | Python | Flask blueprints and flask-restx | the challenges API and the auth blueprint |
+
+**grafana** was a candidate (closures, committed spec) and is out: extracting the whole repository (24k files)
+is killed for memory at 7.7 GB under Docker Desktop. That is a finding about the indexer, not the corpus: today a
+repository is held in memory whole while it is extracted, and a product monorepo of that size would not index on
+a developer machine. hashicorp/vault was left out for its license (BUSL); its MPL fork has no committed spec.
+
+### How v2 was measured
+
+Same rules as v1, plus three decisions recorded in the roadmap:
+
+- **H2-D15:** with a spec, the expected list is the spec plus routes verified in the code. A route found while
+  checking an extracted item (UI files, redirect twins, health) is added, and a route only the spec has (no
+  registration in the code) is removed. Otherwise precision against the list punishes right routes.
+- **H2-D16:** an item that needs more than one fix gets one category: the most specific one besides the mount
+  graph. Examples: `m.Combo("/x").Get(h)` inside a closure is `route-chain`; a closure route whose router is
+  mounted in another file is `prefix-scope-and-file`. The mount graph shows up nearly everywhere and would hide
+  the rest.
+- **H2-D17:** a sampled item counts for the language of its own file (a Go server's React UI pools as TS/JS),
+  and a list can declare `language` per kind. Each category also reports the number of repositories it appears
+  in, so that one large repository (netbox, 1256 operations) cannot rank a category alone. With this rule, three
+  v1 calls move from Go to TS/JS (fiber-recipes' SvelteKit client).
+
+Tooling added on the way: `from-openapi` follows path items that are `$ref` to other files (NodeBB), and
+`--reuse <run>` scores a saved run without extracting it again. It is used only to edit lists, never to measure
+an extractor change.
+
+### Results by language (v2, 38 repositories with an expected list)
+
+| Language | Kind | P checked | P expected | R expected |
+|---|---|---|---|---|
+| Go | routes | 59.6 % (136/228) | 19.2 % (132/686) | 9.0 % (134/1495) |
+| Go | calls | 75.0 % (15/20) | 100 % (9/9) | 25.0 % (9/36) |
+| TS/JS | routes | 27.8 % (47/169) | 3.1 % (20/640) | 2.0 % (20/1015) |
+| TS/JS | calls | 57.6 % (87/151) | 44.6 % (25/56) | 23.1 % (25/108) |
+| C# | routes | 90.4 % (85/94) | 94.6 % (105/111) | 72.9 % (105/144) |
+| C# | calls | 72.2 % (39/54) | 62.2 % (28/45) | 48.3 % (28/58) |
+| Python | routes | 49.5 % (45/91) | 26.8 % (37/138) | 2.1 % (37/1731) |
+| Python | calls | 60.6 % (20/33) | 100 % (2/2) | 66.7 % (2/3) |
+
+The 24 new repositories alone, which is what a product portfolio looks like:
+
+| Language | Routes: P checked · R expected | Calls: P checked · R expected |
+|---|---|---|
+| Go | 58.9 % (76/129) · 8.7 % (124/1429) | 73.7 % (14/19) · 20.0 % (5/25) |
+| TS/JS | 23.1 % (24/104) · 1.7 % (17/981) | 55.9 % (81/145) · 23.1 % (25/108) |
+| C# | 88.2 % (67/76) · 72.9 % (78/107) | 75.0 % (36/48) · 58.5 % (24/41) |
+| Python | 32.5 % (13/40) · 1.0 % (16/1682) | 50.0 % (13/26) · 66.7 % (2/3) |
+
+What this says:
+
+- **Route recall falls apart in real applications, except in C#.** v1's examples registered routes next to their
+  prefix. Real apps register them away from it, so the prefix is lost (mount graph), or through structures no
+  scanner reads (Django urlconf, project helpers, route chains). Recall against the lists: Go 8.7 %, TS/JS
+  1.7 %, Python 1.0 %.
+- **C# holds up.** Attribute routes and minimal APIs carry the full path at the registration. bitwarden and
+  eShopSupport reach 100 % / 100 %, eShopOnWeb 100 % / 97 %. The C# gaps are specific: `[Route]` inherited from a
+  base controller (jellyfin, H2-D10) and endpoint classes (FastEndpoints, ApiEndpoints).
+- **Calls do better than routes, and their errors are a lost prefix too.** Sampled precision is 56–75 %. Most
+  wrong calls lost a base path the code holds: the API client prepends `/api/v1` (`prefix-in-client-wrapper`,
+  3 repositories), or a module constant sits in the template (`field-in-interpolation`, 4 repositories).
+- **The browser side brings new false positives.** jQuery `$.get(url, callback)` taken for a route, committed
+  minified bundles, and variables resolved from another function.
+
+| Repo | Routes | Calls | P routes checked | P / R routes expected | P calls checked | P / R calls expected |
+|---|---|---|---|---|---|---|
+| gitea | 533 | 6 | 0 % (0/20) | 0 % / 0 % | 50 % (3/6) | — / 0 % (0/15) |
+| mattermost | 446 | 41 | 5 % (1/20) | 0.3 % / 0.2 % | 75 % (15/20) | — |
+| kratos | 66 | 6 | 65 % (13/20) | 70.0 % / 54.5 % | 100 % (6/6) | 100 % / 35.7 % |
+| argo-cd | 16 | 27 | 68.8 % (11/16) | 42.9 % / 2.7 % | 10 % (2/20) | 0 % / 0 % |
+| gotify | 46 | 18 | 95 % (19/20) | 100 % / 92.2 % | 100 % (18/18) | 100 % / 66.7 % |
+| go-feature-flag | 18 | 4 | 100 % (18/18) | 100 % / 94.4 % | 50 % (2/4) | 100 % / 66.7 % |
+| go-kit-examples | 17 | 0 | 82.4 % (14/17) | 82.4 % / 51.9 % | — | — / 0 % (0/11) |
+| immich | 295 | 6 | 0 % (0/20) | 0 % / 0 % | 100 % (6/6) | — |
+| NodeBB | 96 | 129 | 45 % (9/20) | 0 % / 0 % | 10 % (2/20) | 0 % / 0 % |
+| Ghost | 309 | 29 | 0 % (0/20) | 0 % / 0 % | 80 % (16/20) | — |
+| express-boilerplate | 8 | 0 | 0 % (0/8) | 0 % / 0 % | — | — |
+| fastify-demo | 10 | 0 | 0 % (0/10) | 0 % / 0 % | — | — |
+| hono-examples | 24 | 0 | 75 % (15/20) | 70.8 % / 54.8 % | — | — |
+| taxonomy | 0 | 6 | — | — / 0 % (0/9) | 100 % (6/6) | 100 % / 100 % |
+| eShopOnWeb | 32 | 0 | 100 % (20/20) | 100 % / 97.0 % | — | — / 0 % (0/6) |
+| eShopSupport | 18 | 19 | 100 % (18/18) | 100 % / 100 % | 94.7 % (18/19) | 94.4 % / 94.4 % |
+| ardalis/CleanArchitecture | 0 | 0 | — | — / 0 % (0/19) | — | — |
+| jellyfin | 388 | 14 | 55 % (11/20) | 33.3 % / 25.0 % | 21.4 % (3/14) | 0 % / 0 % |
+| bitwarden | 671 | 27 | 100 % (20/20) | 100 % / 100 % | 100 % (20/20) | 100 % / 87.5 % |
+| zulip | 2 | 17 | 0 % (0/2) | — / 0 % (0/164) | 23.5 % (4/17) | — / 0 % (0/7) |
+| netbox | 0 | 0 | — | — / 0 % (0/1256) | — | — |
+| dispatch | 68 | 67 | 0 % (0/20) | 1.5 % / 0.5 % | 10 % (2/20) | 0 % / 0 % |
+| aiohttp-demos | 0 | 2 | — | — / 0 % (0/23) | 100 % (2/2) | 100 % / 50 % |
+| CTFd | 129 | 103 | 55 % (11/20) | 57.7 % / 46.9 % | 95 % (19/20) | — |
+
+The `notes` field of each expected list explains its choices and its misses in prose.
+
+### Gaps by category (v2)
+
+*Wrong* = sampled items judged wrong. *Missed* = distinct expected pairs not extracted. *Repos* = repositories
+where the category appears. Rows marked FP are precision errors, which come first under H2-D11. Categories
+already described in v1 keep their v1 description.
+
+**Routes**
+
+| Category | Wrong | Missed | Repos | What it is | Goes to |
+|---|---|---|---|---|---|
+| `django-urlconf` | 0 | 1420 | 2 | zulip `rest_path("realm", PATCH=h)` in `urls.py`; netbox DRF `router.register('regions', ViewSet)` + `include()` | new scanner (Django + DRF) |
+| `prefix-other-file` | 107 | 1154 | 12 | v1. Now also Ghost `lazyUse(BASE_API_PATH, ...)`, mattermost subrouters in struct fields, dispatch `include_router(prefix=)` | mount graph |
+| `custom-registrar` | 0 | 356 | 2 | The project's own helper: NodeBB `setupApiRoute(router, 'post', '/x', mws, h)`, `setupPageRoute`; gitea `g.MatchPath(...)` | convention (`route_patterns.registrars`) |
+| `global-prefix` | 18 | 238 | 2 | nest `app.setGlobalPrefix('api')` (immich) | mount graph |
+| `prefix-scope-and-file` | 9 | 233 | 1 | gitea: routes inside `m.Group("/x", func() {...})` closures, router mounted at `/api/v1` in another file | mount graph (closures, then the mount) |
+| `route-chain` | 0 | 221 | 3 | Path on a builder, verbs chained: gitea `m.Combo("/x").Get(h).Put(h)`, gorilla `r.Methods("POST").Path("/x").Handler(h)`, express `router.route('/x').get(h).post(h)` | extractor |
+| `router-as-param` | 23 | 102 | 5 | v1. Now also helper funcs called inside groups (gitea `addProjectRoutes(m, ...)`) and plugin routers | mount graph |
+| `generated-server` | 0 | 115 | 2 | v1. Now also grpc-gateway (argo-cd `*.pb.gw.go` under `mux.Handle("/api/", gw)`) | F2.1 (spec as source) |
+| `const-other-file` | 2 | 42 | 1 | `@Controller(RouteKey.Asset)`, the enum in another file (immich) | mount graph (constants) |
+| `prefix-other-scope` | 15 | 13 | 3 | v1 | mount graph |
+| `const-concat` | 5 | 22 | 1 | `RouteItem = RouteCollection + "/{id}"` keeps only `/{id}` (kratos). A defect: a constant built from another constant is not followed | extractor (cheap) |
+| `prefix-as-param` | 11 | 15 | 3 | v1. Now also ``router.get(`/api/${name}/config`)`` (NodeBB), `registerDownloadHandlers(mux, base)` (argo-cd) | mount graph (string params) |
+| `prefix-by-folder` | 10 | 14 | 1 | `@fastify/autoload`: `routes/api/tasks/index.ts` serves `/api/tasks` | extractor or convention |
+| `restx-resource` | 7 | 17 | 1 | flask-restx: `@ns.route("/x")` on a `Resource` whose methods are `def get/post`, `add_namespace(ns, "/challenges")` (CTFd) | extractor (Python) |
+| `aiohttp-router` | 0 | 23 | 1 | `app.router.add_get('/x', h)`, `add_route('GET', '/', h)` | extractor (cheap) |
+| `test-app-folder` | 23 | 0 | 4 | v1. Now also `pkg/testhelpers` (kratos) and the Cypress webhook server (mattermost) | decide (config or `TEST_FILE`) |
+| `endpoint-class` | 0 | 20 | 2 | FastEndpoints `Configure() { Get("/x"); }`; ApiEndpoints `[HttpPost("api/x")]` on a non-Controller class | extractor (C#) |
+| `mount-same-scope` | 4 | 16 | 2 | Mount next to the routes: NodeBB `const router = express.Router(); app.use('/api', router)`; Hono `app.route('/book', book)`, `.basePath('/api')` | mount graph, first case |
+| `inherited-route-attr` | 9 | 9 | 1 | `[Route("[controller]")]` on the base controller (jellyfin). See H2-D10 below | extractor (C#) |
+| `multi-app-repo` | 0 | 14 | 6 | v1 | model (F1) |
+| `library-code` | 13 | 0 | 1 | v1 | limitation |
+| `prefix-in-router-type` | 1 | 10 | 1 | kratos `RegisterAdminRoutes(admin *httprouterx.RouterAdmin)`: the type prepends `/admin` | convention or mount graph |
+| `route-by-name-convention` | 0 | 10 | 1 | v1 | convention |
+| `route-by-file-path` | 0 | 9 | 1 | Next.js `app/api/posts/[postId]/route.ts` exporting `GET`/`PATCH` (taxonomy) | new scanner (file convention) |
+| `mount-as-route` (FP) | 5 | 0 | 2 | `mux.Handle("/booking/v1/", sub)`, `mux.Handle("/api/", gw)`: a subtree mount becomes `ANY /booking/v1` | extractor (cheap) |
+| `call-taken-for-route` (FP) | 4 | 0 | 2 | jQuery `$.get(url, callback)` in browser code (NodeBB, zulip) | extractor (cheap) |
+| `build-artifact` (FP) | 2 | 0 | 1 | Committed minified bundles (`themes/*/static/assets/*.js`, CTFd) | extractor or config (cheap) |
+| `client-named-router`, `app-not-recognized`, `no-leading-slash`, `route-constraint-syntax` | 1 | 9 | — | v1 categories, new instances: Hono's `api = new Hono()`, `new Hono()` as the app, gin `g.GET("version")` on the engine, Hono `/:id{[0-9]+}` | extractor (cheap) |
+| `const-in-format`, `default-mux-function`, `group-chain`, `library-registrar`, `route-in-loop` | 0 | 7 | — | `Sprintf("/%s/{id}", Const)`; `http.Handle("/x", h)`; `g.Group("/user").Use(mw).POST("", h)`; `pprof.Register(e)`; `Handle(m+" "+Route)` in a loop | extractor (cheap) / limitation |
+
+**Outbound calls**
+
+| Category | Wrong | Missed | Repos | What it is | Goes to |
+|---|---|---|---|---|---|
+| `prefix-in-client-wrapper` | 38 | 21 | 3 | The project's API client prepends a base path the code holds: argo-cd `requests.get('/x')` → `/api/v1/x`, NodeBB `api.put(...)` → `/api/v3/...`, mattermost `${Client4.getBaseRoute()}/...` | convention (`client_patterns` with a base) |
+| `field-in-interpolation` | 26 | 23 | 4 | v1, now in TS too: `` API.post(`/${resource}/${id}/join`) `` with `const resource = "cases"` (dispatch), C# `const` in `$"..."` | extractor |
+| `client-wrapper` | 0 | 27 | 4 | v1. Verb-named wrappers `GET(url)` (gitea), `HttpService.HttpGet<T>("x")` (eShopOnWeb), `CallHTTPAPI(ctx, url, method)` | convention |
+| `const-base-url` | 10 | 9 | 1 | `ApiUrl = "https://host/20141201"`: the base constant holds part of the path, dropped with the host (jellyfin) | extractor (cheap) |
+| `url-object-builder` | 3 | 16 | 7 | v1, now in every language: Go `u.Path = path.Join(...)`, `url.JoinPath(base, "x")`; Python `urljoin`, yarl `URL / part`; C# `UriBuilder` | extractor |
+| `multiline-receiver` | 0 | 11 | 1 | `requests` on one line and `.put('/x')` on the next: the call is lost (argo-cd). A defect | extractor (cheap) |
+| `request-config-object` | 0 | 9 | 3 | URL and method in an options object: `axios.create().request({url, method})`, zulip `channel.post({url: "/json/bots"})`, `$.ajax(url, {...})` | extractor |
+| `request-encoder` | 0 | 9 | 1 | go-kit: `NewClient("GET", tgt, enc, dec)` with the path set in `enc` | convention |
+| `test-client-in-source` | 9 | 0 | 1 | v1, now Django's test `Client()` driven by a development view (zulip) | extractor (extend the rule) |
+| `mime-like-head` | 0 | 8 | 1 | `` axios.delete(`${url}application/${id}`) ``, `'message'`: a first segment named like a MIME type is rejected (gotify) | extractor (cheap) |
+| `route-taken-for-call` (FP) | 3 | 0 | 1 | `routes.Get("/metrics", append(mid, h)...)`: a route with a spread handler becomes a call (gitea) | extractor (cheap) |
+| `variable-other-scope` (FP) | 3 | 0 | 2 | `fetch(url)` / `SendAsync(message)` where the name is a parameter, resolved to a same-named variable of another function (zulip TS, jellyfin C#). A defect | extractor (cheap) |
+| `method-keyword`, `method-variable` | 3 | 0 | 2 | `request(method="POST", url=...)`; `let method = "PATCH"; fetch(url, {method})` → ANY | extractor (cheap) |
+| `url-in-field`, `url-in-var`, `url-from-helper`, `verb-alias`, `non-http-verb` (FP), `single-segment-relative` | 2 | 8 | — | URL in a struct field or package var; `api.del()`; a cache `Get(key)`; `GetFromJsonAsync("User")` | extractor |
+
+### The two open decisions, with v2 numbers
+
+- **Generated clients (H2-D9).** 371 operations in four generated clients, none extracted: immich's oazapfts SDK
+  (279, ``oazapfts.fetchJson(`/activities${QS.query(...)}`, {...opts})``), kratos' openapi-generator Go client
+  (60, `localVarPath := localBasePath + "/self-service/..."`), and v1's two (32). In immich it is the only path
+  from the web app to the server. Recommendation unchanged: extract them as `HttpCall` with `via: generated-client`.
+- **Inherited `[Route]` (H2-D10).** jellyfin: 26 of 60 controllers declare no `[Route]` and inherit
+  `[Route("[controller]")]` from `BaseJellyfinApiController`. Their 128 extracted routes all lack
+  `/{Controller}`, and their template-less actions are dropped. eShopOnWeb has a `BaseApiController` with
+  `[Route]` that nothing derives from. Recommendation: follow one level of base class for `[Route]` (base classes
+  in the same project, found by name), with a fixture of both cases.
+
+### What H2b should do, in order (v2)
+
+1. **The mount graph.** Confirmed as the first item, now by breadth: its categories (`prefix-other-file`,
+   `router-as-param`, `prefix-other-scope`, `prefix-scope-and-file`, `global-prefix`, `mount-same-scope`,
+   `const-other-file`, `prefix-as-param`, `prefix-in-router-type`, `prefix-by-folder`) appear in 23 of the 38
+   repositories with a list: 200 wrong, 1837 missed. Order inside it:
+   - same scope: `app.use('/api', router)` next to the routes, Hono `route`/`basePath`;
+   - same file: closures `r.Route`/`m.Group(..., func)`;
+   - app-wide: `setGlobalPrefix`;
+   - across files: imports, constants and enums, struct fields, helper functions called inside groups.
+2. **Cheap defects v2 exposed.** Precision first: `variable-other-scope`, `call-taken-for-route`,
+   `mount-as-route`, `route-taken-for-call`, `build-artifact`, `non-http-verb`. Then recall: `const-concat`,
+   `multiline-receiver`, `mime-like-head`, `const-base-url`, `method-keyword`/`method-variable`, `verb-alias`
+   (`del`), `default-mux-function`, `group-chain`, `aiohttp-router`. Each with a fixture and a corpus diff, like
+   item 1 of v1.
+3. **Route chains** (`route-chain`: gitea `Combo`, gorilla builders, express `route()`).
+4. **Calls:** `field-in-interpolation` (constants and fields in templates, TS and C#), `url-object-builder` in
+   all languages, `request-config-object`.
+5. **C#:** `[Route]` inheritance (if H2-D10 is accepted) and endpoint classes (FastEndpoints, ApiEndpoints).
+6. **Scanners for what is not read at all**, each its own piece of work and best done when a portfolio needs it:
+   - Django + DRF: the largest single gap, 1420 misses in 2 repositories;
+   - Next.js file routes;
+   - flask-restx;
+   - generated clients (H2-D9).
+7. **Decide `test-app-folder`**, now in four repositories (nest, fastify, kratos `pkg/testhelpers`, mattermost
+   e2e): per-repo excludes in `atlas.yaml` are the safer answer.
+
+Outside the extractor:
+
+- **Conventions (ADR-003):** `custom-registrar` (NodeBB, gitea), `prefix-in-client-wrapper` and
+  `client-wrapper`, `request-encoder`.
+- **Elsewhere:** `generated-server` → F2.1. `multi-app-repo` → F1. Memory on large repositories (grafana) → F1.4,
+  together with incremental indexing.

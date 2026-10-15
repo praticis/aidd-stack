@@ -1,0 +1,3001 @@
+{
+ "source": {
+  "endpoints": "openapi",
+  "calls": "manual"
+ },
+ "sha": "1c117a9352e4a64cd301028403c33949ab146424",
+ "spec": [
+  "/corpus/repos/gitea/templates/swagger/v1-swagger.generated.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "routers/api/v1/"
+  ],
+  "calls": [
+   "web_src/js/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/actions/jobs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/actions/runners",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/actions/runners/registration-token",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/actions/runs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/cron",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/cron/{task}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/emails",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/emails/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/orgs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/packages",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/unadopted",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/unadopted/{owner}/{repo}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/unadopted/{owner}/{repo}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/users",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/users/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{username}/badges",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/users/{username}/badges",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users/{username}/badges",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users/{username}/keys",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{username}/keys/{id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users/{username}/orgs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users/{username}/rename",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users/{username}/repos",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gitignore/templates",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gitignore/templates/{name}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/label/templates",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/label/templates/{name}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/licenses",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/licenses/{name}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markdown",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markdown/raw",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markup",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/notifications",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/new",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/threads/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/notifications/threads/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/org/{org}/repos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/jobs",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/runners",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/actions/runners/registration-token",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/runs",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/secrets",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/actions/secrets/{secretname}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/orgs/{org}/actions/secrets/{secretname}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/variables",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/activities/feeds",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/blocks",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/orgs/{org}/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/labels",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/labels",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/members",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/default",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/projects/{id}/issues/{issue_id}/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/public_members",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/public_members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/public_members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/orgs/{org}/public_members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/rename",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/orgs/{org}/repos",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/repos",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/repos",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/teams",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orgs/{org}/teams",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/teams/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/packages/{owner}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/packages/{owner}/{type}/{name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/packages/{owner}/{type}/{name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/latest",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/link/{repo_name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/unlink",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}/files",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/issues/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/migrate",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/registration-token",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/approve",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/artifacts",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}/jobs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/cancel",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/force-cancel",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/logs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun-failed-jobs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/secrets",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/secrets/{secretname}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/secrets/{secretname}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/tasks",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/activities/feeds",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/archive/{archive}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/assignees",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/assignees/{assignee}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/priority",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/branches",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/branches",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}/permission",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/commits",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/commits/{ref}/status",
+   "category": "custom-registrar"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/commits/{ref}/statuses",
+   "category": "custom-registrar"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/commits/{sha}/pull",
+   "category": "custom-registrar"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/compare/{basehead}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/contents",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/contents",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/contents-ext/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/diffpatch",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/editorconfig/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/file-contents",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/file-contents",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/forks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/forks",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/blobs/{sha}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}.{diffType}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/notes/{sha}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/refs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/refs/{ref}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/tags/{sha}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/git/trees/{sha}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/git",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/git/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/git/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/git/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}/tests",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issue_config",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issue_config/validate",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issue_templates",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments/{id}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/pinned",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees/{assignee}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/blocks",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/blocks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/blocks",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/comments",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/comments",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/comments/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/comments/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/deadline",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/dependencies",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/dependencies",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/dependencies",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels/{id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/lock",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/lock",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin/{position}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/reactions",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/delete",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/start",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/stop",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/check",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/timeline",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times/{id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/keys/tokens",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/labels",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/labels/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/languages",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/licenses",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/media/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/merge-upstream",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/milestones",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/milestones",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/milestones/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/milestones/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/milestones/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/mirror-sync",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/new_pin_allowed",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/notifications",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/notifications",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/default",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/issues/{issue_id}/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/resolve",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/unresolve",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/pinned",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{base}/{head}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}.{diffType}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/comments/{id}/replies",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/commits",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/files",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/merge",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/merge",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/merge",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/requested_reviewers",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/requested_reviewers",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/comments",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/dismissals",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/undismissals",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/update",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors-sync",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors/{name}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors/{name}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/raw/{filepath}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/releases",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/latest",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/tags/{tag}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/tags/{tag}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}/assets",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/releases/{id}/assets/{attachment_id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/reviewers",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/signing-key.gpg",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/signing-key.pub",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/stargazers",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/statuses/{sha}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/statuses/{sha}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/subscribers",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/subscription",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/subscription",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/subscription",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/tag_protections",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/tag_protections",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/tag_protections/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/tag_protections/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/tag_protections/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/tags",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/tags",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/teams",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/teams/{team}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/teams/{team}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/teams/{team}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/times",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/times/{user}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/topics",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/topics",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/topics/{topic}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repos/{owner}/{repo}/topics/{topic}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/transfer",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/transfer/accept",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/transfer/reject",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/new",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/page/{pageName}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/page/{pageName}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/page/{pageName}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/pages",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/revisions/{pageName}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{template_owner}/{template_repo}/generate",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/api",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/attachment",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/repository",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/ui",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/signing-key.gpg",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/signing-key.pub",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/teams/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/teams/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}/activities/feeds",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}/members",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/teams/{id}/members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}/members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/teams/{id}/members/{username}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}/repos",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/teams/{id}/repos/{org}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}/repos/{org}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/teams/{id}/repos/{org}/{repo}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/token",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/token",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/topics/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/jobs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/runners",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/actions/runners/registration-token",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/actions/runners/{runner_id}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/runs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/actions/secrets/{secretname}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/actions/secrets/{secretname}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/variables",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/actions/variables/{variablename}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/actions/variables/{variablename}",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/actions/variables/{variablename}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/actions/variables/{variablename}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/applications/oauth2",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/applications/oauth2",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/applications/oauth2/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/applications/oauth2/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/applications/oauth2/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/avatar",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/blocks",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/blocks/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/emails",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/emails",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/emails",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/followers",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/following",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/following/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/following/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/following/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/gpg_key_token",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/gpg_key_verify",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/gpg_keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/gpg_keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/gpg_keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/gpg_keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/hooks",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/hooks/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/keys",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/keys/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/orgs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/projects/{id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects/{id}/columns",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects/{id}/columns/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/default",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues",
+   "category": "router-as-param"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}",
+   "category": "router-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/projects/{id}/issues/{issue_id}/move",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/repos",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/repos",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user/settings",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/starred",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/starred/{owner}/{repo}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/starred/{owner}/{repo}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/starred/{owner}/{repo}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/stopwatches",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/subscriptions",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/teams",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/times",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/search",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/activities/feeds",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/followers",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/following",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/following/{target}",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/gpg_keys",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/heatmap",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/keys",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/orgs",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/orgs/{org}/permissions",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/projects",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/repos",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/starred",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/subscriptions",
+   "category": "prefix-scope-and-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{username}/tokens",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{username}/tokens",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{username}/tokens/{token}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/version",
+   "category": "prefix-other-file"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/-/admin/config",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/-/admin/self_check",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/-/web-theme/apply",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications/new",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/repo/search",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/user/settings/security/webauthn/register",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/user/settings/security/webauthn/request_register",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/user/settings/update_preferences",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/user/stopwatches",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/user/webauthn/assertion",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/user/webauthn/assertion",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/user/webauthn/passkey/assertion",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/user/webauthn/passkey/login",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/{owner}/{repo}/issues/suggestions",
+   "category": "client-wrapper"
+  }
+ ],
+ "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, scope routers/api/v1/. Nothing comes out right: every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver, and the router is mounted at /api/v1 in routers/init.go. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs besides the mount graph): route-chain = m.Combo(\"/x\").Get(h).Put(h) (207, verbs chained on a path builder, also needs the prefixes); prefix-scope-and-file = plain m.Get inside closures, also needs the /api/v1 mount (233); prefix-other-file = the extractor already has the route and only /api/v1 is missing (16); router-as-param = helper funcs addActionsRoutes/addProjectRoutes(m, ...) called inside several groups (78); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "gitea:routers/api/packages/api.go:201",
+    "method": "GET",
+    "path": "/files/{package}/{version}/{filename}",
+    "raw": "/files/{package}/{version}/{filename}",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/packages/api.go:218",
+    "method": "POST",
+    "path": "/upload_urls",
+    "raw": "/upload_urls",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/packages/api.go:221",
+    "method": "POST",
+    "path": "/delete",
+    "raw": "/delete",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/packages/api.go:360",
+    "method": "GET",
+    "path": "/index.yaml",
+    "raw": "/index.yaml",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/packages/api.go:472",
+    "method": "GET",
+    "path": "/info/{packagename}",
+    "raw": "/info/{packagename}",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/v1/api.go:1327",
+    "method": "GET",
+    "path": "/{job_id}/logs",
+    "raw": "/{job_id}/logs",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/v1/api.go:1458",
+    "method": "GET",
+    "path": "/stargazers",
+    "raw": "/stargazers",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/v1/api.go:1502",
+    "method": "POST",
+    "path": "/comments/{id}/resolve",
+    "raw": "/comments/{id}/resolve",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/api/v1/api.go:1767",
+    "method": "POST",
+    "path": "/unlink",
+    "raw": "/unlink",
+    "ok": false,
+    "category": "prefix-scope-and-file"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:1226",
+    "method": "POST",
+    "path": "/test",
+    "raw": "/test",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:1315",
+    "method": "GET",
+    "path": "/attachments/{uuid}",
+    "raw": "/attachments/{uuid}",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:1362",
+    "method": "POST",
+    "path": "/viewed-files",
+    "raw": "/viewed-files",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:1473",
+    "method": "POST",
+    "path": "/commit/{rest}",
+    "raw": "/commit/*",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:634",
+    "method": "POST",
+    "path": "/avatar/delete",
+    "raw": "/avatar/delete",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:644",
+    "method": "POST",
+    "path": "/hidden_comments",
+    "raw": "/hidden_comments",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:662",
+    "method": "POST",
+    "path": "/register",
+    "raw": "/register",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:751",
+    "method": "GET",
+    "path": "/activate",
+    "raw": "/activate",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:753",
+    "method": "ANY",
+    "path": "/activate_email",
+    "raw": "/activate_email",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:818",
+    "method": "POST",
+    "path": "/{userid}/orgs/{org_id}/remove",
+    "raw": "/{userid}/orgs/{org_id}/remove",
+    "ok": false,
+    "category": "prefix-other-scope"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:851",
+    "method": "POST",
+    "path": "/cleanup",
+    "raw": "/cleanup",
+    "ok": false,
+    "category": "prefix-other-scope"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "gitea:modules/mcaptcha/mcaptcha.go:44",
+    "method": "POST",
+    "path": "/api/v1/pow/siteverify",
+    "raw": "/api/v1/pow/siteverify",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gitea:modules/recaptcha/recaptcha.go:35",
+    "method": "POST",
+    "path": "/api/siteverify",
+    "raw": "/api/siteverify",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gitea:modules/turnstile/turnstile.go:47",
+    "method": "POST",
+    "path": "/turnstile/v0/siteverify",
+    "raw": "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:289",
+    "method": "GET",
+    "path": "/metrics",
+    "raw": "/metrics",
+    "ok": false,
+    "category": "route-taken-for-call"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:293",
+    "method": "GET",
+    "path": "/-/actions/artifacts/{artifact_id}/{expires}/{signature}/{rest}",
+    "raw": "/-/actions/artifacts/{artifact_id}/{expires}/{signature}/*",
+    "ok": false,
+    "category": "route-taken-for-call"
+   },
+   {
+    "evidence": "gitea:routers/web/web.go:305",
+    "method": "GET",
+    "path": "/api/swagger",
+    "raw": "/api/swagger",
+    "ok": false,
+    "category": "route-taken-for-call"
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

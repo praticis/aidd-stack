@@ -35,7 +35,7 @@
    "entgo-sveltekit/template/src/"
   ]
  },
- "notes": "Only the swagger/ recipe has a spec. GET and POST /api/v1/books are extracted, but endpoint identity is per repo and another recipe registered the same routes first, so they carry that recipe's evidence and fall out of scope (category multi-app-repo — in the graph they point at the other recipe's handler). Precision: 20 of 127 routes sampled (seed 1), all correct — the recipes register on app/Group chains inside one function, which the extractor follows. Calls: all 5 checked; fetch(url) with no options is a GET but comes out as ANY (method-default). 2026-10-16: fetch(\"/api/v1/todo/list\") is a GET now (it was ANY: method-default).",
+ "notes": "Only the swagger/ recipe has a spec. GET and POST /api/v1/books are extracted, but endpoint identity is per repo and another recipe registered the same routes first, so they carry that recipe's evidence and fall out of scope (category multi-app-repo — in the graph they point at the other recipe's handler). Precision: 20 of 127 routes sampled (seed 1), all correct — the recipes register on app/Group chains inside one function, which the extractor follows. Calls: all 5 checked; fetch(url) with no options is a GET but comes out as ANY (method-default). 2026-10-15 (second round): fetch(\"/api/v1/todo/list\") is a GET now (it was ANY: method-default).",
  "checked": {
   "endpoints": [
    {

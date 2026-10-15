@@ -1,0 +1,663 @@
+{
+ "source": {
+  "endpoints": "openapi + manual",
+  "calls": "manual"
+ },
+ "sha": "64f28352dce6e8a95c0a24b54daabedd66aef669",
+ "spec": [
+  "/corpus/repos/gotify/docs/spec.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "router/",
+   "ui/serve.go"
+  ],
+  "calls": [
+   "ui/src/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/application"
+  },
+  {
+   "method": "POST",
+   "path": "/application"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/application/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/application/{id}/image"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{id}/message"
+  },
+  {
+   "method": "GET",
+   "path": "/application/{id}/message"
+  },
+  {
+   "method": "PUT",
+   "path": "/application/{id}/security"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/local/login"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/oidc/callback"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/oidc/elevate"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/oidc/external/authorize"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/oidc/external/token"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/oidc/login"
+  },
+  {
+   "method": "GET",
+   "path": "/client"
+  },
+  {
+   "method": "POST",
+   "path": "/client"
+  },
+  {
+   "method": "DELETE",
+   "path": "/client/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/client/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/client/{id}/elevate"
+  },
+  {
+   "method": "GET",
+   "path": "/current/user"
+  },
+  {
+   "method": "POST",
+   "path": "/current/user/password"
+  },
+  {
+   "method": "GET",
+   "path": "/docs"
+  },
+  {
+   "method": "GET",
+   "path": "/gotifyinfo",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "GET",
+   "path": "/health"
+  },
+  {
+   "method": "GET",
+   "path": "/index.html"
+  },
+  {
+   "method": "GET",
+   "path": "/manifest.json"
+  },
+  {
+   "method": "DELETE",
+   "path": "/mcp"
+  },
+  {
+   "method": "GET",
+   "path": "/mcp"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp"
+  },
+  {
+   "method": "DELETE",
+   "path": "/message"
+  },
+  {
+   "method": "GET",
+   "path": "/message"
+  },
+  {
+   "method": "POST",
+   "path": "/message"
+  },
+  {
+   "method": "DELETE",
+   "path": "/message/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin/{id}/config"
+  },
+  {
+   "method": "POST",
+   "path": "/plugin/{id}/config"
+  },
+  {
+   "method": "POST",
+   "path": "/plugin/{id}/disable"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin/{id}/display"
+  },
+  {
+   "method": "POST",
+   "path": "/plugin/{id}/enable"
+  },
+  {
+   "method": "GET",
+   "path": "/static/{any}"
+  },
+  {
+   "method": "GET",
+   "path": "/stream"
+  },
+  {
+   "method": "GET",
+   "path": "/swagger"
+  },
+  {
+   "method": "GET",
+   "path": "/user"
+  },
+  {
+   "method": "POST",
+   "path": "/user",
+   "category": "group-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/user/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/version",
+   "category": "no-leading-slash"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/application",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "POST",
+   "path": "/application"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{appId}/message"
+  },
+  {
+   "method": "GET",
+   "path": "/application/{appId}/message"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{id}",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "PUT",
+   "path": "/application/{id}",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{id}/image",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "POST",
+   "path": "/application/{id}/image",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "PUT",
+   "path": "/application/{id}/security",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/local/login",
+   "category": "request-config-object"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/client"
+  },
+  {
+   "method": "POST",
+   "path": "/client"
+  },
+  {
+   "method": "PUT",
+   "path": "/client/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/client/{id}/elevate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/message",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "GET",
+   "path": "/message",
+   "category": "mime-like-head"
+  },
+  {
+   "method": "POST",
+   "path": "/message"
+  },
+  {
+   "method": "DELETE",
+   "path": "/message/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin/{id}/config"
+  },
+  {
+   "method": "POST",
+   "path": "/plugin/{id}/config"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin/{id}/display"
+  },
+  {
+   "method": "POST",
+   "path": "/plugin/{id}/{action}"
+  },
+  {
+   "method": "GET",
+   "path": "/user"
+  },
+  {
+   "method": "POST",
+   "path": "/user"
+  },
+  {
+   "method": "POST",
+   "path": "/user/{id}"
+  }
+ ],
+ "notes": "Endpoints: the committed swagger (docs/spec.json, no basePath) plus the routes that exist only in the code (GET /swagger, /docs, /mcp via g.Match, and the UI files in ui/serve.go). Scope: router/ and ui/serve.go. Misses: GET /version and /gotifyinfo are registered on the gin engine without a leading slash (no-leading-slash: relative patterns are only accepted on groups); POST /user is registered on a group created in the same chained expression, g.Group(\"/user\").Use(mw).POST(\"\", h) (group-chain); GET / in ui/serve.go hangs from a group of the router passed in (router-as-param). The example plugin route (plugin/example/echo) is mounted under /plugin/{id}/custom/{token}/ by the plugin manager (router-as-param). Calls: every axios call of the React UI (ui/src, tests excluded), as written after the configured base URL. Eight are dropped because the first segment is a MIME type head — application/{id}, message — which looks_like_rel_path takes for application/json (mime-like-head); one goes through axios.create().request({url, method}) (request-config-object).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "gotify:plugin/example/echo/echo.go:77",
+    "method": "GET",
+    "path": "/echo",
+    "raw": "/echo",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "gotify:router/router.go:134",
+    "method": "GET",
+    "path": "/auth/oidc/login",
+    "raw": "/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:137",
+    "method": "POST",
+    "path": "/auth/oidc/external/token",
+    "raw": "/external/token",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:138",
+    "method": "GET",
+    "path": "/auth/oidc/elevate",
+    "raw": "/elevate",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:156",
+    "method": "GET",
+    "path": "/plugin",
+    "raw": "/plugin",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:169",
+    "method": "POST",
+    "path": "/auth/local/login",
+    "raw": "/auth/local/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:224",
+    "method": "POST",
+    "path": "/application/{id}/image",
+    "raw": "/:id/image",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:231",
+    "method": "DELETE",
+    "path": "/application/{id}/message",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:238",
+    "method": "POST",
+    "path": "/client",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:239",
+    "method": "PUT",
+    "path": "/client/{id}",
+    "raw": "/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:245",
+    "method": "DELETE",
+    "path": "/message",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:249",
+    "method": "GET",
+    "path": "/stream",
+    "raw": "/stream",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:250",
+    "method": "GET",
+    "path": "/current/user",
+    "raw": "/current/user",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:258",
+    "method": "DELETE",
+    "path": "/application/{id}",
+    "raw": "/application/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:261",
+    "method": "POST",
+    "path": "/current/user/password",
+    "raw": "/current/user/password",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:268",
+    "method": "DELETE",
+    "path": "/user/{id}",
+    "raw": "/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:269",
+    "method": "GET",
+    "path": "/user/{id}",
+    "raw": "/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:router/router.go:270",
+    "method": "POST",
+    "path": "/user/{id}",
+    "raw": "/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/serve.go:55",
+    "method": "GET",
+    "path": "/index.html",
+    "raw": "/index.html",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/serve.go:56",
+    "method": "GET",
+    "path": "/manifest.json",
+    "raw": "/manifest.json",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "gotify:ui/src/CurrentUser.ts:127",
+    "method": "POST",
+    "path": "/auth/logout",
+    "raw": "/auth/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/application/AppStore.ts:102",
+    "method": "POST",
+    "path": "/application",
+    "raw": "/application",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/client/ClientStore.ts:14",
+    "method": "GET",
+    "path": "/client",
+    "raw": "/client",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/client/ClientStore.ts:28",
+    "method": "PUT",
+    "path": "/client/{param}",
+    "raw": "/client/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/client/ClientStore.ts:41",
+    "method": "POST",
+    "path": "/client",
+    "raw": "/client",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/client/ClientStore.ts:58",
+    "method": "POST",
+    "path": "/client/{param}/elevate",
+    "raw": "/client/{param}/elevate",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/message/MessagesStore.ts:124",
+    "method": "DELETE",
+    "path": "/message/{param}",
+    "raw": "/message/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/message/MessagesStore.ts:151",
+    "method": "POST",
+    "path": "/message",
+    "raw": "/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/message/MessagesStore.ts:191",
+    "method": "GET",
+    "path": "/application/{param}/message",
+    "raw": "/application/{param}/message?since={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/message/MessagesStore.ts:90",
+    "method": "DELETE",
+    "path": "/application/{param}/message",
+    "raw": "/application/{param}/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/plugin/PluginStore.ts:16",
+    "method": "GET",
+    "path": "/plugin/{param}/config",
+    "raw": "/plugin/{param}/config",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/plugin/PluginStore.ts:19",
+    "method": "GET",
+    "path": "/plugin/{param}/display",
+    "raw": "/plugin/{param}/display",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/plugin/PluginStore.ts:22",
+    "method": "GET",
+    "path": "/plugin",
+    "raw": "/plugin",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/plugin/PluginStore.ts:36",
+    "method": "POST",
+    "path": "/plugin/{param}/config",
+    "raw": "/plugin/{param}/config",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/plugin/PluginStore.ts:45",
+    "method": "POST",
+    "path": "/plugin/{param}/{param}",
+    "raw": "/plugin/{param}/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/user/UserStore.ts:14",
+    "method": "GET",
+    "path": "/user",
+    "raw": "/user",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/user/UserStore.ts:24",
+    "method": "POST",
+    "path": "/user",
+    "raw": "/user",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gotify:ui/src/user/UserStore.ts:31",
+    "method": "POST",
+    "path": "/user/{param}",
+    "raw": "/user/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

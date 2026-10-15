@@ -1,0 +1,1053 @@
+{
+ "source": {
+  "endpoints": "openapi",
+  "calls": "manual"
+ },
+ "sha": "7eed14f6166b53c10228900be047387346f95414",
+ "spec": [
+  "/corpus/repos/zulip/zerver/openapi/zulip.yaml"
+ ],
+ "scope": {
+  "endpoints": [
+   "zproject/",
+   "zerver/"
+  ],
+  "calls": [
+   "web/src/settings_account.ts",
+   "web/src/settings_bots.ts",
+   "web/src/user_topics.ts"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/attachments/{attachment_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/bot_storage",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/bot_storage",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/bot_storage",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/bots/{bot_id}/api_key",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/bots/{bot_id}/api_key/regenerate",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/calls/bigbluebutton/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/calls/constructorgroups/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/calls/nextcloud_talk/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/calls/webex/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/channel_folders",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/channel_folders",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/channel_folders/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/channel_folders/{channel_folder_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/channels/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/default_streams",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/default_streams",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/dev_fetch_api_key",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/dev_list_users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/drafts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/drafts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/drafts/{draft_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/drafts/{draft_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/events",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/events",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/export/realm",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/export/realm",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/export/realm/consents",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/export/realm/{export_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/fetch_api_key",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/get_stream_id",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invites/multiuse",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/invites/multiuse/{invite_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/invites/{invite_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invites/{invite_id}/resend",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/jwt/fetch_api_key",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mark_all_as_read",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mark_stream_as_read",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mark_topic_as_read",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/messages",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/flags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/flags/narrow",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/messages/matches_narrow",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/render",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/messages/{message_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/messages/{message_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/messages/{message_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/messages/{message_id}/history",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/messages/{message_id}/reactions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/{message_id}/reactions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/messages/{message_id}/read_receipts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/{message_id}/report",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/messages/{message_id}/typing",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mobile_push/e2ee/test_notification",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mobile_push/register",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/mobile_push/test_notification",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/navigation_views",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/navigation_views",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/navigation_views/{fragment}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/navigation_views/{fragment}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/real-time",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/deactivate",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/realm/domains",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/domains",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/realm/domains/{domain}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/domains/{domain}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/realm/emoji",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/realm/emoji/{emoji_name}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/emoji/{emoji_name}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/realm/filters/{filter_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/filters/{filter_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/realm/linkifiers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/linkifiers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/playgrounds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/realm/playgrounds/{playground_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/realm/presence",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/realm/profile_fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/profile_fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/profile_fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/realm/profile_fields/{field_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/profile_fields/{field_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/realm/test_welcome_bot_custom_message",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/realm/user_settings_defaults",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/register",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/register_client_device",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/reminders",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/reminders",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/reminders/{reminder_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/remotes/push/e2ee/register",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/remove_client_device",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/rest-error-handling",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/saved_snippets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/saved_snippets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/saved_snippets/{saved_snippet_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/saved_snippets/{saved_snippet_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/scheduled_messages",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/scheduled_messages",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/scheduled_messages/{scheduled_message_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/scheduled_messages/{scheduled_message_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server_settings",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/settings",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/streams",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/streams/{stream_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/streams/{stream_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/streams/{stream_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/streams/{stream_id}/delete_topic",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/streams/{stream_id}/email_address",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/streams/{stream_id}/members",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/thumbnail/status/{realm_id_str}/{filename}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/typing",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user_groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_groups/create",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/user_groups/{user_group_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_groups/{user_group_id}/deactivate",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user_groups/{user_group_id}/members",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_groups/{user_group_id}/members",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user_groups/{user_group_id}/members/{user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user_groups/{user_group_id}/subgroups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_groups/{user_group_id}/subgroups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_topics",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user_uploads",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user_uploads/{realm_id_str}/{filename}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/alert_words",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/alert_words",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/alert_words",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/android_gcm_reg_id",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/android_gcm_reg_id",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/api_key/regenerate",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/apns_device_token",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/apns_device_token",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/avatar",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/avatar",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/muted_users/{muted_user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/muted_users/{muted_user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/presence",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/profile_data",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me/profile_data",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/status",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me/subscriptions/muted_topics",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/subscriptions/properties",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me/subscriptions/{stream_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/{stream_id}/topics",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{email}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/{email}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id_or_email}/presence",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/{user_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}/channels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{user_id}/reactivate",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}/status",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{user_id}/status",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}/subscriptions/{stream_id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/zulip-outgoing-webhook",
+   "category": "django-urlconf"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/api_key/regenerate",
+   "category": "request-config-object"
+  },
+  {
+   "method": "POST",
+   "path": "/json/bots",
+   "category": "request-config-object"
+  },
+  {
+   "method": "POST",
+   "path": "/json/fetch_api_key",
+   "category": "request-config-object"
+  },
+  {
+   "method": "PATCH",
+   "path": "/json/settings",
+   "category": "request-config-object"
+  },
+  {
+   "method": "POST",
+   "path": "/json/user_topics",
+   "category": "request-config-object"
+  },
+  {
+   "method": "DELETE",
+   "path": "/json/users/me",
+   "category": "request-config-object"
+  },
+  {
+   "method": "POST",
+   "path": "/json/users/me/avatar",
+   "category": "request-config-object"
+  }
+ ],
+ "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "zulip:web/src/portico/signup.ts:229",
+    "method": "GET",
+    "path": "/json/realm/subdomain",
+    "raw": "/json/realm/subdomain/",
+    "ok": false,
+    "category": "call-taken-for-route"
+   },
+   {
+    "evidence": "zulip:web/src/portico/slack-import.ts:99",
+    "method": "GET",
+    "path": "/json/realm/import/status/{param}",
+    "raw": "/json/realm/import/status/{param}",
+    "ok": false,
+    "category": "call-taken-for-route"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "zulip:tools/droplets/add_mentor.py:35",
+    "method": "GET",
+    "path": "/users/{param}/keys",
+    "raw": "https://api.github.com/users/{param}/keys",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "zulip:tools/droplets/create.py:297",
+    "method": "GET",
+    "path": "/v2/1-clicks",
+    "raw": "https://api.digitalocean.com/v2/1-clicks",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "zulip:web/src/emojisets.ts:36",
+    "method": "GET",
+    "path": "/json/users",
+    "raw": "/json/users/",
+    "ok": false,
+    "category": "variable-other-scope"
+   },
+   {
+    "evidence": "zulip:web/src/portico/signup.ts:391",
+    "method": "GET",
+    "path": "/json/realm/subdomain",
+    "raw": "/json/realm/subdomain/",
+    "ok": false,
+    "category": "variable-other-scope"
+   },
+   {
+    "evidence": "zulip:zerver/data_import/slack.py:1933",
+    "method": "GET",
+    "path": "/api/api.test",
+    "raw": "https://slack.com/api/api.test",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "zulip:zerver/lib/remote_server.py:183",
+    "method": "ANY",
+    "path": "/{param}/api/v1/remotes/{param}",
+    "raw": "/{param}/api/v1/remotes/{param}",
+    "ok": false,
+    "category": "url-object-builder"
+   },
+   {
+    "evidence": "zulip:zerver/management/commands/fetch_tor_exit_nodes.py:54",
+    "method": "GET",
+    "path": "/exit-addresses",
+    "raw": "https://check.torproject.org/exit-addresses",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:102",
+    "method": "POST",
+    "path": "/accounts/home",
+    "raw": "/accounts/home/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:108",
+    "method": "POST",
+    "path": "/accounts/find",
+    "raw": "/accounts/find/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:117",
+    "method": "POST",
+    "path": "/json/invites",
+    "raw": "/json/invites",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:129",
+    "method": "PATCH",
+    "path": "/json/settings",
+    "raw": "/json/settings",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:144",
+    "method": "POST",
+    "path": "/accounts/confirm_new_email",
+    "raw": "/accounts/confirm_new_email/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:78",
+    "method": "POST",
+    "path": "/accounts/password/reset",
+    "raw": "/accounts/password/reset/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:84",
+    "method": "POST",
+    "path": "/accounts/password/reset",
+    "raw": "/accounts/password/reset/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:91",
+    "method": "POST",
+    "path": "/accounts/password/reset",
+    "raw": "/accounts/password/reset/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zerver/views/development/email_log.py:96",
+    "method": "POST",
+    "path": "/accounts/password/reset",
+    "raw": "/accounts/password/reset/",
+    "ok": false,
+    "category": "test-client-in-source"
+   },
+   {
+    "evidence": "zulip:zilencer/views.py:405",
+    "method": "GET",
+    "path": "/https:/{param}/api/v1/zulip-services/verify/{param}",
+    "raw": "/https://{param}/api/v1/zulip-services/verify/{param}",
+    "ok": false,
+    "category": "url-object-builder"
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

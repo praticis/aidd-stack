@@ -1,0 +1,1467 @@
+{
+ "source": {
+  "endpoints": "openapi",
+  "calls": "manual"
+ },
+ "sha": "dd2837e82a0bf5565b1b4b4b91ea30b7262d4061",
+ "spec": [
+  "/corpus/repos/dispatch/docs/scripts/openapi.yaml"
+ ],
+ "scope": {
+  "endpoints": [
+   "src/dispatch/"
+  ],
+  "calls": [
+   "src/dispatch/static/dispatch/src/case/api.js"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/organizations",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/organizations",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/organizations/{organization_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/organizations/{organization_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/auth/login",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/auth/me",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/auth/register",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_priorities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/case_priorities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_priorities/{case_priority_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/case_priorities/{case_priority_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_severities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/case_severities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_severities/{case_severity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/case_severities/{case_severity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/case_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/case_types/{case_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/case_types/{case_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/cases",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/cases",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/cases/{case_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/cases/{case_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/cases/{case_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/cases/{case_id}/escalate",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/alerts",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/alerts/{alert_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/alerts/{alert_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/alerts/{alert_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/queries",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/queries",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/queries/{query_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/queries/{query_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/queries/{query_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/dataFormats",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources/dataFormats",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/environments",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources/environments",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/environments/{source_environment_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/environments/{source_environment_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/environments/{source_environment_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/statuses",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources/statuses",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/statuses/{source_status_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/statuses/{source_status_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/statuses/{source_status_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/transports",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources/transports",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/transports/{source_transport_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/transports/{source_transport_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/transports/{source_transport_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/data/sources/types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/types/{source_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/types/{source_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/types/{source_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/data/sources/{source_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/data/sources/{source_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/data/sources/{source_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/definitions",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/definitions",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/definitions/{definition_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/definitions/{definition_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/definitions/{definition_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/documents",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/documents",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/documents/{document_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/documents/{document_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/documents/{document_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/entity",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/entity/{entity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity/{entity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/entity/{entity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity/{entity_id}/cases/{days_back}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity/{entity_id}/signal_instances/{days_back}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity_type",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/entity_type",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/entity_type/{entity_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/entity_type/{entity_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/entity_type/{entity_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/entity_type/{entity_type_id}/process",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/events/slack/action",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/events/slack/command",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/events/slack/event",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/events/slack/menu",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/feedback",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/feedback",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/feedback/{feedback_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/feedback/{feedback_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/feedback/{feedback_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_cost_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incident_cost_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_costs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incident_costs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/incident_costs/{incident_cost_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_costs/{incident_cost_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_costs/{incident_cost_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_priorities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incident_priorities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_priorities/{incident_priority_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_priorities/{incident_priority_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_roles/{role}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_roles/{role}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_severities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incident_severities",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_severities/{incident_severity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_severities/{incident_severity_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incident_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incident_types/{incident_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incident_types/{incident_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incidents",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incidents",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incidents/metric/forecast",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/incidents/{incident_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/incidents/{incident_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/incidents/{incident_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incidents/{incident_id}/join",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incidents/{incident_id}/report/executive",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incidents/{incident_id}/report/tactical",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/incidents/{incident_id}/subscribe",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/individuals",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/individuals",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/individuals/{individual_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/individuals/{individual_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/individuals/{individual_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/notifications",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/notifications",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/notifications/{notification_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/notifications/{notification_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/notifications/{notification_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/plugins",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/plugins/instances",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/plugins/instances",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/projects",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/projects",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/projects/{project_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/projects/{project_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/projects/{project_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/search",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/search/filters",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/search/filters",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/search/filters/{search_filter_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/search/filters/{search_filter_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/services",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/services",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/services/{service_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/services/{service_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/services/{service_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/signals",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/signals",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/signals/filters",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/signals/filters",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/signals/filters/{signal_filter_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/signals/filters/{signal_filter_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/signals/instances",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/signals/instances",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/signals/{signal_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/signals/{signal_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/signals/{signal_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tag_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/tag_types",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/tag_types/{tag_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tag_types/{tag_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/tag_types/{tag_type_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tags",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/tags",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tags/recommendations/{model_name}/{id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/tags/{tag_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tags/{tag_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/tags/{tag_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/tasks",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/tasks",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/tasks/{task_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/tasks/{task_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/teams",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/teams",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/teams/{team_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/teams/{team_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/teams/{team_contact_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/terms",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/terms",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/terms/{term_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/terms/{term_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/terms/{term_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/users",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/users/{user_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/users/{user_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/workflows",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/workflows",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/workflows/instances/{workflow_instance_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/{organization}/workflows/{workflow_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/{organization}/workflows/{workflow_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/{organization}/workflows/{workflow_id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/{organization}/workflows/{workflow_id}/run",
+   "category": "prefix-other-file"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/cases",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "DELETE",
+   "path": "/cases/{caseId}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "GET",
+   "path": "/cases/{caseId}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "PUT",
+   "path": "/cases/{caseId}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/add/{email}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "PUT",
+   "path": "/cases/{caseId}/escalate",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "PATCH",
+   "path": "/cases/{caseId}/event",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/event",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "DELETE",
+   "path": "/cases/{caseId}/event/{event_uuid}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/exportTimeline",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/join",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "GET",
+   "path": "/cases/{caseId}/participants",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "DELETE",
+   "path": "/cases/{caseId}/remove/{email}",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/resources",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{caseId}/resources/conversation",
+   "category": "field-in-interpolation"
+  }
+ ],
+ "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations, paths relative to the API sub-app that main.py mounts at /api/v1 — kept as the spec writes them), scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, included with its prefix in src/dispatch/api.py — api_router.include_router(case_router, prefix=\"/{organization}/cases\") — so every route comes out without it and the roots (@router.get(\"\")) are dropped (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`) — the module constant becomes a placeholder (field-in-interpolation); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "dispatch:src/dispatch/ai/prompt/views.py:127",
+    "method": "DELETE",
+    "path": "/{prompt_id}",
+    "raw": "/{prompt_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/ai/prompt/views.py:35",
+    "method": "GET",
+    "path": "/genai-types",
+    "raw": "/genai-types",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/ai/prompt/views.py:89",
+    "method": "PUT",
+    "path": "/{prompt_id}",
+    "raw": "/{prompt_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/auth/views.py:203",
+    "method": "POST",
+    "path": "/{user_id}/change-password",
+    "raw": "/{user_id}/change-password",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/auth/views.py:282",
+    "method": "GET",
+    "path": "/me",
+    "raw": "/me",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/case/views.py:339",
+    "method": "PUT",
+    "path": "/{case_id}/escalate",
+    "raw": "/{case_id}/escalate",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/case/views.py:486",
+    "method": "POST",
+    "path": "/{case_id}/event",
+    "raw": "/{case_id}/event",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/case/views.py:574",
+    "method": "DELETE",
+    "path": "/{case_id}/event/{event_uuid}",
+    "raw": "/{case_id}/event/{event_uuid}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/feedback/service/views.py:45",
+    "method": "DELETE",
+    "path": "/{service_feedback_id}/{individual_contact_id}",
+    "raw": "/{service_feedback_id}/{individual_contact_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/forms/type/views.py:61",
+    "method": "PUT",
+    "path": "/{forms_type_id}/{individual_contact_id}",
+    "raw": "/{forms_type_id}/{individual_contact_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/incident/views.py:534",
+    "method": "GET",
+    "path": "/metric/forecast",
+    "raw": "/metric/forecast",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/plugin/views.py:63",
+    "method": "PUT",
+    "path": "/instances/{plugin_instance_id}",
+    "raw": "/instances/{plugin_instance_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/plugin/views.py:90",
+    "method": "DELETE",
+    "path": "/instances/{plugin_instance_id}",
+    "raw": "/instances/{plugin_instance_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/plugins/dispatch_slack/endpoints.py:130",
+    "method": "POST",
+    "path": "/slack/action",
+    "raw": "/slack/action",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/signal/views.py:179",
+    "method": "PUT",
+    "path": "/engagements/{signal_engagement_id}",
+    "raw": "/engagements/{signal_engagement_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/signal/views.py:214",
+    "method": "POST",
+    "path": "/filters",
+    "raw": "/filters",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/signal/views.py:423",
+    "method": "PUT",
+    "path": "/update/{signal_id}",
+    "raw": "/update/{signal_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/tag/views.py:68",
+    "method": "GET",
+    "path": "/recommendations/{project_id}/case/{case_id}",
+    "raw": "/recommendations/{project_id}/case/{case_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/task/views.py:73",
+    "method": "POST",
+    "path": "/ticket/{task_id}",
+    "raw": "/ticket/{task_id}",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/workflow/views.py:115",
+    "method": "POST",
+    "path": "/{workflow_id}/run",
+    "raw": "/{workflow_id}/run",
+    "ok": false,
+    "category": "prefix-other-file"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "dispatch:src/dispatch/plugins/dispatch_atlassian_confluence/plugin.py:135",
+    "method": "PUT",
+    "path": "/wiki/rest/api/content/{param}/move/append/{param}",
+    "raw": "/wiki/rest/api/content/{param}/move/append/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "dispatch:src/dispatch/plugins/dispatch_jira/plugin.py:88",
+    "method": "GET",
+    "path": "/rest/api/2/{param}",
+    "raw": "/rest/api/2/{param}?query={param}&maxResults=1",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:57",
+    "method": "POST",
+    "path": "/{param}/{param}/join",
+    "raw": "/{param}/{param}/join",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:61",
+    "method": "DELETE",
+    "path": "/{param}/{param}/remove/{param}",
+    "raw": "/{param}/{param}/remove/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:69",
+    "method": "POST",
+    "path": "/{param}/{param}/resources",
+    "raw": "/{param}/{param}/resources",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:73",
+    "method": "POST",
+    "path": "/{param}/{param}/resources/conversation",
+    "raw": "/{param}/{param}/resources/conversation",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:77",
+    "method": "POST",
+    "path": "/{param}/{param}/event",
+    "raw": "/{param}/{param}/event",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:81",
+    "method": "PATCH",
+    "path": "/{param}/{param}/event",
+    "raw": "/{param}/{param}/event",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:85",
+    "method": "DELETE",
+    "path": "/{param}/{param}/event/{param}",
+    "raw": "/{param}/{param}/event/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/entity/api.js:31",
+    "method": "GET",
+    "path": "/{param}/signal_instances/{param}",
+    "raw": "/{param}/signal_instances/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/entity_type/api.js:35",
+    "method": "PUT",
+    "path": "/recalculate/{param}/{param}",
+    "raw": "/recalculate/{param}/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:18",
+    "method": "GET",
+    "path": "/{param}/metric/forecast",
+    "raw": "/{param}/metric/forecast",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:64",
+    "method": "POST",
+    "path": "/{param}/{param}/add/{param}",
+    "raw": "/{param}/{param}/add/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:76",
+    "method": "POST",
+    "path": "/{param}/{param}/event",
+    "raw": "/{param}/{param}/event",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:84",
+    "method": "DELETE",
+    "path": "/{param}/{param}/event/{param}",
+    "raw": "/{param}/{param}/event/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:95",
+    "method": "GET",
+    "path": "/{param}/{param}/regenerate",
+    "raw": "/{param}/{param}/regenerate",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/plugin/api.js:27",
+    "method": "PUT",
+    "path": "/{param}/instances/{param}",
+    "raw": "/{param}/instances/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/search/api.js:31",
+    "method": "GET",
+    "path": "/filters/{param}",
+    "raw": "/filters/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/signal/api.js:41",
+    "method": "GET",
+    "path": "/{param}/instances",
+    "raw": "/{param}/instances",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "dispatch:src/dispatch/static/dispatch/src/workflow/api.js:15",
+    "method": "GET",
+    "path": "/instances/{param}",
+    "raw": "/instances/{param}",
+    "ok": false,
+    "category": "field-in-interpolation"
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

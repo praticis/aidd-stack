@@ -1,0 +1,297 @@
+{
+ "source": {
+  "endpoints": "openapi + manual",
+  "calls": "manual"
+ },
+ "sha": "d7cbdbf6689be02f036e2ecce3199df5e41142ea",
+ "spec": [
+  "/corpus/repos/go-feature-flag/cmd/relayproxy/docs/swagger.yaml"
+ ],
+ "scope": {
+  "endpoints": [
+   "cmd/relayproxy/",
+   "cmd/editor/"
+  ],
+  "calls": [
+   "retriever/bitbucketretriever/",
+   "openfeature/providers/python-provider/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/admin/v1/retriever/refresh"
+  },
+  {
+   "method": "GET",
+   "path": "/debug/pprof",
+   "category": "library-registrar"
+  },
+  {
+   "method": "GET",
+   "path": "/health"
+  },
+  {
+   "method": "GET",
+   "path": "/info"
+  },
+  {
+   "method": "GET",
+   "path": "/metrics"
+  },
+  {
+   "method": "POST",
+   "path": "/ofrep/v1/evaluate/flags"
+  },
+  {
+   "method": "POST",
+   "path": "/ofrep/v1/evaluate/flags/{flag_key}"
+  },
+  {
+   "method": "GET",
+   "path": "/openfeature/v0/manifest"
+  },
+  {
+   "method": "GET",
+   "path": "/stream/v1/sse/flag/change"
+  },
+  {
+   "method": "GET",
+   "path": "/stream/v1/ws/flag/change"
+  },
+  {
+   "method": "GET",
+   "path": "/swagger/{rest}"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/allflags"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/data/collector"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/feature/evaluate"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/feature/{flag_key}/eval"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/flag/change"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/flag/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/ws/v1/flag/change"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/2.0/repositories/{slug}/src/{branch}/{path}",
+   "category": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/data/collector"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/flag/configuration"
+  }
+ ],
+ "notes": "Endpoints: the relay proxy swagger (cmd/relayproxy/docs/swagger.yaml, basePath /) plus /swagger/* and the editor API (cmd/editor). Echo groups created in the same function (g := e.Group(\"/v1\")) resolve; the only miss is /debug/pprof, registered by a library helper, pprof.Register(e) (library-registrar). Calls: the Python OpenFeature provider uses self._http.request(method=\"POST\", url=url) — the path is found, the method keyword is not read (ANY, judged wrong in the sample: method-keyword; the gabarito match accepts ANY). The Go retrievers call through shared.CallHTTPAPI(ctx, url, method, ...) (client-wrapper; bitbucket listed, github/gitlab build the URL in a helper). The other providers (Kotlin, PHP, Ruby, Swift) are not parseable languages.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "go-feature-flag:cmd/editor/main.go:39",
+    "method": "POST",
+    "path": "/v1/feature/evaluate",
+    "raw": "/feature/evaluate",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/editor/main.go:40",
+    "method": "GET",
+    "path": "/health",
+    "raw": "/health",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/route_manifest.go:11",
+    "method": "GET",
+    "path": "/openfeature/v0/manifest",
+    "raw": "/manifest",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_admin.go:11",
+    "method": "POST",
+    "path": "/admin/v1/retriever/refresh",
+    "raw": "/retriever/refresh",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:35",
+    "method": "POST",
+    "path": "/v1/allflags",
+    "raw": "/allflags",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:36",
+    "method": "POST",
+    "path": "/v1/feature/{flagKey}/eval",
+    "raw": "/feature/:flagKey/eval",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:37",
+    "method": "POST",
+    "path": "/v1/data/collector",
+    "raw": "/data/collector",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:38",
+    "method": "GET",
+    "path": "/v1/flag/change",
+    "raw": "/flag/change",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:39",
+    "method": "POST",
+    "path": "/v1/flag/configuration",
+    "raw": "/flag/configuration",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_goff.go:43",
+    "method": "GET",
+    "path": "/swagger/{rest}",
+    "raw": "/swagger/*",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_monitoring.go:36",
+    "method": "GET",
+    "path": "/metrics",
+    "raw": "/metrics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_monitoring.go:46",
+    "method": "GET",
+    "path": "/info",
+    "raw": "/info",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_ofrep.go:24",
+    "method": "POST",
+    "path": "/ofrep/v1/evaluate/flags",
+    "raw": "/evaluate/flags",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_ofrep.go:25",
+    "method": "POST",
+    "path": "/ofrep/v1/evaluate/flags/{flagKey}",
+    "raw": "/evaluate/flags/:flagKey",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_stream.go:20",
+    "method": "GET",
+    "path": "/stream/v1/ws/flag/change",
+    "raw": "/ws/flag/change",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_stream.go:21",
+    "method": "GET",
+    "path": "/stream/v1/sse/flag/change",
+    "raw": "/sse/flag/change",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:cmd/relayproxy/api/routes_stream.go:24",
+    "method": "GET",
+    "path": "/ws/v1/flag/change",
+    "raw": "/ws/v1/flag/change",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:examples/demo/main.go:46",
+    "method": "GET",
+    "path": "/",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "go-feature-flag:openfeature/providers/python-provider/gofeatureflag_python_provider/services/api.py:121",
+    "method": "ANY",
+    "path": "/v1/flag/configuration",
+    "raw": "//v1/flag/configuration",
+    "ok": false,
+    "category": "method-keyword"
+   },
+   {
+    "evidence": "go-feature-flag:openfeature/providers/python-provider/gofeatureflag_python_provider/services/api.py:222",
+    "method": "ANY",
+    "path": "/v1/data/collector",
+    "raw": "//v1/data/collector",
+    "ok": false,
+    "category": "method-keyword"
+   },
+   {
+    "evidence": "go-feature-flag:website/src/hooks/useGitHubStars.js:21",
+    "method": "GET",
+    "path": "/github/stars/{param}/{param}.json",
+    "raw": "https://img.shields.io/github/stars/{param}/{param}.json",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-feature-flag:website/src/pages/versions.jsx:33",
+    "method": "GET",
+    "path": "/repos/{param}/{param}/contents/{param}",
+    "raw": "https://api.github.com/repos/{param}/{param}/contents/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "Python"
+ }
+}

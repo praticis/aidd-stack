@@ -10,18 +10,21 @@
 
 ## Onde estamos
 
-- **Estado:** H2a concluído (2026-10-14). H2b: **item 1 da Fase 4 fechado (2026-10-15 e 2026-10-16)** — todas as
+- **Estado:** H2a concluído (2026-10-14). H2b: **item 1 da Fase 4 fechado (2026-10-15, em duas rodadas)** — todas as
   correções baratas do relatório + router com nome de cliente, FP do roteamento convencional e genérico aninhado
   no C#, com fixtures `route-patterns-{go,ts,py,cs}`. Recall de rotas pelos gabaritos: C# 49 → 73 %, Go 6 → 15 %,
-  Python 31 → 43 %, TS/JS 6 → 9 %; chamadas C# 19 → 24 %.
-- **Incremento atual:** H2b — Fase 3 (ampliar o corpus).
+  Python 31 → 43 %, TS/JS 6 → 9 %; chamadas C# 19 → 24 %. **Fase 3 fechada (2026-10-15):** corpus v2 com 39 repos
+  (24 novos, apps reais), 38 gabaritos, relatório v2. Nos apps reais o recall de rotas despenca fora do C#
+  (Go 8,7 %, TS/JS 1,7 %, Python 1,0 %; C# 73 %) e o grafo de montagem aparece em 23 dos 38 repos.
+- **Incremento atual:** H2b — Fase 4, item 2 (grafo de montagem), na ordem revista pelo v2.
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-baseline/` — depois de todas as correções baratas
-  (a de 2026-10-14 fica como referência do v1).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline/` — corpus v2, 39 repos (os 15 do v1
+  idênticos à `2026-10-15-baseline-2`, a das correções baratas; a de 2026-10-14 fica como referência do v1).
+  Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
 
@@ -34,8 +37,9 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo:** Fase 3 — confirmar e fixar os repos candidatos (preferência por spec commitada), gerar
-  os gabaritos e estender o relatório; só então o grafo de montagem (Fase 4, item 2), medido no corpus ampliado.
+- **Próximo passo:** Fase 4, item 2 — grafo de montagem, começando pelo mesmo escopo e mesmo arquivo; antes
+  dele, decidir H2-D9/H2-D10 (recomendações no relatório) e se os defeitos baratos de precisão do v2 (item 3)
+  passam na frente.
 
 ## Decisões
 
@@ -55,6 +59,9 @@
 | H2-D12 | 2026-10-14 | Rota **ou chamada** com path incompleto — prefixo que o código tem (grupo, mount, `include_router`, campo/constante interpolado) e se perdeu — conta como **erro**; prefixo vindo de config/env (`BaseAddress`, `*_URL`) não conta (é do linker) | O path é a chave do linker; path errado vira ligação errada ou nenhuma |
 | H2-D13 | 2026-10-14 | Medir **o que o grafo recebe** (depois do `_dedupe`), sem contornar a fusão de rotas iguais entre apps do mesmo repo | A fusão é um defeito real (evidência e handler de outro app), não um artefato da medição — vira a categoria `multi-app-repo` |
 | H2-D14 | 2026-10-15 | O H2-D11 julga o erro **que a regra introduz**. Item novo errado só porque herda um defeito já categorizado dos irmãos do mesmo router (prefixo perdido em outro escopo/arquivo) é contado, mas não bloqueia a regra | Nas correções baratas, 6 das 74 rotas novas erraram assim (a regra extraiu exatamente o que está escrito); recusar a regra deixaria de fora 68 corretas e o defeito continua sendo do grafo de montagem, que corrige todas juntas |
+| H2-D15 | 2026-10-15 | Gabarito com spec = **spec + rotas conferidas no código**: rota que só existe na spec (sem registro no código) sai; rota real fora da spec, achada ao conferir um item extraído, entra | A spec documenta a API pública, não tudo o que o código serve; sem isso a precisão contra o gabarito pune rotas certas (UI, redirects, health) |
+| H2-D16 | 2026-10-15 | Item que precisa de mais de uma correção recebe **uma** categoria: a mais específica além do grafo de montagem (`m.Combo("/x").Get(h)` dentro de closure = `route-chain`; closure + mount em outro arquivo = `prefix-scope-and-file`) | O ranking diz qual regra destrava o quê; o grafo de montagem aparece em quase tudo e esconderia as outras |
+| H2-D17 | 2026-10-15 | No resumo por linguagem, item da amostra conta na linguagem **do seu arquivo**, e o gabarito declara `language` por tipo quando difere da do repo (a UI React de um servidor Go). Cada categoria traz o **nº de repos** em que aparece | Repos mistos (backend + UI) misturavam linguagens; um repo grande (netbox, 1256 operações) não pode ranquear uma categoria sozinho |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -96,39 +103,51 @@
 
 ### Fase 3 — ampliar para ~40 repos
 Critério: dar preferência a repos **com spec commitada** (o gabarito sai de graça), incluindo por linguagem
-ao menos um monólito grande e um serviço "de empresa". Candidatos **a confirmar** (spec, tamanho, licença):
+ao menos um monólito grande e um serviço "de empresa". Lista confirmada e fixada em 2026-10-15 (24 repos novos,
+39 no total; SHAs em `CORPUS`):
 
-| Linguagem | Candidatos | O que testam |
+| Linguagem | Repos novos (gabarito) | O que testam |
 |---|---|---|
-| Go | go-gitea/gitea, mattermost/mattermost, grafana/grafana, hashicorp/vault (`http/`), argoproj/argo-cd, um app com echo, um com httprouter, go-kit | `Group` com closure, subrouters gorilla, grpc-gateway (anotações) |
-| TS/JS | immich-app/immich (server Nest), app Next.js com `app/api/**/route.ts`, exemplos Hono, monólito Express, app Fastify | Nest real, rota por caminho de arquivo, `app.use('/x', router)` |
-| C# | dotnet-architecture/eShopOnWeb, dotnet/eShopSupport, ardalis/CleanArchitecture | `[Route("api/[controller]")]`, `MapGroup` aninhado, `AddHttpClient` + `BaseAddress` |
-| Python | zulip/zulip, netbox-community/netbox, app FastAPI com `include_router(prefix=)`, app aiohttp, Flask grande | Django `urls.py` + `include()`, DRF routers, prefixo cross-file |
+| Go | gitea (spec), mattermost (spec em fragmentos), kratos (spec), argo-cd (spec), gotify (spec), go-feature-flag (spec), go-kit-examples (manual) | `Group` com closure, `Combo`, subrouters gorilla em campos, router por tipo (`RouterAdmin`), grpc-gateway, echo, httprouter, go-kit |
+| TS/JS | immich (spec), NodeBB (spec multi-arquivo), Ghost, express-boilerplate, fastify-demo, hono-examples, taxonomy (manual) | Nest real com prefixo global, helpers de registro, `lazyUse`, autoload por pasta, Hono, Next.js por arquivo, jQuery no cliente |
+| C# | eShopOnWeb, eShopSupport, ardalis/CleanArchitecture, jellyfin, bitwarden/server (manual) | minimal API, controllers com `[Route]` herdado, FastEndpoints, ApiEndpoints, clientes tipados |
+| Python | zulip (spec), netbox (spec), dispatch (spec), aiohttp-demos, CTFd (manual) | Django urlconf, DRF routers, `include_router(prefix=)` entre arquivos, aiohttp, flask-restx |
 
-- [ ] Selecionar e confirmar a lista; fixar SHAs; gabaritos onde houver spec
-- [ ] Rodar e estender `corpus-report.md` (seção v2)
+Fora: hashicorp/vault (licença BUSL; o fork openbao não tem spec commitada) e **grafana**, que era
+candidato e não roda: a extração do repo inteiro (24 mil arquivos) é morta por memória a 7,7 GB no Docker
+Desktop — achado de escala do indexer, registrado no relatório.
+
+- [x] Selecionar e confirmar a lista; fixar SHAs; gabaritos onde houver spec — e lista à mão nos demais
+- [x] Rodar e estender `corpus-report.md` (seção v2)
 
 ### Fase 4 — evoluir o extrator (ordem definida pelo ranking do relatório)
 Por categoria: fixture → mudança em `languages/<lang>/http.py` (ou `core/http_base.py` se for comum) →
 `pytest` → corpus `--baseline` (nenhum repo pode regredir, H2-D11) → tabela §3 do guia → nova baseline.
-Um commit por categoria. Ordem definida pelo relatório v1 (wrong + missed no corpus atual):
+Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15** ("What H2b should do, in order
+(v2)" no relatório; categorias e contagens lá):
 - [x] **1. Correções baratas e gerais**
   - [x] *(2026-10-15)* `root-route-dropped` (raiz só com path completo conhecido: app ou grupo com prefixo),
     `route-constraint-syntax` (placeholder mascarado na validação; `?` opcional antes da query), `no-leading-slash`
     (`relative_on_groups` em Go/C#), `client-named-router` (router do arquivo vence o nome) e o FP do roteamento
     convencional do ASP.NET — fixtures `route-patterns-{go,ts,py,cs}`
-  - [x] *(2026-10-16)* `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`,
+  - [x] *(2026-10-15, 2ª rodada)* `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`,
     `verb-alias` (`Del`) e `nested-generic-callee` (C# `<List<T>>`, achado no caminho)
-- [ ] **2. Grafo de montagem** (132 wrong + missed): `prefix-other-scope` no mesmo arquivo primeiro (closure
-  `r.Route`, `Group`, `register(fn, {prefix})`), depois `prefix-other-file`/`router-as-param`/`global-prefix` entre
-  arquivos (imports, constantes/settings, chamadas `Register(v1.Group("/x"))`): passo pós-scan em `integrations.py`,
-  `confidence: heuristic` → bump `INDEXER_VERSION` e `SCHEMA.md` se o nó ganhar campo
-- [ ] **3. Chamadas:** `field-in-interpolation` (campo/constante da classe dentro de `$"..."`), `url-object-builder` (Go `u.Path +=`, `JoinPath`)
-- [ ] **4. H2-D9:** clientes gerados como `HttpCall` `via: generated-client` (openapi-ts: receiver entre parênteses + `url` no objeto de opções)
-- [ ] **5. `test-app-folder`:** `/integration/` no `TEST_FILE` ou exclusão por config — decidir com os repos de produto do H2b
-- [ ] Django: `urlpatterns` + `path()`/`re_path()` + `include()` (com os repos Python do H2b)
-- [ ] Rotas por caminho de arquivo: Next.js `app/**/route.ts` (método = função exportada)
-- [ ] Decidir H2-D10 com os repos do H2b
+- [ ] **2. Grafo de montagem** — no v2 aparece em 23 dos 38 repos com gabarito (200 wrong, 1837 missed). Ordem:
+  mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
+  `r.Route`/`m.Group(..., func)`, `register(fn, {prefix})`) → prefixo global (`setGlobalPrefix`) → entre arquivos
+  (imports, constantes/enums, campos de struct, funções-helper chamadas dentro de grupos, `include_router(prefix=)`).
+  Passo pós-scan em `integrations.py`, `confidence: heuristic` → bump `INDEXER_VERSION` e `SCHEMA.md` se o nó ganhar campo
+- [ ] **3. Defeitos baratos do v2** — precisão primeiro: `variable-other-scope`, `call-taken-for-route` (jQuery
+  `$.get(url, cb)`), `mount-as-route`, `route-taken-for-call`, `build-artifact`, `non-http-verb`; depois recall:
+  `const-concat`, `multiline-receiver`, `mime-like-head`, `const-base-url`, `method-keyword`/`method-variable`,
+  `verb-alias` (`del`), `default-mux-function`, `group-chain`, `aiohttp-router`
+- [ ] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`)
+- [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+- [ ] **6. C#:** herança de `[Route]` (se o H2-D10 for aceito) e classes de endpoint (FastEndpoints, ApiEndpoints)
+- [ ] **7. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
+  rotas por arquivo do Next.js, flask-restx, clientes gerados (H2-D9: 371 operações em 4 clientes, 0 extraídas)
+- [ ] **8. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
+- [ ] Decidir H2-D9 e H2-D10 — medidos no v2, recomendação no relatório ("The two open decisions, with v2 numbers")
 
 ### Fase 5 — fechamento
 - [ ] ROADMAP: F0.4.3b `[x]`; gaps encaminhados (base URL → F0.5 linker; spec como fonte → F2.1; resto → F1 ou limitação)
@@ -136,24 +155,22 @@ Um commit por categoria. Ordem definida pelo relatório v1 (wrong + missed no co
 
 ## Taxonomia de erros
 
-As categorias medidas no v1, com exemplos, o que exigiriam e o destino, estão em `docs/corpus-report.md`
-("Gaps by category"); o `--expected` as reconta a cada execução a partir do campo `category` dos gabaritos.
-Categorias previstas e ainda não vistas no corpus (aparecerão com os repos do H2b):
+As categorias medidas, com exemplos, o que exigiriam e o destino, estão em `docs/corpus-report.md` ("Gaps by
+category" do v1 e do v2); o `--expected` as reconta a cada execução a partir do campo `category` dos gabaritos.
+Das categorias previstas no plano, o v2 viu `route-by-file-path`, `django-urlconf`, `inherited-route-attr` e
+`generated-client` (medido, não é categoria de gabarito); `lowercase-verb-ambiguous` apareceu como `non-http-verb`
+(`Get(key)` de um cache). Seguem fora da métrica:
 
-| Categoria | Exemplo | Provável destino |
+| Categoria | Exemplo | Destino |
 |---|---|---|
-| `route-by-file-path` | Next.js `app/api/users/[id]/route.ts` | extrator (scanner por arquivo) |
-| `django-urlconf` | `urlpatterns = [path("users/<int:id>/", view)]` | extrator (scanner novo) |
-| `inherited-route-attr` | `[Route]` na classe base | H2-D10 |
-| `lowercase-verb-ambiguous` | `client.get(key)` que não é HTTP (FP) | extrator (`CLIENT_RECEIVER`) |
-| `generated-client` | NSwag/openapi-generator/openapi-ts em arquivo gerado | H2-D9 (medido: 32 operações, 0 extraídas) |
-| `runtime-url` | URL montada sem literal | fora da métrica (H2-D5) |
-| `base-url-in-config` | `BaseAddress = new Uri(...)`, `*_URL` | linker F0.5 |
+| `runtime-url` | URL montada sem literal, link lido da página | fora da métrica (H2-D5) |
+| `base-url-in-config` | `BaseAddress = new Uri(...)`, `*_URL`, `globalSettings.X.BaseUrl` | linker F0.5 |
 
 ## Números
 
-Tabela do **v1** (2026-10-14), mantida como referência; os números atuais saem do `--expected` e a
-comparação v1 → correções baratas está no relatório ("Update: the cheap fixes").
+Tabela do **v1** (2026-10-14), mantida como referência; os números atuais saem do `--expected`, a comparação
+v1 → correções baratas está no relatório ("Update: the cheap fixes") e as tabelas do corpus v2 (39 repos, por
+linguagem e por repo) estão em "v2: the widened corpus".
 
 Referência 2026-09 = ordem de grandeza do docstring antigo, medida no HEAD de então (SHA desconhecido). Baseline = 2026-10-13 nos
 SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extrator, então não serve como regressão.
@@ -219,7 +236,7 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   só em Go/C#). Gabaritos: `category` limpo nos itens encontrados e reclassificado nos que faltam; categorias
   novas `client-named-router` e `app-not-recognized`. Sem bump de `INDEXER_VERSION`: a impressão digital do
   build já reindexa. Nova baseline `2026-10-15-baseline`. H2-D14 confirmado.
-- **2026-10-16** — H2b, Fase 4 item 1 fechado. As cinco correções baratas menores (query fora da validação do
+- **2026-10-15** (2ª rodada) — H2b, Fase 4 item 1 fechado. As cinco correções baratas menores (query fora da validação do
   template, `fetch` = GET, `TestClient` não é chamada de saída, grupo opcional do Express 5, `Del`) e uma achada no
   caminho: genérico aninhado no callee C# (`GetFromJsonAsync<List<T>>`) fazia a chamada sumir — e tinha escondido
   `GET /api/webhooks` também do gabarito do eShop (o grep da listagem tinha o mesmo ponto cego); gabarito corrigido.
@@ -227,4 +244,20 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   (`DELETE` do alertmanager, sem `/api/v1` como as irmãs) e 10 chamadas novas no eShop (2 certas; as do catálogo
   sem o `api/catalog/` do campo interpolado, como as irmãs) — H2-D14: precisão de chamadas C# no gabarito
   50 → 40 %, recall 19 → 24 %. Amostra: itens que deixaram de ser extraídos saíram; os do mesmo local com path ou
-  método corrigido foram atualizados. Nova baseline `2026-10-16-baseline`.
+  método corrigido foram atualizados. Nova baseline `2026-10-15-baseline-2`.
+- **2026-10-15** — H2b, Fase 3 fechada. 24 repos novos fixados por SHA (39 no total): Go (gitea, mattermost, kratos,
+  argo-cd, gotify, go-feature-flag, go-kit-examples), TS/JS (immich, NodeBB, Ghost, express-boilerplate, fastify-demo,
+  hono-examples, taxonomy), C# (eShopOnWeb, eShopSupport, ardalis/CleanArchitecture, jellyfin, bitwarden), Python
+  (zulip, netbox, dispatch, aiohttp-demos, CTFd). grafana saiu: a extração do repo inteiro é morta por memória a
+  7,7 GB no Docker Desktop (achado de escala do indexer). Gabaritos: spec onde há (11 dos novos, 14 no total; mattermost em
+  fragmentos, NodeBB multi-arquivo — o `from-openapi` passou a seguir `$ref` externo), lista lida na fonte nos
+  demais; amostra de 20 rotas + 20 chamadas julgada na fonte em cada repo. Decisões H2-D15 (spec + rotas conferidas
+  no código), H2-D16 (uma categoria por item: a mais específica além do grafo de montagem) e H2-D17 (linguagem por
+  arquivo no resumo; nº de repos por categoria). Instrumento: `--reuse`, `language` no gabarito, coluna `repos`.
+  Extrator intocado: os 15 do v1 idênticos à baseline anterior; extração do v2 idêntica à usada nos gabaritos.
+  Achados: o grafo de montagem em 23 de 38 repos (200 wrong, 1837 missed); defeitos baratos novos (`const-concat`,
+  `multiline-receiver`, `variable-other-scope`, `mime-like-head`, jQuery `$.get` como rota, mount como rota);
+  H2-D9 com 371 operações em 4 clientes gerados (0 extraídas); H2-D10 com 26 de 60 controllers do jellyfin herdando
+  `[Route("[controller]")]` (128 rotas sem prefixo). Correção de datas: o trabalho registrado como 2026-10-16 foi
+  feito em 2026-10-15 (2ª rodada); a baseline passou a se chamar `2026-10-15-baseline-2`. Nova baseline
+  `2026-10-15-v2-baseline`.

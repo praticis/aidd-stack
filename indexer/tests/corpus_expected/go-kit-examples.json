@@ -1,0 +1,326 @@
+{
+ "source": "manual",
+ "sha": "e18c82edc2f9c7de3aff9748751d63270c052c1b",
+ "endpoints": [
+  {
+   "method": "ANY",
+   "path": "/addsvc/concat",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/sum",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos/{id}/assign_to_route"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos/{id}/change_destination"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos/{id}/request_routes"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/locations"
+  },
+  {
+   "method": "ANY",
+   "path": "/concat"
+  },
+  {
+   "method": "ANY",
+   "path": "/count",
+   "category": "default-mux-function"
+  },
+  {
+   "method": "POST",
+   "path": "/handling/v1/incidents"
+  },
+  {
+   "method": "ANY",
+   "path": "/metrics"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PATCH",
+   "path": "/profiles/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "PUT",
+   "path": "/profiles/{id}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses",
+   "category": "route-chain"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles/{id}/addresses",
+   "category": "route-chain"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}/addresses/{addressID}",
+   "category": "route-chain"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses/{addressID}",
+   "category": "route-chain"
+  },
+  {
+   "method": "ANY",
+   "path": "/stringsvc/count"
+  },
+  {
+   "method": "ANY",
+   "path": "/stringsvc/uppercase"
+  },
+  {
+   "method": "ANY",
+   "path": "/sum"
+  },
+  {
+   "method": "GET",
+   "path": "/tracking/v1/cargos/{id}"
+  },
+  {
+   "method": "ANY",
+   "path": "/uppercase",
+   "category": "default-mux-function"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/paths",
+   "category": "url-object-builder"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "category": "request-encoder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "PATCH",
+   "path": "/profiles/{id}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "PUT",
+   "path": "/profiles/{id}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses",
+   "category": "request-encoder"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles/{id}/addresses",
+   "category": "request-encoder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}/addresses/{addressID}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses/{addressID}",
+   "category": "request-encoder"
+  },
+  {
+   "method": "POST",
+   "path": "/uppercase",
+   "category": "url-object-builder"
+  }
+ ],
+ "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None is extracted.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "go-kit-examples:addsvc/cmd/addsvc/addsvc.go:140",
+    "method": "ANY",
+    "path": "/metrics",
+    "raw": "/metrics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:addsvc/pkg/addtransport/http.go:51",
+    "method": "ANY",
+    "path": "/sum",
+    "raw": "/sum",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:addsvc/pkg/addtransport/http.go:57",
+    "method": "ANY",
+    "path": "/concat",
+    "raw": "/concat",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:apigateway/main.go:148",
+    "method": "ANY",
+    "path": "/stringsvc/uppercase",
+    "raw": "/stringsvc/uppercase",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:apigateway/main.go:149",
+    "method": "ANY",
+    "path": "/stringsvc/count",
+    "raw": "/stringsvc/count",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:72",
+    "method": "POST",
+    "path": "/booking/v1/cargos",
+    "raw": "/booking/v1/cargos",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:73",
+    "method": "GET",
+    "path": "/booking/v1/cargos",
+    "raw": "/booking/v1/cargos",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:74",
+    "method": "GET",
+    "path": "/booking/v1/cargos/{id}",
+    "raw": "/booking/v1/cargos/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:75",
+    "method": "GET",
+    "path": "/booking/v1/cargos/{id}/request_routes",
+    "raw": "/booking/v1/cargos/{id}/request_routes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:76",
+    "method": "POST",
+    "path": "/booking/v1/cargos/{id}/assign_to_route",
+    "raw": "/booking/v1/cargos/{id}/assign_to_route",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:77",
+    "method": "POST",
+    "path": "/booking/v1/cargos/{id}/change_destination",
+    "raw": "/booking/v1/cargos/{id}/change_destination",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:78",
+    "method": "GET",
+    "path": "/booking/v1/locations",
+    "raw": "/booking/v1/locations",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/handling/transport.go:36",
+    "method": "POST",
+    "path": "/handling/v1/incidents",
+    "raw": "/handling/v1/incidents",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/main.go:139",
+    "method": "ANY",
+    "path": "/booking/v1",
+    "raw": "/booking/v1/",
+    "ok": false,
+    "category": "mount-as-route"
+   },
+   {
+    "evidence": "go-kit-examples:shipping/main.go:140",
+    "method": "ANY",
+    "path": "/tracking/v1",
+    "raw": "/tracking/v1/",
+    "ok": false,
+    "category": "mount-as-route"
+   },
+   {
+    "evidence": "go-kit-examples:shipping/main.go:141",
+    "method": "ANY",
+    "path": "/handling/v1",
+    "raw": "/handling/v1/",
+    "ok": false,
+    "category": "mount-as-route"
+   },
+   {
+    "evidence": "go-kit-examples:shipping/tracking/transport.go:34",
+    "method": "GET",
+    "path": "/tracking/v1/cargos/{id}",
+    "raw": "/tracking/v1/cargos/{id}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

@@ -146,7 +146,7 @@
   ]
  },
  "checked_seed": "1",
- "notes": "Precision: 20 of 31 sampled (seed 1). examples/resource builds routes in an app.resource(path, obj) helper (this.get(path + \"/:id\")): the prefix is a string parameter (prefix-as-param). Express 5 optional groups ({:query}, {.:format}) are normalized into broken templates (optional-segment-syntax). Recall scope: examples/multi-router/ — routers mounted from other files with app.use(\"/api/v1\", require(...)) lose the prefix (prefix-other-file) and the router roots (\"/\") are dropped. 2026-10-16: Express 5 optional groups are normalized now ({:query} → {query}); the sampled search route became correct.",
+ "notes": "Precision: 20 of 31 sampled (seed 1). examples/resource builds routes in an app.resource(path, obj) helper (this.get(path + \"/:id\")): the prefix is a string parameter (prefix-as-param). Express 5 optional groups ({:query}, {.:format}) are normalized into broken templates (optional-segment-syntax). Recall scope: examples/multi-router/ — routers mounted from other files with app.use(\"/api/v1\", require(...)) lose the prefix (prefix-other-file) and the router roots (\"/\") are dropped. 2026-10-15 (second round): Express 5 optional groups are normalized now ({:query} → {query}); the sampled search route became correct.",
  "scope": {
   "endpoints": [
    "examples/multi-router/"

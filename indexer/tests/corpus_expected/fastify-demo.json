@@ -1,0 +1,162 @@
+{
+ "source": "manual",
+ "sha": "5cd560125b3c2f0d42192bc7f493e8e3b9e75e52",
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/login",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tasks",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tasks",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tasks/download/csv",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tasks/{filename}/image",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tasks/{filename}/image",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tasks/{id}",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tasks/{id}",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tasks/{id}",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tasks/{id}/assign",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tasks/{id}/upload",
+   "category": "prefix-by-folder"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/update-password",
+   "category": "prefix-by-folder"
+  }
+ ],
+ "notes": "Manual, the whole app (src/routes). Routes are loaded by @fastify/autoload from src/routes with the folder path as prefix (routes/api/tasks/index.ts → /api/tasks): none comes out right and the roots ('/') are dropped (prefix-by-folder). The framework's official demo app; no outbound calls.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "fastify-demo:src/routes/api/auth/index.ts:9",
+    "method": "POST",
+    "path": "/login",
+    "raw": "/login",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:116",
+    "method": "DELETE",
+    "path": "/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:141",
+    "method": "POST",
+    "path": "/{id}/assign",
+    "raw": "/:id/assign",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:176",
+    "method": "POST",
+    "path": "/{id}/upload",
+    "raw": "/:id/upload",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:241",
+    "method": "GET",
+    "path": "/{filename}/image",
+    "raw": "/:filename/image",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:273",
+    "method": "DELETE",
+    "path": "/{filename}/image",
+    "raw": "/:filename/image",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:307",
+    "method": "GET",
+    "path": "/download/csv",
+    "raw": "/download/csv",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:35",
+    "method": "GET",
+    "path": "/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/tasks/index.ts:89",
+    "method": "PATCH",
+    "path": "/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "prefix-by-folder"
+   },
+   {
+    "evidence": "fastify-demo:src/routes/api/users/index.ts:9",
+    "method": "PUT",
+    "path": "/update-password",
+    "raw": "/update-password",
+    "ok": false,
+    "category": "prefix-by-folder"
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

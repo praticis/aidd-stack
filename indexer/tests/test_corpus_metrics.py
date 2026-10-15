@@ -121,3 +121,12 @@ def test_from_openapi_v3_server_url_and_prefix_override():
     assert M.from_openapi(spec) == [{"method": "POST", "path": "/api/v3/pets"}, {"method": "PUT", "path": "/api/v3/pets/{petId}"}]
     assert M.from_openapi(spec, prefix="") == [{"method": "POST", "path": "/pets"}, {"method": "PUT", "path": "/pets/{petId}"}]
     assert M.openapi_prefix({"servers": [{"url": "/v2"}]}) == "/v2"
+
+
+def test_from_openapi_follows_path_item_refs_to_other_files(tmp_path):
+    (tmp_path / "write").mkdir()
+    (tmp_path / "write" / "users.json").write_text('{"get": {}, "post": {}, "parameters": []}')
+    spec = {"openapi": "3.0.0", "servers": [{"url": "/api/v3"}],
+            "paths": {"/users/": {"$ref": "write/users.json"}, "/ping": {"$ref": "#/components/x"}}}
+    assert M.from_openapi(spec, base=tmp_path) == [{"method": "GET", "path": "/api/v3/users"},
+                                                   {"method": "POST", "path": "/api/v3/users"}]

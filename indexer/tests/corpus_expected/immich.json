@@ -1,0 +1,1626 @@
+{
+ "source": "openapi",
+ "sha": "c43573bb2e657aaecc403c385038ae4b1bbdc86f",
+ "spec": [
+  "/corpus/repos/immich/open-api/immich-openapi-specs.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "server/src/"
+  ],
+  "calls": []
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/activities",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/activities",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/activities/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/activities/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/auth/unlink-all",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/admin/config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/config/defaults",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/admin/database-backups",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/database-backups",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/database-backups/start-restore",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/database-backups/upload",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/database-backups/{filename}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/integrity/report",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/admin/integrity/report/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/integrity/report/{id}/file",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/integrity/report/{type}/csv",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/integrity/summary",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/maintenance",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/maintenance/detect-install",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/maintenance/login",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/maintenance/status",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/notifications",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/notifications/templates/{name}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/notifications/test-email",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/admin/users/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/admin/users/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users/{id}/calendar-heatmap",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users/{id}/preferences",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/admin/users/{id}/preferences",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/admin/users/{id}/restore",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users/{id}/sessions",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/admin/users/{id}/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/albums",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/albums",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/albums/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/albums/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/albums/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/albums/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/albums/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/albums/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/albums/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/albums/{id}/map-markers",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/albums/{id}/user/{userId}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/albums/{id}/user/{userId}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/albums/{id}/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/api-keys",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/api-keys",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/api-keys/me",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/api-keys/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/api-keys/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/api-keys/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/api-keys/{id}/rotate",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/asset-files",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/asset-files/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/asset-files/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/asset-files/{id}/download",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/assets",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/assets",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/assets/bulk-upload-check",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets/copy",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/assets/jobs",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/assets/metadata",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets/metadata",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/statistics",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets/{id}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/assets/{id}/edits",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/edits",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets/{id}/edits",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/metadata",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/assets/{id}/metadata",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/assets/{id}/metadata/{key}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/metadata/{key}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/ocr",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/original",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/thumbnail",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/video/playback",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/video/stream/main.m3u8",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/assets/{id}/video/stream/{sessionId}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/video/stream/{sessionId}/{variantIndex}/playlist.m3u8",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{id}/video/stream/{sessionId}/{variantIndex}/{filename}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/admin-sign-up",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/change-password",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/login",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/logout",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/auth/pin-code",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/pin-code",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/auth/pin-code",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/session/lock",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/session/unlock",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/auth/status",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/validateToken",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cluster-groups/requests",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/cluster-groups/requests/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/cluster-groups/requests/{id}/accept",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/cluster-groups/{id}/leave",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/cluster-groups/{id}/regenerate-people",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cluster-groups/{id}/requests",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/cluster-groups/{id}/requests",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cluster-groups/{id}/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/config/defaults",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/download/archive",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/download/info",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/duplicates",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/duplicates",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/duplicates/resolve",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/duplicates/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/faces",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/faces",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/faces/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/faces/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/jobs",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/jobs",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/jobs/{name}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/libraries",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/libraries",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/libraries/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/libraries/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/libraries/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/libraries/{id}/scan",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/libraries/{id}/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/libraries/{id}/validate",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/map/markers",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/map/reverse-geocode",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memories",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memories",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memories/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memories/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memories/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/memories/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memories/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/memories/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/notifications",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/notifications",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/notifications",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/notifications/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/notifications/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/notifications/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/oauth/authorize",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/oauth/backchannel-logout",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/oauth/callback",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/oauth/link",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/oauth/mobile-redirect",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/oauth/unlink",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/partners",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/partners",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/partners/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/partners/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/partners/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/people",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/people",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/people",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/people",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/people/merge",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/people/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/people/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/people/users",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/people/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/people/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/people/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/people/{id}/merge",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/people/{id}/reassign",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/people/{id}/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/people/{id}/thumbnail",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/plugins",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/plugins/methods",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/plugins/templates",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/plugins/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/public/config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/public/config/defaults",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/queues",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/queues/{name}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/queues/{name}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/queues/{name}/jobs",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/queues/{name}/jobs",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/search/cities",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/search/explore",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/search/large-assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/search/metadata",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/search/person",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/search/places",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/search/random",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/search/smart",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/search/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/search/suggestions",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/about",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/apk-links",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/features",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/server/license",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/license",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/server/license",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/media-types",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/ping",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/statistics",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/storage",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/version",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/version-check",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/server/version-history",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/sessions",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/sessions",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/sessions",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/sessions/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/sessions/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/sessions/{id}/lock",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/shared-links",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/shared-links",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/shared-links/login",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/shared-links/me",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/shared-links/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/shared-links/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/shared-links/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/shared-links/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/shared-links/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/stacks",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/stacks",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/stacks",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/stacks/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/stacks/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/stacks/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/stacks/{id}/assets/{assetId}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/sync/ack",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/sync/ack",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/sync/ack",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/sync/stream",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-config",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-config/defaults",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-config/storage-template-options",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-metadata/admin-onboarding",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/system-metadata/admin-onboarding",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-metadata/reverse-geocoding-state",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-metadata/version-check-state",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tags",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tags",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tags/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tags/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tags/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tags/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tags/{id}/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/timeline/bucket",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/timeline/buckets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/trash/empty",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/trash/restore",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/trash/restore/assets",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/me",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/me",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/me/calendar-heatmap",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/me/license",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/me/license",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/me/license",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/me/onboarding",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/me/onboarding",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/me/onboarding",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/me/preferences",
+   "category": "const-other-file"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/me/preferences",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/profile-image",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/profile-image",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{id}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{id}/profile-image",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/view/folder",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/view/folder/unique-paths",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/workflows",
+   "category": "global-prefix"
+  },
+  {
+   "method": "POST",
+   "path": "/api/workflows",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/workflows/triggers",
+   "category": "global-prefix"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/workflows/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/workflows/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/workflows/{id}",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/workflows/{id}/logs",
+   "category": "global-prefix"
+  },
+  {
+   "method": "GET",
+   "path": "/api/workflows/{id}/share",
+   "category": "global-prefix"
+  }
+ ],
+ "notes": "Endpoints: the committed OpenAPI spec (open-api/immich-openapi-specs.json, servers /api), scope server/src/. Nest controllers resolve (292 routes, 294 handlers), but none carries the app-wide app.setGlobalPrefix('api', {exclude}) from app.common.ts (global-prefix, 237 of 279). The other 42 also have the controller prefix in an enum of another file, @Controller(RouteKey.Asset) with RouteKey.Asset = 'assets' in enum.ts (const-other-file); counted there although they need the global prefix too. The precision sample (whole repo) has 18 routes that only lack /api and 2 that also lack the enum prefix. Calls: not measured with a gabarito — the web app talks to the server only through the oazapfts-generated SDK (packages/sdk/src/fetch-client.ts: 279 operations written as oazapfts.fetchJson(`/activities${QS.query(...)}`, {...opts}), 0 extracted — H2-D9); the mobile app is Dart. The six extracted calls (ML load test and health check, CLI upload, GitHub GraphQL) are right.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "immich:server/src/controllers/album.controller.ts:103",
+    "method": "GET",
+    "path": "/albums/{id}/map-markers",
+    "raw": "/:id/map-markers",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/api-key.controller.ts:16",
+    "method": "POST",
+    "path": "/api-keys",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/asset.controller.ts:33",
+    "method": "GET",
+    "path": "/statistics",
+    "raw": "/statistics",
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "immich:server/src/controllers/asset.controller.ts:76",
+    "method": "DELETE",
+    "path": "/",
+    "raw": "/",
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "immich:server/src/controllers/auth.controller.ts:53",
+    "method": "POST",
+    "path": "/auth/admin-sign-up",
+    "raw": "/admin-sign-up",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/auth.controller.ts:76",
+    "method": "POST",
+    "path": "/auth/change-password",
+    "raw": "/change-password",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/config-admin.controller.ts:36",
+    "method": "PUT",
+    "path": "/admin/config",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/config-user.controller.ts:25",
+    "method": "GET",
+    "path": "/config/defaults",
+    "raw": "/defaults",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/memory.controller.ts:95",
+    "method": "DELETE",
+    "path": "/memories/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/oauth.controller.ts:92",
+    "method": "POST",
+    "path": "/oauth/link",
+    "raw": "/link",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/person.controller.ts:177",
+    "method": "PUT",
+    "path": "/people/{id}/reassign",
+    "raw": "/:id/reassign",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/person.controller.ts:66",
+    "method": "POST",
+    "path": "/people",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/queue.controller.ts:59",
+    "method": "GET",
+    "path": "/queues/{name}/jobs",
+    "raw": "/:name/jobs",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/shared-link.controller.ts:113",
+    "method": "POST",
+    "path": "/shared-links",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/stack.controller.ts:28",
+    "method": "POST",
+    "path": "/stacks",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/tag.controller.ts:46",
+    "method": "PUT",
+    "path": "/tags",
+    "raw": "/",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/tag.controller.ts:90",
+    "method": "PATCH",
+    "path": "/tags/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/trash.controller.ts:16",
+    "method": "POST",
+    "path": "/trash/empty",
+    "raw": "/empty",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/view.controller.ts:15",
+    "method": "GET",
+    "path": "/view/folder/unique-paths",
+    "raw": "/folder/unique-paths",
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "immich:server/src/controllers/workflow.controller.ts:96",
+    "method": "PATCH",
+    "path": "/workflows/{id}",
+    "raw": "/:id",
+    "ok": false,
+    "category": "global-prefix"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "immich:machine-learning/locustfile.py:52",
+    "method": "POST",
+    "path": "/predict",
+    "raw": "/predict",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "immich:machine-learning/locustfile.py:61",
+    "method": "POST",
+    "path": "/predict",
+    "raw": "/predict",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "immich:machine-learning/locustfile.py:81",
+    "method": "POST",
+    "path": "/predict",
+    "raw": "/predict",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "immich:machine-learning/scripts/healthcheck.py:22",
+    "method": "GET",
+    "path": "/ping",
+    "raw": "http://{param}:{param}/ping",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "immich:packages/cli/src/commands/asset.ts:429",
+    "method": "POST",
+    "path": "/assets",
+    "raw": "/assets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "immich:packages/scripts/src/commands/notes.ts:164",
+    "method": "POST",
+    "path": "/graphql",
+    "raw": "https://api.github.com/graphql",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

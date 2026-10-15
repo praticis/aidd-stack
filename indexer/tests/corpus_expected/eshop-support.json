@@ -1,0 +1,457 @@
+{
+ "source": "manual",
+ "sha": "1a772ff84f750167c020fc8b678b7433290ba783",
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/assistant/chat"
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/customer/products"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/customer/ticket/{ticketId}/close"
+  },
+  {
+   "method": "POST",
+   "path": "/api/customer/ticket/{ticketId}/message"
+  },
+  {
+   "method": "GET",
+   "path": "/api/products"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ticket/{ticketId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ticket/{ticketId}/message"
+  },
+  {
+   "method": "POST",
+   "path": "/classify"
+  },
+  {
+   "method": "GET",
+   "path": "/customer/tickets"
+  },
+  {
+   "method": "POST",
+   "path": "/customer/tickets/create"
+  },
+  {
+   "method": "GET",
+   "path": "/customer/tickets/{ticketId}"
+  },
+  {
+   "method": "POST",
+   "path": "/embed"
+  },
+  {
+   "method": "GET",
+   "path": "/manual"
+  },
+  {
+   "method": "POST",
+   "path": "/tickets"
+  },
+  {
+   "method": "GET",
+   "path": "/tickets/{ticketId}"
+  },
+  {
+   "method": "GET",
+   "path": "/user/signout"
+  },
+  {
+   "method": "POST",
+   "path": "/user/signout"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/assistant/chat"
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/customer/products"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/customer/ticket/{ticketId}/close"
+  },
+  {
+   "method": "POST",
+   "path": "/api/customer/ticket/{ticketId}/message"
+  },
+  {
+   "method": "GET",
+   "path": "/api/products"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pull"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ticket/{ticketId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ticket/{ticketId}/message"
+  },
+  {
+   "method": "POST",
+   "path": "/classify"
+  },
+  {
+   "method": "POST",
+   "path": "/collections/manuals/points/search",
+   "category": "field-in-interpolation"
+  },
+  {
+   "method": "GET",
+   "path": "/customer/tickets"
+  },
+  {
+   "method": "POST",
+   "path": "/customer/tickets/create"
+  },
+  {
+   "method": "GET",
+   "path": "/customer/tickets/{ticketId}"
+  },
+  {
+   "method": "GET",
+   "path": "/manual"
+  },
+  {
+   "method": "POST",
+   "path": "/tickets"
+  },
+  {
+   "method": "GET",
+   "path": "/tickets/{ticketId}"
+  }
+ ],
+ "notes": "Manual, the whole solution: every Map* in the Backend and the two web UIs, the FastAPI inference service, and every call in the typed clients (ServiceDefaults/Clients), the backend's Qdrant search and the Aspire host's Ollama calls. Minimal APIs with literal routes and typed HttpClient wrappers with literal paths: everything comes out right, and every UI → Backend call has its route in the same repo — the best case for the linker. The one error: $\"collections/{ManualCollectionName}/points/search\" with private const string ManualCollectionName = \"manuals\" keeps a placeholder where the code holds a literal (field-in-interpolation). GET /manual exists in the Backend and in StaffWebUI (multi-app-repo; one endpoint after the merge).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "eshop-support:src/Backend/Api/AssistantApi.cs:17",
+    "method": "POST",
+    "path": "/api/assistant/chat",
+    "raw": "/api/assistant/chat",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/CatalogApi.cs:16",
+    "method": "GET",
+    "path": "/manual",
+    "raw": "/manual",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/CatalogApi.cs:17",
+    "method": "GET",
+    "path": "/api/categories",
+    "raw": "/api/categories",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/CatalogApi.cs:18",
+    "method": "GET",
+    "path": "/api/products",
+    "raw": "/api/products",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/CatalogApi.cs:22",
+    "method": "GET",
+    "path": "/api/customer/products",
+    "raw": "/api/customer/products",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:17",
+    "method": "POST",
+    "path": "/tickets",
+    "raw": "/tickets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:18",
+    "method": "GET",
+    "path": "/tickets/{ticketId}",
+    "raw": "/tickets/{ticketId:int}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:19",
+    "method": "PUT",
+    "path": "/api/ticket/{ticketId}",
+    "raw": "/api/ticket/{ticketId:int}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:24",
+    "method": "GET",
+    "path": "/customer/tickets",
+    "raw": "/customer/tickets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:28",
+    "method": "GET",
+    "path": "/customer/tickets/{ticketId}",
+    "raw": "/customer/tickets/{ticketId:int}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:32",
+    "method": "POST",
+    "path": "/customer/tickets/create",
+    "raw": "/customer/tickets/create",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketApi.cs:35",
+    "method": "PUT",
+    "path": "/api/customer/ticket/{ticketId}/close",
+    "raw": "/api/customer/ticket/{ticketId:int}/close",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketMessagingApi.cs:12",
+    "method": "POST",
+    "path": "/api/ticket/{ticketId}/message",
+    "raw": "/api/ticket/{ticketId}/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Api/TicketMessagingApi.cs:18",
+    "method": "POST",
+    "path": "/api/customer/ticket/{ticketId}/message",
+    "raw": "/api/customer/ticket/{ticketId}/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/CustomerWebUI/Program.cs:72",
+    "method": "POST",
+    "path": "/user/signout",
+    "raw": "/user/signout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/PythonInference/routers/classifier.py:13",
+    "method": "POST",
+    "path": "/classify",
+    "raw": "/classify",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/PythonInference/routers/embedder.py:11",
+    "method": "POST",
+    "path": "/embed",
+    "raw": "/embed",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/StaffWebUI/Program.cs:80",
+    "method": "GET",
+    "path": "/user/signout",
+    "raw": "/user/signout",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "eshop-support:src/AppHost/Ollama/OllamaResourceExtensions.cs:142",
+    "method": "POST",
+    "path": "/api/pull",
+    "raw": "/api/pull",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/AppHost/Ollama/OllamaResourceExtensions.cs:98",
+    "method": "GET",
+    "path": "/api/tags",
+    "raw": "/api/tags",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/Backend/Services/ProductManualSemanticSearch.cs:29",
+    "method": "POST",
+    "path": "/collections/{param}/points/search",
+    "raw": "/collections/{param}/points/search",
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:12",
+    "method": "GET",
+    "path": "/customer/tickets",
+    "raw": "/customer/tickets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:15",
+    "method": "GET",
+    "path": "/customer/tickets/{param}",
+    "raw": "/customer/tickets/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:18",
+    "method": "POST",
+    "path": "/api/customer/ticket/{param}/message",
+    "raw": "/api/customer/ticket/{param}/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:21",
+    "method": "PUT",
+    "path": "/api/customer/ticket/{param}/close",
+    "raw": "/api/customer/ticket/{param}/close",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:24",
+    "method": "GET",
+    "path": "/api/customer/products",
+    "raw": "/api/customer/products?searchText={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:9",
+    "method": "POST",
+    "path": "/customer/tickets/create",
+    "raw": "/customer/tickets/create",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:12",
+    "method": "POST",
+    "path": "/tickets",
+    "raw": "/tickets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:17",
+    "method": "GET",
+    "path": "/tickets/{param}",
+    "raw": "/tickets/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:21",
+    "method": "POST",
+    "path": "/api/assistant/chat",
+    "raw": "/api/assistant/chat",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:38",
+    "method": "GET",
+    "path": "/manual",
+    "raw": "/manual?file={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:45",
+    "method": "POST",
+    "path": "/api/ticket/{param}/message",
+    "raw": "/api/ticket/{param}/message",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:50",
+    "method": "PUT",
+    "path": "/api/ticket/{param}",
+    "raw": "/api/ticket/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:55",
+    "method": "GET",
+    "path": "/api/categories",
+    "raw": "/api/categories?searchText={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:60",
+    "method": "GET",
+    "path": "/api/categories",
+    "raw": "/api/categories?ids={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/StaffBackendClient.cs:65",
+    "method": "GET",
+    "path": "/api/products",
+    "raw": "/api/products?searchText={param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop-support:src/ServiceDefaults/Clients/PythonInference/PythonInferenceClient.cs:9",
+    "method": "POST",
+    "path": "/classify",
+    "raw": "/classify",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

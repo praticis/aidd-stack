@@ -118,7 +118,7 @@ export TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=~/.cache/tslp   # 1ª vez baixa as 6 
 python -c "import tree_sitter_language_pack as t; t.prefetch(['go','typescript','tsx','javascript','python','csharp'])"
 aidd selftest                                     # gramáticas + queries
 AIDD_TENANT=t WORKSPACE_PATH=/path aidd index <repo> --dry-run --out /tmp/x.json   # payload completo, sem banco
-python scripts/http_corpus.py --json /tmp/corpus-out            # corpus público (clona em /tmp/aidd-corpus)
+python scripts/http_corpus.py --json ~/.cache/aidd-corpus/runs/<data>-<rótulo>   # corpus público (clona em ~/.cache/aidd-corpus/repos)
 ```
 
 O `--dry-run --out` inclui `endpoints`, `http_calls`, `symbols`, `calls`, `warnings` — é a forma de
@@ -139,8 +139,13 @@ inspecionar o que o extrator viu num repo específico.
   proposital por fixture), `edges` (`CALLS` com estratégia) e `gaps` (ligações que o grafo ainda não vê — xfail até
   aparecerem; quando aparecem, o teste pede para movê-las a `edges`). Regenerar `expected.json` só depois de
   conferir cada linha na fonte — nunca a partir da saída do extrator sem revisão.
-- **Corpus público** (`scripts/http_corpus.py`): ordem de grandeza por repo documentada no docstring; um
-  desvio grande em qualquer repo é sinal de regressão ou de melhoria — em ambos os casos, olhar o JSON.
+- **Corpus público** (`scripts/http_corpus.py`, 39 repos fixados por SHA): `--baseline <execução>` lista, por
+  repo, os ids `method path_key evidence` que entraram e saíram — toda mudança no extrator é julgada item a item
+  nesse diff; `--expected` dá precisão/recall contra `tests/corpus_expected/<repo>.json` (spec commitada ou lista
+  lida na fonte, com `scope`, a `category` de cada falta e a amostra `checked` julgada na fonte; formato no
+  docstring de `scripts/corpus_metrics.py`) e fecha com os resumos por linguagem e por categoria (com o número de
+  repos em que cada uma aparece); `--reuse <execução>` pontua uma execução salva sem extrair de novo — só para
+  editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`.
 - **Amostragem manual**: sortear 10–20 itens por repo e conferir na fonte (`evidence` aponta linha).
   Anotar falsos positivos/negativos na tabela de regras (§3). Precisão importa mais que recall no
   extrator: o linker só liga o que casa; ruído vira aresta errada no grafo.

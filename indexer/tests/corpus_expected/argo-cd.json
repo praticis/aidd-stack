@@ -1,0 +1,1002 @@
+{
+ "source": {
+  "endpoints": "openapi + manual",
+  "calls": "manual"
+ },
+ "sha": "ced5c83bb75398eb1d4792505802f3d788597a18",
+ "spec": [
+  "/corpus/repos/argo-cd/assets/swagger.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "server/"
+  ],
+  "calls": [
+   "ui/src/app/shared/services/accounts-service.ts",
+   "ui/src/app/shared/services/user-service.ts",
+   "ui/src/app/shared/services/projects-service.ts",
+   "ui/src/app/shared/services/notification-service.ts",
+   "ui/src/app/shared/services/auth-service.ts"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "ANY",
+   "path": "/"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/can-i/{resource}/{action}/{subresource}",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/account/password",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/account/{name}/token",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/account/{name}/token/{id}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/manifestsWithFiles",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{appName}/server-side-diff",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/applications/{application.metadata.name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{applicationName}/managed-resources",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{applicationName}/resource-tree",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/applications/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/applications/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/events",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/links",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/logs",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/manifests",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/applications/{name}/operation",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/pods/{podName}/logs",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/applications/{name}/resource",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/resource",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/{name}/resource",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/resource/actions",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/{name}/resource/actions",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/{name}/resource/actions/v2",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/resource/links",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/revisions/{revision}/chartdetails",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/revisions/{revision}/metadata",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/revisions/{revision}/ocimetadata",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/{name}/rollback",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/applications/{name}/spec",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applications/{name}/sync",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applications/{name}/syncwindows",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applicationsets",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applicationsets",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/applicationsets/generate",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/applicationsets/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applicationsets/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applicationsets/{name}/events",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/applicationsets/{name}/resource-tree",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/certificates",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/certificates",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/certificates",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/clusters",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/clusters",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/clusters/{id.value}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/clusters/{id.value}",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/clusters/{id.value}",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/clusters/{id.value}/invalidate-cache",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/clusters/{id.value}/rotate-auth",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/gpgkeys",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gpgkeys",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/gpgkeys",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gpgkeys/{keyID}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/services",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/templates",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/triggers",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/detailed",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/events",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/globalprojects",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/links",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/syncwindows",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{project.metadata.name}",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{project}/roles/{role}/token",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{project}/roles/{role}/token/{iat}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repocreds",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repocreds",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repocreds/{creds.url}",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repocreds/{url}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repositories",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/repositories/{repo.repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/repositories/{repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{repo}/apps",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{repo}/helmcharts",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{repo}/oci-tags",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repositories/{repo}/refs",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repositories/{repo}/validate",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repositories/{source.repoURL}/appdetails",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/session",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/session",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/session/userinfo",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/plugins",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stream/applications",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stream/applications/{applicationName}/resource-tree",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stream/applicationsets",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/write-repocreds",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/write-repocreds",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/write-repocreds/{creds.url}",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/write-repocreds/{url}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/write-repositories",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/write-repositories",
+   "category": "generated-server"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/write-repositories/{repo.repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/write-repositories/{repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/write-repositories/{repo}",
+   "category": "generated-server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/write-repositories/{repo}/validate",
+   "category": "generated-server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/version",
+   "category": "generated-server"
+  },
+  {
+   "method": "ANY",
+   "path": "/download/argocd-linux",
+   "category": "prefix-as-param"
+  },
+  {
+   "method": "ANY",
+   "path": "/download/argocd-linux-{arch}",
+   "category": "prefix-as-param"
+  },
+  {
+   "method": "ANY",
+   "path": "/extensions.js"
+  },
+  {
+   "method": "ANY",
+   "path": "/terminal"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/v1/account",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/can-i/{resource}/{action}/{subresource}",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/account/password",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/{name}",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/account/{name}/token",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/account/{name}/token/{id}",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/services",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications/triggers",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{name}",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{name}",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/detailed",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/events",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/globalprojects",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/links",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{name}/syncwindows",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{project}/roles/{role}/token",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{project}/roles/{role}/token/{iat}",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/session",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/session",
+   "category": "multiline-receiver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/session/userinfo",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/settings/plugins",
+   "category": "prefix-in-client-wrapper"
+  }
+ ],
+ "notes": "Endpoints: the committed swagger (assets/swagger.json, /api/v1) is served by grpc-gateway generated code (pkg/apiclient/**/*.pb.gw.go) mounted with mux.Handle(\"/api/\", handler) — nothing the extractor can see (generated-server, recall ~0 by design). The hand-written net/http routes in server/ were added after reading the source; mux.Handle(\"/api/\", gw) and mux.Handle(\"/\"+root+\"/\", StripPrefix(...)) are subtree mounts that come out as routes (mount-as-route), and registerDownloadHandlers(mux, base) builds paths from a string parameter (prefix-as-param). Calls: the React UI goes through ui/src/app/shared/services/requests.ts, whose get/post/put/delete prepend apiRoot() = /api/v1 — the paths come out without it (prefix-in-client-wrapper, H2-D12: the prefix is in the code). Calls written as requests\\n    .put(\"/x\") (receiver on the previous line) are not extracted at all (multiline-receiver). Expected calls = every requests.* call in five sampled service files. s.symlinksState.Get(key) is a cache lookup taken for an HTTP GET (non-http-verb).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "argo-cd:cmd/argocd-applicationset-controller/commands/applicationset_controller.go:361",
+    "method": "ANY",
+    "path": "/api/webhook",
+    "raw": "/api/webhook",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:cmd/argocd-repo-server/commands/argocd_repo_server.go:213",
+    "method": "ANY",
+    "path": "/metrics",
+    "raw": "/metrics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1186",
+    "method": "ANY",
+    "path": "/{param}",
+    "raw": "/{param}/",
+    "ok": false,
+    "category": "mount-as-route"
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1277",
+    "method": "ANY",
+    "path": "/api",
+    "raw": "/api/",
+    "ok": false,
+    "category": "mount-as-route"
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1290",
+    "method": "ANY",
+    "path": "/terminal",
+    "raw": "/terminal",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1339",
+    "method": "ANY",
+    "path": "/extensions.js",
+    "raw": "/extensions.js",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1346",
+    "method": "ANY",
+    "path": "/",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1487",
+    "method": "ANY",
+    "path": "/argocd-linux-{param}",
+    "raw": "/argocd-linux-{param}",
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "argo-cd:server/server.go:1491",
+    "method": "ANY",
+    "path": "/argocd-linux",
+    "raw": "/argocd-linux",
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "argo-cd:util/healthz/healthz.go:14",
+    "method": "ANY",
+    "path": "/healthz",
+    "raw": "/healthz",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/profile/profile.go:25",
+    "method": "ANY",
+    "path": "/debug/pprof",
+    "raw": "/debug/pprof/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/profile/profile.go:26",
+    "method": "ANY",
+    "path": "/debug/pprof/cmdline",
+    "raw": "/debug/pprof/cmdline",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/profile/profile.go:27",
+    "method": "ANY",
+    "path": "/debug/pprof/profile",
+    "raw": "/debug/pprof/profile",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/profile/profile.go:28",
+    "method": "ANY",
+    "path": "/debug/pprof/symbol",
+    "raw": "/debug/pprof/symbol",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/profile/profile.go:29",
+    "method": "ANY",
+    "path": "/debug/pprof/trace",
+    "raw": "/debug/pprof/trace",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:util/swagger/swagger.go:27",
+    "method": "ANY",
+    "path": "/{param}/swagger.json",
+    "raw": "/{param}/swagger.json",
+    "ok": false,
+    "category": "prefix-as-param"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "argo-cd:applicationset/services/plugin/plugin_service.go:58",
+    "method": "POST",
+    "path": "/api/v1/getparams.execute",
+    "raw": "api/v1/getparams.execute",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:hack/gen-resources/generators/repo_generator.go:35",
+    "method": "GET",
+    "path": "/repos/argoproj/argocd-example-apps/forks",
+    "raw": "https://api.github.com/repos/argoproj/argocd-example-apps/forks?per_page=100&page=%v",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "argo-cd:reposerver/repository/repository.go:634",
+    "method": "GET",
+    "path": "/{param}/{param}/,",
+    "raw": "/{param}//{param}/,",
+    "ok": false,
+    "category": "non-http-verb"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/accounts-service.ts:10",
+    "method": "GET",
+    "path": "/account/{param}",
+    "raw": "/account/{param}",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/accounts-service.ts:32",
+    "method": "GET",
+    "path": "/account/can-i/{param}/{param}/{param}",
+    "raw": "/account/can-i/{param}/{param}/{param}",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/accounts-service.ts:6",
+    "method": "GET",
+    "path": "/account",
+    "raw": "/account",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/applications-service.ts:111",
+    "method": "GET",
+    "path": "/applications/{param}/revisions/{param}/metadata",
+    "raw": "/applications/{param}/revisions/{param}/metadata",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/applications-service.ts:122",
+    "method": "GET",
+    "path": "/applications/{param}/revisions/{param}/chartdetails",
+    "raw": "/applications/{param}/revisions/{param}/chartdetails",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/applications-service.ts:682",
+    "method": "GET",
+    "path": "/applicationsets",
+    "raw": "/applicationsets",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/auth-service.ts:10",
+    "method": "GET",
+    "path": "/settings/plugins",
+    "raw": "/settings/plugins",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/auth-service.ts:6",
+    "method": "GET",
+    "path": "/settings",
+    "raw": "/settings",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/clusters-service.ts:14",
+    "method": "GET",
+    "path": "/clusters/{param}",
+    "raw": "/clusters/{param}?id.type={param}",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/notification-service.ts:10",
+    "method": "GET",
+    "path": "/notifications/triggers",
+    "raw": "/notifications/triggers",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/notification-service.ts:6",
+    "method": "GET",
+    "path": "/notifications/services",
+    "raw": "/notifications/services",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/projects-service.ts:66",
+    "method": "GET",
+    "path": "/projects/{param}",
+    "raw": "/projects/{param}",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/projects-service.ts:70",
+    "method": "GET",
+    "path": "/projects/{param}/detailed",
+    "raw": "/projects/{param}/detailed",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/projects-service.ts:74",
+    "method": "GET",
+    "path": "/projects/{param}/globalprojects",
+    "raw": "/projects/{param}/globalprojects",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/repo-service.ts:378",
+    "method": "GET",
+    "path": "/repositories/{param}/refs",
+    "raw": "/repositories/{param}/refs",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/repo-service.ts:395",
+    "method": "GET",
+    "path": "/repositories/{param}/helmcharts",
+    "raw": "/repositories/{param}/helmcharts",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "argo-cd:ui/src/app/shared/services/user-service.ts:13",
+    "method": "DELETE",
+    "path": "/session",
+    "raw": "/session",
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

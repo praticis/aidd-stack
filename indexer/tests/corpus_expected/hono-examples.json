@@ -1,0 +1,310 @@
+{
+ "source": "manual",
+ "sha": "3b0b62875a0e1265763fea1c6388866d5697ef81",
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "app-not-recognized"
+  },
+  {
+   "method": "GET",
+   "path": "/api",
+   "category": "client-named-router"
+  },
+  {
+   "method": "GET",
+   "path": "/api/clock"
+  },
+  {
+   "method": "POST",
+   "path": "/api/hello",
+   "category": "mount-same-scope"
+  },
+  {
+   "method": "GET",
+   "path": "/api/posts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/posts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/posts/{id}",
+   "category": "client-named-router"
+  },
+  {
+   "method": "GET",
+   "path": "/api/posts/{id}",
+   "category": "client-named-router"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/posts/{id}",
+   "category": "client-named-router"
+  },
+  {
+   "method": "GET",
+   "path": "/api/todos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/todos",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/todos/{id}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/todos/{id}/complete",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/{rest}"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/{rest}"
+  },
+  {
+   "method": "GET",
+   "path": "/book",
+   "category": "mount-same-scope"
+  },
+  {
+   "method": "POST",
+   "path": "/book",
+   "category": "mount-same-scope"
+  },
+  {
+   "method": "GET",
+   "path": "/book/{id}",
+   "category": "mount-same-scope"
+  },
+  {
+   "method": "GET",
+   "path": "/checkout"
+  },
+  {
+   "method": "GET",
+   "path": "/decrement"
+  },
+  {
+   "method": "GET",
+   "path": "/entry/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/error"
+  },
+  {
+   "method": "GET",
+   "path": "/etag/cached"
+  },
+  {
+   "method": "ANY",
+   "path": "/favicon.ico"
+  },
+  {
+   "method": "GET",
+   "path": "/fetch-url"
+  },
+  {
+   "method": "GET",
+   "path": "/hello"
+  },
+  {
+   "method": "GET",
+   "path": "/increment"
+  },
+  {
+   "method": "GET",
+   "path": "/post/{id}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/redirect"
+  },
+  {
+   "method": "GET",
+   "path": "/type-error"
+  },
+  {
+   "method": "GET",
+   "path": "/user-agent"
+  }
+ ],
+ "notes": "Manual, every example app in the repo (one Hono app per folder, so routes of different apps share keys — multi-app-repo; expected = the union). Right: plain app.get/post on new Hono(). Misses and errors: new Hono() is not recognised as the application, so the roots app.get('/') are dropped (app-not-recognized); sub-apps mounted in the same file — app.route('/book', book), new Hono().basePath('/api') — lose the prefix (mount-same-scope); the blog's router is named api and taken for an HTTP client (client-named-router); the stytch TodoAPI chain is mounted with .route('/api', TodoAPI) in another file (prefix-other-file); Hono's inline regex constraint /post/:id{[0-9]+} is normalized into /post/{id}{[0-9]+} (route-constraint-syntax). No license file in the repo; only measured locally.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "hono-examples:basic/src/index.ts:100",
+    "method": "GET",
+    "path": "/api/{rest}",
+    "raw": "/api/*",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:103",
+    "method": "GET",
+    "path": "/error",
+    "raw": "/error",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:108",
+    "method": "GET",
+    "path": "/type-error",
+    "raw": "/type-error",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:50",
+    "method": "GET",
+    "path": "/hello",
+    "raw": "/hello",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:69",
+    "method": "GET",
+    "path": "/redirect",
+    "raw": "/redirect",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:71",
+    "method": "GET",
+    "path": "/auth/{rest}",
+    "raw": "/auth/*",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:73",
+    "method": "GET",
+    "path": "/etag/cached",
+    "raw": "/etag/cached",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:82",
+    "method": "GET",
+    "path": "/user-agent",
+    "raw": "/user-agent",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:88",
+    "method": "GET",
+    "path": "/api/posts",
+    "raw": "/api/posts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:basic/src/index.ts:98",
+    "method": "POST",
+    "path": "/api/posts",
+    "raw": "/api/posts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:deno/jsx.tsx:10",
+    "method": "ANY",
+    "path": "/favicon.ico",
+    "raw": "/favicon.ico",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:durable-objects/src/index.ts:37",
+    "method": "GET",
+    "path": "/increment",
+    "raw": "/increment",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:durable-objects/src/index.ts:43",
+    "method": "GET",
+    "path": "/decrement",
+    "raw": "/decrement",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:env-vars/src/index.ts:33",
+    "method": "GET",
+    "path": "/checkout",
+    "raw": "/checkout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:hono-vite-jsx/src/index.tsx:5",
+    "method": "GET",
+    "path": "/api/clock",
+    "raw": "/api/clock",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "hono-examples:jsx-ssr/src/index.tsx:35",
+    "method": "GET",
+    "path": "/post/{id}{[0-9]+}",
+    "raw": "/post/:id{[0-9]+}",
+    "ok": false,
+    "category": "route-constraint-syntax"
+   },
+   {
+    "evidence": "hono-examples:nextjs-stack/pages/api/[...route].ts:16",
+    "method": "POST",
+    "path": "/hello",
+    "raw": "/hello",
+    "ok": false,
+    "category": "mount-same-scope"
+   },
+   {
+    "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
+    "method": "DELETE",
+    "path": "/todos/{id}",
+    "raw": "/todos/:id",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
+    "method": "POST",
+    "path": "/todos",
+    "raw": "/todos",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
+    "method": "POST",
+    "path": "/todos/{id}/complete",
+    "raw": "/todos/:id/complete",
+    "ok": false,
+    "category": "prefix-other-file"
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

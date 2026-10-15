@@ -1,0 +1,102 @@
+{
+ "source": "manual",
+ "sha": "e7c79be54ba0b001a5b332c1efe935f520b9db4b",
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/Contributors",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/Contributors",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "DELETE",
+   "path": "/Contributors/{ContributorId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Contributors/{ContributorId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/Contributors/{ContributorId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Products",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/Products",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Products/{ProductId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "DELETE",
+   "path": "/Projects/{ProjectId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects/{ProjectId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/Projects/{ProjectId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects/{ProjectId}/IncompleteItems",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects/{ProjectId}/ToDoItems",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects/{ProjectId}/ToDoItems/{ToDoItemId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/cart",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "GET",
+   "path": "/cart/{CartId}",
+   "category": "endpoint-class"
+  },
+  {
+   "method": "POST",
+   "path": "/cart/{CartId}/checkout",
+   "category": "endpoint-class"
+  }
+ ],
+ "notes": "Manual, the three apps of the template (src/, sample/, MinimalClean/). Every route is a FastEndpoints endpoint class that declares it inside Configure() — Get(\"/Contributors\"), Post(CreateContributorRequest.Route) with the constant on the request class — so there is no Map*/attribute call to see and nothing is extracted (endpoint-class; the template's three apps share keys, multi-app-repo). No outbound calls outside tests."
+}
