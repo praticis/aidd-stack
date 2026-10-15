@@ -1,7 +1,9 @@
 """C# support: namespaces (block and file-scoped) prefix qualified names; `using X;` resolves to the
 module that declares namespace X, otherwise to a NuGet package (System.* / Microsoft.* = framework).
 Static receiver types for method calls (`this._query.FindByIdAsync()` → `IAccountQuery.FindByIdAsync`)
-and interface → unique implementer (`AccountReadRepository`), the usual DI shape.
+and interface → unique implementer (`AccountReadRepository`), the usual DI shape. Mediator dispatch
+(`mediator.Send(new X())` → the `Handle` of `IRequestHandler<X, ..>`) through the generic arguments
+of base lists: MediatR built in, an organization's own bus declared by its convention (core/dispatch.py).
 """
 
 from __future__ import annotations
@@ -12,6 +14,8 @@ from typing import Any
 
 from tree_sitter import Node
 
+from ...core.config import is_test_path
+from ...core.dispatch import DispatchRule
 from ...core.model import FileInfo
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .http import CsScanner
@@ -21,6 +25,10 @@ HERE = Path(__file__).parent
 NAMESPACE_NODES = frozenset({"namespace_declaration", "file_scoped_namespace_declaration"})
 FRAMEWORK_ROOTS = {"System", "Microsoft"}
 _BUILTINS = frozenset({"Console", "Task", "String", "Enumerable", "Convert"})
+# MediatR (`IMediator` / `ISender` / `IPublisher`): public, so on in every C# repo. Precise because the edge needs
+# a handler of that exact message type in the repo. An organization's own bus goes in its convention.
+_MEDIATR = (DispatchRule(frozenset({"Send"}), frozenset({"IRequestHandler"})),
+            DispatchRule(frozenset({"Publish"}), frozenset({"INotificationHandler"})))
 _DECORATOR_ENTRY = re.compile(r"\[(HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch|Route|Function|ServiceBusTrigger|QueueTrigger)\b")
 
 
@@ -78,11 +86,26 @@ class CSharpSupport(LanguageSupport):
                 bl = next((c for c in n.children if c.type == "base_list"), None)
                 bases = [t for t in (_type_text(c, src) for c in (bl.children if bl is not None else []) if c.is_named and c.type != "argument_list") if t]
                 types[node_text(name, src)] = {"kind": n.type.split("_")[0], "ns": ns, "bases": bases,
+                                               "generic_bases": _generic_bases(bl, src),
                                                "members": _members(n, src), "explicit": _explicit_impls(n, src)}
+        registrations: list[tuple[str, list[str]]] = []          # `services.AddScoped<I, Impl>()` / `Decorate<I, D>()`
+        for n in walk(root):
+            if n.type != "invocation_expression":
+                continue
+            fn = n.child_by_field_name("function")
+            fn = fn.child_by_field_name("name") if fn is not None and fn.type == "member_access_expression" else fn
+            if fn is None or fn.type != "generic_name":
+                continue
+            name = next((c for c in fn.children if c.type == "identifier"), None)
+            targs = next((c for c in fn.children if c.type == "type_argument_list"), None)
+            if name is not None and targs is not None and node_text(name, src) in _REGISTRARS:
+                args = [_type_text(a, src) or "" for a in targs.children if a.is_named]
+                if len(args) == 2 and all(args):
+                    registrations.append((node_text(name, src), args))
         _, file_ns = self.file_scope(root, src)
         for t in types.values():                       # file-scoped namespace: declarations are siblings, not children
             t["ns"] = t["ns"] or file_ns
-        return {"types": types, "usings": usings, "file_ns": file_ns}
+        return {"types": types, "usings": usings, "file_ns": file_ns, "registrations": registrations}
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
         chain: list[str] = []
@@ -105,19 +128,76 @@ class CSharpSupport(LanguageSupport):
             bl = next((c for c in cls.children if c.type == "base_list"), None)
             base = next((t for t in (_type_text(c, src) for c in (bl.children if bl is not None else []) if c.is_named) if t), None)
             return (base, tuple(chain)) if base else None
+        if n.type == "invocation_expression":                              # provider.GetRequiredService<T>().X()
+            resolved = _service_type(n, src)
+            return (resolved, tuple(chain)) if resolved else None
         if n.type != "identifier":
             return None
         ident = node_text(n, src)
-        scope = _enclosing(call, _FUNC_NODES)
-        if scope is not None:
-            local = _local_type(ident, scope, src, call.start_byte)
-            if local:
-                return (local, tuple(chain))
+        local = _scoped_type(ident, call, src)
+        if local:
+            return (local, tuple(chain))
         if cls is not None and cls_name and ident in _members(cls, src):   # a field/property of the enclosing type
             return (cls_name, (ident, *chain))
         if ident[:1].isupper():
             return (ident, tuple(chain))                                   # static access: `Foo.Bar()` → type Foo
         return (cls_name, (ident, *chain)) if cls_name else None          # inherited member of an in-repo base, maybe
+
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        pl = node.child_by_field_name("parameters") or next((c for c in node.children if c.type == "parameter_list"), None)
+        if pl is None:
+            return None
+        required = optional = 0
+        variadic = False
+        for prm in pl.children:
+            if prm.type == "params":                        # `params int[] rest`: any number more
+                variadic = True
+            elif prm.type == "parameter":
+                if any(m.type == "modifier" and node_text(m, src) == "this" for m in prm.children):
+                    continue                                # extension method: the receiver, not an argument
+                if any(c.type == "=" for c in prm.children):
+                    optional += 1
+                else:
+                    required += 1
+        return (required, None if variadic else required + optional)
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        args = call.child_by_field_name("arguments")
+        if args is None:
+            return None
+        return sum(1 for a in args.children if a.type == "argument")
+
+    def call_argument_type(self, call: Node, src: bytes) -> str | None:
+        args = call.child_by_field_name("arguments") if call.type == "invocation_expression" else None
+        first = next((a for a in (args.children if args is not None else []) if a.type == "argument"), None)
+        expr = next((c for c in (first.children if first is not None else []) if c.is_named), None)
+        if expr is None:
+            return None
+        made = _new_type(expr, src)
+        if made or expr.type != "identifier":
+            return made
+        return _scoped_type(node_text(expr, src), call, src, prefer_new=True)
+
+    def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
+                         handler_bases: frozenset[str]) -> list[str]:
+        sent = self._lookup_type(ctx, file, message_type)
+        out: list[str] = []
+        for fid, facts in ctx.facts.items():
+            hf = ctx.files_by_id.get(fid)
+            if hf is None or hf.language != self.id:
+                continue
+            for name, t in (facts.get("types") or {}).items():
+                if t["kind"] == "interface":
+                    continue
+                for base, targs in t.get("generic_bases", []):
+                    if base not in handler_bases or not targs:
+                        continue
+                    handled = self._lookup_type(ctx, hf, targs[0])
+                    # both in the repo: same qualified type; both outside (a package's message): same name
+                    same = (sent[0] == handled[0]) if sent and handled else (not sent and not handled and targs[0] == message_type)
+                    if same:
+                        out.append((t["ns"] + "." if t["ns"] else "") + name)
+        return sorted(set(out))
 
     def _lookup_type(self, ctx: ResolveContext, file: FileInfo, simple: str) -> tuple[str, dict[str, Any], FileInfo] | None:
         """(qualified name, facts, declaring file) of a type by simple name, preferring the namespaces
@@ -180,6 +260,32 @@ class CSharpSupport(LanguageSupport):
                 for b in t["bases"]:
                     impl.setdefault(b, []).append(q)
         ctx.extra["cs_implementers"] = impl
+        ctx.extra["cs_di_chains"] = self._di_chains(ctx)
+
+    def _di_chains(self, ctx: ResolveContext) -> dict[str, list[str]]:
+        """interface → what the container builds, innermost first: `[UpdateCacheStep, CommitActivityStep, CheckTodoStep]`
+        for `AddScoped<I, UpdateCacheStep>(); Decorate<I, CommitActivityStep>(); Decorate<I, CheckTodoStep>()`. An
+        interface registered in more than one file (environments, tests) is left out: which one runs cannot be told."""
+        found: dict[str, list[list[str]]] = {}
+        for fid, facts in ctx.facts.items():
+            f = ctx.files_by_id.get(fid)
+            if f is None or f.language != self.id or is_test_path(f.path):
+                continue
+            here: dict[str, list[str]] = {}
+            for method, (iface, impl) in facts.get("registrations") or []:
+                qi, qt = self._lookup_type(ctx, f, iface), self._lookup_type(ctx, f, impl)
+                if qi is None or qt is None:
+                    continue
+                if method == "Decorate":
+                    if qi[0] in here:
+                        here[qi[0]].append(qt[0])
+                elif qi[0] in here and len(here[qi[0]]) == 1:
+                    here[qi[0]] = [""]                  # registered twice for one interface: no single base
+                else:
+                    here[qi[0]] = [qt[0]]
+            for qi, chain in here.items():
+                found.setdefault(qi, []).append(chain)
+        return {qi: chains[0] for qi, chains in found.items() if len(chains) == 1 and "" not in chains[0]}
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         out: list[str] = []
@@ -199,12 +305,35 @@ class CSharpSupport(LanguageSupport):
                         seen.add(bt[0]); out.append(bt[0]); queue.append(bt[0])
         return out
 
-    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        for q in [qualified_type] + self.supertypes(ctx, qualified_type):
+            simple = q.split(".")[-1]
+            for fid, facts in ctx.facts.items():
+                t = (facts.get("types") or {}).get(simple)
+                f = ctx.files_by_id.get(fid)
+                if t is None or f is None or ((t["ns"] + "." if t["ns"] else "") + simple) != q:
+                    continue
+                if any(self._lookup_type(ctx, f, b) is None for b in t["bases"]):
+                    return True
+        return False
+
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
         iface = qualified_type.split(".")[-1]
-        impls = sorted(set(ctx.extra.get("cs_implementers", {}).get(iface, [])))
-        if len(impls) != 1:
-            return None
-        impl = impls[0]
+        chain = ctx.extra.get("cs_di_chains", {}).get(qualified_type)
+        if chain:
+            if from_type in chain:                       # a decorator calling the instance it wraps: the next one inward
+                i = chain.index(from_type)
+                impl = chain[i - 1] if i > 0 else None
+            else:
+                impl = chain[-1]                         # anyone else gets the outermost
+            if impl is None:
+                return None
+        else:
+            impls = sorted(set(ctx.extra.get("cs_implementers", {}).get(iface, [])))
+            if len(impls) != 1:
+                return None
+            impl = impls[0]
         for facts in ctx.facts.values():
             t = (facts.get("types") or {}).get(impl.split(".")[-1])
             if t and ((t["ns"] + "." if t["ns"] else "") + impl.split(".")[-1]) == impl:
@@ -223,6 +352,13 @@ class CSharpSupport(LanguageSupport):
         root = spec.split(".")[0]
         return (pkg("nuget", spec, root in FRAMEWORK_ROOTS), "Package")
 
+
+# Microsoft.Extensions.DependencyInjection registrations (+ Scrutor's `Decorate`): which implementation the container hands out
+_REGISTRARS = frozenset({"AddScoped", "AddTransient", "AddSingleton", "TryAddScoped", "TryAddTransient", "TryAddSingleton",
+                         "AddKeyedScoped", "AddKeyedTransient", "AddKeyedSingleton", "Decorate"})
+# Microsoft.Extensions.DependencyInjection: `provider.GetRequiredService<T>()` returns a T
+_DI_RESOLVERS = frozenset({"GetRequiredService", "GetService", "GetRequiredKeyedService", "GetKeyedService"})
+_CLOSURES = ("lambda_expression", "anonymous_method_expression", "local_function_statement")
 
 _TYPE_NODES = ("identifier", "qualified_name", "generic_name", "nullable_type", "array_type", "predefined_type")
 _FUNC_NODES = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
@@ -247,6 +383,52 @@ def _type_text(node: Node | None, src: bytes) -> str | None:
     return None
 
 
+def _service_type(expr: Node, src: bytes) -> str | None:
+    """`provider.GetRequiredService<T>()` / `GetService<T>()` (DI) → T."""
+    if expr.type != "invocation_expression":
+        return None
+    fn = expr.child_by_field_name("function")
+    if fn is not None and fn.type == "member_access_expression":
+        fn = fn.child_by_field_name("name")
+    if fn is None or fn.type != "generic_name":
+        return None
+    name = next((c for c in fn.children if c.type == "identifier"), None)
+    targs = next((c for c in fn.children if c.type == "type_argument_list"), None)
+    if name is None or targs is None or node_text(name, src) not in _DI_RESOLVERS:
+        return None
+    return _type_text(next((c for c in targs.children if c.is_named), None), src)
+
+
+def _scoped_type(name: str, at: Node, src: bytes, prefer_new: bool = False) -> str | None:
+    """Type of a parameter/local visible at `at`: its own function first, then — from a lambda, anonymous
+    method or local function — the functions around it (`.Must(x => repo.NotExists(x))` sees the
+    constructor's `var repo`)."""
+    scope = _enclosing(at, _FUNC_NODES)
+    while scope is not None:
+        found = _local_type(name, scope, src, at.start_byte, prefer_new)
+        if found or scope.type not in _CLOSURES:
+            return found
+        scope = _enclosing(scope, _FUNC_NODES)
+    return None
+
+
+def _generic_bases(base_list: Node | None, src: bytes) -> list[tuple[str, list[str]]]:
+    """`: ICommandHandler<CreateTodoCommand, CreateTodoResponse?>` → [("ICommandHandler", ["CreateTodoCommand", "CreateTodoResponse"])]."""
+    out: list[tuple[str, list[str]]] = []
+    for c in (base_list.children if base_list is not None else []):
+        g = c
+        if g.type == "qualified_name":                     # `Bus.ICommandHandler<X>`
+            g = next((x for x in reversed(g.children) if x.is_named), g)
+        if g.type != "generic_name":
+            continue
+        name = next((x for x in g.children if x.type == "identifier"), None)
+        targs = next((x for x in g.children if x.type == "type_argument_list"), None)
+        if name is None or targs is None:
+            continue
+        out.append((node_text(name, src), [_type_text(a, src) or "" for a in targs.children if a.is_named]))
+    return out
+
+
 def _new_type(expr: Node, src: bytes) -> str | None:
     """`new T(...)` / `await x` unwrapped → T."""
     n = expr
@@ -256,6 +438,34 @@ def _new_type(expr: Node, src: bytes) -> str | None:
     if n is not None and n.type == "object_creation_expression":
         return _type_text(n.child_by_field_name("type"), src)
     return None
+
+
+def _returned_type(expr: Node, scope: Node, src: bytes) -> str | None:
+    """`Make(x)` / `this.Make(x)` / `await MakeAsync(x)` → the declared return type of `Make` in the
+    enclosing type (`Task<T>` unwrapped when awaited); None for anything else or overloads."""
+    awaited = expr.type == "await_expression"
+    n = next((c for c in expr.children if c.is_named), None) if awaited else expr
+    if n is None or n.type != "invocation_expression":
+        return None
+    fn = n.child_by_field_name("function")
+    if fn is not None and fn.type == "member_access_expression":
+        obj = fn.child_by_field_name("expression")
+        fn = fn.child_by_field_name("name") if obj is not None and obj.type in ("this_expression", "this") else None
+    if fn is None or fn.type != "identifier":
+        return None
+    owner = _enclosing(scope, ("class_declaration", "record_declaration", "struct_declaration"))
+    body = next((c for c in owner.children if c.type == "declaration_list"), None) if owner is not None else None
+    name = node_text(fn, src)
+    found = [m for m in (body.children if body is not None else [])
+             if m.type == "method_declaration" and m.child_by_field_name("name") is not None
+             and node_text(m.child_by_field_name("name"), src) == name]
+    if len(found) != 1:
+        return None
+    ret = found[0].child_by_field_name("returns") or found[0].child_by_field_name("type")
+    if awaited and ret is not None and ret.type == "generic_name":     # Task<T> / ValueTask<T>
+        targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
+        ret = next((c for c in targs.children if c.is_named), None) if targs is not None else None
+    return _type_text(ret, src)
 
 
 def _enclosing(node: Node, types: tuple[str, ...]) -> Node | None:
@@ -313,8 +523,9 @@ def _members(type_node: Node, src: bytes) -> dict[str, str]:
     return out
 
 
-def _local_type(name: str, scope: Node, src: bytes, before: int) -> str | None:
-    """Type of a parameter or local inside `scope` (explicit type, or `new T()` / `var x = new T()`)."""
+def _local_type(name: str, scope: Node, src: bytes, before: int, prefer_new: bool = False) -> str | None:
+    """Type of a parameter or local inside `scope` (explicit type, or `new T()` / `var x = new T()`).
+    `prefer_new`: the type it was created with wins over the declared one (`IEvent e = new T()` → T)."""
     pl = scope.child_by_field_name("parameters") or next((c for c in scope.children if c.type == "parameter_list"), None)
     if pl is not None:
         for prm in pl.children:
@@ -335,9 +546,10 @@ def _local_type(name: str, scope: Node, src: bytes, before: int) -> str | None:
                 if nm is None or node_text(nm, src) != name:
                     continue
                 tt = _type_text(ty, src)
-                if tt is None:
+                if tt is None or prefer_new:
                     init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-                    tt = _new_type(init, src) if init is not None else None
+                    made = (_new_type(init, src) or _service_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
+                    tt = made or tt
                 best = tt
     return best
 
@@ -355,6 +567,6 @@ LANGUAGES = [
         manifest_suffixes={".csproj": "csproj", ".fsproj": "fsproj"}, builtin_receivers=_BUILTINS, parent_receivers=frozenset({"base"}), ecosystem="nuget",
         http_scanner=CsScanner, namespace_nodes=NAMESPACE_NODES,
         entry_point_hints=("[HttpGet", "[HttpPost", "[HttpPut", "[HttpDelete", "[HttpPatch", "[Route", "IActionResult"),
-        decorator_entry=_DECORATOR_ENTRY,
+        decorator_entry=_DECORATOR_ENTRY, dispatch=_MEDIATR,
     ),
 ]

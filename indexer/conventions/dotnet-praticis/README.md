@@ -24,6 +24,9 @@ What it adds to atlas (all in [`convention.yaml`](aidd_conventions_dotnet_pratic
   `options: {architecture: split}`. Layers: `contracts`, `api`, `consumers`, `application`, `core`,
   `domain`, `outbound`, `infra`, `bootstrap`; a file the layout does not place takes its roles' layer.
 - **Entry points** — `Handle` of command/event handlers (reached through the bus, not by a call).
+- **Dispatch** — the in-house bus: `SendAsync` reaches the `Handle` of the `ICommandHandler<X, ..>` of the
+  message's type, `PublishAsync` every `IEventHandler<X>` — CALLS with strategy `dispatch`, so a controller
+  reaches its handler in the graph whatever the handler is called (MediatR is built into the C# support).
 - **Violations** — contracts import nothing from the service; domain is pure; application does not know
   implementations; controllers dispatch through the bus; consumers do not talk HTTP/storage directly;
   each role lives in its layer (a handler in `.Application` is flagged); routes only in controllers;

@@ -24,4 +24,12 @@ public class AccountsController(IServiceProvider provider) : ControllerBase
     }
 
     public string Describe() => "controller";                          // homonym: must NOT be chosen for local.Describe()
+
+    public async Task<int> Lookup(Guid id, CancellationToken ct)
+    {
+        var query = provider.GetRequiredService<IAccountQuery>();       // `var` typed by the DI call
+        var direct = await provider.GetRequiredService<IAccountQuery>().FindByIdAsync(id, ct);   // chained on the DI call
+        Func<Task<object?>> later = async () => await query.FindByIdAsync(id, ct);              // closure: the local is outside
+        return direct is null ? 0 : 1;
+    }
 }

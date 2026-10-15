@@ -76,6 +76,14 @@ architectures:                       # the first whose `detect` matches a module
       infra:       ["**/*.Api/Infra/**"]
       bootstrap:   ["**/*.Api/Extensions/**", "**/*.Api/Program.cs"]
 
+dispatch:                            # the in-house bus hands a message to whoever handles its type, whatever the
+  - calls: [SendAsync]               # handler's name: `ServiceBus.SendAsync(new XCommand(..))` → ICommandHandler<XCommand, ..>.Handle
+    handlers: [ICommandHandler]      # (MediatR's Send/Publish are built into the C# support: no need to declare them)
+    method: Handle
+  - calls: [PublishAsync]            # `PublishAsync(@event)` → Handle of every IEventHandler<event> (fan-out)
+    handlers: [IEventHandler]
+    method: Handle
+
 entry_points:
   roles:                             # Handle of command/event handlers: reached through the bus, not by a call
     command-handler: [Handle]

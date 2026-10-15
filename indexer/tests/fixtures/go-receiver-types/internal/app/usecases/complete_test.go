@@ -6,6 +6,10 @@ type fakePolicy struct{}
 
 func (fakePolicy) Validate(string) error { return nil }
 
+type fakeRepo struct{}
+
+func (fakeRepo) Save(string) error { return nil }
+
 func setup(t *testing.T) (*Complete, Repo) {
 	t.Helper()
 	return &Complete{}, nil

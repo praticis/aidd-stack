@@ -18,6 +18,10 @@ architectures:                # optional: one `layers` map per layout, the first
     layers: {domain: ["**/*.Domain/**"]}               # and a file no glob places takes its roles' layer.
 targets:                      # outbound calls made from these files talk to this service
   "internal/adapters/out/billing/**": billing
+dispatch:                     # the organization's own bus → the handlers of the message's type (core/dispatch.py;
+  - calls: [Dispatch]         # MediatR is built in). `bus.Dispatch(new CreateOrder(..))` → `Execute` of `IHandles<CreateOrder>`
+    handlers: [IHandles]
+    method: Execute
 entry_points:                 # symbols whose signature contains one of these are entry points
   signature_contains: ["*fiber.Ctx"]
   members_of:                 # methods of types whose declaration contains one of these (C# base lists)
@@ -52,6 +56,7 @@ import yaml
 
 from ..core import ids
 from ..core.config import ConfigError
+from ..core.dispatch import DispatchRule
 from ..core.extract import strip_attributes
 from ..core.model import FileInfo, HttpCallInfo, ModuleInfo, SymbolInfo, ViolationInfo
 from ..core.scan_patterns import ScanPatterns
@@ -171,6 +176,10 @@ class DeclarativeConvention(Convention):
         self.role_layer = {name: r["layer"] for name, r in self.roles if r.get("layer")}
         self.targets: list[tuple[re.Pattern, str]] = [(_glob_re(g), str(svc)) for g, svc in (raw.get("targets") or {}).items()]
         self.patterns = ScanPatterns.from_dict(raw)
+        if not isinstance(raw.get("dispatch") or [], list):
+            raise ConfigError(f"{path}: dispatch must be a list of {{calls, handlers, method}}")
+        self.dispatch_rules = [DispatchRule.from_dict(d, f"{path}: dispatch #{i + 1}")
+                               for i, d in enumerate(raw.get("dispatch") or [])]
         ep = raw.get("entry_points") or {}
         self.entry_sig: tuple[str, ...] = tuple(ep.get("signature_contains") or [])
         members = ep.get("members_of") or {}
@@ -200,6 +209,9 @@ class DeclarativeConvention(Convention):
 
     def scan_patterns(self) -> ScanPatterns:
         return self.patterns
+
+    def dispatch(self) -> list[DispatchRule]:
+        return self.dispatch_rules
 
     def describe(self) -> str:
         return f"{self.id}[{self.architecture}]" if self.architecture else self.id

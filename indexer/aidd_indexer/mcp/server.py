@@ -32,6 +32,7 @@ from typing import Any
 from neo4j import GraphDatabase
 
 from .. import INDEXER_VERSION
+from ..core.build import indexer_build
 from ..core.config import is_test_path, ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
@@ -145,7 +146,9 @@ class Store:
 
     # -- helpers -------------------------------------------------------------------------
     def repos(self) -> list[dict[str, Any]]:
-        return self.read("""
+        """Repos and their snapshots; `outdated: true` on a snapshot an older indexer build wrote — the graph
+        lacks what the running indexer would add (wait for the refresh, or run it), not a limit of atlas."""
+        rows = self.read("""
             MATCH (r:Repo {tenant: $tenant})
             OPTIONAL MATCH (r)-[:HAS_SNAPSHOT]->(s:Snapshot)
             RETURN r.name AS repo, r.default_ref AS default_ref, r.stack AS stack, r.area AS area,
@@ -155,10 +158,16 @@ class Store:
                        success_age_min: duration.inSeconds(r.remote_synced_at, datetime()).seconds / 60
                    } END AS remote,
                    collect({ref: s.ref, sha: left(s.commit_sha, 10), ephemeral: s.ephemeral,
-                            indexed_at: toString(s.indexed_at),
+                            indexed_at: toString(s.indexed_at), build: s.indexer_build,
                             age_min: duration.inSeconds(s.indexed_at, datetime()).seconds / 60}) AS snapshots
             ORDER BY repo
         """)
+        build = indexer_build()
+        for r in rows:
+            for snap in r.get("snapshots") or []:
+                if snap.get("ref") is not None:
+                    snap["outdated"] = snap.pop("build", None) != build
+        return rows
 
     def resolve_ref(self, repo: str, ref: str | None) -> str:
         rows = self.read("""
@@ -275,15 +284,19 @@ def build_server(store: Store | None = None):
         snapshots follow the developer's own `git fetch` (the service token cannot read that remote —
         `note` says why), so a feature branch or PR can lag behind what was pushed: say so, and after a
         `git fetch` run `~/.aidd/aidd refresh --tenant <tenant> --repos <repo>` to catch up.
+        `outdated: true` on a snapshot: an older indexer build wrote it, so links the running indexer
+        makes (newer resolution) are missing until the refresh re-indexes it — say so instead of
+        concluding atlas cannot see them; the same `refresh` command catches up at once.
         In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
         the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
         if the_store.tenant is None and not tenant:
-            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION,
+            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION, "indexer_build": indexer_build(),
                     "tenants": [{"tenant": t, "refresh": the_store.scoped(t).refresh_state() or NO_REFRESH,
                                  "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
         s = st(tenant)
         return {"mode": "fixed" if the_store.tenant else "multi-tenant", "tenant": s.tenant,
-                "indexer_version": INDEXER_VERSION, "refresh": s.refresh_state() or NO_REFRESH, "repos": s.repos()}
+                "indexer_version": INDEXER_VERSION, "indexer_build": indexer_build(), "refresh": s.refresh_state() or NO_REFRESH,
+                "repos": s.repos()}
 
     @mcp.tool()
     def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
@@ -452,14 +465,29 @@ def build_server(store: Store | None = None):
         return rows
 
     def _symbol(s: Store, symbol: str, repo: str | None, ref: str | None) -> dict[str, Any]:
-        """Resolve `symbol` (id, qualified_name or bare name) to exactly one Symbol node."""
+        """Resolve `symbol` (id, qualified_name, the tail of one — `Class.Method` — or bare name) to exactly
+        one Symbol node. The tail is tried only when nothing matches exactly."""
         if repo:
             ref = s.resolve_ref(repo, ref)
-        rows = s.read("""
-            MATCH (sy:Symbol {tenant: $tenant})
-            WHERE (sy.id = $symbol OR sy.qualified_name = $symbol OR sy.name = $symbol)
+        rows = _symbol_rows(s, symbol, repo, ref, "sy.id = $symbol OR sy.qualified_name = $symbol OR sy.name = $symbol")
+        if not rows and "." in symbol:            # `CreateTodoCommandHandler.Handle`: a tail on a `.`/`:` boundary
+            rows = _symbol_rows(s, symbol, repo, ref,
+                                "sy.qualified_name ENDS WITH '.' + $symbol OR sy.qualified_name ENDS WITH ':' + $symbol")
+        if not rows:
+            raise AtlasError(f"symbol '{symbol}' not found" + (f" in {repo}@{ref}" if repo else "") +
+                             " as an id, a qualified name, its `Class.Method` tail or a bare name — this says nothing about"
+                             " how the file was parsed: look it up with find_symbol (match: word), or name the repo/ref")
+        if len(rows) > 1:
+            opts = "; ".join(f"{r['id']}" for r in rows)
+            raise AtlasError(f"'{symbol}' is ambiguous ({len(rows)} matches). Use one of the ids: {opts}")
+        return rows[0]
+
+    def _symbol_rows(s: Store, symbol: str, repo: str | None, ref: str | None, match: str) -> list[dict[str, Any]]:
+        return s.read(f"""
+            MATCH (sy:Symbol {{tenant: $tenant}})
+            WHERE ({match})
               AND ($repo IS NULL OR sy.repo = $repo)
-            MATCH (snap:Snapshot {tenant: $tenant, repo: sy.repo, ref: sy.ref})
+            MATCH (snap:Snapshot {{tenant: $tenant, repo: sy.repo, ref: sy.ref}})
             WHERE ($ref IS NOT NULL AND sy.ref = $ref) OR ($ref IS NULL AND coalesce(snap.ephemeral, false) = false)
             MATCH (f:File)-[:CONTAINS]->(sy)
             RETURN sy.id AS id, sy.repo AS repo, sy.ref AS ref, sy.kind AS kind, sy.name AS name,
@@ -468,26 +496,21 @@ def build_server(store: Store | None = None):
                    sy.visibility AS visibility, sy.is_entry_point AS entry_point, sy.role AS role
             LIMIT 6
         """, symbol=symbol, repo=repo, ref=ref)
-        if not rows:
-            raise AtlasError(f"symbol '{symbol}' not found" + (f" in {repo}@{ref}" if repo else "") +
-                             " — try find_symbol first, or name the repo/ref")
-        if len(rows) > 1:
-            opts = "; ".join(f"{r['id']}" for r in rows)
-            raise AtlasError(f"'{symbol}' is ambiguous ({len(rows)} matches). Use one of the ids: {opts}")
-        return rows[0]
 
     @mcp.tool()
     def who_calls(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 50, tenant: str | None = None) -> dict[str, Any]:
         """Incoming calls: which symbols (and files) call `symbol`. `symbol` may be a symbol id from
-        find_symbol, a qualified name (pkg.Type.Method) or a bare name when unambiguous. Calls are
-        resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven."""
+        find_symbol, a qualified name (pkg.Type.Method), its `Type.Method` tail or a bare name when unambiguous. Calls are
+        resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven.
+        On a type (class/interface/struct), `inherited` callers use a method it gets from a package base
+        (`method` says which: `repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>`)."""
         s = st(tenant)
         target = _symbol(s, symbol, repo, ref)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
             OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
             RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
-                   caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+                   caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY file, line LIMIT $limit
         """, id=target["id"], limit=min(limit, MAX_ROWS))
         return {"symbol": target, "callers": callers, "caller_count": len(callers)}
@@ -505,14 +528,14 @@ def build_server(store: Store | None = None):
         callees = s.read("""
             MATCH (:Symbol {id: $id})-[c:CALLS]->(t:Symbol)
             MATCH (f:File)-[:CONTAINS]->(t)
-            RETURN t.id AS id, t.kind AS kind, t.qualified_name AS qualified_name, f.path AS file, c.line AS line, c.strategy AS strategy
+            RETURN t.id AS id, t.kind AS kind, t.qualified_name AS qualified_name, f.path AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY line LIMIT $limit
         """, **base)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
             OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
             RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
-                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy
+                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY file, line LIMIT $limit
         """, **base)
         imports = s.read("""
@@ -625,24 +648,29 @@ def build_server(store: Store | None = None):
         `production_caller_count` / `test_caller_count` — read the production ones first. An empty
         `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
         app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
-        `-ambiguous` are likely, not proven."""
+        `-ambiguous` are likely, not proven. On a type (class/interface/struct) the calls to its members
+        count too (`members_included`): changing the class affects whoever calls its methods."""
         s = st(tenant)
         sy = _symbol(s, symbol, repo, ref)
         depth = max(1, min(max_depth, 10))
+        members = [r["id"] for r in s.read(
+            "MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id", id=sy["id"])]
+        targets = [sy["id"]] + members
         callers = s.read(f"""
-            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(:Symbol {{id: $id}})
-            WHERE h.ref = $ref AND h.repo = $repo
+            MATCH (t:Symbol) WHERE t.id IN $targets
+            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(t)
+            WHERE h.ref = $ref AND h.repo = $repo AND NOT h.id IN $targets
             WITH h, min(length(p)) AS hops, collect(DISTINCT [r IN relationships(p) | r.strategy]) AS strategies
             MATCH (f:File)-[:CONTAINS]->(h)
             RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file, hops,
                    h.is_entry_point AS entry_point,
                    any(st IN reduce(acc = [], x IN strategies | acc + x) WHERE st ENDS WITH 'ambiguous') AS via_ambiguous
             ORDER BY hops, qualified_name LIMIT $limit
-        """, id=sy["id"], ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
+        """, targets=targets, ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
         for c in callers:
             c["test"] = is_test_path(c["file"])
         production = [c for c in callers if not c["test"]]
-        reach_ids = [sy["id"]] + [c["id"] for c in callers]
+        reach_ids = targets + [c["id"] for c in callers]
         exposed = s.read("""
             MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
             WHERE h.id IN $ids
@@ -659,7 +687,7 @@ def build_server(store: Store | None = None):
         for e in exposed:
             for c in _collapse_refs(e.pop("consumers")):
                 consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
-        return {"symbol": sy, "internal_callers": callers, "internal_caller_count": len(callers),
+        return {"symbol": sy, "members_included": len(members), "internal_callers": callers, "internal_caller_count": len(callers),
                 "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
                 "exposed_through": exposed, "consumers": consumers,
                 "consumer_repos": sorted({c["repo"] for c in consumers})}
@@ -792,7 +820,7 @@ def build_server(store: Store | None = None):
           (:Symbol {name, qualified_name, kind, signature, doc, visibility, path, line_start, line_end,
               is_entry_point, role})  kind: function|method|struct|interface|class|enum|type|const|var|field
           (:Symbol)-[:CONTAINS]->(:Symbol)                       members
-          (:Symbol|File)-[:CALLS {line, strategy}]->(:Symbol)    same repo and ref only
+          (:Symbol|File)-[:CALLS {line, strategy, method}]->(:Symbol)    same repo and ref only
           (:File)-[:IMPORTS {spec, line}]->(:File|Module|Package {name, ecosystem, internal})
           (:File|Symbol)-[:HAS_VIOLATION]->(:Violation {convention, rule, severity, message, line})
           (:Symbol|File)-[:MAKES_HTTP_CALL]->(:HttpCall {method, path, path_key, raw_path, line})

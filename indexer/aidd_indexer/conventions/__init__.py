@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.config import ConfigError
+from ..core.dispatch import DispatchRule
 from ..core.scan_patterns import ScanPatterns
 from ..core.model import ExtractionResult
 from ..core.resolve import Resolved
@@ -78,6 +79,10 @@ def scan_patterns(convs: list[Convention]) -> ScanPatterns:
     for c in convs or []:
         out = out.merge(c.scan_patterns())
     return out
+
+
+def dispatch_rules(convs: list[Convention]) -> list[DispatchRule]:
+    return [r for c in convs or [] for r in c.dispatch()]
 
 
 def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:

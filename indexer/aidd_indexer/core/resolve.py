@@ -17,8 +17,11 @@ from .. import languages
 from ..languages.base import ResolveContext
 from . import ids
 from .config import is_test_path
+from .dispatch import DispatchRule
 from .extract import CALLABLE_KINDS, FileExtractor
 from .model import ExtractionResult, FileInfo, SymbolInfo
+
+TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
 
 # receivers that are runtime builtins in some language — a call on them never targets repo code
 BUILTIN_RECEIVERS: frozenset[str] = frozenset().union(*(l.builtin_receivers for l in languages.all()))
@@ -29,7 +32,8 @@ class CallEdge:
     caller_id: str
     callee_id: str
     line: int
-    strategy: str          # receiver-type | receiver-type-impl | same-file | same-module | unique-name (+ "-ambiguous")
+    strategy: str          # receiver-type | receiver-type-impl | dispatch | inherited | inherited-impl | same-file | same-module | unique-name (+ "-ambiguous")
+    method: str | None = None   # inherited*: the method called, which the repo does not declare (it comes from a package base)
 
 
 @dataclass
@@ -61,9 +65,19 @@ class Resolved:
     namespace_files: dict[str, list[str]] = field(default_factory=dict)
 
 
+def _fitting(syms: list[SymbolInfo], argc: int | None) -> list[SymbolInfo]:
+    """The symbols a call with `argc` arguments can reach (overloads by arity); unchanged when the count or the
+    arities are unknown, or when none fits."""
+    if argc is None or len(syms) < 2:
+        return syms
+    fit = [s for s in syms if s.arity is None or (s.arity[0] <= argc and (s.arity[1] is None or argc <= s.arity[1]))]
+    return fit or syms
+
+
 class Resolver:
-    def __init__(self, result: ExtractionResult, extractors: list[FileExtractor]):
+    def __init__(self, result: ExtractionResult, extractors: list[FileExtractor], dispatch: list[DispatchRule] | None = None):
         self.r = result
+        self.dispatch = dispatch or []
         self.root = Path(result.repo.root)
         self.files_by_path = {f.path: f for f in result.files}
         self.files_by_id = {f.id: f for f in result.files}
@@ -74,6 +88,7 @@ class Resolver:
             if s.kind in CALLABLE_KINDS:
                 self.by_name[s.name].append(s)
         self.sym_by_id = {s.id: s for s in result.symbols}
+        self.type_by_q = {s.qualified_name: s for s in result.symbols if s.kind in TYPE_KINDS}
         namespaces: dict[str, list[str]] = defaultdict(list)
         for fx in extractors:
             for ns in fx.namespaces:
@@ -91,8 +106,13 @@ class Resolver:
         edges: list[CallEdge] = []
         unresolved = 0
         for c in self.r.calls:
-            cands = self.by_name.get(c.callee_name)
-            if not cands:
+            if c.arg_type:                       # a bus method of a convention's `dispatch`: link to the handlers
+                sent = self._dispatched(c)
+                if sent:
+                    edges.extend(sent)
+                    continue
+            cands = self.by_name.get(c.callee_name, [])
+            if not cands and not c.receiver_type:   # typed receivers go on: the method may come from a package base
                 unresolved += 1
                 continue
             if c.receiver:
@@ -104,7 +124,7 @@ class Resolver:
             # production code never targets test code: drop fakes/mocks from the candidate set
             if not self.test_file.get(c.file_id, False):
                 prod = [s for s in cands if not self.test_file.get(s.file_id, False)]
-                if not prod:
+                if not prod and not c.receiver_type:
                     unresolved += 1
                     continue
                 cands = prod
@@ -113,16 +133,24 @@ class Resolver:
                 lang = languages.by_id(caller_file.language)
                 qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
                 if qtype:
-                    typed = self._method_on(cands, c.callee_name, qtype, lang)
-                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name)
-                    impl_typed = self._method_on(cands, c.callee_name, impl, lang) if impl else None
-                    if typed is not None:
-                        edges.append(CallEdge(c.caller_id, typed.id, c.line, "receiver-type"))
-                    if impl_typed is not None:
-                        edges.append(CallEdge(c.caller_id, impl_typed.id, c.line, "receiver-type-impl"))
-                    if typed is None and impl_typed is None:
-                        unresolved += 1      # the receiver's type is known and it has no such method here (inherited from a package): don't guess
+                    typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
+                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
+                    impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
+                    for found, strategy in ((typed, "receiver-type"), (impl_typed, "receiver-type-impl")):
+                        # overloads the argument count cannot tell apart: all of them, marked ambiguous
+                        suffix = "-ambiguous" if len(found) > 1 else ""
+                        edges.extend(CallEdge(c.caller_id, s.id, c.line, strategy + suffix) for s in found[:3])
+                    if not typed:
+                        # the receiver's type does not declare the method: never guess a homonym. When the type has a
+                        # base outside the repo the method comes from there — record the dependency on the type
+                        inherited = self._inherited(c, qtype, lang, impl_found=bool(impl_typed))
+                        edges.extend(inherited)
+                        if not impl_typed and not inherited:
+                            unresolved += 1
                     continue
+            if not cands:
+                unresolved += 1
+                continue
             lang = languages.by_id(caller_file.language) if caller_file is not None else None
             if c.receiver and lang is not None and c.receiver in lang.parent_receivers:
                 unresolved += 1              # `base.X()` with the base type outside the repo (or implicit): the name fallback would only find the override itself
@@ -145,19 +173,75 @@ class Resolver:
                 methods = [s for s in chosen if s.kind == "method"] or chosen
                 chosen = methods
             if len(chosen) > 1:
+                # homonyms found by name: the argument count trims the guesses, it does not make one of them proven
                 strat += "-ambiguous"
-                chosen = chosen[:3]
+                chosen = _fitting(chosen, c.arg_count)[:3]
             for s in chosen:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
 
-    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
-        """The candidate declared on `qtype` or, failing that, on its nearest in-repo supertype."""
+    def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
+        """`repo.CreateAsync(x)` where `repo: ITodoRepository : IBaseRepository<T>` (a package): CALLS to the
+        type itself and to its single implementer, carrying the method name (strategies `inherited` /
+        `inherited-impl`) — who uses this repository stays visible without inventing the method."""
+        if not lang.has_external_base(self.ctx, qtype):
+            return []
+        owners = {qtype, *lang.supertypes(self.ctx, qtype)}
+        if any(s.qualified_name.rsplit(".", 1)[0] in owners for s in self.by_name.get(c.callee_name, [])):
+            return []                    # declared in the repo (overloads: no single target) — not a package method
+        caller_test = self.test_file.get(c.file_id, False)
+        out = []
+        impl = None if impl_found else lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
+        for target, strategy in ((qtype, "inherited"), (impl, "inherited-impl")):
+            t = self.type_by_q.get(target) if target else None
+            if t is None or self._inside(c.caller_id, t.id) or (not caller_test and self.test_file.get(t.file_id, False)):
+                continue                 # its own type (`this.ResponseAsync()` in a controller) says nothing new
+            out.append(CallEdge(c.caller_id, t.id, c.line, strategy, c.callee_name))
+        return out
+
+    def _owner(self, symbol_id: str) -> str | None:
+        """Qualified name of the type a symbol is declared in (the caller's own type), if any."""
+        s = self.sym_by_id.get(symbol_id)
+        while s is not None and s.kind not in TYPE_KINDS:
+            s = self.sym_by_id.get(s.parent_id) if s.parent_id else None
+        return s.qualified_name if s is not None else None
+
+    def _inside(self, symbol_id: str, type_id: str) -> bool:
+        s = self.sym_by_id.get(symbol_id)
+        while s is not None:
+            if s.id == type_id:
+                return True
+            s = self.sym_by_id.get(s.parent_id) if s.parent_id else None
+        return False
+
+    def _dispatched(self, c) -> list[CallEdge]:
+        """`bus.SendAsync(new X(..))` → `Handle` of every type that handles X (core/dispatch.py)."""
+        f = self.files_by_id.get(c.file_id)
+        lang = languages.by_id(f.language) if f is not None else None
+        if lang is None:
+            return []
+        out: dict[str, CallEdge] = {}
+        for rule in [*self.dispatch, *lang.dispatch]:          # the conventions' bus, then the language's (MediatR)
+            if c.callee_name not in rule.calls:
+                continue
+            for handler in lang.message_handlers(self.ctx, f, c.arg_type, rule.handlers):
+                target = self._method_on(self.by_name.get(rule.method, []), rule.method, handler, lang)
+                if target is not None and (self.test_file.get(c.file_id, False) or not self.test_file.get(target.file_id, False)):
+                    out.setdefault(target.id, CallEdge(c.caller_id, target.id, c.line, "dispatch"))
+        return list(out.values())
+
+    def _methods_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang, argc: int | None = None) -> list[SymbolInfo]:
+        """The method declared on `qtype` or, failing that, on its nearest in-repo supertype — the overloads that
+        accept `argc` arguments (all of them when none does: the arity read may be incomplete)."""
         for t in [qtype] + lang.supertypes(self.ctx, qtype):
             hit = [s for s in cands if s.qualified_name == f"{t}.{name}"]
-            if len(hit) == 1:
-                return hit[0]
-        return None
+            if hit:
+                return _fitting(hit, argc)
+        return []
+
+    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
+        hit = self._methods_on(cands, name, qtype, lang)
+        return hit[0] if len(hit) == 1 else None
 
     # -- imports ---------------------------------------------------------------------
     def _pkg(self, ecosystem: str, name: str, stdlib: bool = False) -> str:

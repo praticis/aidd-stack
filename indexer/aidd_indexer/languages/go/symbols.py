@@ -1,5 +1,7 @@
 """Go language support: packages as modules, receiver-scoped methods, go.mod based import resolution,
-and static receiver types for method calls (`uc.policy.Validate()` → `password.Policy.Validate`)."""
+and static receiver types for method calls (`uc.policy.Validate()` → `password.Policy.Validate`). A call
+on an interface of the repo also reaches the one production type whose method set covers it
+(`uc.repo.Save()` → `store.MemRepo.Save`, strategy `receiver-type-impl`)."""
 
 from __future__ import annotations
 
@@ -10,6 +12,7 @@ from typing import Any
 from tree_sitter import Node
 
 from ...core import ids
+from ...core.config import is_test_path
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .http import GoScanner
@@ -167,6 +170,8 @@ class GoSupport(LanguageSupport):
     def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
         structs: dict[str, dict[str, str]] = {}
         embeds: dict[str, list[str]] = {}
+        interfaces: dict[str, dict[str, Any]] = {}       # name -> {methods, embeds}; None embeds = a constraint (union)
+        methods: dict[str, list[str]] = {}               # receiver type -> method names declared in this file
         funcs: dict[str, list[str]] = {}
         imports: dict[str, str] = {}
         for n in walk(root):
@@ -191,6 +196,22 @@ class GoSupport(LanguageSupport):
                     structs[node_text(name, src)] = fields
                     if embedded:
                         embeds[node_text(name, src)] = embedded
+                elif name is not None and typ is not None and typ.type == "interface_type":
+                    own, inner = [], []
+                    for el in typ.children:
+                        if el.type == "method_elem":
+                            nm = next((c for c in el.children if c.type == "field_identifier"), None)
+                            if nm is not None:
+                                own.append(node_text(nm, src))
+                        elif el.type == "type_elem":
+                            parts = [c for c in el.children if c.is_named]
+                            tt = _type_text(parts[0], src) if len(parts) == 1 else None
+                            inner = None if tt is None or inner is None else inner + [tt]
+                    interfaces[node_text(name, src)] = {"methods": own, "embeds": inner}
+            elif n.type == "method_declaration":
+                recv, mname = _receiver(n, src), n.child_by_field_name("name")
+                if recv and mname is not None:
+                    methods.setdefault(recv, []).append(node_text(mname, src))
             elif n.type == "function_declaration":
                 name, result = n.child_by_field_name("name"), n.child_by_field_name("result")
                 if name is not None and result is not None:
@@ -213,7 +234,26 @@ class GoSupport(LanguageSupport):
                     spec = node_text(path, src).strip('"`')
                     for alias in self.import_bindings("", n, spec, src):
                         imports[alias] = spec
-        return {"structs": structs, "embeds": embeds, "funcs": funcs, "imports": imports}
+        return {"structs": structs, "embeds": embeds, "funcs": funcs, "imports": imports,
+                "interfaces": interfaces, "methods": methods}
+
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        pl = node.child_by_field_name("parameters")
+        if pl is None:
+            return None
+        n, variadic = 0, False
+        for pd in pl.children:
+            if pd.type == "parameter_declaration":
+                n += max(1, sum(1 for c in pd.children if c.type == "identifier"))   # `a, b int` = 2
+            elif pd.type == "variadic_parameter_declaration":
+                variadic = True
+        return (n, None if variadic else n)
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        args = call.child_by_field_name("arguments")
+        if args is None or any(a.type == "variadic_argument" for a in args.children):
+            return None                                     # `f(xs...)`: unknown
+        return sum(1 for a in args.children if a.is_named and a.type != "comment")
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
         # receiver = `uc.policy` (selector chain) or `p` (identifier); anything else (call results,
@@ -343,6 +383,70 @@ class GoSupport(LanguageSupport):
         stdlib = "." not in first
         name = spec if stdlib else "/".join(spec.split("/")[:3])
         return (pkg("go", name, stdlib), "Package")
+
+    def _interface_methods(self, ctx: ResolveContext, owner: tuple[str, str], depth: int = 0) -> set[str] | None:
+        """Every method an interface of the repo requires, embedded interfaces included; None when it
+        is not an interface of the repo, embeds one from outside (`io.Reader`: its methods are unknown)
+        or is a type constraint."""
+        if depth > 4:
+            return None
+        prefix, name = owner
+        for f in self._files_in(ctx, prefix):
+            iface = (ctx.facts.get(f.id) or {}).get("interfaces", {}).get(name)
+            if iface is None:
+                continue
+            if iface["embeds"] is None:
+                return None
+            out = set(iface["methods"])
+            for emb in iface["embeds"]:
+                inner = self._resolve_type(ctx, f, emb)
+                more = self._interface_methods(ctx, inner, depth + 1) if inner else None
+                if more is None:
+                    return None
+                out |= more
+            return out
+        return None
+
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str, depth: int = 0) -> bool:
+        """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
+        if depth > 4:
+            return False
+        prefix, _, name = qualified_type.rpartition(".")
+        for f in self._files_in(ctx, prefix):
+            facts = ctx.facts.get(f.id) or {}
+            iface = facts.get("interfaces", {}).get(name)
+            embedded = facts.get("embeds", {}).get(name, []) if name in facts.get("structs", {}) else (iface or {}).get("embeds") or []
+            if name not in facts.get("structs", {}) and iface is None:
+                continue
+            for emb in embedded:
+                inner = self._resolve_type(ctx, f, emb)
+                if inner is None or not any(self._files_in(ctx, inner[0])):
+                    return True
+                if self.has_external_base(ctx, f"{inner[0]}.{inner[1]}" if inner[0] else inner[1], depth + 1):
+                    return True
+            return False
+        return False
+
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
+        cache = ctx.extra.setdefault("go_impl", {})
+        if qualified_type not in cache:
+            prefix, _, name = qualified_type.rpartition(".")
+            needed = self._interface_methods(ctx, (prefix, name))
+            impls: set[str] = set()
+            if needed:
+                sets: dict[tuple[str, str], set[str]] = {}
+                for f in ctx.files_by_path.values():
+                    if f.language != self.id or is_test_path(f.path):     # fakes and mocks implement it too: not what runs
+                        continue
+                    d = str(PurePosixPath(f.path).parent)
+                    pfx = "" if d == "." else d.replace("/", ".")
+                    for recv, names in (ctx.facts.get(f.id) or {}).get("methods", {}).items():
+                        sets.setdefault((pfx, recv), set()).update(names)
+                impls = {f"{p}.{t}" if p else t for (p, t), have in sets.items() if needed <= have}
+            cache[qualified_type] = (needed or set(), next(iter(impls)) if len(impls) == 1 else None)
+        needed, impl = cache[qualified_type]
+        return impl if method in needed else None
 
     def link_symbols(self, symbols: list[SymbolInfo], files_by_id: dict[str, FileInfo]) -> None:
         """Methods → receiver struct as parent (`pkg.Type.Method` → `pkg.Type`)."""

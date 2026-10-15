@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..core.dispatch import DispatchRule
 from ..core.scan_patterns import ScanPatterns
 from ..core.model import ExtractionResult, FileInfo, HttpCallInfo, ModuleInfo, SymbolInfo, ViolationInfo
 from ..core.resolve import Resolved
@@ -59,6 +60,12 @@ class Convention:
         """Route registrars / HTTP client methods the generic tables cannot know (`srv.Route(...)`,
         `sdk.DoJSON(...)`). Merged across the tenant's conventions and handed to every scanner."""
         return ScanPatterns()
+
+    # ---- resolver hook (before resolution): how the pattern's mediator reaches its handlers
+    def dispatch(self) -> list[DispatchRule]:
+        """Bus methods and the generic handler bases they reach (`SendAsync(new X())` →
+        `ICommandHandler<X>.Handle`) — linked as CALLS with strategy `dispatch` (core/dispatch.py)."""
+        return []
 
     # ---- annotation hooks (called per element, first non-None answer wins across conventions)
     def role_of(self, symbol: SymbolInfo, file: FileInfo) -> str | None:

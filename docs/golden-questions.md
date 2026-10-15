@@ -281,3 +281,31 @@ Resíduo: 29 chamadores de **teste** chegam por `-ambiguous` (locais vindos de h
 tipagem Go ainda não cobre) — não afeta produção, amostra para F0.7.3. Observação: "rota sem
 consumidor = pública" foi inferência do modelo; o atlas só afirma "nenhum consumidor nos repos
 indexados" (vira dado com `Service` externo / `workspace_map`).
+
+## Terceira rodada: Q4 .NET depois do F0.7.3 (2026-10-14, indexer 0.2.14)
+
+O que mudou desde a segunda rodada: despacho do mediator como aresta (`dispatch`), interface → implementação
+pelo registro no DI e pela cadeia de decorators, serviços resolvidos do container (`GetRequiredService<T>()`)
+e locais vistos de dentro de lambdas, métodos que vêm da base de um pacote (`inherited`), sobrecargas pela
+contagem de argumentos, e `impact_of` num tipo contando os chamadores dos seus membros. Perguntas feitas no
+`<svc-transaction>`, numa sessão nova, no formato da Q4 ("se eu mudar X, o que é afetado — dentro do repo e
+nos outros?").
+
+| Q | Resultado | Observação |
+|---|---|---|
+| Q4a `AccountReadRepository.FindByIdAsync` | ✅ 1 chamador de produção (`AccountsController.FindByIdAsync`, via `IAccountQuery`), `GET /api/accounts/{accountId}/details`, consumidor `<svc-accrual>` `exact` com símbolo e arquivo:linha | na segunda rodada, 6 chamadores falsos e a cadeia reconstruída lendo código; agora o grafo deu a estrutura e a leitura de código foi para o que o grafo não guarda (contrato da resposta: 404 × 200, tipos dos campos) |
+| Q4b classe `CategoryReadRepository` | ✅ pelo grafo (conferido em Cypher): 1 hop — `CategoriesController.ListAsync` (`GET /api/categories`), `CreateTransactionCommandHandler.Handle`, os 2 validators; 2 hops — `TransactionsController.RegisterTransactionAsync` (`dispatch`, `POST /api/transactions`) | a primeira tentativa respondeu com um grafo antigo (ver abaixo); a segunda, já com 0.2.14, o modelo respondeu lendo código e chegou aos mesmos chamadores, sem as rotas |
+
+**Lição de operação:** a primeira Q4b veio com 1 chamador só — o snapshot era de 0.2.13, indexado antes dos
+commits de sobrecargas e registros do DI, que não subiram a versão; o refresher só reindexa quando a versão ou o
+commit mudam. Com 0.2.14 e `aidd refresh --tenant <t> --repos <a>,<b> --wait 600`, a resposta certa saiu do
+grafo. O modelo concluiu, do grafo velho, que "o atlas não captura DI" e recomendou "sempre completar com grep" —
+uma conclusão errada que só não virou insight porque ele não a gravou. Encaminhamento: o snapshot guardar a
+impressão digital do código do indexer e das convenções, para qualquer mudança reindexar após a reinstalação.
+
+**O que segue fora do grafo, com razão:** (1) eventos entre serviços (`TransactionWasCreatedEvent` publicado pelo
+handler e consumido no `<svc-accrual>` via Kafka) — F2.2; (2) o que o pacote do SDK faz por dentro (o
+`BaseRepository` delega as leituras ao `ICategoryReadRepository` injetado) — só com SCIP/metadados do pacote;
+(3) referência por tipo sem chamada (campo injetado e não usado, registro no DI) — F1.2; (4) validators são
+alcançados pelo pipeline do barramento, sem chamada explícita: aparecem como chamadores sem rota — candidato a
+regra de `dispatch` (`SendAsync(cmd)` → o `AbstractValidator<cmd>`).

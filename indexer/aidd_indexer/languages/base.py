@@ -26,6 +26,8 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from tree_sitter import Node
 
+from ..core.dispatch import DispatchRule
+
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
     from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
@@ -82,6 +84,8 @@ class LanguageSupport:
     namespace_nodes: frozenset[str] = frozenset()  # tree node types that prefix qualified names (C# namespaces)
     entry_point_hints: tuple[str, ...] = ()        # substrings of the signature that mark an entry point
     decorator_entry: re.Pattern | None = None      # regex over leading decorators/attributes
+    dispatch: tuple[DispatchRule, ...] = ()         # mediators of public libraries (MediatR), always on; an organization's
+                                                   # own bus is declared by its convention (`dispatch:`, core/dispatch.py)
 
     # ---- discovery ------------------------------------------------------------------------
     def discover_modules(self, repo: "RepoInfo", rel_files: list[str], modules: dict[str, "ModuleInfo"]) -> None:
@@ -140,6 +144,21 @@ class LanguageSupport:
         when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
         return None
 
+    def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
+        """(required, max) arguments a call to this function/method passes — optional parameters and
+        defaults widen the range, a variadic one makes max None. None = unknown (no overload filtering)."""
+        return None
+
+    def call_arg_count(self, call: Node, src: bytes) -> int | None:
+        """How many arguments the call passes; None when unknown (a spread)."""
+        return None
+
+    def call_argument_type(self, call: Node, src: bytes) -> str | None:
+        """Static type of the call's first argument as written — `new T(..)`, or a parameter/local
+        (preferring the type it was created with over the declared one: `IEvent e = new T()` → T).
+        Asked only for the bus methods of a convention's `dispatch` rules. None = unknown."""
+        return None
+
     # ---- manifests -----------------------------------------------------------------
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """(names this manifest publishes, [(required package name, version)]) for a manifest of
@@ -168,13 +187,28 @@ class LanguageSupport:
         from a base class declared in this repo still resolves by receiver type."""
         return []
 
-    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str) -> str | None:
-        """Qualified name of the single concrete type that implements `qualified_type` *and* can
-        serve `method` for it — None when there are zero or several implementers, or when the
-        implementer's `method` is an explicit implementation of another interface. A call on the
-        interface then also links to the implementation (strategy `receiver-type-impl`), the usual
-        DI case in C#."""
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        """Whether the type (or one of its in-repo bases) extends/embeds a type declared outside the repo —
+        so a method the repo does not declare may come from there (`ITodoRepository : IBaseRepository<T>`
+        of a package). Lets the resolver keep the dependency on the type (strategy `inherited`)."""
+        return False
+
+    def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
+                              from_type: str | None = None) -> str | None:
+        """Qualified name of the concrete type a call on `qualified_type` reaches — the single implementer, or
+        the one the DI registrations say (C#: `AddScoped<I, Impl>()`, and a `Decorate<I, D>()` chain, where
+        `from_type` — the caller's own type — picks the next one inward) — and that can serve `method` for
+        it. None when it cannot be told, or when the implementer's `method` is an explicit implementation
+        of another interface. A call on the interface then also links to the implementation (strategy
+        `receiver-type-impl`)."""
         return None
+
+    def message_handlers(self, ctx: ResolveContext, file: "FileInfo", message_type: str,
+                         handler_bases: frozenset[str]) -> list[str]:
+        """Qualified names of the types whose base list has one of `handler_bases` with `message_type`
+        (as seen from `file`) as its first type argument — who receives a message sent through a
+        mediator (core/dispatch.py). Empty when the language has no generics or none matches."""
+        return []
 
     def link_symbols(self, symbols: list["SymbolInfo"], files_by_id: dict[str, "FileInfo"]) -> None:
         """Repo-wide post-processing (Go: methods → receiver struct as parent)."""

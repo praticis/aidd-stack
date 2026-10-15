@@ -116,47 +116,19 @@
     {"from": "SummariesController.ResetAsync", "to": "SummaryRepository.LoadAsync", "strategy": "receiver-type-impl"},
     {"from": "ProcessTodoHandler.Handle", "to": "ITodoRepository.UpdateProgressAsync", "strategy": "receiver-type"},
     {"from": "ProcessTodoHandler.Handle", "to": "TodoRepository.UpdateProgressAsync", "strategy": "receiver-type-impl"},
-    {"from": "ProcessTagHandler.Handle", "to": "TimelineRepository.SaveAsync", "strategy": "receiver-type-impl"}
+    {"from": "ProcessTagHandler.Handle", "to": "TimelineRepository.SaveAsync", "strategy": "receiver-type-impl"},
+    {"from": "SummariesController.ResetAsync", "to": "ResetSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "ResetSummaryCommandHandler.Handle", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "UpdateCacheStep.ProcessAsync", "to": "InitializeSummaryCommandHandler.Handle", "strategy": "dispatch"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTodoHandler.Handle", "strategy": "dispatch"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "ProcessTagHandler.Handle", "strategy": "dispatch"},
+    {"from": "TodoWasCreatedEventHandler.Handle", "to": "ITodoRepository", "strategy": "inherited", "methods": ["CreateAsync"]},
+    {"from": "CheckTodoStep.ProcessAsync", "to": "ITodoRepository", "strategy": "inherited", "methods": ["Exists"]},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "IActivityRepository", "strategy": "inherited", "methods": ["Exists", "CreateAsync", "SaveAsync"]},
+    {"from": "ProcessTagHandler.Handle", "to": "ITimelineRepository", "strategy": "inherited", "methods": ["SaveAsync"]},
+    {"from": "ActivityWasCreatedEventHandler.Handle", "to": "CheckTodoStep.ProcessAsync", "strategy": "receiver-type-impl"},
+    {"from": "CheckTodoStep.ProcessAsync", "to": "CommitActivityStep.ProcessAsync", "strategy": "receiver-type-impl"},
+    {"from": "CommitActivityStep.ProcessAsync", "to": "UpdateCacheStep.ProcessAsync", "strategy": "receiver-type-impl"}
   ],
-  "gaps": [
-    {
-      "from": "SummariesController.ResetAsync",
-      "to": "ResetSummaryCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
-    },
-    {
-      "from": "CommitActivityStep.ProcessAsync",
-      "to": "ProcessTodoHandler.Handle",
-      "why": "in-process event: PublishAsync(event) -> IEventHandler<event> (F0.7.3)"
-    },
-    {
-      "from": "ActivityWasCreatedEventHandler.Handle",
-      "to": "CheckTodoStep.ProcessAsync",
-      "why": "decorator chain registered with Scrutor Decorate<>: interface with several implementers"
-    },
-    {
-      "from": "TodoWasCreatedEventHandler.Handle",
-      "to": "ITodoRepository",
-      "methods": ["CreateAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "CheckTodoStep.ProcessAsync",
-      "to": "ITodoRepository",
-      "methods": ["Exists"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "CommitActivityStep.ProcessAsync",
-      "to": "IActivityRepository",
-      "methods": ["Exists", "CreateAsync", "SaveAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    },
-    {
-      "from": "ProcessTagHandler.Handle",
-      "to": "ITimelineRepository",
-      "methods": ["SaveAsync"],
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo"
-    }
-  ]
+  "gaps": []
 }

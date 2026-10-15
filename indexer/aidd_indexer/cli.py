@@ -29,6 +29,7 @@ from . import INDEXER_VERSION
 from . import conventions, daemon, languages
 from .core.config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
 from .core.deps import collect_manifest_deps
+from .core.dispatch import call_names
 from .core.discovery import build_files, discover_modules, list_files
 from .core.extract import GRAMMAR_ERRORS, extract_file, load_language
 from .core.gitinfo import branch_sha, current_ref, default_ref, export_tree, fetch, head_sha, is_git_repo, list_branches, remote_url
@@ -51,7 +52,7 @@ TRIGGER = os.getenv("AIDD_TRIGGER", "manual")
 
 # -- core: extract + resolve one tree -------------------------------------------------------
 
-def extract_tree(repo: RepoInfo, patterns=None) -> tuple[ExtractionResult, list]:
+def extract_tree(repo: RepoInfo, patterns=None, dispatch_calls: frozenset[str] = frozenset()) -> tuple[ExtractionResult, list]:
     t0 = time.time()
     rel_files = list_files(Path(repo.root))
     modules, stack = discover_modules(repo, rel_files)
@@ -80,7 +81,7 @@ def extract_tree(repo: RepoInfo, patterns=None) -> tuple[ExtractionResult, list]
     for f in files:
         if f.language not in languages.parseable():
             continue
-        fx, warns = extract_file(repo, f)
+        fx, warns = extract_file(repo, f, dispatch_calls)
         res.warnings.extend(warns)
         if fx is None:
             continue
@@ -116,8 +117,9 @@ def conventions_for(tenant: str, repo_name: str, config: str | None = None) -> l
 def extract_and_resolve(repo: RepoInfo, convs: list | None = None) -> tuple[ExtractionResult, Resolved]:
     if convs is None:
         convs = conventions_for(repo.tenant, repo.name)
-    res, extractors = extract_tree(repo, conventions.scan_patterns(convs))
-    rv = Resolver(res, extractors).run()
+    rules = conventions.dispatch_rules(convs)
+    res, extractors = extract_tree(repo, conventions.scan_patterns(convs), call_names(rules))
+    rv = Resolver(res, extractors, rules).run()
     log(f"[resolve]  {len(rv.calls)} CALLS edges ({rv.unresolved_calls} unresolved call sites), "
         f"{len(rv.imports)} IMPORTS edges ({rv.unresolved_imports} unresolved), {len(rv.packages)} external packages")
     if convs:

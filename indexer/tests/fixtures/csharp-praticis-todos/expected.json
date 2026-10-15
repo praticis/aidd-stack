@@ -188,28 +188,41 @@
       "from": "ActivityRepository.IsUniqueKey",
       "to": "IActivityReadRepository.IsUniqueKey",
       "strategy": "receiver-type"
-    }
-  ],
-  "gaps": [
+    },
     {
       "from": "TodosController.CreateAsync",
       "to": "CreateTodoCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+      "strategy": "dispatch"
     },
     {
       "from": "TodosController.ChangeAsync",
       "to": "UpdateTodoCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+      "strategy": "dispatch"
     },
     {
       "from": "ActivitiesController.RegisterActivityAsync",
       "to": "CreateActivityCommandHandler.Handle",
-      "why": "mediator dispatch: ServiceBus.SendAsync(command) -> ICommandHandler<command> (F0.7.3)"
+      "strategy": "dispatch"
+    },
+    {
+      "from": "CreateTodoCommandValidator.CreateTodoCommandValidator",
+      "to": "ITodoReadRepository.NotExists",
+      "strategy": "receiver-type"
+    },
+    {
+      "from": "CreateTodoCommandValidator.CreateTodoCommandValidator",
+      "to": "TodoReadRepository.NotExists",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "RegisterActivityCommandValidator.RegisterActivityCommandValidator",
+      "to": "IActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type"
     },
     {
       "from": "CreateTodoCommandHandler.Handle",
       "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
         "CreateAsync"
       ]
@@ -217,26 +230,30 @@
     {
       "from": "UpdateTodoCommandHandler.Handle",
       "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
-        "FindByIdAsync"
-      ]
-    },
-    {
-      "from": "UpdateTodoCommandHandler.Handle",
-      "to": "ITodoRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
-      "methods": [
+        "FindByIdAsync",
         "UpdateAsync"
       ]
     },
     {
       "from": "CreateActivityCommandHandler.Handle",
       "to": "IActivityRepository",
-      "why": "method inherited from the SDK base repository (package): no symbol in the repo",
+      "strategy": "inherited",
       "methods": [
         "CreateAsync"
       ]
+    },
+    {
+      "from": "RegisterActivityCommandValidator.RegisterActivityCommandValidator",
+      "to": "ActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type-impl"
+    },
+    {
+      "from": "ActivityRepository.IsUniqueKey",
+      "to": "ActivityReadRepository.IsUniqueKey",
+      "strategy": "receiver-type-impl"
     }
-  ]
+  ],
+  "gaps": []
 }
