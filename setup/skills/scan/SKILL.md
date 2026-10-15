@@ -125,6 +125,12 @@ as they are. The conversation itself stays in the person's language.
      If the repo's `remote.ok` is `false`, atlas cannot read its git
      remote (`remote.note` says why) and follows your own `git fetch`:
      branches pushed by others may be missing or behind — mention it.
+     If the snapshot says `outdated: true`, an older indexer wrote it:
+     links the current indexer makes (DI, mediator dispatch...) may be
+     missing until it is re-indexed — run `~/.aidd/aidd refresh --tenant
+     <tenant> --repos <current-repo-name> --wait 600` before relying on
+     who calls what, and never conclude from it that atlas cannot see
+     a kind of link.
 
 1. **Load what the process requires and what was learned.** Call
    `knowledge.policy_for(repo: "<current-repo-name>")` — coverage

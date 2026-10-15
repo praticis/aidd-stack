@@ -14,6 +14,7 @@ from typing import Any, Iterable
 from neo4j import GraphDatabase, Driver
 
 from .. import INDEXER_VERSION
+from .build import indexer_build
 from . import ids
 from .config import Neo4jConfig
 from .linker import CallRow, DepRow, EndpointRow, ProvideRow, called_from_rows, consumes_rows, depends_on_rows, link, link_deps
@@ -27,6 +28,11 @@ BATCH = 1000
 def _chunks(rows: list[dict[str, Any]], n: int = BATCH) -> Iterable[list[dict[str, Any]]]:
     for i in range(0, len(rows), n):
         yield rows[i:i + n]
+
+
+def current_sha(sha: str | None, build: str | None) -> str:
+    """The snapshot's sha when the running indexer build wrote it, else "" (re-index it)."""
+    return (sha or "") if build == indexer_build() else ""
 
 
 class GraphWriter:
@@ -81,12 +87,12 @@ class GraphWriter:
             MATCH (r:Repo {id: $repo_id})
             MERGE (s:Snapshot {id: $id})
             SET s.tenant = $tenant, s.repo = $repo, s.ref = $ref, s.commit_sha = $sha,
-                s.indexed_at = datetime($now), s.indexer_version = $ver, s.ephemeral = $ephemeral,
+                s.indexed_at = datetime($now), s.indexer_version = $ver, s.indexer_build = $build, s.ephemeral = $ephemeral,
                 s.provides = $provides, s.requires = $requires,
                 s.conventions = $conventions, s.architecture = $architecture
             MERGE (r)-[:HAS_SNAPSHOT]->(s)
         """, id=ids.snapshot(repo.tenant, repo.name, repo.ref), repo_id=ids.repo(repo.tenant, repo.name),
-             ver=INDEXER_VERSION, ephemeral=ephemeral, conventions=res.conventions, architecture=res.architecture,
+             ver=INDEXER_VERSION, build=indexer_build(), ephemeral=ephemeral, conventions=res.conventions, architecture=res.architecture,
              provides=sorted({p.key() for p in res.provides}),
              requires=sorted({f"{d.key()}@{d.version}" for d in res.requires}), **common)
         counts["provides"], counts["requires"] = len(res.provides), len(res.requires)
@@ -343,11 +349,12 @@ class GraphWriter:
     # ------------------------------------------------------------------------------
     def snapshot_shas(self, tenant: str) -> dict[tuple[str, str], str]:
         """(repo, ref) -> commit_sha currently in the graph — the input of `plan`/`refresh`.
-        A snapshot written by an older indexer reports an empty sha, so the next refresh
-        re-indexes it (new extractors → new nodes, e.g. HttpEndpoint/HttpCall in 0.2.0)."""
+        A snapshot written by another indexer build (version, or the code that shapes the graph —
+        core/build.py) reports an empty sha, so the next refresh re-indexes it."""
         with self.driver.session(database=self.cfg.database) as s:
-            rows = s.run("MATCH (n:Snapshot {tenant: $tenant}) RETURN n.repo AS repo, n.ref AS ref, n.commit_sha AS sha, n.indexer_version AS ver", tenant=tenant)
-            return {(r["repo"], r["ref"]): (r["sha"] if r["ver"] == INDEXER_VERSION else "") for r in rows}
+            rows = s.run("MATCH (n:Snapshot {tenant: $tenant}) RETURN n.repo AS repo, n.ref AS ref, n.commit_sha AS sha, "
+                         "n.indexer_build AS build", tenant=tenant)
+            return {(r["repo"], r["ref"]): current_sha(r["sha"], r["build"]) for r in rows}
 
     def persistent_snapshots(self, tenant: str) -> set[tuple[str, str]]:
         """(repo, ref) of the snapshots that only a policy change or `aidd wipe` removes

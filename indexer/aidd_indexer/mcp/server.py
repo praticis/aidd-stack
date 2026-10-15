@@ -32,6 +32,7 @@ from typing import Any
 from neo4j import GraphDatabase
 
 from .. import INDEXER_VERSION
+from ..core.build import indexer_build
 from ..core.config import is_test_path, ConfigError, Neo4jConfig
 
 MAX_ROWS = 200
@@ -145,7 +146,9 @@ class Store:
 
     # -- helpers -------------------------------------------------------------------------
     def repos(self) -> list[dict[str, Any]]:
-        return self.read("""
+        """Repos and their snapshots; `outdated: true` on a snapshot an older indexer build wrote — the graph
+        lacks what the running indexer would add (wait for the refresh, or run it), not a limit of atlas."""
+        rows = self.read("""
             MATCH (r:Repo {tenant: $tenant})
             OPTIONAL MATCH (r)-[:HAS_SNAPSHOT]->(s:Snapshot)
             RETURN r.name AS repo, r.default_ref AS default_ref, r.stack AS stack, r.area AS area,
@@ -155,10 +158,16 @@ class Store:
                        success_age_min: duration.inSeconds(r.remote_synced_at, datetime()).seconds / 60
                    } END AS remote,
                    collect({ref: s.ref, sha: left(s.commit_sha, 10), ephemeral: s.ephemeral,
-                            indexed_at: toString(s.indexed_at),
+                            indexed_at: toString(s.indexed_at), build: s.indexer_build,
                             age_min: duration.inSeconds(s.indexed_at, datetime()).seconds / 60}) AS snapshots
             ORDER BY repo
         """)
+        build = indexer_build()
+        for r in rows:
+            for snap in r.get("snapshots") or []:
+                if snap.get("ref") is not None:
+                    snap["outdated"] = snap.pop("build", None) != build
+        return rows
 
     def resolve_ref(self, repo: str, ref: str | None) -> str:
         rows = self.read("""
@@ -275,15 +284,19 @@ def build_server(store: Store | None = None):
         snapshots follow the developer's own `git fetch` (the service token cannot read that remote —
         `note` says why), so a feature branch or PR can lag behind what was pushed: say so, and after a
         `git fetch` run `~/.aidd/aidd refresh --tenant <tenant> --repos <repo>` to catch up.
+        `outdated: true` on a snapshot: an older indexer build wrote it, so links the running indexer
+        makes (newer resolution) are missing until the refresh re-indexes it — say so instead of
+        concluding atlas cannot see them; the same `refresh` command catches up at once.
         In multi-tenant mode (AIDD_TENANT=auto) omit `tenant` to list every tenant's repos, or pass
         the tenant (the workspace folder right below WORKSPACE_PATH) to scope the answer."""
         if the_store.tenant is None and not tenant:
-            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION,
+            return {"mode": "multi-tenant", "indexer_version": INDEXER_VERSION, "indexer_build": indexer_build(),
                     "tenants": [{"tenant": t, "refresh": the_store.scoped(t).refresh_state() or NO_REFRESH,
                                  "repos": the_store.scoped(t).repos()} for t in the_store.tenants()]}
         s = st(tenant)
         return {"mode": "fixed" if the_store.tenant else "multi-tenant", "tenant": s.tenant,
-                "indexer_version": INDEXER_VERSION, "refresh": s.refresh_state() or NO_REFRESH, "repos": s.repos()}
+                "indexer_version": INDEXER_VERSION, "indexer_build": indexer_build(), "refresh": s.refresh_state() or NO_REFRESH,
+                "repos": s.repos()}
 
     @mcp.tool()
     def repo_map(repo: str, ref: str | None = None, max_entry_points: int = 40, tenant: str | None = None) -> dict[str, Any]:
