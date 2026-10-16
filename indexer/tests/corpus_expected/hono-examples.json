@@ -9,8 +9,7 @@
   },
   {
    "method": "GET",
-   "path": "/api",
-   "category": "client-named-router"
+   "path": "/api"
   },
   {
    "method": "GET",
@@ -30,38 +29,31 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/posts/{id}",
-   "category": "client-named-router"
+   "path": "/api/posts/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/posts/{id}",
-   "category": "client-named-router"
+   "path": "/api/posts/{id}"
   },
   {
    "method": "PUT",
-   "path": "/api/posts/{id}",
-   "category": "client-named-router"
+   "path": "/api/posts/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/todos",
-   "category": "prefix-other-file"
+   "path": "/api/todos"
   },
   {
    "method": "POST",
-   "path": "/api/todos",
-   "category": "prefix-other-file"
+   "path": "/api/todos"
   },
   {
    "method": "DELETE",
-   "path": "/api/todos/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/todos/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/todos/{id}/complete",
-   "category": "prefix-other-file"
+   "path": "/api/todos/{id}/complete"
   },
   {
    "method": "GET",
@@ -137,7 +129,7 @@
    "path": "/user-agent"
   }
  ],
- "notes": "Manual, every example app in the repo (one Hono app per folder, so routes of different apps share keys — multi-app-repo; expected = the union). Right: plain app.get/post on new Hono(). Misses and errors: new Hono() is not recognised as the application, so the roots app.get('/') are dropped (app-not-recognized); sub-apps mounted in the same file — app.route('/book', book), new Hono().basePath('/api') — lose the prefix (mount-same-scope); the blog's router is named api and taken for an HTTP client (client-named-router); the stytch TodoAPI chain is mounted with .route('/api', TodoAPI) in another file (prefix-other-file); Hono's inline regex constraint /post/:id{[0-9]+} is normalized into /post/{id}{[0-9]+} (route-constraint-syntax). No license file in the repo; only measured locally.",
+ "notes": "Manual, every example app in the repo (one Hono app per folder, so routes of different apps share keys — multi-app-repo; expected = the union). Right: plain app.get/post on new Hono(). Misses and errors: new Hono() is not recognised as the application, so the roots app.get('/') are dropped (app-not-recognized); sub-apps mounted in the same file — app.route('/book', book), new Hono().basePath('/api') — lose the prefix (mount-same-scope); the blog's router is named api and taken for an HTTP client (client-named-router); the stytch TodoAPI chain is mounted with .route('/api', TodoAPI) in another file (prefix-other-file); Hono's inline regex constraint /post/:id{[0-9]+} is normalized into /post/{id}{[0-9]+} (route-constraint-syntax). No license file in the repo; only measured locally. Since H2b's TS cross-file mount graph (2026-10-16): routes chained on the constructor (export const TodoAPI = new Hono<..>().get(..).post(..)) belong to the name the chain is bound to, and a router typed with generics (new Hono<{ Bindings }>()) is one — the stytch TodoAPI under /api and the blog's api router come out right.",
  "checked": {
   "endpoints": [
    {
@@ -279,26 +271,23 @@
    {
     "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
     "method": "DELETE",
-    "path": "/todos/{id}",
+    "path": "/api/todos/{id}",
     "raw": "/todos/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
     "method": "POST",
-    "path": "/todos",
+    "path": "/api/todos",
     "raw": "/todos",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "hono-examples:stytch-auth/api/TodoAPI.ts:11",
     "method": "POST",
-    "path": "/todos/{id}/complete",
+    "path": "/api/todos/{id}/complete",
     "raw": "/todos/:id/complete",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    }
   ]
  },

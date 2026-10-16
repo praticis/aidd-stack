@@ -67,6 +67,15 @@ class MountGraph:
                 out.append((APP if is_app(parent) else TOP, p))
         return list(dict.fromkeys(out))
 
+    def targets(self, key: RouterKey, global_of: Callable[[RouterKey], str | None], is_app: Callable[[RouterKey], bool],
+                up: dict | None = None) -> list[tuple[str, str]]:
+        """Where a mount on `key` takes another file's router: `key`'s global id, else the mounts above it, else the
+        top (`APP` when `key` is the application)."""
+        g = global_of(key)
+        if g is not None:
+            return [(g, "")]
+        return self.exits(key, global_of, is_app, up) or [(APP if is_app(key) else TOP, "")]
+
     def settle(self, endpoints: list[E], rebase: Callable[[E, str], E], is_root: Callable[[E], bool],
                global_of: Callable[[RouterKey], str | None] = lambda _: None,
                foreign: list[tuple[str, RouterKey, str]] = (),
@@ -105,18 +114,16 @@ class MountGraph:
         edges = [(g, t, p) for child in up if (g := global_of(child)) is not None
                  for t, p in self.exits(child, global_of, is_app, up)]
         for child, parent, prefix in foreign:
-            g = global_of(parent)
-            ups = [(g, "")] if g is not None else self.exits(parent, global_of, is_app, up) or \
-                [(APP if is_app(parent) else TOP, "")]
-            edges += [(child, t, pp.rstrip("/") + prefix) for t, pp in ups]
+            edges += [(child, t, pp.rstrip("/") + prefix) for t, pp in self.targets(parent, global_of, is_app, up)]
         return waiting, list(dict.fromkeys(edges))
 
 
 def compose(waiting: list[tuple[E, str]], edges: dict[str, list[tuple[str, str]]], rebase: Callable[[E, str], E],
-            is_root: Callable[[E], bool]) -> dict[int, list[E]]:
+            is_root: Callable[[E], bool], apps: frozenset[str] | set[str] = frozenset()) -> dict[int, list[E]]:
     """The plan for the routes waiting on a global router (`id(route)` → what replaces it): one copy per chain of
     edges up to a top or to a router mounted nowhere. A router mounted nowhere keeps its routes; a sub-router's root
-    is a route only under a non-empty prefix."""
+    is a route only under a non-empty prefix, or where the chain ends at an application (`apps`: the global routers
+    that are one, such as a module's `app = express()`)."""
     memo: dict[str, list[tuple[str, bool]]] = {}
 
     def chains(g: str, seen: frozenset) -> list[tuple[str, bool]]:
@@ -125,7 +132,7 @@ def compose(waiting: list[tuple[E, str]], edges: dict[str, list[tuple[str, str]]
             return memo[g]
         outs = edges.get(g)
         if not outs:
-            return [("", False)]                          # mounted nowhere: the router is a top
+            return [("", g in apps)]                      # mounted nowhere: the router is a top
         res: list[tuple[str, bool]] = []
         for parent, p in outs:
             if parent in (TOP, APP):
@@ -140,7 +147,7 @@ def compose(waiting: list[tuple[E, str]], edges: dict[str, list[tuple[str, str]]
     plan: dict[int, list[E]] = {}
     for ep, g in waiting:
         if not edges.get(g):
-            if is_root(ep):
+            if is_root(ep) and g not in apps:
                 plan[id(ep)] = []
             continue
         prefixes = dict.fromkeys(p for p, app in chains(g, frozenset()) if p or app or not is_root(ep))

@@ -1236,3 +1236,94 @@ Django's urlconf (1420, netbox and zulip) is still deferred (item 8).
 same code, mattermost took 249.6 s (29.0 s of HTTP). The spike was the machine, not this change.
 
 New baseline: `2026-10-16-v2-baseline-11`.
+
+## Update: the mount graph across files in TS/JS (2026-10-16)
+
+TS/JS was the language furthest behind: 3.7 % recall of the expected routes. The largest gap was a router whose prefix
+lives in another file (`prefix-other-file`: ghost 256, express-realworld 19, express and hono-examples 4 each). The
+cross-file mount graph that Go and Python already had now covers TS/JS.
+
+**What is read now:**
+
+- **Imports and exports, ESM and CommonJS.**
+  - Imports: `import r from`, `import { a as b }`, `import * as m`, `require('./x')`, `require('./x').y` and
+    `const { y } = require('./x')`.
+  - A module-level router is known to other files as `var:<file>:<name>`. A router a function returns is
+    `ret:<file>:<function>`, and a router passed as a parameter is `param:<file>:<function>:<i>`. A function exported by
+    `module.exports =` or `export default` is named `default`.
+  - An export under another name (`export default router`, `module.exports = { a: b }`, `exports.x = y`) and a
+    re-export (`module.exports = require('./app')`, `export { a } from './x'`) are edges without a prefix, from the
+    local name to the exported one.
+- **What a mount can mount:** an imported name, `require('./x')` in place, `routes()` (what the function returns) or
+  `m.router`. `require('./legacy')(app)` hands the router to the other file's parameter.
+- **`use` without a path** mounts with an empty prefix.
+- **Chains.** A chain of calls that starts at a router constructor belongs to the name the chain is bound to:
+  `export const TodoAPI = new Hono().get(..).post(..)`, or `export default Router().use('/api', api)` (named
+  `default`). A generic between the constructor and its call (`new Hono<{ Bindings: Env }>()`) no longer hides it.
+- **A project's own mount wrapper.** Ghost mounts its APIs with `app.lazyUse(path, require('./x'))`, a method that
+  `shared/express.js` defines as `app.use(mountPath, .. requireFn() ..)`.
+  - A method whose parameter is the path of a `use` call is published as a mount wrapper: the position of the path,
+    the position of the router, and whether the method calls it.
+  - A call of that name on a router stays a candidate, and `compose` makes it a mount when some file defines a wrapper
+    of the same shape.
+- **Applications.** An application other files can name is published, so a chain that ends at an application nobody
+  mounts keeps a sub-router's root.
+
+Diff against `2026-10-16-v2-baseline-11`, judged: 5 repositories changed, all TS/JS; Go, Python and C# are identical.
+
+- **ghost:**
+  - The Admin and Content APIs come out under `/ghost/api/admin` and `/ghost/api/content`. The chain is backend →
+    `lazyUse(BASE_API_PATH, require('../api'))` → re-export → `lazyUse('/admin/', ..)` → `use(routes())`, with
+    `BASE_API_PATH` from `shared/url-utils.ts`.
+  - The members, comments, announcement, gift and webmentions apps take `/members`, `/gift` and `/webmentions` the
+    same way.
+  - The Content API grows from 4 routes to 20. Without the prefix, its routes had the ids of the Admin ones, and the
+    dedupe kept only the first.
+- **express-realworld:** all 19 routes under `/api`, through the unnamed chains.
+- **express:** `examples/multi-router` under `/api/v1` and `/api/v2`, roots included.
+- **hono-examples:**
+  - The stytch `TodoAPI` comes out under `/api`.
+  - The blog's router (`api`, typed with generics) is a router now, not a client.
+- **nodebb (+2):** `GET /` and `POST /` of the web installer (`install/web.js`). Its `app = express()` is the
+  application, and the routes registered inside `setupRoutes()` keep their root.
+
+Expected lists:
+
+- **ghost:** 13 routes added. The run showed that the regex behind the list had missed two sub-routers that
+  `admin/routes.js` mounts on itself (`router.use('/apps', appsRouter)`, `router.use('/members/metafields', ..)`).
+- **All four repositories:**
+  - `prefix-other-file` and `client-named-router` were removed from the items found.
+  - The 42 samples whose path changed were judged again, and all are right.
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| ghost | 0 % / 0 % | 100 % / 100 % (269) |
+| express-realworld | 0 % / 0 % | 100 % / 100 % |
+| express (`multi-router`) | — / 0 % | 100 % / 80 % |
+| hono-examples | 77.8 % / 67.7 % | 93.5 % / 93.5 % |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| TS/JS before | 31.9 % (52/163) | 5.9 % | 3.7 % (38/1028) |
+| TS/JS now | 57.7 % (94/163) | 50.4 % | 32.9 % (338/1028) |
+
+The before row is baseline-11 measured against the new lists, which have the 13 ghost routes.
+
+What TS/JS routes still miss (690):
+
+- NodeBB's own registrar (`custom-registrar`, 353);
+- Nest's `setGlobalPrefix` (`global-prefix`, 238);
+- the controller prefix in an enum of another file (`const-other-file`, 42 in immich);
+- the express-boilerplate mount loop over a literal array (`prefix-other-file`, 14);
+- the fastify-demo autoload by folder (`prefix-by-folder`, 14);
+- a prefix passed as a string parameter (`prefix-as-param`, 13);
+- the Next.js file routes (`route-by-file-path`, 9);
+- the multi-app repositories and the rest (7).
+
+**Timing.** HTTP extraction took 105.0 s, against 113.8 s before. ghost, the repository the change does the most
+for, went from 11.6 s to 12.4 s. In this run bitwarden took 813 s in all, with its HTTP part unchanged (6.9 s). Run
+alone right after, with the same code, it took 129.8 s. The run before had the same spike in mattermost. In each full
+run, one large repository becomes 4–6 times slower outside HTTP, likely from memory pressure in the Docker VM. It is
+not this change.
+
+New baseline: `2026-10-16-v2-baseline-12`.

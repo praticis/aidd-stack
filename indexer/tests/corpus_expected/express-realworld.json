@@ -6,140 +6,140 @@
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:110",
     "method": "PUT",
-    "path": "/articles/{slug}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}",
+    "raw": "/articles/:slug",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:129",
     "method": "DELETE",
-    "path": "/articles/{slug}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}",
+    "raw": "/articles/:slug",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:149",
     "method": "GET",
-    "path": "/articles/{slug}/comments",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/articles/:slug/comments",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:170",
     "method": "POST",
-    "path": "/articles/{slug}/comments",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/articles/:slug/comments",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:190",
     "method": "DELETE",
-    "path": "/articles/{slug}/comments/{id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}/comments/{id}",
+    "raw": "/articles/:slug/comments/:id",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:210",
     "method": "POST",
-    "path": "/articles/{slug}/favorite",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/articles/:slug/favorite",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:230",
     "method": "DELETE",
-    "path": "/articles/{slug}/favorite",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/articles/:slug/favorite",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:30",
     "method": "GET",
-    "path": "/articles",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles",
+    "raw": "/articles",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:45",
     "method": "GET",
-    "path": "/articles/feed",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/feed",
+    "raw": "/articles/feed",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:71",
     "method": "POST",
-    "path": "/articles",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles",
+    "raw": "/articles",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/article/article.controller.ts:87",
     "method": "GET",
-    "path": "/articles/{slug}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/articles/{slug}",
+    "raw": "/articles/:slug",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/auth/auth.controller.ts:14",
     "method": "POST",
-    "path": "/users",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/users",
+    "raw": "/users",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/auth/auth.controller.ts:30",
     "method": "POST",
-    "path": "/users/login",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/users/login",
+    "raw": "/users/login",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/auth/auth.controller.ts:45",
     "method": "GET",
-    "path": "/user",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/user",
+    "raw": "/user",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/auth/auth.controller.ts:61",
     "method": "PUT",
-    "path": "/user",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/user",
+    "raw": "/user",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/profile/profile.controller.ts:14",
     "method": "GET",
-    "path": "/profiles/{username}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/profiles/{username}",
+    "raw": "/profiles/:username",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/profile/profile.controller.ts:34",
     "method": "POST",
-    "path": "/profiles/{username}/follow",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/profiles/:username/follow",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/profile/profile.controller.ts:54",
     "method": "DELETE",
-    "path": "/profiles/{username}/follow",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/profiles/:username/follow",
+    "ok": true
    },
    {
     "evidence": "express-realworld:src/app/routes/tag/tag.controller.ts:13",
     "method": "GET",
-    "path": "/tags",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/tags",
+    "raw": "/tags",
+    "ok": true
    }
   ]
  },
  "checked_seed": "1",
- "notes": "Every controller is a Router() aggregated in app/routes/routes.ts and mounted with Router().use(\"/api\", api), so all 19 routes come out without /api (prefix-other-file). The expected list is the RealWorld API under /api; scope = the four controllers.",
+ "notes": "Every controller is a Router() aggregated in app/routes/routes.ts and mounted with Router().use(\"/api\", api), so all 19 routes come out without /api (prefix-other-file). The expected list is the RealWorld API under /api; scope = the four controllers. Since H2b's TS cross-file mount graph (2026-10-16): the controllers' `export default router` are followed through the unnamed chains Router().use(tags)... and export default Router().use('/api', api) to main.ts's app.use(routes) — all 19 under /api, the 19 samples judged again: right.",
  "scope": {
   "endpoints": [
    "src/app/routes/"
@@ -148,98 +148,79 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/api/articles",
-   "category": "prefix-other-file"
+   "path": "/api/articles"
   },
   {
    "method": "GET",
-   "path": "/api/articles/feed",
-   "category": "prefix-other-file"
+   "path": "/api/articles/feed"
   },
   {
    "method": "POST",
-   "path": "/api/articles",
-   "category": "prefix-other-file"
+   "path": "/api/articles"
   },
   {
    "method": "GET",
-   "path": "/api/articles/{slug}",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "PUT",
-   "path": "/api/articles/{slug}",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "GET",
-   "path": "/api/articles/{slug}/comments",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}/comments"
   },
   {
    "method": "POST",
-   "path": "/api/articles/{slug}/comments",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}/comments"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}/comments/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}/comments/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/articles/{slug}/favorite",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}/favorite"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}/favorite",
-   "category": "prefix-other-file"
+   "path": "/api/articles/{slug}/favorite"
   },
   {
    "method": "POST",
-   "path": "/api/users",
-   "category": "prefix-other-file"
+   "path": "/api/users"
   },
   {
    "method": "POST",
-   "path": "/api/users/login",
-   "category": "prefix-other-file"
+   "path": "/api/users/login"
   },
   {
    "method": "GET",
-   "path": "/api/user",
-   "category": "prefix-other-file"
+   "path": "/api/user"
   },
   {
    "method": "PUT",
-   "path": "/api/user",
-   "category": "prefix-other-file"
+   "path": "/api/user"
   },
   {
    "method": "GET",
-   "path": "/api/profiles/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/profiles/{username}"
   },
   {
    "method": "POST",
-   "path": "/api/profiles/{username}/follow",
-   "category": "prefix-other-file"
+   "path": "/api/profiles/{username}/follow"
   },
   {
    "method": "DELETE",
-   "path": "/api/profiles/{username}/follow",
-   "category": "prefix-other-file"
+   "path": "/api/profiles/{username}/follow"
   },
   {
    "method": "GET",
-   "path": "/api/tags",
-   "category": "prefix-other-file"
+   "path": "/api/tags"
   }
  ]
 }

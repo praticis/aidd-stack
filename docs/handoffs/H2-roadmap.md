@@ -46,15 +46,18 @@
   rotas Go P 99,1 %, R 90,5 → 97,8 % (argo-cd R 3,5 → 96,5 %, alertmanager 0 → 100 %). **flask-restx e decorador
   aplicado à mão (2026-10-16):** `Namespace`/`Api` são routers, `add_namespace` monta, cada método de um `Resource` é
   rota; `router.post("/x")(fn)` é rota de `fn`; rotas Python fora do Django P 96,1 → 99,0 %, R 93,4 → 98,0 % (CTFd
-  R 46,9 → 100 %).
+  R 46,9 → 100 %). **TS no H2 (H2-D19), etapa 1 — grafo entre arquivos em TS/JS (2026-10-16):** imports ESM e
+  CommonJS, exports e reexportações como arestas, `use` sem path, cadeias no construtor (Hono), genérico no
+  construtor, o wrapper de montagem do próprio projeto (`lazyUse` do Ghost) e a aplicação que ninguém monta mantendo a
+  raiz; rotas TS/JS P 5,9 → 50,4 %, R 3,7 → 32,9 % (ghost 0 → 100 %, express-realworld 0 → 100 %, hono 67,7 → 93,5 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-11/` — corpus v2, 42 repos, com o
-  flask-restx (a `-10` é a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-12/` — corpus v2, 42 repos, com o
+  grafo entre arquivos em TS/JS (a `-11` é a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -75,10 +78,13 @@
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
   `client-in-field`). **Python fora do Django fechado no essencial:** rotas P 99,0 % / R 98,0 % (sobram o registro
   de plugins do dispatch, `router-from-registry`, 4, preenchido em runtime — limitação; e `multi-app-repo`, 4, no
-  fastapi). Próximo: decidir se o TS (etapa 2 do grafo + `setGlobalPrefix` + clientes gerados TS) entra no H2 ou
-  num incremento próprio (recomendação de 2026-10-16: entra, reaproveita o que existe), e então a Fase 5. TS por último: a etapa 2 para TS (o `mount_rule`
-  do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
-  `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
+  fastapi). **TS em curso (H2-D19):** a etapa 1, o grafo entre arquivos, está feita. Próximo: a etapa 2, o
+  Nest — `setGlobalPrefix` (`global-prefix`, 238), o prefixo do controller num enum de outro arquivo
+  (`const-other-file`, 42 no immich) e, no caminho, o resolvedor de imports TS (o `.js` do ESM que nomeia um `.ts`; o
+  alias `src/*` do `tsconfig` de um pacote abaixo da raiz). Depois os clientes gerados TS (oazapfts, openapi-ts, do
+  item 7) e então a Fase 5. Sobram para decidir: o registrar próprio do NodeBB (`custom-registrar`, 353 — o mesmo
+  mecanismo do wrapper de montagem serviria a um wrapper de rota), o laço sobre array literal do express-boilerplate
+  (14) e o autoload por pasta do fastify-demo (14).
 
 ## Decisões
 
@@ -102,6 +108,7 @@
 | H2-D16 | 2026-10-15 | Item que precisa de mais de uma correção recebe **uma** categoria: a mais específica além do grafo de montagem (`m.Combo("/x").Get(h)` dentro de closure = `route-chain`; closure + mount em outro arquivo = `prefix-scope-and-file`) | O ranking diz qual regra destrava o quê; o grafo de montagem aparece em quase tudo e esconderia as outras |
 | H2-D17 | 2026-10-15 | No resumo por linguagem, item da amostra conta na linguagem **do seu arquivo**, e o gabarito declara `language` por tipo quando difere da do repo (a UI React de um servidor Go). Cada categoria traz o **nº de repos** em que aparece | Repos mistos (backend + UI) misturavam linguagens; um repo grande (netbox, 1256 operações) não pode ranquear uma categoria sozinho |
 | H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo (o Python é FastAPI/Flask, não Django), TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus; Django + DRF (item 8) segue adiado | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
+| H2-D19 | 2026-10-16 | **O TS entra no H2**, depois de .NET, Go e Python fechados no essencial: grafo entre arquivos, `setGlobalPrefix` do Nest e clientes gerados TS, em etapas com corpus e commit cada uma | Recomendação de 2026-10-16, seguida no passo seguinte: reaproveita o grafo de montagem e o `compose` que Go e Python já usam; num incremento próprio, o mesmo contexto teria de ser remontado |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -186,7 +193,12 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     parâmetro de região de closure = router de fora; achados no caminho: restrição com chaves aninhadas ou `?`,
     alternativas literais num segmento, `Methods` com vários verbos, `Group().Use()`, raiz na aplicação. Fixtures
     `route-patterns-go/{cmd/crossfile,internal}` e `route-patterns-py/app/crossfile`
-  - [ ] etapa 2 para TS/JS (`mount_rule` do TS: ghost, express-realworld), prefixo global (`setGlobalPrefix`)
+  - [x] *(2026-10-16)* etapa 2 para TS/JS: imports ESM e CommonJS (`TsScanner.read_imports`), exports e
+    reexportações como arestas sem prefixo, filhos de montagem de outro arquivo (`require('./x')`, `routes()`,
+    `m.router`), router como argumento de função de outro arquivo, `use` sem path, cadeias no construtor ligadas ao
+    nome, wrapper de montagem do projeto (`ts.mount-wrapper` + candidatos `ts.mount.maybe` + `TsScanner.compose`);
+    aplicação nomeável publicada (`<regra>.app`). Fixture `route-patterns-ts/src/crossfile`
+  - [ ] prefixo global (`setGlobalPrefix`) — etapa 2 do TS
 
   Ordem original:
   mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
@@ -531,3 +543,20 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   do CTFd julgadas de novo (certas). Rotas Python fora do Django P 96,1 → 99,0 %, R 93,4 → 98,0 %. HTTP do corpus
   111,7 → 113,8 s; o mattermost levou 1369 s nesta rodada (HTTP igual), mas sozinho, logo depois e com o
   mesmo código, 249,6 s — máquina, não regressão. Nova baseline `2026-10-16-v2-baseline-11`.
+- **2026-10-16** — TS no H2 (H2-D19), etapa 1: grafo de montagem entre arquivos em TS/JS. Imports ESM e CommonJS
+  (`require`, `require('x').y`, desestruturação); router de módulo `var:`, devolvido `ret:`, parâmetro `param:`, função
+  exportada por `module.exports =`/`export default` chamada `default`; export com outro nome e reexportação viram
+  arestas sem prefixo; filho de montagem importado, `require('./x')` no lugar, `routes()` ou `m.router`;
+  `require('./legacy')(app)`; `use` sem path; cadeia que começa num construtor pertence ao nome a que é ligada
+  (`export const TodoAPI = new Hono().get(..)`, `export default Router().use('/api', api)`); genérico no construtor;
+  wrapper de montagem do projeto (`app.lazyUse = function (path, fn) { app.use(path, .. fn() ..) }`: fato
+  `ts.mount-wrapper`, chamadas candidatas `ts.mount.maybe`, `TsScanner.compose`); aplicação nomeável publicada
+  (`<regra>.app`, `compose` mantém a raiz numa aplicação que ninguém monta — vale para Go e Python também, sem
+  diferença no corpus). Diff contra `-11` (5 repos, todos TS) julgado certo: ghost (Admin e Content API sob
+  `/ghost/api/*`, members, comments, gift, webmentions; a Content API sobe de 4 para 20 porque o dedupe juntava os ids
+  sem prefixo), express-realworld (19 sob `/api`), express (`multi-router`), hono-examples (stytch sob `/api`, o `api`
+  do blog é router) e nodebb (+2: a raiz do instalador web). Gabaritos: ghost +13 rotas de dois sub-routers que a
+  regex do gabarito não via (`appsRouter`, `metafieldsRouter`); categorias encontradas removidas; 42 amostras julgadas
+  de novo (certas). Rotas TS/JS P 5,9 → 50,4 %, R 3,7 → 32,9 %. HTTP do corpus 113,8 → 105,0 s; o bitwarden levou
+  813 s nesta rodada e 129,8 s sozinho logo depois — de novo um repo grande lento fora do HTTP numa rodada completa
+  (antes o mattermost), provável pressão de memória na VM do Docker. Nova baseline `2026-10-16-v2-baseline-12`.

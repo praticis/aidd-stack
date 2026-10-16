@@ -299,6 +299,10 @@ class BaseScanner(PathExpressions):
             self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
             for child, parent, prefix in edges:
                 self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+            for key in self.app_vars:
+                g = self._global(key)
+                if g is not None:                             # an application other files can name
+                    self.out.publish(f"{self.mount_rule}.app", g, True)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
@@ -309,7 +313,9 @@ class BaseScanner(PathExpressions):
         waiting = [(p.item, p.key[0]) for p in out.pending if p.rule == cls.mount_rule]
         if waiting:
             edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
-            replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root))
+            apps = set(out.facts.get(f"{cls.mount_rule}.app", {}))
+            replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root,
+                                                  apps))
 
     # -- what crosses files: imports, routers other files name -----------------------------------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:

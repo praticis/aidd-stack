@@ -74,6 +74,66 @@
    "method": "DELETE",
    "path": "/members/{memberId}",
    "handler": "deleteUser"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/posts",
+   "handler": "browsePosts"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/posts",
+   "handler": "addPost"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags",
+   "handler": "listTags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/profiles/{username}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "receiveWebhook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/todos",
+   "handler": "listTodos"
+  },
+  {
+   "method": "POST",
+   "path": "/api/todos/{id}/complete",
+   "handler": "completeTodo"
+  },
+  {
+   "method": "GET",
+   "path": "/blog/posts",
+   "handler": "listPosts"
+  },
+  {
+   "method": "GET",
+   "path": "/v1",
+   "handler": "v1Root"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/status",
+   "handler": "v1Status"
+  },
+  {
+   "method": "GET",
+   "path": "/ops/healthz",
+   "handler": "healthz"
+  },
+  {
+   "method": "GET",
+   "path": "/v2/legacy/ping",
+   "handler": "ping"
   }
  ],
  "calls": [

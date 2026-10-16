@@ -146,7 +146,7 @@
   ]
  },
  "checked_seed": "1",
- "notes": "Precision: 20 of 31 sampled (seed 1). examples/resource builds routes in an app.resource(path, obj) helper (this.get(path + \"/:id\")): the prefix is a string parameter (prefix-as-param). Express 5 optional groups ({:query}, {.:format}) are normalized into broken templates (optional-segment-syntax). Recall scope: examples/multi-router/ — routers mounted from other files with app.use(\"/api/v1\", require(...)) lose the prefix (prefix-other-file) and the router roots (\"/\") are dropped. 2026-10-15 (second round): Express 5 optional groups are normalized now ({:query} → {query}); the sampled search route became correct.",
+ "notes": "Precision: 20 of 31 sampled (seed 1). examples/resource builds routes in an app.resource(path, obj) helper (this.get(path + \"/:id\")): the prefix is a string parameter (prefix-as-param). Express 5 optional groups ({:query}, {.:format}) are normalized into broken templates (optional-segment-syntax). Recall scope: examples/multi-router/ — routers mounted from other files with app.use(\"/api/v1\", require(...)) lose the prefix (prefix-other-file) and the router roots (\"/\") are dropped. 2026-10-15 (second round): Express 5 optional groups are normalized now ({:query} → {query}); the sampled search route became correct. Since H2b's TS cross-file mount graph (2026-10-16): app.use('/api/v1', require('./controllers/api_v1')) is followed to the module's `module.exports = apiv1`, roots included (GET /api/v1, /api/v2).",
  "scope": {
   "endpoints": [
    "examples/multi-router/"
@@ -160,23 +160,19 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1",
-   "category": "prefix-other-file"
+   "path": "/api/v1"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users"
   },
   {
    "method": "GET",
-   "path": "/api/v2",
-   "category": "prefix-other-file"
+   "path": "/api/v2"
   },
   {
    "method": "GET",
-   "path": "/api/v2/users",
-   "category": "prefix-other-file"
+   "path": "/api/v2/users"
   }
  ]
 }

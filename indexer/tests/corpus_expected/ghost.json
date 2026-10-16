@@ -9,1447 +9,1223 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/ghost/api/admin/actions",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/actions"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/authentication/invitation",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/authentication/invitation",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/authentication/password_reset",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/authentication/password_reset",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/authentication/reset",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/authentication/setup",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/authentication/setup",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/authentication/setup",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automated_emails",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automated_emails",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automated_emails/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automated_emails/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automated_emails/:id/preview",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automated_emails/:id/test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automated_emails/design",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automated_emails/design",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automated_emails/senders",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automated_emails/verifications",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations/:automation_id/actions/:action_id/links",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automations/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automations/:id/email_preview",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/automations/:id/email_test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations/:id/performance-stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations/:id/runs",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/automations/:id/runs/:run_id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/automations/poll",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/comments",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/comments/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/:id/dislikes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/:id/likes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/:id/replies",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/:id/reports",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/comments/post/:post_id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/config",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/config/featurebase",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/custom_theme_settings",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/custom_theme_settings",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations/preview"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/db",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations/{id}"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/db",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/db",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/db/backup",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/db/media/inline",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/email_previews/posts/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/email_previews/posts/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/emails",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/emails/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/emails/:id/analytics",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations/{id}"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/emails/:id/analytics",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/apps/installations/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/apps/installations/{id}/sessions"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/emails/:id/batches",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/authentication/invitation"
   },
   {
-   "method": "GET",
-   "path": "/ghost/api/admin/emails/:id/recipient-failures",
-   "category": "prefix-other-file"
+   "method": "POST",
+   "path": "/ghost/api/admin/authentication/invitation"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/authentication/password_reset"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/emails/:id/retry",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/authentication/password_reset"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/authentication/reset"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/emails/:id/status",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/authentication/setup"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/authentication/setup"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/authentication/setup"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automated_emails"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automated_emails"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automated_emails/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automated_emails/:id"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automated_emails/:id/preview"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automated_emails/:id/test"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automated_emails/design"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automated_emails/design"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automated_emails/senders"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automated_emails/verifications"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automations"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations/:automation_id/actions/:action_id/links"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automations/:id"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automations/:id/email_preview"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/automations/:id/email_test"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations/:id/performance-stats"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations/:id/runs"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/automations/:id/runs/:run_id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/automations/poll"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/comments"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/comments/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/:id/dislikes"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/:id/likes"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/:id/replies"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/:id/reports"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/comments/post/:post_id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/config"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/config/featurebase"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/custom_theme_settings"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/custom_theme_settings"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/emails/analytics",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/db"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/db"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/exports",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/exports/download",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/featurebase/token",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/feedback/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/db"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/files/upload",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/db/backup"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/db/media/inline"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/email_previews/posts/:id"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/email_previews/posts/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/emails"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/emails/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/emails/:id/analytics"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/gift_links/remove_all",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/emails/:id/analytics"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/emails/:id/batches"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/emails/:id/recipient-failures"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/gifts/flush_deliveries",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/gifts/flush_reminders",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/emails/:id/retry"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/identities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/images/upload",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/incoming_recommendations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/integrations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/integrations",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/emails/:id/status"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/integrations/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/emails/analytics"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/exports"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/integrations/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/exports/download"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/featurebase/token"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/feedback/:id"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/files/upload"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/integrations/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/gift_links/remove_all"
   },
   {
-   "method": "POST",
-   "path": "/ghost/api/admin/integrations/:id/api_key/:keyid/refresh",
-   "category": "prefix-other-file"
+   "method": "PUT",
+   "path": "/ghost/api/admin/gifts/flush_deliveries"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/gifts/flush_reminders"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/invites",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/identities"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/invites",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/images/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/incoming_recommendations"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/integrations"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/integrations"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/invites/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/integrations/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/invites/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/integrations/:id"
   },
   {
-   "method": "GET",
-   "path": "/ghost/api/admin/labels",
-   "category": "prefix-other-file"
+   "method": "PUT",
+   "path": "/ghost/api/admin/integrations/:id"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/labels",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/integrations/:id/api_key/:keyid/refresh"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/invites"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/invites"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/labels/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/invites/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/labels/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/labels/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/invites/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/labels/slug/:slug",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/links",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/links/bulk",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/media/thumbnail/upload",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/labels"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/media/upload",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/labels"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/members",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/labels/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/members",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/labels/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/labels/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/labels/slug/:slug"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/links"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/links/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/media/thumbnail/upload"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/members",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/media/upload"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/members/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/members/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/members/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/members/:id/commenting/disable",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/members/:id/commenting/enable",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/members/:id/sessions",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/members/:id/signin_urls",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/members/:id/subscriptions/",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/members/:id/subscriptions/:subscription_id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/members/:id/commenting/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/members/:id/commenting/enable"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/members/:id/suppression",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/members/bulk",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id/sessions"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/members/events",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/members/stats/count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/members/stats/mrr",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/members/stripe_connect",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/members/upload",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id/signin_urls"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/members/upload",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/mentions",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/newsletters",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/newsletters",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/newsletters/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id/subscriptions/"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/newsletters/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/newsletters/verifications/",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/notifications",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/notifications",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id/subscriptions/:subscription_id"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/notifications/:notification_id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/oembed",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/offers",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/offers",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/offers/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/:id/suppression"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/offers/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/events"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/metafields/{namespace}"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/members/metafields/{namespace}"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/members/metafields/{namespace}"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/pages",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/metafields/{namespace}/{key}"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/pages",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/metafields/{namespace}/{key}"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/members/metafields/{namespace}/{key}"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/stats/count"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/stats/mrr"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/stripe_connect"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/members/upload"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/pages",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/members/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/mentions"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/newsletters"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/newsletters"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/newsletters/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/newsletters/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/newsletters/verifications/"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/notifications"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/pages/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/notifications/:notification_id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/pages/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/oembed"
   },
   {
-   "method": "PUT",
-   "path": "/ghost/api/admin/pages/:id",
-   "category": "prefix-other-file"
+   "method": "GET",
+   "path": "/ghost/api/admin/offers"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/pages/:id/copy",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/offers"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/pages/:id/gift_links",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/pages/:id/gift_links",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/offers/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/pages/:id/gift_links",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/pages/bulk",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/pages/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/offers/:id"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/posts",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/posts",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/posts",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/posts/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/posts/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/posts/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/posts/:id/copy",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id/copy"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/posts/:id/gift_links",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id/gift_links"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/posts/:id/gift_links",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id/gift_links"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/posts/:id/gift_links",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/:id/gift_links"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/posts/bulk",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/bulk"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/posts/export",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/posts/slug/:slug",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/posts/upload",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/recommendations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/recommendations",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/pages/slug/:slug"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/recommendations/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/recommendations/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/recommendations/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/recommendations/check",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/redirects/download",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/redirects/upload",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/roles/",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/schedules/:resource/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/search-index/pages",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/search-index/posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/search-index/tags",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/search-index/users",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/session",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/session",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/session/verify",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/session/verify",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/settings",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/settings",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/settings/access_code/regenerate",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id/copy"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/settings/routes/yaml",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id/gift_links"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/settings/routes/yaml",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/posts/:id/gift_links"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/posts/:id/gift_links"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/posts/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/posts/export"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/posts/slug/:slug"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/posts/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/recommendations"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/recommendations"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/settings/stripe/connect",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/recommendations/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/recommendations/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/settings/verifications/",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/site",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/recommendations/:id"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/slack/test",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/recommendations/check"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/slugs/:type/:name",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/slugs/:type/:name/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/snippets",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/redirects/download"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/snippets",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/redirects/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/roles/"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/schedules/:resource/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/search-index/pages"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/search-index/posts"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/search-index/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/search-index/users"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/snippets/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/session"
   },
   {
-   "method": "GET",
-   "path": "/ghost/api/admin/snippets/:id",
-   "category": "prefix-other-file"
+   "method": "POST",
+   "path": "/ghost/api/admin/session"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/session/verify"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/snippets/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/session/verify"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/stats/member_count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/mrr",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/newsletter-basic-stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/newsletter-click-stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/newsletter-stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/stats/posts-member-counts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/stats/posts-visitor-counts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/posts/:id/growth",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/posts/:id/stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/posts/:id/top-referrers",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/referrers",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/subscriber-count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/subscriptions",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/top-content",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/top-posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/top-posts-views",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stats/top-sources-growth",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stripe/checkout/branding",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/stripe/checkout/config",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/stripe/checkout/config",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/stripe/checkout/preview",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings/access_code/regenerate"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/tags",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings/routes/yaml"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/tags",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings/routes/yaml"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/tags/:id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/tags/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings/stripe/connect"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/tags/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/settings/verifications/"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/tags/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/site"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/slack/test"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/themes/",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/slugs/:type/:name"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/slugs/:type/:name/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/snippets"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/snippets"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/themes/:name",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/snippets/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/snippets/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/themes/:name/activate",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/snippets/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/themes/:name/download",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/member_count"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/themes/active",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/mrr"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/newsletter-basic-stats"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/newsletter-click-stats"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/newsletter-stats"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/themes/install",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/posts-member-counts"
   },
   {
    "method": "POST",
-   "path": "/ghost/api/admin/themes/upload",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/posts-visitor-counts"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/tiers",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/tiers",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/posts/:id/growth"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/tiers/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stats/posts/:id/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/posts/:id/top-referrers"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/referrers"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/subscriber-count"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/subscriptions"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/top-content"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/top-posts"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/top-posts-views"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stats/top-sources-growth"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stripe/checkout/branding"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/stripe/checkout/config"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/tiers/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/stripe/checkout/config"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/stripe/checkout/preview"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/tinybird/token",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tags"
   },
   {
-   "method": "GET",
-   "path": "/ghost/api/admin/users",
-   "category": "prefix-other-file"
+   "method": "POST",
+   "path": "/ghost/api/admin/tags"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/users/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tags/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/users/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tags/:id"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/users/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tags/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/users/:id/token",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/users/:id/token",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tags/slug/:slug"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/admin/users/email/:email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/users/owner",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/ghost/api/admin/users/password",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/ghost/api/admin/users/slug/:slug",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/ghost/api/admin/webhooks",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/themes/"
   },
   {
    "method": "DELETE",
-   "path": "/ghost/api/admin/webhooks/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/themes/:name"
   },
   {
    "method": "PUT",
-   "path": "/ghost/api/admin/webhooks/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/themes/:name/activate"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/authors",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/themes/:name/download"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/authors/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/themes/active"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/themes/install"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/themes/upload"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/authors/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tiers"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/tiers"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/newsletters",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tiers/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/tiers/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/offers/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/tinybird/token"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/pages",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/ghost/api/admin/users/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/pages/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/users/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/users/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/pages/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/users/:id/token"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/users/:id/token"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/posts",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/users/email/:email"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/users/owner"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/users/password"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/posts/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/admin/users/slug/:slug"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/webhooks"
+  },
+  {
+   "method": "DELETE",
+   "path": "/ghost/api/admin/webhooks/:id"
+  },
+  {
+   "method": "PUT",
+   "path": "/ghost/api/admin/webhooks/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/posts/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/authors"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/recommendations",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/authors/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/search-index/authors",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/authors/slug/:slug"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/search-index/posts",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/newsletters"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/search-index/tags",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/offers/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/settings",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/pages"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/tags",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/pages/:id"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/tags/:id",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/pages/slug/:slug"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/tags/slug/:slug",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/posts"
   },
   {
    "method": "GET",
-   "path": "/ghost/api/content/tiers",
-   "category": "prefix-other-file"
+   "path": "/ghost/api/content/posts/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/posts/slug/:slug"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/recommendations"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/search-index/authors"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/search-index/posts"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/search-index/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/settings"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/tags/:id"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/tags/slug/:slug"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/content/tiers"
   }
  ],
- "notes": "Manual: expected = every router.<verb>('<path>') in the Admin and Content API route files (ghost/core/server/web/api/endpoints/{admin,content}/routes.js, read with a regex), prefixed with the real mount: BASE_API_PATH = '/ghost/api' (shared/url-utils.ts) via backendApp.lazyUse(BASE_API_PATH, ...) and apiApp.lazyUse('/admin/' | '/content/', ...) in other files. The routes resolve except for that prefix (prefix-other-file, all 256); lazyUse is Ghost's own express wrapper. The precision sample (whole repo) is the same story for the members app (frontendApp.lazyUse('/members', ...)) and the comments router (membersApp.use('/api/comments', ...)). Calls: the portal, search and admin apps use plain fetch with the site URL from config and the path written out — right; the admin-auth frame builds adminUrl = window.location.href.replace(...) + 'api/admin' and calls `${adminUrl}/comments/...` — the literal api/admin is lost (field-in-interpolation, H2-D12).",
+ "notes": "Manual: expected = every router.<verb>('<path>') in the Admin and Content API route files (ghost/core/server/web/api/endpoints/{admin,content}/routes.js, read with a regex), prefixed with the real mount: BASE_API_PATH = '/ghost/api' (shared/url-utils.ts) via backendApp.lazyUse(BASE_API_PATH, ...) and apiApp.lazyUse('/admin/' | '/content/', ...) in other files. The routes resolve except for that prefix (prefix-other-file, all 256); lazyUse is Ghost's own express wrapper. The precision sample (whole repo) is the same story for the members app (frontendApp.lazyUse('/members', ...)) and the comments router (membersApp.use('/api/comments', ...)). Calls: the portal, search and admin apps use plain fetch with the site URL from config and the path written out — right; the admin-auth frame builds adminUrl = window.location.href.replace(...) + 'api/admin' and calls `${adminUrl}/comments/...` — the literal api/admin is lost (field-in-interpolation, H2-D12). Since H2b's TS cross-file mount graph (2026-10-16): the 256 come out under /ghost/api/{admin,content} — routes.js exports a function returning its router (module.exports = function apiRoutes() {..; return router}), app.js mounts what it returns (apiApp.use(routes())), api/index.js re-exports (module.exports = require('./app')) and lazyUse is read as a mount because shared/express.js defines it as one (app.use(mountPath, .. requireFn() ..)). The run showed the regex had missed two sub-routers of admin/routes.js mounted in the file itself (router.use('/apps', appsRouter), router.use('/members/metafields', metafieldsRouter)): their 13 routes were added. The members, comments, announcement and gift routes take /members and /gift the same way; the 20 sampled routes were judged again: right.",
  "checked": {
   "endpoints": [
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:136",
     "method": "PUT",
-    "path": "/users/owner",
+    "path": "/ghost/api/admin/users/owner",
     "raw": "/users/owner",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:299",
     "method": "GET",
-    "path": "/stats/referrers",
+    "path": "/ghost/api/admin/stats/referrers",
     "raw": "/stats/referrers",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:301",
     "method": "GET",
-    "path": "/stats/top-posts",
+    "path": "/ghost/api/admin/stats/top-posts",
     "raw": "/stats/top-posts",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:358",
     "method": "PUT",
-    "path": "/automations/{id}",
+    "path": "/ghost/api/admin/automations/{id}",
     "raw": "/automations/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:369",
     "method": "GET",
-    "path": "/automated_emails/{id}",
+    "path": "/ghost/api/admin/automated_emails/{id}",
     "raw": "/automated_emails/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:372",
     "method": "PUT",
-    "path": "/automated_emails/{id}",
+    "path": "/ghost/api/admin/automated_emails/{id}",
     "raw": "/automated_emails/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:389",
     "method": "GET",
-    "path": "/themes",
+    "path": "/ghost/api/admin/themes",
     "raw": "/themes/",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:465",
     "method": "POST",
-    "path": "/authentication/password_reset",
+    "path": "/ghost/api/admin/authentication/password_reset",
     "raw": "/authentication/password_reset",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:482",
     "method": "POST",
-    "path": "/authentication/reset",
+    "path": "/ghost/api/admin/authentication/reset",
     "raw": "/authentication/reset",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:548",
     "method": "POST",
-    "path": "/email_previews/posts/{id}",
+    "path": "/ghost/api/admin/email_previews/posts/{id}",
     "raw": "/email_previews/posts/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:577",
     "method": "GET",
-    "path": "/newsletters",
+    "path": "/ghost/api/admin/newsletters",
     "raw": "/newsletters",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:578",
     "method": "GET",
-    "path": "/newsletters/{id}",
+    "path": "/ghost/api/admin/newsletters/{id}",
     "raw": "/newsletters/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:588",
     "method": "PUT",
-    "path": "/links/bulk",
+    "path": "/ghost/api/admin/links/bulk",
     "raw": "/links/bulk",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:596",
     "method": "DELETE",
-    "path": "/recommendations/{id}",
+    "path": "/ghost/api/admin/recommendations/{id}",
     "raw": "/recommendations/:id",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/api/endpoints/admin/routes.js:76",
     "method": "PUT",
-    "path": "/posts/{id}/gift_links",
+    "path": "/ghost/api/admin/posts/{id}/gift_links",
     "raw": "/posts/:id/gift_links",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/comments/routes.js:84",
     "method": "POST",
-    "path": "/{id}/like",
+    "path": "/members/api/comments/{id}/like",
     "raw": "/:id/like",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/comments/routes.js:85",
     "method": "DELETE",
-    "path": "/{id}/like",
+    "path": "/members/api/comments/{id}/like",
     "raw": "/:id/like",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/members/app.js:150",
     "method": "GET",
-    "path": "/feedback/{postId}/{score}",
+    "path": "/members/feedback/{postId}/{score}",
     "raw": "/feedback/:postId/:score",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/members/app.js:155",
     "method": "GET",
-    "path": "/api/gifts/{token}/redeem",
+    "path": "/members/api/gifts/{token}/redeem",
     "raw": "/api/gifts/:token/redeem",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    },
    {
     "evidence": "ghost:ghost/core/server/web/members/app.js:48",
     "method": "GET",
-    "path": "/api/member/newsletters",
+    "path": "/members/api/member/newsletters",
     "raw": "/api/member/newsletters",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true
    }
   ],
   "calls": [
