@@ -62,8 +62,8 @@ class Pending(NamedTuple):
     """What a file cannot finish alone: a route recorded as the file writes it whose prefix lives in another file, or
     a call to a method another file defines (`item` is then the call without its path). The language's `compose`
     resolves it from the facts every file published, after the whole repo is scanned."""
-    item: HttpEndpointInfo | HttpCallInfo
-    rule: str               # which `compose` rule resolves it ("cs.inherited-route", "cs.client-wrapper")
+    item: HttpEndpointInfo | HttpCallInfo | None   # None: a request for routes the rule creates (inherited actions)
+    rule: str               # which `compose` rule resolves it ("cs.inherited-route", "cs.client-wrapper", ..)
     key: tuple              # what that rule looks up
 
 
@@ -198,6 +198,7 @@ class BaseScanner(PathExpressions):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
         self.src = fx.src
         self.scopes = Scopes(fx.tree.root_node, self.src)
+        self._path_memo: dict[tuple[int, bool], str | None] = {}   # `path_of` per (node, lenient)
         self.mounts = MountGraph()
         self.symbols_by_name: dict[str, list[SymbolInfo]] = {}
         for s in fx.symbols:
@@ -415,17 +416,24 @@ class BaseScanner(PathExpressions):
         if m and m.group(1) in HTTP_METHODS:
             method, pat = m.group(1), m.group(2)
         full = (prefix.rstrip("/") + "/" + pat.lstrip("/")) if prefix else pat
-        path = normalize_path(full)
         if handler_name is None and handler_node is not None:
             handler_name, handler_id = self.resolve_handler(handler_node)
-        ep = HttpEndpointInfo(
-            id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path_key(path)),
-            method=method or "ANY", path=path, raw_pattern=raw_pattern if isinstance(raw_pattern, MountedRoot) else str(raw_pattern),
-            framework=framework, file_id=self.fx.file.id, line=node.start_point[0] + 1,
-            handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
-        )
+        ep = self.endpoint_info(node, method, full, framework, handler_name, handler_id, raw_pattern=raw_pattern)
         self.out.endpoints.append(ep)
         return ep
+
+    def endpoint_info(self, node: Node, method: str | None, raw: str, framework: str, handler_name: str | None = None,
+                      handler_id: str | None = None, raw_pattern: str | None = None) -> HttpEndpointInfo:
+        """The route at `node` (`raw`: its full path), not recorded — what a file publishes for another to take
+        (inherited actions). `raw_pattern`: as written, when the path holds a prefix too."""
+        path = normalize_path(raw)
+        written = raw if raw_pattern is None else raw_pattern
+        return HttpEndpointInfo(
+            id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path_key(path)),
+            method=method or "ANY", path=path, raw_pattern=written if isinstance(written, MountedRoot) else str(written),
+            framework=framework, file_id=self.fx.file.id,
+            line=node.start_point[0] + 1, handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
+        )
 
     def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
         c = self.call_info(node, method, raw_path, via)

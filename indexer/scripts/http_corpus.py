@@ -19,15 +19,16 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-15, v2 after H2b C# calls, routes + calls): Go — alertmanager 21 · chi 39 ·
+Baseline at the pinned commits (2026-10-16, v2 after H2b NSwag clients, routes + calls): Go — alertmanager 21 · chi 39 ·
 fiber-recipes 150+6 · gin-examples 39+1 · gin-realworld 13 · gorilla-mux 0 (library only) · gitea 1066+4 ·
 mattermost 446+42 · kratos 69+9 · argo-cd 16+104 · gotify 47+28 · go-feature-flag 18+4 · go-kit-examples 16.
 TS/JS — express 32 · express-realworld 20 · fastify 8+1 · nest 195+1 (157 in the framework's own test apps) ·
 immich 295+7 · nodebb 90+185 · ghost 311+30 · express-boilerplate 8 · fastify-demo 10 · hono-examples 27 ·
 taxonomy 0+6 (Next.js file routes). C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support
-18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 671+30. Python — fastapi 86+9 ·
+18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 671+30 · notifo 130+218 · rapid-blazor 18+17 ·
+azure-saas 35+26 (the last three with NSwag clients). Python — fastapi 86+9 ·
 fastapi-template 23 · flask 18 · zulip 0+20 and netbox 0 (Django) · dispatch 68+288 · aiohttp-demos 24+1 ·
-ctfd 122+79. Whole run ~13 min in Docker (mattermost ~4 min, bitwarden ~2 min); grafana is out (memory, see
+ctfd 122+79. Whole run ~11 min in Docker (mattermost ~3 min, bitwarden ~2 min); grafana is out (memory, see
 CORPUS). Precision/recall per repo and the ranking of gaps: docs/corpus-report.md.
 """
 from __future__ import annotations
@@ -91,6 +92,10 @@ CORPUS = {                                                    # pinned 2026-10-1
     "dispatch": ("Netflix/dispatch", "dd2837e82a0bf5565b1b4b4b91ea30b7262d4061"),
     "aiohttp-demos": ("aio-libs/aiohttp-demos", "411ddddd09b6934d1d87eb0fcf9383e7fa104bc0"),
     "ctfd": ("CTFd/CTFd", "6b01b531e8445c781a8bdcdc9409400e19207037"),
+    # .NET with NSwag-generated clients (H2b item 7; pinned 2026-10-16)
+    "notifo": ("notifo-io/notifo", "54da324ff6f4c51ca959751bdc6572e20c10a6e4"),
+    "rapid-blazor": ("jasontaylordev/RapidBlazor", "923b6d4537d7c8b499435c7378f4bd8ee69b2271"),
+    "azure-saas": ("Azure/azure-saas", "80ac009ec7b7738ab7861ea64af8de01435638de"),
 }
 
 
@@ -102,6 +107,7 @@ LANGUAGE = {"chi": "Go", "fiber-recipes": "Go", "gin-examples": "Go", "gin-realw
             "immich": "TS/JS", "nodebb": "TS/JS", "ghost": "TS/JS", "express-boilerplate": "TS/JS", "fastify-demo": "TS/JS",
             "hono-examples": "TS/JS", "taxonomy": "TS/JS",
             "eshop-on-web": "C#", "eshop-support": "C#", "ardalis-clean-arch": "C#", "jellyfin": "C#", "bitwarden": "C#",
+            "notifo": "C#", "rapid-blazor": "C#", "azure-saas": "C#",
             "zulip": "Python", "netbox": "Python", "dispatch": "Python", "aiohttp-demos": "Python", "ctfd": "Python"}
 
 

@@ -14,7 +14,8 @@ from ...core.http_base import (BaseScanner, HttpResult, OUTBOUND, Pending, STRIN
 from ...core.http_nodes import CLASS_NODES, CONCAT_NODES, INTERPOLATION_NODES, STRING_TEXT_NODES, has_interpolation
 from ...core.http_scope import enclosing_function
 from ...core.model import RepoInfo
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, has_literal_segment, normalize_path, unquote
+from ...core import ids
+from ...core.paths import HTTP_METHODS, VERB_BY_NAME, has_literal_segment, normalize_path, path_key, unquote
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
@@ -37,6 +38,11 @@ class CsScanner(BaseScanner):
         self._class_members: dict[int, dict[str, str]] = {}            # class node → its members' types
 
     def run(self) -> None:
+        if b"NSwag toolchain" in self.src[:4096]:           # a generated client: each operation, read whole
+            for n in walk(self.fx.tree.root_node):
+                if n.type == "method_declaration":
+                    self._nswag_operation(n)
+            return
         for n in walk(self.fx.tree.root_node):
             if n.type == "class_declaration":
                 self._controller(n)
@@ -105,7 +111,10 @@ class CsScanner(BaseScanner):
         if not is_controller:
             return
         prefix = prefixes[0] if prefixes else ""
+        area = next((lit for name, lit, _ in attrs if name == "Area" and lit), "")
         inherit = not prefixes and bool(bases)     # no [Route] of its own: the base class's, if it has one
+        abstract = any(c.type == "modifier" and text(c, self.src) == "abstract" for c in cls.children)
+        own: set[str] = set()
         for m in body.children:
             if m.type != "method_declaration":
                 continue
@@ -117,17 +126,26 @@ class CsScanner(BaseScanner):
             mname = m.child_by_field_name("name")
             hname = text(mname, self.src) if mname is not None else None
             hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind == "method"), None)
+            own.add(hname or "")
             for method, lit, a in routes:
                 tmpl = lit if lit is not None else (extra[0] if extra else "")
                 absolute = tmpl.startswith(("/", "~/"))
+                if cname_txt:                   # what a derived controller in another file takes, under its own route
+                    self.out.publish("cs.actions", cname_txt,
+                                     (self.endpoint_info(a, method, "/", "aspnet", hname, hid), tmpl, absolute, hname or ""))
+                if abstract:
+                    continue                    # not routable by itself: its actions live under each derived controller
                 if not prefixes and not tmpl and not inherit:
                     continue                    # conventional routing ({controller}/{action}): no path of its own here
                 full = tmpl if absolute else (prefix.rstrip("/") + "/" + tmpl).rstrip("/")
-                full = _tokens(full.replace("~/", "/"), controller, hname or "")
+                full = _tokens(full.replace("~/", "/"), controller, hname or "", area)
                 ep = self.add_endpoint(a, method, full or "/", "aspnet", None, handler_name=hname, handler_id=hid)
                 if inherit and not absolute and ep is not None:
                     self.out.pending.append(Pending(ep, "cs.inherited-route",
-                                                    (tuple(b.split(".")[-1] for b in bases), controller, hname or "", not tmpl)))
+                                                    (tuple(b.split(".")[-1] for b in bases), controller, hname or "", not tmpl, area)))
+        if bases and not abstract:                  # the actions its base declares are routes of this controller too
+            self.out.pending.append(Pending(None, "cs.inherited-actions",
+                                            (tuple(b.split(".")[-1] for b in bases), controller, tuple(prefixes), area, frozenset(own))))
 
     def _fast_endpoint(self, cls: Node, body: Node, bases: list[str]) -> bool:
         """FastEndpoints: a class deriving from `Endpoint<...>` (`EndpointWithoutRequest`, `Ep.Req<..>.Res<..>`) that
@@ -173,13 +191,39 @@ class CsScanner(BaseScanner):
         for p in out.pending:
             if p.rule != "cs.inherited-route":
                 continue
-            bases, controller, action, root = p.key
+            bases, controller, action, root, area = p.key
             route = _inherited_route(classes, bases)
             if route is not None:
-                plan[id(p.item)] = [rebased(repo, p.item, _tokens(route, controller, action))]
+                plan[id(p.item)] = [rebased(repo, p.item, _tokens(route, controller, action, area))]
             elif root:
                 plan[id(p.item)] = []
         replace_endpoints(out, plan)
+        cls._compose_inherited_actions(out, repo, classes)
+
+    @staticmethod
+    def _compose_inherited_actions(out: HttpResult, repo: RepoInfo, classes: dict[str, list]) -> None:
+        """`EmailTemplatesController : ChannelTemplatesController<T, TDto>` with `[Route("api/apps/{appId}/email-templates")]`
+        and no action of its own: the actions the base declares (one level up, found by name, as the `[Route]`) are its
+        routes, under its route — or the one it inherits — with `[controller]` its name. An action it redeclares is its
+        own; a base two classes share the name of gives nothing."""
+        actions = out.facts.get("cs.actions", {})
+        for p in out.pending:
+            if p.rule != "cs.inherited-actions":
+                continue
+            bases, controller, prefixes, area, own = p.key
+            base = next((b for b in bases if b in classes), None)
+            if base is None or sum(1 for _, partial in classes[base] if not partial) > 1 or base not in actions:
+                continue
+            route = prefixes[0] if prefixes else _inherited_route(classes, bases)
+            if route is None:
+                continue
+            for proto, tmpl, absolute, action in actions[base]:
+                if action in own:
+                    continue
+                full = tmpl if absolute else (route.rstrip("/") + "/" + tmpl).rstrip("/")
+                path = normalize_path(_tokens(full.replace("~/", "/"), controller, action, area) or "/")
+                out.endpoints.append(replace(proto, path=path, raw_pattern=tmpl or "/",
+                                             id=ids.http_endpoint(repo.tenant, repo.name, proto.method, path_key(path))))
 
     @staticmethod
     def _compose_wrapped_calls(out: HttpResult) -> None:
@@ -283,6 +327,51 @@ class CsScanner(BaseScanner):
             self._wrapper(n, method, arg_nodes)
             return
         self._wrapped_call(n, fn, name, arg_nodes)
+
+    # -- NSwag-generated clients (H2-D9) ----------------------------------------------------------------------
+    def _nswag_operation(self, m: Node) -> None:
+        """One operation of an NSwag client: the path template from `// Operation Path: "api/x/{id}"` (v14), else from
+        the `urlBuilder_.Append(..)` literals (v13: `Append("api/x/{id}")` + `Replace("{id}", ..)`), the base URL before
+        it and the query after `?` left out; the verb from `request_.Method = new HttpMethod("GET")`."""
+        body = m.child_by_field_name("body")
+        if body is None:
+            return
+        verb = op_path = None
+        appends: list[Node] = []
+        for d in walk(body):
+            if d.type == "comment" and op_path is None:
+                found = re.match(r'//\s*Operation Path:\s*"([^"]*)"', text(d, self.src))
+                op_path = found.group(1) if found else None
+            elif d.type == "assignment_expression":
+                left, right = d.child_by_field_name("left"), d.child_by_field_name("right")
+                if left is not None and right is not None and text(left, self.src) == "request_.Method":
+                    verb = (first_string(right, self.src) or "").upper() or None
+            elif d.type == "invocation_expression":
+                kids = [c for c in d.children if c.is_named]
+                callee = self.callee_of(kids[0]) if kids else ""
+                if callee.startswith("urlBuilder_.") and callee.endswith(".Append") and kids[-1].type == "argument_list":
+                    arg = next((self._unwrap_arg(c) for c in kids[-1].children if c.is_named), None)
+                    if arg is not None:
+                        appends.append(arg)
+        if not appends:
+            return
+        appends.sort(key=lambda a: a.start_byte)
+        path = op_path
+        if path is None:
+            parts: list[str] = []
+            for a in appends:
+                lit = unquote(text(a, self.src)) if a.type in ("string_literal", "verbatim_string_literal", "character_literal") else None
+                if lit is None:
+                    if parts:                                   # before the path: the base URL
+                        parts.append("{param}")
+                    continue
+                parts.append(lit.split("?", 1)[0])
+                if "?" in lit:
+                    break
+            path = "".join(parts)
+        if verb in HTTP_METHODS and path and valid_path("/" + path.lstrip("/")):
+            self.add_call(next((a for a in appends if a.type == "string_literal"), appends[0]), verb,
+                          "/" + path.lstrip("/"), "generated-client")
 
     # -- the repo's own client wrappers: `HttpService.HttpGet<T>(string uri)` and the calls to it --------------
     def _wrapper(self, call: Node, method: str | None, arg_nodes: list[Node]) -> None:
@@ -463,12 +552,16 @@ class CsScanner(BaseScanner):
                 return
 
 
-def _tokens(path: str, controller: str, action: str) -> str:
-    """ASP.NET route tokens: `[controller]` is the class name without `Controller`, `[action]` the method name
-    without `Async` (`SuppressAsyncSuffixInActionNames`, on by default). Lowercased, the way clients write them: the
-    framework matches without case, the linker exactly (a case-insensitive match for ASP.NET routes is F0.5's)."""
-    path = re.sub(r"\[controller\]", lambda _: controller.lower(), path, flags=re.I)
-    return re.sub(r"\[action\]", lambda _: re.sub(r"async$", "", action.lower()), path, flags=re.I)
+def _tokens(path: str, controller: str, action: str, area: str = "") -> str:
+    """ASP.NET route tokens as the framework fills them — and as its OpenAPI and the clients generated from it write
+    them: `[controller]` is the class name without `Controller`, `[action]` the method name without `Async`
+    (`SuppressAsyncSuffixInActionNames`, on by default), `[area]` the controller's `[Area("..")]`. The parameters
+    `{controller}`, `{area}`, `{action}` are reserved: the router fixes them to the same values. The framework
+    matches without case; so does the linker for these routes."""
+    path = re.sub(r"\[controller\]|\{controller\}", lambda _: controller, path, flags=re.I)
+    if area:
+        path = re.sub(r"\[area\]|\{area\}", lambda _: area, path, flags=re.I)
+    return re.sub(r"\[action\]|\{action\}", lambda _: re.sub(r"Async$", "", action), path, flags=re.I)
 
 
 def _inherited_route(classes: dict[str, list], bases: tuple[str, ...]) -> str | None:

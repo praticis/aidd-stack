@@ -2,27 +2,27 @@
   "endpoints": [
     {
       "method": "POST",
-      "path": "/api/todos",
+      "path": "/api/Todos",
       "handler": "CreateAsync"
     },
     {
       "method": "PUT",
-      "path": "/api/todos/{todoId}",
+      "path": "/api/Todos/{todoId}",
       "handler": "ChangeAsync"
     },
     {
       "method": "GET",
-      "path": "/api/todos",
+      "path": "/api/Todos",
       "handler": "ListAsync"
     },
     {
       "method": "GET",
-      "path": "/api/todos/{todoId}/details",
+      "path": "/api/Todos/{todoId}/details",
       "handler": "FindByIdAsync"
     },
     {
       "method": "POST",
-      "path": "/api/activities",
+      "path": "/api/Activities",
       "handler": "RegisterActivityAsync"
     }
   ],

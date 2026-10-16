@@ -27,27 +27,27 @@
   },
   {
    "method": "GET",
-   "path": "/api/reports",
+   "path": "/api/Reports",
    "handler": "List"
   },
   {
    "method": "GET",
-   "path": "/api/reports/{id}",
+   "path": "/api/Reports/{id}",
    "handler": "Get"
   },
   {
    "method": "GET",
-   "path": "/devices",
+   "path": "/Devices",
    "handler": "GetDevices"
   },
   {
    "method": "GET",
-   "path": "/devices/Info",
+   "path": "/Devices/Info",
    "handler": "GetDeviceInfo"
   },
   {
    "method": "POST",
-   "path": "/devices/Options",
+   "path": "/Devices/Options",
    "handler": "UpdateOptions"
   },
   {
@@ -89,6 +89,46 @@
    "method": "GET",
    "path": "/Orders/recent",
    "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantId}/Members/List",
+   "handler": "ListAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/admin",
+   "handler": "Admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates",
+   "handler": "GetTemplates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}",
+   "handler": "GetTemplate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}",
+   "handler": "DeleteTemplate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates",
+   "handler": "GetTemplates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/{id}",
+   "handler": "GetTemplate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}/all",
+   "handler": "DeleteTemplate"
   }
  ],
  "calls": [
@@ -151,6 +191,18 @@
    "method": "GET",
    "path": "/catalog-items",
    "line": 16
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoItems/{id}",
+   "line": 14,
+   "caller": "UpdateAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}",
+   "line": 20,
+   "caller": "TenantsGETAsync"
   }
  ]
 }

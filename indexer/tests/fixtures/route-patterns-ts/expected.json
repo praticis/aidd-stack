@@ -131,6 +131,11 @@
    "method": "GET",
    "path": "/cases",
    "line": 73
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/topics/{topic}/events",
+   "line": 107
   }
  ]
 }

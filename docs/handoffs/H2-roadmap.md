@@ -26,14 +26,17 @@
   passo entre arquivos (`compose`); rotas C# P 94,6 → 100 %, R 72,9 → 93,1 % nos gabaritos. **Chamadas C# do
   item 5 (2026-10-15):** constante em template como segmentos inteiros e wrappers de cliente do próprio app;
   chamadas C# P 84 → 100 %, R 64 → 97 % (TS/JS R 31,5 → 45 % de carona); extração HTTP do corpus 672 → 98 s.
+  **NSwag do item 7 (2026-10-16), o último do .NET:** clientes NSwag C# (v13 e v14) e TS lidos, 3 apps .NET novos
+  no corpus (42 repos), `[controller]`/`[action]` na caixa declarada com o linker sem distinção de caixa para
+  ASP.NET, `[area]` e actions herdadas de base abstrata; C# com 10 repos: rotas R 96,9 %, chamadas R 99 %, P 100 %.
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-5/` — corpus v2, 39 repos, com as
-  chamadas C# do item 5 (a `-4` é a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-6/` — corpus v2, 42 repos, com o
+  NSwag do item 7 (a `-5` é a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -48,16 +51,16 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo (H2-D18):** o NSwag do item 7 — o último do .NET (`route-by-name-convention`, 10, fica para a
-  convenção do projeto; sobram 2 chamadas C#: `GetFromJsonAsync("User")` de um segmento só e um `UriBuilder`).
-  Depois
+- **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
+  projeto; 2 chamadas C#: `GetFromJsonAsync("User")` de um segmento só e um `UriBuilder`; e o roteamento
+  convencional do MVC, que serve páginas). Agora
   o item 2, etapa 2, que é o maior ganho de Go e Python — entre arquivos (`prefix-other-file`: Go 863, Python 230:
   o router exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1",
   apiv1.Routes())`) e helpers que recebem o router (`router-as-param`, Go 102) —, com o `route-chain` do Go (216)
   logo atrás. Cada arquivo deixa um **resumo** (routers que exporta, montagens com o nome importado, rotas por
   router) e um passo depois do scan compõe os resumos — nunca as árvores (F1.13). TS por último (`global-prefix`
-  238, `custom-registrar` 353, `prefix-in-client-wrapper`). O corpus tem só 7 repos C# de 39 (144 rotas esperadas,
-  contra 1495 de Go): para o .NET pesar o que pesa no portfólio, ampliar a fatia C# com apps reais junto do item 6.
+  238, `custom-registrar` 353, `prefix-in-client-wrapper`), com os outros geradores do item 7 (oazapfts,
+  openapi-generator, openapi-ts, go-swagger). A fatia C# passou a 10 repos (320 rotas esperadas, contra 1495 de Go).
 
 ## Decisões
 
@@ -186,8 +189,17 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   *(2026-10-15)* — primeiro passo entre arquivos (`facts` + `Pending` → `CsScanner.compose`); constante de classe
   por `Classe.NOME`; `nameof(X)` e variável local em interpolação do C#; `[action]` sem `Async`. Fixtures em
   `route-patterns-cs` (herança entre arquivos, base ambígua, FastEndpoints, ApiEndpoints)
-- [ ] **7. Clientes gerados** (H2-D9, aceito): oazapfts (immich), openapi-generator Go/TS (kratos), NSwag e
-  openapi-fetch (v1) — `via: generated-client`, fixture por gerador
+- [ ] **7. Clientes gerados** (H2-D9, aceito): `via: generated-client`, fixture por gerador
+  - [x] *(2026-10-16)* NSwag, C# e TS — o corpus não tinha nenhum (os do v1 são openapi-ts e go-swagger; o do
+    clean-arch-dotnet é gitignored), então entraram RapidBlazor, azure-saas e notifo. C#: arquivo com o cabeçalho do
+    NSwag (o `.g.cs` deixa de ser excluído quando é dele), path do `// Operation Path` (v14) ou dos
+    `urlBuilder_.Append` (v13), verbo do `request_.Method`. TS: o template do `fetch` já era lido; `path_of`
+    memoizado (profundidade 4 → 64, as cadeias `url_ = url_.replace(..)`/`url_ +=`) e verbo pela variável
+    `options_`. No caminho: caixa declarada + linker sem caixa para ASP.NET, `[area]` e `{area}`/`{controller}`/
+    `{action}` reservados, actions herdadas de base abstrata. Fixtures em `route-patterns-cs` (v13, v14, área, base
+    genérica) e `route-patterns-ts` (cliente NSwag)
+  - [ ] oazapfts (immich, 279), openapi-generator Go (kratos, 60), openapi-ts (fastapi-template, 23), go-swagger
+    (alertmanager, 9) — com Go/Python/TS, depois da etapa 2
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
   rotas por arquivo do Next.js, flask-restx
 - [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
@@ -205,9 +217,9 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda
   - custo do HTTP no netbox: 49 s de 107 s, com 0 rotas e 0 chamadas (zulip 17 s de 47 s) — perfilar junto do F1.13
 - [ ] Pendências do item 6, fora do corpus atual (medir quando a fatia .NET crescer):
-  - linker: rotas ASP.NET casadas sem distinção de caixa (F0.5) — o extrator mantém `[controller]` em minúsculas
-    porque o linker compara exato
-  - actions herdadas de controller base abstrato (CRUD genérico) — 0 no corpus
+  - [x] *(2026-10-16)* linker: rotas ASP.NET casadas sem distinção de caixa (F0.5); o extrator passou à caixa
+    declarada, a dos clientes gerados
+  - [x] *(2026-10-16)* actions herdadas de controller base abstrato (CRUD genérico) — notifo, 27 rotas
   - FastEndpoints: `RoutePrefix` global e `Group<T>()` — 0 no corpus
   - herança de `[Route]` em mais de um nível (H2-D10 decidiu um)
 - [ ] Pendências das chamadas C# (item 5):
@@ -388,3 +400,16 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   deixa de chutar homônimo quando o tipo do receiver é de pacote (só extensão do repo que estenda o tipo e caiba nos
   argumentos). Medido no grafo dos 4 repos .NET do corpus: bitwarden −5.684 +12.244 arestas, jellyfin −1.459 +367;
   o que sai é chute, o que entra é `receiver-type` e extensões do repo. Detalhe no log do ROADMAP.
+- **2026-10-16** — H2b, Fase 4 item 7, parte NSwag (o último do .NET, H2-D18). O corpus não tinha cliente NSwag
+  (a nota que dava NSwag no v1 estava errada: os do v1 são openapi-ts e go-swagger, e o do clean-arch-dotnet é
+  gitignored); entraram 3 apps .NET fixados por SHA (42 repos): RapidBlazor (v13), azure-saas (v14) e notifo (SDK
+  .NET v14 + cliente TS do front). Reconhecedor C# pelo cabeçalho do arquivo (`.g.cs` do NSwag deixa de ser
+  excluído na descoberta); no TS, `path_of` memoizado com profundidade 64 e verbo pela variável de opções. Os
+  clientes mostraram a caixa que o ASP.NET publica (`/api/TodoItems`): `[controller]`/`[action]` voltam à caixa
+  declarada e o linker casa rotas `aspnet`/`aspnet-minimal`/`fastendpoints` sem caixa (F0.5, ROADMAP); `[area]` e os
+  parâmetros reservados `{area}`/`{controller}`/`{action}`; actions de base abstrata servidas por cada derivado
+  (notifo 75 → 102 de 102). Diff contra `-5`: jellyfin, eShopOnWeb e bitwarden só na caixa (mesmo método,
+  evidência e path em minúsculas), nenhuma chamada, nenhum repo TS; gabaritos reescritos na caixa declarada.
+  Gabaritos novos pelas operações dos clientes + rotas escondidas por `IgnoreApi` lidas no código (H2-D15): 100/100
+  em rotas e chamadas nos três. C# (10 repos): rotas P 100 %, R 93,1 → 96,9 %; chamadas P 100 %, R 96,6 → 99,0 %.
+  Nova baseline `2026-10-16-v2-baseline-6`.

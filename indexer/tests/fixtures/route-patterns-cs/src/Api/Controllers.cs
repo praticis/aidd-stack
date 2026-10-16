@@ -22,3 +22,19 @@ public class ReportsController : ControllerBase
     [HttpGet("{id:int?}")]
     public IActionResult Get(int? id) => Ok();
 }
+
+[Area("Admin")]
+[Route("[area]/Tenants/{tenantId}/[controller]")]
+public class MembersController : Controller
+{
+    [HttpGet("[action]")]
+    public IActionResult ListAsync(string tenantId) => View();
+}
+
+[Area("Admin")]
+public class TenantsController : Controller
+{
+    [HttpGet]
+    [Route("{area}/{controller}/admin")]
+    public IActionResult Admin() => View();
+}

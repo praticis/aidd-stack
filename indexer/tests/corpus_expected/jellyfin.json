@@ -13,6 +13,42 @@
  },
  "endpoints": [
   {
+   "method": "GET",
+   "path": "/Backup"
+  },
+  {
+   "method": "POST",
+   "path": "/Backup/Create"
+  },
+  {
+   "method": "GET",
+   "path": "/Backup/Manifest"
+  },
+  {
+   "method": "POST",
+   "path": "/Backup/Restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/Devices"
+  },
+  {
+   "method": "GET",
+   "path": "/Devices"
+  },
+  {
+   "method": "GET",
+   "path": "/Devices/Info"
+  },
+  {
+   "method": "GET",
+   "path": "/Devices/Options"
+  },
+  {
+   "method": "POST",
+   "path": "/Devices/Options"
+  },
+  {
    "method": "POST",
    "path": "/Items/{itemId}"
   },
@@ -23,42 +59,6 @@
   {
    "method": "GET",
    "path": "/Items/{itemId}/MetadataEditor"
-  },
-  {
-   "method": "GET",
-   "path": "/backup"
-  },
-  {
-   "method": "POST",
-   "path": "/backup/Create"
-  },
-  {
-   "method": "GET",
-   "path": "/backup/Manifest"
-  },
-  {
-   "method": "POST",
-   "path": "/backup/Restore"
-  },
-  {
-   "method": "DELETE",
-   "path": "/devices"
-  },
-  {
-   "method": "GET",
-   "path": "/devices"
-  },
-  {
-   "method": "GET",
-   "path": "/devices/Info"
-  },
-  {
-   "method": "GET",
-   "path": "/devices/Options"
-  },
-  {
-   "method": "POST",
-   "path": "/devices/Options"
   }
  ],
  "calls": [
@@ -105,7 +105,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/ChannelsController.cs:83",
     "method": "GET",
-    "path": "/channels/Features",
+    "path": "/Channels/Features",
     "raw": "/Features",
     "ok": true,
     "category": null
@@ -113,7 +113,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/ChannelsController.cs:96",
     "method": "GET",
-    "path": "/channels/{channelId}/Features",
+    "path": "/Channels/{channelId}/Features",
     "raw": "/{channelId}/Features",
     "ok": true,
     "category": null
@@ -201,7 +201,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/LiveTvController.cs:468",
     "method": "GET",
-    "path": "/livetv/Timers/Defaults",
+    "path": "/LiveTv/Timers/Defaults",
     "raw": "/Timers/Defaults",
     "ok": true,
     "category": null
@@ -209,7 +209,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/LiveTvController.cs:835",
     "method": "POST",
-    "path": "/livetv/Timers",
+    "path": "/LiveTv/Timers",
     "raw": "/Timers",
     "ok": true,
     "category": null
@@ -217,7 +217,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/PlaylistsController.cs:277",
     "method": "POST",
-    "path": "/playlists/{playlistId}/Users/{userId}",
+    "path": "/Playlists/{playlistId}/Users/{userId}",
     "raw": "/{playlistId}/Users/{userId}",
     "ok": true,
     "category": null
@@ -225,7 +225,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/QuickConnectController.cs:104",
     "method": "POST",
-    "path": "/quickconnect/Authorize",
+    "path": "/QuickConnect/Authorize",
     "raw": "/Authorize",
     "ok": true,
     "category": null
@@ -233,7 +233,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/StartupController.cs:74",
     "method": "POST",
-    "path": "/startup/Configuration",
+    "path": "/Startup/Configuration",
     "raw": "/Configuration",
     "ok": true,
     "category": null
@@ -241,7 +241,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/SyncPlayController.cs:158",
     "method": "POST",
-    "path": "/syncplay/SetPlaylistItem",
+    "path": "/SyncPlay/SetPlaylistItem",
     "raw": "/SetPlaylistItem",
     "ok": true,
     "category": null
@@ -249,7 +249,7 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/SystemController.cs:146",
     "method": "GET",
-    "path": "/system/Logs",
+    "path": "/System/Logs",
     "raw": "/Logs",
     "ok": true,
     "category": null

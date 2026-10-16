@@ -2,12 +2,12 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/api/rollups",
+   "path": "/api/Rollups",
    "handler": "GetAsync"
   },
   {
    "method": "PUT",
-   "path": "/api/rollups/{rollupDay}/reset",
+   "path": "/api/Rollups/{rollupDay}/reset",
    "handler": "ResetAsync"
   }
  ],

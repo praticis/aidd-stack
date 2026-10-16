@@ -4,7 +4,7 @@
 (`PackageContext.route_const`, filled by `collect_constants`), concatenation, templates (f"", $"", `${}`),
 Sprintf/Format/format, Join/urljoin/Combine, Replace/Trim, `new Uri(...)`, request objects (`{url: ...}`) and
 `x += e`. `method_from_args` reads the verb from literals, `http.MethodX` / `HttpMethod.X`, a `method` key or keyword,
-or a local holding one. The scanner mixes this in (it needs `src`, `ctx` and `scopes`).
+or a local holding one. The scanner mixes this in (it needs `src`, `ctx`, `scopes` and a `_path_memo` dict).
 """
 
 from __future__ import annotations
@@ -153,9 +153,16 @@ class PathExpressions:
 
     def path_of(self, n: Node, lenient: bool = False, _depth: int = 0) -> str | None:
         """Best-effort path template for an argument expression, or None when it is not path-like.
-        `lenient` (outbound-call arguments): accept `items/{id}` style relative paths too."""
-        if _depth > 4:
-            return None
+        `lenient` (outbound-call arguments): accept `items/{id}` style relative paths too. Each expression is read once
+        per file (memoized), so a long chain of reassignments — NSwag's `url_ = url_.replace(..)` and `url_ += "q=" ..`,
+        two steps per parameter — costs one pass, and the depth guard only stops a pathological one."""
+        memo = self._path_memo
+        key = (n.id, lenient)
+        if key not in memo:
+            memo[key] = None if _depth > 64 else self._path_of(n, lenient, _depth)
+        return memo[key]
+
+    def _path_of(self, n: Node, lenient: bool, _depth: int) -> str | None:
         t = n.type
         if t in STRING_NODES:
             return self._path_of_string(n, lenient, _depth)
@@ -399,6 +406,9 @@ class PathExpressions:
                 if v:
                     return v
         for a in arg_nodes[:4]:
+            if a.type == "identifier":                      # `let options_ = {method: "POST", ..}; fetch(url_, options_)`
+                bound, val = self.scopes.binding(a)
+                a = val if bound and val is not None and val.type in OBJECT_NODES else a
             txt = text(a, self.src)
             if a.type in STRING_NODES and unquote(txt).upper() in HTTP_METHODS:
                 return unquote(txt).upper()

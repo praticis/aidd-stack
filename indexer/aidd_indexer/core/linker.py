@@ -5,8 +5,8 @@ Pure functions over rows already in the graph — no Neo4j here, so the rules ar
 
 Rules, in order of confidence:
 
-* `exact`  — same tenant, compatible method (equal, or `ANY` on either side), equal `path_key`,
-             endpoint exposed by a service other than the caller's.
+* `exact`  — same tenant, compatible method (equal, or `ANY` on either side), equal `path_key` (without case for
+             an ASP.NET route, as the framework matches), endpoint exposed by a service other than the caller's.
 * `suffix` — only when nothing matches exactly: one `path_key` is a segment-aligned suffix of the
              other (`/v1/orders/{param}` × `/api/v1/orders/{param}` — a base URL with a prefix),
              **and** a hint (`target_hint` / `env_hints`) names the provider. A bare suffix is too
@@ -33,12 +33,17 @@ GENERIC_TOKENS = frozenset({"api", "svc", "service", "services", "url", "base", 
                             "http", "https", "client", "gateway", "app", "server", "internal", "v1", "v2", "v3"})
 
 
+# Frameworks that match a request path without case (`/api/TodoItems` is `/api/todoitems`): ASP.NET routing.
+CASE_INSENSITIVE = frozenset({"aspnet", "aspnet-minimal", "fastendpoints"})
+
+
 @dataclass(frozen=True)
 class EndpointRow:
     id: str
     service: str
     method: str
     path_key: str
+    framework: str = ""
 
 
 @dataclass(frozen=True)
@@ -107,13 +112,18 @@ def hinted_services(call: CallRow, services: set[str]) -> set[str]:
     return {s for s in services if hint_matches(call.target_hint, s) or any(hint_matches(h, s) for h in call.env_hints)}
 
 
+def _keys(call: CallRow, e: EndpointRow) -> tuple[str, str]:
+    """The two path keys as the endpoint's framework compares them (ASP.NET: without case)."""
+    return (call.path_key.lower(), e.path_key.lower()) if e.framework in CASE_INSENSITIVE else (call.path_key, e.path_key)
+
+
 def _candidates(call: CallRow, endpoints: list[EndpointRow]) -> tuple[list[EndpointRow], str]:
     usable = [e for e in endpoints if e.service != call.repo and methods_compatible(call.method, e.method)]
-    exact = [e for e in usable if e.path_key == call.path_key]
+    exact = [e for e in usable if (k := _keys(call, e))[0] == k[1]]
     if exact:
         return exact, "exact"
     suffix = [e for e in usable
-              if is_segment_suffix(call.path_key, e.path_key) or is_segment_suffix(e.path_key, call.path_key)]
+              if is_segment_suffix(*(k := _keys(call, e))) or is_segment_suffix(k[1], k[0])]
     corroborated = hinted_services(call, {e.service for e in suffix})
     return [e for e in suffix if e.service in corroborated], "suffix"
 

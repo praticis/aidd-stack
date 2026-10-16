@@ -1,8 +1,8 @@
 {
   "endpoints": [
-    {"method": "POST", "path": "/api/projects", "handler": "CreateAsync"},
-    {"method": "PUT", "path": "/api/projects/{projectId}/archive", "handler": "ArchiveAsync"},
-    {"method": "GET", "path": "/api/projects/{projectId}/details", "handler": "FindByIdAsync"}
+    {"method": "POST", "path": "/api/Projects", "handler": "CreateAsync"},
+    {"method": "PUT", "path": "/api/Projects/{projectId}/archive", "handler": "ArchiveAsync"},
+    {"method": "GET", "path": "/api/Projects/{projectId}/details", "handler": "FindByIdAsync"}
   ],
   "calls": [
     {

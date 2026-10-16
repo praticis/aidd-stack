@@ -1,7 +1,7 @@
 {
   "endpoints": [
-    {"method": "GET", "path": "/api/summaries", "handler": "GetAsync"},
-    {"method": "PUT", "path": "/api/summaries/{summaryDay}/reset", "handler": "ResetAsync"}
+    {"method": "GET", "path": "/api/Summaries", "handler": "GetAsync"},
+    {"method": "PUT", "path": "/api/Summaries/{summaryDay}/reset", "handler": "ResetAsync"}
   ],
   "calls": [
     {

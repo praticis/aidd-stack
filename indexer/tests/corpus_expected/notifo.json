@@ -1,0 +1,1255 @@
+{
+ "source": {
+  "endpoints": "nswag + manual",
+  "calls": "nswag"
+ },
+ "sha": "54da324ff6f4c51ca959751bdc6572e20c10a6e4",
+ "spec": [
+  "/corpus/repos/notifo/tools/sdk-dotnet/Notifo.SDK/Generated.cs",
+  "/corpus/repos/notifo/frontend/src/app/service/service.ts"
+ ],
+ "scope": {
+  "endpoints": [
+   "backend/src/Notifo/Areas/Api/Controllers/"
+  ],
+  "calls": [
+   "tools/sdk-dotnet/Notifo.SDK/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/apps"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/auth"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/contributors"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/contributors/{contributorId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/properties"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates/render"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/email-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}/preview"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/integration"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/integrations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/integrations/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/integrations/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/logs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/media"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/media"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/media/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/media/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/messaging-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates/properties"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/messaging-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/messaging-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/sms-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/properties"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/sms-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/templates"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/templates/{code}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/topics"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/topics"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/topics/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users/{id}/allowed-topics"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/allowed-topics/{prefix}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/mobilepush/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions/{prefix}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/webpush/{endpoint}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/asset/{appId}/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/proxy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{appId}/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/callback"
+  },
+  {
+   "method": "POST",
+   "path": "/api/callback"
+  },
+  {
+   "method": "GET",
+   "path": "/api/diagnostics/dump"
+  },
+  {
+   "method": "GET",
+   "path": "/api/diagnostics/gcdump"
+  },
+  {
+   "method": "GET",
+   "path": "/api/email-preferences"
+  },
+  {
+   "method": "POST",
+   "path": "/api/email-preferences"
+  },
+  {
+   "method": "GET",
+   "path": "/api/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/integrations/image/{type}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/languages"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/mobilepush"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/mobilepush"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/me/mobilepush/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications/archive"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications/device"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/notifications/handled"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/subscriptions/{prefix}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/subscriptions/{topic}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/topics"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/web/connect"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/web/poll"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/me/webpush"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/webpush"
+  },
+  {
+   "method": "GET",
+   "path": "/api/mjml/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/mobilepush"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/mobilepush/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/system-users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}/lock"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}/unlock"
+  },
+  {
+   "method": "GET",
+   "path": "/api/timezones"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tracking/notifications/{id}/confirm"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tracking/notifications/{id}/confirm"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tracking/notifications/{id}/delivered"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tracking/notifications/{id}/delivered"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tracking/notifications/{id}/delivered"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tracking/notifications/{id}/seen"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tracking/notifications/{id}/seen"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tracking/notifications/{id}/seen"
+  },
+  {
+   "method": "POST",
+   "path": "/api/web/register"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/webpush"
+  },
+  {
+   "method": "POST",
+   "path": "/api/webpush"
+  },
+  {
+   "method": "GET",
+   "path": "/ping"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/apps"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/auth"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/contributors"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/contributors/{contributorId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/properties"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates/render"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/email-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/email-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}/preview"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/integration"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/integrations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/integrations/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/integrations/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/logs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/media"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/media"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/media/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/media/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/messaging-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates/properties"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/messaging-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/messaging-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/messaging-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/messaging-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/sms-templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/properties"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/sms-templates/{code}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}/{language}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/apps/{appId}/sms-templates/{code}/{language}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/templates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/templates"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/templates/{code}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/topics"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/topics"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/topics/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users/{id}/allowed-topics"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/allowed-topics/{prefix}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/mobilepush/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/subscriptions/{prefix}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/users/{id}/webpush/{endpoint}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/asset/{appId}/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/proxy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/assets/{appId}/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/diagnostics/dump"
+  },
+  {
+   "method": "GET",
+   "path": "/api/diagnostics/gcdump"
+  },
+  {
+   "method": "GET",
+   "path": "/api/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/languages"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/mobilepush"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/mobilepush"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/me/mobilepush/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications/archive"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/notifications/device"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/notifications/handled"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/subscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/me/subscriptions/{prefix}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/subscriptions/{topic}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/me/topics"
+  },
+  {
+   "method": "GET",
+   "path": "/api/mjml/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/system-users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}/lock"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/system-users/{id}/unlock"
+  },
+  {
+   "method": "GET",
+   "path": "/api/timezones"
+  },
+  {
+   "method": "GET",
+   "path": "/ping"
+  }
+ ],
+ "notes": "Endpoints: the operations of the NSwag-generated .NET SDK (tools/sdk-dotnet/Notifo.SDK/Generated.cs, NSwag v14 with // Operation Path comments: 102) — the same 102 the generated TypeScript client of the frontend has (frontend/src/app/service/service.ts) — plus 22 routes hidden from the OpenAPI document by [ApiExplorerSettings(IgnoreApi = true)] (web push, mobile push, callbacks, email preferences, tracking pixels, web connect/poll, registration) or living on a plain Controller (integrations image). Scope backend/src/Notifo/Areas/Api/Controllers/ (the Account area is the identity pages). The three channel-template controllers (email, messaging, SMS) declare no actions: each serves the 9 of the generic abstract base ChannelTemplatesController<T, TDto> under its own [Route] (27 routes, evidence on the base's lines). Calls: the 102 operations of the .NET SDK (C#); the TypeScript client extracts the same 102 and is covered by the sample and the baseline. The other calls are the integrations' third-party APIs and the test suite. Added 2026-10-16 with H2b item 7 (NSwag).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Apps/AppsController.cs:166",
+    "method": "POST",
+    "path": "/api/apps/{appId}/contributors/{contributorId}",
+    "raw": "/api/apps/{appId:notEmpty}/contributors/{contributorId:notEmpty}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Apps/AppsController.cs:203",
+    "method": "POST",
+    "path": "/api/apps/{appId}/integration",
+    "raw": "/api/apps/{appId:notEmpty}/integration",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/ChannelTemplates/ChannelTemplatesController.cs:147",
+    "method": "PUT",
+    "path": "/api/apps/{appId}/email-templates/{code}/{language}",
+    "raw": "{code:notEmpty}/{language:notEmpty}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/ChannelTemplates/ChannelTemplatesController.cs:184",
+    "method": "DELETE",
+    "path": "/api/apps/{appId}/email-templates/{code}",
+    "raw": "{code:notEmpty}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/ChannelTemplates/ChannelTemplatesController.cs:30",
+    "method": "GET",
+    "path": "/api/apps/{appId}/messaging-templates",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/ChannelTemplates/ChannelTemplatesController.cs:30",
+    "method": "GET",
+    "path": "/api/apps/{appId}/sms-templates",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/ChannelTemplates/ChannelTemplatesController.cs:50",
+    "method": "GET",
+    "path": "/api/apps/{appId}/sms-templates/properties",
+    "raw": "properties",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Diagnostics/DiagnosticsController.cs:45",
+    "method": "GET",
+    "path": "/api/diagnostics/gcdump",
+    "raw": "/api/diagnostics/gcdump",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Media/MediaController.cs:60",
+    "method": "GET",
+    "path": "/api/asset/{appId}/{fileName}",
+    "raw": "/api/asset/{appId:notEmpty}/{fileName:notEmpty}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/MobilePush/MobilePushController.cs:62",
+    "method": "POST",
+    "path": "/api/me/mobilepush",
+    "raw": "/api/me/mobilepush",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Notifications/NotificationsController.cs:139",
+    "method": "POST",
+    "path": "/api/me/notifications/handled",
+    "raw": "/api/me/notifications/handled",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Notifications/NotificationsController.cs:33",
+    "method": "GET",
+    "path": "/api/apps/{appId}/notifications",
+    "raw": "/api/apps/{appId:notEmpty}/notifications",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Notifications/NotificationsController.cs:56",
+    "method": "GET",
+    "path": "/api/apps/{appId}/users/{id}/notifications",
+    "raw": "/api/apps/{appId:notEmpty}/users/{id:notEmpty}/notifications",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Notifications/NotificationsController.cs:76",
+    "method": "GET",
+    "path": "/api/me/notifications",
+    "raw": "/api/me/notifications",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Templates/TemplatesController.cs:74",
+    "method": "DELETE",
+    "path": "/api/apps/{appId}/templates/{code}",
+    "raw": "/api/apps/{appId:notEmpty}/templates/{code:notEmpty}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Tracking/TrackingController.cs:35",
+    "method": "GET",
+    "path": "/api/tracking/notifications/{id}/delivered",
+    "raw": "/api/tracking/notifications/{id:notEmpty}/delivered",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Tracking/TrackingController.cs:36",
+    "method": "PUT",
+    "path": "/api/tracking/notifications/{id}/delivered",
+    "raw": "/api/tracking/notifications/{id:notEmpty}/delivered",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Tracking/TrackingController.cs:46",
+    "method": "POST",
+    "path": "/api/tracking/notifications/{id}/confirm",
+    "raw": "/api/tracking/notifications/{id:notEmpty}/confirm",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/Users/UserController.cs:100",
+    "method": "GET",
+    "path": "/api/me/subscriptions",
+    "raw": "/api/me/subscriptions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:backend/src/Notifo/Areas/Api/Controllers/WebPush/WebPushController.cs:18",
+    "method": "POST",
+    "path": "/api/me/webpush",
+    "raw": "/api/me/webpush",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:1430",
+    "method": "POST",
+    "path": "/api/apps/{appId}/templates",
+    "raw": "/api/apps/{appId}/templates",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:1608",
+    "method": "POST",
+    "path": "/api/system-users",
+    "raw": "/api/system-users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:2538",
+    "method": "POST",
+    "path": "/api/me/mobilepush",
+    "raw": "/api/me/mobilepush",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:3199",
+    "method": "GET",
+    "path": "/api/assets/proxy",
+    "raw": "/api/assets/proxy?{param}{param}{param}{param}{param}{param}{param}{param}{param}{param}{param}{param}{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:3810",
+    "method": "GET",
+    "path": "/api/mjml/schema",
+    "raw": "/api/mjml/schema",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:393",
+    "method": "POST",
+    "path": "/api/me/subscriptions/{prefix}",
+    "raw": "/api/me/subscriptions/{prefix}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:4166",
+    "method": "GET",
+    "path": "/api/apps/{appId}/email-templates/{id}",
+    "raw": "/api/apps/{appId}/email-templates/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:4227",
+    "method": "POST",
+    "path": "/api/apps/{appId}/email-templates/{code}",
+    "raw": "/api/apps/{appId}/email-templates/{code}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:4487",
+    "method": "DELETE",
+    "path": "/api/apps/{appId}/email-templates/{code}/{language}",
+    "raw": "/api/apps/{appId}/email-templates/{code}/{language}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:frontend/src/app/service/service.ts:598",
+    "method": "GET",
+    "path": "/api/apps/{appId}/users/{id}",
+    "raw": "/api/apps/{appId}/users/{id}?{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:11101",
+    "method": "GET",
+    "path": "/api/apps/{appId}/messaging-templates",
+    "raw": "/api/apps/{appId}/messaging-templates",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:11428",
+    "method": "GET",
+    "path": "/api/apps/{appId}/messaging-templates/{id}",
+    "raw": "/api/apps/{appId}/messaging-templates/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:14167",
+    "method": "PUT",
+    "path": "/api/apps/{appId}/auth",
+    "raw": "/api/apps/{appId}/auth",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:1462",
+    "method": "GET",
+    "path": "/api/apps/{appId}/users/{id}",
+    "raw": "/api/apps/{appId}/users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:2671",
+    "method": "GET",
+    "path": "/api/apps/{appId}/topics",
+    "raw": "/api/apps/{appId}/topics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:3307",
+    "method": "POST",
+    "path": "/api/apps/{appId}/templates",
+    "raw": "/api/apps/{appId}/templates",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:532",
+    "method": "GET",
+    "path": "/api/me/subscriptions",
+    "raw": "/api/me/subscriptions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:5551",
+    "method": "GET",
+    "path": "/api/me/notifications/archive",
+    "raw": "/api/me/notifications/archive",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:5756",
+    "method": "POST",
+    "path": "/api/me/notifications/handled",
+    "raw": "/api/me/notifications/handled",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "notifo:tools/sdk-dotnet/Notifo.SDK/Generated.cs:6036",
+    "method": "GET",
+    "path": "/api/me/mobilepush",
+    "raw": "/api/me/mobilepush",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

@@ -11,6 +11,106 @@
  },
  "endpoints": [
   {
+   "method": "GET",
+   "path": "/Manage/ChangePassword"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/ChangePassword"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/Disable2fa"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/Disable2faWarning"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/EnableAuthenticator"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/EnableAuthenticator"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/ExternalLogins"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/GenerateRecoveryCodes"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/GenerateRecoveryCodesWarning"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/LinkLogin"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/LinkLoginCallback"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/MyAccount"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/MyAccount"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/RemoveLogin"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/ResetAuthenticator"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/ResetAuthenticatorWarning"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/SendVerificationEmail"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/SetPassword"
+  },
+  {
+   "method": "POST",
+   "path": "/Manage/SetPassword"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/ShowRecoveryCodes"
+  },
+  {
+   "method": "GET",
+   "path": "/Manage/TwoFactorAuthentication"
+  },
+  {
+   "method": "GET",
+   "path": "/Order/Detail/{orderId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Order/MyOrders"
+  },
+  {
+   "method": "GET",
+   "path": "/User"
+  },
+  {
+   "method": "POST",
+   "path": "/User/Logout"
+  },
+  {
    "method": "POST",
    "path": "/api/authenticate"
   },
@@ -41,106 +141,6 @@
   {
    "method": "GET",
    "path": "/api/catalog-types"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/changepassword"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/changepassword"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/disable2fa"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/disable2fawarning"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/enableauthenticator"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/enableauthenticator"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/externallogins"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/generaterecoverycodes"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/generaterecoverycodeswarning"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/linklogin"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/linklogincallback"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/myaccount"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/myaccount"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/removelogin"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/resetauthenticator"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/resetauthenticatorwarning"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/sendverificationemail"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/setpassword"
-  },
-  {
-   "method": "POST",
-   "path": "/manage/setpassword"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/showrecoverycodes"
-  },
-  {
-   "method": "GET",
-   "path": "/manage/twofactorauthentication"
-  },
-  {
-   "method": "GET",
-   "path": "/order/detail/{orderId}"
-  },
-  {
-   "method": "GET",
-   "path": "/order/myorders"
-  },
-  {
-   "method": "GET",
-   "path": "/user"
-  },
-  {
-   "method": "POST",
-   "path": "/user/Logout"
   }
  ],
  "calls": [
@@ -208,7 +208,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:106",
     "method": "POST",
-    "path": "/manage/sendverificationemail",
+    "path": "/Manage/SendVerificationEmail",
     "raw": "manage/sendverificationemail",
     "ok": true,
     "category": null
@@ -216,7 +216,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:136",
     "method": "GET",
-    "path": "/manage/changepassword",
+    "path": "/Manage/ChangePassword",
     "raw": "manage/changepassword",
     "ok": true,
     "category": null
@@ -224,7 +224,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:155",
     "method": "POST",
-    "path": "/manage/changepassword",
+    "path": "/Manage/ChangePassword",
     "raw": "manage/changepassword",
     "ok": true,
     "category": null
@@ -232,7 +232,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:185",
     "method": "GET",
-    "path": "/manage/setpassword",
+    "path": "/Manage/SetPassword",
     "raw": "manage/setpassword",
     "ok": true,
     "category": null
@@ -240,7 +240,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:233",
     "method": "GET",
-    "path": "/manage/externallogins",
+    "path": "/Manage/ExternalLogins",
     "raw": "manage/externallogins",
     "ok": true,
     "category": null
@@ -248,7 +248,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:265",
     "method": "GET",
-    "path": "/manage/linklogincallback",
+    "path": "/Manage/LinkLoginCallback",
     "raw": "manage/linklogincallback",
     "ok": true,
     "category": null
@@ -256,7 +256,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:337",
     "method": "GET",
-    "path": "/manage/disable2fawarning",
+    "path": "/Manage/Disable2faWarning",
     "raw": "manage/disable2fawarning",
     "ok": true,
     "category": null
@@ -264,7 +264,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:354",
     "method": "POST",
-    "path": "/manage/disable2fa",
+    "path": "/Manage/Disable2fa",
     "raw": "manage/disable2fa",
     "ok": true,
     "category": null
@@ -272,7 +272,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:374",
     "method": "GET",
-    "path": "/manage/enableauthenticator",
+    "path": "/Manage/EnableAuthenticator",
     "raw": "manage/enableauthenticator",
     "ok": true,
     "category": null
@@ -280,7 +280,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:389",
     "method": "GET",
-    "path": "/manage/showrecoverycodes",
+    "path": "/Manage/ShowRecoveryCodes",
     "raw": "manage/showrecoverycodes",
     "ok": true,
     "category": null
@@ -288,7 +288,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:403",
     "method": "POST",
-    "path": "/manage/enableauthenticator",
+    "path": "/Manage/EnableAuthenticator",
     "raw": "manage/enableauthenticator",
     "ok": true,
     "category": null
@@ -296,7 +296,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:440",
     "method": "GET",
-    "path": "/manage/resetauthenticatorwarning",
+    "path": "/Manage/ResetAuthenticatorWarning",
     "raw": "manage/resetauthenticatorwarning",
     "ok": true,
     "category": null
@@ -304,7 +304,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:446",
     "method": "POST",
-    "path": "/manage/resetauthenticator",
+    "path": "/Manage/ResetAuthenticator",
     "raw": "manage/resetauthenticator",
     "ok": true,
     "category": null
@@ -312,7 +312,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:463",
     "method": "POST",
-    "path": "/manage/generaterecoverycodes",
+    "path": "/Manage/GenerateRecoveryCodes",
     "raw": "manage/generaterecoverycodes",
     "ok": true,
     "category": null
@@ -320,7 +320,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/ManageController.cs:67",
     "method": "POST",
-    "path": "/manage/myaccount",
+    "path": "/Manage/MyAccount",
     "raw": "manage/myaccount",
     "ok": true,
     "category": null
@@ -328,7 +328,7 @@
    {
     "evidence": "eshop-on-web:src/Web/Controllers/OrderController.cs:22",
     "method": "GET",
-    "path": "/order/myorders",
+    "path": "/Order/MyOrders",
     "raw": "order/myorders",
     "ok": true,
     "category": null

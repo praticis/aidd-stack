@@ -81,3 +81,29 @@ export async function adminRequest(endpoint: string) {
   const separator = endpoint.includes('?') ? '&' : '?';
   return fetch(`${GHOST_URL}/ghost/api/admin/${endpoint}${separator}god_mode=true`); // the rest of the path is the caller's
 }
+
+// An NSwag-generated client (fetch template): each path parameter adds a `url_ = url_.replace(..)` step, and the
+// verb lives in the options object assigned before the call.
+export class EventsClient {
+  constructor(private baseUrl: string, private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {}
+
+  postEvents(appId: string, topic: string, request: unknown): Promise<Response> {
+    let url_ = this.baseUrl + "/api/apps/{appId}/topics/{topic}/events?";
+    if (appId === undefined || appId === null)
+      throw new globalThis.Error("The parameter 'appId' must be defined.");
+    url_ = url_.replace("{appId}", encodeURIComponent("" + appId));
+    url_ = url_.replace("{topic}", encodeURIComponent("" + topic));
+    url_ += "take=" + encodeURIComponent("" + 10) + "&";
+    url_ += "skip=" + encodeURIComponent("" + 0) + "&";
+    url_ += "query=" + encodeURIComponent("" + topic) + "&";
+    url_ += "scope=" + encodeURIComponent("" + appId) + "&";
+    url_ = url_.replace(/[?&]$/, "");
+    const content_ = JSON.stringify(request);
+    let options_: RequestInit = {
+      body: content_,
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    };
+    return this.http.fetch(url_, options_);
+  }
+}
