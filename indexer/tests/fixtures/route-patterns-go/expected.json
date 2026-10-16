@@ -209,6 +209,76 @@
    "method": "HEAD",
    "path": "/",
    "handler": "uiIndex"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "handler": "postProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "HEAD",
+   "path": "/profiles/{id}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}",
+   "handler": "deleteProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/oauth",
+   "handler": "oauthMetadata"
+  },
+  {
+   "method": "ANY",
+   "path": "/sum",
+   "handler": "sum"
+  },
+  {
+   "method": "ANY",
+   "path": "/concat",
+   "handler": "concat"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/sum",
+   "handler": "sum"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/concat",
+   "handler": "concat"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications",
+   "handler": "listNotifications"
+  },
+  {
+   "method": "PUT",
+   "path": "/notifications",
+   "handler": "readNotifications"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications/threads/{id}",
+   "handler": "getThread"
+  },
+  {
+   "method": "PATCH",
+   "path": "/notifications/threads/{id}",
+   "handler": "readThread"
+  },
+  {
+   "method": "DELETE",
+   "path": "/token",
+   "handler": "deleteToken"
   }
  ],
  "calls": [

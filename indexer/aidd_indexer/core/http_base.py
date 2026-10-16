@@ -32,7 +32,7 @@ from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / i
 from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg, valid_path  # noqa: F401 — re-exported
 from .http_mounts import MountedRoot, MountGraph, RouterKey, compose as compose_mounts
 from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODES, STRING_NODES,  # noqa: F401
-                         FUNCTION_SCOPES, has_interpolation)
+                         FUNCTION_SCOPES, has_interpolation, member)
 from .http_scope import END, Scopes, scope_id
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
@@ -420,6 +420,22 @@ class BaseScanner(PathExpressions):
             return lit
         if self.relative_on_groups and pre is not None and PATH_LITERAL.match("/" + masked):
             return "/" + lit
+        return None
+
+    def route_chain(self, n: Node, builders: set[str], verbs: dict[str, str]) -> tuple[str, Node, Node] | None:
+        """A verb of a route chain — gitea `m.Combo("/x").Get(h).Put(h)`, express `router.route('/x').get(h).post(h)`:
+        every verb is a route on the builder's path. (the verb's method, the builder call, its receiver) when `n` is
+        one, whatever verbs come between them; None otherwise."""
+        obj, field = member(n.child_by_field_name("function"))
+        method = verbs.get(text(field, self.src)) if field is not None else None
+        while method is not None and obj is not None and obj.type in CALL_NODES:
+            recv, link = member(obj.child_by_field_name("function"))
+            name = text(link, self.src) if link is not None else ""
+            if name in builders and recv is not None:
+                return method, obj, recv
+            if name not in verbs:
+                return None
+            obj = recv
         return None
 
     # -- route vs. client ----------------------------------------------------------------------

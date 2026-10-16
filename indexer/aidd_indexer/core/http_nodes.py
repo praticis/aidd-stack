@@ -33,6 +33,14 @@ HANDLER_NODES = frozenset({"func_literal", "arrow_function", "function_expressio
 NON_HANDLER_NODES = STRING_NODES | {"nil", "null", "none", "number", "int_literal", "integer", "float_literal", "true", "false",
                                     "composite_literal", "object", "array", "dictionary", "list", "object_creation_expression",
                                     "unary_expression", "boolean_literal", "null_literal", "character_literal"}
+MEMBER_FIELDS = {"selector_expression": ("operand", "field"), "member_expression": ("object", "property"),
+                 "attribute": ("object", "attribute"), "member_access_expression": ("expression", "name")}   # `x.f`
+
+
+def member(n: Node | None) -> tuple[Node | None, Node | None]:
+    """`x.f` as (x, f) in any of the languages; (None, None) for anything else."""
+    fields = MEMBER_FIELDS.get(n.type) if n is not None else None
+    return (n.child_by_field_name(fields[0]), n.child_by_field_name(fields[1])) if fields else (None, None)
 
 
 def has_interpolation(n: Node) -> bool:

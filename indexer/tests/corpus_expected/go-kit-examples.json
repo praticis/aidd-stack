@@ -4,13 +4,11 @@
  "endpoints": [
   {
    "method": "ANY",
-   "path": "/addsvc/concat",
-   "category": "prefix-other-file"
+   "path": "/addsvc/concat"
   },
   {
    "method": "ANY",
-   "path": "/addsvc/sum",
-   "category": "prefix-other-file"
+   "path": "/addsvc/sum"
   },
   {
    "method": "GET",
@@ -58,48 +56,39 @@
   },
   {
    "method": "POST",
-   "path": "/profiles",
-   "category": "route-chain"
+   "path": "/profiles"
   },
   {
    "method": "DELETE",
-   "path": "/profiles/{id}",
-   "category": "route-chain"
+   "path": "/profiles/{id}"
   },
   {
    "method": "GET",
-   "path": "/profiles/{id}",
-   "category": "route-chain"
+   "path": "/profiles/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/profiles/{id}",
-   "category": "route-chain"
+   "path": "/profiles/{id}"
   },
   {
    "method": "PUT",
-   "path": "/profiles/{id}",
-   "category": "route-chain"
+   "path": "/profiles/{id}"
   },
   {
    "method": "GET",
-   "path": "/profiles/{id}/addresses",
-   "category": "route-chain"
+   "path": "/profiles/{id}/addresses"
   },
   {
    "method": "POST",
-   "path": "/profiles/{id}/addresses",
-   "category": "route-chain"
+   "path": "/profiles/{id}/addresses"
   },
   {
    "method": "DELETE",
-   "path": "/profiles/{id}/addresses/{addressID}",
-   "category": "route-chain"
+   "path": "/profiles/{id}/addresses/{addressID}"
   },
   {
    "method": "GET",
-   "path": "/profiles/{id}/addresses/{addressID}",
-   "category": "route-chain"
+   "path": "/profiles/{id}/addresses/{addressID}"
   },
   {
    "method": "ANY",
@@ -179,7 +168,7 @@
    "category": "url-object-builder"
   }
  ],
- "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None is extracted. Since the v2 cheap fixes (2026-10-15): http.Handle on the default mux is a route, and a ServeMux pattern ending in / is a mount, not a route.",
+ "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file) — both found since H2b item 4 (2026-10-16), and /sum, /concat stay because addsvc's main serves the same handler (http.Serve). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None is extracted. Since the v2 cheap fixes (2026-10-15): http.Handle on the default mux is a route, and a ServeMux pattern ending in / is a mount, not a route.",
  "checked": {
   "endpoints": [
    {

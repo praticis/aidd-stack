@@ -1,5 +1,5 @@
-"""Go: net/http (>= 1.22 method patterns), gorilla `.Methods()`, chi, gin/echo (+Group), fiber routes;
-net/http / resty / PostJSON-like helpers outbound."""
+"""Go: net/http (>= 1.22 method patterns), gorilla `.Methods()` and its route builder, chi, gin/echo (+Group), fiber
+routes, gitea's `Combo`; net/http / resty / PostJSON-like helpers outbound."""
 
 from __future__ import annotations
 
@@ -8,7 +8,9 @@ import re
 from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, STRING_NODES, Region, dir_of,
-                               split_callee, text, walk)
+                               split_callee, text, unwrap_arg, walk)
+from ...core.http_mounts import APP
+from ...core.http_nodes import member
 from ...core.paths import VERB_BY_NAME, expand_alternatives, unquote
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
@@ -16,6 +18,11 @@ GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NA
 GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter"}                       # prefix carriers
 GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
 GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
+GO_CHAIN_BUILDERS = {"Combo"}                                                             # gitea: m.Combo("/x").Get(h).Put(h)
+GO_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options")}
+GORILLA_LINKS = {"Methods", "Path", "PathPrefix", "Name", "Queries", "Headers", "HeadersRegexp", "Schemes", "Host",
+                 "NewRoute"}                                                              # r.Methods("GET").Path("/x").Handler(h)
+GO_SERVE = {"http.ListenAndServe": 1, "http.Serve": 1, "http.ListenAndServeTLS": 3, "http.ServeTLS": 1}   # handler's position
 
 
 class GoScanner(BaseScanner):
@@ -24,6 +31,7 @@ class GoScanner(BaseScanner):
 
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
+        self.served: list[str] = []              # another file's router a server of this one serves (global id)
         self._functions: dict[str, Node] | None = None
         for n in walk(self.fx.tree.root_node):
             if n.type in ("short_var_declaration", "assignment_statement", "var_spec"):
@@ -87,6 +95,11 @@ class GoScanner(BaseScanner):
         self._router_arguments(n, fn, arg_nodes)
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
+        if self._chained_route(n, arg_nodes) or self._gorilla_route(n, name, arg_nodes):
+            return
+        if callee in GO_SERVE and len(arg_nodes) > GO_SERVE[callee]:
+            self._serve(arg_nodes[GO_SERVE[callee]])
+            return
         operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
         base = self._middleware_base(operand) if operand is not None else None
         if base is not None:                                        # r.With(paginate).Get("/", h): a route on r
@@ -101,13 +114,7 @@ class GoScanner(BaseScanner):
             p = self.path_of(arg_nodes[0])
             parent = self.router_key(self._field_router(recv) or recv_last, n)
             prefix = (self.prefix_for(recv_last, n) or "").rstrip("/") + (p or "")
-            child = self._router_of(arg_nodes[1]) if p is not None else None
-            if child is not None:
-                self.mounts.mount(child, parent, prefix)
-                return
-            g = self._returned_router(arg_nodes[1]) if p is not None else None
-            if g is not None:                                       # r.Mount("/api/v1", apiv1.Routes())
-                self.foreign.append((g, parent, prefix))
+            if p is not None and self._mount_router(arg_nodes[1], parent, prefix):
                 return
 
         # ---- exposed routes ---------------------------------------------------------------
@@ -153,6 +160,113 @@ class GoScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
+        """gitea `m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of
+        those verbs, even with a path this file cannot read."""
+        chained = self.route_chain(n, GO_CHAIN_BUILDERS, GO_CHAIN_VERBS)
+        if chained is None:
+            return False
+        method, builder, recv = chained
+        args = builder.child_by_field_name("arguments")
+        first = args.named_children[0] if args is not None and args.named_child_count else None
+        recv_text = self.callee_of(recv)
+        recv_last = recv_text.split(".")[-1]
+        if first is None or recv.type not in ("identifier", "selector_expression") \
+                or (recv_last not in self.router_vars and CLIENT_RECEIVER.search(recv_last)):
+            return True
+        lit = self.route_path(first, recv_last, n)
+        if lit is not None and lit.startswith("/"):
+            self.add_endpoint(n, method, lit, "chi/fiber", arg_nodes[-1], router=self._field_router(recv_text) or recv_last)
+        return True
+
+    def _gorilla_route(self, n: Node, name: str, arg_nodes: list[Node]) -> bool:
+        """gorilla's route builder, path and methods before or after the handler: `r.Methods("POST").Path("/x").Handler(h)`,
+        `r.Path("/x").HandlerFunc(h).Methods("GET")`. A `PathPrefix` serves a whole tree: a route only with its
+        methods (`MainRouter.PathPrefix("/.well-known/x").Handler(h).Methods("GET")`); without them, the mount of the
+        router `http.StripPrefix` hands the rest of the path to. True when `n` (the `Handler` call) is one."""
+        if name not in ("Handler", "HandlerFunc") or len(arg_nodes) != 1:
+            return False
+        cur, _ = member(n.child_by_field_name("function"))
+        methods: list[str] = []
+        path = prefix = None
+        while cur is not None and cur.type == "call_expression":
+            recv, link = member(cur.child_by_field_name("function"))
+            verb = text(link, self.src) if link is not None else ""
+            if verb not in GORILLA_LINKS:
+                return False
+            args = cur.child_by_field_name("arguments")
+            args = args.named_children if args is not None else []
+            if verb == "Methods":
+                methods += [m for a in args if (m := self.method_from_args([a]))]
+            elif verb == "Path" and args:
+                path = args[0]
+            elif verb == "PathPrefix" and args:
+                prefix = args[0]
+            cur = recv
+        if cur is None or cur.type not in ("identifier", "selector_expression") or (path is None and prefix is None):
+            return False
+        recv_text = self.callee_of(cur)
+        recv_last = recv_text.split(".")[-1]
+        if recv_last not in self.router_vars and CLIENT_RECEIVER.search(recv_last):
+            return False
+        methods = list(dict.fromkeys(methods + (self._gorilla_methods(n) or [])))
+        router = self._field_router(recv_text) or recv_last
+        base = self.path_of(prefix) if prefix is not None else ""
+        if base is None:
+            return True
+        if path is None and not methods:
+            stripped = self._stripped(arg_nodes[0])
+            if stripped is not None:
+                under = (self.prefix_for(recv_last, n) or "").rstrip("/") + stripped[0]   # what the inner router no longer sees
+                self._mount_router(stripped[1], self.router_key(router, n), under)
+            return True
+        lit = self.route_path(path, recv_last, n) if path is not None else base
+        if lit is not None and path is not None and base:
+            lit = base.rstrip("/") + "/" + lit.lstrip("/")
+        if lit is not None and lit.startswith("/"):
+            for m in methods or ["ANY"]:
+                for pattern in expand_alternatives(lit):
+                    self.add_endpoint(n, m, pattern, "gorilla", arg_nodes[0], router=router)
+        return True
+
+    def _stripped(self, handler: Node) -> tuple[str, Node] | None:
+        """`http.StripPrefix("/addsvc", h)` → ("/addsvc", h): `h` sees the path without the prefix."""
+        h = unwrap_arg(handler)
+        fn = h.child_by_field_name("function") if h.type == "call_expression" else None
+        args = h.child_by_field_name("arguments") if fn is not None else None
+        if fn is None or args is None or self.callee_of(fn) != "http.StripPrefix" or args.named_child_count != 2:
+            return None
+        p = self.path_of(args.named_children[0])
+        return (p, args.named_children[1]) if p is not None else None
+
+    def _mount_router(self, n: Node, parent: tuple[int, str], prefix: str) -> bool:
+        """The router `n` names mounted on `parent` under `prefix`: a router of this file, or the one a function
+        returns (`r.Mount("/api/v1", apiv1.Routes())`). False when `n` names neither."""
+        child = self._router_of(n)
+        if child is not None:
+            self.mounts.mount(child, parent, prefix)
+            return True
+        g = self._returned_router(n)
+        if g is not None:
+            self.foreign.append((g, parent, prefix))
+            return True
+        return False
+
+    def _serve(self, handler: Node) -> None:
+        """`http.Serve(l, h)` with `h` another file's router (`h := addtransport.NewHTTPHandler(...)`): that router
+        is an application too, whatever else mounts it."""
+        h = unwrap_arg(handler)
+        if h.type == "identifier":
+            h = self.resolve_local(h)
+        g = self._returned_router(h) if h is not None else None
+        if g is not None:
+            self.served.append(g)
+
+    def finish(self) -> None:
+        super().finish()
+        for g in dict.fromkeys(self.served):
+            self.out.publish(f"{self.mount_rule}.edge", g, (APP, ""))
 
     def _middleware_base(self, n: Node) -> str | None:
         """`r.With(mw).Use(mw2)` — only middleware on a variable: that variable's name (None for any other receiver)."""

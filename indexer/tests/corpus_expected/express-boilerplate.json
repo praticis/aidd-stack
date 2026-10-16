@@ -50,30 +50,30 @@
   {
    "method": "GET",
    "path": "/v1/users",
-   "category": "route-chain"
+   "category": "prefix-other-file"
   },
   {
    "method": "POST",
    "path": "/v1/users",
-   "category": "route-chain"
+   "category": "prefix-other-file"
   },
   {
    "method": "DELETE",
    "path": "/v1/users/{userId}",
-   "category": "route-chain"
+   "category": "prefix-other-file"
   },
   {
    "method": "GET",
    "path": "/v1/users/{userId}",
-   "category": "route-chain"
+   "category": "prefix-other-file"
   },
   {
    "method": "PATCH",
    "path": "/v1/users/{userId}",
-   "category": "route-chain"
+   "category": "prefix-other-file"
   }
  ],
- "notes": "Manual, the whole API (src/routes/v1). Routers are mounted from a table in routes/v1/index.js — [{path: '/auth', route: authRoute}, ...].forEach(r => router.use(r.path, r.route)) — and that router at app.use('/v1', routes) in app.js, so every auth route comes out without /v1/auth (prefix-other-file; the mount graph would also have to follow the array). The user routes use router.route('/:userId').get(h).patch(h).delete(h) (route-chain). No outbound calls.",
+ "notes": "Manual, the whole API (src/routes/v1). Routers are mounted from a table in routes/v1/index.js — [{path: '/auth', route: authRoute}, ...].forEach(r => router.use(r.path, r.route)) — and that router at app.use('/v1', routes) in app.js, so every auth route comes out without /v1/auth (prefix-other-file; the mount graph would also have to follow the array). The user routes use router.route('/:userId').get(h).patch(h).delete(h): until H2b item 4 (2026-10-16) none came out (route-chain); since then they come out without /v1/users, like the auth ones, and the roots router.route('/') wait for a mount this file does not make (prefix-other-file). No outbound calls.",
  "checked": {
   "endpoints": [
    {

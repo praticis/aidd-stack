@@ -54,6 +54,26 @@
    "method": "GET",
    "path": "/v3/config",
    "handler": "getConfig"
+  },
+  {
+   "method": "POST",
+   "path": "/members",
+   "handler": "createUser"
+  },
+  {
+   "method": "GET",
+   "path": "/members",
+   "handler": "listUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/members/{memberId}",
+   "handler": "getUserById"
+  },
+  {
+   "method": "DELETE",
+   "path": "/members/{memberId}",
+   "handler": "deleteUser"
   }
  ],
  "calls": [

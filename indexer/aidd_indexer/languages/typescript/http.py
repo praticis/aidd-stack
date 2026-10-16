@@ -12,6 +12,7 @@ from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, O
 from ...core.paths import VERB_BY_NAME
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
+TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
 TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, NodeBB's api module
 JQUERY = {"$", "jQuery"}
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
@@ -65,6 +66,25 @@ class TsScanner(BaseScanner):
         for c in children:
             self.mount(text(c, self.src), c, recv_last, n, p)
         return bool(children)
+
+    def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
+        """express `router.route('/x').get(h).post(h)`: each verb a route on the path of `route`. True when `n` is one
+        of those verbs, even with a path this file cannot read."""
+        chained = self.route_chain(n, {"route"}, TS_CHAIN_VERBS)
+        if chained is None:
+            return False
+        method, builder, recv = chained
+        args = builder.child_by_field_name("arguments")
+        if args is None or args.named_child_count != 1:
+            return False                                           # Hono's app.route('/x', sub) is a mount
+        recv_last = self.callee_of(recv).split(".")[-1]
+        if recv.type not in ("identifier", "member_expression") \
+                or (recv_last not in self.router_vars and CLIENT_RECEIVER.search(recv_last)):
+            return True
+        p = self.route_path(args.named_children[0], recv_last, n)
+        if p is not None and p.startswith("/"):
+            self.add_endpoint(n, method, p, "express", arg_nodes[-1], router=recv_last)
+        return True
 
     def region_of(self, call: Node, fn: Node) -> Region | None:
         """fastify `instance.register(function (child) {...}, { prefix: '/v1' })`: the plugin's routes under the prefix."""
@@ -122,6 +142,8 @@ class TsScanner(BaseScanner):
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
         if self._mount(n, name, recv_last, arg_nodes):
+            return
+        if self._chained_route(n, arg_nodes):
             return
         if recv_last in JQUERY:                                     # browser code: `$.get(url, cb)` is a request, cb is no handler
             p = self.path_of(arg_nodes[0], lenient=True) if name in JQUERY_VERBS else None

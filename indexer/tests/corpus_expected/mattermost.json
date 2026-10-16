@@ -13,8 +13,7 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/.well-known/oauth-authorization-server",
-   "category": "path-prefix-handler"
+   "path": "/.well-known/oauth-authorization-server"
   },
   {
    "method": "GET",
@@ -2541,7 +2540,7 @@
    "path": "/signup/{service}/complete"
   }
  ],
- "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4, plus the routes only the code has, read in it (channel join requests, property field options, the /api/v4/{anything} 404 catch-all, the web package's OAuth routes: 24). Scope server/channels/api4/ and server/channels/web/oauth.go (where /oauth/intune and the OAuth metadata live). Every API route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). Until H2b item 2 step 2 (2026-10-16) the prefix never came out and the roots Handle(\"\", ...) were dropped (prefix-other-file, all 607). Miss: GET /.well-known/oauth-authorization-server, registered as MainRouter.PathPrefix(model.OAuthMetadataEndpoint).Handler(h) (path-prefix-handler). The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured.",
+ "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4, plus the routes only the code has, read in it (channel join requests, property field options, the /api/v4/{anything} 404 catch-all, the web package's OAuth routes: 24). Scope server/channels/api4/ and server/channels/web/oauth.go (where /oauth/intune and the OAuth metadata live). Every API route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). Until H2b item 2 step 2 (2026-10-16) the prefix never came out and the roots Handle(\"\", ...) were dropped (prefix-other-file, all 607). GET /.well-known/oauth-authorization-server, registered as MainRouter.PathPrefix(model.OAuthMetadataEndpoint).Handler(h).Methods(GET), was missed until H2b item 4 (2026-10-16) (path-prefix-handler): a PathPrefix with a method is one endpoint. The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured.",
  "checked": {
   "endpoints": [
    {

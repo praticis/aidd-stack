@@ -987,3 +987,58 @@ HTTP extraction went from 82 s to 88 s for the whole corpus (mattermost 22 → 2
 11 minutes.
 
 New baseline: `2026-10-16-v2-baseline-7`.
+
+## Update: route chains — H2b item 4 (2026-10-16)
+
+This is H2b item 4, `route-chain`, which H2-D18 put next for Go. It is done for Go and for the express form in
+TS/JS.
+
+**What is read now:**
+
+- **Verbs chained on a path builder.** gitea's `m.Combo("/x", mw).Get(h).Put(h)` and express's
+  `router.route('/x').get(h).post(h)` give one route per verb, on the builder's path and router. The verb's first
+  argument is not a path, so nothing came out before. Hono's `app.route('/x', sub)`, with two arguments, is still a
+  mount.
+- **gorilla's route builder.** `r.Methods("POST").Path("/x").Handler(h)` and `r.Path("/x").HandlerFunc(h).Methods("GET")`
+  are routes. The verbs can come before or after the handler. A `PathPrefix(...).Handler(h)` serves a whole tree,
+  so it is a route only when it has a method: mattermost's OAuth metadata endpoint is one, a `FileServer` is not.
+- **`http.StripPrefix`.** In `r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", pkg.NewHTTPHandler()))`,
+  the gateway mounts the handler another package returns, under the prefix the strip removes.
+- **Served routers.** A router of another file passed to `http.Serve` or `ListenAndServe` is an application too. So
+  when go-kit's addsvc serves the handler that the gateway also mounts, its routes stay in both places.
+
+Diff against `2026-10-16-v2-baseline-7`, judged: 4 repositories changed, all with routes added only.
+
+- **gitea (+290):** the 219 `Combo` routes of the API, and 71 in the web UI and the actions artifacts router. The
+  web UI routes have the same prefixes as their neighbours. That includes the `router-as-param` defect already
+  judged in `web.go`, where a closure passed to a group by value loses the group's path.
+- **go-kit-examples (+11):** profilesvc's 9 builder routes, and addsvc's two routes under `/addsvc`.
+- **mattermost (+1):** `GET /.well-known/oauth-authorization-server`.
+- **express-boilerplate (+3):** `GET`, `PATCH` and `DELETE /:userId`. They lack the `/v1/users` that another file
+  mounts, so they are wrong, like the auth routes (`prefix-other-file`, the TS step 2). The chain's
+  `router.route('/')` roots wait for that mount. The 5 expected items moved from `route-chain` to
+  `prefix-other-file`.
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| gitea | 99.7 % / 59.1 % | 99.8 % / 99.1 % |
+| go-kit-examples | 100 % / 59.3 % | 100 % / 100 % |
+| mattermost | 100 % / 99.8 % | 100 % / 100 % |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| Go before | 87.7 % (192/219) | 98.7 % | 75.4 % (1153/1530) |
+| Go now | 87.7 % (192/219) | 98.9 % | 90.5 % (1384/1530) |
+
+`route-chain` is no longer in the ranking. Go still misses 146 routes; the largest groups are:
+
+- the generated servers of argo-cd and alertmanager (`generated-server`, 115);
+- kratos' router types that add `/admin` (`prefix-in-router-type`, 12);
+- gitea's `g.MatchPath("GET", "/<ref:*>/status", h)` (`custom-registrar`, 3), plus two patterns that gitea joins to
+  the group without a slash.
+
+Go calls are still at 31.6 % recall: go-kit's request encoders, URL objects, and the generated clients of item 7.
+
+HTTP extraction took 88.8 s for the whole corpus (88 s before). The whole run still takes about 11 minutes.
+
+New baseline: `2026-10-16-v2-baseline-8`.

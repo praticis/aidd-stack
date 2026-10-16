@@ -33,15 +33,19 @@
   (variável de módulo/pacote, router devolvido por função, parâmetro router, campo de struct), arestas publicadas por
   arquivo e compostas depois do scan, imports pelo `resolve_import` de cada linguagem, constantes de outro pacote;
   rotas Go P 18,4 → 98,7 %, R 10,6 → 75,4 %; Python fora do Django P 37,7 → 96,1 %, R 19,3 → 93,4 %
-  (mattermost R 0,2 → 99,8 %, gitea 0 → 59,1 %, dispatch 0,5 → 98,3 %).
+  (mattermost R 0,2 → 99,8 %, gitea 0 → 59,1 %, dispatch 0,5 → 98,3 %). **Item 4 (2026-10-16), `route-chain`:**
+  verbos encadeados num construtor de path (gitea `m.Combo("/x").Get(h).Put(h)`, express
+  `router.route('/x').get(h)`), o builder do gorilla (`r.Methods("POST").Path("/x").Handler(h)`, `PathPrefix` com
+  verbo), montagem por `http.StripPrefix` e router servido por `http.Serve` como aplicação; rotas Go P 98,9 %,
+  R 75,4 → 90,5 % (gitea R 59,1 → 99,1 %, go-kit 59,3 → 100 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-7/` — corpus v2, 42 repos, com a
-  etapa 2 do grafo de montagem (a `-6` é a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-8/` — corpus v2, 42 repos, com as
+  cadeias de rota do item 4 (a `-7` é a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -57,11 +61,12 @@
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
 - **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
-  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas) e a etapa 2 cobre Go e Python. No
-  Go sobra o item 4, `route-chain` (gitea 219: `m.Combo("/x").Get(h).Put(h)`; go-kit 9), que fecha as rotas do
-  gitea; depois as chamadas Go (R 31,6 %: `request-encoder` do go-kit, `url-object-builder`) com os clientes
-  gerados do Go no item 7 (openapi-generator do kratos, go-swagger do alertmanager). Python fora do Django: só o
-  flask-restx do CTFd (17) e o registro de plugins do dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
+  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). As rotas Go estão em R 90,5 %: o
+  que sobra é servidor gerado (`generated-server`, argo-cd 106 e alertmanager 9), os tipos de router do kratos
+  (`prefix-in-router-type`, 12) e o `MatchPath` do gitea (3). O próximo é o lado das **chamadas Go** (R 31,6 %:
+  `request-encoder` do go-kit, `url-object-builder`) com os clientes gerados do Go no item 7 (openapi-generator
+  do kratos, go-swagger do alertmanager). Python fora do Django: só o flask-restx do CTFd (17) e o registro de
+  plugins do dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
   do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
   `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
 
@@ -187,7 +192,12 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   `aiohttp-router`; achados no julgamento: variável interpolada que lê o próprio valor anterior, `x += e`, e o
   contraexemplo do wrapper genérico (constante de módulo em template fica placeholder). Sobra 1 item
   (`data-taken-for-handler`, gotify)
-- [ ] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`)
+- [x] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`) *(2026-10-16)* —
+  `BaseScanner.route_chain` (cada verbo depois do construtor é rota no path dele: `Combo` no Go, `route` de um
+  argumento no TS); builder do gorilla com `Methods`/`Path`/`PathPrefix` antes ou depois do `Handler` (`PathPrefix`
+  só é rota com verbo); no caminho, `http.StripPrefix` monta o router de dentro e um router de outro arquivo
+  servido por `http.Serve`/`ListenAndServe` é aplicação (as rotas valem nos dois lugares). Fixtures
+  `route-patterns-go/cmd/{combo,chain,addsvc}` e `route-patterns-ts/src/chain.ts`
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
   - [x] *(2026-10-15)* C#: constante interpolada como segmentos inteiros (de path no começo; de uma palavra entre
     barras), nunca num wrapper genérico (variável de nome de path no template); chamada interpolada que já é path
@@ -442,3 +452,16 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   escopo do mattermost; categorias novas `router-from-registry`, `decorator-call`, `path-prefix-handler`. Rotas Go
   P 18,4 → 98,7 %, R 10,6 → 75,4 %; Python fora do Django P 37,7 → 96,1 %, R 19,3 → 93,4 %. Nova baseline
   `2026-10-16-v2-baseline-7`.
+- **2026-10-16** — Item 4 da Fase 4, `route-chain`. `BaseScanner.route_chain` + `member` (`x.f` nas quatro
+  linguagens): gitea `m.Combo(path, mw).Get(h).Put(h)` e express `router.route('/x').get(h)` (o `route('/x', sub)`
+  do Hono continua montagem); builder do gorilla (`r.Methods("POST").Path("/x").Handler(h)`,
+  `r.Path("/x").HandlerFunc(h).Methods("GET")`; `PathPrefix` com verbo é um endpoint — o OAuth metadata do
+  mattermost —, sem verbo é árvore ou montagem). No caminho: `http.StripPrefix` monta o router devolvido por outro
+  pacote sob o prefixo removido (gateway do go-kit), e o router de outro arquivo entregue a `http.Serve` publica uma
+  aresta para `APP` — senão montar o handler do addsvc no gateway tiraria `/sum` e `/concat` do próprio serviço.
+  Diff contra `-7` (4 repos, só adições) julgado: gitea +290 (219 `Combo` da API, 71 da UI e dos artifacts, com o
+  mesmo prefixo das vizinhas — inclusive o `router-as-param` já julgado no `web.go`), go-kit +11, mattermost +1,
+  express-boilerplate +3 (sem o `/v1/users` de outro arquivo: as 5 esperadas passaram de `route-chain` para
+  `prefix-other-file`). `route-chain` sai do ranking. Rotas Go P 98,7 → 98,9 %, R 75,4 → 90,5 % (gitea R 59,1 →
+  99,1 %, go-kit 59,3 → 100 %, mattermost 100 %). HTTP do corpus 88 → 88,8 s. Nova baseline
+  `2026-10-16-v2-baseline-8`.
