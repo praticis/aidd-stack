@@ -2,9 +2,10 @@
 
 `PathExpressions.path_of` reads literals, variables (`Scopes.binding`), the directory's constants
 (`PackageContext.route_const`, filled by `collect_constants`), concatenation, templates (f"", $"", `${}`),
-Sprintf/Format/format, Join/urljoin/Combine, Replace/Trim, `new Uri(...)`, request objects (`{url: ...}`),
-`x += e` and Go's `url.URL` (`u.Path = e`, `u.Path += e`, then `u.String()` or `u`). `method_from_args` reads the verb
-from literals, `http.MethodX` / `HttpMethod.X`, a `method` key or keyword, or a local holding one. The scanner mixes this in (it needs `src`, `ctx`, `scopes` and a `_path_memo` dict).
+Sprintf/Format/format, Join/urljoin/Combine, Replace/Trim, `new Uri(...)`, request objects (`{url: ...}`), `x += e`,
+Go's `url.URL` (`u.Path = e`, `u.Path += e`, then `u.String()` or `u`) and grpc-gateway's `runtime.NewPattern`.
+`method_from_args` reads the verb from literals, `http.MethodX` / `HttpMethod.X`, a `method` key or keyword, or a local
+holding one. The scanner mixes this in (it needs `src`, `ctx`, `scopes` and a `_path_memo` dict).
 """
 
 from __future__ import annotations
@@ -32,6 +33,28 @@ _PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w
 _JOIN_CALL = re.compile(r"^(Join|JoinPath|AppendPaths?|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
 _SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
+
+
+def grpc_gateway_pattern(ops: list[int], pool: list[str], verb: str = "") -> str | None:
+    """The path a grpc-gateway `runtime.NewPattern(1, ops, pool, verb)` matches: `ops` is a stack program of (opcode,
+    operand) pairs — 1 push a segment, 2 push the literal `pool[operand]`, 3 push the rest of the path, 4 join the
+    top `operand` items, 5 capture the top as the variable `pool[operand]`, 0 nothing."""
+    stack: list[str] = []
+    for i in range(0, len(ops) - 1, 2):
+        op, arg = ops[i], ops[i + 1]
+        if op == 1:
+            stack.append("*")
+        elif op == 2 and arg < len(pool):
+            stack.append(pool[arg])
+        elif op == 3:
+            stack.append("**")
+        elif op == 4 and 0 < arg <= len(stack):
+            stack[-arg:] = ["/".join(stack[-arg:])]
+        elif op == 5 and stack and arg < len(pool):
+            stack[-1] = "{" + pool[arg] + "}"
+        elif op != 0:
+            return None
+    return ("/" + "/".join(stack) + (":" + verb if verb else "")) if stack else None
 
 
 # -- the directory's constants ---------------------------------------------------------------
@@ -228,7 +251,12 @@ class PathExpressions:
             if found is not None:
                 return found
         found = self.ctx.route_const(name)
-        return found if found is not None else self.foreign_const(name)
+        found = found if found is not None else self.foreign_const(name)
+        if found is None and n.type == "identifier":            # a package var built by a call, used in a function
+            val = self.scopes.assigned_before(self.scopes.root, END, name)     # (grpc-gateway's pattern_X = runtime.MustPattern(..))
+            if val is not None and val.type in CALL_NODES:
+                found = self.path_of(val, lenient, _depth + 1)
+        return found
 
     def _url_path(self, obj: Node, lenient: bool, _depth: int) -> str | None:
         """Go's `url.URL` `u`, used here (`u.String()`, or `u` handed to a client): the path its last `u.Path = e` or
@@ -303,6 +331,13 @@ class PathExpressions:
                 return self.path_of(arg_nodes[0], lenient, _depth + 1)
             if fname == "JoinPath" and text(operand, self.src) != "url":       # u.JoinPath("x"): u's path, then "x"
                 arg_nodes = [operand] + arg_nodes
+            if text(operand, self.src) == "runtime" and fname == "MustPattern" and arg_nodes:
+                return self.path_of(arg_nodes[0], lenient, _depth + 1)     # grpc-gateway
+            if text(operand, self.src) == "runtime" and fname == "NewPattern" and len(arg_nodes) >= 3:
+                ops = [int(text(c, self.src)) for c in walk(arg_nodes[1]) if c.type == "int_literal"]
+                pool = [unquote(text(c, self.src)) for c in walk(arg_nodes[2]) if c.type == "interpreted_string_literal"]
+                verb = unquote(text(arg_nodes[3], self.src)) if len(arg_nodes) > 3 and arg_nodes[3].type in STRING_NODES else ""
+                return grpc_gateway_pattern(ops, pool, verb)
         if fname in ("Sprintf", "Errorf", "Format", "format"):
             if fname == "format" and fn is not None and fn.type == "attribute":      # "/v1/{}".format(x)
                 recv = fn.child_by_field_name("object")

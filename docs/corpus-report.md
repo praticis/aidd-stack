@@ -1114,3 +1114,62 @@ What Go calls still miss (7 calls):
 HTTP extraction took 91.1 s for the whole corpus (88.8 s before). The whole run still takes about 11 minutes.
 
 New baseline: `2026-10-16-v2-baseline-9`.
+
+## Update: Go generated servers (2026-10-16)
+
+This is the last large gap in Go routes. 115 of the 146 Go routes still missed were served by generated code:
+argo-cd's grpc-gateway (106) and alertmanager's go-swagger server (9).
+
+**What is read now:**
+
+- **grpc-gateway.** `*.pb.gw.go` registers each route as `mux.Handle("GET", pattern_AccountService_CanI_0, func(..))`.
+  The path exists only in `runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, ..}, []string{"api", "v1", ..},
+  ""))`, a small stack program that pushes literals, captures variables (`{name}`, also `{id.value}`), takes the rest
+  of the path (`**`) and appends a custom verb (`:sync`). `path_of` decodes it. Three changes support it:
+  - `Handle(verb, path, h)` with the verb first is a route; httprouter uses the same form.
+  - The handler is named after the gRPC method (`AccountService.CanI`).
+  - A package variable built by a call counts as a last resort for a name, so `pattern_X_0` resolves.
+  - `normalize_path` keeps a custom verb after a placeholder literal: `{name}:cancel` is no longer `{name}{cancel}`.
+- **go-swagger server.** `restapi/operations` registers `o.handlers["GET"]["/alerts"] = ..`. The routes are relative
+  to the spec's `basePath`, which only `restapi/embedded_spec.go` holds, inside the embedded JSON. That file publishes
+  the `basePath`, and the routes wait for it.
+
+Diff against `2026-10-16-v2-baseline-9`, judged: 2 repositories changed, routes added only.
+
+- **argo-cd (+106):** the whole `/api/v1` of the committed swagger, from `pkg/apiclient/**`. The four extra
+  registrations are the same routes registered twice (`...HandlerServer` and `...HandlerClient`).
+- **alertmanager (+9):** the whole `/api/v2` spec.
+
+Expected lists:
+
+- **argo-cd:**
+  - `pkg/apiclient/` entered the endpoint scope, since the gateway registers the routes there.
+  - The hand-written `/auth/login`, `/auth/callback` and `/api/webhook` were added. The last two are registered first
+    by another app of the repo (the CLI's local login callback, the applicationset controller), and the route node
+    keeps that evidence (`multi-app-repo`).
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| argo-cd | 66.7 % / 3.5 %¹ | 98.2 % / 96.5 % |
+| alertmanager | — / 0 % | 100 % / 100 % |
+
+¹ Before = the run of baseline-9 measured against the new expected list (114 routes).
+
+| Language (routes) | P expected | R expected |
+|---|---|---|
+| Go before | 98.9 % | 90.5 % (1384/1530) |
+| Go now | 99.1 % | 97.8 % (1500/1533) |
+
+What Go routes still miss (33):
+
+- kratos' router types that add `/admin` (`prefix-in-router-type`, 12);
+- paths built from a string parameter (`prefix-as-param`, argo-cd and others);
+- `multi-app-repo`;
+- gitea's `MatchPath` (3).
+
+**Timing.** This run took 111.7 s of HTTP extraction against 91.1 s before, but every repository slowed by 20–25 %,
+TS, Python and C# included, and parsing too. Re-running ghost, netbox and gitea right after, with the code before and
+after this change, gave the same times (52.9 / 52.8 s, 33.8 / 31.2 s, 62.6 / 61.0 s). The rise was the machine's
+load at that moment, not this change.
+
+New baseline: `2026-10-16-v2-baseline-10`.

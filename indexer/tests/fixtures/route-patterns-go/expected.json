@@ -279,6 +279,36 @@
    "method": "DELETE",
    "path": "/token",
    "handler": "deleteToken"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/can-i/{resource}/{action}/{subresource}",
+   "handler": "AccountService.CanI"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/account/password",
+   "handler": "AccountService.UpdatePassword"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/account/{name}/token/{id}",
+   "handler": "AccountService.DeleteToken"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/account/{name}:sync",
+   "handler": "AccountService.Sync"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/silences",
+   "handler": "SilenceGetSilencesHandler"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/silence/{silenceID}",
+   "handler": "SilenceDeleteSilenceHandler"
   }
  ],
  "calls": [

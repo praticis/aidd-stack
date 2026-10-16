@@ -105,8 +105,8 @@ Três passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `
 3. **Composição entre arquivos** (`BaseScanner.compose`, uma vez por linguagem depois do scan): cada arquivo deixa
    um resumo só de dados — `out.publish(tipo, nome, fato)` e rotas `Pending` (gravadas como o arquivo as escreve,
    com o que falta para completá-las) — e a linguagem as resolve sem reabrir árvores (F1.13). Hoje: o `[Route]`
-   herdado e os wrappers de cliente do C#, o grafo de montagem entre arquivos de Go e Python (`mount_rule`) e o path
-   que o encoder de um cliente go-kit põe na request (`go.encoder`).
+   herdado e os wrappers de cliente do C#, o grafo de montagem entre arquivos de Go e Python (`mount_rule`) o path
+   que o encoder de um cliente go-kit põe na request (`go.encoder`) e o `basePath` do servidor go-swagger (`go.swagger-base`).
 
 Regras aprendidas no corpus (não regredir):
 
@@ -186,6 +186,8 @@ Regras aprendidas no corpus (não regredir):
 | go-kit `httptransport.NewClient("GET", tgt, encodeX, decodeX)`, com o path no encoder (`req.URL.Path = "/profiles/" + id`, em outro arquivo do pacote) | o verbo é o 1º argumento; o path, o da URL ou, sem ele (`tgt.Path = ""`), o que o encoder põe no `*http.Request`: cada função que atribui `req.URL.Path` publica `go.encoder`, a chamada fica `Pending` e `GoScanner.compose` completa |
 | Cliente openapi-generator Go (`localVarPath := localBasePath + "/admin/identities/{id}"`, `strings.Replace(localVarPath, "{"+"id"+"}", ..)`, `localVarHTTPMethod = http.MethodGet`, `prepareRequest(..)`) e go-swagger (`&runtime.ClientOperation{Method: "GET", PathPattern: "/alerts"}`) | `generated-client`: no arquivo com o cabeçalho do OpenAPI Generator, o `prepareRequest` com o path do 2º argumento e o verbo da variável do 3º (variável ligada a literal ou `http.MethodX` vale como verbo); o literal `runtime.ClientOperation` do go-swagger. O `basePath` da spec vem do transporte em runtime, como uma base URL. `strings.Replace(s, ..)` do Go é o `s` |
 | `huma.Get(api, "/books", h)` lido como chamada GET; `"SELECT " + strings.Join(cols, ", ") + " FROM Posts"` como `GET /SELECT ...` (mattermost) | verbo com um path **antes** do último argumento e handler no fim é registro de rota (o `notify.Get(ctx, client, u.String())`, com a URL no fim, é chamada); `"VERBO /x"` só com verbo HTTP; `strings.Join` não junta path |
+| Servidor grpc-gateway (`*.pb.gw.go`, argo-cd: 106 rotas da API): `mux.Handle("GET", pattern_AccountService_CanI_0, func(..) {..})` com o path só em `runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, ..}, []string{"api", "v1", ..}, ""))` | `Handle(verbo, path, h)` com o verbo literal primeiro é rota (também o do httprouter); o padrão é decodificado (`grpc_gateway_pattern`: o programa de pilha do gateway — literal, segmento, captura `{x}`, `**`, verbo customizado `:sync`); o handler é o método gRPC (`AccountService.CanI`). Variável de pacote construída por chamada vale como último recurso do `path_of`. `{name}:cancel` não vira `{name}{cancel}` (`:x` depois de `}` não é parâmetro) |
+| Servidor go-swagger (alertmanager `api/v2/restapi`): `o.handlers["GET"]["/alerts"] = alert.NewGetAlerts(..)`, com o `basePath` só no JSON embutido (`embedded_spec.go`, no pacote pai) | a atribuição ao mapa de handlers é rota (`go-swagger`), que espera o `basePath` que o `embedded_spec.go` do pacote pai publica (`go.swagger-base`) e `GoScanner.compose` aplica |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos entre arquivos em TS/JS (o grafo entre
 arquivos cobre Go e Python) e `setGlobalPrefix`; router guardado num registro e montado em laço

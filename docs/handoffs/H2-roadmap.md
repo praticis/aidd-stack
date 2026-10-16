@@ -41,14 +41,17 @@
   path de `url.URL` (`u.Path = ..`/`+=`, `u.String()`), clientes go-kit (verbo no `NewClient`, path no encoder por
   `compose`), openapi-generator e go-swagger (`generated-client`); chamadas Go P 100 %, R 10,9 → 93,6 % nos mesmos
   gabaritos (kratos 10,5 → 96,1 % com as 60 operações do cliente gerado; alertmanager 0 → 93,8 %; go-kit 0 → 78,6 %).
+  **Servidores gerados Go (2026-10-16):** grpc-gateway (`mux.Handle("GET", pattern_X, h)`, path decodificado do
+  `runtime.NewPattern`) e servidor go-swagger (`o.handlers["GET"]["/x"]` sob o `basePath` do `embedded_spec.go`);
+  rotas Go P 99,1 %, R 90,5 → 97,8 % (argo-cd R 3,5 → 96,5 %, alertmanager 0 → 100 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-9/` — corpus v2, 42 repos, com as
-  chamadas Go e os clientes gerados Go (a `-8` é a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-10/` — corpus v2, 42 repos, com os
+  servidores gerados Go (a `-9` é a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -64,12 +67,12 @@
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
 - **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
-  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). Go: rotas R 90,5 %, chamadas
-  R 93,6 % (sobram 7: `url-in-field`, `url-from-helper`, `client-in-field`). O que mais pesa nas rotas Go é servidor
-  gerado (`generated-server`, 115 de 146: o grpc-gateway do argo-cd, 106, e o servidor go-swagger do alertmanager,
-  9, com o `basePath` no JSON embutido); depois os tipos de router do kratos (`prefix-in-router-type`, 12) e o
-  `MatchPath` do gitea (3). Python fora do Django: só o flask-restx do CTFd (17) e o registro de plugins do
-  dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
+  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). **Go fechado no essencial:** rotas
+  P 99,1 % / R 97,8 %, chamadas P 100 % / R 93,6 % (sobram os tipos de router do kratos, `prefix-in-router-type`, 12;
+  `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
+  `client-in-field`). Próximo: Python fora do Django — o flask-restx do CTFd (17) e o registro de plugins do
+  dispatch. Depois, decidir se o TS (etapa 2 do grafo + `setGlobalPrefix` + clientes gerados TS) entra no H2 ou
+  num incremento próprio (recomendação de 2026-10-16: entra, reaproveita o que existe), e então a Fase 5. TS por último: a etapa 2 para TS (o `mount_rule`
   do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
   `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
 
@@ -230,6 +233,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     go-swagger (alertmanager, 9; o `basePath` fica com o transporte, como base URL). Fixtures
     `route-patterns-go/internal/{genclient,swaggerclient}`
   - [ ] oazapfts (immich, 279), openapi-ts (fastapi-template, 23) — com TS
+  - [x] *(2026-10-16)* Go, **servidores** gerados (`generated-server`): grpc-gateway (`runtime.NewPattern`
+    decodificado; handler = método gRPC; verbo customizado `:x` literal) e go-swagger (`o.handlers[M][P]` +
+    `basePath` publicado pelo `embedded_spec.go`, `go.swagger-base`). Fixtures
+    `route-patterns-go/internal/{gateway,swaggerserver}`
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
   rotas por arquivo do Next.js, flask-restx
 - [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
@@ -493,3 +500,15 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   go-swagger e o rocketchat como `client-in-field`, go-kit com `/uppercase` corrigido para GET e 3 chamadas
   `url-from-helper` que faltavam. Chamadas Go P 100 %, R 10,9 → 93,6 % nos mesmos gabaritos; HTTP do corpus
   88,8 → 91,1 s. Nova baseline `2026-10-16-v2-baseline-9`.
+- **2026-10-16** — Servidores gerados Go (`generated-server`, 115 das 146 rotas Go que faltavam). grpc-gateway:
+  `Handle(verbo, path, h)` com o verbo primeiro é rota; `path_of` decodifica `runtime.MustPattern(runtime.NewPattern(
+  1, ops, pool, verb))` (programa de pilha: literal, segmento, captura, `**`, concatenação, verbo); variável de pacote
+  construída por chamada vale como último recurso de um nome; handler = método gRPC (`AccountService.CanI`);
+  `{name}:cancel` fica literal no `normalize_path`. go-swagger: `o.handlers["GET"]["/x"] = ..` em `restapi/operations`
+  espera o `basePath` que o `embedded_spec.go` do pacote pai publica. Diff contra `-9` (2 repos, só adições) julgado
+  certo: argo-cd +106 (a `/api/v1` inteira da swagger), alertmanager +9. Gabaritos: argo-cd com `pkg/apiclient/` no
+  escopo e as rotas escritas à mão `/auth/login`, `/auth/callback` e `/api/webhook` (as duas últimas
+  `multi-app-repo`: outro app do repo registra antes). Rotas Go P 98,9 → 99,1 %, R 90,5 → 97,8 %. O HTTP do corpus
+  subiu para 111,7 s nesta rodada, mas todos os repos (TS, Python e C# inclusive) e o parse subiram 20–25 %:
+  rodando ghost, netbox e gitea de novo com o código de antes e de depois, os tempos ficaram iguais — carga da
+  máquina, não regressão. Nova baseline `2026-10-16-v2-baseline-10`.

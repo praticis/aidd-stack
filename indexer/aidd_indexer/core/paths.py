@@ -71,7 +71,7 @@ def normalize_path(path: str) -> str:
     p = re.sub(r"\$\{[^}]*\}", "{param}", p)                      # JS template literals
     p = re.sub(r"\{\*+([A-Za-z_][A-Za-z0-9_]*)\}", r"{\1}", p)   # {*rest} (ASP.NET catch-all)
     p = re.sub(r"<(?:[^<>:]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id>, <any(a, b):page> (Flask/Werkzeug)
-    p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)      # :id (gin, express, echo)
+    p = re.sub(r"(?<!\}):([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)   # :id (gin, express, echo); not `{name}:cancel` (gRPC custom verb)
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)(\.\.\.)?\}", r"{\1}", p)  # {id...} → {id}
     p = re.sub(r"\{\d+\}", "{param}", p)                             # string.Format("{0}")
     p = re.sub(r"\[controller\]", "{controller}", p, flags=re.I)  # ASP.NET token (resolved later by the linker)
