@@ -27,7 +27,7 @@ from tree_sitter import Node
 from ..languages.base import node_text as text, walk  # noqa: F401 — walk is re-exported for the scanners
 from . import ids
 from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
-from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg  # noqa: F401 — re-exported
+from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg, valid_path  # noqa: F401 — re-exported
 from .http_mounts import MountedRoot, MountGraph, RouterKey
 from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODES, STRING_NODES,  # noqa: F401
                          FUNCTION_SCOPES, has_interpolation)
@@ -59,10 +59,11 @@ CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|
 
 
 class Pending(NamedTuple):
-    """A route recorded as its file writes it, whose prefix lives in another file. The language's `compose` resolves
-    it from the facts every file published, after the whole repo is scanned."""
-    endpoint: HttpEndpointInfo
-    rule: str               # which `compose` rule resolves it ("cs.inherited-route")
+    """What a file cannot finish alone: a route recorded as the file writes it whose prefix lives in another file, or
+    a call to a method another file defines (`item` is then the call without its path). The language's `compose`
+    resolves it from the facts every file published, after the whole repo is scanned."""
+    item: HttpEndpointInfo | HttpCallInfo
+    rule: str               # which `compose` rule resolves it ("cs.inherited-route", "cs.client-wrapper")
     key: tuple              # what that rule looks up
 
 
@@ -110,17 +111,27 @@ class PackageContext:
         self.env_hints: set[str] = set()
         self.patterns = patterns or ScanPatterns()
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
+        self.segments: dict[str, str] = {}          # name -> one path segment (`"cases"`): only whole, inside a template
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
         self._values: dict[str, object] = {}
 
-    def define(self, name: str, raw: str | None = None, parts: list | None = None) -> None:
-        value = raw if raw is not None else tuple(parts or ())
+    def define(self, name: str, raw: str | None = None, parts: list | None = None, segment: str | None = None) -> None:
+        value = raw if raw is not None else segment if segment is not None else tuple(parts or ())
         if self._values.setdefault(name, value) != value:
             self.ambiguous.add(name)
         if raw is not None:
             self.route_consts[name] = raw
+        elif segment is not None:
+            self.segments[name] = segment
         else:
             self.const_parts[name] = list(parts or ())
+
+    def segment_const(self, name: str) -> str | None:
+        """A constant holding one path segment, looked up as `route_const` does."""
+        if "." in name:
+            qualified = ".".join(name.split(".")[-2:])
+            name = qualified if qualified in self.segments else name.split(".")[-1]
+        return None if name in self.ambiguous else self.segments.get(name)
 
     def route_const(self, name: str, _seen: tuple[str, ...] = ()) -> str | None:
         """Raw path of a module-level constant; one built from others (`RouteItem = RouteCollection + "/{id}"`)
@@ -417,17 +428,24 @@ class BaseScanner(PathExpressions):
         return ep
 
     def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
-        path = normalize_path(raw_path)
-        if not has_literal_segment(path):
-            return
+        c = self.call_info(node, method, raw_path, via)
+        if c is not None:
+            self.out.calls.append(c)
+
+    def call_info(self, node: Node, method: str | None, raw_path: str, via: str) -> HttpCallInfo | None:
+        """The outbound call at `node`; None when its path names no segment. With an empty `raw_path`, the call still
+        waiting on its path (a `Pending` one)."""
+        path = normalize_path(raw_path) if raw_path else ""
+        if raw_path and not has_literal_segment(path):
+            return None
         caller = self.fx._enclosing_symbol(node)
-        self.out.calls.append(HttpCallInfo(
+        return HttpCallInfo(
             id=ids.http_call(self.repo.tenant, self.repo.name, self.repo.ref, self.fx.file.path, node.start_point[0] + 1),
             method=(method or "ANY").upper(), path=path, raw_path=raw_path, via=via[-60:],
             target_hint=target_hint(self.fx.file.path), env_hints=sorted(self.ctx.env_hints),
             file_id=self.fx.file.id, line=node.start_point[0] + 1,
             caller_id=caller.id if caller else self.fx.file.id, evidence=self.evidence(node),
-        ))
+        )
 
     # -- shared: `x := r.Group("/v1")` style prefix tracking -------------------------------
     def _record_group(self, names: list[str], call: Node, fn_text: str, arg_nodes: list[Node]) -> None:

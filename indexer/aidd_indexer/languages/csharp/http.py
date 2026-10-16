@@ -5,13 +5,16 @@ HttpRequestMessage, Refit, Flurl, RestSharp outbound."""
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, HttpResult, OUTBOUND, Pending, STRING_NODES, first_string, rebased,
-                               replace_endpoints, split_callee, text, walk)
+                               replace_endpoints, split_callee, text, valid_path, walk)
+from ...core.http_nodes import CLASS_NODES, CONCAT_NODES, INTERPOLATION_NODES, STRING_TEXT_NODES, has_interpolation
+from ...core.http_scope import enclosing_function
 from ...core.model import RepoInfo
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from ...core.paths import HTTP_METHODS, VERB_BY_NAME, has_literal_segment, normalize_path, unquote
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
@@ -27,6 +30,11 @@ FLURL_VERBS = {"GetAsync": "GET", "GetJsonAsync": "GET", "GetStringAsync": "GET"
 class CsScanner(BaseScanner):
     """ASP.NET Core: attribute-routed controllers + minimal APIs; HttpClient / Refit outbound."""
     relative_on_groups = True
+
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
+        self._types: dict[int, dict[str, str | None]] = {}             # function → its names' declared types
+        self._class_members: dict[int, dict[str, str]] = {}            # class node → its members' types
 
     def run(self) -> None:
         for n in walk(self.fx.tree.root_node):
@@ -155,9 +163,11 @@ class CsScanner(BaseScanner):
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo) -> None:
-        """A controller without a `[Route]` of its own takes its base class's (`[Route("[controller]")]` on
+        """What crosses files in C#: calls to the repo's own client wrappers (`_compose_wrapped_calls`), and the
+        `[Route]` a controller without one of its own takes from its base class (`[Route("[controller]")]` on
         `BaseApiController`), one level up: the base is found by name in the repo — two classes with that name (not
         `partial` halves of one) give nothing. An action with no template is a route only under that prefix."""
+        cls._compose_wrapped_calls(out)
         classes = out.facts.get("cs.class", {})
         plan = {}
         for p in out.pending:
@@ -166,10 +176,29 @@ class CsScanner(BaseScanner):
             bases, controller, action, root = p.key
             route = _inherited_route(classes, bases)
             if route is not None:
-                plan[id(p.endpoint)] = [rebased(repo, p.endpoint, _tokens(route, controller, action))]
+                plan[id(p.item)] = [rebased(repo, p.item, _tokens(route, controller, action))]
             elif root:
-                plan[id(p.endpoint)] = []
+                plan[id(p.item)] = []
         replace_endpoints(out, plan)
+
+    @staticmethod
+    def _compose_wrapped_calls(out: HttpResult) -> None:
+        """A call to a client wrapper (`HttpService.HttpGet(uri)`, found by the receiver's declared type) is an
+        outbound call: the wrapper's verb, its text around the argument that is the path. A name two wrappers of that
+        type define differently (overloads) gives nothing."""
+        wrappers = out.facts.get("cs.client-wrapper", {})
+        for p in out.pending:
+            if p.rule != "cs.client-wrapper":
+                continue
+            rtype, name, args = p.key
+            shapes = set(wrappers.get(f"{rtype}.{name}", ()))
+            if len(shapes) != 1:
+                continue
+            idx, before, after, method = next(iter(shapes))
+            raw = valid_path(before + args[idx] + after, lenient=True) if idx < len(args) and args[idx] else None
+            path = normalize_path(raw) if raw else ""
+            if raw and has_literal_segment(path):
+                out.calls.append(replace(p.item, method=method, path=path, raw_path=raw, via=f"{rtype}.{name}"[-60:]))
 
     def _refit(self, iface: Node) -> None:
         body = iface.child_by_field_name("body")
@@ -251,6 +280,141 @@ class CsScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+            self._wrapper(n, method, arg_nodes)
+            return
+        self._wrapped_call(n, fn, name, arg_nodes)
+
+    # -- the repo's own client wrappers: `HttpService.HttpGet<T>(string uri)` and the calls to it --------------
+    def _wrapper(self, call: Node, method: str | None, arg_nodes: list[Node]) -> None:
+        """`_http.GetAsync($"{_apiUrl}{uri}")` inside `HttpGet<T>(string uri)`: the path is the caller's. Publish the
+        method as a client wrapper — which parameter is the path, the verb, what goes around it — under its class and
+        the class's bases (a field is often typed by the interface)."""
+        m = enclosing_function(call)
+        if m is None or m.type != "method_declaration" or m.child_by_field_name("name") is None:
+            return
+        pl = m.child_by_field_name("parameters")
+        params = [text(p.child_by_field_name("name"), self.src) for p in (pl.children if pl is not None else ())
+                  if p.type == "parameter" and p.child_by_field_name("name") is not None]
+        shape = next((sh for a in arg_nodes if (sh := self._param_shape(a, params)) is not None), None)
+        cls = m.parent
+        while cls is not None and cls.type not in CLASS_NODES:
+            cls = cls.parent
+        if shape is None or cls is None or cls.child_by_field_name("name") is None:
+            return
+        mname = text(m.child_by_field_name("name"), self.src)
+        for owner in [text(cls.child_by_field_name("name"), self.src)] + [b.split(".")[-1] for b in self._bases(cls)]:
+            self.out.publish("cs.client-wrapper", f"{owner}.{mname}", (*shape, (method or "ANY").upper()))
+
+    def _param_shape(self, a: Node, params: list[str]) -> tuple[int, str, str] | None:
+        """(index of the parameter, text before it, text after it) when the path is built around a parameter of the
+        method — the first one: `uri`, `$"{_apiUrl}{uri}/{id}"`, `_base + uri`."""
+        if a.type == "identifier":
+            if text(a, self.src) in params:
+                return params.index(text(a, self.src)), "", ""
+            a = self.resolve_local(a)
+            if a is None:
+                return None
+        tokens: list[str | int] = []
+        if a.type in STRING_NODES and (a.type == "interpolated_string_expression" or has_interpolation(a)):
+            for c in a.children:
+                if c.type in INTERPOLATION_NODES:
+                    inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]
+                    name = text(inner[0], self.src) if len(inner) == 1 and inner[0].type == "identifier" else None
+                    tokens.append(params.index(name) if name in params else "{param}")
+                elif c.type in STRING_TEXT_NODES:
+                    tokens.append(text(c, self.src))
+        elif a.type in CONCAT_NODES:
+            stack = [a]
+            while stack:
+                c = stack.pop()
+                if c.type == a.type:
+                    stack.extend(reversed([k for k in c.children if k.is_named]))
+                elif c.type == "identifier" and text(c, self.src) in params:
+                    tokens.append(params.index(text(c, self.src)))
+                elif c.type in STRING_NODES and not has_interpolation(c):
+                    tokens.append(unquote(text(c, self.src)))
+                else:
+                    tokens.append(self.path_of(c) or "{param}")
+        slots = [i for i, t in enumerate(tokens) if isinstance(t, int)]
+        if not slots:
+            return None
+        i = slots[0]                                  # the path; a later parameter is a placeholder (`{uri}/{id}`)
+        around = ("".join(t if isinstance(t, str) else "{param}" for t in tokens[:i]),
+                  "".join(t if isinstance(t, str) else "{param}" for t in tokens[i + 1:]))
+        return tokens[i], *(re.sub(r"\{[^}]*\}", "{param}", x) for x in around)
+
+    def _wrapped_call(self, n: Node, fn: Node, name: str, arg_nodes: list[Node]) -> None:
+        """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument
+        waits for `compose` to find whether that type's method is a client wrapper (it may live in another file)."""
+        recv = fn.child_by_field_name("expression") if fn.type == "member_access_expression" else None
+        if recv is None or recv.type != "identifier" or not arg_nodes:
+            return
+        args = tuple(self._literal(a) for a in arg_nodes)
+        rtype = self._declared_type(recv, n) if any(args) else None
+        if rtype:
+            self.out.pending.append(Pending(self.call_info(n, None, "", name), "cs.client-wrapper", (rtype, name, args)))
+
+    def _literal(self, a: Node) -> str | None:
+        """Text of a string argument (a template with `{param}`), or of the local it is assigned to."""
+        if a.type == "identifier":
+            bound, val = self.scopes.binding(a)
+            a = val if bound and val is not None else a
+        if a.type not in STRING_NODES:
+            return None
+        return self._interpolated(a, True) if a.type == "interpolated_string_expression" or has_interpolation(a) \
+            else unquote(text(a, self.src))
+
+    def _declared_type(self, recv: Node, at: Node) -> str | None:
+        """Declared type of a local, parameter, field, property or primary-constructor parameter (simple name): the
+        function around `at` first — and, from a lambda or local function, the ones around it — then the class."""
+        from .symbols import _CLOSURES, _FUNC_NODES, _enclosing, _members   # the language module imports this one
+        name = text(recv, self.src)
+        scope = _enclosing(at, _FUNC_NODES)
+        while scope is not None:
+            types = self._scope_types(scope)
+            if name in types:
+                return types[name]
+            if scope.type not in _CLOSURES:
+                break
+            scope = _enclosing(scope, _FUNC_NODES)
+        cls = at.parent
+        while cls is not None and cls.type not in CLASS_NODES:
+            cls = cls.parent
+        if cls is None:
+            return None
+        if cls.id not in self._class_members:
+            self._class_members[cls.id] = _members(cls, self.src)
+        return self._class_members[cls.id].get(name)
+
+    def _scope_types(self, scope: Node) -> dict[str, str | None]:
+        """Parameter and local name → declared type (or the type it is created with: `var x = new T()`), read in one
+        pass per function."""
+        from .symbols import _new_type, _returned_type, _service_type, _type_text
+        if scope.id in self._types:
+            return self._types[scope.id]
+        types: dict[str, str | None] = {}
+        for d in walk(scope):
+            if d.type != "variable_declaration" or d.parent is None or d.parent.type != "local_declaration_statement":
+                continue
+            ty = d.child_by_field_name("type") or next((c for c in d.children if c.is_named), None)
+            for v in d.children:
+                nm = v.child_by_field_name("name") or next((c for c in v.children if c.type == "identifier"), None) \
+                    if v.type == "variable_declarator" else None
+                if nm is None:
+                    continue
+                tt = _type_text(ty, self.src)
+                if tt is None:
+                    init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
+                    tt = (_new_type(init, self.src) or _service_type(init, self.src)
+                          or _returned_type(init, scope, self.src)) if init is not None else None
+                types[text(nm, self.src)] = tt
+        pl = scope.child_by_field_name("parameters") or next((c for c in scope.children if c.type == "parameter_list"), None)
+        for prm in (pl.children if pl is not None else ()):
+            nm = prm.child_by_field_name("name") if prm.type == "parameter" else None
+            if nm is not None:
+                types[text(nm, self.src)] = _type_text(prm.child_by_field_name("type"), self.src)
+        self._types[scope.id] = types
+        return types
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

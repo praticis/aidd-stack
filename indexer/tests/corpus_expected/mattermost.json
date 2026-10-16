@@ -3218,16 +3218,16 @@
    {
     "evidence": "mattermost:.github/actions/save-junit-report-tms/src/main.ts:334",
     "method": "POST",
-    "path": "/testcycles",
-    "raw": "/testcycles",
+    "path": "/v2/testcycles",
+    "raw": "https://api.zephyrscale.smartbear.com/v2/testcycles",
     "ok": true,
     "category": null
    },
    {
     "evidence": "mattermost:.github/actions/save-junit-report-tms/src/main.ts:359",
     "method": "POST",
-    "path": "/testexecutions",
-    "raw": "/testexecutions",
+    "path": "/v2/testexecutions",
+    "raw": "https://api.zephyrscale.smartbear.com/v2/testexecutions",
     "ok": true,
     "category": null
    },
@@ -3346,10 +3346,10 @@
    {
     "evidence": "mattermost:server/channels/app/platform/support_packet.go:551",
     "method": "GET",
-    "path": "/{param}/version",
-    "raw": "/{param}/version",
-    "ok": false,
-    "category": "url-object-builder"
+    "path": "/version",
+    "raw": "/version",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/app/security_update_check.go:90",

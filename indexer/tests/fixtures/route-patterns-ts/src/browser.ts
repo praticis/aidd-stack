@@ -65,3 +65,19 @@ export function savePage(CTFd: any, part: string) {
   }
   return CTFd.fetch(target, { method: method });
 }
+
+const resource = 'cases';
+
+export const caseApi = {
+  join: (API: any, caseId: string) => API.post(`/${resource}/${caseId}/join`, {}), // a word constant, one whole segment
+  all: (API: any) => API.get(`/${resource}`),
+  byName: (API: any) => API.get(resource), // a word alone is not a path
+  tagged: (API: any, tag: string) => API.get(`/${resource}-${tag}`), // not a whole segment
+};
+
+const GHOST_URL = 'http://localhost:2368';
+
+export async function adminRequest(endpoint: string) {
+  const separator = endpoint.includes('?') ? '&' : '?';
+  return fetch(`${GHOST_URL}/ghost/api/admin/${endpoint}${separator}god_mode=true`); // the rest of the path is the caller's
+}

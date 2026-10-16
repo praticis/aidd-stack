@@ -122,8 +122,7 @@
   },
   {
    "method": "POST",
-   "path": "/collections/manuals/points/search",
-   "category": "field-in-interpolation"
+   "path": "/collections/manuals/points/search"
   },
   {
    "method": "GET",
@@ -150,7 +149,7 @@
    "path": "/tickets/{ticketId}"
   }
  ],
- "notes": "Manual, the whole solution: every Map* in the Backend and the two web UIs, the FastAPI inference service, and every call in the typed clients (ServiceDefaults/Clients), the backend's Qdrant search and the Aspire host's Ollama calls. Minimal APIs with literal routes and typed HttpClient wrappers with literal paths: everything comes out right, and every UI → Backend call has its route in the same repo — the best case for the linker. The one error: $\"collections/{ManualCollectionName}/points/search\" with private const string ManualCollectionName = \"manuals\" keeps a placeholder where the code holds a literal (field-in-interpolation). GET /manual exists in the Backend and in StaffWebUI (multi-app-repo; one endpoint after the merge).",
+ "notes": "Manual, the whole solution: every Map* in the Backend and the two web UIs, the FastAPI inference service, and every call in the typed clients (ServiceDefaults/Clients), the backend's Qdrant search and the Aspire host's Ollama calls. Minimal APIs with literal routes and typed HttpClient wrappers with literal paths: everything comes out right, and every UI → Backend call has its route in the same repo — the best case for the linker. The one error: $\"collections/{ManualCollectionName}/points/search\" with private const string ManualCollectionName = \"manuals\" keeps a placeholder where the code holds a literal (field-in-interpolation). GET /manual exists in the Backend and in StaffWebUI (multi-app-repo; one endpoint after the merge). Since item 5 for C# (2026-10-15): the word constant is read as its segment (/collections/manuals/points/search).",
  "checked": {
   "endpoints": [
    {
@@ -318,10 +317,10 @@
    {
     "evidence": "eshop-support:src/Backend/Services/ProductManualSemanticSearch.cs:29",
     "method": "POST",
-    "path": "/collections/{param}/points/search",
-    "raw": "/collections/{param}/points/search",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/collections/manuals/points/search",
+    "raw": "/collections/manuals/points/search",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "eshop-support:src/ServiceDefaults/Clients/Backend/CustomerBackendClient.cs:12",

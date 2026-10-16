@@ -731,3 +731,69 @@ Diff against `2026-10-15-v2-baseline-3`: only the three repositories below chang
   4 wrong), then NSwag (item 7).
 
 New baseline: `2026-10-15-v2-baseline-4`.
+
+## Update: C# calls — constants in templates and the app's own client wrappers (2026-10-15)
+
+This is the C# part of H2b item 5, done next because of the portfolio priority (H2-D18). The template rule is
+general, so it also changes TS/JS calls.
+
+- **Constants in templates.** A constant interpolated into a URL template is read only when it forms whole path
+  segments:
+  - a constant holding a path, at the start of the template: `$"{remoteServiceBaseUrl}items/{id}"` with the field
+    `remoteServiceBaseUrl = "api/catalog/"`, or `$"{ApiUrlBase}/{orderId}"`;
+  - a constant holding one word, standing for a whole segment: `` `/${resource}/${id}/join` `` with
+    `resource = "cases"`, or `$"collections/{ManualCollectionName}/points/search"`. Word constants are kept apart
+    from path constants, so a word alone never becomes a path.
+
+  Neither applies inside a generic wrapper, meaning a template that takes the rest of its path from a variable
+  named like one (`path`, `url`, `endpoint`, `*Url`). There the constant is only a base. Two cases show why:
+  alertmanager's `${pathPrefix}/${API_PATH}${path}`, and ghost's
+  `${GHOST_URL}/ghost/api/admin/${endpoint}${separator}god_mode=true`, which the first version of this rule
+  turned into a junk call.
+- **Path-valued calls in a template.** A call that already yields a path counts as whole segments, such as eShop's
+  `UriHelper.CombineUri(base, ApiUrlBase)`. `CombineUri`, `CombineUrl` and `UrlCombine` join `Path.Combine`'s
+  family. An unknown first part of a join is the base and is dropped, as in `base + "/x"`.
+- **The app's own client wrappers.** eShopOnWeb's admin UI calls its API only through `HttpService.HttpGet<T>(uri)`,
+  which wraps `_httpClient.GetAsync($"{_apiUrl}{uri}")`.
+  - A method whose outbound path is built around one of its parameters publishes itself as a wrapper. The fact
+    records which parameter is the path, the verb and the text around it, under its class and the class's
+    interfaces.
+  - A call with a string argument on a receiver whose declared type is known waits for the composition step. The
+    receiver can be a field, a property, a parameter or a local.
+  - The composition step builds the call's path. This is the first use of the cross-file step for calls.
+- **Cost.** The first measurement showed the scanners were slow in general. Two fixes made the whole corpus faster,
+  with the output identical to the run before them:
+  - name bindings are indexed once per scope instead of walking the scope for each lookup;
+  - aiohttp's bound-method alias is only looked for in files that use it.
+
+  HTTP extraction time over the corpus went from 672 s to 98 s (netbox 49 s → 8 s in a normal run), and the whole
+  run from about 23 minutes to 13.
+
+Diff against `2026-10-15-v2-baseline-4`, judged: 8 repositories changed, and every changed item is right.
+
+- **dispatch (−53 +273):** each UI `api.js` module's `resource` constant.
+- **eshop (−11 +20):** the services' prefix field and the ClientApp's `CombineUri`.
+- **eshop-on-web (+6):** the calls through `HttpService`.
+- **eshop-support (−1 +1):** the word constant.
+- **mattermost (−3 +3):** the Zephyr base URL's `/v2`, and `url.JoinPath(serverURL, "version")`.
+- **zulip (−1 +1):** `urljoin(base, "/api/v1/remotes/" + endpoint)`.
+- **argo-cd (−1 +1):** `/swagger.json`, whose prefix `path.Dir("/swagger-ui")` is the root.
+- **ghost (+1):** an external GeoJSON download.
+
+| Language (calls) | P sampled before → now | P expected before → now | R expected before → now |
+|---|---|---|---|
+| C# | 92.5 % → 100 % (53/53) | 84.1 % → 100 % | 63.8 % → 96.6 % |
+| TS/JS | 57.6 % → 70.1 % (101/144) | 44.3 % → 59.5 % | 31.5 % → 45.0 % |
+| Go | 93.8 % → 100 % (16/16) | 100 % | 31.6 % |
+| Python | 66.7 % → 69.7 % (23/33) | 100 % | 66.7 % |
+
+- `field-in-interpolation` is down to ghost's admin URL, which starts from `window.location` (4 wrong, 1 missed).
+  `client-wrapper` is down to gitea's TS wrappers (16 missed): reading them needs receiver types in TS.
+- The 2 C# calls still missed:
+  - eshop-on-web's `GetFromJsonAsync("User")`, a single relative segment;
+  - a `UriBuilder` in bitwarden (`url-object-builder`).
+- **Found on the way, outside the HTTP extractor:** a C# generic method call on a receiver (`obj.Method<T>(...)`) is
+  not a call site at all. `queries.scm` only matches bare generic calls, so `CALLS` edges to generic methods are
+  missing in .NET repositories.
+
+New baseline: `2026-10-15-v2-baseline-5`.

@@ -23,15 +23,17 @@
   (2026-10-15):** escopos, expressões de path, grafo de montagem e tipos de nó saíram do `http_base.py` para
   módulos próprios; corpus idêntico nos 39 repos. Prioridade do portfólio registrada (H2-D18). **Item 6 fechado
   (2026-10-15):** `[Route]` herdado (um nível) e classes de endpoint (FastEndpoints, ApiEndpoints), com o primeiro
-  passo entre arquivos (`compose`); rotas C# P 94,6 → 100 %, R 72,9 → 93,1 % nos gabaritos.
+  passo entre arquivos (`compose`); rotas C# P 94,6 → 100 %, R 72,9 → 93,1 % nos gabaritos. **Chamadas C# do
+  item 5 (2026-10-15):** constante em template como segmentos inteiros e wrappers de cliente do próprio app;
+  chamadas C# P 84 → 100 %, R 64 → 97 % (TS/JS R 31,5 → 45 % de carona); extração HTTP do corpus 672 → 98 s.
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-4/` — corpus v2, 39 repos, com o item 6
-  (a `-3` é a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-5/` — corpus v2, 39 repos, com as
+  chamadas C# do item 5 (a `-4` é a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -46,9 +48,9 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo (H2-D18):** o resto do .NET — as chamadas C# do item 5 (`client-wrapper` 11,
-  `field-in-interpolation` 8 + 4 errados) e o NSwag do item 7 (`route-by-name-convention`, 10, fica para a
-  convenção do projeto). Depois
+- **Próximo passo (H2-D18):** o NSwag do item 7 — o último do .NET (`route-by-name-convention`, 10, fica para a
+  convenção do projeto; sobram 2 chamadas C#: `GetFromJsonAsync("User")` de um segmento só e um `UriBuilder`).
+  Depois
   o item 2, etapa 2, que é o maior ganho de Go e Python — entre arquivos (`prefix-other-file`: Go 863, Python 230:
   o router exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1",
   apiv1.Routes())`) e helpers que recebem o router (`router-as-param`, Go 102) —, com o `route-chain` do Go (216)
@@ -175,6 +177,11 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   (`data-taken-for-handler`, gotify)
 - [ ] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`)
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+  - [x] *(2026-10-15)* C#: constante interpolada como segmentos inteiros (de path no começo; de uma palavra entre
+    barras), nunca num wrapper genérico (variável de nome de path no template); chamada interpolada que já é path
+    (`CombineUri`); wrappers de cliente do app (`HttpService.HttpGet(uri)`) por fato + `Pending` + `compose`, com o
+    tipo declarado do receiver. Sobra em TS: o `adminUrl` do ghost (`window.location`) e os wrappers do gitea
+    (precisam de tipo do receiver em TS)
 - [x] **6. C#:** herança de `[Route]` (H2-D10, aceito: um nível) e classes de endpoint (FastEndpoints, ApiEndpoints)
   *(2026-10-15)* — primeiro passo entre arquivos (`facts` + `Pending` → `CsScanner.compose`); constante de classe
   por `Classe.NOME`; `nameof(X)` e variável local em interpolação do C#; `[action]` sem `Async`. Fixtures em
@@ -203,6 +210,11 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - actions herdadas de controller base abstrato (CRUD genérico) — 0 no corpus
   - FastEndpoints: `RoutePrefix` global e `Group<T>()` — 0 no corpus
   - herança de `[Route]` em mais de um nível (H2-D10 decidiu um)
+- [ ] Pendências das chamadas C# (item 5):
+  - **fora do HTTP:** chamada genérica com receiver (`obj.Method<T>(...)`) não vira call site — o `queries.scm` do
+    C# só casa a genérica sem receiver; faltam arestas `CALLS` para métodos genéricos no .NET
+  - `URL_LITERAL` aceita qualquer caractere depois do host (`/x/{param}{param}god_mode=true` passaria)
+  - wrappers de cliente em TS (gitea, 16) e Python: o mesmo caminho, com o tipo do receiver de cada linguagem
 
 ## Taxonomia de erros
 
@@ -359,3 +371,16 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   (−128 +162), ardalis (+19) e eshop-on-web (+1), todos certos; nenhuma chamada muda. Rotas C# nos gabaritos:
   P 94,6 → 100 %, R 72,9 → 93,1 %; jellyfin P/R 33/25 → 100/100 %. Python do portfólio = FastAPI/Flask (H2-D18).
   Nova baseline `2026-10-15-v2-baseline-4`.
+- **2026-10-15** — H2b, Fase 4 item 5, parte C# (H2-D18). Constante interpolada vale como segmentos inteiros: a de
+  path no começo do template (`$"{remoteServiceBaseUrl}items/{id}"`), a de uma palavra entre barras
+  (`` `/${resource}/${id}` ``, guardada à parte para nunca virar path sozinha) — e nunca num wrapper genérico, um
+  template com variável de nome de path (a primeira versão fez lixo do `${GHOST_URL}/ghost/api/admin/${endpoint}`
+  do ghost, pego no diff). Chamada interpolada que já é path (`CombineUri`, família do `Path.Combine`; base
+  desconhecida sai do join). Wrappers de cliente do app: o método que monta o path em volta de um parâmetro publica
+  `Classe.Método` (e sob as interfaces); a chamada num receiver de tipo declarado conhecido fica `Pending` e
+  `compose` monta o path — primeiro uso do passo entre arquivos para chamadas. Custo: a primeira medida mostrou o
+  netbox em 445 s de HTTP; `Scopes` passou a indexar as atribuições uma vez por escopo e o alias do aiohttp só é
+  procurado onde existe — saída idêntica, HTTP do corpus 672 → 98 s, execução 23 → 13 min. Diff julgado (8 repos,
+  tudo certo): dispatch +273, eshop, eshop-on-web (+6 pelo `HttpService`), eshop-support, mattermost, zulip,
+  argo-cd, ghost. Chamadas C#: P 84 → 100 %, R 64 → 97 %; TS/JS: P 44 → 60 %, R 31,5 → 45 %. Achado fora do HTTP:
+  `obj.Method<T>()` não é call site no C#. Nova baseline `2026-10-15-v2-baseline-5`.

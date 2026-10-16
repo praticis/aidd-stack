@@ -1054,53 +1054,43 @@
  "calls": [
   {
    "method": "GET",
-   "path": "/cases",
-   "category": "field-in-interpolation"
+   "path": "/cases"
   },
   {
    "method": "POST",
-   "path": "/cases",
-   "category": "field-in-interpolation"
+   "path": "/cases"
   },
   {
    "method": "DELETE",
-   "path": "/cases/{caseId}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}"
   },
   {
    "method": "GET",
-   "path": "/cases/{caseId}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}"
   },
   {
    "method": "PUT",
-   "path": "/cases/{caseId}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}"
   },
   {
    "method": "POST",
-   "path": "/cases/{caseId}/add/{email}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/add/{email}"
   },
   {
    "method": "PUT",
-   "path": "/cases/{caseId}/escalate",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/escalate"
   },
   {
    "method": "PATCH",
-   "path": "/cases/{caseId}/event",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/event"
   },
   {
    "method": "POST",
-   "path": "/cases/{caseId}/event",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/event"
   },
   {
    "method": "DELETE",
-   "path": "/cases/{caseId}/event/{event_uuid}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/event/{event_uuid}"
   },
   {
    "method": "POST",
@@ -1109,31 +1099,26 @@
   },
   {
    "method": "POST",
-   "path": "/cases/{caseId}/join",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/join"
   },
   {
    "method": "GET",
-   "path": "/cases/{caseId}/participants",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/participants"
   },
   {
    "method": "DELETE",
-   "path": "/cases/{caseId}/remove/{email}",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/remove/{email}"
   },
   {
    "method": "POST",
-   "path": "/cases/{caseId}/resources",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/resources"
   },
   {
    "method": "POST",
-   "path": "/cases/{caseId}/resources/conversation",
-   "category": "field-in-interpolation"
+   "path": "/cases/{caseId}/resources/conversation"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations, paths relative to the API sub-app that main.py mounts at /api/v1 — kept as the spec writes them), scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, included with its prefix in src/dispatch/api.py — api_router.include_router(case_router, prefix=\"/{organization}/cases\") — so every route comes out without it and the roots (@router.get(\"\")) are dropped (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`) — the module constant becomes a placeholder (field-in-interpolation); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right.",
+ "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations, paths relative to the API sub-app that main.py mounts at /api/v1 — kept as the spec writes them), scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, included with its prefix in src/dispatch/api.py — api_router.include_router(case_router, prefix=\"/{organization}/cases\") — so every route comes out without it and the roots (@router.get(\"\")) are dropped (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`) — the module constant becomes a placeholder (field-in-interpolation); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right. Since item 5 (2026-10-15): each UI api.js module's `resource` constant (\"cases\" or \"/data/alerts\") is read as whole segments of its templates — 273 calls more, the sampled ones right.",
  "checked": {
   "endpoints": [
    {
@@ -1309,154 +1294,154 @@
    {
     "evidence": "dispatch:src/dispatch/plugins/dispatch_jira/plugin.py:88",
     "method": "GET",
-    "path": "/rest/api/2/{param}",
-    "raw": "/rest/api/2/{param}?query={param}&maxResults=1",
+    "path": "/rest/api/2/groupuserpicker",
+    "raw": "/rest/api/2/groupuserpicker?query={param}&maxResults=1",
     "ok": true,
     "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:57",
     "method": "POST",
-    "path": "/{param}/{param}/join",
-    "raw": "/{param}/{param}/join",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/join",
+    "raw": "/cases/{param}/join",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:61",
     "method": "DELETE",
-    "path": "/{param}/{param}/remove/{param}",
-    "raw": "/{param}/{param}/remove/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/remove/{param}",
+    "raw": "/cases/{param}/remove/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:69",
     "method": "POST",
-    "path": "/{param}/{param}/resources",
-    "raw": "/{param}/{param}/resources",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/resources",
+    "raw": "/cases/{param}/resources",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:73",
     "method": "POST",
-    "path": "/{param}/{param}/resources/conversation",
-    "raw": "/{param}/{param}/resources/conversation",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/resources/conversation",
+    "raw": "/cases/{param}/resources/conversation",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:77",
     "method": "POST",
-    "path": "/{param}/{param}/event",
-    "raw": "/{param}/{param}/event",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/event",
+    "raw": "/cases/{param}/event",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:81",
     "method": "PATCH",
-    "path": "/{param}/{param}/event",
-    "raw": "/{param}/{param}/event",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/event",
+    "raw": "/cases/{param}/event",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/case/api.js:85",
     "method": "DELETE",
-    "path": "/{param}/{param}/event/{param}",
-    "raw": "/{param}/{param}/event/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/cases/{param}/event/{param}",
+    "raw": "/cases/{param}/event/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/entity/api.js:31",
     "method": "GET",
-    "path": "/{param}/signal_instances/{param}",
-    "raw": "/{param}/signal_instances/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/entity/{param}/signal_instances/{param}",
+    "raw": "/entity/{param}/signal_instances/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/entity_type/api.js:35",
     "method": "PUT",
-    "path": "/recalculate/{param}/{param}",
-    "raw": "/recalculate/{param}/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/entity_type/recalculate/{param}/{param}",
+    "raw": "/entity_type/recalculate/{param}/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:18",
     "method": "GET",
-    "path": "/{param}/metric/forecast",
-    "raw": "/{param}/metric/forecast",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/incidents/metric/forecast",
+    "raw": "/incidents/metric/forecast",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:64",
     "method": "POST",
-    "path": "/{param}/{param}/add/{param}",
-    "raw": "/{param}/{param}/add/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/incidents/{param}/add/{param}",
+    "raw": "/incidents/{param}/add/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:76",
     "method": "POST",
-    "path": "/{param}/{param}/event",
-    "raw": "/{param}/{param}/event",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/incidents/{param}/event",
+    "raw": "/incidents/{param}/event",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:84",
     "method": "DELETE",
-    "path": "/{param}/{param}/event/{param}",
-    "raw": "/{param}/{param}/event/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/incidents/{param}/event/{param}",
+    "raw": "/incidents/{param}/event/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/incident/api.js:95",
     "method": "GET",
-    "path": "/{param}/{param}/regenerate",
-    "raw": "/{param}/{param}/regenerate",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/incidents/{param}/regenerate",
+    "raw": "/incidents/{param}/regenerate",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/plugin/api.js:27",
     "method": "PUT",
-    "path": "/{param}/instances/{param}",
-    "raw": "/{param}/instances/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/plugins/instances/{param}",
+    "raw": "/plugins/instances/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/search/api.js:31",
     "method": "GET",
-    "path": "/filters/{param}",
-    "raw": "/filters/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/search/filters/{param}",
+    "raw": "/search/filters/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/signal/api.js:41",
     "method": "GET",
-    "path": "/{param}/instances",
-    "raw": "/{param}/instances",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/signals/{param}/instances",
+    "raw": "/signals/{param}/instances",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/static/dispatch/src/workflow/api.js:15",
     "method": "GET",
-    "path": "/instances/{param}",
-    "raw": "/instances/{param}",
-    "ok": false,
-    "category": "field-in-interpolation"
+    "path": "/workflows/instances/{param}",
+    "raw": "/workflows/instances/{param}",
+    "ok": true,
+    "category": null
    }
   ]
  },

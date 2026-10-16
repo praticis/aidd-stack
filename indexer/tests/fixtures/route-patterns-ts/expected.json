@@ -121,6 +121,16 @@
    "method": "PATCH",
    "path": "/api/v1/pages/{param}",
    "line": 66
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{param}/join",
+   "line": 72
+  },
+  {
+   "method": "GET",
+   "path": "/cases",
+   "line": 73
   }
  ]
 }

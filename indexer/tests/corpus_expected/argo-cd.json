@@ -802,10 +802,10 @@
    {
     "evidence": "argo-cd:util/swagger/swagger.go:27",
     "method": "ANY",
-    "path": "/{param}/swagger.json",
-    "raw": "/{param}/swagger.json",
-    "ok": false,
-    "category": "prefix-as-param"
+    "path": "/swagger.json",
+    "raw": "/swagger.json",
+    "ok": true,
+    "category": null
    }
   ],
   "calls": [

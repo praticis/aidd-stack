@@ -111,6 +111,46 @@
    "method": "GET",
    "path": "/20141201/lineups",
    "line": 21
+  },
+  {
+   "method": "GET",
+   "path": "/api/ordering/orders/{param}",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/api/ordering/orders/recent",
+   "line": 11
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{param}",
+   "line": 18
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/drafts",
+   "line": 21
+  },
+  {
+   "method": "GET",
+   "path": "/catalog-items/{param}",
+   "line": 9
+  },
+  {
+   "method": "DELETE",
+   "path": "/catalog-items/{param}",
+   "line": 11
+  },
+  {
+   "method": "POST",
+   "path": "/catalog-items",
+   "line": 13
+  },
+  {
+   "method": "GET",
+   "path": "/catalog-items",
+   "line": 16
   }
  ]
 }

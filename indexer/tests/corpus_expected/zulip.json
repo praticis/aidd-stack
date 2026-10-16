@@ -918,10 +918,10 @@
    {
     "evidence": "zulip:zerver/lib/remote_server.py:183",
     "method": "ANY",
-    "path": "/{param}/api/v1/remotes/{param}",
-    "raw": "/{param}/api/v1/remotes/{param}",
-    "ok": false,
-    "category": "url-object-builder"
+    "path": "/api/v1/remotes/{param}",
+    "raw": "/api/v1/remotes/{param}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "zulip:zerver/management/commands/fetch_tor_exit_nodes.py:54",

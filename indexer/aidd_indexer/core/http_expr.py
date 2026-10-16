@@ -28,6 +28,9 @@ REQUEST_PATH_FIELDS = frozenset({"path", "url", "uri", "endpoint", "requesturi"}
 PATH_NAME_NODES = NAME_NODES | {"property_identifier"}
 PATH_CONCAT_NODES = CONCAT_NODES | {"concatenated_string"}
 _ONE_WORD = re.compile(r"^[A-Za-z][A-Za-z0-9_\-]{2,}(\?.*)?$")          # `message`, `message?since=1`
+_PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w*(Path|Url|Uri|_path|_url|_uri))$", re.I)
+_JOIN_CALL = re.compile(r"^(Join|JoinPath|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
+_SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
 
@@ -42,9 +45,10 @@ def owner_class(n: Node, src: bytes) -> str | None:
 
 
 def collect_constants(fx, ctx: "PackageContext") -> None:
-    """Module- and class-level constants holding a path or a base URL. A function's locals are not constants of the
-    directory: a `url` parameter elsewhere would take the value of this function's `url` (`Scopes` reads them). A
-    class-level one is also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
+    """Module- and class-level constants holding a path or a base URL — or a single word, a path segment only where a
+    template puts it whole (`/${resource}/${id}`). A function's locals are not constants of the directory: a `url`
+    parameter elsewhere would take the value of this function's `url` (`Scopes` reads them). A class-level one is
+    also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
     src = fx.src
     for n in walk(fx.tree.root_node):
         name = val = None
@@ -70,6 +74,9 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                 if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or URL_LITERAL.match(lit)) and len(lit) > 1:
                     for nm in names:
                         ctx.define(nm, raw=lit)
+                elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _SEGMENT.match(lit):
+                    for nm in names:
+                        ctx.define(nm, segment=lit)
         if n.type in STRING_NODES:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
@@ -97,6 +104,25 @@ def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
         else:
             parts.append(("unk", None))
     return parts if any(k == "lit" for k, _ in parts) else None
+
+
+def valid_path(lit: str, lenient: bool = False) -> str | None:
+    """The text of a string or template, as a path template — or None. A leading placeholder is a base URL
+    (`{base}/v1/x` → `/v1/x`); `lenient` (a client's argument) also takes `items/{id}` and `{base}catalogBrands`."""
+    lit = re.sub(r"\$\{[^}]*\}", "{param}", lit)
+    m = re.match(r"^\{param\}(/?)(.*)$", lit)              # leading base-URL placeholder
+    if m:
+        rest = m.group(2)
+        if m.group(1) == "/" or (lenient and (looks_like_rel_path(rest) or _ONE_WORD.match(rest))):
+            lit = "/" + rest.lstrip("/")
+        else:
+            return None
+    check = mask_placeholders(lit).split("?", 1)[0].split("#", 1)[0]    # `items/{id}?api-version=2.0`: the query is not the path
+    if URL_LITERAL.match(lit) or PATH_LITERAL.match(check) or REL_PATH_LITERAL.match(lit):
+        return lit if len(check) > 1 else None
+    if lenient and looks_like_rel_path(check):
+        return "/" + lit
+    return None
 
 
 def first_string(n: Node, src: bytes) -> str | None:
@@ -167,20 +193,7 @@ class PathExpressions:
     def _path_of_string(self, n: Node, lenient: bool, _depth: int) -> str | None:
         lit = self._interpolated(n, lenient, _depth) if has_interpolation(n) or n.type == "interpolated_string_expression" \
             else unquote(text(n, self.src))
-        lit = re.sub(r"\$\{[^}]*\}", "{param}", lit)
-        m = re.match(r"^\{param\}(/?)(.*)$", lit)              # leading base-URL placeholder
-        if m:
-            rest = m.group(2)
-            if m.group(1) == "/" or (lenient and (looks_like_rel_path(rest) or _ONE_WORD.match(rest))):
-                lit = "/" + rest.lstrip("/")
-            else:
-                return None
-        check = mask_placeholders(lit).split("?", 1)[0].split("#", 1)[0]    # `items/{id}?api-version=2.0`: the query is not the path
-        if URL_LITERAL.match(lit) or PATH_LITERAL.match(check) or REL_PATH_LITERAL.match(lit):
-            return lit if len(check) > 1 else None
-        if lenient and looks_like_rel_path(check):
-            return "/" + lit
-        return None
+        return valid_path(lit, lenient)
 
     def _path_of_name(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """A local binding first (a parameter has no value here), then the directory's constants (`A.B` by its
@@ -255,10 +268,12 @@ class PathExpressions:
                 kids_fn = [c for c in fn.children if c.is_named]
                 recv = kids_fn[0] if kids_fn else None
             return self.path_of(recv, lenient, _depth + 1) if recv is not None else None
-        if fname in ("Join", "JoinPath", "urljoin", "Combine"):
+        if _JOIN_CALL.match(fname):
             segs = [(unquote(text(a, self.src)) if a.type in STRING_NODES and not has_interpolation(a)
                      else self.path_of(a, lenient, _depth + 1)) or "{param}" for a in arg_nodes]
             segs = [s for s in segs if s]
+            if len(segs) > 1 and segs[0] == "{param}":           # an unknown first part is the base URL, as in `base + "/x"`
+                segs = segs[1:]
             return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
         return None
 
@@ -277,26 +292,89 @@ class PathExpressions:
         return base + (tail if tail is not None else "{param}")
 
     def _interpolated(self, n: Node, lenient: bool = False, _depth: int = 0) -> str:
-        """Template text with each substitution as `{param}` — except a local variable holding a path, read as in a
-        concatenation (`url = `${url}?notify=true``). A module constant stays a placeholder: in a generic wrapper
-        (`${prefix}/${API_PATH}${path}`) it would make a path out of what is only a base."""
-        parts = []
+        """Template text with each substitution as `{param}`, except where the code holds the value (`_substitution`)."""
+        tokens: list[str | Node | None] = []              # literal text, or the expression of a substitution
         for c in n.children:
             if c.type in INTERPOLATION_NODES:
                 inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]     # C# names its braces
-                v = None
-                if len(inner) == 1 and inner[0].type == "identifier":
-                    bound, val = self.scopes.binding(inner[0])
-                    v = self.path_of(val, lenient, _depth + 1) if bound and val is not None else None
-                elif len(inner) == 1 and inner[0].type in CALL_NODES:          # C# `$"/{nameof(Project)}s"`: a constant
-                    m = re.match(r"^nameof\s*\(\s*([\w.]+)\s*\)$", text(inner[0], self.src))
-                    v = m.group(1).split(".")[-1] if m else None
-                parts.append(v if v is not None else "{param}")
+                tokens.append(inner[0] if len(inner) == 1 else None)
             elif c.type in STRING_TEXT_NODES:
-                parts.append(text(c, self.src))
+                tokens.append(text(c, self.src))
             # interpolation_start ($"), string_start/end, quotes: structural, no text
-        raw = "".join(parts) if parts else unquote(text(n, self.src))
+        if not tokens:
+            raw = unquote(text(n, self.src))
+        else:
+            path_named = [t for t in tokens if isinstance(t, Node) and t.type == "identifier"
+                          and _PATH_NAMED.match(text(t, self.src))]
+            parts = []
+            for i, t in enumerate(tokens):
+                if isinstance(t, str) or t is None:
+                    parts.append(t if t is not None else "{param}")
+                    continue
+                prev, nxt = (tokens[i - 1] if i else ""), (tokens[i + 1] if i + 1 < len(tokens) else "")
+                whole = (i == 0 or (isinstance(prev, str) and prev.endswith("/")),
+                         i + 1 == len(tokens) or (isinstance(nxt, str) and nxt[:1] in ("/", "?", "#")))
+                generic = any(o is not t for o in path_named)
+                v = self._substitution(t, lenient, _depth, generic, whole)
+                parts.append(v if v is not None else "{param}")
+            raw = "".join(parts)
         return re.sub(r"\{[^}]*\}", "{param}", raw) if n.type == "interpolated_string_expression" else raw
+
+    def _substitution(self, e: Node, lenient: bool, _depth: int, generic: bool, whole: tuple[bool, bool]) -> str | None:
+        """The value of `${e}` when the code holds it:
+        - a local variable holding a path, read as in a concatenation (`url = `${url}?notify=true``);
+        - a constant of the module or class holding a path, at the start of whole segments (`$"{baseUrl}items/{id}"`
+          with `baseUrl = "api/catalog/"`, `$"{ApiUrlBase}/{orderId}"`) — but not in a generic wrapper, a template that
+          takes the rest of the path from a variable named like one (`${prefix}/${API_PATH}${path}`, alertmanager;
+          `${GHOST_URL}/ghost/api/admin/${endpoint}`): there the constant is only a base;
+        - a word (a local or a constant: `resource = "cases"`) standing for one whole segment (`/${resource}/${id}`);
+        - a call that is a path (`CombineUri(base, "api/orders")`), as whole segments; C# `nameof(X)`: the text `X`."""
+        starts, ends = whole
+        if e.type == "identifier":
+            bound, val = self.scopes.binding(e)
+            if bound:
+                if val is None:
+                    return None
+                p = self.path_of(val, lenient, _depth + 1)
+                return p if p is not None else (_word(val, self.src) if starts and ends else None)
+            const = self._constant(e)
+        elif e.type in NAME_NODES:                                 # `Routes.Orders`, `this.base`
+            const = self._constant(e)
+        elif e.type in CALL_NODES:
+            m = re.match(r"^nameof\s*\(\s*([\w.]+)\s*\)$", text(e, self.src))
+            if m:
+                return m.group(1).split(".")[-1]
+            p = self.path_of(e, lenient, _depth + 1)
+            return p if p is not None and starts and ends else None
+        else:
+            return None
+        if const is None:
+            return None
+        value, is_path = const
+        if is_path:
+            return value if not generic and starts and (ends or value.endswith("/")) else None
+        return value if starts and ends else None
+
+    def _constant(self, n: Node) -> tuple[str, bool] | None:
+        """(value, holds a path) of the module or class constant an identifier names — this class's own first, then the
+        directory's; a name the directory defines twice is this file's."""
+        name = text(n, self.src)
+        if name.split(".")[0] in ("this", "self"):                 # `this.base`: this class's own
+            name = name.split(".")[-1]
+        owner = owner_class(n, self.src)
+        for key in ([f"{owner}.{name}"] if owner and "." not in name else []) + [name]:
+            if (v := self.ctx.route_const(key)) is not None:
+                return v, True
+            if (w := self.ctx.segment_const(key)) is not None:
+                return w, False
+        if "." not in name and name in self.ctx.ambiguous:
+            val = self.scopes.assigned_before(self.scopes.root, END, name)
+            if val is not None:
+                if (p := self.path_of(val)) is not None:
+                    return p, True
+                if (w := _word(val, self.src)) is not None:
+                    return w, False
+        return None
 
     def _keyed_fields(self, n: Node) -> list[tuple[str, Node]]:
         """(key, value) pairs of an object / struct literal, one level deep."""
@@ -362,3 +440,11 @@ class PathExpressions:
         if n.type in ("identifier", "shorthand_property_identifier"):
             return self._method_value(self.scopes.binding(n)[1], depth + 1)
         return None
+
+
+def _word(n: Node, src: bytes) -> str | None:
+    """A plain string literal holding one path segment (`"cases"`)."""
+    if n.type not in STRING_NODES or has_interpolation(n):
+        return None
+    lit = unquote(text(n, src))
+    return lit if _SEGMENT.match(lit) else None
