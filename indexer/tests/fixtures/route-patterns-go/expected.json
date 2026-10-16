@@ -291,6 +291,66 @@
    "method": "GET",
    "path": "/repositories/{param}/{param}/src",
    "line": 53
+  },
+  {
+   "method": "GET",
+   "path": "/gettoken",
+   "line": 23
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts/{param}/close",
+   "line": 30
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/userinfo",
+   "line": 39
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chat.postMessage",
+   "line": 44
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "line": 16
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{param}",
+   "line": 17
+  },
+  {
+   "method": "GET",
+   "path": "/paths",
+   "line": 29
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities/{id}",
+   "line": 42
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/identities/{id}",
+   "line": 64
+  },
+  {
+   "method": "GET",
+   "path": "/alerts",
+   "line": 15
+  },
+  {
+   "method": "DELETE",
+   "path": "/silence/{silenceID}",
+   "line": 31
+  },
+  {
+   "method": "GET",
+   "path": "/oauth2/v1/userinfo",
+   "line": 58
   }
  ]
 }

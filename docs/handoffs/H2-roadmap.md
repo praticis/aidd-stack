@@ -37,15 +37,18 @@
   verbos encadeados num construtor de path (gitea `m.Combo("/x").Get(h).Put(h)`, express
   `router.route('/x').get(h)`), o builder do gorilla (`r.Methods("POST").Path("/x").Handler(h)`, `PathPrefix` com
   verbo), montagem por `http.StripPrefix` e router servido por `http.Serve` como aplicação; rotas Go P 98,9 %,
-  R 75,4 → 90,5 % (gitea R 59,1 → 99,1 %, go-kit 59,3 → 100 %).
+  R 75,4 → 90,5 % (gitea R 59,1 → 99,1 %, go-kit 59,3 → 100 %). **Chamadas Go e clientes gerados Go (2026-10-16):**
+  path de `url.URL` (`u.Path = ..`/`+=`, `u.String()`), clientes go-kit (verbo no `NewClient`, path no encoder por
+  `compose`), openapi-generator e go-swagger (`generated-client`); chamadas Go P 100 %, R 10,9 → 93,6 % nos mesmos
+  gabaritos (kratos 10,5 → 96,1 % com as 60 operações do cliente gerado; alertmanager 0 → 93,8 %; go-kit 0 → 78,6 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-8/` — corpus v2, 42 repos, com as
-  cadeias de rota do item 4 (a `-7` é a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-9/` — corpus v2, 42 repos, com as
+  chamadas Go e os clientes gerados Go (a `-8` é a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -61,12 +64,12 @@
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
 - **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
-  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). As rotas Go estão em R 90,5 %: o
-  que sobra é servidor gerado (`generated-server`, argo-cd 106 e alertmanager 9), os tipos de router do kratos
-  (`prefix-in-router-type`, 12) e o `MatchPath` do gitea (3). O próximo é o lado das **chamadas Go** (R 31,6 %:
-  `request-encoder` do go-kit, `url-object-builder`) com os clientes gerados do Go no item 7 (openapi-generator
-  do kratos, go-swagger do alertmanager). Python fora do Django: só o flask-restx do CTFd (17) e o registro de
-  plugins do dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
+  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). Go: rotas R 90,5 %, chamadas
+  R 93,6 % (sobram 7: `url-in-field`, `url-from-helper`, `client-in-field`). O que mais pesa nas rotas Go é servidor
+  gerado (`generated-server`, 115 de 146: o grpc-gateway do argo-cd, 106, e o servidor go-swagger do alertmanager,
+  9, com o `basePath` no JSON embutido); depois os tipos de router do kratos (`prefix-in-router-type`, 12) e o
+  `MatchPath` do gitea (3). Python fora do Django: só o flask-restx do CTFd (17) e o registro de plugins do
+  dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
   do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
   `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
 
@@ -199,6 +202,12 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   servido por `http.Serve`/`ListenAndServe` é aplicação (as rotas valem nos dois lugares). Fixtures
   `route-patterns-go/cmd/{combo,chain,addsvc}` e `route-patterns-ts/src/chain.ts`
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+  - [x] *(2026-10-16)* Go: `url-object-builder` — `url.URL` pelo `u.Path` (`=`, `+=`, `path.Join(u.Path, ..)`),
+    `u.String()`, `u.JoinPath(..)`, `url.Parse(literal)`; `request-encoder` do go-kit (`NewClient(method, tgt, enc,
+    dec)`, path do encoder por `go.encoder` + `Pending` + `GoScanner.compose`); no caminho, verbo em variável
+    (`localVarHTTPMethod = http.MethodGet`, `&http.Request{Method: ..}`), e os contraexemplos `huma.Get(api, "/x",
+    h)` (rota, não chamada) e `"SELECT " + strings.Join(..)` (não é `"MÉTODO /path"`). Fixtures
+    `route-patterns-go/internal/{notify,kitclient}`
   - [x] *(2026-10-15)* C#: constante interpolada como segmentos inteiros (de path no começo; de uma palavra entre
     barras), nunca num wrapper genérico (variável de nome de path no template); chamada interpolada que já é path
     (`CombineUri`); wrappers de cliente do app (`HttpService.HttpGet(uri)`) por fato + `Pending` + `compose`, com o
@@ -217,8 +226,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     `options_`. No caminho: caixa declarada + linker sem caixa para ASP.NET, `[area]` e `{area}`/`{controller}`/
     `{action}` reservados, actions herdadas de base abstrata. Fixtures em `route-patterns-cs` (v13, v14, área, base
     genérica) e `route-patterns-ts` (cliente NSwag)
-  - [ ] oazapfts (immich, 279), openapi-generator Go (kratos, 60), openapi-ts (fastapi-template, 23), go-swagger
-    (alertmanager, 9) — com Go/Python/TS, depois da etapa 2
+  - [x] *(2026-10-16)* Go: openapi-generator (kratos, 60 operações em duas cópias, iguais à `spec/api.json`) e
+    go-swagger (alertmanager, 9; o `basePath` fica com o transporte, como base URL). Fixtures
+    `route-patterns-go/internal/{genclient,swaggerclient}`
+  - [ ] oazapfts (immich, 279), openapi-ts (fastapi-template, 23) — com TS
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
   rotas por arquivo do Next.js, flask-restx
 - [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
@@ -465,3 +476,20 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   `prefix-other-file`). `route-chain` sai do ranking. Rotas Go P 98,7 → 98,9 %, R 75,4 → 90,5 % (gitea R 59,1 →
   99,1 %, go-kit 59,3 → 100 %, mattermost 100 %). HTTP do corpus 88 → 88,8 s. Nova baseline
   `2026-10-16-v2-baseline-8`.
+- **2026-10-16** — Chamadas Go e clientes gerados Go (itens 5 e 7, fatia Go; H2-D18). `url.URL`: o índice de
+  escopos já guardava `u.Path` como nome, então `u.String()`/`u` valem o último `u.Path = e`/`+= e` antes dali
+  (`Scopes.binding(ident, name)`), `path.Join(u.Path, ..)` lê o anterior, `u.JoinPath` começa pelo path de `u`,
+  `url.Parse(literal)`; com base desconhecida o `+=` relativo ganha a barra. go-kit: `NewClient` (import
+  `go-kit/kit/transport/http`), verbo no 1º argumento, path da URL ou do encoder (`go.encoder`, `Pending`,
+  `GoScanner.compose`). Gerados: `prepareRequest` em arquivo do OpenAPI Generator e `runtime.ClientOperation` do
+  go-swagger; `strings.Replace(s, ..)` é `s`; variável ligada a literal ou `http.MethodX` é verbo. A guarda de
+  "router desconhecido" passou a exigir path antes do último argumento (o `notify.Get(ctx, client, u.String())` é
+  chamada) — a 1ª rodada mostrou dois FPs que ela escondia: `huma.Get(api, "/books", h)` (rota) e uma query SQL
+  do mattermost lida como `"SELECT /..."` (o padrão `"MÉTODO /path"` aceitava qualquer palavra; `strings.Join`
+  contava como junção de path) — corrigidos com contraexemplos na fixture. Diff contra `-8` (7 repos, só chamadas,
+  só adições) julgado certo: kratos +126 (60 × 2 do cliente gerado, conferidos contra a spec, + 6 OIDC),
+  alertmanager +15, go-kit +11, go-feature-flag +3, mattermost +2, argo-cd +1, fiber-recipes +1. Gabaritos:
+  kratos com as 60 operações da spec (escopo `pkg/httpclient/`, `pkg/client-go/`), alertmanager com as 9 do
+  go-swagger e o rocketchat como `client-in-field`, go-kit com `/uppercase` corrigido para GET e 3 chamadas
+  `url-from-helper` que faltavam. Chamadas Go P 100 %, R 10,9 → 93,6 % nos mesmos gabaritos; HTTP do corpus
+  88,8 → 91,1 s. Nova baseline `2026-10-16-v2-baseline-9`.

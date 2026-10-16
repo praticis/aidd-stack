@@ -45,11 +45,11 @@ class Scopes:
         self._binds: dict[tuple[int, str], bool] = {}
         self._index: dict[int, dict[str, list[tuple[int, int, bool, Node]]]] = {}
 
-    def binding(self, ident: Node) -> tuple[bool, Node | None]:
+    def binding(self, ident: Node, name: str | None = None) -> tuple[bool, Node | None]:
         """(True, value) for an assignment that precedes the use — `value` is the assignment itself for `x += e` —,
         (True, None) for a parameter, (False, None) when no enclosing function binds the name. Code at module
-        level reads the module."""
-        name = text(ident, self.src)
+        level reads the module. `name`: another name, seen from where `ident` is (`u.Path` from a use of `u`)."""
+        name = name or text(ident, self.src)
         scope = enclosing_function(ident)
         while scope is not None:
             val = self.assigned_before(scope, ident, name)

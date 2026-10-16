@@ -1042,3 +1042,75 @@ Go calls are still at 31.6 % recall: go-kit's request encoders, URL objects, and
 HTTP extraction took 88.8 s for the whole corpus (88 s before). The whole run still takes about 11 minutes.
 
 New baseline: `2026-10-16-v2-baseline-8`.
+
+## Update: Go calls and Go generated clients (2026-10-16)
+
+This step covers the call side of Go, the next tier after the routes (H2-D18). It joins item 5 (`url-object-builder`)
+with the Go part of item 7 (generated clients).
+
+**What is read now:**
+
+- **The path on a `url.URL`.** The notifiers of alertmanager and the OIDC providers of kratos build the URL as an
+  object: `u.Path += "gettoken"`, `u.Path = path.Join(u.Path, "/oauth/userinfo")`, `APIURL.JoinPath("api/v1/x")`. They
+  send `u.String()` later. Now `u.String()`, or `u` itself, takes the last path assigned to `u.Path` before that
+  point; with nothing assigned, it takes the path of `url.Parse(literal)`. The base URL comes from configuration, so a
+  relative `+=` gets its leading slash.
+- **go-kit clients.** In `httptransport.NewClient("GET", tgt, encodeX, decodeX)` the method is the first argument.
+  The path is the URL's, or, when the URL sets none (`tgt.Path = ""`), whatever the request encoder sets
+  (`req.URL.Path = "/profiles/" + id`). The encoder is often in another file: each encoder publishes its path, and
+  the call is completed after the scan.
+- **Generated clients** (`via: generated-client`):
+  - **openapi-generator.** `localVarPath := localBasePath + "/admin/identities/{id}"`, then `strings.Replace(..)` and
+    `prepareRequest(ctx, localVarPath, localVarHTTPMethod, ..)`. The verb comes from the variable.
+  - **go-swagger.** `&runtime.ClientOperation{Method: "GET", PathPattern: "/alerts"}`. The spec's `basePath` is added
+    by the transport at runtime, like a base URL.
+
+**Caught on the first run.** Relaxing the "unknown router" guard, so that `notify.Get(ctx, client, u.String())`
+counts as a call, also let through two false calls:
+
+- **huma.** `huma.Get(api, "/books", h)` registers a route; it is not a request. A verb with a path before the last
+  argument and a handler at the end is now a route registration.
+- **A SQL query in mattermost** (`"SELECT " + strings.Join(cols, ", ") + " FROM Posts"`). The concatenation accepted
+  any `"WORD /"` as a net/http 1.22 `"METHOD /path"` pattern; it now requires an HTTP verb. `strings.Join` no longer
+  counts as a path join.
+
+Diff against `2026-10-16-v2-baseline-8`, judged: 7 repositories changed, calls only, all added. No route changed.
+
+- **kratos (+126):** the 60 operations of the openapi-generator client, in its two copies (`pkg/httpclient` and
+  `pkg/client-go`), match `spec/api.json` exactly. Six OIDC provider calls were added too.
+- **alertmanager (+15):** the 9 go-swagger operations, opsgenie's 4 and wechat's 2.
+- **go-kit-examples (+11):** profilesvc's 9 calls through its encoders, `/paths` and `/uppercase`.
+- **go-feature-flag (+3), argo-cd (+1), mattermost (+2), fiber-recipes (+1):** URLs built on `url.Parse(..)`. That
+  covers Maven, PyPI, GitHub, the Azure token exchange and Mattermost's calls to a remote Mattermost
+  (`path.Join(u.Path, model.APIURLSuffix, "remotecluster", ...)`).
+
+Expected lists:
+
+- **kratos:** the generated client's 60 operations, taken from the spec it is generated from.
+- **alertmanager:** the 9 go-swagger operations. Rocketchat's call is still missed: it posts through a function kept
+  in a struct field (`n.postJSONFunc`), now categorised `client-in-field`.
+- **go-kit:**
+  - the `/uppercase` client was listed as `POST`; it is a `GET`;
+  - three calls were added whose path is a parameter of a helper (`copyURL(u, "/sum")` and the gateway's
+    `stringsvcFactory(ctx, "GET", "/count")`), as `url-from-helper`.
+
+| Repo (calls) | R expected, baseline-8 → now (same expected lists) | P expected |
+|---|---|---|
+| kratos | 10.5 % → 96.1 % | 100 % |
+| alertmanager | 0 % → 93.8 % | 100 % |
+| go-kit-examples | 0 % → 78.6 % | 100 % |
+
+| Language (calls) | P sampled | P expected | R expected |
+|---|---|---|---|
+| Go before (same expected lists) | 100 % (16/16) | 100 % | 10.9 % (12/110) |
+| Go now | 100 % (16/16) | 100 % | 93.6 % (103/110) |
+
+What Go calls still miss (7 calls):
+
+- URLs kept in struct fields (`url-in-field`, kratos, 3);
+- paths passed to a helper as a parameter (`url-from-helper`, go-kit, 3);
+- rocketchat's function field (`client-in-field`, 1).
+
+HTTP extraction took 91.1 s for the whole corpus (88.8 s before). The whole run still takes about 11 minutes.
+
+New baseline: `2026-10-16-v2-baseline-9`.

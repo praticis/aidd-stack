@@ -2,9 +2,9 @@
 
 `PathExpressions.path_of` reads literals, variables (`Scopes.binding`), the directory's constants
 (`PackageContext.route_const`, filled by `collect_constants`), concatenation, templates (f"", $"", `${}`),
-Sprintf/Format/format, Join/urljoin/Combine, Replace/Trim, `new Uri(...)`, request objects (`{url: ...}`) and
-`x += e`. `method_from_args` reads the verb from literals, `http.MethodX` / `HttpMethod.X`, a `method` key or keyword,
-or a local holding one. The scanner mixes this in (it needs `src`, `ctx`, `scopes` and a `_path_memo` dict).
+Sprintf/Format/format, Join/urljoin/Combine, Replace/Trim, `new Uri(...)`, request objects (`{url: ...}`),
+`x += e` and Go's `url.URL` (`u.Path = e`, `u.Path += e`, then `u.String()` or `u`). `method_from_args` reads the verb
+from literals, `http.MethodX` / `HttpMethod.X`, a `method` key or keyword, or a local holding one. The scanner mixes this in (it needs `src`, `ctx`, `scopes` and a `_path_memo` dict).
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ PATH_NAME_NODES = NAME_NODES | {"property_identifier"}
 PATH_CONCAT_NODES = CONCAT_NODES | {"concatenated_string"}
 _ONE_WORD = re.compile(r"^[A-Za-z][A-Za-z0-9_\-]{2,}(\?.*)?$")          # `message`, `message?since=1`
 _PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w*(Path|Url|Uri|_path|_url|_uri))$", re.I)
-_JOIN_CALL = re.compile(r"^(Join|JoinPath|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
+_JOIN_CALL = re.compile(r"^(Join|JoinPath|AppendPaths?|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
 _SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
@@ -206,10 +206,14 @@ class PathExpressions:
         return valid_path(lit, lenient)
 
     def _path_of_name(self, n: Node, lenient: bool, _depth: int) -> str | None:
-        """A local binding first (a parameter has no value here), then the directory's constants (`A.B` by its
-        qualified name, else by `B`), then an imported one (`pkg.NAME` from the package's directory)."""
+        """A local binding first (a parameter has no value here; a Go `url.URL` points where its `Path` was last set),
+        then the directory's constants (`A.B` by its qualified name, else by `B`), then an imported one (`pkg.NAME`
+        from the package's directory)."""
         name = text(n, self.src)
         if n.type == "identifier":
+            moved = self._url_path(n, lenient, _depth)
+            if moved is not None:
+                return moved
             bound, val = self.scopes.binding(n)
             if bound:
                 return self.path_of(val, lenient, _depth + 1) if val is not None else None
@@ -219,8 +223,27 @@ class PathExpressions:
             if name in self.ctx.ambiguous:                        # other files of the directory define it too: this one's
                 val = self.scopes.assigned_before(self.scopes.root, END, name)
                 return self.path_of(val, lenient, _depth + 1) if val is not None else None
+        elif n.type == "selector_expression" and name.endswith(".Path"):
+            found = self._url_field(n, lenient, _depth)
+            if found is not None:
+                return found
         found = self.ctx.route_const(name)
         return found if found is not None else self.foreign_const(name)
+
+    def _url_path(self, obj: Node, lenient: bool, _depth: int) -> str | None:
+        """Go's `url.URL` `u`, used here (`u.String()`, or `u` handed to a client): the path its last `u.Path = e` or
+        `u.Path += e` before here sets; None when nothing sets it."""
+        bound, val = self.scopes.binding(obj, text(obj, self.src) + ".Path")
+        return self.path_of(val, lenient, _depth + 1) if bound and val is not None else None
+
+    def _url_field(self, n: Node, lenient: bool, _depth: int) -> str | None:
+        """`u.Path` read (`path.Join(u.Path, "/userinfo")`, `u.Path += "x"`): its last assignment before here, else the
+        path of the URL `u` holds (`url.Parse("https://host/v1")`)."""
+        bound, val = self.scopes.binding(n)
+        if bound and val is not None:
+            return self.path_of(val, lenient, _depth + 1)
+        obj = n.child_by_field_name("operand")
+        return self.path_of(obj, lenient, _depth + 1) if obj is not None and obj.type == "identifier" else None
 
     def foreign_const(self, name: str) -> str | None:
         """A constant of another directory the file imports (`BaseScanner`); None here."""
@@ -254,7 +277,8 @@ class PathExpressions:
         raw = re.sub(r"^\{param\}(?=/)", "", raw)
         if not raw:
             return None
-        if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw) or re.match(r"^[A-Z]+ /", raw):
+        pattern = re.match(r"^([A-Z]+) /", raw)                 # not "SELECT " + cols + " FROM x"
+        if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw) or (pattern and pattern.group(1) in HTTP_METHODS):
             return raw                                           # "PUT " + base + "/x" is a net/http 1.22 pattern
         if lenient and lead and _ONE_WORD.match(raw):
             return "/" + raw                                     # base + 'message' (gotify)
@@ -271,19 +295,29 @@ class PathExpressions:
         if args is None:
             return None
         arg_nodes = [unwrap_arg(c) for c in args.children if c.is_named]
+        if fn is not None and fn.type == "selector_expression":                # Go's url.URL
+            operand = fn.child_by_field_name("operand")
+            if fname == "String" and not arg_nodes:                            # u.String(): where u points
+                return self.path_of(operand, lenient, _depth + 1)
+            if fname in ("Parse", "ParseRequestURI") and text(operand, self.src) == "url" and arg_nodes:
+                return self.path_of(arg_nodes[0], lenient, _depth + 1)
+            if fname == "JoinPath" and text(operand, self.src) != "url":       # u.JoinPath("x"): u's path, then "x"
+                arg_nodes = [operand] + arg_nodes
         if fname in ("Sprintf", "Errorf", "Format", "format"):
             if fname == "format" and fn is not None and fn.type == "attribute":      # "/v1/{}".format(x)
                 recv = fn.child_by_field_name("object")
                 rp = self.path_of(recv, lenient, _depth + 1) if recv is not None else None
                 return rp.replace("{}", "{param}") if rp else None
             return self.path_of(arg_nodes[0], lenient, _depth + 1) if arg_nodes else None
+        if fname in ("Replace", "ReplaceAll") and text(fn, self.src).startswith("strings.") and arg_nodes:
+            return self.path_of(arg_nodes[0], lenient, _depth + 1)     # Go: strings.Replace(path, "{"+"id"+"}", v, -1)
         if fname in ("Replace", "replace", "TrimStart", "TrimEnd", "Trim", "ToLower", "ToLowerInvariant", "lstrip", "rstrip", "strip"):
             recv = fn.child_by_field_name("object") if fn is not None and fn.type == "attribute" else None
             if recv is None and fn is not None and fn.type in ("member_access_expression", "member_expression", "selector_expression"):
                 kids_fn = [c for c in fn.children if c.is_named]
                 recv = kids_fn[0] if kids_fn else None
             return self.path_of(recv, lenient, _depth + 1) if recv is not None else None
-        if _JOIN_CALL.match(fname):
+        if _JOIN_CALL.match(fname) and text(fn, self.src) != "strings.Join":        # strings.Join(cols, ", ") joins no path
             segs = [(unquote(text(a, self.src)) if a.type in STRING_NODES and not has_interpolation(a)
                      else self.path_of(a, lenient, _depth + 1)) or "{param}" for a in arg_nodes]
             segs = [s for s in segs if s]
@@ -302,6 +336,8 @@ class PathExpressions:
         base = self.path_of(left, lenient, _depth + 1)
         tail = self.path_of(right, lenient, _depth + 1) if right.type not in STRING_NODES else unquote(text(right, self.src))
         if base is None:
+            if tail is not None and text(left, self.src).endswith(".Path") and not tail.startswith(("/", "http")):
+                tail = "/" + tail                                # u.Path += "gettoken": the URL's own path ends in "/"
             ok = tail is not None and tail.startswith("/") and has_literal_segment(normalize_path(tail))
             return tail if ok else None
         return base + (tail if tail is not None else "{param}")
@@ -416,6 +452,12 @@ class PathExpressions:
         for a in arg_nodes[:4]:
             if a.type == "identifier":                      # `let options_ = {method: "POST", ..}; fetch(url_, options_)`
                 bound, val = self.scopes.binding(a)
+                if bound and val is not None and val.type == "unary_expression" and val.named_child_count == 1:
+                    val = val.named_children[0]                # res := &http.Request{Method: "GET", ..}; client.Do(res)
+                if bound and val is not None and val.type not in OBJECT_NODES:
+                    v = self._method_value(val)                # localVarHTTPMethod = http.MethodGet (openapi-generator)
+                    if v:
+                        return v
                 a = val if bound and val is not None and val.type in OBJECT_NODES else a
             txt = text(a, self.src)
             if a.type in STRING_NODES and unquote(txt).upper() in HTTP_METHODS:
