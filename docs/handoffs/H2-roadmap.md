@@ -211,8 +211,8 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - FastEndpoints: `RoutePrefix` global e `Group<T>()` — 0 no corpus
   - herança de `[Route]` em mais de um nível (H2-D10 decidiu um)
 - [ ] Pendências das chamadas C# (item 5):
-  - **fora do HTTP:** chamada genérica com receiver (`obj.Method<T>(...)`) não vira call site — o `queries.scm` do
-    C# só casa a genérica sem receiver; faltam arestas `CALLS` para métodos genéricos no .NET
+  - [x] *(2026-10-16)* **fora do HTTP:** chamada genérica com receiver (`obj.Method<T>(...)`) vira call site; tipo de
+    pacote no receiver só alcança extensão do repo (ROADMAP, log de 2026-10-16)
   - `URL_LITERAL` aceita qualquer caractere depois do host (`/x/{param}{param}god_mode=true` passaria)
   - wrappers de cliente em TS (gitea, 16) e Python: o mesmo caminho, com o tipo do receiver de cada linguagem
 
@@ -384,3 +384,7 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   tudo certo): dispatch +273, eshop, eshop-on-web (+6 pelo `HttpService`), eshop-support, mattermost, zulip,
   argo-cd, ghost. Chamadas C#: P 84 → 100 %, R 64 → 97 %; TS/JS: P 44 → 60 %, R 31,5 → 45 %. Achado fora do HTTP:
   `obj.Method<T>()` não é call site no C#. Nova baseline `2026-10-15-v2-baseline-5`.
+- **2026-10-16** — Fora do HTTP, achado no item 5: chamada genérica com receiver no C# vira call site, e o resolver
+  deixa de chutar homônimo quando o tipo do receiver é de pacote (só extensão do repo que estenda o tipo e caiba nos
+  argumentos). Medido no grafo dos 4 repos .NET do corpus: bitwarden −5.684 +12.244 arestas, jellyfin −1.459 +367;
+  o que sai é chute, o que entra é `receiver-type` e extensões do repo. Detalhe no log do ROADMAP.

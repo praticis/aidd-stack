@@ -25,6 +25,11 @@
 
 (invocation_expression function: (generic_name (identifier) @callee)) @call
 
+;; generic methods on a receiver: `repo.FindAsync<T>(id)`, `this.Map<T>()` — the name sits in a `generic_name`
+(invocation_expression function: (member_access_expression expression: (_) @receiver name: (generic_name (identifier) @callee))) @call
+
+(invocation_expression function: (member_access_expression expression: ["this" "base"] @receiver name: (generic_name (identifier) @callee))) @call
+
 (object_creation_expression type: (identifier) @callee) @call
 
 (using_directive (qualified_name) @import)

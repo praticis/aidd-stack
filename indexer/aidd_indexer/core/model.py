@@ -74,6 +74,7 @@ class CallInfo:
     arg_count: int | None = None           # arguments passed (None = unknown, e.g. a spread) — picks among overloads
     arg_type: str | None = None            # static type of the first argument, as written — only for the bus methods
                                            # a convention declares (`dispatch`), see core/dispatch.py
+    generic: bool = False                  # written with type arguments (`x.Find<T>()`) — resolver only, not in the graph
 
 
 @dataclass
