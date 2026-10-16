@@ -43,6 +43,7 @@ class Scopes:
     def __init__(self, root: Node, src: bytes) -> None:
         self.root, self.src = root, src
         self._binds: dict[tuple[int, str], bool] = {}
+        self._index: dict[int, dict[str, list[tuple[int, int, bool, Node]]]] = {}
 
     def binding(self, ident: Node) -> tuple[bool, Node | None]:
         """(True, value) for an assignment that precedes the use — `value` is the assignment itself for `x += e` —,
@@ -84,38 +85,57 @@ class Scopes:
     def assigned_before(self, scope: Node, at, name: str) -> Node | None:
         """Value of the last assignment to `name` before `at` in `scope`, leaving out the bodies of other functions."""
         best: Node | None = None
+        for start, end, append, value in self._assignments(scope).get(name, ()):
+            if start >= at.start_byte:
+                break                            # in document order
+            if start <= at.start_byte < end:
+                continue                         # `url = `${url}?x``: the name on the right is the earlier value
+            if append:
+                best = value                     # `url += "/" + id`: read by path_of as the earlier value plus this
+            elif best is None or start > best.start_byte:
+                best = value
+        return best
+
+    def _assignments(self, scope: Node) -> dict[str, list[tuple[int, int, bool, Node]]]:
+        """name → (start, end, is `+=`, value) of every assignment in `scope` outside other functions' bodies, in
+        document order: read once per scope, so a lookup does not walk the scope again."""
+        index = self._index.get(scope.id)
+        if index is not None:
+            return index
+        index = {}
         stack = [scope]
         while stack:
             d = stack.pop()
-            if d.start_byte >= at.start_byte:
-                continue
-            inside = d.start_byte <= at.start_byte < d.end_byte
-            if d is not scope and d.type in FUNCTION_SCOPES and not inside:
+            if d is not scope and d.type in FUNCTION_SCOPES:
                 continue
             stack.extend(reversed(d.children))
-            if inside:
-                continue                     # `url = `${url}?x`` — the name on the right is the earlier value
-            if self.appends_to(d, name):
-                best = d                     # `url += "/" + id`: read by path_of as the earlier value plus this
-                continue
-            if d.type in ASSIGNMENT_NODES:
-                left = d.child_by_field_name("left") or d.child_by_field_name("name")
-                right = d.child_by_field_name("right") or d.child_by_field_name("value")
-                if d.type == "variable_declarator" and right is None:                 # C#
-                    kids = [c for c in d.children if c.is_named]
-                    if len(kids) >= 2:
-                        left, right = kids[0], kids[-1]
-                        if right.type == "equals_value_clause":
-                            inner = [c for c in right.children if c.is_named]
-                            right = inner[-1] if inner else right
-                if left is None or right is None:
-                    continue
-                lefts = [c for c in left.children if c.is_named] if left.type == "expression_list" else [left]
-                rights = [c for c in right.children if c.is_named] if right.type == "expression_list" else [right]
-                for i, l in enumerate(lefts):
-                    if text(l, self.src) == name and i < len(rights) and (best is None or d.start_byte > best.start_byte):
-                        best = rights[i]
-        return best
+            for name, append, value in self._assigned(d):
+                index.setdefault(name, []).append((d.start_byte, d.end_byte, append, value))
+        self._index[scope.id] = index
+        return index
+
+    def _assigned(self, d: Node) -> list[tuple[str, bool, Node]]:
+        """The names node `d` assigns: (name, is `+=`, value — the node itself for `+=`)."""
+        if d.type in APPEND_NODES:
+            op, left = d.child_by_field_name("operator"), d.child_by_field_name("left")
+            if op is not None and left is not None and text(op, self.src) == "+=":
+                return [(text(left, self.src), True, d)]
+        if d.type not in ASSIGNMENT_NODES:
+            return []
+        left = d.child_by_field_name("left") or d.child_by_field_name("name")
+        right = d.child_by_field_name("right") or d.child_by_field_name("value")
+        if d.type == "variable_declarator" and right is None:                 # C#
+            kids = [c for c in d.children if c.is_named]
+            if len(kids) >= 2:
+                left, right = kids[0], kids[-1]
+                if right.type == "equals_value_clause":
+                    inner = [c for c in right.children if c.is_named]
+                    right = inner[-1] if inner else right
+        if left is None or right is None:
+            return []
+        lefts = [c for c in left.children if c.is_named] if left.type == "expression_list" else [left]
+        rights = [c for c in right.children if c.is_named] if right.type == "expression_list" else [right]
+        return [(text(lft, self.src), False, rights[i]) for i, lft in enumerate(lefts) if i < len(rights)]
 
     def appends_to(self, d: Node, name: str) -> bool:
         """`name += expr` (JS/Python/C# augmented assignment, Go `+=` assignment statement)."""

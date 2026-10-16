@@ -107,6 +107,8 @@ class PyScanner(BaseScanner):
         """aiohttp: `app.router.add_get('/x', h)`, `router.add_route('*', '/x', h)`, and the bound method
         `add_route = app.router.add_route` called afterwards. The receiver is an application's router, so its
         root is a route; True = recorded."""
+        if fn.type == "identifier" and b"router.add_" not in self.src:
+            return False                                            # no `add_route = app.router.add_route` here
         target = self.resolve_local(fn) if fn.type == "identifier" else fn
         if target is None or target.type != "attribute":
             return False
