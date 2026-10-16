@@ -15,12 +15,15 @@ import re
 
 from .. import languages
 from .http_base import TEST_FILE, HttpResult, PackageContext, ScanPatterns, collect_constants, dir_of
-from .model import RepoInfo
+from .http_view import RepoView
+from .model import ModuleInfo, RepoInfo
 
 
-def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | None" = None) -> HttpResult:
+def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | None" = None,
+                 modules: list[ModuleInfo] | None = None) -> HttpResult:
     """`extractors` are FileExtractor objects (core/extract.py) after `.run()`; `patterns` is what the
-    tenant's conventions add to the scanners (route registrars / client methods of an internal SDK)."""
+    tenant's conventions add to the scanners (route registrars / client methods of an internal SDK); `modules`
+    let an import be resolved to a package directory (Go)."""
     out = HttpResult()
     by_dir: dict[str, PackageContext] = {}
     scanners: dict[type, None] = {}
@@ -32,6 +35,9 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
             for s in fx.symbols:
                 if s.kind in ("function", "method"):
                     ctx.functions_by_name.setdefault(s.name, []).append(s)
+    view = RepoView(repo, [fx.file for fx in extractors], modules, by_dir)
+    for ctx in by_dir.values():
+        ctx.view = view
     for fx in extractors:
         if TEST_FILE.search("/" + fx.file.path):
             continue
@@ -47,7 +53,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
             out.warnings.append(f"{fx.file.path}: http candidates skipped ({type(e).__name__}: {e})")
     for scanner in scanners:                     # what crosses files: composed from the summaries the files left
         try:
-            scanner.compose(out, repo)
+            scanner.compose(out, repo, view)
         except Exception as e:  # noqa: BLE001
             out.warnings.append(f"{scanner.__name__}: cross-file composition skipped ({type(e).__name__}: {e})")
     _dedupe(out)

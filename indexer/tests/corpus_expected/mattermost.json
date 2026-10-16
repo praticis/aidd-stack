@@ -1,3044 +1,2500 @@
 {
- "source": "openapi",
+ "source": "openapi + manual",
  "sha": "4b32c6f092d84602989d78a5eda768d2b1856c76",
  "spec": [
   "api/v4/source/*.yaml"
  ],
  "scope": {
   "endpoints": [
-   "server/channels/api4/"
+   "server/channels/api4/",
+   "server/channels/web/oauth.go"
   ]
  },
  "endpoints": [
   {
    "method": "GET",
    "path": "/.well-known/oauth-authorization-server",
-   "category": "prefix-other-file"
+   "category": "path-prefix-handler"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/oauth/{service}/complete"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control/decisions/actions/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control/decisions/actions/search"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/access_control_policies",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/access_control_policies/activate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/activate"
   },
   {
    "method": "GET",
-   "path": "/api/v4/access_control_policies/cel/autocomplete/fields",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/autocomplete/fields"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/cel/check",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/check"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/cel/simulate_users",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/simulate_users"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/cel/test",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/test"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/cel/validate_requester",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/validate_requester"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/cel/visual_ast",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/cel/visual_ast"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/search"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/access_control_policies/{policy_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/access_control_policies/{policy_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/access_control_policies/{policy_id}/activate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}/activate"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/{policy_id}/assign",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}/assign"
   },
   {
    "method": "GET",
-   "path": "/api/v4/access_control_policies/{policy_id}/resources/channels",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}/resources/channels"
   },
   {
    "method": "POST",
-   "path": "/api/v4/access_control_policies/{policy_id}/resources/channels/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}/resources/channels/search"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/access_control_policies/{policy_id}/unassign",
-   "category": "prefix-other-file"
+   "path": "/api/v4/access_control_policies/{policy_id}/unassign"
   },
   {
    "method": "POST",
-   "path": "/api/v4/actions/dialogs/execute",
-   "category": "prefix-other-file"
+   "path": "/api/v4/actions/dialogs/execute"
   },
   {
    "method": "POST",
-   "path": "/api/v4/actions/dialogs/lookup",
-   "category": "prefix-other-file"
+   "path": "/api/v4/actions/dialogs/lookup"
   },
   {
    "method": "POST",
-   "path": "/api/v4/actions/dialogs/open",
-   "category": "prefix-other-file"
+   "path": "/api/v4/actions/dialogs/open"
   },
   {
    "method": "POST",
-   "path": "/api/v4/actions/dialogs/submit",
-   "category": "prefix-other-file"
+   "path": "/api/v4/actions/dialogs/submit"
   },
   {
    "method": "GET",
-   "path": "/api/v4/agents",
-   "category": "prefix-other-file"
+   "path": "/api/v4/agents"
   },
   {
    "method": "GET",
-   "path": "/api/v4/agents/status",
-   "category": "prefix-other-file"
+   "path": "/api/v4/agents/status"
   },
   {
    "method": "GET",
-   "path": "/api/v4/analytics/old",
-   "category": "prefix-other-file"
+   "path": "/api/v4/analytics/old"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/audit_logs/certificate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/audit_logs/certificate"
   },
   {
    "method": "POST",
-   "path": "/api/v4/audit_logs/certificate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/audit_logs/certificate"
   },
   {
    "method": "GET",
-   "path": "/api/v4/audits",
-   "category": "prefix-other-file"
+   "path": "/api/v4/audits"
   },
   {
    "method": "POST",
-   "path": "/api/v4/boards",
-   "category": "prefix-other-file"
+   "path": "/api/v4/boards"
   },
   {
    "method": "GET",
-   "path": "/api/v4/bots",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots"
   },
   {
    "method": "POST",
-   "path": "/api/v4/bots",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots"
   },
   {
    "method": "GET",
-   "path": "/api/v4/bots/{bot_user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/bots/{bot_user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/bots/{bot_user_id}/assign/{user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}/assign/{user_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/bots/{bot_user_id}/convert_to_user",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}/convert_to_user"
   },
   {
    "method": "POST",
-   "path": "/api/v4/bots/{bot_user_id}/disable",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}/disable"
   },
   {
    "method": "POST",
-   "path": "/api/v4/bots/{bot_user_id}/enable",
-   "category": "prefix-other-file"
+   "path": "/api/v4/bots/{bot_user_id}/enable"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/brand/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/brand/image"
   },
   {
    "method": "GET",
-   "path": "/api/v4/brand/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/brand/image"
   },
   {
    "method": "POST",
-   "path": "/api/v4/brand/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/brand/image"
   },
   {
    "method": "POST",
-   "path": "/api/v4/caches/invalidate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/caches/invalidate"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/direct",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/direct"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/group",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/group"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/group/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/group/search"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/channels/members/{user_id}/direct/read",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/members/{user_id}/direct/read"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/members/{user_id}/mark_read",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/members/{user_id}/mark_read"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/members/{user_id}/view",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/members/{user_id}/view"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/search"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/stats/member_count",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/stats/member_count"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/channels/{channel_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/access_control/attributes",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/access_control/attributes"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/bookmarks",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/bookmarks"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/bookmarks",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/bookmarks"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}/sort_order",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/bookmarks/{bookmark_id}/sort_order"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/common_teams",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/common_teams"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/convert_to_channel",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/convert_to_channel"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/groups",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/member_counts_by_group",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/members/ids",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/groups"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_request"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}/autotranslation",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}/notify_props",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}/roles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/members/{user_id}/schemeRoles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/members_minus_group_members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/moderations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/moderations/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_request"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/move",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_request"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/pinned",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_requests"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/privacy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/restore",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/channels/{channel_id}/scheme",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/timezones",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/views",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/views",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/channels/{channel_id}/views/{view_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/views/{view_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_requests/count"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/channels/{channel_id}/views/{view_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/join_requests/{request_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/channels/{channel_id}/views/{view_id}/posts",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/member_counts_by_group"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/channels/{channel_id}/members"
   },
   {
    "method": "POST",
-   "path": "/api/v4/channels/{channel_id}/views/{view_id}/sort_order",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/client_perf",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/check-cws-connection",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/customer",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/cloud/customer",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/cloud/customer/address",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/installation",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/limits",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/preview/modal_data",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/products",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/subscription",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/subscription/invoices",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cloud/subscription/invoices/{invoice_id}/pdf",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members"
   },
   {
    "method": "POST",
-   "path": "/api/v4/cloud/validate-business-email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/cloud/validate-workspace-business-email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/cloud/webhook",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/cluster/status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/commands",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/commands",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/commands/execute",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/ids"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/commands/{command_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/commands/{command_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/commands/{command_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}/autotranslation"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/commands/{command_id}/move",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}/notify_props"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/commands/{command_id}/regen_token",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/compliance/reports",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/compliance/reports",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/compliance/reports/{report_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/compliance/reports/{report_id}/download",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}/roles"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members/{user_id}/schemeRoles"
   },
   {
    "method": "GET",
-   "path": "/api/v4/config/client",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/members_minus_group_members"
   },
   {
    "method": "GET",
-   "path": "/api/v4/config/environment",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/config/migrate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/moderations"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/config/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/moderations/patch"
   },
   {
    "method": "POST",
-   "path": "/api/v4/config/reload",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/content_flagging/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/move"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/content_flagging/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/patch"
   },
   {
    "method": "GET",
-   "path": "/api/v4/content_flagging/fields",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/pinned"
   },
   {
    "method": "GET",
-   "path": "/api/v4/content_flagging/flag/config",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/content_flagging/post/{post_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/content_flagging/post/{post_id}/assign/{content_reviewer_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/content_flagging/post/{post_id}/exposure_report",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/content_flagging/post/{post_id}/field_values",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/content_flagging/post/{post_id}/flag",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/posts"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/content_flagging/post/{post_id}/keep",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/privacy"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/channels/{channel_id}/restore"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/content_flagging/post/{post_id}/remove",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/scheme"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/channels/{channel_id}/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/channels/{channel_id}/timezones"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/channels/{channel_id}/views"
   },
   {
    "method": "POST",
-   "path": "/api/v4/content_flagging/post/{post_id}/report",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/content_flagging/team/{team_id}/reviewers/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/content_flagging/team/{team_id}/status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/custom_profile_attributes/fields",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/custom_profile_attributes/fields",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/views"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/custom_profile_attributes/fields/{field_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/views/{view_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/channels/{channel_id}/views/{view_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/custom_profile_attributes/fields/{field_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/views/{view_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/custom_profile_attributes/group",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PATCH",
-   "path": "/api/v4/custom_profile_attributes/values",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/data_retention/policies",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/views/{view_id}/posts"
   },
   {
    "method": "POST",
-   "path": "/api/v4/data_retention/policies",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/data_retention/policies/{policy_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/data_retention/policies/{policy_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PATCH",
-   "path": "/api/v4/data_retention/policies/{policy_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/data_retention/policies/{policy_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/data_retention/policies/{policy_id}/channels",
-   "category": "prefix-other-file"
+   "path": "/api/v4/channels/{channel_id}/views/{view_id}/sort_order"
   },
   {
    "method": "POST",
-   "path": "/api/v4/data_retention/policies/{policy_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/data_retention/policies/{policy_id}/channels/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/data_retention/policies/{policy_id}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v4/client_perf"
   },
   {
    "method": "GET",
-   "path": "/api/v4/data_retention/policies/{policy_id}/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/data_retention/policies/{policy_id}/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/data_retention/policies/{policy_id}/teams/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/check-cws-connection"
   },
   {
    "method": "GET",
-   "path": "/api/v4/data_retention/policies_count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/data_retention/policy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/database/recycle",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/delivery_tracking/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/customer"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/delivery_tracking/config",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/customer"
   },
   {
-   "method": "POST",
-   "path": "/api/v4/drafts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/elasticsearch/purge_indexes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/elasticsearch/test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/email/test",
-   "category": "prefix-other-file"
+   "method": "PUT",
+   "path": "/api/v4/cloud/customer/address"
   },
   {
    "method": "GET",
-   "path": "/api/v4/emoji",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/emoji",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/installation"
   },
   {
    "method": "GET",
-   "path": "/api/v4/emoji/autocomplete",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/limits"
   },
   {
    "method": "GET",
-   "path": "/api/v4/emoji/name/{emoji_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/preview/modal_data"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/cloud/products"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/cloud/subscription"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/cloud/subscription/invoices"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/cloud/subscription/invoices/{invoice_id}/pdf"
   },
   {
    "method": "POST",
-   "path": "/api/v4/emoji/names",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/validate-business-email"
   },
   {
    "method": "POST",
-   "path": "/api/v4/emoji/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/cloud/validate-workspace-business-email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/cloud/webhook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/cluster/status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/commands"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/commands"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/commands/execute"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/emoji/{emoji_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/commands/{command_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/emoji/{emoji_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/commands/{command_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/commands/{command_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/commands/{command_id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/commands/{command_id}/regen_token"
   },
   {
    "method": "GET",
-   "path": "/api/v4/emoji/{emoji_id}/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/compliance/reports"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ephemeral_mode/cleanup",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/ephemeral_mode/purge",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/ephemeral_mode/wipe",
-   "category": "prefix-other-file"
+   "path": "/api/v4/compliance/reports"
   },
   {
    "method": "GET",
-   "path": "/api/v4/exports",
-   "category": "prefix-other-file"
+   "path": "/api/v4/compliance/reports/{report_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/compliance/reports/{report_id}/download"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/config"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/config"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/config/client"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/config/environment"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/config/migrate"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/config/patch"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/config/reload"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/config"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/content_flagging/config"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/fields"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/flag/config"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/post/{post_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/content_flagging/post/{post_id}/assign/{content_reviewer_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/content_flagging/post/{post_id}/exposure_report"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/post/{post_id}/field_values"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/content_flagging/post/{post_id}/flag"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/content_flagging/post/{post_id}/keep"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/content_flagging/post/{post_id}/remove"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/content_flagging/post/{post_id}/report"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/team/{team_id}/reviewers/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/content_flagging/team/{team_id}/status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/custom_profile_attributes/fields"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/custom_profile_attributes/fields"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/exports/{export_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/custom_profile_attributes/fields/{field_id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v4/custom_profile_attributes/fields/{field_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/exports/{export_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/custom_profile_attributes/group"
   },
   {
-   "method": "POST",
-   "path": "/api/v4/exports/{export_name}/presign-url",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/file/s3_test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/file/test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/files",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/files/search",
-   "category": "prefix-other-file"
+   "method": "PATCH",
+   "path": "/api/v4/custom_profile_attributes/values"
   },
   {
    "method": "GET",
-   "path": "/api/v4/files/{file_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/data_retention/policies"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/data_retention/policies"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/data_retention/policies/{policy_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/data_retention/policies/{policy_id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v4/data_retention/policies/{policy_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/data_retention/policies/{policy_id}/channels"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/data_retention/policies/{policy_id}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/data_retention/policies/{policy_id}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/data_retention/policies/{policy_id}/channels/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/data_retention/policies/{policy_id}/teams"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/data_retention/policies/{policy_id}/teams"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/data_retention/policies/{policy_id}/teams"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/data_retention/policies/{policy_id}/teams/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/data_retention/policies_count"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/data_retention/policy"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/database/recycle"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/delivery_tracking/config"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/delivery_tracking/config"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/drafts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/elasticsearch/purge_indexes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/elasticsearch/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/email/test"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/emoji"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/emoji"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/emoji/autocomplete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/emoji/name/{emoji_name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/emoji/names"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/emoji/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/emoji/{emoji_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/emoji/{emoji_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/emoji/{emoji_id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/ephemeral_mode/cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/ephemeral_mode/purge"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/ephemeral_mode/wipe"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/exports"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/exports/{export_name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/exports/{export_name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/exports/{export_name}/presign-url"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/file/s3_test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/file/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/files"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/files/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/files/{file_id}"
   },
   {
    "method": "HEAD",
-   "path": "/api/v4/files/{file_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/files/{file_id}/info",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/info"
   },
   {
    "method": "GET",
-   "path": "/api/v4/files/{file_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/link"
   },
   {
    "method": "GET",
-   "path": "/api/v4/files/{file_id}/preview",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/preview"
   },
   {
    "method": "HEAD",
-   "path": "/api/v4/files/{file_id}/preview",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/preview"
   },
   {
    "method": "GET",
-   "path": "/api/v4/files/{file_id}/thumbnail",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/thumbnail"
   },
   {
    "method": "HEAD",
-   "path": "/api/v4/files/{file_id}/thumbnail",
-   "category": "prefix-other-file"
+   "path": "/api/v4/files/{file_id}/thumbnail"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups/names",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/names"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/groups/{group_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/channels",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/channels"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/channels/{channel_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/channels/{channel_id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/link"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/link"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/channels/{channel_id}/patch"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/groups/{group_id}/members",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/members"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/members",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/members"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups/{group_id}/members",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/members"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/groups/{group_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/patch"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups/{group_id}/restore",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/restore"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/stats",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/stats"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/teams"
   },
   {
    "method": "GET",
-   "path": "/api/v4/groups/{group_id}/teams/{team_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/teams/{team_id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/groups/{group_id}/teams/{team_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/teams/{team_id}/link"
   },
   {
    "method": "POST",
-   "path": "/api/v4/groups/{group_id}/teams/{team_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/teams/{team_id}/link"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/groups/{group_id}/teams/{team_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/groups/{group_id}/teams/{team_id}/patch"
   },
   {
    "method": "GET",
-   "path": "/api/v4/health/findings",
-   "category": "prefix-other-file"
+   "path": "/api/v4/health/findings"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/health/findings/{fingerprint}/mute",
-   "category": "prefix-other-file"
+   "path": "/api/v4/health/findings/{fingerprint}/mute"
   },
   {
    "method": "POST",
-   "path": "/api/v4/health/findings/{fingerprint}/mute",
-   "category": "prefix-other-file"
+   "path": "/api/v4/health/findings/{fingerprint}/mute"
   },
   {
    "method": "GET",
-   "path": "/api/v4/hooks/incoming",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/incoming"
   },
   {
    "method": "POST",
-   "path": "/api/v4/hooks/incoming",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/incoming"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/hooks/incoming/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/incoming/{hook_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/hooks/incoming/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/incoming/{hook_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/hooks/incoming/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/incoming/{hook_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/hooks/outgoing",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing"
   },
   {
    "method": "POST",
-   "path": "/api/v4/hooks/outgoing",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/hooks/outgoing/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing/{hook_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/hooks/outgoing/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing/{hook_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/hooks/outgoing/{hook_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing/{hook_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/hooks/outgoing/{hook_id}/regen_token",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hooks/outgoing/{hook_id}/regen_token"
   },
   {
    "method": "GET",
-   "path": "/api/v4/hosted_customer/signup_available",
-   "category": "prefix-other-file"
+   "path": "/api/v4/hosted_customer/signup_available"
   },
   {
    "method": "GET",
-   "path": "/api/v4/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/image"
   },
   {
    "method": "GET",
-   "path": "/api/v4/imports",
-   "category": "prefix-other-file"
+   "path": "/api/v4/imports"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/imports/{import_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/imports/{import_name}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/integrity",
-   "category": "prefix-other-file"
+   "path": "/api/v4/integrity"
   },
   {
    "method": "GET",
-   "path": "/api/v4/ip_filtering",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ip_filtering"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ip_filtering",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ip_filtering"
   },
   {
    "method": "GET",
-   "path": "/api/v4/ip_filtering/my_ip",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ip_filtering/my_ip"
   },
   {
    "method": "GET",
-   "path": "/api/v4/jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs"
   },
   {
    "method": "POST",
-   "path": "/api/v4/jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs"
   },
   {
    "method": "GET",
-   "path": "/api/v4/jobs/type/{job_type}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs/type/{job_type}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/jobs/{job_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs/{job_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/jobs/{job_id}/cancel",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs/{job_id}/cancel"
   },
   {
    "method": "GET",
-   "path": "/api/v4/jobs/{job_id}/download",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs/{job_id}/download"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/jobs/{job_id}/status",
-   "category": "prefix-other-file"
+   "path": "/api/v4/jobs/{job_id}/status"
   },
   {
    "method": "GET",
-   "path": "/api/v4/latest_version",
-   "category": "prefix-other-file"
+   "path": "/api/v4/latest_version"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/ldap/certificate/private",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/certificate/private"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/certificate/private",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/certificate/private"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/ldap/certificate/public",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/certificate/public"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/certificate/public",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/certificate/public"
   },
   {
    "method": "GET",
-   "path": "/api/v4/ldap/groups",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/groups"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/ldap/groups/{remote_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/groups/{remote_id}/link"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/groups/{remote_id}/link",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/groups/{remote_id}/link"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/migrateid",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/migrateid"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/sync",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/sync"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/test",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/test"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/test_connection",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/test_connection"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/test_diagnostics",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/test_diagnostics"
   },
   {
    "method": "POST",
-   "path": "/api/v4/ldap/users/{user_id}/group_sync_memberships",
-   "category": "prefix-other-file"
+   "path": "/api/v4/ldap/users/{user_id}/group_sync_memberships"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/license",
-   "category": "prefix-other-file"
+   "path": "/api/v4/license"
   },
   {
    "method": "POST",
-   "path": "/api/v4/license",
-   "category": "prefix-other-file"
+   "path": "/api/v4/license"
   },
   {
    "method": "GET",
-   "path": "/api/v4/license/client",
-   "category": "prefix-other-file"
+   "path": "/api/v4/license/client"
   },
   {
    "method": "GET",
-   "path": "/api/v4/license/load_metric",
-   "category": "prefix-other-file"
+   "path": "/api/v4/license/load_metric"
   },
   {
    "method": "POST",
-   "path": "/api/v4/license/preview",
-   "category": "prefix-other-file"
+   "path": "/api/v4/license/preview"
   },
   {
    "method": "GET",
-   "path": "/api/v4/limits/server",
-   "category": "prefix-other-file"
+   "path": "/api/v4/limits/server"
   },
   {
    "method": "GET",
-   "path": "/api/v4/llmservices",
-   "category": "prefix-other-file"
+   "path": "/api/v4/llmservices"
   },
   {
    "method": "GET",
-   "path": "/api/v4/logs",
-   "category": "prefix-other-file"
+   "path": "/api/v4/logs"
   },
   {
    "method": "POST",
-   "path": "/api/v4/logs",
-   "category": "prefix-other-file"
+   "path": "/api/v4/logs"
   },
   {
    "method": "GET",
-   "path": "/api/v4/logs/download",
-   "category": "prefix-other-file"
+   "path": "/api/v4/logs/download"
   },
   {
    "method": "POST",
-   "path": "/api/v4/logs/query",
-   "category": "prefix-other-file"
+   "path": "/api/v4/logs/query"
   },
   {
    "method": "POST",
-   "path": "/api/v4/notifications/ack",
-   "category": "prefix-other-file"
+   "path": "/api/v4/notifications/ack"
   },
   {
    "method": "POST",
-   "path": "/api/v4/notifications/test",
-   "category": "prefix-other-file"
+   "path": "/api/v4/notifications/test"
   },
   {
    "method": "GET",
-   "path": "/api/v4/oauth/apps",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps"
   },
   {
    "method": "POST",
-   "path": "/api/v4/oauth/apps",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps"
   },
   {
    "method": "POST",
-   "path": "/api/v4/oauth/apps/register",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/register"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/oauth/apps/{app_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/{app_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/oauth/apps/{app_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/{app_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/oauth/apps/{app_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/{app_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/oauth/apps/{app_id}/info",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/{app_id}/info"
   },
   {
    "method": "POST",
-   "path": "/api/v4/oauth/apps/{app_id}/regen_secret",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/apps/{app_id}/regen_secret"
   },
   {
    "method": "GET",
-   "path": "/api/v4/oauth/outgoing_connections",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections"
   },
   {
    "method": "POST",
-   "path": "/api/v4/oauth/outgoing_connections",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections"
   },
   {
    "method": "POST",
-   "path": "/api/v4/oauth/outgoing_connections/validate",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections/validate"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/permissions/ancillary",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth/outgoing_connections/{outgoing_oauth_connection_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/plugins",
-   "category": "prefix-other-file"
+   "path": "/api/v4/oauth_test"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/plugins/install_from_url",
-   "category": "prefix-other-file"
+   "path": "/api/v4/permissions/ancillary"
   },
   {
    "method": "GET",
-   "path": "/api/v4/plugins/marketplace",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/marketplace",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/plugins/marketplace/first_admin_visit",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/marketplace/first_admin_visit",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/install_from_url"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/plugins/marketplace"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/reattach",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/marketplace"
   },
   {
    "method": "GET",
-   "path": "/api/v4/plugins/statuses",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/marketplace/first_admin_visit"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/plugins/marketplace/first_admin_visit"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/plugins/reattach"
   },
   {
    "method": "GET",
-   "path": "/api/v4/plugins/webapp",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/statuses"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/plugins/webapp"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/plugins/{plugin_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/{plugin_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/{plugin_id}/detach",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/{plugin_id}/detach"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/{plugin_id}/disable",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/{plugin_id}/disable"
   },
   {
    "method": "POST",
-   "path": "/api/v4/plugins/{plugin_id}/enable",
-   "category": "prefix-other-file"
+   "path": "/api/v4/plugins/{plugin_id}/enable"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/ephemeral",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/ephemeral"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/ids",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/ids"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/rewrite",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/rewrite"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/schedule",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/schedule"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/posts/schedule/{scheduled_post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/schedule/{scheduled_post_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/posts/schedule/{scheduled_post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/schedule/{scheduled_post_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/scheduled/team/{team_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/scheduled/team/{team_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/search"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/posts/{post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/posts/{post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/{post_id}/actions/{action_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/actions/{action_id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/posts/{post_id}/burn",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/burn"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/edit_history",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/edit_history"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/files/info",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/files/info"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/info",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/info"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/{post_id}/move",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/move"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/posts/{post_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/patch"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/{post_id}/pin",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/pin"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/reactions",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/reactions"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/{post_id}/restore/{restore_version_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/restore/{restore_version_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/reveal",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/reveal"
   },
   {
    "method": "GET",
-   "path": "/api/v4/posts/{post_id}/thread",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/thread"
   },
   {
    "method": "POST",
-   "path": "/api/v4/posts/{post_id}/unpin",
-   "category": "prefix-other-file"
+   "path": "/api/v4/posts/{post_id}/unpin"
   },
   {
    "method": "POST",
-   "path": "/api/v4/properties/groups/{group_name}/fields/search",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/fields/search"
   },
   {
    "method": "GET",
-   "path": "/api/v4/properties/groups/{group_name}/system/values",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/system/values"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/properties/groups/{group_name}/system/values",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/system/values"
   },
   {
    "method": "GET",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields"
   },
   {
    "method": "POST",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}/options"
   },
   {
    "method": "GET",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/values/{target_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}/options"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/properties/groups/{group_name}/{object_type}/values/{target_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}/options"
   },
   {
    "method": "POST",
-   "path": "/api/v4/reactions",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/fields/{field_id}/options"
   },
   {
    "method": "GET",
-   "path": "/api/v4/recaps",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/recaps",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/recaps/limit_status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/recaps/mark_viewed",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/recaps/{recap_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/recaps/{recap_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/recaps/{recap_id}/read",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/recaps/{recap_id}/regenerate",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/redirect_location",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/remotecluster",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/accept_invite",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/confirm_invite",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/msg",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/ping",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/upload/{upload_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/remotecluster/{remote_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/remotecluster/{remote_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/values/{target_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/remotecluster/{remote_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/properties/groups/{group_name}/{object_type}/values/{target_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/remotecluster/{remote_id}/channels/{channel_id}/invite",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/{remote_id}/channels/{channel_id}/uninvite",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/remotecluster/{remote_id}/generate_invite",
-   "category": "prefix-other-file"
+   "path": "/api/v4/reactions"
   },
   {
    "method": "GET",
-   "path": "/api/v4/remotecluster/{remote_id}/sharedchannelremotes",
-   "category": "prefix-other-file"
+   "path": "/api/v4/recaps"
   },
   {
    "method": "POST",
-   "path": "/api/v4/remotecluster/{user_id}/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/recaps"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/recaps/limit_status"
   },
   {
    "method": "POST",
-   "path": "/api/v4/reports/posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/reports/users",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/reports/users/count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/reports/users/export",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/restart",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/roles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/roles/name/{role_name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/roles/names",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/roles/{role_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/roles/{role_id}/patch",
-   "category": "prefix-other-file"
+   "path": "/api/v4/recaps/mark_viewed"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/saml/certificate/idp",
-   "category": "prefix-other-file"
+   "path": "/api/v4/recaps/{recap_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/recaps/{recap_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/saml/certificate/idp",
-   "category": "prefix-other-file"
+   "path": "/api/v4/recaps/{recap_id}/read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/recaps/{recap_id}/regenerate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/redirect_location"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/remotecluster"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/accept_invite"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/confirm_invite"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/msg"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/ping"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/upload/{upload_id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/saml/certificate/private",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}"
   },
   {
-   "method": "POST",
-   "path": "/api/v4/saml/certificate/private",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/saml/certificate/public",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/saml/certificate/public",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/saml/certificate/status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/saml/metadata",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/saml/metadatafromidp",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/saml/reset_auth_data",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/scheduled_recaps",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/scheduled_recaps",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}/pause",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}/resume",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/schemes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/schemes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/schemes/{scheme_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/schemes/{scheme_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/schemes/{scheme_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/schemes/{scheme_id}/patch",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/schemes/{scheme_id}/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/server_busy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/server_busy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/server_busy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/sharedchannels/remote_info/{remote_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/sharedchannels/users/{user_id}/can_dm/{other_user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/sharedchannels/{channel_id}/remotes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/sharedchannels/{team_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/site_url/test",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/system/e2e/ai_bridge",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/e2e/ai_bridge",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/system/e2e/ai_bridge",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/system/notices/view",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/notices/{team_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/onboarding/complete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/system/onboarding/complete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/ping",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/schema/version",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/support_packet",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/system/timezones",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/invite/{invite_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/teams/invites/email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/members/invite",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/name/{team_name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/name/{team_name}/channels/name/{channel_name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/name/{team_name}/exists",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/teams/{team_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/access_control/attributes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/access_control/policy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/autocomplete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/deleted",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/channels/ids",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/managed_categories",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/name/{channel_name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/private",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/recommended",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/channels/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/channels/search_autocomplete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/commands/autocomplete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/commands/autocomplete_suggestions",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/files/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/groups",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/groups_by_channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/teams/{team_id}/image",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/image",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/image",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/invite-guests/email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/invite/email",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/members/batch",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/members/ids",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/teams/{team_id}/members/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/members/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}/members/{user_id}/roles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}/members/{user_id}/schemeRoles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/members_minus_group_members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}/patch",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/posts/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}/privacy",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/regenerate_invite_id",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/teams/{team_id}/restore",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/teams/{team_id}/scheme",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/teams/{team_id}/stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/terms_of_service",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/terms_of_service",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/trial-license",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/trial-license/prev",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/upgrade_to_enterprise",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/upgrade_to_enterprise/allowed",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/upgrade_to_enterprise/status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/uploads",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/uploads/{upload_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/uploads/{upload_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/usage/posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/usage/storage",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/usage/teams",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/users",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/auth_data",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/autocomplete",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/email/verify",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/email/verify/send",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/email/{email}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/group_channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/ids",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/invalid_emails",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/known",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login/cws",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login/desktop_token",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login/sso/code-exchange",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login/switch",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/login/type",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/logout",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/migrate_auth/ldap",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/migrate_auth/saml",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/notify-admin",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/password/reset",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/password/reset/send",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/sessions/attributes/manifest",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/sessions/device",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/sessions/revoke/all",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/stats",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/stats/filtered",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/status/ids",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/tokens",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/disable",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/enable",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/tokens/non_compliant/count",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/non_compliant/revoke",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/revoke",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/rotate",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/tokens/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/tokens/{token_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/trigger-notify-admin-posts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/username/{username}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/usernames",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/users/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/active",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/audits",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/auth",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/channel_members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/channels/{channel_id}/drafts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/channels/{channel_id}/drafts/{thread_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/channels/{channel_id}/posts/unread",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/channels/{channel_id}/unread",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/convert_to_bot",
-   "category": "prefix-other-file"
-  },
-  {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/custom_profile_attributes",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v4/users/{user_id}/custom_profile_attributes",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/data_retention/channel_policies",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/data_retention/team_policies",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/demote",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}/channels/{channel_id}/invite"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/email/verify/member",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}/channels/{channel_id}/uninvite"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/{remote_id}/generate_invite"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/groups",
-   "category": "prefix-other-file"
+   "path": "/api/v4/remotecluster/{remote_id}/sharedchannelremotes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/remotecluster/{user_id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/reports/posts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/reports/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/reports/users/count"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/reports/users/export"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/restart"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/roles/name/{role_name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/roles/names"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/roles/{role_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/roles/{role_id}/patch"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/image",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/image",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/idp"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/image",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/image/default",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/mfa",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/mfa/generate",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/oauth/apps/authorized",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/password",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/patch",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/posts/flagged",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/idp"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/posts/{post_id}/ack",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/private"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/posts/{post_id}/ack",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/private"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/posts/{post_id}/reactions/{emoji_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/public"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/posts/{post_id}/reminder",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/posts/{post_id}/set_unread",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/public"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/preferences",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/preferences",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/preferences/delete",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/certificate/status"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/preferences/{category}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/saml/metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/saml/metadatafromidp"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/saml/reset_auth_data"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/preferences/{category}/name/{preference_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/scheduled_recaps"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/promote",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/reset_failed_attempts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/roles",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/sessions",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/sessions/revoke",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/sessions/revoke/all",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/status",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/status",
-   "category": "prefix-other-file"
+   "path": "/api/v4/scheduled_recaps"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/status/custom",
-   "category": "prefix-other-file"
+   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/users/{user_id}/status/custom",
-   "category": "prefix-other-file"
+   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}/pause"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/scheduled_recaps/{scheduled_recap_id}/resume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/schemes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/schemes"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/status/custom/recent",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/status/custom/recent/delete",
-   "category": "prefix-other-file"
+   "path": "/api/v4/schemes/{scheme_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v4/schemes/{scheme_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/members",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/unread",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories",
-   "category": "prefix-other-file"
+   "path": "/api/v4/schemes/{scheme_id}/channels"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories",
-   "category": "prefix-other-file"
+   "path": "/api/v4/schemes/{scheme_id}/patch"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/order",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/order",
-   "category": "prefix-other-file"
+   "path": "/api/v4/schemes/{scheme_id}/teams"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/server_busy"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/server_busy"
   },
   {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/members",
-   "category": "prefix-other-file"
+   "method": "POST",
+   "path": "/api/v4/server_busy"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/drafts",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/read",
-   "category": "prefix-other-file"
+   "path": "/api/v4/sharedchannels/remote_info/{remote_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/read",
-   "category": "prefix-other-file"
+   "path": "/api/v4/sharedchannels/users/{user_id}/can_dm/{other_user_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/sharedchannels/{channel_id}/remotes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/sharedchannels/{team_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/site_url/test"
   },
   {
    "method": "DELETE",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/following",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/e2e/ai_bridge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/system/e2e/ai_bridge"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/following",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/e2e/ai_bridge"
   },
   {
    "method": "PUT",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/read/{timestamp}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/notices/view"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/system/notices/{team_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/system/onboarding/complete"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/set_unread/{post_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/onboarding/complete"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/teams/{team_id}/unread",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/ping"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/terms_of_service",
-   "category": "prefix-other-file"
+   "path": "/api/v4/system/schema/version"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/system/support_packet"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/system/timezones"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/terms_of_service",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/tokens",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/invite/{invite_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/teams/invites/email"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/tokens",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/members/invite"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/name/{team_name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/name/{team_name}/channels/name/{channel_name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/name/{team_name}/exists"
   },
   {
    "method": "POST",
-   "path": "/api/v4/users/{user_id}/typing",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/teams/{team_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/users/{user_id}/uploads",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/{team_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v4/websocket",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/{team_id}/access_control/attributes"
   },
   {
    "method": "GET",
-   "path": "/files/{file_id}/public",
-   "category": "prefix-other-file"
+   "path": "/api/v4/teams/{team_id}/access_control/policy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/autocomplete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/deleted"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/channels/ids"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/managed_categories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/name/{channel_name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/private"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/recommended"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/channels/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/channels/search_autocomplete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/commands/autocomplete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/commands/autocomplete_suggestions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/files/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/groups"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/groups_by_channels"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/teams/{team_id}/image"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/invite-guests/email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/invite/email"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/members"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/members"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/members/batch"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/members/ids"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/teams/{team_id}/members/{user_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/members/{user_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}/members/{user_id}/roles"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}/members/{user_id}/schemeRoles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/members_minus_group_members"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}/patch"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/posts/search"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}/privacy"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/regenerate_invite_id"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{team_id}/restore"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/teams/{team_id}/scheme"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{team_id}/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/terms_of_service"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/terms_of_service"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/trial-license"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/trial-license/prev"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/upgrade_to_enterprise"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/upgrade_to_enterprise/allowed"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/upgrade_to_enterprise/status"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/uploads"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/uploads/{upload_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/uploads/{upload_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/usage/posts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/usage/storage"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/usage/teams"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/auth_data"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/autocomplete"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/email/verify"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/email/verify/send"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/email/{email}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/group_channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/ids"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/invalid_emails"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/known"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login/cws"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login/desktop_token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login/sso/code-exchange"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login/switch"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login/type"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/logout"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/migrate_auth/ldap"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/migrate_auth/saml"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/notify-admin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/password/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/password/reset/send"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/sessions/attributes/manifest"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/sessions/device"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/sessions/revoke/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/stats/filtered"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/status/ids"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/tokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/enable"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/tokens/non_compliant/count"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/non_compliant/revoke"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/revoke"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/rotate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/tokens/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/tokens/{token_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/trigger-notify-admin-posts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/username/{username}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/usernames"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/active"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/audits"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/auth"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/channel_join_requests"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/channel_members"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/channels"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/channels/{channel_id}/drafts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/channels/{channel_id}/drafts/{thread_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/channels/{channel_id}/posts/unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/channels/{channel_id}/unread"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/convert_to_bot"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/custom_profile_attributes"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v4/users/{user_id}/custom_profile_attributes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/data_retention/channel_policies"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/data_retention/team_policies"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/demote"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/email/verify/member"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/groups"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/image"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/image"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/image/default"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/mfa"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/mfa/generate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/oauth/apps/authorized"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/password"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/patch"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/posts/flagged"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/posts/{post_id}/ack"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/posts/{post_id}/ack"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/posts/{post_id}/reactions/{emoji_name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/posts/{post_id}/reminder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/posts/{post_id}/set_unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/preferences"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/preferences"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/preferences/delete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/preferences/{category}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/preferences/{category}/name/{preference_name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/promote"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/reset_failed_attempts"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/sessions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/sessions/revoke"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/sessions/revoke/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/status"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/status/custom"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/status/custom"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/status/custom/recent"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/status/custom/recent/delete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/members"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/order"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/order"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/categories/{category_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/channels/members"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/drafts"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/following"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/following"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/read/{timestamp}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/threads/{thread_id}/set_unread/{post_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/teams/{team_id}/unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/terms_of_service"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/terms_of_service"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/tokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/tokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/{user_id}/typing"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/uploads"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/websocket"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/v4/{anything}"
+  },
+  {
+   "method": "GET",
+   "path": "/files/{file_id}/public"
   },
   {
    "method": "HEAD",
-   "path": "/files/{file_id}/public",
-   "category": "prefix-other-file"
+   "path": "/files/{file_id}/public"
+  },
+  {
+   "method": "GET",
+   "path": "/login/{service}/complete"
   },
   {
    "method": "GET",
@@ -3046,11 +2502,46 @@
   },
   {
    "method": "POST",
-   "path": "/oauth/intune",
-   "category": "prefix-other-file"
+   "path": "/oauth/access_token"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/authorize"
+  },
+  {
+   "method": "POST",
+   "path": "/oauth/authorize"
+  },
+  {
+   "method": "POST",
+   "path": "/oauth/deauthorize"
+  },
+  {
+   "method": "POST",
+   "path": "/oauth/intune"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/{service}/complete"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/{service}/login"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/{service}/mobile_login"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/{service}/signup"
+  },
+  {
+   "method": "GET",
+   "path": "/signup/{service}/complete"
   }
  ],
- "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4; scope server/channels/api4/. Every route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). The method and the relative path come out right; the prefix never does, and the roots Handle(\"\", ...) are dropped (prefix-other-file, all 607). The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured.",
+ "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4, plus the routes only the code has, read in it (channel join requests, property field options, the /api/v4/{anything} 404 catch-all, the web package's OAuth routes: 24). Scope server/channels/api4/ and server/channels/web/oauth.go (where /oauth/intune and the OAuth metadata live). Every API route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). Until H2b item 2 step 2 (2026-10-16) the prefix never came out and the roots Handle(\"\", ...) were dropped (prefix-other-file, all 607). Miss: GET /.well-known/oauth-authorization-server, registered as MainRouter.PathPrefix(model.OAuthMetadataEndpoint).Handler(h) (path-prefix-handler). The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured.",
  "checked": {
   "endpoints": [
    {
@@ -3072,138 +2563,138 @@
    {
     "evidence": "mattermost:server/channels/api4/ai_bridge_test_helper.go:15",
     "method": "PUT",
-    "path": "/e2e/ai_bridge",
+    "path": "/api/v4/system/e2e/ai_bridge",
     "raw": "/e2e/ai_bridge",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/ai_bridge_test_helper.go:16",
     "method": "GET",
-    "path": "/e2e/ai_bridge",
+    "path": "/api/v4/system/e2e/ai_bridge",
     "raw": "/e2e/ai_bridge",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/audit_logging.go:15",
     "method": "DELETE",
-    "path": "/certificate",
+    "path": "/api/v4/audit_logs/certificate",
     "raw": "/certificate",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/channel.go:120",
     "method": "PUT",
-    "path": "/roles",
+    "path": "/api/v4/channels/{channel_id}/members/{user_id}/roles",
     "raw": "/roles",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/channel.go:81",
     "method": "GET",
-    "path": "/channels",
+    "path": "/api/v4/users/{user_id}/channels",
     "raw": "/channels",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/channel_join_request.go:28",
     "method": "GET",
-    "path": "/join_requests/count",
+    "path": "/api/v4/channels/{channel_id}/join_requests/count",
     "raw": "/join_requests/count",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/data_retention.go:18",
     "method": "POST",
-    "path": "/policies",
+    "path": "/api/v4/data_retention/policies",
     "raw": "/policies",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/data_retention.go:20",
     "method": "PATCH",
-    "path": "/policies/{policy_id}",
+    "path": "/api/v4/data_retention/policies/{policy_id}",
     "raw": "/policies/{policy_id:[A-Za-z0-9]+}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/ldap.go:26",
     "method": "POST",
-    "path": "/test_diagnostics",
+    "path": "/api/v4/ldap/test_diagnostics",
     "raw": "/test_diagnostics",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/license.go:25",
     "method": "GET",
-    "path": "/license/client",
+    "path": "/api/v4/license/client",
     "raw": "/license/client",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/plugin.go:34",
     "method": "GET",
-    "path": "/statuses",
+    "path": "/api/v4/plugins/statuses",
     "raw": "/statuses",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/report.go:23",
     "method": "POST",
-    "path": "/posts",
+    "path": "/api/v4/reports/posts",
     "raw": "/posts",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/saml.go:28",
     "method": "GET",
-    "path": "/certificate/status",
+    "path": "/api/v4/saml/certificate/status",
     "raw": "/certificate/status",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/system.go:54",
     "method": "POST",
-    "path": "/database/recycle",
+    "path": "/api/v4/database/recycle",
     "raw": "/database/recycle",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/system.go:60",
     "method": "POST",
-    "path": "/logs",
+    "path": "/api/v4/logs",
     "raw": "/logs",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/usage.go:19",
     "method": "GET",
-    "path": "/storage",
+    "path": "/api/v4/usage/storage",
     "raw": "/storage",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/api4/user.go:107",
     "method": "GET",
-    "path": "/channel_members",
+    "path": "/api/v4/users/{user_id}/channel_members",
     "raw": "/channel_members",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "mattermost:server/channels/app/platform/metrics.go:189",
@@ -3338,8 +2829,8 @@
    {
     "evidence": "mattermost:server/channels/app/notification_push.go:638",
     "method": "POST",
-    "path": "/ack",
-    "raw": "/ack",
+    "path": "/api/v1/ack",
+    "raw": "/api/v1/ack",
     "ok": true,
     "category": null
    },

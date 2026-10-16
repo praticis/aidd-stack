@@ -74,6 +74,31 @@
    "method": "GET",
    "path": "/admin/dashboard",
    "handler": "dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/reports/monthly",
+   "handler": "monthly"
+  },
+  {
+   "method": "GET",
+   "path": "/internal/status",
+   "handler": "status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{order_id}",
+   "handler": "read_order"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tags/{tag_id}",
+   "handler": "read_tag"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tags",
+   "handler": "list_tags"
   }
  ],
  "calls": [

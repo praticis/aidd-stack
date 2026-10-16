@@ -6,86 +6,98 @@
    {
     "evidence": "gin-realworld:articles/routers.go:14",
     "method": "GET",
-    "path": "/feed",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/feed",
+    "raw": "/feed",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:17",
     "method": "PUT",
-    "path": "/{slug}",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:19",
     "method": "DELETE",
-    "path": "/{slug}",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:20",
     "method": "POST",
-    "path": "/{slug}/favorite",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/:slug/favorite",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:21",
     "method": "DELETE",
-    "path": "/{slug}/favorite",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/:slug/favorite",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:22",
     "method": "POST",
-    "path": "/{slug}/comments",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/:slug/comments",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:23",
     "method": "DELETE",
-    "path": "/{slug}/comments/{id}",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}/comments/{id}",
+    "raw": "/:slug/comments/:id",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:29",
     "method": "GET",
-    "path": "/{slug}",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:articles/routers.go:30",
     "method": "GET",
-    "path": "/{slug}/comments",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/:slug/comments",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:users/routers.go:13",
     "method": "POST",
-    "path": "/login",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/users/login",
+    "raw": "/login",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:users/routers.go:28",
     "method": "POST",
-    "path": "/{username}/follow",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/:username/follow",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-realworld:users/routers.go:29",
     "method": "DELETE",
-    "path": "/{username}/follow",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/:username/follow",
+    "ok": true,
+    "category": null
    }
   ]
  },
@@ -100,98 +112,79 @@
  "endpoints": [
   {
    "method": "POST",
-   "path": "/api/users",
-   "category": "router-as-param"
+   "path": "/api/users"
   },
   {
    "method": "POST",
-   "path": "/api/users/login",
-   "category": "router-as-param"
+   "path": "/api/users/login"
   },
   {
    "method": "GET",
-   "path": "/api/user",
-   "category": "router-as-param"
+   "path": "/api/user"
   },
   {
    "method": "PUT",
-   "path": "/api/user",
-   "category": "router-as-param"
+   "path": "/api/user"
   },
   {
    "method": "GET",
-   "path": "/api/profiles/{username}",
-   "category": "router-as-param"
+   "path": "/api/profiles/{username}"
   },
   {
    "method": "POST",
-   "path": "/api/profiles/{username}/follow",
-   "category": "router-as-param"
+   "path": "/api/profiles/{username}/follow"
   },
   {
    "method": "DELETE",
-   "path": "/api/profiles/{username}/follow",
-   "category": "router-as-param"
+   "path": "/api/profiles/{username}/follow"
   },
   {
    "method": "GET",
-   "path": "/api/articles",
-   "category": "router-as-param"
+   "path": "/api/articles"
   },
   {
    "method": "GET",
-   "path": "/api/articles/feed",
-   "category": "router-as-param"
+   "path": "/api/articles/feed"
   },
   {
    "method": "POST",
-   "path": "/api/articles",
-   "category": "router-as-param"
+   "path": "/api/articles"
   },
   {
    "method": "GET",
-   "path": "/api/articles/{slug}",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "PUT",
-   "path": "/api/articles/{slug}",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}"
   },
   {
    "method": "POST",
-   "path": "/api/articles/{slug}/favorite",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}/favorite"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}/favorite",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}/favorite"
   },
   {
    "method": "GET",
-   "path": "/api/articles/{slug}/comments",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}/comments"
   },
   {
    "method": "POST",
-   "path": "/api/articles/{slug}/comments",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}/comments"
   },
   {
    "method": "DELETE",
-   "path": "/api/articles/{slug}/comments/{id}",
-   "category": "router-as-param"
+   "path": "/api/articles/{slug}/comments/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/tags",
-   "category": "router-as-param"
+   "path": "/api/tags"
   }
  ]
 }

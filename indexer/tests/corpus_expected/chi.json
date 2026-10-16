@@ -78,38 +78,31 @@
   },
   {
    "method": "GET",
-   "path": "/todos",
-   "category": "prefix-other-file"
+   "path": "/todos"
   },
   {
    "method": "POST",
-   "path": "/todos",
-   "category": "prefix-other-file"
+   "path": "/todos"
   },
   {
    "method": "PUT",
-   "path": "/todos",
-   "category": "prefix-other-file"
+   "path": "/todos"
   },
   {
    "method": "DELETE",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
+   "path": "/todos/{id}"
   },
   {
    "method": "GET",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
+   "path": "/todos/{id}"
   },
   {
    "method": "PUT",
-   "path": "/todos/{id}",
-   "category": "prefix-other-file"
+   "path": "/todos/{id}"
   },
   {
    "method": "GET",
-   "path": "/todos/{id}/sync",
-   "category": "prefix-other-file"
+   "path": "/todos/{id}/sync"
   }
  ],
  "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo).",
@@ -199,10 +192,10 @@
    {
     "evidence": "chi:_examples/todos-resource/todos.go:25",
     "method": "GET",
-    "path": "/{id}/sync",
+    "path": "/todos/{id}/sync",
     "raw": "/sync",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "chi:middleware/profiler.go:29",

@@ -17,6 +17,7 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
 
 class PyScanner(BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
+    mount_rule = "py.mount"
 
     def run(self) -> None:
         self.test_clients: set[str] = set()
@@ -135,27 +136,136 @@ class PyScanner(BaseScanner):
         return True
 
     def _mount(self, n: Node, fn: Node, args: Node) -> bool:
-        """`app.include_router(router, prefix="/v1")`, `app.register_blueprint(bp, url_prefix="/admin")` with a router of
-        this file."""
+        """`app.include_router(router, prefix="/v1")`, `app.register_blueprint(bp, url_prefix="/admin")`, Starlette's
+        `app.mount("/api/v1", app=api)` — of a router of this file, or of one imported (`tag_router`,
+        `users.router`), which `compose` follows to its file."""
         verb = text(fn.child_by_field_name("attribute"), self.src)
-        if verb not in ("include_router", "register_blueprint"):
+        if verb not in ("include_router", "register_blueprint", "mount"):
             return False
         parent = text(fn.child_by_field_name("object"), self.src).split(".")[-1]
         pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
-        p = ""
-        for a in args.children:
-            if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) in ("prefix", "url_prefix"):
-                p = self.path_of(a.child_by_field_name("value")) or ""
-        if not pos or pos[0].type != "identifier" or text(pos[0], self.src) not in self.router_vars:
+        kw = {text(a.child_by_field_name("name"), self.src): a.child_by_field_name("value")
+              for a in args.children if a.type == "keyword_argument"}
+        if verb == "mount":
+            p = self.path_of(pos[0]) if pos else None
+            child = kw.get("app") or (pos[1] if len(pos) > 1 else None)
+            if p is None:
+                return True
+        else:
+            v = kw.get("prefix") or kw.get("url_prefix")
+            p = (self.path_of(v) or "") if v is not None else ""
+            child = pos[0] if pos else None
+        if child is None:
             return True
-        self.mount(text(pos[0], self.src), pos[0], parent, n, p)
+        if child.type == "identifier" and text(child, self.src) in self.router_vars:
+            self.mount(text(child, self.src), child, parent, n, p)
+            return True
+        g = self._imported_router(child)
+        if g is not None:
+            self.foreign.append((g, self.router_key(parent, n), (self.prefix_for(parent, n) or "").rstrip("/") + p))
         return True
+
+    # -- routers other files name: module variables, router parameters, returned routers ----------------------
+    def read_imports(self) -> dict[str, tuple[str, str | None]]:
+        """`from dispatch.tag.views import router as tag_router` → tag_router: ("dispatch.tag.views", "router");
+        `from . import users` → users: (".", "users"); `import a.b as c` → c: ("a.b", None)."""
+        out: dict[str, tuple[str, str | None]] = {}
+        for n in walk(self.fx.tree.root_node):
+            if n.type not in ("import_from_statement", "import_statement"):
+                continue
+            mod = n.child_by_field_name("module_name")
+            for c in n.children_by_field_name("name"):
+                alias = c.child_by_field_name("alias") if c.type == "aliased_import" else None
+                name = text(c.child_by_field_name("name") if alias is not None else c, self.src)
+                if n.type == "import_from_statement" and mod is not None:
+                    out[text(alias, self.src) if alias is not None else name] = (text(mod, self.src), name)
+                elif alias is not None:
+                    out[text(alias, self.src)] = (name, None)
+        return out
+
+    def _module(self, spec: str, name: str | None) -> str | None:
+        """The file a module reference names: `spec` itself, or `name` as a submodule of it."""
+        if name is None:
+            return self.resolve_import(spec)
+        return self.resolve_import(spec + name if spec.endswith(".") else f"{spec}.{name}")
+
+    def _imported_router(self, n: Node) -> str | None:
+        """`tag_router` (imported by name) or `users.router` (`users` an imported module): the router's global id."""
+        if n.type == "identifier":
+            spec, orig = self.imports.get(text(n, self.src)) or (None, None)
+            if spec is None or orig is None or self._module(spec, orig) is not None:
+                return None                                     # a module, not a router
+            target = self.resolve_import(spec)
+            return f"var:{target}:{orig}" if target is not None and target.endswith(".py") else None
+        obj, attr = n.child_by_field_name("object"), n.child_by_field_name("attribute")
+        if n.type != "attribute" or obj is None or attr is None or obj.type != "identifier":
+            return None
+        spec, orig = self.imports.get(text(obj, self.src)) or (None, None)
+        target = self._module(spec, orig) if spec is not None else None
+        return f"var:{target}:{text(attr, self.src)}" if target is not None and target.endswith(".py") else None
+
+    def global_of(self, key: tuple[int, str]) -> str | None:
+        scope, name = key
+        path = self.fx.file.path
+        if scope == 0:
+            if not re.fullmatch(r"[A-Za-z_]\w*", name):
+                return None
+            if self.module_binds(name):
+                return f"var:{path}:{name}"
+            spec, orig = self.imports.get(name) or (None, None)
+            target = self.resolve_import(spec) if spec is not None and orig is not None else None
+            return f"var:{target}:{orig}" if target is not None and target.endswith(".py") else None
+        fn = self.function_of(scope)
+        if fn is None or fn.type != "function_definition":
+            return None
+        fname = text(fn.child_by_field_name("name"), self.src)
+        i = self._param(fn, name)[0]
+        if i is not None:
+            return f"param:{path}:{fname}:{i}"
+        return f"ret:{path}:{fname}" if self.returns_name(fn, name) else None
+
+    def router_param_type(self, fn: Node, name: str) -> str | None:
+        decl = self._param(fn, name)[1] if fn.type == "function_definition" else None
+        typ = decl.child_by_field_name("type") if decl is not None else None
+        return text(typ, self.src) if typ is not None else "" if decl is not None else None
+
+    def _param(self, fn: Node, name: str) -> tuple[int | None, Node | None]:
+        """Position of the positional parameter `name` of `fn`, and its declaration."""
+        params = fn.child_by_field_name("parameters")
+        i = 0
+        for d in params.named_children if params is not None else ():
+            if d.type not in ("identifier", "typed_parameter", "default_parameter", "typed_default_parameter"):
+                continue
+            ident = d if d.type == "identifier" else d.child_by_field_name("name") or \
+                next((c for c in d.children if c.type == "identifier"), None)
+            if ident is not None and text(ident, self.src) == name:
+                return i, d
+            i += 1
+        return None, None
+
+    def _router_arguments(self, n: Node, fn: Node, args: Node) -> None:
+        """`register_routes(app)`, `init_app(app)`: a router handed to a function of this file or an imported one."""
+        fname = text(fn, self.src)
+        if any(s.kind == "function" for s in self.symbols_by_name.get(fname, ())):
+            unit = self.fx.file.path
+        else:
+            spec, orig = self.imports.get(fname) or (None, None)
+            unit = self.resolve_import(spec) if spec is not None and orig is not None else None
+            fname = orig or fname
+        if unit is None:
+            return
+        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
+        for i, a in enumerate(pos):
+            if a.type == "identifier":
+                self.router_args.append((f"param:{unit}:{fname}:{i}", text(a, self.src), n, ""))
 
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
+        if fn.type == "identifier":
+            self._router_arguments(n, fn, args)
         if self._aiohttp(n, fn, args) or fn.type != "attribute" or self._mount(n, fn, args):
             return
         callee = self.callee_of(fn)

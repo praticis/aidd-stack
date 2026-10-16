@@ -1,13 +1,19 @@
-"""The mount graph of one file: which router is mounted on which, under what prefix.
+"""The mount graph: which router is mounted on which, under what prefix — in one file, then across files.
 
 A router is a `RouterKey` — (id of the function that binds its name, or 0 at module level; the name) — so a
 closure's `r` is not the outer `r`. Scanners record an edge per mount (`app.use('/api', router)`,
 `r.Mount("/x", sub)`, `include_router(r, prefix=...)`; a group variable gets one with an empty prefix to its
-parent) and each route registered on a router. At the end of the file `apply` gives every such route each chain
-of mounts above its router; a sub-router's root (`MountedRoot`) that nothing mounts is dropped.
+parent) and each route registered on a router.
 
-This is the per-file part of the mount graph. Across files the same graph is composed from per-file summaries
-(routers exported, mounts by imported name), never from the trees of other files (F1.13).
+Across files the graph is composed from per-file summaries, never from the trees of other files (F1.13). A router
+another file can name has a global id (`global_of`, per language): a module-level variable (`var:<unit>:<name>`),
+the router a function returns (`ret:<unit>:<function>`), a function's router parameter (`param:<unit>:<function>:<i>`)
+or a struct field (`field:<unit>:<path>`); the unit is the file, or the package directory in Go. At the end of a
+file (`settle`), a route on such a router waits for the composition; a route whose chain of mounts ends at a router
+no other file can name is final. Each file also publishes, per global router, where its own mounts take it — to
+another global router or to a top (`""`) — and every mount of a router from elsewhere (`settle`'s `foreign`).
+`compose` follows those edges from each waiting route's router; a router mounted nowhere keeps its routes as they
+are, and drops a sub-router's root (`MountedRoot`), which is a route only under a prefix or on the application.
 """
 
 from __future__ import annotations
@@ -18,10 +24,12 @@ from typing import TypeVar
 
 RouterKey = tuple[int, str]
 E = TypeVar("E")
+TOP = ""                                   # a router no other file can name: the chain ends there
+APP = "@app"                               # the same, when that router is the application: a root mounted on it is `/`
 
 
 class MountedRoot(str):
-    """`"/"` registered on a sub-router: a route only if this file mounts the router under a prefix."""
+    """`"/"` registered on a sub-router: a route only once the router is mounted somewhere."""
 
 
 @dataclass
@@ -41,34 +49,100 @@ class MountGraph:
             up.setdefault(child, []).append((parent, p))
         return up
 
-    def prefixes(self, router: RouterKey, _up: dict | None = None) -> list[str]:
-        """Every non-empty prefix the chains of mounts above `router` give, in order, without repeats."""
-        up = _up if _up is not None else self._up()
+    def exits(self, key: RouterKey, global_of: Callable[[RouterKey], str | None], is_app: Callable[[RouterKey], bool],
+              up: dict | None = None, _seen: frozenset = frozenset()) -> list[tuple[str, str]]:
+        """Where the mounts above `key` lead: (the first global router up the chain, or `TOP` / `APP`; the prefix the
+        edges on the way add). A router without mounts gives nothing."""
+        up = up if up is not None else self._up()
+        out: list[tuple[str, str]] = []
+        for parent, p in up.get(key, ()):
+            if parent in _seen or parent == key:
+                continue
+            g = global_of(parent)
+            if g is not None:
+                out.append((g, p))
+            elif parent in up:
+                out += [(t, pp.rstrip("/") + p) for t, pp in self.exits(parent, global_of, is_app, up, _seen | {key})]
+            else:
+                out.append((APP if is_app(parent) else TOP, p))
+        return list(dict.fromkeys(out))
 
-        def chains(key: RouterKey, seen: frozenset) -> list[str]:
-            if key in seen or key not in up:
-                return [""]
-            return [pp.rstrip("/") + p for parent, p in up[key] for pp in chains(parent, seen | {key})]
-
-        return [c for c in dict.fromkeys(chains(router, frozenset())) if c]
-
-    def apply(self, endpoints: list[E], rebase: Callable[[E, str], E], is_root: Callable[[E], bool]) -> None:
-        """Rewrite, in `endpoints`, each route registered here: one copy per prefix (`rebase`), or none at all for an
-        unmounted sub-router root (`is_root`). Only the indexes registered here are touched."""
-        if not self.routes:
-            return
+    def settle(self, endpoints: list[E], rebase: Callable[[E, str], E], is_root: Callable[[E], bool],
+               global_of: Callable[[RouterKey], str | None] = lambda _: None,
+               foreign: list[tuple[str, RouterKey, str]] = (),
+               is_app: Callable[[RouterKey], bool] = lambda _: False) -> tuple[list[tuple[E, str]], list[tuple[str, str, str]]]:
+        """Rewrite, in `endpoints`, each route registered here under the prefixes of this file's mounts; drop a
+        sub-router's root that no mount reaches. Returns what crosses files: the routes waiting on a global router
+        (route, global id) and the edges (child global id, parent global id or `TOP`, prefix) — this file's mounts
+        of its global routers, and `foreign`, mounts of another file's router (its id) on a router of this one."""
         up = self._up()
+        waiting: list[tuple[E, str]] = []
         drop: list[int] = []
         extra: list[E] = []
         for idx, router in self.routes:
-            prefixes = self.prefixes(router, up)
-            if not prefixes:
-                if is_root(endpoints[idx]):
+            ep = endpoints[idx]
+            g = global_of(router)
+            if g is not None:
+                waiting.append((ep, g))
+                continue
+            moved = []
+            for target, prefix in self.exits(router, global_of, is_app, up):
+                if is_root(ep) and not prefix and target == TOP:
+                    continue                                  # a sub-router's root needs a prefix, or the application
+                copy = rebase(ep, prefix) if prefix or is_root(ep) and target == APP else ep
+                moved.append(copy)
+                if target not in (TOP, APP):
+                    waiting.append((copy, target))
+            if not moved:
+                if is_root(ep):
                     drop.append(idx)
                 continue
-            moved = [rebase(endpoints[idx], pre) for pre in prefixes]
             endpoints[idx] = moved[0]
             extra.extend(moved[1:])
         for idx in sorted(drop, reverse=True):
             del endpoints[idx]
         endpoints.extend(extra)
+        edges = [(g, t, p) for child in up if (g := global_of(child)) is not None
+                 for t, p in self.exits(child, global_of, is_app, up)]
+        for child, parent, prefix in foreign:
+            g = global_of(parent)
+            ups = [(g, "")] if g is not None else self.exits(parent, global_of, is_app, up) or \
+                [(APP if is_app(parent) else TOP, "")]
+            edges += [(child, t, pp.rstrip("/") + prefix) for t, pp in ups]
+        return waiting, list(dict.fromkeys(edges))
+
+
+def compose(waiting: list[tuple[E, str]], edges: dict[str, list[tuple[str, str]]], rebase: Callable[[E, str], E],
+            is_root: Callable[[E], bool]) -> dict[int, list[E]]:
+    """The plan for the routes waiting on a global router (`id(route)` → what replaces it): one copy per chain of
+    edges up to a top or to a router mounted nowhere. A router mounted nowhere keeps its routes; a sub-router's root
+    is a route only under a non-empty prefix."""
+    memo: dict[str, list[tuple[str, bool]]] = {}
+
+    def chains(g: str, seen: frozenset) -> list[tuple[str, bool]]:
+        """(prefix, whether the chain ends at the application)."""
+        if g in memo:
+            return memo[g]
+        outs = edges.get(g)
+        if not outs:
+            return [("", False)]                          # mounted nowhere: the router is a top
+        res: list[tuple[str, bool]] = []
+        for parent, p in outs:
+            if parent in (TOP, APP):
+                res.append((p, parent == APP))
+            elif parent not in seen and len(seen) < 16:
+                res += [(pp.rstrip("/") + p, app) for pp, app in chains(parent, seen | {g})]
+        res = list(dict.fromkeys(res))[:16]
+        if not seen:
+            memo[g] = res
+        return res
+
+    plan: dict[int, list[E]] = {}
+    for ep, g in waiting:
+        if not edges.get(g):
+            if is_root(ep):
+                plan[id(ep)] = []
+            continue
+        prefixes = dict.fromkeys(p for p, app in chains(g, frozenset()) if p or app or not is_root(ep))
+        plan[id(ep)] = [rebase(ep, p) for p in prefixes]
+    return plan

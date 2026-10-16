@@ -1,6 +1,10 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+
+	"example.com/routepatterns/internal/users"
+)
 
 func main() {
 	r := gin.Default()
@@ -14,15 +18,24 @@ func main() {
 	api := r.Group("/api") // a group named like a client is still a group
 	api.GET("/health", health)
 
-	registerAdmin(r.Group("/admin"))
+	registerAdmin(r.Group("/manage"))
+	users.Register(v1.Group("/users")) // a group handed to another package
+	registerUI(r)
 	r.Run()
 }
 
-// The group arrives as a parameter: its prefix is not known here, so its root is not a route.
+// The group arrives as a parameter: the call in main gives its prefix, so its root is GET /manage.
 func registerAdmin(rg *gin.RouterGroup) {
 	rg.GET("", adminIndex)
 }
 
+// gotify: a "/" group made in a function that gets the application; its root is the application's (HEAD /).
+func registerUI(r *gin.Engine) {
+	ui := r.Group("/")
+	ui.HEAD("/", uiIndex)
+}
+
+func uiIndex(c *gin.Context)    {}
 func index(c *gin.Context)      {}
 func listUsers(c *gin.Context)  {}
 func getUser(c *gin.Context)    {}

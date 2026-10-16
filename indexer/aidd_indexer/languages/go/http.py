@@ -7,9 +7,9 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, STRING_NODES, Region,
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, STRING_NODES, Region, dir_of,
                                split_callee, text, walk)
-from ...core.paths import VERB_BY_NAME, unquote
+from ...core.paths import VERB_BY_NAME, expand_alternatives, unquote
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | set(VERB_BY_NAME) | set(GO_VERB_ALIASES)   # net/http, gorilla, chi, gin, echo, fiber
@@ -20,6 +20,8 @@ GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")          
 
 class GoScanner(BaseScanner):
     relative_on_groups = True
+    mount_rule = "go.mount"
+
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
         self._functions: dict[str, Node] | None = None
@@ -34,12 +36,25 @@ class GoScanner(BaseScanner):
         right = n.child_by_field_name("right") or n.child_by_field_name("value")
         if left is None or right is None:
             return
+        if left.type == "expression_list" and left.named_child_count == 1:
+            left = left.named_children[0]
+        if left.type == "selector_expression":         # api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix("/users").Subrouter()
+            value = right.named_children[0] if right.type == "expression_list" and right.named_child_count == 1 else right
+            child = self._field_router(text(left, self.src))
+            sub = self._router_expr(value) if value.type == "call_expression" else None
+            if child is not None and sub is not None:
+                self.mount(child, n, sub[0], n, sub[1])
+            return
         rights = [c for c in right.children if c.is_named] if right.type == "expression_list" else [right]
         names = [text(c, self.src) for c in (left.children if left.type == "expression_list" else [left]) if c.type == "identifier"]
         for r in rights:
             if r.type != "call_expression":
                 continue
             fn = r.child_by_field_name("function")
+            while fn is not None and fn.type == "selector_expression" and text(fn.child_by_field_name("field"), self.src) in ("Use", "With") \
+                    and fn.child_by_field_name("operand").type == "call_expression":
+                r = fn.child_by_field_name("operand")           # r := app.Group("/todo").Use(auth): the group
+                fn = r.child_by_field_name("function")
             if fn is None:
                 continue
             fname = text(fn, self.src)
@@ -69,6 +84,7 @@ class GoScanner(BaseScanner):
         arg_nodes = [c for c in args.children if c.is_named]
         if not arg_nodes:
             return
+        self._router_arguments(n, fn, arg_nodes)
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
         operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
@@ -83,9 +99,15 @@ class GoScanner(BaseScanner):
         default_mux = recv == "http" and name in ("Handle", "HandleFunc")   # http.Handle("/x", h): the default ServeMux
         if name == "Mount" and len(arg_nodes) >= 2 and recv_last:        # chi: r.Mount("/admin", adminRouter())
             p = self.path_of(arg_nodes[0])
-            child = self._router_of(arg_nodes[1])
-            if p is not None and child is not None:
-                self.mounts.mount(child, self.router_key(recv_last, n), (self.prefix_for(recv_last, n) or "").rstrip("/") + p)
+            parent = self.router_key(self._field_router(recv) or recv_last, n)
+            prefix = (self.prefix_for(recv_last, n) or "").rstrip("/") + (p or "")
+            child = self._router_of(arg_nodes[1]) if p is not None else None
+            if child is not None:
+                self.mounts.mount(child, parent, prefix)
+                return
+            g = self._returned_router(arg_nodes[1]) if p is not None else None
+            if g is not None:                                       # r.Mount("/api/v1", apiv1.Routes())
+                self.foreign.append((g, parent, prefix))
                 return
 
         # ---- exposed routes ---------------------------------------------------------------
@@ -107,11 +129,15 @@ class GoScanner(BaseScanner):
                         framework = "gin/echo"
                     elif name in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All") or name in GO_VERB_ALIASES:
                         framework = "chi/fiber"
+                    methods = [method or "ANY"]
                     if method is None:
                         gm = self._gorilla_methods(n)
                         if gm:
-                            method, framework = gm, "gorilla"
-                    self.add_endpoint(n, method or "ANY", lit, framework, handler, router=recv_last)
+                            methods, framework = gm, "gorilla"
+                    router = self._field_router(recv) or recv_last
+                    for m in methods:
+                        for pattern in expand_alternatives(lit):
+                            self.add_endpoint(n, m, pattern, framework, handler, router=router)
                     return
 
         # ---- outbound calls ---------------------------------------------------------------
@@ -200,6 +226,141 @@ class GoScanner(BaseScanner):
                 return None
         return None
 
+    # -- routers other files name: package variables, returned routers, router parameters, struct fields ---------
+    def read_imports(self) -> dict[str, tuple[str, str | None]]:
+        """`import apiv1 "gitea.dev/routers/api/v1"` → apiv1; without a name, the path's last element (a `/v2` is
+        skipped)."""
+        out: dict[str, tuple[str, str | None]] = {}
+        for decl in self.fx.tree.root_node.children:
+            if decl.type != "import_declaration":
+                continue
+            for spec in (d for d in walk(decl) if d.type == "import_spec"):
+                path, name = spec.child_by_field_name("path"), spec.child_by_field_name("name")
+                if path is None:
+                    continue
+                imp = unquote(text(path, self.src))
+                parts = imp.split("/")
+                alias = text(name, self.src) if name is not None else \
+                    (parts[-2] if len(parts) > 1 and re.fullmatch(r"v\d+", parts[-1]) else parts[-1]).split(".")[0].replace("-", "_")
+                if alias not in ("_", "."):
+                    out[alias] = (imp, None)
+        return out
+
+    def global_of(self, key: tuple[int, str]) -> str | None:
+        scope, name = key
+        unit = dir_of(self.fx.file.path)
+        if scope == 0:
+            if name.startswith("field:"):
+                return f"field:{unit}:{name[6:]}"
+            return f"var:{unit}:{name}" if re.fullmatch(r"[A-Za-z_]\w*", name) and name not in self.imports else None
+        fn = self.function_of(scope)
+        fname = self._function_name(fn) if fn is not None else None
+        if fname is None:
+            return None
+        i = self._param(fn, name)[0]
+        if i is not None:
+            return f"param:{unit}:{fname}:{i}"
+        return f"ret:{unit}:{fname}" if self.returns_name(fn, name) else None
+
+    def router_param_type(self, fn: Node, name: str) -> str | None:
+        decl = self._param(fn, name)[1]
+        typ = decl.child_by_field_name("type") if decl is not None else None
+        return text(typ, self.src) if typ is not None else None
+
+    def _function_name(self, fn: Node) -> str | None:
+        """`Routes`, or `todosResource.Routes` for a method: two types of a package may both have a `Routes`. A closure
+        assigned to a variable is called by that name (gitea's `addActionsRoutes := func(m *web.Router, ...)`)."""
+        if fn.type == "func_literal":
+            decl = fn.parent.parent if fn.parent is not None and fn.parent.type == "expression_list" else fn.parent
+            left = decl.child_by_field_name("left") if decl is not None and decl.type in ("short_var_declaration",
+                                                                                          "assignment_statement") else None
+            names = [c for c in left.named_children] if left is not None and left.type == "expression_list" else [left]
+            return text(names[0], self.src) if len(names) == 1 and names[0] is not None and names[0].type == "identifier" else None
+        if fn.type not in ("function_declaration", "method_declaration"):
+            return None
+        name = text(fn.child_by_field_name("name"), self.src)
+        recv = fn.child_by_field_name("receiver") if fn.type == "method_declaration" else None
+        typ = next((d.child_by_field_name("type") for d in recv.named_children), None) if recv is not None else None
+        return f"{text(typ, self.src).lstrip('*').split('[')[0]}.{name}" if typ is not None else name
+
+    def _param(self, fn: Node, name: str) -> tuple[int | None, Node | None]:
+        """Position of the parameter `name` of `fn` (the receiver does not count), and its declaration."""
+        params = fn.child_by_field_name("parameters")
+        i = 0
+        for decl in params.named_children if params is not None else ():
+            names = [c for c in decl.children if c.type == "identifier"]
+            for c in names or [None]:
+                if c is not None and text(c, self.src) == name:
+                    return i, decl
+                i += 1
+        return None, None
+
+    def _field_router(self, recv: str) -> str | None:
+        """`api.BaseRoutes.Users` → `field:BaseRoutes.Users`: a router kept in a struct field, which the package's
+        files share whatever the variable is called. Not a package's variable (`http.DefaultServeMux`)."""
+        parts = recv.split(".")
+        if len(parts) < 2 or "(" in recv or parts[0] in self.imports:
+            return None
+        return "field:" + ".".join(parts[1:])
+
+    def _router_expr(self, n: Node) -> tuple[str, str] | None:
+        """A router expression as (router name, the prefix it adds to that router's own): `v1`,
+        `api.BaseRoutes.APIRoot`, `v1.Group("/users")`, `r.PathPrefix("/x").Subrouter()`, with middleware (`Use`,
+        `With`) in between."""
+        if n.type == "identifier":
+            return text(n, self.src), ""
+        if n.type == "selector_expression":
+            field = self._field_router(text(n, self.src))
+            return (field, "") if field is not None else None
+        fn = n.child_by_field_name("function") if n.type == "call_expression" else None
+        if fn is None or fn.type != "selector_expression":
+            return None
+        verb, operand = text(fn.child_by_field_name("field"), self.src), fn.child_by_field_name("operand")
+        if verb in ("Subrouter", "Use", "With"):
+            return self._router_expr(operand)
+        if verb not in ("PathPrefix", "Group"):
+            return None
+        args = n.child_by_field_name("arguments")
+        first = args.named_children[0] if args is not None and args.named_child_count else None
+        p = self.path_of(first) if first is not None and first.type != "func_literal" else None
+        base = self._router_expr(operand) if p is not None else None
+        return (base[0], base[1].rstrip("/") + p) if base is not None else None
+
+    def _function_unit(self, fn: Node) -> tuple[str, str] | None:
+        """(package directory, name) of the function a call names: `F` of this package, `pkg.F` of an imported one,
+        or the method of a value built in place (`todosResource{}.Routes`)."""
+        if fn.type == "identifier":
+            return dir_of(self.fx.file.path), text(fn, self.src)
+        operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
+        while operand is not None and operand.type in ("parenthesized_expression", "unary_expression"):
+            operand = operand.named_children[-1] if operand.named_child_count else None
+        if operand is not None and operand.type == "composite_literal" and operand.child_by_field_name("type") is not None:
+            typ = text(operand.child_by_field_name("type"), self.src)
+            if "." not in typ:
+                return dir_of(self.fx.file.path), f"{typ}.{text(fn.child_by_field_name('field'), self.src)}"
+            return None
+        if operand is None or operand.type != "identifier" or text(operand, self.src) not in self.imports:
+            return None
+        target = self.resolve_import(self.imports[text(operand, self.src)][0])
+        return (target or ".", text(fn.child_by_field_name("field"), self.src)) if target is not None else None
+
+    def _returned_router(self, n: Node) -> str | None:
+        """`apiv1.Routes()`, `adminRouter()` from another file of the package: the router that function returns."""
+        fn = n.child_by_field_name("function") if n.type == "call_expression" else None
+        unit = self._function_unit(fn) if fn is not None else None
+        return f"ret:{unit[0]}:{unit[1]}" if unit is not None else None
+
+    def _router_arguments(self, n: Node, fn: Node, arg_nodes: list[Node]) -> None:
+        """`users.UsersRegister(v1.Group("/users"))`, `addActionsRoutes(m, ...)`: a router handed to a function's
+        parameter, with the prefix it has here (kept by `finish` only when the argument is a router of this file)."""
+        unit = self._function_unit(fn)
+        if unit is None:
+            return
+        for i, a in enumerate(arg_nodes):
+            r = self._router_expr(a) if a.type in ("identifier", "call_expression", "selector_expression") else None
+            if r is not None:
+                self.router_args.append((f"param:{unit[0]}:{unit[1]}:{i}", r[0], n, r[1]))
+
     def _in_main(self, n: Node) -> bool:
         p = n.parent
         while p is not None and p.type not in ("function_declaration", "method_declaration", "func_literal"):
@@ -207,8 +368,8 @@ class GoScanner(BaseScanner):
         name = p.child_by_field_name("name") if p is not None and p.type == "function_declaration" else None
         return name is not None and text(name, self.src) == "main"
 
-    def _gorilla_methods(self, call: Node) -> str | None:
-        """`r.HandleFunc("/x", h).Methods("GET")` — `call` is the operand of `.Methods(...)`."""
+    def _gorilla_methods(self, call: Node) -> list[str] | None:
+        """`r.HandleFunc("/x", h).Methods("GET", "HEAD")` — `call` is the operand of `.Methods(...)`."""
         p = call.parent
         if p is None or p.type != "selector_expression":
             return None
@@ -219,5 +380,6 @@ class GoScanner(BaseScanner):
         if outer is None or outer.type != "call_expression":
             return None
         args = outer.child_by_field_name("arguments")
-        return self.method_from_args([c for c in args.children if c.is_named]) if args else None
+        found = [m for c in (args.named_children if args is not None else ()) if (m := self.method_from_args([c]))]
+        return list(dict.fromkeys(found)) or None
 

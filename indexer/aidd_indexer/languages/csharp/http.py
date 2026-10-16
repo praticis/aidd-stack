@@ -180,7 +180,7 @@ class CsScanner(BaseScanner):
         return True
 
     @classmethod
-    def compose(cls, out: HttpResult, repo: RepoInfo) -> None:
+    def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """What crosses files in C#: calls to the repo's own client wrappers (`_compose_wrapped_calls`), and the
         `[Route]` a controller without one of its own takes from its base class (`[Route("[controller]")]` on
         `BaseApiController`), one level up: the base is found by name in the repo — two classes with that name (not

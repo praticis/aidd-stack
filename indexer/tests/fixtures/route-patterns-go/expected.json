@@ -82,6 +82,11 @@
   },
   {
    "method": "GET",
+   "path": "/manage",
+   "handler": "adminIndex"
+  },
+  {
+   "method": "GET",
    "path": "/articles",
    "handler": "listArticles"
   },
@@ -114,6 +119,96 @@
    "method": "POST",
    "path": "/user/settings/avatar/delete",
    "handler": "deleteAvatar"
+  },
+  {
+   "method": "GET",
+   "path": "/todos",
+   "handler": "ListTodos"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}",
+   "handler": "GetTodo"
+  },
+  {
+   "method": "GET",
+   "path": "/me",
+   "handler": "Me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users",
+   "handler": "createUser"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login",
+   "handler": "loginUser"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/openid",
+   "handler": "openID"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/version",
+   "handler": "version"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}",
+   "handler": "listRepos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/issues",
+   "handler": "listIssues"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users",
+   "handler": "signUp"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users/login",
+   "handler": "signIn"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/me/profile",
+   "handler": "profile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/image",
+   "handler": "getImage"
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/v4/users/{user_id}/image",
+   "handler": "getImage"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/teams/sync",
+   "handler": "syncKind"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/channels/sync",
+   "handler": "syncKind"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/hooks",
+   "handler": "listHooks"
+  },
+  {
+   "method": "HEAD",
+   "path": "/",
+   "handler": "uiIndex"
   }
  ],
  "calls": [

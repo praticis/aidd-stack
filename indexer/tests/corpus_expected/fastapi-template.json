@@ -6,135 +6,154 @@
    {
     "evidence": "fastapi-template:backend/app/api/routes/items.py:48",
     "method": "GET",
-    "path": "/items/{id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/items/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/items.py:75",
     "method": "PUT",
-    "path": "/items/{id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/items/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/items.py:99",
     "method": "DELETE",
-    "path": "/items/{id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/items/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/login.py:100",
     "method": "POST",
-    "path": "/password-recovery-html-content/{email}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/password-recovery-html-content/{email}",
+    "raw": "/password-recovery-html-content/{email}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/login.py:23",
     "method": "POST",
-    "path": "/login/access-token",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/login/access-token",
+    "raw": "/login/access-token",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/login.py:45",
     "method": "POST",
-    "path": "/login/test-token",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/login/test-token",
+    "raw": "/login/test-token",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/login.py:53",
     "method": "POST",
-    "path": "/password-recovery/{email}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/password-recovery/{email}",
+    "raw": "/password-recovery/{email}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/login.py:77",
     "method": "POST",
-    "path": "/reset-password",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/reset-password",
+    "raw": "/reset-password/",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/private.py:23",
     "method": "POST",
-    "path": "/private/users",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/private/users",
+    "raw": "/users/",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:103",
     "method": "PATCH",
-    "path": "/users/me/password",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/me/password",
+    "raw": "/me/password",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:124",
     "method": "GET",
-    "path": "/users/me",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/me",
+    "raw": "/me",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:132",
     "method": "DELETE",
-    "path": "/users/me",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/me",
+    "raw": "/me",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:146",
     "method": "POST",
-    "path": "/users/signup",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/signup",
+    "raw": "/signup",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:162",
     "method": "GET",
-    "path": "/users/{user_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/{user_id}",
+    "raw": "/{user_id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:182",
     "method": "PATCH",
-    "path": "/users/{user_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/{user_id}",
+    "raw": "/{user_id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:214",
     "method": "DELETE",
-    "path": "/users/{user_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/{user_id}",
+    "raw": "/{user_id}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/users.py:81",
     "method": "PATCH",
-    "path": "/users/me",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/users/me",
+    "raw": "/me",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/utils.py:11",
     "method": "POST",
-    "path": "/utils/test-email",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/utils/test-email",
+    "raw": "/test-email/",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastapi-template:backend/app/api/routes/utils.py:29",
     "method": "GET",
-    "path": "/utils/health-check",
-    "ok": false,
-    "category": "prefix-other-file"
+    "path": "/api/v1/utils/health-check",
+    "raw": "/health-check/",
+    "ok": true,
+    "category": null
    }
   ]
  },
@@ -148,118 +167,95 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/api/v1/items",
-   "category": "prefix-other-file"
+   "path": "/api/v1/items"
   },
   {
    "method": "POST",
-   "path": "/api/v1/items",
-   "category": "prefix-other-file"
+   "path": "/api/v1/items"
   },
   {
    "method": "GET",
-   "path": "/api/v1/items/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/items/{id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/items/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/items/{id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/items/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/items/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/login/access-token",
-   "category": "prefix-other-file"
+   "path": "/api/v1/login/access-token"
   },
   {
    "method": "POST",
-   "path": "/api/v1/login/test-token",
-   "category": "prefix-other-file"
+   "path": "/api/v1/login/test-token"
   },
   {
    "method": "POST",
-   "path": "/api/v1/password-recovery/{email}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/password-recovery/{email}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/reset-password",
-   "category": "prefix-other-file"
+   "path": "/api/v1/reset-password"
   },
   {
    "method": "POST",
-   "path": "/api/v1/password-recovery-html-content/{email}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/password-recovery-html-content/{email}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/private/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/private/users"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users"
   },
   {
    "method": "POST",
-   "path": "/api/v1/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/me",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/me"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/users/me",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/me"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/users/me/password",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/me/password"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/users/me",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/me"
   },
   {
    "method": "POST",
-   "path": "/api/v1/users/signup",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/signup"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{user_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/users/{user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{user_id}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/users/{user_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{user_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/utils/test-email",
-   "category": "prefix-other-file"
+   "path": "/api/v1/utils/test-email"
   },
   {
    "method": "GET",
-   "path": "/api/v1/utils/health-check",
-   "category": "prefix-other-file"
+   "path": "/api/v1/utils/health-check"
   }
  ]
 }

@@ -28,7 +28,19 @@ def unquote(s: str) -> str:
     return s
 
 
-PLACEHOLDER = re.compile(r"\{[^{}]*\}|<[^<>]*>")
+PLACEHOLDER = re.compile(r"\{(?:[^{}]|\{[^{}]*\})*\}|<[^<>]*>")        # a regex constraint may hold braces: {id:[0-9]{4}}
+_ALTERNATIVES = re.compile(r"(?:(?<=/)|^)\{[A-Za-z_]\w*\s*:\s*\(?((?:[\w.-]+\|)+[\w.-]+|[\w.-]+(?=\(\?:\\*/\)\?))\)?"
+                           r"(?:\(\?:\\*/\)\?)?\}(?=/|$)")        # a whole segment: `{sha}.{diffType:diff|patch}` stays a parameter
+
+
+def expand_alternatives(pattern: str) -> list[str]:
+    """`/{syncable_type:teams|channels}/x` → `/teams/x`, `/channels/x`: a whole segment whose regex lists literal words
+    stands for each of them (gorilla, chi); `{ws:websocket(?:\\/)?}` is the word itself."""
+    m = _ALTERNATIVES.search(pattern)
+    if m is None:
+        return [pattern]
+    head, tail = pattern[:m.start()], pattern[m.end():]
+    return [x for alt in m.group(1).split("|") for x in expand_alternatives(head + alt + tail)][:16]
 
 
 def mask_placeholders(pattern: str) -> str:
@@ -50,12 +62,13 @@ def normalize_path(path: str) -> str:
     if m:
         p = m.group(1) or "/"
     p = re.sub(r"\{([./]?):([A-Za-z_][A-Za-z0-9_]*)\}", r"\1{\2}", p)   # Express 5 optional group {:q}, {.:ext}, {/:id} → its parameter
+    p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # {id:int}, {id:[0-9]{4}} → {id}: before
+    #                                                             the query split — a regex constraint may hold `?`
     p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", p)        # optional :id? (express, gin)
     p = p.split("?", 1)[0].split("#", 1)[0]
     p = re.sub(r"%[sdvq]", "{param}", p)                          # Sprintf verbs
     p = re.sub(r"\$\{[^}]*\}", "{param}", p)                      # JS template literals
-    p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:[^}]*\}", r"{\1}", p)   # {id:int} (ASP.NET) → {id}
     p = re.sub(r"\{\*+([A-Za-z_][A-Za-z0-9_]*)\}", r"{\1}", p)   # {*rest} (ASP.NET catch-all)
     p = re.sub(r"<(?:[^<>:]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id>, <any(a, b):page> (Flask/Werkzeug)
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)      # :id (gin, express, echo)

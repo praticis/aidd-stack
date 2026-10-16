@@ -19,8 +19,7 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/",
-   "category": "router-as-param"
+   "path": "/"
   },
   {
    "method": "GET",

@@ -55,9 +55,10 @@
    {
     "evidence": "gin-examples:group-routes/routes/users.go:15",
     "method": "GET",
-    "path": "/users/comments",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/v1/users/comments",
+    "raw": "/comments",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gin-examples:grpc/example1/gin/main.go:25",
@@ -191,23 +192,19 @@
   },
   {
    "method": "GET",
-   "path": "/v1/users/comments",
-   "category": "router-as-param"
+   "path": "/v1/users/comments"
   },
   {
    "method": "GET",
-   "path": "/v1/users/pictures",
-   "category": "router-as-param"
+   "path": "/v1/users/pictures"
   },
   {
    "method": "GET",
-   "path": "/v1/ping",
-   "category": "router-as-param"
+   "path": "/v1/ping"
   },
   {
    "method": "GET",
-   "path": "/v2/ping",
-   "category": "router-as-param"
+   "path": "/v2/ping"
   }
  ]
 }

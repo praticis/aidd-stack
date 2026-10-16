@@ -238,8 +238,7 @@
   },
   {
    "method": "POST",
-   "path": "/admin",
-   "category": "prefix-other-file"
+   "path": "/admin"
   }
  ]
 }

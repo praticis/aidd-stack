@@ -1,6 +1,6 @@
 {
  "source": {
-  "endpoints": "openapi",
+  "endpoints": "openapi + manual",
   "calls": "manual"
  },
  "sha": "1c117a9352e4a64cd301028403c33949ab146424",
@@ -17,59 +17,52 @@
  },
  "endpoints": [
   {
-   "method": "GET",
-   "path": "/api/v1/admin/actions/jobs",
-   "category": "prefix-other-file"
+   "method": "ANY",
+   "path": "/api/v1/activitypub/{rest}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/actions/runners",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/jobs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/actions/runners"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/actions/runners/registration-token",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/runners/registration-token"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/runners/{runner_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/admin/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/actions/runs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/actions/runs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/cron",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/cron"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/cron/{task}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/cron/{task}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/emails",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/emails"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/emails/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/emails/search"
   },
   {
    "method": "GET",
@@ -98,38 +91,31 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/orgs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/orgs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/packages",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/packages"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/unadopted",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/unadopted"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/admin/unadopted/{owner}/{repo}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/unadopted/{owner}/{repo}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/unadopted/{owner}/{repo}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/unadopted/{owner}/{repo}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users"
   },
   {
    "method": "DELETE",
@@ -143,88 +129,79 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/badges"
   },
   {
    "method": "GET",
-   "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/badges"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/users/{username}/badges",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/badges"
   },
   {
    "method": "POST",
-   "path": "/api/v1/admin/users/{username}/keys",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/keys"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/admin/users/{username}/keys/{id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/admin/users/{username}/orgs",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/admin/users/{username}/rename",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/admin/users/{username}/repos",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/keys/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/gitignore/templates",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/gitignore/templates/{name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/label/templates",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/label/templates/{name}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/licenses",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/licenses/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/orgs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/markdown",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/orgs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/markdown/raw",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/rename"
   },
   {
    "method": "POST",
-   "path": "/api/v1/markup",
-   "category": "prefix-other-file"
+   "path": "/api/v1/admin/users/{username}/repos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gitignore/templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/gitignore/templates/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/label/templates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/label/templates/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/licenses"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/licenses/{name}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markdown"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markdown/raw"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/markup"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/nodeinfo"
   },
   {
    "method": "GET",
@@ -238,8 +215,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/notifications/new",
-   "category": "prefix-other-file"
+   "path": "/api/v1/notifications/new"
   },
   {
    "method": "GET",
@@ -253,18 +229,15 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/org/{org}/repos",
-   "category": "prefix-other-file"
+   "path": "/api/v1/org/{org}/repos"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs"
   },
   {
    "method": "DELETE",
@@ -283,113 +256,97 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/jobs",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/jobs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/runners",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runners"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/actions/runners/registration-token",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runners/registration-token"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/runs",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/runs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/secrets",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/secrets"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/orgs/{org}/actions/secrets/{secretname}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "PUT",
    "path": "/api/v1/orgs/{org}/actions/secrets/{secretname}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/actions/variables",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/actions/variables"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
    "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "POST",
    "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "PUT",
    "path": "/api/v1/orgs/{org}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/activities/feeds",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/activities/feeds"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/avatar"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/avatar"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/blocks",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/blocks"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/blocks/{username}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/blocks/{username}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/orgs/{org}/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/blocks/{username}"
   },
   {
    "method": "GET",
@@ -418,13 +375,11 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/labels",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/labels"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/labels",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/labels"
   },
   {
    "method": "DELETE",
@@ -443,8 +398,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/members",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/members"
   },
   {
    "method": "DELETE",
@@ -458,88 +412,71 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/orgs/{org}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/move",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/move"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/default",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/default"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/projects/{id}/issues/{issue_id}/move",
-   "category": "router-as-param"
+   "path": "/api/v1/orgs/{org}/projects/{id}/issues/{issue_id}/move"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/public_members",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/public_members"
   },
   {
    "method": "DELETE",
@@ -558,8 +495,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/rename",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/rename"
   },
   {
    "method": "DELETE",
@@ -578,78 +514,63 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/teams"
   },
   {
    "method": "POST",
-   "path": "/api/v1/orgs/{org}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/teams"
   },
   {
    "method": "GET",
-   "path": "/api/v1/orgs/{org}/teams/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/orgs/{org}/teams/search"
   },
   {
    "method": "GET",
-   "path": "/api/v1/packages/{owner}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/packages/{owner}/{type}/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/packages/{owner}/{type}/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/-/latest",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/latest"
   },
   {
    "method": "POST",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/-/link/{repo_name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/link/{repo_name}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/-/unlink",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/-/unlink"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}/files",
-   "category": "prefix-other-file"
+   "path": "/api/v1/packages/{owner}/{type}/{name}/{version}/files"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/issues/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/issues/search"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/migrate",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/migrate"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/search"
   },
   {
    "method": "DELETE",
@@ -668,213 +589,177 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runners",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/registration-token",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/registration-token"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/approve",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/approve"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/artifacts",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/artifacts"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}/jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/attempts/{attempt}/jobs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/cancel",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/cancel"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/force-cancel",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/force-cancel"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/jobs/{job_id}/rerun"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/logs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/logs"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun-failed-jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/runs/{run}/rerun-failed-jobs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/secrets",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/secrets"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/actions/secrets/{secretname}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/actions/secrets/{secretname}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/tasks",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/tasks"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/variables",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/variables"
   },
   {
    "method": "DELETE",
    "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
    "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "POST",
    "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "PUT",
    "path": "/api/v1/repos/{owner}/{repo}/actions/variables/{variablename}",
-   "category": "router-as-param"
+   "category": "route-chain"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/activities/feeds",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/activities/feeds"
   },
   {
    "method": "GET",
@@ -883,88 +768,71 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/assignees",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/assignees"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/assignees/{assignee}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/assignees/{assignee}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/avatar"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/avatar"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/priority",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/priority"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branch_protections/{name}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/branches",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/branches",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/branches/{branch}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/collaborators",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators"
   },
   {
    "method": "DELETE",
@@ -983,13 +851,11 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}/permission",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/collaborators/{collaborator}/permission"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/commits",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/commits"
   },
   {
    "method": "GET",
@@ -1008,53 +874,43 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/compare/{basehead}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/compare/{basehead}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/contents",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/contents",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/contents-ext/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents-ext/{filepath}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/contents/{filepath}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/diffpatch",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/diffpatch"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/editorconfig/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/editorconfig/{filepath}"
   },
   {
    "method": "GET",
@@ -1078,43 +934,35 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/blobs/{sha}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/blobs/{sha}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}.{diffType}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/commits/{sha}.{diffType}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/notes/{sha}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/notes/{sha}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/refs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/refs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/refs/{ref}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/refs/{ref}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/tags/{sha}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/tags/{sha}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/git/trees/{sha}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/git/trees/{sha}"
   },
   {
    "method": "GET",
@@ -1163,23 +1011,19 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}/tests",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/hooks/{id}/tests"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issue_config",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issue_config"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issue_config/validate",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issue_config/validate"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issue_templates",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issue_templates"
   },
   {
    "method": "GET",
@@ -1193,8 +1037,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/comments",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/comments"
   },
   {
    "method": "DELETE",
@@ -1253,8 +1096,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/pinned",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/pinned"
   },
   {
    "method": "DELETE",
@@ -1308,8 +1150,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees/{assignee}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/assignees/{assignee}"
   },
   {
    "method": "DELETE",
@@ -1388,8 +1229,7 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/labels/{id}"
   },
   {
    "method": "DELETE",
@@ -1413,8 +1253,7 @@
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin/{position}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/pin/{position}"
   },
   {
    "method": "DELETE",
@@ -1433,43 +1272,35 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/delete",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/delete"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/start",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/start"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/stop",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/stopwatch/stop"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/check",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/check"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/subscriptions/{user}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/timeline",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/timeline"
   },
   {
    "method": "DELETE",
@@ -1488,8 +1319,7 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/issues/{index}/times/{id}"
   },
   {
    "method": "GET",
@@ -1503,8 +1333,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/keys/tokens",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/keys/tokens"
   },
   {
    "method": "DELETE",
@@ -1543,23 +1372,19 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/languages",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/languages"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/licenses",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/licenses"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/media/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/media/{filepath}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/merge-upstream",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/merge-upstream"
   },
   {
    "method": "GET",
@@ -1588,13 +1413,11 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/mirror-sync",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/mirror-sync"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/new_pin_allowed",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/new_pin_allowed"
   },
   {
    "method": "GET",
@@ -1608,83 +1431,67 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/move",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/move"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/default",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/default"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/issues/{issue_id}/move",
-   "category": "router-as-param"
+   "path": "/api/v1/repos/{owner}/{repo}/projects/{id}/issues/{issue_id}/move"
   },
   {
    "method": "GET",
@@ -1698,23 +1505,19 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/resolve",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/resolve"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/unresolve",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/comments/{id}/unresolve"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/pinned",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/pinned"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{base}/{head}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{base}/{head}"
   },
   {
    "method": "GET",
@@ -1733,18 +1536,15 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/comments/{id}/replies",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/comments/{id}/replies"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/commits",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/commits"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/files",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/files"
   },
   {
    "method": "DELETE",
@@ -1803,18 +1603,15 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/dismissals",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/dismissals"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/undismissals",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/reviews/{id}/undismissals"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/update",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/pulls/{index}/update"
   },
   {
    "method": "GET",
@@ -1828,8 +1625,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors-sync",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/push_mirrors-sync"
   },
   {
    "method": "DELETE",
@@ -1843,8 +1639,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/raw/{filepath}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/raw/{filepath}"
   },
   {
    "method": "GET",
@@ -1913,23 +1708,19 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/reviewers",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/reviewers"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/signing-key.gpg",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/signing-key.gpg"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/signing-key.pub",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/signing-key.pub"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/stargazers",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/stargazers"
   },
   {
    "method": "GET",
@@ -1943,23 +1734,19 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/subscribers",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/subscribers"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/subscription"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/subscription"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/repos/{owner}/{repo}/subscription",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/subscription"
   },
   {
    "method": "GET",
@@ -1988,28 +1775,23 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/tags",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/tags"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/tags",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/tags"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/tags/{tag}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/teams"
   },
   {
    "method": "DELETE",
@@ -2058,23 +1840,19 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/transfer",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/transfer"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/transfer/accept",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/transfer/accept"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/transfer/reject",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/transfer/reject"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{owner}/{repo}/wiki/new",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/new"
   },
   {
    "method": "DELETE",
@@ -2093,18 +1871,43 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/wiki/pages",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/pages"
   },
   {
    "method": "GET",
-   "path": "/api/v1/repos/{owner}/{repo}/wiki/revisions/{pageName}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{owner}/{repo}/wiki/revisions/{pageName}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/repos/{template_owner}/{template_repo}/generate",
-   "category": "prefix-other-file"
+   "path": "/api/v1/repos/{template_owner}/{template_repo}/generate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{username}/{reponame}/actions/artifacts/{artifact_id}/zip/raw"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{username}/{reponame}/commits/{sha}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{username}/{reponame}/commits/{sha}.{diffType}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{username}/{reponame}/contents-ext"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{username}/{reponame}/markdown"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{username}/{reponame}/markdown/raw"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/repos/{username}/{reponame}/markup"
   },
   {
    "method": "GET",
@@ -2113,33 +1916,31 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/settings/api",
-   "category": "prefix-other-file"
+   "path": "/api/v1/settings/api"
   },
   {
    "method": "GET",
-   "path": "/api/v1/settings/attachment",
-   "category": "prefix-other-file"
+   "path": "/api/v1/settings/attachment"
   },
   {
    "method": "GET",
-   "path": "/api/v1/settings/repository",
-   "category": "prefix-other-file"
+   "path": "/api/v1/settings/repository"
   },
   {
    "method": "GET",
-   "path": "/api/v1/settings/ui",
-   "category": "prefix-other-file"
+   "path": "/api/v1/settings/ui"
   },
   {
    "method": "GET",
-   "path": "/api/v1/signing-key.gpg",
-   "category": "prefix-other-file"
+   "path": "/api/v1/signing-key.gpg"
   },
   {
    "method": "GET",
-   "path": "/api/v1/signing-key.pub",
-   "category": "prefix-other-file"
+   "path": "/api/v1/signing-key.pub"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/swagger"
   },
   {
    "method": "DELETE",
@@ -2148,8 +1949,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/teams/{id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/teams/{id}"
   },
   {
    "method": "PATCH",
@@ -2158,13 +1958,11 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/teams/{id}/activities/feeds",
-   "category": "prefix-other-file"
+   "path": "/api/v1/teams/{id}/activities/feeds"
   },
   {
    "method": "GET",
-   "path": "/api/v1/teams/{id}/members",
-   "category": "prefix-other-file"
+   "path": "/api/v1/teams/{id}/members"
   },
   {
    "method": "DELETE",
@@ -2183,8 +1981,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/teams/{id}/repos",
-   "category": "prefix-other-file"
+   "path": "/api/v1/teams/{id}/repos"
   },
   {
    "method": "DELETE",
@@ -2213,48 +2010,39 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/topics/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/topics/search"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/actions/jobs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/jobs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/actions/runners",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runners"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/actions/runners/registration-token",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runners/registration-token"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runners/{runner_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/user/actions/runners/{runner_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runners/{runner_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/actions/runs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/runs"
   },
   {
    "method": "DELETE",
@@ -2268,8 +2056,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/actions/variables",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/actions/variables"
   },
   {
    "method": "DELETE",
@@ -2318,33 +2105,27 @@
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/avatar"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/avatar",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/avatar"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/blocks",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/blocks"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/blocks/{username}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/blocks/{username}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/user/blocks/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/blocks/{username}"
   },
   {
    "method": "DELETE",
@@ -2363,38 +2144,31 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/followers",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/followers"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/following",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/following"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/following/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/following/{username}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/following/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/following/{username}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/user/following/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/following/{username}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/gpg_key_token",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/gpg_key_token"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/gpg_key_verify",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/gpg_key_verify"
   },
   {
    "method": "GET",
@@ -2463,88 +2237,71 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/orgs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/orgs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/user/projects/{id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects/{id}/columns",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects/{id}/columns/move",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/move"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}/default",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/default"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/columns/{column_id}/issues/{issue_id}"
   },
   {
    "method": "POST",
-   "path": "/api/v1/user/projects/{id}/issues/{issue_id}/move",
-   "category": "router-as-param"
+   "path": "/api/v1/user/projects/{id}/issues/{issue_id}/move"
   },
   {
    "method": "GET",
@@ -2558,128 +2315,103 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/settings",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/settings"
   },
   {
    "method": "PATCH",
-   "path": "/api/v1/user/settings",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/settings"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/starred",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/starred"
   },
   {
    "method": "DELETE",
-   "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/starred/{owner}/{repo}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/starred/{owner}/{repo}"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/user/starred/{owner}/{repo}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/starred/{owner}/{repo}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/stopwatches",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/stopwatches"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/subscriptions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/subscriptions"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/teams"
   },
   {
    "method": "GET",
-   "path": "/api/v1/user/times",
-   "category": "prefix-other-file"
+   "path": "/api/v1/user/times"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/search",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/search"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/activities/feeds",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/activities/feeds"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/followers",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/followers"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/following",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/following"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/following/{target}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/following/{target}"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/gpg_keys",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/gpg_keys"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/heatmap",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/heatmap"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/keys",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/keys"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/orgs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/orgs"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/orgs/{org}/permissions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/orgs/{org}/permissions"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/projects",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/projects"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/repos",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/repos"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/starred",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/starred"
   },
   {
    "method": "GET",
-   "path": "/api/v1/users/{username}/subscriptions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/users/{username}/subscriptions"
   },
   {
    "method": "GET",
@@ -2698,8 +2430,7 @@
   },
   {
    "method": "GET",
-   "path": "/api/v1/version",
-   "category": "prefix-other-file"
+   "path": "/api/v1/version"
   }
  ],
  "calls": [
@@ -2779,80 +2510,80 @@
    "category": "client-wrapper"
   }
  ],
- "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, scope routers/api/v1/. Nothing comes out right: every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver, and the router is mounted at /api/v1 in routers/init.go. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs besides the mount graph): route-chain = m.Combo(\"/x\").Get(h).Put(h) (207, verbs chained on a path builder, also needs the prefixes); prefix-scope-and-file = plain m.Get inside closures, also needs the /api/v1 mount (233); prefix-other-file = the extractor already has the route and only /api/v1 is missing (16); router-as-param = helper funcs addActionsRoutes/addProjectRoutes(m, ...) called inside several groups (78); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5). Since the v2 cheap fixes (2026-10-15): a spread handler list (append(mid, h)...) makes a route, not a call.",
+ "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, plus 11 routes only the code has, read in it (swagger, nodeinfo and activitypub behind settings, the GitHub-compatible commits/{sha}, the per-repo markup/markdown, contents-ext, artifact zip/raw, GET admin user orgs); scope routers/api/v1/. Every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver of Routes(), and routers/init.go mounts that router at /api/v1 (r.Mount(\"/api/v1\", apiv1.Routes())); helpers (addActionsRoutes, a closure assigned to a variable, and addProjectRoutes) take the router as a parameter and are called inside several groups. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs): route-chain = m.Combo(\"/x\").Get(h).Put(h) (verbs chained on a path builder, also inside the helpers); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3); prefix-scope-and-file: GET archive/{archive} and pulls/{index}.{diffType}, whose \".{diffType}\" pattern gitea joins to the group without a slash (extracted as /pulls/{index}/.{diffType}). Until H2b item 2 step 2 (2026-10-16) no API route came out with its /api/v1 (prefix-other-file 247, router-as-param 78). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5). Since the v2 cheap fixes (2026-10-15): a spread handler list (append(mid, h)...) makes a route, not a call.",
  "checked": {
   "endpoints": [
    {
     "evidence": "gitea:routers/api/packages/api.go:201",
     "method": "GET",
-    "path": "/{username}/composer/files/{package}/{version}/{filename}",
+    "path": "/api/packages/{username}/composer/files/{package}/{version}/{filename}",
     "raw": "/files/{package}/{version}/{filename}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:218",
     "method": "POST",
-    "path": "/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/upload_urls",
+    "path": "/api/packages/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/upload_urls",
     "raw": "/upload_urls",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:221",
     "method": "POST",
-    "path": "/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/packages/delete",
+    "path": "/api/packages/{username}/conan/v1/conans/{name}/{version}/{user}/{channel}/packages/delete",
     "raw": "/delete",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:360",
     "method": "GET",
-    "path": "/{username}/helm/index.yaml",
+    "path": "/api/packages/{username}/helm/index.yaml",
     "raw": "/index.yaml",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/packages/api.go:472",
     "method": "GET",
-    "path": "/{username}/rubygems/info/{packagename}",
+    "path": "/api/packages/{username}/rubygems/info/{packagename}",
     "raw": "/info/{packagename}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1327",
     "method": "GET",
-    "path": "/repos/{username}/{reponame}/actions/jobs/{job_id}/logs",
+    "path": "/api/v1/repos/{username}/{reponame}/actions/jobs/{job_id}/logs",
     "raw": "/{job_id}/logs",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1458",
     "method": "GET",
-    "path": "/repos/{username}/{reponame}/stargazers",
+    "path": "/api/v1/repos/{username}/{reponame}/stargazers",
     "raw": "/stargazers",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1502",
     "method": "POST",
-    "path": "/repos/{username}/{reponame}/pulls/comments/{id}/resolve",
+    "path": "/api/v1/repos/{username}/{reponame}/pulls/comments/{id}/resolve",
     "raw": "/comments/{id}/resolve",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/api/v1/api.go:1767",
     "method": "POST",
-    "path": "/packages/{username}/{type}/{name}/-/unlink",
+    "path": "/api/v1/packages/{username}/{type}/{name}/-/unlink",
     "raw": "/unlink",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:1226",

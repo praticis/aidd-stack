@@ -33,13 +33,11 @@
   },
   {
    "method": "GET",
-   "path": "/admin/courier/messages",
-   "category": "prefix-in-router-type"
+   "path": "/admin/courier/messages"
   },
   {
    "method": "GET",
-   "path": "/admin/courier/messages/{id}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/courier/messages/{id}"
   },
   {
    "method": "GET",
@@ -48,8 +46,7 @@
   },
   {
    "method": "GET",
-   "path": "/admin/identities",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities"
   },
   {
    "method": "PATCH",
@@ -58,38 +55,31 @@
   },
   {
    "method": "POST",
-   "path": "/admin/identities",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities"
   },
   {
    "method": "GET",
-   "path": "/admin/identities/by/external/{externalID}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/by/external/{externalID}"
   },
   {
    "method": "DELETE",
-   "path": "/admin/identities/{id}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/{id}"
   },
   {
    "method": "GET",
-   "path": "/admin/identities/{id}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/admin/identities/{id}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/{id}"
   },
   {
    "method": "PUT",
-   "path": "/admin/identities/{id}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/{id}"
   },
   {
    "method": "DELETE",
-   "path": "/admin/identities/{id}/credentials/{type}",
-   "category": "prefix-in-router-type"
+   "path": "/admin/identities/{id}/credentials/{type}"
   },
   {
    "method": "DELETE",
@@ -437,10 +427,10 @@
    {
     "evidence": "kratos:courier/handler.go:50",
     "method": "GET",
-    "path": "/courier/messages",
-    "raw": "/courier/messages",
-    "ok": false,
-    "category": "const-other-file"
+    "path": "/admin/courier/messages",
+    "raw": "/admin/courier/messages",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "kratos:courier/template/testhelpers/testhelpers.go:97",

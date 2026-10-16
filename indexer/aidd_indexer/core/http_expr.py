@@ -58,14 +58,17 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                 kids = [c for c in n.children if c.is_named]
                 if len(kids) >= 2:
                     name, val = kids[0], kids[-1]
-        elif n.type == "assignment" and n.parent is not None and n.parent.type in ("module", "expression_statement"):  # Python
-            name, val = n.child_by_field_name("left"), n.child_by_field_name("right")
+        elif n.type == "assignment" and n.parent is not None and (
+                n.parent.type in ("module", "expression_statement")
+                or n.parent.type == "block" and n.parent.parent is not None and n.parent.parent.type == "class_definition"):
+            name, val = n.child_by_field_name("left"), n.child_by_field_name("right")    # Python (`X: str = ".."` in a class)
         if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
             while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
                 val = val.named_children[0]
             owner = owner_class(n, src)
             names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
-            parts = _concat_parts(val, src) if val.type in CONCAT_NODES else None
+            parts = _concat_parts(val, src) if val.type in CONCAT_NODES else \
+                [("ref", text(val, src))] if n.type == "const_spec" and val.type == "identifier" else None   # Go `A = B`
             if parts:
                 for nm in names:
                     ctx.define(nm, parts=parts)
@@ -204,7 +207,7 @@ class PathExpressions:
 
     def _path_of_name(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """A local binding first (a parameter has no value here), then the directory's constants (`A.B` by its
-        qualified name, else by `B`)."""
+        qualified name, else by `B`), then an imported one (`pkg.NAME` from the package's directory)."""
         name = text(n, self.src)
         if n.type == "identifier":
             bound, val = self.scopes.binding(n)
@@ -216,7 +219,12 @@ class PathExpressions:
             if name in self.ctx.ambiguous:                        # other files of the directory define it too: this one's
                 val = self.scopes.assigned_before(self.scopes.root, END, name)
                 return self.path_of(val, lenient, _depth + 1) if val is not None else None
-        return self.ctx.route_const(name)
+        found = self.ctx.route_const(name)
+        return found if found is not None else self.foreign_const(name)
+
+    def foreign_const(self, name: str) -> str | None:
+        """A constant of another directory the file imports (`BaseScanner`); None here."""
+        return None
 
     def _path_of_concat(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """`base + "/v1/x" + id`; an unknown first operand is a base URL."""

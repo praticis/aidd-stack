@@ -6,8 +6,10 @@ requests — see `docs/indexer-evolution.md` for the rules table. `BaseScanner` 
 - expressions → path templates and methods (`path_of`, `method_from_args`: `http_expr.PathExpressions`), over the
   file's name bindings (`http_scope.Scopes`) and the directory's constants (`PackageContext`);
 - where a route lives: `prefix_for` (a closure region — the language's `region_of` — or a group variable),
-  `route_path` (the root, constraints and converters, relative patterns on a group) and the file's mount graph
-  (`mount`, applied by `finish`: `http_mounts.MountGraph`);
+  `route_path` (the root, constraints and converters, relative patterns on a group) and the mount graph
+  (`mount`, settled by `finish` for the file: `http_mounts.MountGraph`; across files, `compose` follows the routers
+  each file names for the others — `global_of` —, its imports — `read_imports`, resolved by `http_view.RepoView` —
+  and the constants of the packages it imports, `foreign_const`);
 - route vs. client (the main source of false positives): `is_handler_like` — a call is a *route registration*
   when the argument after the path is a function value, an *outbound call* when it is data;
 - recording with evidence `repo:path:line` (`add_endpoint`, `add_call`). Test files and e2e/integration folders are
@@ -28,10 +30,10 @@ from ..languages.base import node_text as text, walk  # noqa: F401 — walk is r
 from . import ids
 from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
 from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg, valid_path  # noqa: F401 — re-exported
-from .http_mounts import MountedRoot, MountGraph, RouterKey
+from .http_mounts import MountedRoot, MountGraph, RouterKey, compose as compose_mounts
 from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODES, STRING_NODES,  # noqa: F401
                          FUNCTION_SCOPES, has_interpolation)
-from .http_scope import Scopes, scope_id
+from .http_scope import END, Scopes, scope_id
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
 from .paths import (HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, has_literal_segment, mask_placeholders,
@@ -56,6 +58,10 @@ OUTBOUND = {
 }
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
+
+
+ROUTER_TYPE = re.compile(r"\b(Router|RouterGroup|Engine|Echo|Group|Mux|ServeMux|App|APIRouter|FastAPI|Flask|Blueprint|"
+                         r"Starlette|Sanic|Quart)\b")     # a parameter's declared type that makes it a router
 
 
 class Pending(NamedTuple):
@@ -88,6 +94,10 @@ def rebased(repo: RepoInfo, ep: HttpEndpointInfo, prefix: str) -> HttpEndpointIn
                    id=ids.http_endpoint(repo.tenant, repo.name, ep.method, path_key(path)))
 
 
+def _is_root(ep: HttpEndpointInfo) -> bool:
+    return isinstance(ep.raw_pattern, MountedRoot)
+
+
 def replace_endpoints(out: HttpResult, plan: dict[int, list[HttpEndpointInfo]]) -> None:
     """Each endpoint whose `id()` is in `plan` gives way to what the plan lists there (nothing = dropped)."""
     if plan:
@@ -114,6 +124,7 @@ class PackageContext:
         self.segments: dict[str, str] = {}          # name -> one path segment (`"cases"`): only whole, inside a template
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
         self._values: dict[str, object] = {}
+        self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
     def define(self, name: str, raw: str | None = None, parts: list | None = None, segment: str | None = None) -> None:
         value = raw if raw is not None else segment if segment is not None else tuple(parts or ())
@@ -193,6 +204,7 @@ def split_callee(callee: str) -> tuple[str, str, str]:
 # ------------------------------------------------------------------------------------------
 class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
+    mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
 
     def __init__(self, repo: RepoInfo, fx, ctx: PackageContext, out: HttpResult):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
@@ -206,6 +218,11 @@ class BaseScanner(PathExpressions):
         self.group_prefix: dict[str, str] = {}   # router/group variable -> path prefix
         self.router_vars: set[str] = set()       # identifiers known to be routers/groups/apps
         self.app_vars: set[tuple[int, str]] = set()   # (scope, name) of the application itself, not a sub-router
+        self.imports: dict[str, tuple[str, str | None]] = self.read_imports()   # local name -> (spec, name in it)
+        self.foreign: list[tuple[str, RouterKey, str]] = []       # another file's router (global id) mounted here
+        self.router_args: list[tuple[str, str, Node, str]] = []   # (parameter's global id, name, call, prefix added)
+        self._functions_by_id: dict[int, Node] | None = None
+        self._globals: dict[RouterKey, str | None] = {}
 
     def scan(self) -> None:
         self.run()
@@ -251,6 +268,15 @@ class BaseScanner(PathExpressions):
         return self.group_prefix.get(receiver)
 
     def router_key(self, name: str, at: Node) -> RouterKey:
+        """The router `name` is at `at`. A closure region's router parameter is the outer router — chi's
+        `r.Route("/x", func(r chi.Router) {...})`: the region's prefix is already in what is registered there."""
+        f = at.parent
+        while f is not None:
+            if f.type in HANDLER_NODES and f.parent is not None and f.parent.parent is not None \
+                    and f.parent.parent.type in CALL_NODES and self.scopes.is_parameter(f, name):
+                region = self.region_of(f.parent.parent, f)
+                return self.router_key(region.outer, f.parent.parent) if region is not None else (f.id, name)
+            f = f.parent
         return self.scopes.binding_scope(name, at), name
 
     def mount(self, child: str, child_at: Node, parent: str, at: Node, prefix: str, derived: bool = False) -> None:
@@ -262,14 +288,113 @@ class BaseScanner(PathExpressions):
         self.mounts.mount(self.router_key(child, child_at), self.router_key(parent, at), prefix)
 
     def finish(self) -> None:
-        """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted."""
-        self.mounts.apply(self.out.endpoints, lambda ep, prefix: rebased(self.repo, ep, prefix),
-                          lambda ep: isinstance(ep.raw_pattern, MountedRoot))
+        """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted. With
+        `mount_rule`, a route on a router other files can name waits for `compose`, and the file publishes its mounts
+        of such routers."""
+        glob = self._global if self.mount_rule else (lambda _: None)
+        waiting, edges = self.mounts.settle(self.out.endpoints, lambda ep, prefix: rebased(self.repo, ep, prefix),
+                                            _is_root, glob, self.foreign + self._router_args() if self.mount_rule else [],
+                                            lambda key: key in self.app_vars)
+        if self.mount_rule:
+            self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
+            for child, parent, prefix in edges:
+                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
 
     @classmethod
-    def compose(cls, out: HttpResult, repo: RepoInfo) -> None:
+    def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """Language hook, once per repo after every file is scanned: resolve the `out.pending` routes of this language
-        from `out.facts`."""
+        from `out.facts`. By default, the routes waiting on a router another file mounts (`mount_rule`)."""
+        if cls.mount_rule is None:
+            return
+        waiting = [(p.item, p.key[0]) for p in out.pending if p.rule == cls.mount_rule]
+        if waiting:
+            edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
+            replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root))
+
+    # -- what crosses files: imports, routers other files name -----------------------------------
+    def read_imports(self) -> dict[str, tuple[str, str | None]]:
+        """Language hook: local name → (import spec, the name it has in the imported module, or None for the module
+        itself)."""
+        return {}
+
+    def resolve_import(self, spec: str) -> str | None:
+        """Repo path of the file or package directory an import of this file names."""
+        view = self.ctx.view
+        return view.resolve(self.fx.file, spec) if view is not None else None
+
+    def foreign_const(self, name: str) -> str | None:
+        """`pkg.NAME` (or `NAME` imported by name), the import being of this repo: the constant as the directory of
+        the imported file or package defines it — `model.APIURLSuffix`, `settings.API_V1_STR`."""
+        head, _, rest = name.partition(".")
+        spec, orig = self.imports.get(head) or (None, None)
+        if spec is None or not (rest or orig):
+            return None
+        target = self.resolve_import(spec)
+        ctx = self.ctx.view.constants(target) if target is not None else None
+        return ctx.route_const(rest or orig) if ctx is not None else None
+
+    def global_of(self, key: RouterKey) -> str | None:
+        """Language hook: the id other files know this router by (`http_mounts`), or None."""
+        return None
+
+    def _global(self, key: RouterKey) -> str | None:
+        if key not in self._globals:
+            self._globals[key] = self.global_of(key)
+        return self._globals[key]
+
+    def function_of(self, scope: int) -> Node | None:
+        """The function a `RouterKey`'s scope id names."""
+        if self._functions_by_id is None:
+            self._functions_by_id = {n.id: n for n in walk(self.fx.tree.root_node) if n.type in FUNCTION_SCOPES}
+        return self._functions_by_id.get(scope)
+
+    def returns_name(self, fn: Node, name: str) -> bool:
+        """`fn` has a `return name` (a closure's returns are its own)."""
+        stack = [c for c in fn.children]
+        while stack:
+            d = stack.pop()
+            if d.type in FUNCTION_SCOPES:
+                continue
+            if d.type == "return_statement":
+                vals = [c for c in walk(d) if c.is_named and c is not d and c.type not in ("expression_list",)]
+                if len(vals) == 1 and vals[0].type == "identifier" and text(vals[0], self.src) == name:
+                    return True
+            stack.extend(d.children)
+        return False
+
+    def module_binds(self, name: str) -> bool:
+        return self.scopes.assigned_before(self.scopes.root, END, name) is not None
+
+    def router_param_type(self, fn: Node, name: str) -> str | None:
+        """Language hook: the declared type of `fn`'s parameter `name`, None when it is not one."""
+        return None
+
+    def is_router_param(self, name: str, at: Node) -> bool:
+        """`name` at `at` is a parameter of an enclosing function typed as a router (`rg *gin.RouterGroup`)."""
+        f = at.parent
+        while f is not None:
+            if f.type in FUNCTION_SCOPES:
+                typ = self.router_param_type(f, name)
+                if typ is not None:
+                    return bool(ROUTER_TYPE.search(typ))
+            f = f.parent
+        return False
+
+    def _router_args(self) -> list[tuple[str, RouterKey, str]]:
+        """The router arguments of function calls as (global id of the parameter, the router, its prefix at the
+        call), kept when the argument is a router of this file — by name first, the key only for those."""
+        if not self.router_args:
+            return []
+        known = {r for _, r in self.mounts.routes} | {k for c, p, _ in self.mounts.edges for k in (c, p)} | \
+            {p for _, p, _ in self.foreign} | self.app_vars
+        names = {k[1] for k in known} | self.router_vars
+        out = []
+        for g, name, at, extra in self.router_args:
+            if name in names or self.is_router_param(name, at):
+                key = self.router_key(name, at)
+                if key in known or name in self.router_vars or self.is_router_param(name, at):
+                    out.append((g, key, (self.prefix_for(name, at) or "").rstrip("/") + extra))
+        return out
 
     def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
         """Pattern of a route registration on `receiver` (the call is `at`): what `path_of` accepts, plus what

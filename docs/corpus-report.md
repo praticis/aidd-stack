@@ -880,3 +880,110 @@ What .NET still misses:
 The run took about 11 minutes, 82 s of it HTTP extraction.
 
 New baseline: `2026-10-16-v2-baseline-6` (42 repositories).
+
+## Update: the mount graph, step 2 — across files (2026-10-16)
+
+This is H2b item 2, step 2, for Go and Python, the portfolio's second tier (H2-D18). TS/JS stays on step 1.
+
+**What crosses files now.** A router that another file can name gets a global id:
+
+- a module-level or package-level variable (`router = APIRouter()` in a `views.py`);
+- the router a function returns (gitea's `apiv1.Routes()`, chi's `todosResource{}.Routes()`, named
+  `Type.Method`);
+- a function's router parameter (`func UsersRegister(router *gin.RouterGroup)`), including a closure assigned to a
+  variable (gitea's `addActionsRoutes := func(m *web.Router, ...)`);
+- a struct field shared by a package's files (mattermost's `api.BaseRoutes.Users`).
+
+A route registered on such a router waits for the composition step. Each file publishes:
+
+- the mounts of its own global routers;
+- every mount of a router from another file: `r.Mount("/api/v1", apiv1.Routes())`,
+  `include_router(tag_router, prefix="/tags")`, `include_router(login.router)`, `app.mount("/api/v1", app=api)`;
+- every router it passes to a function: `users.UsersRegister(v1.Group("/users"))`, `addActionsRoutes(m, ...)`.
+
+The composition step follows those edges up to a top. A router mounted nowhere keeps its routes as written. Imports
+are resolved by the same `resolve_import` that gives the graph its `IMPORTS` edges. A file never reads another
+file's tree.
+
+**Found on the way, also general:**
+
+- **Constants from another package or module.** `PathPrefix(model.APIURLSuffix)`, `prefix=settings.API_V1_STR` and
+  `mux.Handle(common.LoginEndpoint, h)` now resolve. Two kinds of constant were not collected before: a Go `const`
+  that names another, and an annotated constant in a Python class body.
+- **Closures.** A closure region's router parameter (chi's `r.Route("/x", func(r chi.Router) {...})`) is the outer
+  router, so a mount of the outer router reaches it.
+- **Gorilla.**
+  - A regex constraint may hold braces (`{fingerprint:[a-f0-9]{32}}`) or a `?` (`{ws:websocket(?:\/)?}`).
+  - A whole segment listing literal alternatives (`{syncable_type:teams|channels}`) gives one path per word. Inside a
+    segment, as in gitea's `{sha}.{diffType:diff|patch}`, it stays a parameter.
+  - `.Methods(GET, HEAD)` gives one route per verb.
+- **Groups.** `r := app.Group("/todo").Use(auth)` is the group.
+- **A sub-router's root** mounted without a prefix is a route when the chain ends at the application (gotify's UI
+  `/`).
+
+Diff against `2026-10-16-v2-baseline-6`, judged: 11 repositories changed, all Go or Python. No TS/JS or C#
+repository changed.
+
+- **mattermost (−378 +622):** every API route now has `/api/v4` and its subrouter's path. The two push-proxy calls
+  gain `/api/v1`.
+- **gitea (−472 +549):** the API routes under `/api/v1` and the package registry under `/api/packages`. The helpers
+  that receive the router now get each group's prefix.
+- **dispatch (−64 +286):** `/api/v1/{organization}/...` through three files: `views.py`, `api.py`, `main.py`.
+- **fastapi-template (−23 +23):** `/api/v1` from `settings.API_V1_STR`.
+- **gin-realworld (−12 +19), gin-examples (−4 +5), fiber-recipes (−11 +25):** groups passed to another package's
+  functions.
+- **chi (−4 +15):** todos/users resources and the versioned article routers.
+- **kratos (−3 +14):** the public redirect routes now carry `httprouterx.AdminPrefix`. The admin router's own routes,
+  which used to collide with them, now appear; they still lack the `/admin` of the router type
+  (`prefix-in-router-type`). Six test-helper calls resolve their path constants.
+- **argo-cd (+1):** `/auth/login` from `common.LoginEndpoint`.
+- **fastapi (−1 +2):** the sub-application mounted at `/subapi`, and the `admin` router included with `/admin`.
+- **gotify (+1):** `GET /`.
+
+Expected lists, with H2-D15 applied (spec plus routes verified in the code):
+
+- **dispatch:** the spec's paths are now under the `/api/v1` where `main.py` mounts the sub-app. The 85 routes the
+  older spec lacks were added, and the outdated tag-recommendation operation became the code's two routes. Five
+  misses remain:
+  - the Slack plugin routes, mounted by a loop over the registered plugins (`router-from-registry`);
+  - `auth_router.post("/register")(fn)` (`decorator-call`).
+- **mattermost:** 24 routes the spec lacks (channel join requests, property options, the 404 catch-all,
+  `web/oauth.go`, now in scope). The one miss left is a gorilla `PathPrefix(...).Handler(h)`
+  (`path-prefix-handler`).
+- **gitea:** 11 routes the spec lacks. Its 219 remaining misses are `route-chain`.
+
+| Repo (routes) | P / R expected before | P / R expected now | P sampled before → now |
+|---|---|---|---|
+| mattermost | 0.3 % / 0.2 % | 100 % / 99.8 % | 5 % → 90 % |
+| gitea | 0 % / 0 % | 99.7 % / 59.1 % | 45 % → 90 % |
+| dispatch | 1.5 % / 0.5 % | 98.6 % / 98.3 % | 0 % → 95 % |
+| fastapi-template | 0 % / 0 % | 100 % / 100 % | 0 % → 100 % |
+| gin-realworld | 0 % / 0 % | 100 % / 100 % | 0 % → 100 % |
+| chi | 75 % / 54.5 % | 100 % / 86.4 % | 44 % → 48 % |
+| kratos | 82.5 % / 67.5 % | 84.9 % / 80.5 % | 85 % → 90 % |
+| gin-examples | 70 % / 58.3 % | 100 % / 91.7 % | 95 % → 100 % |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| Go before | 68.9 % (151/219) | 18.4 % | 10.6 % (158/1495) |
+| Go now | 87.7 % (192/219) | 98.7 % | 75.4 % (1153/1530) |
+| Python before | 49.5 % (45/91) | 37.7 % | 3.5 % (60/1731) |
+| Python now | 91.2 % (83/91) | 96.1 % | 20.3 % (369/1815) |
+| Python without Django (FastAPI, Flask, aiohttp, CTFd), before → now | | 37.7 % → 96.1 % | 19.3 % → 93.4 % |
+
+Before and after use different expected lists for dispatch (207 operations relative to the sub-app, then 291 under
+`/api/v1`) and for gitea and mattermost (the routes the specs lack).
+
+What Go still misses:
+
+- gitea's `route-chain` (219): `m.Combo("/x").Get(h).Put(h)`, item 4;
+- the generated servers of argo-cd and alertmanager (`generated-server`, 115);
+- kratos' router types that add `/admin` (`prefix-in-router-type`, 12).
+
+Python outside Django misses CTFd's flask-restx resources (17) and the five dispatch routes above. Django
+(`django-urlconf`, 1420) is item 8.
+
+HTTP extraction went from 82 s to 88 s for the whole corpus (mattermost 22 → 23 s). The whole run still takes about
+11 minutes.
+
+New baseline: `2026-10-16-v2-baseline-7`.

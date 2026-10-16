@@ -93,7 +93,7 @@ def extract_tree(repo: RepoInfo, patterns=None, dispatch_calls: frozenset[str] =
     # integration candidates: routes exposed + outbound HTTP calls with literal paths
     from .core.integrations import extract_http
     t1 = time.time()
-    hr = extract_http(repo, extractors, patterns)
+    hr = extract_http(repo, extractors, patterns, modules)
     res.endpoints, res.http_calls = hr.endpoints, hr.calls
     res.warnings.extend(hr.warnings)
     resolved = sum(1 for e in hr.endpoints if e.handler_id)

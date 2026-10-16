@@ -29,14 +29,19 @@
   **NSwag do item 7 (2026-10-16), o último do .NET:** clientes NSwag C# (v13 e v14) e TS lidos, 3 apps .NET novos
   no corpus (42 repos), `[controller]`/`[action]` na caixa declarada com o linker sem distinção de caixa para
   ASP.NET, `[area]` e actions herdadas de base abstrata; C# com 10 repos: rotas R 96,9 %, chamadas R 99 %, P 100 %.
+  **Etapa 2 do item 2 (2026-10-16), Go e Python:** grafo de montagem entre arquivos — routers com id global
+  (variável de módulo/pacote, router devolvido por função, parâmetro router, campo de struct), arestas publicadas por
+  arquivo e compostas depois do scan, imports pelo `resolve_import` de cada linguagem, constantes de outro pacote;
+  rotas Go P 18,4 → 98,7 %, R 10,6 → 75,4 %; Python fora do Django P 37,7 → 96,1 %, R 19,3 → 93,4 %
+  (mattermost R 0,2 → 99,8 %, gitea 0 → 59,1 %, dispatch 0,5 → 98,3 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-6/` — corpus v2, 42 repos, com o
-  NSwag do item 7 (a `-5` é a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-7/` — corpus v2, 42 repos, com a
+  etapa 2 do grafo de montagem (a `-6` é a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -52,15 +57,13 @@
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
 - **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
-  projeto; 2 chamadas C#: `GetFromJsonAsync("User")` de um segmento só e um `UriBuilder`; e o roteamento
-  convencional do MVC, que serve páginas). Agora
-  o item 2, etapa 2, que é o maior ganho de Go e Python — entre arquivos (`prefix-other-file`: Go 863, Python 230:
-  o router exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1",
-  apiv1.Routes())`) e helpers que recebem o router (`router-as-param`, Go 102) —, com o `route-chain` do Go (216)
-  logo atrás. Cada arquivo deixa um **resumo** (routers que exporta, montagens com o nome importado, rotas por
-  router) e um passo depois do scan compõe os resumos — nunca as árvores (F1.13). TS por último (`global-prefix`
-  238, `custom-registrar` 353, `prefix-in-client-wrapper`), com os outros geradores do item 7 (oazapfts,
-  openapi-generator, openapi-ts, go-swagger). A fatia C# passou a 10 repos (320 rotas esperadas, contra 1495 de Go).
+  projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas) e a etapa 2 cobre Go e Python. No
+  Go sobra o item 4, `route-chain` (gitea 219: `m.Combo("/x").Get(h).Put(h)`; go-kit 9), que fecha as rotas do
+  gitea; depois as chamadas Go (R 31,6 %: `request-encoder` do go-kit, `url-object-builder`) com os clientes
+  gerados do Go no item 7 (openapi-generator do kratos, go-swagger do alertmanager). Python fora do Django: só o
+  flask-restx do CTFd (17) e o registro de plugins do dispatch. TS por último: a etapa 2 para TS (o `mount_rule`
+  do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
+  `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
 
 ## Decisões
 
@@ -162,7 +165,13 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     ligações de nomes), `core/http_expr.py` (expressões de path), `core/http_mounts.py` (o grafo de montagem do
     arquivo, a peça que a etapa 2 compõe entre arquivos), `core/http_nodes.py` (tipos de nó); `http_base.py` fica
     com o scanner e os ganchos por linguagem
-  - [ ] etapa 2: entre arquivos e funções (resumo por arquivo), prefixo global
+  - [x] *(2026-10-16)* etapa 2, Go e Python: entre arquivos e funções — router com id global (`var:`, `ret:`,
+    `param:`, `field:`), arestas publicadas por arquivo e compostas depois do scan (`http_mounts.compose`), imports
+    pelo `RepoView` (`resolve_import` de cada linguagem), constantes de outro pacote (`foreign_const`), router
+    parâmetro de região de closure = router de fora; achados no caminho: restrição com chaves aninhadas ou `?`,
+    alternativas literais num segmento, `Methods` com vários verbos, `Group().Use()`, raiz na aplicação. Fixtures
+    `route-patterns-go/{cmd/crossfile,internal}` e `route-patterns-py/app/crossfile`
+  - [ ] etapa 2 para TS/JS (`mount_rule` do TS: ghost, express-realworld), prefixo global (`setGlobalPrefix`)
 
   Ordem original:
   mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
@@ -214,7 +223,8 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - os scanners leem `CLIENT_RECEIVER` direto em vez de pedir o cliente às convenções
   - limiares fixos no `built_bundle` (detecção de artefato de build)
   - um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
-  - na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda
+  - [x] *(2026-10-16)* na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda —
+    `RepoView` chama o `resolve_import` de cada linguagem
   - custo do HTTP no netbox: 49 s de 107 s, com 0 rotas e 0 chamadas (zulip 17 s de 47 s) — perfilar junto do F1.13
 - [ ] Pendências do item 6, fora do corpus atual (medir quando a fatia .NET crescer):
   - [x] *(2026-10-16)* linker: rotas ASP.NET casadas sem distinção de caixa (F0.5); o extrator passou à caixa
@@ -413,3 +423,22 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   Gabaritos novos pelas operações dos clientes + rotas escondidas por `IgnoreApi` lidas no código (H2-D15): 100/100
   em rotas e chamadas nos três. C# (10 repos): rotas P 100 %, R 93,1 → 96,9 %; chamadas P 100 %, R 96,6 → 99,0 %.
   Nova baseline `2026-10-16-v2-baseline-6`.
+- **2026-10-16** — H2b, Fase 4 item 2, etapa 2 (Go e Python, H2-D18). O grafo de montagem atravessa arquivos: um
+  router que outro arquivo pode nomear tem id global — variável de módulo/pacote (`var:`), o router que uma função
+  devolve (`ret:`, método por `Tipo.Metodo`, closure atribuída pelo nome da variável), parâmetro router de função
+  (`param:`) ou campo de struct (`field:`, Go) —; a rota num router desses espera a composição, e cada arquivo
+  publica as arestas dos seus routers globais, as montagens de routers de fora e os routers que passa a funções.
+  `compose` segue as arestas até o topo; router montado em lugar nenhum mantém as rotas. Imports pelo `RepoView`
+  (o `resolve_import` de cada linguagem, a dívida da reciclagem), constantes de outro pacote (`model.APIURLSuffix`,
+  `settings.API_V1_STR`). No julgamento: o `r` de `r.Route("/x", func(r chi.Router))` é o router de fora; método
+  por tipo (dois `Routes` no pacote do chi); `const` Go que nomeia outra e constante anotada em classe Python;
+  `Group().Use()` na atribuição; restrição gorilla com chaves aninhadas ou `?` (antes do corte da query);
+  alternativas literais num segmento inteiro e `Methods(GET, HEAD)`; raiz de sub-router montada sem prefixo na
+  aplicação. Custo: o HTTP do argo-cd subiu 60 % na primeira versão (chave do router de cada argumento de cada
+  chamada) — adiado para o fim do arquivo e filtrado por nome; corpus 82 → 88 s de HTTP. Diff contra `-6` (11
+  repos, todos Go/Python; nenhum TS/C#) julgado: certo, exceto `pulls/{index}/.{diffType}` do gitea (o padrão
+  `.{diffType}` que o gitea junta ao grupo sem barra). Gabaritos: dispatch sob o `/api/v1` do sub-app e com as 85
+  rotas que a spec antiga não tem; mattermost e gitea com as rotas só do código (24 e 11) e `web/oauth.go` no
+  escopo do mattermost; categorias novas `router-from-registry`, `decorator-call`, `path-prefix-handler`. Rotas Go
+  P 18,4 → 98,7 %, R 10,6 → 75,4 %; Python fora do Django P 37,7 → 96,1 %, R 19,3 → 93,4 %. Nova baseline
+  `2026-10-16-v2-baseline-7`.

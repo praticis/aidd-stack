@@ -1,6 +1,6 @@
 {
  "source": {
-  "endpoints": "openapi",
+  "endpoints": "openapi + manual",
   "calls": "manual"
  },
  "sha": "dd2837e82a0bf5565b1b4b4b91ea30b7262d4061",
@@ -18,1037 +18,1172 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/organizations",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/organizations",
-   "category": "prefix-other-file"
+   "path": "/api/v1/healthcheck"
   },
   {
    "method": "GET",
-   "path": "/organizations/{organization_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/organizations"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/organizations"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/organizations/{organization_id}"
   },
   {
    "method": "PUT",
-   "path": "/organizations/{organization_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/organizations/{organization_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/ai"
   },
   {
    "method": "POST",
-   "path": "/{organization}/auth/login",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/ai"
   },
   {
    "method": "GET",
-   "path": "/{organization}/auth/me",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/auth/register",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/ai/defaults"
   },
   {
    "method": "GET",
-   "path": "/{organization}/case_priorities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/case_priorities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/case_priorities/{case_priority_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/case_priorities/{case_priority_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/case_severities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/case_severities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/case_severities/{case_severity_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/case_severities/{case_severity_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/case_types",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/case_types",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/case_types/{case_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/case_types/{case_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/cases",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/cases",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/ai/genai-types"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/cases/{case_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/ai/{prompt_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/cases/{case_id}"
+   "path": "/api/v1/{organization}/ai/{prompt_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/cases/{case_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/cases/{case_id}/escalate",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/ai/{prompt_id}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/alerts",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/auth/login"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/auth/me"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/auth/me/settings"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/auth/me/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/auth/mfa"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/auth/myrole"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/auth/register",
+   "category": "decorator-call"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/case_cost_types"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/case_cost_types"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/alerts/{alert_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_cost_types/{case_cost_type_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/alerts/{alert_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_cost_types/{case_cost_type_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/alerts/{alert_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_cost_types/{case_cost_type_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/queries",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_costs"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/queries",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_costs"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/queries/{query_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_costs/{case_cost_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/queries/{query_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_costs/{case_cost_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/queries/{query_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_costs/{case_cost_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/sources",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_priorities"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_priorities"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/sources/dataFormats",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_priorities/{case_priority_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/case_priorities/{case_priority_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/case_severities"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources/dataFormats",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/case_severities"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/case_severities/{case_severity_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/case_severities/{case_severity_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/case_types"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/case_types"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/case_types/{case_type_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/case_types/{case_type_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/cases"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/cases"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/cases/minimal"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/sources/dataFormats/{source_data_format_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/environments",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources/environments",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}/add/{email}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/cases/{case_id}/escalate"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/{organization}/cases/{case_id}/event"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/cases/{case_id}/event"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/environments/{source_environment_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/environments/{source_environment_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/data/sources/environments/{source_environment_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/statuses",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}/event/{event_uuid}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources/statuses",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}/exportTimeline"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/cases/{case_id}/join"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/cases/{case_id}/participants"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/cases/{case_id}/participants/minimal"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/statuses/{source_status_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/statuses/{source_status_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/data/sources/statuses/{source_status_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/transports",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}/remove/{email}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources/transports",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cases/{case_id}/resources"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/cases/{case_id}/resources/conversation"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/cost_models"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/cost_models"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/transports/{source_transport_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/transports/{source_transport_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cost_models/{cost_model_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/sources/transports/{source_transport_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/data/sources/types",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/cost_models/{cost_model_id}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/data/sources/types",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/alerts"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/types/{source_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/alerts/{alert_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/sources/types/{source_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/alerts/{alert_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/sources/types/{source_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/alerts/{alert_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/data/queries"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/data/queries"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/data/sources/{source_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/queries/{query_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/data/sources/{source_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/queries/{query_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/data/sources/{source_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/queries/{query_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/definitions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources"
   },
   {
    "method": "POST",
-   "path": "/{organization}/definitions",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/data/sources/dataFormats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/data/sources/dataFormats"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/definitions/{definition_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/dataFormats/{source_data_format_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/definitions/{definition_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/dataFormats/{source_data_format_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/definitions/{definition_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/dataFormats/{source_data_format_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/documents",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/environments"
   },
   {
    "method": "POST",
-   "path": "/{organization}/documents",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/environments"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/documents/{document_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/environments/{source_environment_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/documents/{document_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/environments/{source_environment_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/documents/{document_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/environments/{source_environment_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/entity",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/statuses"
   },
   {
    "method": "POST",
-   "path": "/{organization}/entity",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/statuses"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/entity/{entity_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/statuses/{source_status_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/entity/{entity_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/statuses/{source_status_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/entity/{entity_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/statuses/{source_status_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/entity/{entity_id}/cases/{days_back}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/entity/{entity_id}/signal_instances/{days_back}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/entity_type",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/transports"
   },
   {
    "method": "POST",
-   "path": "/{organization}/entity_type",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/transports"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/entity_type/{entity_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/transports/{source_transport_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/entity_type/{entity_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/transports/{source_transport_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/entity_type/{entity_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/entity_type/{entity_type_id}/process",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/events/slack/action",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/events/slack/command",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/events/slack/event",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/events/slack/menu",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/transports/{source_transport_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/feedback",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/types"
   },
   {
    "method": "POST",
-   "path": "/{organization}/feedback",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/types"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/feedback/{feedback_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/types/{source_type_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/feedback/{feedback_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/types/{source_type_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/feedback/{feedback_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_cost_types",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incident_cost_types",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/types/{source_type_id}"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/{source_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/{source_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/incident_cost_types/{incident_cost_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/data/sources/{source_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/incident_costs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/definitions"
   },
   {
    "method": "POST",
-   "path": "/{organization}/incident_costs",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/definitions"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/incident_costs/{incident_cost_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/definitions/{definition_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/incident_costs/{incident_cost_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/definitions/{definition_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/incident_costs/{incident_cost_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/definitions/{definition_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/incident_priorities",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/documents"
   },
   {
    "method": "POST",
-   "path": "/{organization}/incident_priorities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_priorities/{incident_priority_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/incident_priorities/{incident_priority_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_roles/{role}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/incident_roles/{role}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_severities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incident_severities",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_severities/{incident_severity_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/incident_severities/{incident_severity_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_types",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incident_types",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incident_types/{incident_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/incident_types/{incident_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incidents",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incidents",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/incidents/metric/forecast",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/documents"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/incidents/{incident_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/documents/{document_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/incidents/{incident_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/documents/{document_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/incidents/{incident_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incidents/{incident_id}/join",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incidents/{incident_id}/report/executive",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incidents/{incident_id}/report/tactical",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/incidents/{incident_id}/subscribe",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/documents/{document_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/individuals",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/email_template"
   },
   {
    "method": "POST",
-   "path": "/{organization}/individuals",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/email_template"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/individuals/{individual_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/email_template/{email_template_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/individuals/{individual_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/email_template/{email_template_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/individuals/{individual_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/email_template/{email_template_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/notifications",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity"
   },
   {
    "method": "POST",
-   "path": "/{organization}/notifications",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/notifications/{notification_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity/{entity_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/notifications/{notification_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity/{entity_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/notifications/{notification_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity/{entity_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/plugins",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity/{entity_id}/cases/{days_back}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/plugins/instances",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity/{entity_id}/signal_instances/{days_back}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/entity_type"
   },
   {
    "method": "POST",
-   "path": "/{organization}/plugins/instances",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity_type"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/entity_type/recalculate/{entity_type_id}/{case_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/entity_type/{case_id}"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity_type/{entity_type_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity_type/{entity_type_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/plugins/instances/{plugin_instance_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/entity_type/{entity_type_id}"
   },
   {
-   "method": "GET",
-   "path": "/{organization}/projects",
-   "category": "prefix-other-file"
+   "method": "PUT",
+   "path": "/api/v1/{organization}/entity_type/{entity_type_id}/process"
   },
   {
    "method": "POST",
-   "path": "/{organization}/projects",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/events/slack/action",
+   "category": "router-from-registry"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/events/slack/command",
+   "category": "router-from-registry"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/events/slack/event",
+   "category": "router-from-registry"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/events/slack/menu",
+   "category": "router-from-registry"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/feedback"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/feedback"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/projects/{project_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/feedback/{feedback_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/projects/{project_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/feedback/{feedback_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/projects/{project_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/feedback/{feedback_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/search",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/search/filters",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms"
   },
   {
    "method": "POST",
-   "path": "/{organization}/search/filters",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/forms/completed/{form_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/forms/export"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/forms/{form_id}"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/search/filters/{search_filter_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms/{forms_id}/{individual_contact_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/search/filters/{search_filter_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms/{forms_id}/{individual_contact_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/services",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms_type"
   },
   {
    "method": "POST",
-   "path": "/{organization}/services",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms_type"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/forms_type/{forms_type_id}"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/services/{service_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/services/{service_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms_type/{forms_type_id}/{individual_contact_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/services/{service_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/forms_type/{forms_type_id}/{individual_contact_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/signals",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_cost_types"
   },
   {
    "method": "POST",
-   "path": "/{organization}/signals",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/signals/filters",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "POST",
-   "path": "/{organization}/signals/filters",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_cost_types"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/signals/filters/{signal_filter_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/signals/filters/{signal_filter_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_cost_types/{incident_cost_type_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/signals/instances",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_cost_types/{incident_cost_type_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/incident_cost_types/{incident_cost_type_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_costs"
   },
   {
    "method": "POST",
-   "path": "/{organization}/signals/instances",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_costs"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/signals/{signal_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_costs/{incident_cost_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/signals/{signal_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_costs/{incident_cost_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/signals/{signal_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_costs/{incident_cost_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/tag_types",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_priorities"
   },
   {
    "method": "POST",
-   "path": "/{organization}/tag_types",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incident_priorities"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_priorities/{incident_priority_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/incident_priorities/{incident_priority_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_roles/{role}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/incident_roles/{role}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_severities"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incident_severities"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_severities/{incident_severity_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/incident_severities/{incident_severity_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_types"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incident_types"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incident_types/{incident_type_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/incident_types/{incident_type_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incidents"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incidents/metric/forecast"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/tag_types/{tag_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/tag_types/{tag_type_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/tag_types/{tag_type_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/tags",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/tags",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}/add/{email}"
   },
   {
-   "method": "GET",
-   "path": "/{organization}/tags/recommendations/{model_name}/{id}",
-   "category": "prefix-other-file"
+   "method": "PATCH",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/event"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/event"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/tags/{tag_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/tags/{tag_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/tags/{tag_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/tasks",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}/event/{event_uuid}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/tasks",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}/exportTimeline"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/join"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/regenerate"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/tasks/{task_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/tasks/{task_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}/remove/{email}"
   },
   {
    "method": "POST",
-   "path": "/{organization}/teams",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/incidents/{incident_id}/report/executive"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/report/tactical"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/report/tactical/generate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/resources"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/incidents/{incident_id}/subscribe"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/individuals"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/individuals"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/teams/{team_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/individuals/{individual_contact_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/teams/{team_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/individuals/{individual_contact_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/teams/{team_contact_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/individuals/{individual_contact_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/terms",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/notifications"
   },
   {
    "method": "POST",
-   "path": "/{organization}/terms",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/notifications"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/terms/{term_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/notifications/{notification_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/terms/{term_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/notifications/{notification_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/terms/{term_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/notifications/{notification_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/users",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins"
   },
   {
    "method": "GET",
-   "path": "/{organization}/users/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "PUT",
-   "path": "/{organization}/users/{user_id}",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/workflows",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins/instances"
   },
   {
    "method": "POST",
-   "path": "/{organization}/workflows",
-   "category": "prefix-other-file"
-  },
-  {
-   "method": "GET",
-   "path": "/{organization}/workflows/instances/{workflow_instance_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins/instances"
   },
   {
    "method": "DELETE",
-   "path": "/{organization}/workflows/{workflow_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins/instances/{plugin_instance_id}"
   },
   {
    "method": "GET",
-   "path": "/{organization}/workflows/{workflow_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins/instances/{plugin_instance_id}"
   },
   {
    "method": "PUT",
-   "path": "/{organization}/workflows/{workflow_id}",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/plugins/instances/{plugin_instance_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/plugins/plugin_events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/projects"
   },
   {
    "method": "POST",
-   "path": "/{organization}/workflows/{workflow_id}/run",
-   "category": "prefix-other-file"
+   "path": "/api/v1/{organization}/projects"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/projects/{project_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/projects/{project_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/projects/{project_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/search/filters"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/search/filters"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/search/filters/{search_filter_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/search/filters/{search_filter_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/search/filters/{search_filter_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/service_feedback"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/service_feedback/{service_feedback_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/service_feedback/{service_feedback_id}/{individual_contact_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/services"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/services"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/services/externalids"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/services/{service_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/services/{service_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/services/{service_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/signals"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/engagements"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/signals/engagements"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/engagements/{engagement_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/signals/engagements/{signal_engagement_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/filters"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/signals/filters"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/signals/filters/{signal_filter_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/signals/filters/{signal_filter_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/instances"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/signals/instances"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/stats"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/signals/update/{signal_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/signals/{signal_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/{signal_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/signals/{signal_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/signals/{signal_id}/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tag_types"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/tag_types"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/tag_types/{tag_type_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tag_types/{tag_type_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/tag_types/{tag_type_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tags/recommendations/{project_id}/case/{case_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tags/recommendations/{project_id}/incident/{incident_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/tags/{tag_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tags/{tag_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/tags/{tag_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/tasks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/tasks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/tasks/ticket/{task_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/tasks/{task_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/tasks/{task_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/teams"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/teams"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/teams/{team_contact_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/teams/{team_contact_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/teams/{team_contact_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/terms"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/terms"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/terms/{term_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/terms/{term_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/terms/{term_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/users/{user_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/users/{user_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/users/{user_id}/change-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/users/{user_id}/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/workflows"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/workflows"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/workflows/instances/{workflow_instance_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/{organization}/workflows/{workflow_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{organization}/workflows/{workflow_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{organization}/workflows/{workflow_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{organization}/workflows/{workflow_id}/run"
   }
  ],
  "calls": [
@@ -1118,112 +1253,112 @@
    "path": "/cases/{caseId}/resources/conversation"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations, paths relative to the API sub-app that main.py mounts at /api/v1 — kept as the spec writes them), scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, included with its prefix in src/dispatch/api.py — api_router.include_router(case_router, prefix=\"/{organization}/cases\") — so every route comes out without it and the roots (@router.get(\"\")) are dropped (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`) — the module constant becomes a placeholder (field-in-interpolation); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right. Since item 5 (2026-10-15): each UI api.js module's `resource` constant (\"cases\" or \"/data/alerts\") is read as whole segments of its templates — 273 calls more, the sampled ones right.",
+ "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations) with its paths under /api/v1, where main.py mounts the API sub-app (app.mount(\"/api/v1\", app=api)); the dump is older than the code, so the routes only the code has were read in it and added (85, among them GET /healthcheck, include_in_schema=False), and the tag-recommendation operation is the code's two routes. Scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, imported by src/dispatch/api.py and included there with its prefix (authenticated_organization_api_router.include_router(case_router, prefix=\"/cases\") under \"/{organization}\"); api.py's api_router is included by main.py into the sub-app. Misses: the Slack plugin's event routes, mounted at /{organization}/events by a loop over the registered plugins (install_plugin_events, router-from-registry; the extracted /slack/* lack that prefix), and POST /auth/register, registered as auth_router.post(\"/register\")(fn) (decorator-call). Until H2b item 2 step 2 (2026-10-16) every route came out without its file's prefix (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right. Since item 5 (2026-10-15): each UI api.js module's `resource` constant is read as whole segments of its templates — 273 calls more, the sampled ones right.",
  "checked": {
   "endpoints": [
    {
     "evidence": "dispatch:src/dispatch/ai/prompt/views.py:127",
     "method": "DELETE",
-    "path": "/{prompt_id}",
+    "path": "/api/v1/{organization}/ai/{prompt_id}",
     "raw": "/{prompt_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/ai/prompt/views.py:35",
     "method": "GET",
-    "path": "/genai-types",
+    "path": "/api/v1/{organization}/ai/genai-types",
     "raw": "/genai-types",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/ai/prompt/views.py:89",
     "method": "PUT",
-    "path": "/{prompt_id}",
+    "path": "/api/v1/{organization}/ai/{prompt_id}",
     "raw": "/{prompt_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/auth/views.py:203",
     "method": "POST",
-    "path": "/{user_id}/change-password",
+    "path": "/api/v1/{organization}/users/{user_id}/change-password",
     "raw": "/{user_id}/change-password",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/auth/views.py:282",
     "method": "GET",
-    "path": "/me",
+    "path": "/api/v1/{organization}/auth/me",
     "raw": "/me",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/case/views.py:339",
     "method": "PUT",
-    "path": "/{case_id}/escalate",
+    "path": "/api/v1/{organization}/cases/{case_id}/escalate",
     "raw": "/{case_id}/escalate",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/case/views.py:486",
     "method": "POST",
-    "path": "/{case_id}/event",
+    "path": "/api/v1/{organization}/cases/{case_id}/event",
     "raw": "/{case_id}/event",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/case/views.py:574",
     "method": "DELETE",
-    "path": "/{case_id}/event/{event_uuid}",
+    "path": "/api/v1/{organization}/cases/{case_id}/event/{event_uuid}",
     "raw": "/{case_id}/event/{event_uuid}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/feedback/service/views.py:45",
     "method": "DELETE",
-    "path": "/{service_feedback_id}/{individual_contact_id}",
+    "path": "/api/v1/{organization}/service_feedback/{service_feedback_id}/{individual_contact_id}",
     "raw": "/{service_feedback_id}/{individual_contact_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/forms/type/views.py:61",
     "method": "PUT",
-    "path": "/{forms_type_id}/{individual_contact_id}",
+    "path": "/api/v1/{organization}/forms_type/{forms_type_id}/{individual_contact_id}",
     "raw": "/{forms_type_id}/{individual_contact_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/incident/views.py:534",
     "method": "GET",
-    "path": "/metric/forecast",
+    "path": "/api/v1/{organization}/incidents/metric/forecast",
     "raw": "/metric/forecast",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/plugin/views.py:63",
     "method": "PUT",
-    "path": "/instances/{plugin_instance_id}",
+    "path": "/api/v1/{organization}/plugins/instances/{plugin_instance_id}",
     "raw": "/instances/{plugin_instance_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/plugin/views.py:90",
     "method": "DELETE",
-    "path": "/instances/{plugin_instance_id}",
+    "path": "/api/v1/{organization}/plugins/instances/{plugin_instance_id}",
     "raw": "/instances/{plugin_instance_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/plugins/dispatch_slack/endpoints.py:130",
@@ -1236,50 +1371,50 @@
    {
     "evidence": "dispatch:src/dispatch/signal/views.py:179",
     "method": "PUT",
-    "path": "/engagements/{signal_engagement_id}",
+    "path": "/api/v1/{organization}/signals/engagements/{signal_engagement_id}",
     "raw": "/engagements/{signal_engagement_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/signal/views.py:214",
     "method": "POST",
-    "path": "/filters",
+    "path": "/api/v1/{organization}/signals/filters",
     "raw": "/filters",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/signal/views.py:423",
     "method": "PUT",
-    "path": "/update/{signal_id}",
+    "path": "/api/v1/{organization}/signals/update/{signal_id}",
     "raw": "/update/{signal_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/tag/views.py:68",
     "method": "GET",
-    "path": "/recommendations/{project_id}/case/{case_id}",
+    "path": "/api/v1/{organization}/tags/recommendations/{project_id}/case/{case_id}",
     "raw": "/recommendations/{project_id}/case/{case_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/task/views.py:73",
     "method": "POST",
-    "path": "/ticket/{task_id}",
+    "path": "/api/v1/{organization}/tasks/ticket/{task_id}",
     "raw": "/ticket/{task_id}",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "dispatch:src/dispatch/workflow/views.py:115",
     "method": "POST",
-    "path": "/{workflow_id}/run",
+    "path": "/api/v1/{organization}/workflows/{workflow_id}/run",
     "raw": "/{workflow_id}/run",
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    }
   ],
   "calls": [

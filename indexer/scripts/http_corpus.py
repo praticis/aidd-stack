@@ -19,15 +19,15 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-16, v2 after H2b NSwag clients, routes + calls): Go — alertmanager 21 · chi 39 ·
-fiber-recipes 150+6 · gin-examples 39+1 · gin-realworld 13 · gorilla-mux 0 (library only) · gitea 1066+4 ·
-mattermost 446+42 · kratos 69+9 · argo-cd 16+104 · gotify 47+28 · go-feature-flag 18+4 · go-kit-examples 16.
+Baseline at the pinned commits (2026-10-16, v2 after H2b mount graph step 2, routes + calls): Go — alertmanager 21 · chi 50 ·
+fiber-recipes 164+6 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1143+4 ·
+mattermost 690+42 · kratos 80+15 · argo-cd 17+104 · gotify 48+28 · go-feature-flag 18+4 · go-kit-examples 16.
 TS/JS — express 32 · express-realworld 20 · fastify 8+1 · nest 195+1 (157 in the framework's own test apps) ·
 immich 295+7 · nodebb 90+185 · ghost 311+30 · express-boilerplate 8 · fastify-demo 10 · hono-examples 27 ·
 taxonomy 0+6 (Next.js file routes). C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support
 18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 671+30 · notifo 130+218 · rapid-blazor 18+17 ·
-azure-saas 35+26 (the last three with NSwag clients). Python — fastapi 86+9 ·
-fastapi-template 23 · flask 18 · zulip 0+20 and netbox 0 (Django) · dispatch 68+288 · aiohttp-demos 24+1 ·
+azure-saas 35+26 (the last three with NSwag clients). Python — fastapi 87+9 ·
+fastapi-template 23 · flask 18 · zulip 0+20 and netbox 0 (Django) · dispatch 290+288 · aiohttp-demos 24+1 ·
 ctfd 122+79. Whole run ~11 min in Docker (mattermost ~3 min, bitwarden ~2 min); grafana is out (memory, see
 CORPUS). Precision/recall per repo and the ranking of gaps: docs/corpus-report.md.
 """
@@ -248,7 +248,7 @@ def main() -> int:
             with contextlib.redirect_stderr(io.StringIO()):
                 res, extractors = extract_tree(repo)
                 t1 = time.time()
-                hr = extract_http(repo, extractors)
+                hr = extract_http(repo, extractors, modules=res.modules)
             fw = collections.Counter(e.framework for e in hr.endpoints)
             via = collections.Counter(c.via.split(".")[-1] for c in hr.calls)
             with_handler = sum(1 for e in hr.endpoints if e.handler_id)

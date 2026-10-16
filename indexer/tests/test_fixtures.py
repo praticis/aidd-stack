@@ -32,7 +32,7 @@ def _extract(root: Path):
 
     repo = RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
     res, extractors = extract_tree(repo)
-    return extract_http(repo, extractors)
+    return extract_http(repo, extractors, modules=res.modules)
 
 
 @pytest.mark.parametrize("root", FIXTURES, ids=[p.name for p in FIXTURES])
