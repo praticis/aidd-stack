@@ -90,8 +90,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/v1/{organization}/auth/register",
-   "category": "decorator-call"
+   "path": "/api/v1/{organization}/auth/register"
   },
   {
    "method": "GET",
@@ -1253,7 +1252,7 @@
    "path": "/cases/{caseId}/resources/conversation"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations) with its paths under /api/v1, where main.py mounts the API sub-app (app.mount(\"/api/v1\", app=api)); the dump is older than the code, so the routes only the code has were read in it and added (85, among them GET /healthcheck, include_in_schema=False), and the tag-recommendation operation is the code's two routes. Scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, imported by src/dispatch/api.py and included there with its prefix (authenticated_organization_api_router.include_router(case_router, prefix=\"/cases\") under \"/{organization}\"); api.py's api_router is included by main.py into the sub-app. Misses: the Slack plugin's event routes, mounted at /{organization}/events by a loop over the registered plugins (install_plugin_events, router-from-registry; the extracted /slack/* lack that prefix), and POST /auth/register, registered as auth_router.post(\"/register\")(fn) (decorator-call). Until H2b item 2 step 2 (2026-10-16) every route came out without its file's prefix (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right. Since item 5 (2026-10-15): each UI api.js module's `resource` constant is read as whole segments of its templates — 273 calls more, the sampled ones right.",
+ "notes": "Endpoints: the committed OpenAPI dump (docs/scripts/openapi.yaml, 207 operations) with its paths under /api/v1, where main.py mounts the API sub-app (app.mount(\"/api/v1\", app=api)); the dump is older than the code, so the routes only the code has were read in it and added (85, among them GET /healthcheck, include_in_schema=False), and the tag-recommendation operation is the code's two routes. Scope src/dispatch/. Every router is an APIRouter() in its feature's views.py, imported by src/dispatch/api.py and included there with its prefix (authenticated_organization_api_router.include_router(case_router, prefix=\"/cases\") under \"/{organization}\"); api.py's api_router is included by main.py into the sub-app. Misses: the Slack plugin's event routes, mounted at /{organization}/events by a loop over the registered plugins (install_plugin_events, router-from-registry; the extracted /slack/* lack that prefix). POST /auth/register, registered as auth_router.post(\"/register\")(fn), is a route since 2026-10-16 (decorator-call). Until H2b item 2 step 2 (2026-10-16) every route came out without its file's prefix (prefix-other-file, all 207). Archived repo. Calls (recall: the Vue app's case/api.js): every module does const resource = \"cases\" and calls API.post(`/${resource}/${caseId}/join`); the axios instance also prepends baseURL \"/api/v1\" and an interceptor the organization (not counted: as written). The Jira and Confluence plugin calls are right. Since item 5 (2026-10-15): each UI api.js module's `resource` constant is read as whole segments of its templates — 273 calls more, the sampled ones right.",
  "checked": {
   "endpoints": [
    {

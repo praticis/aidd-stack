@@ -1173,3 +1173,66 @@ after this change, gave the same times (52.9 / 52.8 s, 33.8 / 31.2 s, 62.6 / 61.
 load at that moment, not this change.
 
 New baseline: `2026-10-16-v2-baseline-10`.
+
+## Update: flask-restx resources and hand-applied route decorators (2026-10-16)
+
+Python outside Django still missed or got wrong 26 expected routes in two repositories: CTFd's REST API, which is
+flask-restx, and one route of dispatch.
+
+**What is read now:**
+
+- **flask-restx** (also `flask_restplus` and `flask_restful`):
+  - `Namespace` and `Api` imported from it are routers. A namespace's `path=` is its prefix.
+  - An `Api(blueprint)` is mounted on the blueprint or app it is built with, so it takes the blueprint's
+    `url_prefix`.
+  - `api.add_namespace(ns, "/challenges")` mounts the namespace, also one from another file, through the
+    cross-file mount graph.
+  - `@ns.route("/<id>")` on a `Resource` class gives one route per HTTP method the class defines, with the handler
+    `Class.method`. Before, the class was a single `GET` with neither prefix.
+- **A decorator applied by hand.** `register_user = auth_router.post("/register")(register_user)` is the route of
+  `register_user`.
+
+Not applied: a namespace's default path (`/<name>`), which holds only when neither `Namespace` nor `add_namespace`
+gives one. CTFd always gives it.
+
+Diff against `2026-10-16-v2-baseline-10`, judged: 2 repositories changed.
+
+- **CTFd:**
+  - The 40 restx routes that came out as `GET` without a prefix are replaced by 155, one per method, under
+    `/api/v1/<namespace>`. An `ast` walk of `CTFd/api` counts the same 155, in 90 classes.
+  - Four blueprint routes come back (`GET /teams`, `/users`, `/users/{user_id}` and `/{route}`). A restx route with
+    the same normalized id had hidden each of them.
+  - Routes with a handler went from 82 of 122 to 241 of 241.
+- **dispatch (+1):** `POST /api/v1/{organization}/auth/register`.
+
+Expected lists:
+
+- CTFd's 17 `restx-resource` items and dispatch's `decorator-call` item lose their category.
+- The 7 CTFd samples judged wrong (a `GET` without its prefix) were judged again, and all are right now. Among them
+  is `TeamPrivateMembers`, which defines only `post` and is now a `POST`.
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| CTFd | 57.7 % / 46.9 % | 100 % / 100 % |
+| dispatch | 98.6 % / 98.3 % | 98.6 % / 98.6 % |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| Python before | 91.2 % (83/91) | 96.1 % | 20.3 % (369/1815) |
+| Python now | 98.9 % (90/91) | 99.0 % | 21.3 % (387/1815) |
+| Python without Django (FastAPI, Flask, aiohttp, CTFd), before → now | | 96.1 % → 99.0 % | 93.4 % → 98.0 % (387/395) |
+
+What Python routes still miss outside Django (8):
+
+- dispatch's Slack plugin routes, which a loop over the registered plugins mounts (`router-from-registry`, 4). The
+  registry is filled at run time, so this stays a limitation.
+- fastapi's documentation examples, which register the same path in several apps of the repository
+  (`multi-app-repo`, 4).
+
+Django's urlconf (1420, netbox and zulip) is still deferred (item 8).
+
+**Timing.** HTTP extraction took 113.8 s, against 111.7 s before. In this run mattermost took 1369 s in all, against
+250 s before, with its HTTP part unchanged (30.4 s). The change touches only Python. Run alone right after, with the
+same code, mattermost took 249.6 s (29.0 s of HTTP). The spike was the machine, not this change.
+
+New baseline: `2026-10-16-v2-baseline-11`.

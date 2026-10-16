@@ -99,6 +99,31 @@
    "method": "GET",
    "path": "/api/v1/tags",
    "handler": "list_tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/challenges",
+   "handler": "ChallengeList.get"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/challenges",
+   "handler": "ChallengeList.post"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/challenges/{challenge_id}",
+   "handler": "Challenge.get"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v2/challenges/{challenge_id}",
+   "handler": "Challenge.patch"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/register",
+   "handler": "register_user"
   }
  ],
  "calls": [

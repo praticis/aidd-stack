@@ -1,4 +1,4 @@
-"""Python: FastAPI (APIRouter prefix) / Flask (Blueprint url_prefix) / Starlette decorators;
+"""Python: FastAPI (APIRouter prefix) / Flask (Blueprint url_prefix) / Starlette decorators, flask-restx resources;
 requests / httpx / aiohttp outbound."""
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_call
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
+RESTX = ("flask_restx", "flask_restplus", "flask_restful")                             # Namespace, Api, Resource
 AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": "PATCH", "add_delete": "DELETE",
            "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
 
@@ -42,6 +43,9 @@ class PyScanner(BaseScanner):
             return
         fn = right.child_by_field_name("function")
         fname = text(fn, self.src).split(".")[-1] if fn is not None else ""
+        if fname in ("Namespace", "Api") and self._restx(fn):
+            self._restx_router(text(left, self.src), fname, right, n)
+            return
         if fname in ("APIRouter", "Blueprint", "FastAPI", "Flask", "Starlette", "Router", "Sanic", "Quart"):
             name = text(left, self.src)
             self.router_vars.add(name)
@@ -56,6 +60,43 @@ class PyScanner(BaseScanner):
                         prefix = unquote(text(v, self.src)) if v is not None and v.type == "string" else ""
             self.group_prefix[name] = prefix
 
+    def _restx(self, fn: Node) -> bool:
+        """`Namespace` / `Api` of flask-restx (or flask-restful), not any class of that name."""
+        name = text(fn, self.src)
+        head = name.split(".")[0]
+        spec = (self.imports.get(head) or ("",))[0]
+        return spec in RESTX or name.startswith(tuple(m + "." for m in RESTX))
+
+    def _restx_router(self, name: str, kind: str, call: Node, at: Node) -> None:
+        """`ns = Namespace("challenges", path="/x")`: a router of resources — its `path` applies, the default
+        `/<name>` only by `add_namespace`, which usually gives its own. `Api(bp, prefix="/x")`: a router on the
+        blueprint (or app) it is built with, so it takes the blueprint's `url_prefix`."""
+        self.router_vars.add(name)
+        args = call.child_by_field_name("arguments")
+        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"] if args is not None else []
+        kw = {text(a.child_by_field_name("name"), self.src): a.child_by_field_name("value")
+              for a in (args.children if args is not None else ()) if a.type == "keyword_argument"}
+        own = kw.get("path" if kind == "Namespace" else "prefix")
+        self.group_prefix[name] = (self.path_of(own) or "") if own is not None else ""
+        if kind == "Api" and pos and pos[0].type == "identifier" and text(pos[0], self.src) in self.router_vars:
+            self.mount(name, at, text(pos[0], self.src), at, "")
+
+    def _resource(self, cls: Node, d: Node, p: str, recv: str) -> None:
+        """`@ns.route("/<id>")` on a flask-restx `Resource`: a route per HTTP method the class defines."""
+        cname = text(cls.child_by_field_name("name"), self.src)
+        body = cls.child_by_field_name("body")
+        for m in body.named_children if body is not None else ():
+            f = m.child_by_field_name("definition") if m.type == "decorated_definition" else m
+            if f is None or f.type != "function_definition":
+                continue
+            mname = text(f.child_by_field_name("name"), self.src)
+            if mname.upper() not in HTTP_METHODS:
+                continue
+            handler = f"{cname}.{mname}"
+            hid = next((s.id for s in self.symbols_by_name.get(mname, []) if s.qualified_name.endswith(handler)), None)
+            self.add_endpoint(d, mname.upper(), p, "flask-restx", None, handler_name=handler, handler_id=hid,
+                              router=recv)
+
     def _maybe_test_client(self, target: Node | None, value: Node | None) -> None:
         """`TestClient(app)` / `app.test_client()`: requests through it exercise this app, they are not outbound."""
         if target is None or value is None or value.type != "call":
@@ -69,40 +110,46 @@ class PyScanner(BaseScanner):
         func = next((c for c in n.children if c.type in ("function_definition", "class_definition")), None)
         fname_node = func.child_by_field_name("name") if func is not None else None
         hname = text(fname_node, self.src) if fname_node is not None else None
-        hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind in ("function", "method")), None)
         for d in n.children:
-            if d.type != "decorator":
-                continue
-            call = next((c for c in d.children if c.type == "call"), None)
-            if call is None:
-                continue
-            fn = call.child_by_field_name("function")
-            args = call.child_by_field_name("arguments")
-            if fn is None or args is None or fn.type != "attribute":
-                continue
-            recv = text(fn.child_by_field_name("object"), self.src).split(".")[-1]
-            verb = text(fn.child_by_field_name("attribute"), self.src)
-            if verb not in PY_REGISTRARS:
-                continue
-            arg_nodes = [c for c in args.children if c.is_named]
-            if not arg_nodes:
-                continue
-            p = self.route_path(arg_nodes[0], recv, d) if arg_nodes[0].type == "string" else None
-            if p is None or not p.startswith("/"):
-                continue
-            methods = [VERB_BY_NAME[verb]] if verb in VERB_BY_NAME else ["ANY"]
-            if verb in ("route", "api_route"):
-                for a in arg_nodes:
-                    if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) == "methods":
-                        found = re.findall(r"[\"']([A-Za-z]+)[\"']", text(a.child_by_field_name("value"), self.src))
-                        methods = [m.upper() for m in found if m.upper() in HTTP_METHODS] or ["ANY"]
-                if verb == "route" and methods == ["ANY"]:
-                    methods = ["GET"]                     # Flask default
-            if verb == "websocket":
-                continue
-            framework = "flask" if verb == "route" or recv in ("bp", "blueprint") else "fastapi"
-            for m in methods:
-                self.add_endpoint(d, m, p, framework, None, handler_name=hname, handler_id=hid, router=recv)
+            call = next((c for c in d.children if c.type == "call"), None) if d.type == "decorator" else None
+            if call is not None:
+                self._registration(call, d, hname, func)
+
+    def _registration(self, call: Node, d: Node, hname: str | None, func: Node | None = None) -> bool:
+        """`@router.get("/x")` on `hname` (`d`: the decorator) — or applied by hand, `router.post("/register")(fn)`.
+        True when `call` is a route registrar."""
+        hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind in ("function", "method")), None)
+        fn = call.child_by_field_name("function")
+        args = call.child_by_field_name("arguments")
+        if fn is None or args is None or fn.type != "attribute":
+            return False
+        recv = text(fn.child_by_field_name("object"), self.src).split(".")[-1]
+        verb = text(fn.child_by_field_name("attribute"), self.src)
+        if verb not in PY_REGISTRARS:
+            return False
+        arg_nodes = [c for c in args.children if c.is_named]
+        if not arg_nodes:
+            return False
+        p = self.route_path(arg_nodes[0], recv, d) if arg_nodes[0].type == "string" else None
+        if p is None or not p.startswith("/"):
+            return False
+        if func is not None and func.type == "class_definition" and verb == "route":
+            self._resource(func, d, p, recv)
+            return True
+        methods = [VERB_BY_NAME[verb]] if verb in VERB_BY_NAME else ["ANY"]
+        if verb in ("route", "api_route"):
+            for a in arg_nodes:
+                if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) == "methods":
+                    found = re.findall(r"[\"']([A-Za-z]+)[\"']", text(a.child_by_field_name("value"), self.src))
+                    methods = [m.upper() for m in found if m.upper() in HTTP_METHODS] or ["ANY"]
+            if verb == "route" and methods == ["ANY"]:
+                methods = ["GET"]                     # Flask default
+        if verb == "websocket":
+            return True
+        framework = "flask" if verb == "route" or recv in ("bp", "blueprint") else "fastapi"
+        for m in methods:
+            self.add_endpoint(d, m, p, framework, None, handler_name=hname, handler_id=hid, router=recv)
+        return True
 
     def _aiohttp(self, n: Node, fn: Node, args: Node) -> bool:
         """aiohttp: `app.router.add_get('/x', h)`, `router.add_route('*', '/x', h)`, and the bound method
@@ -140,7 +187,7 @@ class PyScanner(BaseScanner):
         `app.mount("/api/v1", app=api)` — of a router of this file, or of one imported (`tag_router`,
         `users.router`), which `compose` follows to its file."""
         verb = text(fn.child_by_field_name("attribute"), self.src)
-        if verb not in ("include_router", "register_blueprint", "mount"):
+        if verb not in ("include_router", "register_blueprint", "mount", "add_namespace"):
             return False
         parent = text(fn.child_by_field_name("object"), self.src).split(".")[-1]
         pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
@@ -151,6 +198,10 @@ class PyScanner(BaseScanner):
             child = kw.get("app") or (pos[1] if len(pos) > 1 else None)
             if p is None:
                 return True
+        elif verb == "add_namespace":                               # api.add_namespace(ns, "/challenges")
+            v = kw.get("path") or (pos[1] if len(pos) > 1 else None)
+            p = (self.path_of(v) or "") if v is not None else ""
+            child = pos[0] if pos else None
         else:
             v = kw.get("prefix") or kw.get("url_prefix")
             p = (self.path_of(v) or "") if v is not None else ""
@@ -266,6 +317,11 @@ class PyScanner(BaseScanner):
             return
         if fn.type == "identifier":
             self._router_arguments(n, fn, args)
+        if fn.type == "call":                                       # router.post("/register")(register_user)
+            pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
+            if len(pos) == 1 and pos[0].type in ("identifier", "attribute"):
+                self._registration(fn, n, text(pos[0], self.src).split(".")[-1])
+            return
         if self._aiohttp(n, fn, args) or fn.type != "attribute" or self._mount(n, fn, args):
             return
         callee = self.callee_of(fn)

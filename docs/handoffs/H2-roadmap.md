@@ -43,15 +43,18 @@
   gabaritos (kratos 10,5 → 96,1 % com as 60 operações do cliente gerado; alertmanager 0 → 93,8 %; go-kit 0 → 78,6 %).
   **Servidores gerados Go (2026-10-16):** grpc-gateway (`mux.Handle("GET", pattern_X, h)`, path decodificado do
   `runtime.NewPattern`) e servidor go-swagger (`o.handlers["GET"]["/x"]` sob o `basePath` do `embedded_spec.go`);
-  rotas Go P 99,1 %, R 90,5 → 97,8 % (argo-cd R 3,5 → 96,5 %, alertmanager 0 → 100 %).
+  rotas Go P 99,1 %, R 90,5 → 97,8 % (argo-cd R 3,5 → 96,5 %, alertmanager 0 → 100 %). **flask-restx e decorador
+  aplicado à mão (2026-10-16):** `Namespace`/`Api` são routers, `add_namespace` monta, cada método de um `Resource` é
+  rota; `router.post("/x")(fn)` é rota de `fn`; rotas Python fora do Django P 96,1 → 99,0 %, R 93,4 → 98,0 % (CTFd
+  R 46,9 → 100 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-10/` — corpus v2, 42 repos, com os
-  servidores gerados Go (a `-9` é a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-11/` — corpus v2, 42 repos, com o
+  flask-restx (a `-10` é a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -70,8 +73,9 @@
   projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). **Go fechado no essencial:** rotas
   P 99,1 % / R 97,8 %, chamadas P 100 % / R 93,6 % (sobram os tipos de router do kratos, `prefix-in-router-type`, 12;
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
-  `client-in-field`). Próximo: Python fora do Django — o flask-restx do CTFd (17) e o registro de plugins do
-  dispatch. Depois, decidir se o TS (etapa 2 do grafo + `setGlobalPrefix` + clientes gerados TS) entra no H2 ou
+  `client-in-field`). **Python fora do Django fechado no essencial:** rotas P 99,0 % / R 98,0 % (sobram o registro
+  de plugins do dispatch, `router-from-registry`, 4, preenchido em runtime — limitação; e `multi-app-repo`, 4, no
+  fastapi). Próximo: decidir se o TS (etapa 2 do grafo + `setGlobalPrefix` + clientes gerados TS) entra no H2 ou
   num incremento próprio (recomendação de 2026-10-16: entra, reaproveita o que existe), e então a Fase 5. TS por último: a etapa 2 para TS (o `mount_rule`
   do TS; `prefix-other-file` do ghost 256, express-realworld 19), `global-prefix` 238, `custom-registrar` 353,
   `prefix-in-client-wrapper`, com oazapfts e openapi-ts do item 7.
@@ -239,6 +243,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     `route-patterns-go/internal/{gateway,swaggerserver}`
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
   rotas por arquivo do Next.js, flask-restx
+  - [x] *(2026-10-16)* flask-restx (também `flask_restplus`/`flask_restful`), adiantado pelo H2-D18 (o Python do
+    portfólio é Flask/FastAPI): `Namespace`/`Api` como routers, `Api(blueprint)` montado no blueprint,
+    `add_namespace(ns, path)` como montagem entre arquivos, uma rota por método do `Resource`; no caminho, o
+    decorador aplicado à mão (`router.post("/x")(fn)`, dispatch). Fixtures `route-patterns-py/app/{restx,decorcall.py}`
 - [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
 - [x] Decidir H2-D9 e H2-D10 — *(2026-10-15)* as duas recomendações do relatório aceitas (itens 6 e 7)
 
@@ -512,3 +520,14 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   subiu para 111,7 s nesta rodada, mas todos os repos (TS, Python e C# inclusive) e o parse subiram 20–25 %:
   rodando ghost, netbox e gitea de novo com o código de antes e de depois, os tempos ficaram iguais — carga da
   máquina, não regressão. Nova baseline `2026-10-16-v2-baseline-10`.
+- **2026-10-16** — flask-restx e decorador aplicado à mão (Python fora do Django, H2-D18). `Namespace`/`Api` de
+  `flask_restx`/`flask_restplus`/`flask_restful` são routers (`path=` do namespace, `prefix=` do `Api`); o `Api` é
+  montado no blueprint ou app com que é construído; `add_namespace(ns, path)` é montagem, também de namespace de
+  outro arquivo; `@ns.route` numa classe `Resource` dá uma rota por método HTTP definido (`Classe.metodo`). O
+  `register_user = router.post("/register")(register_user)` do dispatch é rota de `register_user`. Diff contra
+  `-10` (2 repos) julgado certo: CTFd troca 40 rotas `GET` sem prefixo por 155 sob `/api/v1/<namespace>` (a contagem
+  de um `ast` sobre `CTFd/api`: 155 em 90 classes) e 4 rotas de blueprint voltam (uma rota restx de mesmo id as
+  escondia); dispatch +1. Gabaritos: categorias `restx-resource` (17) e `decorator-call` (1) removidas, 7 amostras
+  do CTFd julgadas de novo (certas). Rotas Python fora do Django P 96,1 → 99,0 %, R 93,4 → 98,0 %. HTTP do corpus
+  111,7 → 113,8 s; o mattermost levou 1369 s nesta rodada (HTTP igual), mas sozinho, logo depois e com o
+  mesmo código, 249,6 s — máquina, não regressão. Nova baseline `2026-10-16-v2-baseline-11`.
