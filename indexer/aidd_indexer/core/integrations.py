@@ -3,7 +3,8 @@ makes with a literal (or template) path. Deterministic, tree-sitter based, no LL
 
 This module only orchestrates: per-directory context (route constants, env-var names) is collected
 for every file, then each parseable file is handed to the scanner its language module registers
-(`LanguageSupport.http_scanner`). What each language recognizes lives in
+(`LanguageSupport.http_scanner`), and last each language composes what crosses files (`BaseScanner.compose`)
+from the facts the files published. What each language recognizes lives in
 `languages/<lang>/http.py`; the shared expression → path machinery in `core/http_base.py`.
 A committed build bundle (a minified or hash-named `.js`) is left out: its routes and calls repeat the source's.
 """
@@ -22,6 +23,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
     tenant's conventions add to the scanners (route registrars / client methods of an internal SDK)."""
     out = HttpResult()
     by_dir: dict[str, PackageContext] = {}
+    scanners: dict[type, None] = {}
     extractors = [fx for fx in extractors if not built_bundle(fx.file.path, fx.src)]
     for fx in extractors:
         ctx = by_dir.setdefault(dir_of(fx.file.path), PackageContext(patterns))
@@ -38,10 +40,16 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
         scanner = lang.http_scanner if lang is not None else None
         if scanner is None:
             continue
+        scanners[scanner] = None
         try:
             scanner(repo, fx, ctx, out).scan()
         except Exception as e:  # noqa: BLE001 — a weird file must not stop the repo
             out.warnings.append(f"{fx.file.path}: http candidates skipped ({type(e).__name__}: {e})")
+    for scanner in scanners:                     # what crosses files: composed from the summaries the files left
+        try:
+            scanner.compose(out, repo)
+        except Exception as e:  # noqa: BLE001
+            out.warnings.append(f"{scanner.__name__}: cross-file composition skipped ({type(e).__name__}: {e})")
     _dedupe(out)
     return out
 

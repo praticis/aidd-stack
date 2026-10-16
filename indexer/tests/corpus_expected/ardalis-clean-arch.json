@@ -4,99 +4,80 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/Contributors",
-   "category": "endpoint-class"
+   "path": "/Contributors"
   },
   {
    "method": "POST",
-   "path": "/Contributors",
-   "category": "endpoint-class"
+   "path": "/Contributors"
   },
   {
    "method": "DELETE",
-   "path": "/Contributors/{ContributorId}",
-   "category": "endpoint-class"
+   "path": "/Contributors/{ContributorId}"
   },
   {
    "method": "GET",
-   "path": "/Contributors/{ContributorId}",
-   "category": "endpoint-class"
+   "path": "/Contributors/{ContributorId}"
   },
   {
    "method": "PUT",
-   "path": "/Contributors/{ContributorId}",
-   "category": "endpoint-class"
+   "path": "/Contributors/{ContributorId}"
   },
   {
    "method": "GET",
-   "path": "/Products",
-   "category": "endpoint-class"
+   "path": "/Products"
   },
   {
    "method": "POST",
-   "path": "/Products",
-   "category": "endpoint-class"
+   "path": "/Products"
   },
   {
    "method": "GET",
-   "path": "/Products/{ProductId}",
-   "category": "endpoint-class"
+   "path": "/Products/{ProductId}"
   },
   {
    "method": "GET",
-   "path": "/Projects",
-   "category": "endpoint-class"
+   "path": "/Projects"
   },
   {
    "method": "POST",
-   "path": "/Projects",
-   "category": "endpoint-class"
+   "path": "/Projects"
   },
   {
    "method": "DELETE",
-   "path": "/Projects/{ProjectId}",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}"
   },
   {
    "method": "GET",
-   "path": "/Projects/{ProjectId}",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}"
   },
   {
    "method": "PUT",
-   "path": "/Projects/{ProjectId}",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}"
   },
   {
    "method": "GET",
-   "path": "/Projects/{ProjectId}/IncompleteItems",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}/IncompleteItems"
   },
   {
    "method": "POST",
-   "path": "/Projects/{ProjectId}/ToDoItems",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}/ToDoItems"
   },
   {
    "method": "POST",
-   "path": "/Projects/{ProjectId}/ToDoItems/{ToDoItemId}",
-   "category": "endpoint-class"
+   "path": "/Projects/{ProjectId}/ToDoItems/{ToDoItemId}"
   },
   {
    "method": "POST",
-   "path": "/cart",
-   "category": "endpoint-class"
+   "path": "/cart"
   },
   {
    "method": "GET",
-   "path": "/cart/{CartId}",
-   "category": "endpoint-class"
+   "path": "/cart/{CartId}"
   },
   {
    "method": "POST",
-   "path": "/cart/{CartId}/checkout",
-   "category": "endpoint-class"
+   "path": "/cart/{CartId}/checkout"
   }
  ],
- "notes": "Manual, the three apps of the template (src/, sample/, MinimalClean/). Every route is a FastEndpoints endpoint class that declares it inside Configure() — Get(\"/Contributors\"), Post(CreateContributorRequest.Route) with the constant on the request class — so there is no Map*/attribute call to see and nothing is extracted (endpoint-class; the template's three apps share keys, multi-app-repo). No outbound calls outside tests."
+ "notes": "Manual, the three apps of the template (src/, sample/, MinimalClean/). Every route is a FastEndpoints endpoint class that declares it inside Configure() — Get(\"/Contributors\"), Post(CreateContributorRequest.Route) with the constant on the request class — so there is no Map*/attribute call to see and nothing is extracted (endpoint-class; the template's three apps share keys, multi-app-repo). No outbound calls outside tests. Since item 6 (2026-10-15) the endpoint classes are read (Configure() verbs; the Route constant by its qualified name, since every request class of a folder has one; $\"/{nameof(Project)}s\" as /Projects): all 19 come out right."
 }

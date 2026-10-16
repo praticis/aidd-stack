@@ -674,3 +674,60 @@ Diff against `2026-10-15-v2-baseline-2`, judged:
 
 New baseline: `2026-10-15-v2-baseline-3`.
 
+
+## Update: C# — inherited `[Route]` and endpoint classes (2026-10-15)
+
+H2b item 6, done first because the portfolio is mostly .NET (H2-D18). It needed the first step that crosses
+files: each file leaves a summary that is data only, and each language composes the summaries after the whole
+repository is scanned. The summary holds the facts the file publishes and the routes waiting on another file.
+The mount graph's step 2 will use the same step.
+
+- **Inherited `[Route]`, one level (H2-D10).** A controller with no `[Route]` of its own takes its base class's,
+  found by name in the repository, with `[controller]` filled from the derived class. Two classes with the base's
+  name (not two `partial` halves of one) give nothing. An action with no template is a route only under the
+  inherited prefix.
+- **Endpoint classes.**
+  - FastEndpoints: a class deriving from `Endpoint<...>`, `EndpointWithoutRequest` or `Ep.*` declares its routes
+    in `Configure()` with `Get("/x")`, `Post(CreateRequest.Route)`, or `Verbs(...)` with `Routes(...)`. Its
+    handler is the class's `HandleAsync` or `ExecuteAsync`.
+  - Ardalis.ApiEndpoints: an `EndpointBase*` class counts as a controller.
+- **Class constants by qualified name.** Every request class in an ardalis folder has a `Route`, and the
+  directory context used to keep only the last one collected. A class constant is now also known as
+  `Class.NAME`. A bare name with two values in the directory resolves only to the file's own definition.
+- **Found while judging the diff:**
+  - `$"/{nameof(Project)}s"` came out as `/{param}s`. A `nameof(X)` inside an interpolation is the text `X`.
+  - C# names the braces of an interpolation as nodes, so a local variable interpolated in C# was never resolved,
+    although the rule was meant for every language.
+- **`[action]`** drops the `Async` suffix, as ASP.NET Core does by default. The tokens stay lowercased because the
+  linker compares paths exactly and clients write them lowercased. Keeping the declared case broke the .NET
+  end-to-end link test, so case-insensitive matching for ASP.NET routes is left to the linker (F0.5).
+
+Diff against `2026-10-15-v2-baseline-3`: only the three repositories below changed, and no calls changed.
+
+- **jellyfin (−128 +162):**
+  - the 128 routes that lacked `/{controller}` now have it;
+  - 34 routes are new: template-less actions, and routes that used to collide in the dedupe (`/{genreName}` with
+    other controllers' `/{param}`);
+  - `GET /Items/Latest` now carries its real handler (`UserLibraryController`) instead of `ChannelsController`'s,
+    which is now `/channels/Items/Latest`.
+- **ardalis-clean-arch (+19):** all right.
+- **eshop-on-web (+1):** `POST /api/authenticate`, right.
+
+| Repository (routes) | P/R expected before | P/R expected now | P sampled before → now |
+|---|---|---|---|
+| jellyfin | 33.3 % / 25.0 % | 100 % / 100 % | 55 % → 100 % (20/20) |
+| ardalis-clean-arch | — / 0 % | 100 % / 100 % | — |
+| eshop-on-web | 100 % / 97.0 % | 100 % / 100 % | 100 % (20/20) |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| C# before | 90.4 % (85/94) | 94.6 % | 72.9 % (105/144) |
+| C# now | 100 % (94/94) | 100 % | 93.1 % (134/144) |
+
+- `inherited-route-attr` (9 missed, 9 wrong) and `endpoint-class` (20 missed) are gone.
+- The 10 C# routes still missed are clean-arch-dotnet's `route-by-name-convention`. That repository maps its
+  endpoint groups by reflection, which a convention describes better than the extractor.
+- C# calls are unchanged. Next in C#: `client-wrapper` (11 missed) and `field-in-interpolation` (8 missed,
+  4 wrong), then NSwag (item 7).
+
+New baseline: `2026-10-15-v2-baseline-4`.

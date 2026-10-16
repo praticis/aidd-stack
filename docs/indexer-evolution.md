@@ -30,8 +30,8 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `core/extract.py` | `FileExtractor`: parse tree-sitter + `queries.scm` → `SymbolInfo`, `CallInfo`, `ImportInfo`; delega a `LanguageSupport` nomes qualificados, visibilidade, docstrings, bindings de import e marcadores de entry point; `load_language()` com `GRAMMAR_ERRORS` |
 | `core/resolve.py` | `CALLS`: candidatos pelo nome do callee, **código de produção nunca aponta para símbolo de teste**, depois tipo estático do receiver (`LanguageSupport.resolve_receiver` → método no tipo ou em `supertypes` do repo = `receiver-type`; interface com `implementations` único = `receiver-type-impl` — em Go, pelo conjunto de métodos, sem contar fakes/mocks; em C#, o registro no DI decide quando há mais de um (`AddScoped<I, Impl>()`; cadeia `Decorate<I, D>()`: de fora → o decorator mais externo, de dentro de um decorator → o próximo para dentro); tipo conhecido sem o método = **sem aresta**, salvo quando o tipo tem base fora do repo: aresta para o tipo e seu implementador único com o nome do método = `inherited`/`inherited-impl`); antes de tudo, despacho de mediator declarado pela convenção (`dispatch:` → `core/dispatch.py`: `bus.SendAsync(new X())` → `Handle` de quem implementa `ICommandHandler<X, ..>` = `dispatch`) → same-file → same-module → unique-name (`-ambiguous` quando sobra mais de um); sobrecargas pela contagem de argumentos (`LanguageSupport.arity`/`call_arg_count`: opcionais e `params`/variádicos alargam a faixa) — com receiver tipado escolhe a sobrecarga (mesma aridade = todas, `-ambiguous`); no casamento por nome só corta palpites, a aresta continua `-ambiguous`; `IMPORTS` via `resolve_import()` → File/Module/Package; `link_symbols()` por linguagem |
 | `core/deps.py` | manifestos → `provides`/`requires` por repo (`LanguageSupport.manifest_deps`: go.mod, .csproj, package.json, pyproject/requirements), nomes normalizados por ecossistema; vão para o `Snapshot` e o linker cruza por tenant em `DEPENDS_ON` (Service→Service) — F0.5.1 |
-| `core/integrations.py` | orquestra os **candidatos HTTP**: contexto por diretório → `LanguageSupport.http_scanner` de cada arquivo — ver §3 |
-| `core/http_base.py` | `BaseScanner`: onde a rota mora (`prefix_for`, `region_of`, `route_path`, `mount`/`finish`), rota × cliente (`is_handler_like`), handlers, gravação (`add_endpoint`, `add_call`); `PackageContext`, tabela `OUTBOUND`, `split_callee`/`callee_of`; `convention_call()` aplica os `ScanPatterns` da convenção (`route_patterns`/`client_patterns`, em `core/scan_patterns.py`) antes das tabelas genéricas; handler embrulhado em middleware/opções resolve pelo argumento mais interno que é função do repo |
+| `core/integrations.py` | orquestra os **candidatos HTTP**: contexto por diretório → `LanguageSupport.http_scanner` de cada arquivo → `compose` de cada linguagem (o que atravessa arquivos) — ver §3 |
+| `core/http_base.py` | `BaseScanner`: onde a rota mora (`prefix_for`, `region_of`, `route_path`, `mount`/`finish`; entre arquivos, `compose` sobre os `facts` que cada arquivo publica e as rotas `Pending`), rota × cliente (`is_handler_like`), handlers, gravação (`add_endpoint`, `add_call`); `PackageContext`, tabela `OUTBOUND`, `split_callee`/`callee_of`; `convention_call()` aplica os `ScanPatterns` da convenção (`route_patterns`/`client_patterns`, em `core/scan_patterns.py`) antes das tabelas genéricas; handler embrulhado em middleware/opções resolve pelo argumento mais interno que é função do repo |
 | `core/http_expr.py` | expressão → path e método (`PathExpressions`, misturado ao `BaseScanner`): `path_of` por tipo de nó (string/template, nome, concatenação, chamada, objeto de request, `new Uri`, `x += e`), `method_from_args`; `collect_constants` (constantes do diretório) |
 | `core/http_scope.py` | escopos e ligações de nome de um arquivo (`Scopes`): da função mais interna para fora, parâmetro encerra a busca, `x += e`; `scope_id`, `in_function` |
 | `core/http_mounts.py` | grafo de montagem de um arquivo (`MountGraph`, `RouterKey`, `MountedRoot`): arestas de montagem, rotas por router, `apply` no fim do arquivo — a parte por arquivo do grafo que a etapa 2 compõe entre arquivos |
@@ -60,12 +60,14 @@ Pipeline de um repo (`cli.extract_tree` → `extract_and_resolve`): `list_files`
 
 ## 3. Como o extrator HTTP decide
 
-Dois passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_enclosing_symbol()`):
+Três passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_enclosing_symbol()`):
 
 1. **Contexto por diretório** (`PackageContext`): constantes de rota **do módulo ou da classe** (`const routeX = "/v1/x"`,
    `ORDERS_PATH = '/v1/orders'`, base URL com path `"https://host/v1"`, e as montadas de outras —
    `RouteItem = RouteCollection + "/{id}"`, resolvidas no primeiro uso por `route_const`) e nomes de env var que
    parecem base URL (`*_URL`, `*_HOST`, `*_ENDPOINT`). Locais de função não entram: são lidas por `Scopes.binding`.
+   Constante de classe vale também por `Classe.NOME`; nome com dois valores na pasta é ambíguo (só o do próprio
+   arquivo vale).
 2. **Scanner por linguagem** (`languages/<lang>/http.py`: `GoScanner`, `TsScanner`, `CsScanner`, `PyScanner`),
    todos herdando de `core/http_base.BaseScanner` (`scan()` = `run()` da linguagem + `finish()`), que concentra as
    peças reutilizáveis — algumas em módulos próprios (`http_expr`, `http_scope`, `http_mounts`):
@@ -91,6 +93,10 @@ Dois passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `_
      monta com prefixo. Entre arquivos ainda não (próxima etapa: resumo por arquivo, sem árvores — F1.13).
    - `normalize_path`: `:id`, `{id:int}`, `<int:id>`, `%s`, `${x}`, `[controller]` → `{param}`-style;
      remove base URL, query string, barra final. `path_key` = tudo vira `{param}` (chave de join do linker).
+3. **Composição entre arquivos** (`BaseScanner.compose`, uma vez por linguagem depois do scan): cada arquivo deixa
+   um resumo só de dados — `out.publish(tipo, nome, fato)` e rotas `Pending` (gravadas como o arquivo as escreve,
+   com o que falta para completá-las) — e a linguagem as resolve sem reabrir árvores (F1.13). Hoje: o `[Route]`
+   herdado do C#; a etapa 2 do grafo de montagem usa o mesmo caminho.
 
 Regras aprendidas no corpus (não regredir):
 
@@ -140,6 +146,11 @@ Regras aprendidas no corpus (não regredir):
 | `app.use('/api', router)` / Hono `app.route('/book', book)` / chi `r.Mount("/admin", adminRouter())` / `include_router(r, prefix=)` no mesmo arquivo: as rotas do router ficavam sem o prefixo, e a raiz dele era descartada | aresta de montagem + `finish()`; a raiz do sub-router montado vira a rota do prefixo (`GET /admin`) |
 | `r.With(paginate).Get("/", h)` dentro de um `Route`: o receiver era a cadeia, não o `r` da closure | cadeia só de `With`/`Use` é registro no próprio router |
 | bundle de build commitado (`static/assets/main-OdxfRQdf.js`) repetia rotas e chamadas da fonte | `.js` com nome de hash e linha > 500, ou com linha > 2000 e média > 200 por linha, fica fora da extração HTTP |
+| `class DevicesController : BaseJellyfinApiController` sem `[Route]` próprio: rotas sem o `/devices` e ações sem template perdidas (jellyfin: 26 de 60 controllers) | `[Route]` da classe base, **um nível** (H2-D10): cada arquivo publica suas classes com o `[Route]` (`cs.class`), a rota do controller sem prefixo fica `Pending` e `CsScanner.compose` aplica o da base achada pelo nome, com `[controller]` do derivado; nome ambíguo (duas classes não `partial`) não herda; ação sem template só é rota com o prefixo herdado |
+| FastEndpoints (`Get("/x")`, `Post(CreateRequest.Route)`, `Verbs(..)` + `Routes(..)` no `Configure()`) e Ardalis.ApiEndpoints (`EndpointBaseAsync.WithRequest<..>` com `[HttpPost("api/x")]`) não eram lidos | classe de endpoint: base `Endpoint<..>`/`EndpointWithoutRequest`/`Ep.*` com `Configure()` → as chamadas sem receiver dele, handler `HandleAsync`/`ExecuteAsync` da classe (`fastendpoints`); base `EndpointBase*` é controller |
+| `Post(UpdateProjectRequest.Route)` com um `Route` em cada classe de request da pasta pegava o último coletado | constante de classe também por `Classe.NOME`, procurado antes do nome solto; nome com dois valores na pasta é ambíguo: vale o do arquivo, senão nada |
+| `Get($"/{nameof(Project)}s")` gravado como `/{param}s`; e no C# a variável local interpolada (`$"{url}/x"`) nunca era resolvida | `nameof(X)` interpolado é o texto `X` (constante de compilação); as chaves da interpolação do C# são nós nomeados (`interpolation_brace`) e ficam fora da conta |
+| `[action]` num método `GetAsync` virava `getasync` | sem o sufixo `Async`, como o ASP.NET Core faz por padrão; `[controller]`/`[action]` em minúsculas porque o linker compara exato (sem distinção de caixa nas rotas ASP.NET: F0.5) |
 
 Limitações conhecidas (candidatas a evolução — ver handoffs): prefixos definidos em outro arquivo ou em
 outra função (`include_router(users.router, prefix=)` com o router importado, `r.Mount("/api/v1", apiv1.Routes())`,

@@ -58,11 +58,39 @@ GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "re
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
 
 
+class Pending(NamedTuple):
+    """A route recorded as its file writes it, whose prefix lives in another file. The language's `compose` resolves
+    it from the facts every file published, after the whole repo is scanned."""
+    endpoint: HttpEndpointInfo
+    rule: str               # which `compose` rule resolves it ("cs.inherited-route")
+    key: tuple              # what that rule looks up
+
+
 @dataclass
 class HttpResult:
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     calls: list[HttpCallInfo] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    # The per-file summaries composed after the scan — data only, never trees (F1.13): what a file publishes for the
+    # others (`facts[kind][name]` → one entry per declaration) and the routes waiting on them.
+    facts: dict[str, dict[str, list]] = field(default_factory=dict)
+    pending: list[Pending] = field(default_factory=list)
+
+    def publish(self, kind: str, name: str, fact) -> None:
+        self.facts.setdefault(kind, {}).setdefault(name, []).append(fact)
+
+
+def rebased(repo: RepoInfo, ep: HttpEndpointInfo, prefix: str) -> HttpEndpointInfo:
+    """`ep` under `prefix` (a mount, an inherited route), with the id of its new path."""
+    path = normalize_path(prefix.rstrip("/") + "/" + ep.path.lstrip("/"))
+    return replace(ep, path=path, raw_pattern=str(ep.raw_pattern),
+                   id=ids.http_endpoint(repo.tenant, repo.name, ep.method, path_key(path)))
+
+
+def replace_endpoints(out: HttpResult, plan: dict[int, list[HttpEndpointInfo]]) -> None:
+    """Each endpoint whose `id()` is in `plan` gives way to what the plan lists there (nothing = dropped)."""
+    if plan:
+        out.endpoints = [new for ep in out.endpoints for new in plan.get(id(ep), [ep])]
 
 
 class Region(NamedTuple):
@@ -82,10 +110,27 @@ class PackageContext:
         self.env_hints: set[str] = set()
         self.patterns = patterns or ScanPatterns()
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
+        self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
+        self._values: dict[str, object] = {}
+
+    def define(self, name: str, raw: str | None = None, parts: list | None = None) -> None:
+        value = raw if raw is not None else tuple(parts or ())
+        if self._values.setdefault(name, value) != value:
+            self.ambiguous.add(name)
+        if raw is not None:
+            self.route_consts[name] = raw
+        else:
+            self.const_parts[name] = list(parts or ())
 
     def route_const(self, name: str, _seen: tuple[str, ...] = ()) -> str | None:
         """Raw path of a module-level constant; one built from others (`RouteItem = RouteCollection + "/{id}"`)
-        is resolved on first use, since the constants it names may live in another file of the directory."""
+        is resolved on first use, since the constants it names may live in another file of the directory. `A.B`
+        is looked up as `A.B` (a class constant), else as `B`; a name with two values in the directory is unknown."""
+        if "." in name:
+            qualified = ".".join(name.split(".")[-2:])
+            name = qualified if qualified in self.route_consts or qualified in self.const_parts else name.split(".")[-1]
+        if name in self.ambiguous:
+            return None
         if name in self.route_consts:
             return self.route_consts[name]
         parts = self.const_parts.get(name)
@@ -206,11 +251,13 @@ class BaseScanner(PathExpressions):
 
     def finish(self) -> None:
         """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted."""
-        def rebase(ep: HttpEndpointInfo, prefix: str) -> HttpEndpointInfo:
-            path = normalize_path(prefix.rstrip("/") + "/" + ep.path.lstrip("/"))
-            return replace(ep, path=path, raw_pattern=str(ep.raw_pattern),
-                           id=ids.http_endpoint(self.repo.tenant, self.repo.name, ep.method, path_key(path)))
-        self.mounts.apply(self.out.endpoints, rebase, lambda ep: isinstance(ep.raw_pattern, MountedRoot))
+        self.mounts.apply(self.out.endpoints, lambda ep, prefix: rebased(self.repo, ep, prefix),
+                          lambda ep: isinstance(ep.raw_pattern, MountedRoot))
+
+    @classmethod
+    def compose(cls, out: HttpResult, repo: RepoInfo) -> None:
+        """Language hook, once per repo after every file is scanned: resolve the `out.pending` routes of this language
+        from `out.facts`."""
 
     def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
         """Pattern of a route registration on `receiver` (the call is `at`): what `path_of` accepts, plus what
@@ -341,15 +388,16 @@ class BaseScanner(PathExpressions):
 
     def add_endpoint(self, node: Node, method: str, raw_pattern: str, framework: str, handler_node: Node | None,
                      prefix: str | None = None, handler_name: str | None = None, handler_id: str | None = None,
-                     router: str | None = None) -> None:
+                     router: str | None = None) -> HttpEndpointInfo | None:
         """`router`: the receiver the route is registered on — its prefix (`prefix_for`) applies, and a mount later
-        in the file prefixes it again. `prefix`: given when there is no router (a Nest controller's)."""
+        in the file prefixes it again. `prefix`: given when there is no router (a Nest controller's). Returns the
+        route recorded (None for a sub-router root nothing can mount)."""
         if router is not None:
             if prefix is None:
                 prefix = self.prefix_for(router, node) or ""
             self.mounts.register(len(self.out.endpoints), self.router_key(router, node))
         elif isinstance(raw_pattern, MountedRoot):
-            return
+            return None
         prefix = prefix or ""
         pat = (raw_pattern or "").strip()
         m = re.match(r"^([A-Z]+)\s+(/.*)$", pat)
@@ -359,12 +407,14 @@ class BaseScanner(PathExpressions):
         path = normalize_path(full)
         if handler_name is None and handler_node is not None:
             handler_name, handler_id = self.resolve_handler(handler_node)
-        self.out.endpoints.append(HttpEndpointInfo(
+        ep = HttpEndpointInfo(
             id=ids.http_endpoint(self.repo.tenant, self.repo.name, method or "ANY", path_key(path)),
             method=method or "ANY", path=path, raw_pattern=raw_pattern if isinstance(raw_pattern, MountedRoot) else str(raw_pattern),
             framework=framework, file_id=self.fx.file.id, line=node.start_point[0] + 1,
             handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
-        ))
+        )
+        self.out.endpoints.append(ep)
+        return ep
 
     def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
         path = normalize_path(raw_path)

@@ -1,5 +1,6 @@
-"""C# / ASP.NET Core: attribute-routed controllers + minimal APIs (MapGroup chains);
-HttpClient.*Async, HttpRequestMessage, Refit, Flurl, RestSharp outbound."""
+"""C# / ASP.NET Core: attribute-routed controllers (with the `[Route]` of their base class, one level), endpoint
+classes (FastEndpoints, Ardalis.ApiEndpoints) and minimal APIs (MapGroup chains); HttpClient.*Async,
+HttpRequestMessage, Refit, Flurl, RestSharp outbound."""
 
 from __future__ import annotations
 
@@ -7,11 +8,16 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import BaseScanner, OUTBOUND, STRING_NODES, first_string, split_callee, text, walk
+from ...core.http_base import (BaseScanner, HttpResult, OUTBOUND, Pending, STRING_NODES, first_string, rebased,
+                               replace_endpoints, split_callee, text, walk)
+from ...core.model import RepoInfo
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
+ENDPOINT_BASE = re.compile(r"^(EndpointBase(Sync|Async)?|BaseEndpoint|BaseAsyncEndpoint)$")   # Ardalis.ApiEndpoints
+FAST_ENDPOINT = re.compile(r"^(Endpoint|EndpointWithoutRequest|EndpointWithMapping|EndpointWithMapper|Ep)$")
+FE_VERBS = {"Get": "GET", "Post": "POST", "Put": "PUT", "Patch": "PATCH", "Delete": "DELETE", "Head": "HEAD", "Options": "OPTIONS"}
 FLURL_VERBS = {"GetAsync": "GET", "GetJsonAsync": "GET", "GetStringAsync": "GET", "GetStreamAsync": "GET",
                "PostAsync": "POST", "PostJsonAsync": "POST", "PostStringAsync": "POST", "PostUrlEncodedAsync": "POST",
                "PutAsync": "PUT", "PutJsonAsync": "PUT", "PatchAsync": "PATCH", "PatchJsonAsync": "PATCH",
@@ -57,18 +63,41 @@ class CsScanner(BaseScanner):
                 out.append((text(nm, self.src) if nm is not None else "", lit, a))
         return out
 
+    def _bases(self, cls: Node) -> list[str]:
+        """The base types as dotted names without type arguments: `Endpoint<Req, Res>` → `Endpoint`,
+        `EndpointBaseAsync.WithRequest<R>.WithActionResult<T>` → `EndpointBaseAsync.WithRequest.WithActionResult`."""
+        bl = next((c for c in cls.children if c.type == "base_list"), None)
+        out = []
+        for b in (c for c in bl.children if c.is_named) if bl is not None else ():
+            name = re.sub(r"\s+", "", text(b, self.src)).split("(")[0]
+            while re.search(r"<[^<>]*>", name):
+                name = re.sub(r"<[^<>]*>", "", name)
+            out.append(name.removeprefix("global::"))
+        return out
+
     def _controller(self, cls: Node) -> None:
-        prefixes = [lit for name, lit, _ in self._attrs(cls) if name in ("Route", "RoutePrefix") and lit is not None]
+        attrs = self._attrs(cls)
+        prefixes = [lit for name, lit, _ in attrs if name in ("Route", "RoutePrefix") and lit is not None]
         cname = cls.child_by_field_name("name")
         cname_txt = text(cname, self.src) if cname is not None else ""
+        bases = self._bases(cls)
+        if cname_txt:                              # what a derived controller in another file inherits
+            partial = any(c.type == "modifier" and text(c, self.src) == "partial" for c in cls.children)
+            self.out.publish("cs.class", cname_txt, (tuple(prefixes), partial))
         controller = re.sub(r"Controller$", "", cname_txt)
         body = cls.child_by_field_name("body")
-        if body is None:
+        if body is None or self._fast_endpoint(cls, body, bases):
             return
-        is_controller = bool(prefixes) or cname_txt.endswith("Controller") or any(name == "ApiController" for name, _, _ in self._attrs(cls))
+        names = {name for name, _, _ in attrs}
+        segments = {seg for b in bases for seg in b.split(".")}
+        is_controller = "NonController" not in names and (
+            bool(prefixes) or cname_txt.endswith("Controller") or bool(names & {"ApiController", "Controller"})
+            or any(b.split(".")[-1].endswith(("Controller", "ControllerBase")) for b in bases)
+            or any(ENDPOINT_BASE.match(seg) for seg in segments))
         if not is_controller:
             return
         prefix = prefixes[0] if prefixes else ""
+        inherit = not prefixes and bool(bases)     # no [Route] of its own: the base class's, if it has one
         for m in body.children:
             if m.type != "method_declaration":
                 continue
@@ -82,13 +111,65 @@ class CsScanner(BaseScanner):
             hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind == "method"), None)
             for method, lit, a in routes:
                 tmpl = lit if lit is not None else (extra[0] if extra else "")
-                if not prefixes and not tmpl:
+                absolute = tmpl.startswith(("/", "~/"))
+                if not prefixes and not tmpl and not inherit:
                     continue                    # conventional routing ({controller}/{action}): no path of its own here
-                full = tmpl if (tmpl.startswith("/") or tmpl.startswith("~/")) else (prefix.rstrip("/") + "/" + tmpl).rstrip("/")
-                full = full.replace("~/", "/")
-                full = re.sub(r"\[controller\]", controller.lower(), full, flags=re.I)
-                full = re.sub(r"\[action\]", (hname or "").lower(), full, flags=re.I)
-                self.add_endpoint(a, method, full or "/", "aspnet", None, handler_name=hname, handler_id=hid)
+                full = tmpl if absolute else (prefix.rstrip("/") + "/" + tmpl).rstrip("/")
+                full = _tokens(full.replace("~/", "/"), controller, hname or "")
+                ep = self.add_endpoint(a, method, full or "/", "aspnet", None, handler_name=hname, handler_id=hid)
+                if inherit and not absolute and ep is not None:
+                    self.out.pending.append(Pending(ep, "cs.inherited-route",
+                                                    (tuple(b.split(".")[-1] for b in bases), controller, hname or "", not tmpl)))
+
+    def _fast_endpoint(self, cls: Node, body: Node, bases: list[str]) -> bool:
+        """FastEndpoints: a class deriving from `Endpoint<...>` (`EndpointWithoutRequest`, `Ep.Req<..>.Res<..>`) that
+        declares its routes in `Configure()` — `Get("/x")`, `Post(CreateRequest.Route)`, `Verbs(Http.POST)` +
+        `Routes("/x")`; the handler is its `HandleAsync`/`ExecuteAsync`."""
+        if not any(FAST_ENDPOINT.match(seg) for b in bases for seg in b.split(".")):
+            return False
+        methods = {text(m.child_by_field_name("name"), self.src): m for m in body.children
+                   if m.type == "method_declaration" and m.child_by_field_name("name") is not None}
+        configure = methods.get("Configure")
+        if configure is None:
+            return False
+        hname = next((n for n in ("HandleAsync", "ExecuteAsync") if n in methods), None)
+        first, last = cls.start_point[0] + 1, cls.end_point[0] + 1
+        hid = next((s.id for s in self.symbols_by_name.get(hname or "", [])
+                    if s.kind == "method" and first <= s.line_start <= last), None)
+        verbs: list[str] = []
+        for d in walk(configure):
+            kids = [c for c in d.children if c.is_named] if d.type == "invocation_expression" else []
+            if len(kids) < 2 or kids[0].type != "identifier" or kids[-1].type != "argument_list":
+                continue                        # only the endpoint's own calls: `Get(...)`, not `s.Get(...)`
+            name = text(kids[0], self.src)
+            args = [self._unwrap_arg(c) for c in kids[-1].children if c.is_named]
+            if name == "Verbs":
+                verbs = [v for a in args if (v := re.sub(r"^Http\.", "", unquote(text(a, self.src))).upper()) in HTTP_METHODS]
+                continue
+            methods_here = [FE_VERBS[name]] if name in FE_VERBS else verbs if name == "Routes" else []
+            for a in args:
+                p = self.path_of(a)
+                for method in methods_here if p is not None else ():
+                    self.add_endpoint(d, method, p, "fastendpoints", None, handler_name=hname, handler_id=hid)
+        return True
+
+    @classmethod
+    def compose(cls, out: HttpResult, repo: RepoInfo) -> None:
+        """A controller without a `[Route]` of its own takes its base class's (`[Route("[controller]")]` on
+        `BaseApiController`), one level up: the base is found by name in the repo — two classes with that name (not
+        `partial` halves of one) give nothing. An action with no template is a route only under that prefix."""
+        classes = out.facts.get("cs.class", {})
+        plan = {}
+        for p in out.pending:
+            if p.rule != "cs.inherited-route":
+                continue
+            bases, controller, action, root = p.key
+            route = _inherited_route(classes, bases)
+            if route is not None:
+                plan[id(p.endpoint)] = [rebased(repo, p.endpoint, _tokens(route, controller, action))]
+            elif root:
+                plan[id(p.endpoint)] = []
+        replace_endpoints(out, plan)
 
     def _refit(self, iface: Node) -> None:
         body = iface.child_by_field_name("body")
@@ -217,3 +298,22 @@ class CsScanner(BaseScanner):
                 self.add_call(n, method, p, via)
                 return
 
+
+def _tokens(path: str, controller: str, action: str) -> str:
+    """ASP.NET route tokens: `[controller]` is the class name without `Controller`, `[action]` the method name
+    without `Async` (`SuppressAsyncSuffixInActionNames`, on by default). Lowercased, the way clients write them: the
+    framework matches without case, the linker exactly (a case-insensitive match for ASP.NET routes is F0.5's)."""
+    path = re.sub(r"\[controller\]", lambda _: controller.lower(), path, flags=re.I)
+    return re.sub(r"\[action\]", lambda _: re.sub(r"async$", "", action.lower()), path, flags=re.I)
+
+
+def _inherited_route(classes: dict[str, list], bases: tuple[str, ...]) -> str | None:
+    """The `[Route]` of the first base that is a class of this repo; None when it has none or the name is ambiguous."""
+    for b in bases:
+        decls = classes.get(b)
+        if not decls:
+            continue
+        if sum(1 for _, partial in decls if not partial) > 1:
+            return None
+        return next((routes[0] for routes, _ in decls if routes), None)
+    return None

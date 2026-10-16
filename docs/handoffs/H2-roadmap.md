@@ -21,16 +21,18 @@
   arquivo: closures e montagens do mesmo arquivo) feita em 2026-10-15 — chi 14 → 75 % de precisão, fastify,
   Hono e NodeBB sobem; `prefix-other-scope` e `mount-same-scope` saem do ranking. **Reciclagem antes da etapa 2
   (2026-10-15):** escopos, expressões de path, grafo de montagem e tipos de nó saíram do `http_base.py` para
-  módulos próprios; corpus idêntico nos 39 repos. Prioridade do portfólio registrada (H2-D18).
-- **Incremento atual:** H2b — Fase 4, ordem a confirmar sob o H2-D18 (ver "Próximo passo").
+  módulos próprios; corpus idêntico nos 39 repos. Prioridade do portfólio registrada (H2-D18). **Item 6 fechado
+  (2026-10-15):** `[Route]` herdado (um nível) e classes de endpoint (FastEndpoints, ApiEndpoints), com o primeiro
+  passo entre arquivos (`compose`); rotas C# P 94,6 → 100 %, R 72,9 → 93,1 % nos gabaritos.
+- **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-3/` — corpus v2, 39 repos, com a etapa 1
-  do grafo de montagem (a `-2` é a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é o v2 com o extrator da
-  Fase 3; a de 2026-10-14 fica como referência do v1).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-15-v2-baseline-4/` — corpus v2, 39 repos, com o item 6
+  (a `-3` é a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+  o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
   `PYTHONPATH`, então não precisa rebuild a cada mudança):
@@ -44,9 +46,9 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo (proposto sob o H2-D18, a confirmar):** primeiro o que falta no .NET — item 6 (`[Route]` herdado:
-  9 errados + 9 faltando no jellyfin; classes de endpoint: 20 em 2 repos; `route-by-name-convention`: 10), as
-  chamadas C# do item 5 (`client-wrapper` 11, `field-in-interpolation` 8 + 4 errados) e o NSwag do item 7. Depois
+- **Próximo passo (H2-D18):** o resto do .NET — as chamadas C# do item 5 (`client-wrapper` 11,
+  `field-in-interpolation` 8 + 4 errados) e o NSwag do item 7 (`route-by-name-convention`, 10, fica para a
+  convenção do projeto). Depois
   o item 2, etapa 2, que é o maior ganho de Go e Python — entre arquivos (`prefix-other-file`: Go 863, Python 230:
   o router exportado por um arquivo e montado em outro, `include_router(users.router)`, `r.Mount("/api/v1",
   apiv1.Routes())`) e helpers que recebem o router (`router-as-param`, Go 102) —, com o `route-chain` do Go (216)
@@ -76,7 +78,7 @@
 | H2-D15 | 2026-10-15 | Gabarito com spec = **spec + rotas conferidas no código**: rota que só existe na spec (sem registro no código) sai; rota real fora da spec, achada ao conferir um item extraído, entra | A spec documenta a API pública, não tudo o que o código serve; sem isso a precisão contra o gabarito pune rotas certas (UI, redirects, health) |
 | H2-D16 | 2026-10-15 | Item que precisa de mais de uma correção recebe **uma** categoria: a mais específica além do grafo de montagem (`m.Combo("/x").Get(h)` dentro de closure = `route-chain`; closure + mount em outro arquivo = `prefix-scope-and-file`) | O ranking diz qual regra destrava o quê; o grafo de montagem aparece em quase tudo e esconderia as outras |
 | H2-D17 | 2026-10-15 | No resumo por linguagem, item da amostra conta na linguagem **do seu arquivo**, e o gabarito declara `language` por tipo quando difere da do repo (a UI React de um servidor Go). Cada categoria traz o **nº de repos** em que aparece | Repos mistos (backend + UI) misturavam linguagens; um repo grande (netbox, 1256 operações) não pode ranquear uma categoria sozinho |
-| H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo, TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
+| H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo (o Python é FastAPI/Flask, não Django), TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus; Django + DRF (item 8) segue adiado | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -173,7 +175,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   (`data-taken-for-handler`, gotify)
 - [ ] **4. `route-chain`** (gitea `Combo`, builders gorilla, express `router.route()`)
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
-- [ ] **6. C#:** herança de `[Route]` (H2-D10, aceito: um nível) e classes de endpoint (FastEndpoints, ApiEndpoints)
+- [x] **6. C#:** herança de `[Route]` (H2-D10, aceito: um nível) e classes de endpoint (FastEndpoints, ApiEndpoints)
+  *(2026-10-15)* — primeiro passo entre arquivos (`facts` + `Pending` → `CsScanner.compose`); constante de classe
+  por `Classe.NOME`; `nameof(X)` e variável local em interpolação do C#; `[action]` sem `Async`. Fixtures em
+  `route-patterns-cs` (herança entre arquivos, base ambígua, FastEndpoints, ApiEndpoints)
 - [ ] **7. Clientes gerados** (H2-D9, aceito): oazapfts (immich), openapi-generator Go/TS (kratos), NSwag e
   openapi-fetch (v1) — `via: generated-client`, fixture por gerador
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
@@ -192,6 +197,12 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
   - na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda
   - custo do HTTP no netbox: 49 s de 107 s, com 0 rotas e 0 chamadas (zulip 17 s de 47 s) — perfilar junto do F1.13
+- [ ] Pendências do item 6, fora do corpus atual (medir quando a fatia .NET crescer):
+  - linker: rotas ASP.NET casadas sem distinção de caixa (F0.5) — o extrator mantém `[controller]` em minúsculas
+    porque o linker compara exato
+  - actions herdadas de controller base abstrato (CRUD genérico) — 0 no corpus
+  - FastEndpoints: `RoutePrefix` global e `Group<T>()` — 0 no corpus
+  - herança de `[Route]` em mais de um nível (H2-D10 decidiu um)
 
 ## Taxonomia de erros
 
@@ -337,3 +348,14 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   corpus idêntico a `2026-10-15-v2-baseline-3` nos 39 repos (ids, handlers e callers); a saída do corpus agora
   mostra o tempo do HTTP por repo (`(http Xs)`). Prioridade do portfólio registrada como H2-D18 (.NET > Go/Python >
   TS), com a ordem da Fase 4 proposta em "Próximo passo". Dívidas adiadas na Fase 5. A baseline não muda.
+- **2026-10-15** — H2b, Fase 4 item 6 (C#), primeiro sob o H2-D18. Primeiro passo entre arquivos: cada arquivo
+  publica fatos (`out.publish`) e deixa rotas `Pending`; `BaseScanner.compose` roda uma vez por linguagem depois do
+  scan, sem árvores (F1.13). `[Route]` da classe base, um nível, achada pelo nome (nome ambíguo não herda; ação sem
+  template só com o prefixo herdado); FastEndpoints (`Configure()`) e Ardalis.ApiEndpoints. Constante de classe
+  também por `Classe.NOME`, nome com dois valores na pasta só vale no próprio arquivo (o ardalis tem um `Route` em
+  cada request). No julgamento: `nameof(X)` em interpolação, e as chaves da interpolação do C# (nós nomeados)
+  impediam a regra da variável local interpolada. Tentado e revertido: `[controller]` na caixa declarada — o teste
+  de ponta a ponta do .NET quebra porque o linker compara exato (pendência F0.5). Diff contra `-3`: só jellyfin
+  (−128 +162), ardalis (+19) e eshop-on-web (+1), todos certos; nenhuma chamada muda. Rotas C# nos gabaritos:
+  P 94,6 → 100 %, R 72,9 → 93,1 %; jellyfin P/R 33/25 → 100/100 %. Python do portfólio = FastAPI/Flask (H2-D18).
+  Nova baseline `2026-10-15-v2-baseline-4`.

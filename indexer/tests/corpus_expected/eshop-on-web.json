@@ -12,8 +12,7 @@
  "endpoints": [
   {
    "method": "POST",
-   "path": "/api/authenticate",
-   "category": "endpoint-class"
+   "path": "/api/authenticate"
   },
   {
    "method": "GET",
@@ -176,7 +175,7 @@
    "category": "client-wrapper"
   }
  ],
- "notes": "Manual, the whole solution (archived reference app). Routes: minimal-API endpoint classes in PublicApi (app.MapGet(\"api/catalog-items/{catalogItemId}\", ...)) and MVC controllers with [Route(\"[controller]/[action]\")] all come out right; the one miss is AuthenticateEndpoint, an Ardalis.ApiEndpoints class (EndpointBaseAsync, not a Controller) with [HttpPost(\"api/authenticate\")] (endpoint-class). Razor Pages (Web/Pages) are pages, not listed. H2-D10: BaseApiController carries [Route(\"api/[controller]/[action]\")] but no class derives from it (0). Calls: the Blazor admin goes through its own HttpService (HttpGet<T>(\"catalog-items\"), base URL from config) — client-wrapper, nothing extracted; GetFromJsonAsync<UserInfo>(\"User\") is a single relative segment, not taken for a path (single-segment-relative) — and it targets GET /user of the Web app, so even when extracted the linker would need case-insensitive matching (ASP.NET routes are).",
+ "notes": "Manual, the whole solution (archived reference app). Routes: minimal-API endpoint classes in PublicApi (app.MapGet(\"api/catalog-items/{catalogItemId}\", ...)) and MVC controllers with [Route(\"[controller]/[action]\")] all come out right; the one miss is AuthenticateEndpoint, an Ardalis.ApiEndpoints class (EndpointBaseAsync, not a Controller) with [HttpPost(\"api/authenticate\")] (endpoint-class). Razor Pages (Web/Pages) are pages, not listed. H2-D10: BaseApiController carries [Route(\"api/[controller]/[action]\")] but no class derives from it (0). Calls: the Blazor admin goes through its own HttpService (HttpGet<T>(\"catalog-items\"), base URL from config) — client-wrapper, nothing extracted; GetFromJsonAsync<UserInfo>(\"User\") is a single relative segment, not taken for a path (single-segment-relative) — and it targets GET /user of the Web app, so even when extracted the linker would need case-insensitive matching (ASP.NET routes are). Since item 6 (2026-10-15) EndpointBase* classes count as controllers: POST /api/authenticate comes out right.",
  "checked": {
   "endpoints": [
    {

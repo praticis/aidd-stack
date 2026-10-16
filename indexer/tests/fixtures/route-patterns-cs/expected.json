@@ -34,6 +34,61 @@
    "method": "GET",
    "path": "/api/reports/{id}",
    "handler": "Get"
+  },
+  {
+   "method": "GET",
+   "path": "/devices",
+   "handler": "GetDevices"
+  },
+  {
+   "method": "GET",
+   "path": "/devices/Info",
+   "handler": "GetDeviceInfo"
+  },
+  {
+   "method": "POST",
+   "path": "/devices/Options",
+   "handler": "UpdateOptions"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "Health"
+  },
+  {
+   "method": "GET",
+   "path": "/widgets/{id}",
+   "handler": "One"
+  },
+  {
+   "method": "POST",
+   "path": "/orders",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/orders/{OrderId}",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/ping",
+   "handler": "ExecuteAsync"
+  },
+  {
+   "method": "HEAD",
+   "path": "/ping",
+   "handler": "ExecuteAsync"
+  },
+  {
+   "method": "POST",
+   "path": "/api/authenticate",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Orders/recent",
+   "handler": "HandleAsync"
   }
  ],
  "calls": [

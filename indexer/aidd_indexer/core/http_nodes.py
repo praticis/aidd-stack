@@ -27,6 +27,7 @@ FUNCTION_SCOPES = frozenset({"function_declaration", "method_declaration", "func
                              "arrow_function", "function_expression", "function", "method_definition",
                              "generator_function_declaration", "local_function_statement", "lambda_expression",
                              "anonymous_method_expression", "lambda", "constructor_declaration"})
+CLASS_NODES = frozenset({"class_declaration", "class_definition", "class", "struct_declaration", "record_declaration"})
 HANDLER_NODES = frozenset({"func_literal", "arrow_function", "function_expression", "function", "lambda_expression",
                            "anonymous_method_expression", "lambda", "method_reference"})
 NON_HANDLER_NODES = STRING_NODES | {"nil", "null", "none", "number", "int_literal", "integer", "float_literal", "true", "false",

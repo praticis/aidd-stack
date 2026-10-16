@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING
 from tree_sitter import Node
 
 from ..languages.base import node_text as text, walk
-from .http_nodes import (APPEND_NODES, CALL_NODES, CONCAT_NODES, NAME_NODES, OBJECT_NODES, STRING_NODES,
+from .http_nodes import (APPEND_NODES, CALL_NODES, CLASS_NODES, CONCAT_NODES, NAME_NODES, OBJECT_NODES, STRING_NODES,
                          STRING_TEXT_NODES, INTERPOLATION_NODES, WRAPPED_ARG_NODES, has_interpolation)
-from .http_scope import in_function
+from .http_scope import END, in_function
 from .paths import (ENV_URL_NAME, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, has_literal_segment,
                     looks_like_rel_path, mask_placeholders, normalize_path, unquote)
 
@@ -32,9 +32,19 @@ _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][
 
 
 # -- the directory's constants ---------------------------------------------------------------
+def owner_class(n: Node, src: bytes) -> str | None:
+    """Name of the class (struct, record) `n` is declared in."""
+    p = n.parent
+    while p is not None and p.type not in CLASS_NODES:
+        p = p.parent
+    name = p.child_by_field_name("name") if p is not None else None
+    return text(name, src) if name is not None else None
+
+
 def collect_constants(fx, ctx: "PackageContext") -> None:
     """Module- and class-level constants holding a path or a base URL. A function's locals are not constants of the
-    directory: a `url` parameter elsewhere would take the value of this function's `url` (`Scopes` reads them)."""
+    directory: a `url` parameter elsewhere would take the value of this function's `url` (`Scopes` reads them). A
+    class-level one is also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
     src = fx.src
     for n in walk(fx.tree.root_node):
         name = val = None
@@ -49,13 +59,17 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
         if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
             while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
                 val = val.named_children[0]
+            owner = owner_class(n, src)
+            names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
             parts = _concat_parts(val, src) if val.type in CONCAT_NODES else None
             if parts:
-                ctx.const_parts[text(name, src)] = parts
+                for nm in names:
+                    ctx.define(nm, parts=parts)
             else:
                 lit = first_string(val, src)
                 if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or URL_LITERAL.match(lit)) and len(lit) > 1:
-                    ctx.route_consts[text(name, src)] = lit
+                    for nm in names:
+                        ctx.define(nm, raw=lit)
         if n.type in STRING_NODES:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
@@ -79,7 +93,7 @@ def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
         elif c.type in STRING_NODES and not has_interpolation(c):
             parts.append(("lit", unquote(text(c, src))))
         elif c.type in NAME_NODES:
-            parts.append(("ref", text(c, src).split(".")[-1]))
+            parts.append(("ref", ".".join(text(c, src).split(".")[-2:])))
         else:
             parts.append(("unk", None))
     return parts if any(k == "lit" for k, _ in parts) else None
@@ -169,12 +183,20 @@ class PathExpressions:
         return None
 
     def _path_of_name(self, n: Node, lenient: bool, _depth: int) -> str | None:
-        """A local binding first (a parameter has no value here), then the directory's constants."""
+        """A local binding first (a parameter has no value here), then the directory's constants (`A.B` by its
+        qualified name, else by `B`)."""
+        name = text(n, self.src)
         if n.type == "identifier":
             bound, val = self.scopes.binding(n)
             if bound:
                 return self.path_of(val, lenient, _depth + 1) if val is not None else None
-        return self.ctx.route_const(text(n, self.src).split(".")[-1])
+            owner = owner_class(n, self.src)                     # a class's own constant, used bare inside it
+            if owner is not None and self.ctx.route_const(f"{owner}.{name}") is not None:
+                return self.ctx.route_const(f"{owner}.{name}")
+            if name in self.ctx.ambiguous:                        # other files of the directory define it too: this one's
+                val = self.scopes.assigned_before(self.scopes.root, END, name)
+                return self.path_of(val, lenient, _depth + 1) if val is not None else None
+        return self.ctx.route_const(name)
 
     def _path_of_concat(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """`base + "/v1/x" + id`; an unknown first operand is a base URL."""
@@ -261,11 +283,14 @@ class PathExpressions:
         parts = []
         for c in n.children:
             if c.type in INTERPOLATION_NODES:
-                inner = [k for k in c.children if k.is_named]
+                inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]     # C# names its braces
                 v = None
                 if len(inner) == 1 and inner[0].type == "identifier":
                     bound, val = self.scopes.binding(inner[0])
                     v = self.path_of(val, lenient, _depth + 1) if bound and val is not None else None
+                elif len(inner) == 1 and inner[0].type in CALL_NODES:          # C# `$"/{nameof(Project)}s"`: a constant
+                    m = re.match(r"^nameof\s*\(\s*([\w.]+)\s*\)$", text(inner[0], self.src))
+                    v = m.group(1).split(".")[-1] if m else None
                 parts.append(v if v is not None else "{param}")
             elif c.type in STRING_TEXT_NODES:
                 parts.append(text(c, self.src))

@@ -13,51 +13,6 @@
  },
  "endpoints": [
   {
-   "method": "GET",
-   "path": "/Backup",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "POST",
-   "path": "/Backup/Create",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "GET",
-   "path": "/Backup/Manifest",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "POST",
-   "path": "/Backup/Restore",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "DELETE",
-   "path": "/Devices",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "GET",
-   "path": "/Devices",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "GET",
-   "path": "/Devices/Info",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "GET",
-   "path": "/Devices/Options",
-   "category": "inherited-route-attr"
-  },
-  {
-   "method": "POST",
-   "path": "/Devices/Options",
-   "category": "inherited-route-attr"
-  },
-  {
    "method": "POST",
    "path": "/Items/{itemId}"
   },
@@ -68,6 +23,42 @@
   {
    "method": "GET",
    "path": "/Items/{itemId}/MetadataEditor"
+  },
+  {
+   "method": "GET",
+   "path": "/backup"
+  },
+  {
+   "method": "POST",
+   "path": "/backup/Create"
+  },
+  {
+   "method": "GET",
+   "path": "/backup/Manifest"
+  },
+  {
+   "method": "POST",
+   "path": "/backup/Restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/devices"
+  },
+  {
+   "method": "GET",
+   "path": "/devices"
+  },
+  {
+   "method": "GET",
+   "path": "/devices/Info"
+  },
+  {
+   "method": "GET",
+   "path": "/devices/Options"
+  },
+  {
+   "method": "POST",
+   "path": "/devices/Options"
   }
  ],
  "calls": [
@@ -108,24 +99,24 @@
    "path": "/20141201/token"
   }
  ],
- "notes": "Manual, no committed spec (the OpenAPI is generated in CI). Recall from three controllers read whole (Backup, Devices, ItemUpdate); precision from the sample over the repo. H2-D10 measured: BaseJellyfinApiController carries [Route(\"[controller]\")], and 26 of the 60 controllers declare no [Route] of their own — their 128 extracted routes all miss /{Controller} (/Features instead of /Channels/Features) and their template-less actions ([HttpGet]) are dropped (inherited-route-attr). The other controllers declare [Route(\"\")] or [Route(\"System\")] and come out right. Calls (recall: SchedulesDirect.cs): ApiUrl = \"https://json.schedulesdirect.org/20141201\" is dropped as a base URL together with the /20141201 path it holds (const-base-url, H2-D12; same for AudioDb's BaseUrl with /api/v1/json/{key}); SendAsync(message) inside Request<T>(HttpRequestMessage message, ...) is resolved to a `message` variable of another method (variable-other-scope). Since the v2 cheap fixes (2026-10-15): a constant holding an absolute URL keeps its path (/20141201, /api/v1/json/{key}), and a parameter is no longer resolved to another method's variable.",
+ "notes": "Manual, no committed spec (the OpenAPI is generated in CI). Recall from three controllers read whole (Backup, Devices, ItemUpdate); precision from the sample over the repo. H2-D10 measured: BaseJellyfinApiController carries [Route(\"[controller]\")], and 26 of the 60 controllers declare no [Route] of their own — their 128 extracted routes all miss /{Controller} (/Features instead of /Channels/Features) and their template-less actions ([HttpGet]) are dropped (inherited-route-attr). The other controllers declare [Route(\"\")] or [Route(\"System\")] and come out right. Calls (recall: SchedulesDirect.cs): ApiUrl = \"https://json.schedulesdirect.org/20141201\" is dropped as a base URL together with the /20141201 path it holds (const-base-url, H2-D12; same for AudioDb's BaseUrl with /api/v1/json/{key}); SendAsync(message) inside Request<T>(HttpRequestMessage message, ...) is resolved to a `message` variable of another method (variable-other-scope). Since the v2 cheap fixes (2026-10-15): a constant holding an absolute URL keeps its path (/20141201, /api/v1/json/{key}), and a parameter is no longer resolved to another method's variable. Since item 6 (2026-10-15): the base class's [Route] applies one level up (/channels/Features, template-less actions as /backup, /devices); the [controller] token is lowercased, as the extractor writes it for clients (the expected paths follow), and two routes that used to collide in the dedupe (/Items/Latest of Channels and UserLibrary) now come out apart.",
  "checked": {
   "endpoints": [
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/ChannelsController.cs:83",
     "method": "GET",
-    "path": "/Features",
+    "path": "/channels/Features",
     "raw": "/Features",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/ChannelsController.cs:96",
     "method": "GET",
-    "path": "/{channelId}/Features",
+    "path": "/channels/{channelId}/Features",
     "raw": "/{channelId}/Features",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/ConfigurationController.cs:77",
@@ -210,58 +201,58 @@
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/LiveTvController.cs:468",
     "method": "GET",
-    "path": "/Timers/Defaults",
+    "path": "/livetv/Timers/Defaults",
     "raw": "/Timers/Defaults",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/LiveTvController.cs:835",
     "method": "POST",
-    "path": "/Timers",
+    "path": "/livetv/Timers",
     "raw": "/Timers",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/PlaylistsController.cs:277",
     "method": "POST",
-    "path": "/{playlistId}/Users/{userId}",
+    "path": "/playlists/{playlistId}/Users/{userId}",
     "raw": "/{playlistId}/Users/{userId}",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/QuickConnectController.cs:104",
     "method": "POST",
-    "path": "/Authorize",
+    "path": "/quickconnect/Authorize",
     "raw": "/Authorize",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/StartupController.cs:74",
     "method": "POST",
-    "path": "/Configuration",
+    "path": "/startup/Configuration",
     "raw": "/Configuration",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/SyncPlayController.cs:158",
     "method": "POST",
-    "path": "/SetPlaylistItem",
+    "path": "/syncplay/SetPlaylistItem",
     "raw": "/SetPlaylistItem",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/SystemController.cs:146",
     "method": "GET",
-    "path": "/Logs",
+    "path": "/system/Logs",
     "raw": "/Logs",
-    "ok": false,
-    "category": "inherited-route-attr"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "jellyfin:Jellyfin.Api/Controllers/UniversalAudioController.cs:92",
