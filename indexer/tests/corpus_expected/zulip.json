@@ -853,41 +853,34 @@
  "calls": [
   {
    "method": "POST",
-   "path": "/api/v1/users/me/api_key/regenerate",
-   "category": "request-config-object"
+   "path": "/api/v1/users/me/api_key/regenerate"
   },
   {
    "method": "POST",
-   "path": "/json/bots",
-   "category": "request-config-object"
+   "path": "/json/bots"
   },
   {
    "method": "POST",
-   "path": "/json/fetch_api_key",
-   "category": "request-config-object"
+   "path": "/json/fetch_api_key"
   },
   {
    "method": "PATCH",
-   "path": "/json/settings",
-   "category": "request-config-object"
+   "path": "/json/settings"
   },
   {
    "method": "POST",
-   "path": "/json/user_topics",
-   "category": "request-config-object"
+   "path": "/json/user_topics"
   },
   {
    "method": "DELETE",
-   "path": "/json/users/me",
-   "category": "request-config-object"
+   "path": "/json/users/me"
   },
   {
    "method": "POST",
-   "path": "/json/users/me/avatar",
-   "category": "request-config-object"
+   "path": "/json/users/me/avatar"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source). Since the v2 cheap fixes (2026-10-15): $.get is a call, never a route, and a parameter is no longer resolved to another function's variable.",
+ "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source). Since the v2 cheap fixes (2026-10-15): $.get is a call, never a route, and a parameter is no longer resolved to another function's variable. Since 2026-10-17 a request described by an object is read: the web app's channel.post/get/patch/del({ url: \"/json/..\" }) — 124 calls more, the expected ones all found.",
  "checked": {
   "endpoints": [],
   "calls": [

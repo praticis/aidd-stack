@@ -56,15 +56,17 @@
   `IMPORTS` em 4 repos; rotas TS/JS P 50,7 → 93,9 %, R 32,6 → 60,7 % (immich 0,7 → 100 %). **Registrars próprios em
   TS/JS (2026-10-17):** wrapper de rota do projeto (NodeBB `setupApiRoute`/`setupPageRoute`) pelo mesmo mecanismo do
   wrapper de montagem, router de módulo devolvido pela função exportada, parâmetro opcional do Express no fim; rotas
-  TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB R 8,7 → 73,1 %).
+  TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB R 8,7 → 73,1 %). **Clientes gerados TS e requisição descrita por
+  objeto (2026-10-17):** SDK do oazapfts (immich, 279) e do openapi-ts (fastapi-template, 23), `channel.post({ url })`,
+  `axios.request({ url, method })`, `$.ajax(url, {..})`; chamadas TS/JS P 59,5 → 91,4 %, R 12,1 → 87,4 %.
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-14/` — corpus v2, 42 repos, com os
-  wrappers de rota TS (a `-13` é a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-17-v2-baseline-15/` — corpus v2, 42 repos, com os
+  clientes gerados TS (a `2026-10-16-v2-baseline-14` é a dos wrappers de rota TS; a `-13`, a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -85,12 +87,13 @@
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
   `client-in-field`). **Python fora do Django fechado no essencial:** rotas P 99,0 % / R 98,0 % (sobram o registro
   de plugins do dispatch, `router-from-registry`, 4, preenchido em runtime — limitação; e `multi-app-repo`, 4, no
-  fastapi). **TS em curso (H2-D19):** grafo entre arquivos, Nest e registrars próprios feitos; rotas TS/JS P 95,5 % /
-  R 85,3 %. Próximo: os clientes gerados TS (oazapfts do immich, 279 operações; openapi-ts do fastapi-template, 23
-  — item 7) com o objeto de configuração de requisição (`request-config-object`: `channel.post({ url })`,
-  `axios.request({ url, method })`, `$.ajax(url, {..})`), e então a Fase 5. Sobram nas rotas TS (162 que faltam):
-  prefixo montado em runtime (`prefix-as-param`, 119 no NodeBB — limitação), o laço sobre array literal do
-  express-boilerplate (14), o autoload por pasta do fastify-demo (14), as rotas por arquivo do Next.js (9).
+  fastapi). **TS fechado no essencial (H2-D19):** rotas P 95,5 % / R 85,3 %, chamadas P 91,4 % / R 87,4 % (sobram
+  nas rotas o prefixo montado em runtime, `prefix-as-param`, 119 no NodeBB — limitação; o laço sobre array literal
+  do express-boilerplate, 14; o autoload por pasta do fastify-demo, 14; as rotas por arquivo do Next.js, 9; nas
+  chamadas, o wrapper de cliente com prefixo próprio, `prefix-in-client-wrapper`, 34, e os wrappers do gitea, 15,
+  que pedem o tipo do receiver em TS). **Próximo: a Fase 5** — o conjunto *hold-out* (repos fora do ajuste, medidos
+  uma vez, para checar sobreajuste ao corpus), o guia (§3 com as regras novas e o sintoma, §5 com `--expected` e
+  `--baseline`), o ROADMAP (F0.4.3b) e o encaminhamento das lacunas que sobram (limitação, F1 ou F2.1).
 
 ## Decisões
 
@@ -185,7 +188,7 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     convencional do ASP.NET — fixtures `route-patterns-{go,ts,py,cs}`
   - [x] *(2026-10-15, 2ª rodada)* `optional-segment-syntax`, `query-in-template`, `method-default` (`fetch` = GET), `test-client-in-source`,
     `verb-alias` (`Del`) e `nested-generic-callee` (C# `<List<T>>`, achado no caminho)
-- [ ] **2. Grafo de montagem** — no v2 aparece em 23 dos 38 repos com gabarito (200 wrong, 1837 missed).
+- [x] **2. Grafo de montagem** *(fechado em 2026-10-16, com o TS)* — no v2 aparece em 23 dos 38 repos com gabarito (200 wrong, 1837 missed).
   - [x] *(2026-10-15)* etapa 1, dentro do arquivo: regiões de closure (`Route`/`Group` com func, `register(fn,
     {prefix})`), montagens do mesmo arquivo (`use`, `route`, `Mount`, `include_router`, `register_blueprint`,
     `basePath`), raiz de sub-router montado, `With`/`Use` — fixtures `route-patterns-*/…/mounts`
@@ -231,6 +234,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   servido por `http.Serve`/`ListenAndServe` é aplicação (as rotas valem nos dois lugares). Fixtures
   `route-patterns-go/cmd/{combo,chain,addsvc}` e `route-patterns-ts/src/chain.ts`
 - [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+  - [x] *(2026-10-17)* `request-config-object` (TS/JS): objeto com `url` num método de verbo ou em
+    `request`/`ajax`/`axios` é a requisição, qualquer que seja o receptor; verbo do nome, do `method` ou do `type` do
+    próprio objeto, senão GET — zulip `channel.post({ url })`, gotify `axios.request`, `$.ajax(url, {..})`; o mesmo
+    caminho lê o SDK do openapi-ts. Fixture `route-patterns-ts/src/clients/config-requests.ts`
   - [x] *(2026-10-16)* Go: `url-object-builder` — `url.URL` pelo `u.Path` (`=`, `+=`, `path.Join(u.Path, ..)`),
     `u.String()`, `u.JoinPath(..)`, `url.Parse(literal)`; `request-encoder` do go-kit (`NewClient(method, tgt, enc,
     dec)`, path do encoder por `go.encoder` + `Pending` + `GoScanner.compose`); no caminho, verbo em variável
@@ -246,7 +253,7 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   *(2026-10-15)* — primeiro passo entre arquivos (`facts` + `Pending` → `CsScanner.compose`); constante de classe
   por `Classe.NOME`; `nameof(X)` e variável local em interpolação do C#; `[action]` sem `Async`. Fixtures em
   `route-patterns-cs` (herança entre arquivos, base ambígua, FastEndpoints, ApiEndpoints)
-- [ ] **7. Clientes gerados** (H2-D9, aceito): `via: generated-client`, fixture por gerador
+- [x] **7. Clientes gerados** *(fechado em 2026-10-17)* (H2-D9, aceito): `via: generated-client`, fixture por gerador
   - [x] *(2026-10-16)* NSwag, C# e TS — o corpus não tinha nenhum (os do v1 são openapi-ts e go-swagger; o do
     clean-arch-dotnet é gitignored), então entraram RapidBlazor, azure-saas e notifo. C#: arquivo com o cabeçalho do
     NSwag (o `.g.cs` deixa de ser excluído quando é dele), path do `// Operation Path` (v14) ou dos
@@ -258,7 +265,10 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   - [x] *(2026-10-16)* Go: openapi-generator (kratos, 60 operações em duas cópias, iguais à `spec/api.json`) e
     go-swagger (alertmanager, 9; o `basePath` fica com o transporte, como base URL). Fixtures
     `route-patterns-go/internal/{genclient,swaggerclient}`
-  - [ ] oazapfts (immich, 279), openapi-ts (fastapi-template, 23) — com TS
+  - [x] *(2026-10-17)* oazapfts (immich, 279: `oazapfts.fetchJson/fetchText/fetchBlob`, path sem `${QS.query(..)}`
+    sob o `baseUrl` literal, verbo das opções) e openapi-ts (fastapi-template, 23: `client.post({ url })`, pela
+    requisição descrita por objeto). Gabaritos de chamadas novos: immich (as 279 da spec sob `/api`) e
+    fastapi-template (as 23 rotas). Fixtures `route-patterns-ts/src/clients/{fetch-client.ts,sdk.gen.ts}`
   - [x] *(2026-10-16)* Go, **servidores** gerados (`generated-server`): grpc-gateway (`runtime.NewPattern`
     decodificado; handler = método gRPC; verbo customizado `:x` literal) e go-swagger (`o.handlers[M][P]` +
     `basePath` publicado pelo `embedded_spec.go`, `go.swagger-base`). Fixtures
@@ -607,3 +617,12 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   `POST /api/email/unsubscribe/{token}` só na spec, removida; os bloqueados por prefixo de runtime passam a
   `prefix-as-param` (119). Rotas TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB P 66,7 → 93,9 %, R 8,7 → 73,1 %).
   HTTP do corpus 105,2 s. Nova baseline `2026-10-16-v2-baseline-14`.
+- **2026-10-17** — Clientes gerados TS e requisição descrita por objeto (item 7 fechado; `request-config-object` do
+  item 5). Objeto com `url` que guarda um path, num método de verbo ou em `request`/`ajax`/`axios`, é a requisição
+  qualquer que seja o receptor (verbo do nome, senão `method`/`type` do próprio objeto, senão GET); oazapfts em arquivo
+  com o cabeçalho do gerador (`generated-client`, path sem a query, sob o `baseUrl` literal). Diff contra `-14` (7 repos,
+  só chamadas, só adições) julgado certo: immich +279, fastapi-template +23, zulip +124 (`channel.*({ url })`), ctfd +5,
+  NodeBB +6, gotify +2, mattermost +10 (em `e2e-tests/`, que a baseline já conta). Gabaritos: chamadas do immich (279
+  da spec sob `/api`, escopo `packages/sdk/`) e do fastapi-template (as 23 rotas, escopo `frontend/src/client/`,
+  linguagem TS/JS pelo H2-D17); os 9 `request-config-object` encontrados. Chamadas TS/JS P 59,5 → 91,4 %, R 12,1 →
+  87,4 %. HTTP do corpus 106,9 s. Nova baseline `2026-10-17-v2-baseline-15`. O TS fecha no essencial; próximo, a Fase 5.

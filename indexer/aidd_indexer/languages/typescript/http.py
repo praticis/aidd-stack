@@ -1,5 +1,6 @@
 """TypeScript / JavaScript: express / koa / fastify / Hono (`app.get('/x', handler)`, also chained on the constructor)
-+ NestJS decorators (under the package's `setGlobalPrefix`); axios / fetch / got / ky outbound. Routers cross files
++ NestJS decorators (under the package's `setGlobalPrefix`); axios / fetch / got / ky outbound, a request described by
+an object (`client.post({ url })`, openapi-ts) and oazapfts' generated client. Routers cross files
 through ESM imports and CommonJS `require` / `module.exports` (`global_of`), and through a project's own mount wrappers
 (Ghost's `app.lazyUse`) and route wrappers (NodeBB's `setupApiRoute(router, 'get', '/x', .., handler)`)."""
 
@@ -30,6 +31,8 @@ FUNCTIONS = {"function_declaration", "function_expression", "function", "arrow_f
              "generator_function_declaration"}
 OPTIONAL_TAIL = re.compile(r"/:[A-Za-z_$][\w$]*\?$")                     # Express: /reset/:code?
 NEST_DECORATORS = {"Controller", "Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All"}
+CONFIG_REQUESTS = {"request", "ajax", "axios"}                            # a request described by an object (`url`)
+OAZAPFTS = {"fetchJson", "fetchText", "fetchBlob"}                       # oazapfts.fetchJson<T>(path, opts)
 JQUERY = {"$", "jQuery"}
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
 
@@ -44,6 +47,9 @@ class TsScanner(BaseScanner):
         self.route_calls: list[tuple] = []         # calls of a function that may be a route wrapper
         self.wrapped: dict[int, str] = {}          # registrations inside a route wrapper → its name (`compose`)
         wraps = b".use(" in self.src
+        self.oazapfts = b"generated using oazapfts" in self.src[:1024]
+        base = re.search(rb"baseUrl:\s*[\"'](/[^\"']*)[\"']", self.src) if self.oazapfts else None
+        self.oazapfts_base = base.group(1).decode().rstrip("/") if base else ""
         for n in walk(self.fx.tree.root_node):
             if n.type == "decorator":
                 self._decorator(n, controller_prefix)
@@ -319,6 +325,11 @@ class TsScanner(BaseScanner):
         if self._wrapper_call(n, name, recv_last, arg_nodes):
             return
         self._wrapped_route_call(n, name, arg_nodes)            # a candidate only: the call may still be a request
+        if self.oazapfts and name in OAZAPFTS and recv_last == "oazapfts":
+            self._oazapfts_call(n, arg_nodes)
+            return
+        if self._config_request(n, name, callee, arg_nodes):
+            return
         if recv_last in JQUERY:                                     # browser code: `$.get(url, cb)` is a request, cb is no handler
             p = self.path_of(arg_nodes[0], lenient=True) if name in JQUERY_VERBS else None
             if p is not None:
@@ -350,6 +361,57 @@ class TsScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _config_request(self, n: Node, name: str, callee: str, arg_nodes: list[Node]) -> bool:
+        """A request described by an object — `channel.post({ url: "/json/bots" })`, `axios.request({ url, method:
+        'POST' })`, openapi-ts' `(options.client ?? client).post({ url: '/api/v1/users/' })`, `$.ajax(url, { type })`:
+        a `url` holding a path is the request, whatever the receiver is called. The verb is the method's name, else the
+        object's `method` (`type` for jQuery), else GET."""
+        verb = VERB_BY_NAME.get(name) or TS_VERB_ALIASES.get(name)
+        if verb is None and name not in CONFIG_REQUESTS:
+            return False
+        objs = [unwrap_arg(a) for a in arg_nodes if unwrap_arg(a).type == "object"]
+        fields = {k: v for o in objs[:1] for k, v in self._own_fields(o)}
+        url = fields.get("url")
+        if url is None and name == "ajax" and arg_nodes[0].type != "object":
+            url = arg_nodes[0]                                       # $.ajax(url, settings)
+        p = self.path_of(url, lenient=True) if url is not None else None
+        if p is None:
+            return False
+        given = fields.get("method") or fields.get("type")
+        given = unquote(text(given, self.src)).upper() if given is not None and given.type == "string" else None
+        self.add_call(n, verb or (given if given in HTTP_METHODS else None) or "GET", p, callee)
+        return True
+
+    def _own_fields(self, n: Node) -> list[tuple[str, Node]]:
+        """(key, value) of an object literal's own pairs — not of the objects inside it."""
+        out = []
+        for d in n.named_children:
+            key, value = d.child_by_field_name("key"), d.child_by_field_name("value")
+            if d.type == "pair" and key is not None and value is not None:
+                out.append((unquote(text(key, self.src)), value))
+        return out
+
+    def _oazapfts_call(self, n: Node, arg_nodes: list[Node]) -> None:
+        """oazapfts' generated client: `oazapfts.fetchJson<T>(`/activities/${encodeURIComponent(id)}${QS.query(..)}`,
+        oazapfts.json({ ...opts, method: "POST" }))` — the path without its query string, under the client's `baseUrl`
+        (`defaults.baseUrl = "/api"`); the verb from the options, GET without one."""
+        p = arg_nodes[0]
+        if p.type == "template_string":
+            raw = "".join(text(c, self.src) if c.type == "string_fragment" else
+                          "" if re.search(r"\.query\(", text(c, self.src)) else "{param}"
+                          for c in p.named_children)
+        elif p.type == "string":
+            raw = unquote(text(p, self.src))
+        else:
+            return
+        opts = unwrap_arg(arg_nodes[1]) if len(arg_nodes) > 1 else None
+        if opts is not None and opts.type == "call_expression":           # oazapfts.json({..}), .multipart({..})
+            inner = opts.child_by_field_name("arguments")
+            opts = inner.named_children[0] if inner is not None and inner.named_child_count else None
+        method = next((unquote(text(v, self.src)).upper() for k, v in self._own_fields(opts) if k == "method"),
+                      "GET") if opts is not None and opts.type == "object" else "GET"
+        self.add_call(n, method, self.oazapfts_base + raw, "generated-client")
 
     # -- a project's own mount wrappers: `app.lazyUse(path, require('./x'))` ---------------------------------------
     def _mount_wrapper(self, fn: Node) -> None:
@@ -388,12 +450,12 @@ class TsScanner(BaseScanner):
 
     # -- a project's own route wrappers: `setupApiRoute(router, 'post', '/x', mws, handler)` ------------------------
     def _route_wrapper(self, fn: Node) -> None:
-        """`helpers.setupApiRoute = function (...args) { const [router, verb, name] = args; .. router[verb](name, ..) }`,
-        `setupPageRoute(router, name, ..)` registering `router.get(name, ..)` and `` router.get(`/api${name}`, ..) ``: a
-        function that registers routes on the router and under the path it is given. Its shapes — (position of the
-        router, the verb or the position of the argument naming it, position of the path, the path around it) — are
-        published for `compose`, which makes its calls in any file routes — and then drops the registrations in its body,
-        which are templates of them (`GET /api{param}`)."""
+        """A function that registers routes on the router and under the path it is given — NodeBB's
+        `helpers.setupApiRoute = function (...args) { const [router, verb, name] = args; .. router[verb](name, ..) }`,
+        `setupPageRoute(router, name, ..)` registering `router.get(name, ..)` and `` router.get(`/api${name}`, ..) ``.
+        Its shapes — (position of the router, the verb or the position of the argument naming it, position of the
+        path, the path around it) — are published for `compose`, which makes its calls in any file routes, and then
+        drops the registrations in its body, which are templates of them (`GET /api{param}`)."""
         name = self._wrapper_name(fn, declared=True)
         params = self._wrapper_params(fn) if name else {}
         body = fn.child_by_field_name("body")
@@ -453,7 +515,8 @@ class TsScanner(BaseScanner):
         return out
 
     def _param_template(self, n: Node, params: dict[str, int]) -> tuple[int, str] | None:
-        """`name` → (its position, "{}"); `` `/api${name}` `` → (its position, "/api{}"): a path made of one parameter."""
+        """`name` → (its position, "{}"); `` `/api${name}` `` → (its position, "/api{}"): a path made of one
+        parameter."""
         if n.type == "identifier":
             return (params[text(n, self.src)], "{}") if text(n, self.src) in params else None
         subs = [c for c in n.named_children if c.type == "template_substitution"] if n.type == "template_string" else []
@@ -464,11 +527,13 @@ class TsScanner(BaseScanner):
         return (params[text(inner[0], self.src)], before + "{}" + after) if "${" not in before + after else None
 
     def _wrapped_route_call(self, n: Node, name: str, arg_nodes: list[Node]) -> None:
-        """`setupApiRoute(router, 'post', '/x', mws, handler)`, `helpers.setupPageRoute(app, '/x', .., handler)`: a route if
-        some file defines `name` as a route wrapper (`_route_wrapper`) — a candidate here, made a route in `compose`,
-        with the handler in the last argument. A path with a part this file cannot read (`` `/${name}/x` ``, NodeBB's
-        remountable prefixes) makes none: the linker compares literal segments, so `/{param}/x` would link nothing."""
-        if len(arg_nodes) < 3 or name in TS_REGISTRARS or name in TS_MOUNTS or name in OUTBOUND or name in TS_VERB_ALIASES:
+        """`setupApiRoute(router, 'post', '/x', mws, handler)`, `helpers.setupPageRoute(app, '/x', .., handler)`: a
+        route if some file defines `name` as a route wrapper (`_route_wrapper`) — a candidate here, made a route in
+        `compose`, with the handler in the last argument. A path with a part this file cannot read
+        (`` `/${name}/x` ``, NodeBB's remountable prefixes) makes none: the linker compares literal segments, so
+        `/{param}/x` would link nothing."""
+        if len(arg_nodes) < 3 or name in TS_REGISTRARS or name in TS_MOUNTS or name in OUTBOUND \
+                or name in TS_VERB_ALIASES:
             return
         args = []
         for a in map(unwrap_arg, arg_nodes):
@@ -478,7 +543,8 @@ class TsScanner(BaseScanner):
                 else "/" if lit in ("/", "") and lit is not None else None
             verb = lit.upper() if lit and lit.upper() in HTTP_METHODS else TS_VERB_ALIASES.get(lit or "")
             args.append((p, verb))
-        routers = {i: text(a, self.src) for i, a in enumerate(arg_nodes) if a.type == "identifier" and args[i] == (None, None)}
+        routers = {i: text(a, self.src) for i, a in enumerate(arg_nodes)
+                   if a.type == "identifier" and args[i] == (None, None)}
         if not routers or not any(p for p, _ in args):
             return
         hname, hid = self.resolve_handler(arg_nodes[-1])

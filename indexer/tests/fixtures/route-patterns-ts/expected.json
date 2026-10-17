@@ -316,6 +316,46 @@
    "method": "DELETE",
    "path": "/public/groups/{param}",
    "line": 15
+  },
+  {
+   "method": "POST",
+   "path": "/auth/local/login",
+   "line": 10
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/suggest",
+   "line": 14
+  },
+  {
+   "method": "POST",
+   "path": "/json/bots",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/activities",
+   "line": 13
+  },
+  {
+   "method": "POST",
+   "path": "/api/activities",
+   "line": 18
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/activities/{param}",
+   "line": 25
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{user_id}",
+   "line": 15
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users",
+   "line": 6
   }
  ]
 }

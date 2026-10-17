@@ -1,6 +1,206 @@
 {
  "source": "manual",
  "sha": "7257e606cb94eada1dca40173e2b7f99dd549bc6",
+ "scope": {
+  "endpoints": [
+   "backend/app/api/routes/"
+  ],
+  "calls": [
+   "frontend/src/client/"
+  ]
+ },
+ "language": {
+  "calls": "TS/JS"
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/items"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/items"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/login/access-token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/login/test-token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/password-recovery/{email}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/reset-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/password-recovery-html-content/{email}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/private/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me/password"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/signup"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/utils/test-email"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/utils/health-check"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/v1/items"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/items"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/items/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/login/access-token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/login/test-token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/password-recovery/{email}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/reset-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/password-recovery-html-content/{email}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/private/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/me/password"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/signup"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{user_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/utils/test-email"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/utils/health-check"
+  }
+ ],
+ "notes": "Every router is included in api/main.py and mounted with app.include_router(api_router, prefix=settings.API_V1_STR) (\"/api/v1\", a settings field) in main.py, so all 19 routes come out without /api/v1 (prefix-other-file); the APIRouter(prefix=...) of each module is applied. The router roots (GET|POST /items/, GET|POST /users/) are dropped (root-route-dropped). Recall scope: backend/app/api/routes/, read whole. Calls (2026-10-17): the @hey-api/openapi-ts SDK (frontend/src/client/sdk.gen.ts) calls (options.client ?? client).post({ url: '/api/v1/..', ...options }) — a request described by an object, read since then; expected = the 23 routes of the backend, which the generated client mirrors, scope frontend/src/client/.",
  "checked": {
   "endpoints": [
    {
@@ -157,105 +357,5 @@
    }
   ]
  },
- "checked_seed": "1",
- "notes": "Every router is included in api/main.py and mounted with app.include_router(api_router, prefix=settings.API_V1_STR) (\"/api/v1\", a settings field) in main.py, so all 19 routes come out without /api/v1 (prefix-other-file); the APIRouter(prefix=...) of each module is applied. The router roots (GET|POST /items/, GET|POST /users/) are dropped (root-route-dropped). Recall scope: backend/app/api/routes/, read whole.",
- "scope": {
-  "endpoints": [
-   "backend/app/api/routes/"
-  ]
- },
- "endpoints": [
-  {
-   "method": "GET",
-   "path": "/api/v1/items"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/items"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/items/{id}"
-  },
-  {
-   "method": "PUT",
-   "path": "/api/v1/items/{id}"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v1/items/{id}"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/login/access-token"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/login/test-token"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/password-recovery/{email}"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/reset-password"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/password-recovery-html-content/{email}"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/private/users"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/users"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/users"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/users/me"
-  },
-  {
-   "method": "PATCH",
-   "path": "/api/v1/users/me"
-  },
-  {
-   "method": "PATCH",
-   "path": "/api/v1/users/me/password"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v1/users/me"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/users/signup"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/users/{user_id}"
-  },
-  {
-   "method": "PATCH",
-   "path": "/api/v1/users/{user_id}"
-  },
-  {
-   "method": "DELETE",
-   "path": "/api/v1/users/{user_id}"
-  },
-  {
-   "method": "POST",
-   "path": "/api/v1/utils/test-email"
-  },
-  {
-   "method": "GET",
-   "path": "/api/v1/utils/health-check"
-  }
- ]
+ "checked_seed": "1"
 }

@@ -1470,3 +1470,65 @@ The before row is baseline-13 measured against the new lists.
 **Timing.** HTTP extraction took 105.2 s, back from the 131.1 s of the loaded Nest run. NodeBB took 3.4 s.
 
 New baseline: `2026-10-16-v2-baseline-14`.
+
+## Update: TS generated clients and requests described by an object (2026-10-17)
+
+Two TS clients in the corpus are generated from the server's OpenAPI spec. Neither was read:
+
+- immich's web app calls its server only through an oazapfts SDK, with 279 operations;
+- fastapi-template's frontend uses a `@hey-api/openapi-ts` SDK, with 23.
+
+The second writes each operation as `(options.client ?? client).post({ url: '/api/v1/..', ...options })`. That is the
+`request-config-object` form already measured in hand-written code (9 misses in zulip, gotify and NodeBB), so one
+general rule covers both.
+
+**What is read now:**
+
+- **A request described by an object.** In a verb method (`get` … `delete`, `del`), or in `request`, `ajax` or
+  `axios`, an object whose `url` holds a path is the request, whatever the receiver is called.
+  - The verb comes from the method's name, else from the object's own `method` (`type` for jQuery), else GET.
+  - Only the object's own keys count. The `security: [{ type: 'http' }]` of openapi-ts is no verb.
+  - Examples: zulip's `channel.post({ url: "/json/bots" })`, gotify's `axios.create().request({ url, method })`,
+    `$.ajax(url, { type: 'POST' })`.
+- **oazapfts.** In a file with its header, `oazapfts.fetchJson`, `fetchText` and `fetchBlob` are `generated-client`
+  calls.
+  - The path drops its query string (`${QS.query(..)}`) and goes under the client's literal `baseUrl` (`"/api"`).
+  - The verb comes from the options, also inside `oazapfts.json(..)` or `multipart(..)`, and is GET when there is none.
+
+Diff against `2026-10-16-v2-baseline-14`, judged: 7 repositories changed, calls only, additions only.
+
+- immich +279 (the SDK, every operation of the spec under `/api`) and fastapi-template +23 (its SDK).
+- zulip +124: the web app's `channel.post/get/patch/del({ url })`.
+- ctfd +5, NodeBB +6 (`$.ajax`), gotify +2 (`axios.request`).
+- mattermost +10, in `e2e-tests/` (test tooling, which the baseline already counts: 21 of its 44 calls).
+
+Expected lists:
+
+- immich and fastapi-template get call lists for the first time: immich the 279 operations of its committed spec
+  under `/api` (scope `packages/sdk/`); fastapi-template its 23 routes, which the generated client mirrors (scope
+  `frontend/src/client/`, language TS/JS under H2-D17).
+- The 9 `request-config-object` misses are found.
+
+| Repo (calls) | P / R expected before | P / R expected now |
+|---|---|---|
+| immich (SDK) | — / 0 % | 100 % / 100 % (279) |
+| fastapi-template (SDK) | — / 0 % | 100 % / 100 % (23) |
+| zulip | — / 0 % | 100 % / 100 % (7) |
+
+| Language (calls) | P expected | R expected |
+|---|---|---|
+| TS/JS before | 59.5 % | 12.1 % (50/413) |
+| TS/JS now | 91.4 % | 87.4 % (361/413) |
+
+The before row is baseline-14 measured against the new lists.
+
+What TS/JS calls still miss (52):
+
+- a client wrapper that prepends its own prefix (`prefix-in-client-wrapper`, 34): argo-cd's UI, 25, and NodeBB's
+  `api.put('/admin/..')` under `/api/v3`, 9;
+- the app's own client wrappers in TS (`client-wrapper`, 15, gitea), which need the receiver's type in TS;
+- one each of a field in an interpolation, a URL builder and data taken for a handler.
+
+**Timing.** HTTP extraction took 106.9 s, against 105.2 s before.
+
+New baseline: `2026-10-17-v2-baseline-15`.
