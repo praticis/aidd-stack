@@ -36,7 +36,7 @@ from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODE
 from .http_scope import END, Scopes, scope_id
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
-from .paths import (HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, has_literal_segment, mask_placeholders,
+from .paths import (HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, has_literal_segment, is_url_literal, mask_placeholders,
                     normalize_path, path_key, unquote)
 
 
@@ -163,7 +163,7 @@ class PackageContext:
             r = v if kind == "lit" else (self.route_const(v, _seen + (name,)) if kind == "ref" and v else None)
             raw += r if r is not None else "{param}"
         raw = re.sub(r"^\{param\}(?=/)", "", raw)
-        if len(raw) < 2 or not (PATH_LITERAL.match(mask_placeholders(raw)) or REL_PATH_LITERAL.match(raw) or URL_LITERAL.match(raw)):
+        if len(raw) < 2 or not (PATH_LITERAL.match(mask_placeholders(raw)) or REL_PATH_LITERAL.match(raw) or is_url_literal(raw)):
             return None
         self.route_consts[name] = raw
         return raw

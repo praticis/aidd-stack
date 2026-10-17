@@ -258,7 +258,31 @@ Em aberto:
   Restrição para quem vier antes: o grafo de montagem do HTTP (H2b) cruza arquivos — deve trabalhar com um resumo por
   arquivo (quem monta o quê, com que prefixo), nunca segurando árvores de outros diretórios. **Pronto quando** o
   grafana indexa sob um teto fixo de memória (ex.: 2 GB) e, num repo médio, a extração em lotes é idêntica à inteira
-  (o corpus HTTP com `--baseline` dá o diff)
+  (o corpus HTTP com `--baseline` dá o diff). Medir junto o custo do HTTP em repos sem rotas que ele leia (netbox: 49 s
+  de 107 s com 0 rotas e 0 chamadas no corpus v2; zulip 17 s de 47 s)
+- [ ] F1.14 **Extrator HTTP: o que o H2 deixou** (fechamento do F0.4.3b, 2026-10-17). As lacunas que o corpus de 42
+  repos ainda mostra e que são evolução do extrator, com os números de `docs/corpus-report.md` ("Closing H2b"), na
+  ordem do portfólio (H2-D18). Cada uma pelo ciclo do guia (`docs/indexer-evolution.md` §5: fixture → corpus
+  `--baseline` → julgamento item a item → nova baseline):
+  1. .NET: FastEndpoints `RoutePrefix` global e `Group<T>()`; `[Route]` herdado em mais de um nível (H2-D10 decidiu
+     um). Zero no corpus: medir quando a fatia .NET crescer;
+  2. Go: método de router chamado por um campo de tipo declarado (alertmanager
+     `api.deprecationRouter.Register(r.WithPrefix("/api/v1"))`, 7 rotas sem o prefixo); closure de registro chamada
+     dentro de vários grupos (gitea); tipo de router que põe o prefixo nos próprios métodos (kratos `RouterAdmin`, 12);
+  3. Python: wrapper de cliente do app (o caminho do C#, sem caso no corpus); Django urlconf + DRF (1420 rotas em 2
+     repos), quando um portfólio pedir;
+  4. TS/JS: wrapper de cliente que põe a base no path (`prefix-in-client-wrapper`: argo-cd `requests`, NodeBB `api`,
+     37 chamadas erradas e 34 faltando; `client-wrapper` do gitea, 16) — o caminho do C#, agora que o TS resolve
+     imports; router guardado em lista e montado em laço (express-boilerplate, 14); rotas por pasta
+     (`@fastify/autoload`, 14) e por arquivo (Next.js, 9);
+  5. modelo: o id do `HttpEndpoint` é por repo, então a mesma rota em dois apps do repo vira um nó só, com a evidência
+     do primeiro (`multi-app-repo`, 16 rotas em 7 repos);
+  6. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
+     cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
+     fixos do `built_bundle`.
+
+  Pastas de app de teste com nome de produção (`integration/` do nest e do fastify, 20 rotas) ficam para a config por
+  repo do F1.1. **Pronto quando** cada item tiver regra com fixture e corpus julgado, ou limitação registrada no guia
 
 **Saída da fase:** qualquer repo do workspace indexável em 1 comando; `scan` e `flow` respondendo com fatos do grafo.
 

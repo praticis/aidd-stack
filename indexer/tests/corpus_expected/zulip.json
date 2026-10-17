@@ -880,7 +880,7 @@
    "path": "/json/users/me/avatar"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source). Since the v2 cheap fixes (2026-10-15): $.get is a call, never a route, and a parameter is no longer resolved to another function's variable. Since 2026-10-17 a request described by an object is read: the web app's channel.post/get/patch/del({ url: \"/json/..\" }) — 124 calls more, the expected ones all found.",
+ "notes": "Endpoints: the committed OpenAPI spec (zerver/openapi/zulip.yaml, servers .../api/v1), scope zproject/ and zerver/. Routes are Django urlconf entries through Zulip's helper, rest_path(\"realm\", PATCH=update_realm) in zproject/urls.py (which also creates the /json twin): no scanner reads them, recall 0 (django-urlconf). The only \"routes\" extracted are jQuery $.get(url, callback) calls in the browser code (call-taken-for-route). Calls (recall: three web/src files): the web app calls through channel.post({url: \"/json/bots\", ...}) — the URL is in an options object (request-config-object), none extracted. In the sample: fetch(url) where url is the function's parameter is resolved to a `url` variable of another function of the file (variable-other-scope); urljoin(settings.X, \"/api/v1/...\") keeps the base as a placeholder (url-object-builder); the development email log view drives Django's test Client (client.post(\"/accounts/password/reset/\")) outside test folders (test-client-in-source). Since the v2 cheap fixes (2026-10-15): $.get is a call, never a route, and a parameter is no longer resolved to another function's variable. Since 2026-10-17 a request described by an object is read: the web app's channel.post/get/patch/del({ url: \"/json/..\" }) — 124 calls more, the expected ones all found. Since H2 Phase 5 (2026-10-17): Django's test Client (from django.test import Client) counts as a test client, so the 9 development-view requests left the sample (they were its test-client-in-source items); urljoin onto an absolute path is that path, so zilencer's call to a remote server comes out as GET /api/v1/zulip-services/verify/{param}, judged right.",
  "checked": {
   "endpoints": [],
   "calls": [
@@ -925,84 +925,12 @@
     "category": null
    },
    {
-    "evidence": "zulip:zerver/views/development/email_log.py:102",
-    "method": "POST",
-    "path": "/accounts/home",
-    "raw": "/accounts/home/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:108",
-    "method": "POST",
-    "path": "/accounts/find",
-    "raw": "/accounts/find/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:117",
-    "method": "POST",
-    "path": "/json/invites",
-    "raw": "/json/invites",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:129",
-    "method": "PATCH",
-    "path": "/json/settings",
-    "raw": "/json/settings",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:144",
-    "method": "POST",
-    "path": "/accounts/confirm_new_email",
-    "raw": "/accounts/confirm_new_email/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:78",
-    "method": "POST",
-    "path": "/accounts/password/reset",
-    "raw": "/accounts/password/reset/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:84",
-    "method": "POST",
-    "path": "/accounts/password/reset",
-    "raw": "/accounts/password/reset/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:91",
-    "method": "POST",
-    "path": "/accounts/password/reset",
-    "raw": "/accounts/password/reset/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
-    "evidence": "zulip:zerver/views/development/email_log.py:96",
-    "method": "POST",
-    "path": "/accounts/password/reset",
-    "raw": "/accounts/password/reset/",
-    "ok": false,
-    "category": "test-client-in-source"
-   },
-   {
     "evidence": "zulip:zilencer/views.py:405",
     "method": "GET",
-    "path": "/https:/{param}/api/v1/zulip-services/verify/{param}",
-    "raw": "/https://{param}/api/v1/zulip-services/verify/{param}",
-    "ok": false,
-    "category": "url-object-builder"
+    "path": "/api/v1/zulip-services/verify/{param}",
+    "raw": "/api/v1/zulip-services/verify/{param}/",
+    "ok": true,
+    "category": null
    }
   ]
  },

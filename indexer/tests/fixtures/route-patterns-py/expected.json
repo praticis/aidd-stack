@@ -136,6 +136,11 @@
    "method": "POST",
    "path": "/v1/flag/configuration",
    "line": 19
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/services/verify/{param}",
+   "line": 32
   }
  ]
 }

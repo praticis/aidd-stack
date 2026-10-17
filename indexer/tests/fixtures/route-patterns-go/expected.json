@@ -271,6 +271,21 @@
    "handler": "getThread"
   },
   {
+   "method": "GET",
+   "path": "/schemas",
+   "handler": "listSchemas"
+  },
+  {
+   "method": "GET",
+   "path": "/schemas/{id}",
+   "handler": "getSchema"
+  },
+  {
+   "method": "GET",
+   "path": "/tenants/{param}/schemas",
+   "handler": "listSchemas"
+  },
+  {
    "method": "PATCH",
    "path": "/notifications/threads/{id}",
    "handler": "readThread"

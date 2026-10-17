@@ -92,21 +92,30 @@ Três passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `
      nome, nome); `finish()` prefixa, no fim do arquivo, o que foi registrado em cada router com cada cadeia de
      montagens acima dele. A raiz de um sub-router fica pendente (`MountedRoot`) e só vira rota montada com
      prefixo ou na própria aplicação.
-   - **Grafo de montagem entre arquivos** (etapa 2, Go e Python): um router que outro arquivo pode nomear tem um id
-     global — variável do módulo/pacote (`var:`), o router que uma função devolve (`ret:`, método por
+   - **Grafo de montagem entre arquivos** (etapa 2, Go, Python e TS/JS): um router que outro arquivo pode nomear tem
+     um id global — variável do módulo/pacote (`var:`), o router que uma função devolve (`ret:`, método por
      `Tipo.Metodo`, closure atribuída a variável pelo nome dela), parâmetro de função (`param:`) ou campo de struct
      (`field:`, Go). A rota num router desses espera a composição; o arquivo publica as arestas dos seus routers
      globais e as montagens de routers de fora — `r.Mount("/api/v1", apiv1.Routes())`,
-     `include_router(tag_router)`, `include_router(users.router)`, `app.mount("/x", app=sub)` — e os routers que
-     passa a funções (`users.Register(v1.Group("/users"))`, `addActionsRoutes(m)`). O router parâmetro de uma
-     região de closure é o router de fora. Imports pelo `RepoView` (`resolve_import` da linguagem).
+     `include_router(tag_router)`, `include_router(users.router)`, `app.mount("/x", app=sub)`,
+     `app.use('/api', require('./api'))` — e os routers que passa a funções (`users.Register(v1.Group("/users"))`,
+     `addActionsRoutes(m)`, `routes(app)`). O router parâmetro de uma região de closure é o router de fora. No TS/JS
+     o id é por arquivo (`var:<arquivo>:<nome>`, `ret:<arquivo>:<função>`; o que `export default`/`module.exports =`
+     exporta se chama `default`), e export com outro nome ou reexportação é aresta sem prefixo. Imports pelo
+     `RepoView` (`resolve_import` da linguagem).
    - `normalize_path`: `:id`, `{id:int}`, `<int:id>`, `%s`, `${x}`, `[controller]` → `{param}`-style;
      remove base URL, query string, barra final. `path_key` = tudo vira `{param}` (chave de join do linker).
 3. **Composição entre arquivos** (`BaseScanner.compose`, uma vez por linguagem depois do scan): cada arquivo deixa
    um resumo só de dados — `out.publish(tipo, nome, fato)` e rotas `Pending` (gravadas como o arquivo as escreve,
-   com o que falta para completá-las) — e a linguagem as resolve sem reabrir árvores (F1.13). Hoje: o `[Route]`
-   herdado e os wrappers de cliente do C#, o grafo de montagem entre arquivos de Go e Python (`mount_rule`) o path
-   que o encoder de um cliente go-kit põe na request (`go.encoder`) e o `basePath` do servidor go-swagger (`go.swagger-base`).
+   com o que falta para completá-las) — e a linguagem as resolve sem reabrir árvores (F1.13). Hoje:
+   - C#: o `[Route]` herdado (`cs.class`), as actions de base abstrata (`cs.actions`) e os wrappers de cliente do app;
+   - Go, Python e TS/JS: o grafo de montagem entre arquivos (`mount_rule`, com `<regra>.edge` e `<regra>.app`);
+   - Go: o path que o encoder de um cliente go-kit põe na request (`go.encoder`) e o `basePath` do servidor
+     go-swagger (`go.swagger-base`);
+   - TS/JS: os wrappers de rota e de montagem do projeto (`ts.route-wrapper`, `ts.mount-wrapper`, com as chamadas
+     candidatas `ts.route.maybe`, `ts.mount.maybe`) e o prefixo global do Nest por pacote (`ts.nest-prefix`, com o
+     `exclude` em `ts.string-array`). A ordem do `TsScanner.compose`: rotas de wrapper, montagens por wrapper, grafo
+     de montagem, Nest — cada passo produz o que o seguinte compõe.
 
 Regras aprendidas no corpus (não regredir):
 
@@ -202,13 +211,36 @@ Regras aprendidas no corpus (não regredir):
 | Express `'/reset/:code?'`, `'/chats/:roomid?/:index?'`: só a forma longa saía | parâmetro opcional no fim gera também a rota sem ele, um por vez (`/chats`, `/chats/{roomid}`, `/chats/{roomid}/{index}`) — no registro direto e nas rotas de wrapper |
 | Requisição descrita por objeto (`request-config-object`): zulip `channel.post({ url: "/json/bots" })`, gotify `axios.create().request({ url, method: 'POST' })`, `$.ajax(url, { type })`, o SDK do openapi-ts `(options.client ?? client).post({ url: '/api/v1/..' })` | num método de verbo (`get`…`delete`, `del`) ou em `request`/`ajax`/`axios`, um objeto com `url` que guarda um path é a requisição, qualquer que seja o receptor; verbo do nome do método, senão o `method` (o `type` do jQuery) do próprio objeto, senão GET — só as chaves do próprio objeto (o `security: [{ type: 'http' }]` do openapi-ts não é verbo) |
 | Cliente gerado pelo oazapfts (immich `packages/sdk`, 279 operações): `oazapfts.fetchJson<T>(`/activities${QS.query(..)}`, oazapfts.json({ ...opts, method: "POST" }))` não era chamada | em arquivo com o cabeçalho do oazapfts, `oazapfts.fetchJson`/`fetchText`/`fetchBlob` é chamada `generated-client`: path sem a query (`${QS.query(..)}`), sob o `baseUrl` literal do cliente (`defaults.baseUrl = "/api"`); verbo das opções (também dentro de `oazapfts.json/multipart/form(..)`), GET sem |
+| `client = Client()` com `from django.test import Client` numa view de desenvolvimento (zulip `email_log.py`, 9 chamadas) virava chamada de saída | o `Client()` de teste do Django (importado de `django.test`) entra na regra do `TestClient`: o que passa por ele exercita o próprio app |
+| `urljoin(f"https://{hostname}", f"/api/v1/x/{token}/")` gravado como `/https:/{param}/api/v1/x/{param}` | `urljoin` com path absoluto no 2º argumento é esse path; numa junção que começa por URL, o host fica e o resto se junta ao path dela |
+| `` `https://host/admin/${token}god_mode=true` `` aceito como chamada: uma URL passava na validação com qualquer coisa depois do host | `is_url_literal`: o path da URL (placeholders mascarados, sem a query) tem de ser um path de rota, como os literais sem host |
+| `public.GET(fmt.Sprintf("/%s", SchemasPath), h)` com `SchemasPath = "schemas"` (kratos) gravado como `GET /{param}` | `%s`/`%v` do `Sprintf` cujo argumento o código guarda vale como numa interpolação (`_substitution`: constante de segmento inteiro, de path no começo, fora de wrapper genérico); os outros verbos ficam parâmetro |
+| Hono `'/post/:id{[0-9]+}'` gravado como `/post/{id}{[0-9]+}` | parâmetro com restrição de regex do Hono (`:id{..}`, chaves aninhadas num nível) vira o parâmetro, antes de cortar a query |
+| Rotas e chamadas de servidores e helpers de teste fora de pasta `test` (mattermost `e2e-tests/cypress/webhook_serve.js`, kratos `courier/template/testhelpers`, Playwright) | `TEST_FILE` cobre também `e2e-tests/`, `cypress/`, `playwright/` e `testhelpers/`. `integration/` não: em app real é nome de código de produção (integrações), e o do nest e do fastify fica para a config por repo (F1.1) |
 
-Limitações conhecidas (candidatas a evolução — ver handoffs): versionamento de URI do Nest
-(`enableVersioning` + `version` no controller); router guardado num registro e montado em laço
-(`for plugin in plugins: include_router(plugin.events)`), reexportação por `__init__.py`,
-rotas por convenção de nome (`MapGet(GetTodoItems)`), URL montada em runtime sem literal, gRPC/proto,
-mensageria. O prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é
-problema do **linker** (match por sufixo + `target_hint`/`env_hints`), não do extrator.
+Limitações conhecidas no fechamento do H2 (2026-10-17; as que são evolução do extrator estão no ROADMAP, **F1.14**,
+com os números do corpus):
+
+- **Sem scanner:** Django urlconf e DRF (`path()`, `rest_path()`, `router.register()`); rotas por arquivo (Next.js
+  `app/**/route.ts`, `@fastify/autoload` por pasta); rotas por convenção de nome (`MapGet(GetTodoItems)`).
+- **Composição que o grafo ainda não segue:** router guardado num registro e montado em laço
+  (`defaultRoutes.forEach(r => router.use(r.path, r.route))`, `for plugin in plugins: include_router(plugin.events)`);
+  método de router chamado por um campo de tipo declarado (`api.deprecationRouter.Register(r.WithPrefix("/api/v1"))`);
+  closure de registro atribuída e chamada dentro de vários grupos (gitea `addIssuesPullsViewRoutes`); tipo de router
+  que acrescenta o prefixo nos próprios métodos (kratos `RouterAdmin`); reexportação por `__init__.py`; versionamento
+  de URI do Nest (`enableVersioning` + `version`).
+- **Wrapper de cliente fora do C#:** o cliente do próprio app que põe a base no path (argo-cd `requests.get('/x')` →
+  `` agent.get(`${apiRoot()}${url}`) ``, NodeBB `api.put(..)` → `/api/v3`, gitea `GET(url)`): no TS e no Python a
+  chamada sai sem o prefixo, ou não sai.
+- **Limitação, não evolução:** prefixo que só existe em runtime (NodeBB `` `/api/${name}/..` `` montado com nomes de
+  plugins) — o linker compara segmentos literais, então `/{param}/x` não liga nada e o extrator não grava; router
+  entregue por uma interface (gotify `instance.RegisterWebhook(base, g)` aos plugins); rotas de biblioteca que o
+  usuário monta (`middleware.Profiler()` do chi); URL montada em runtime sem literal; gRPC/proto e mensageria
+  (F1/F2.2).
+- **Fora do extrator:** o prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é do
+  **linker** (match por sufixo + `target_hint`/`env_hints`); a spec como fonte de rotas, do **F2.1**; a mesma rota em
+  dois apps do repo (o id do endpoint é por repo), do modelo (F1.14); pastas de app de teste com nome de produção
+  (`integration/` do nest e do fastify), da config por repo (F1.1, `.aidd/index.yaml`).
 
 ## 4. Como rodar localmente (sem Neo4j)
 
@@ -228,7 +260,10 @@ inspecionar o que o extrator viu num repo específico.
 
 - **Fixtures golden** (`indexer/tests/fixtures/<nome>/` + `expected.json`, rodadas por `pytest tests/`): cada
   padrão suportado aparece uma vez com o resultado esperado; precisão e recall 100 % obrigatórios. Hoje:
-  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `route-patterns-{go,ts,py,cs}` (raiz só com path conhecido, restrições/conversores, padrão relativo em grupo, router com nome de cliente — e os contra-exemplos que não podem virar rota; desde os defeitos do corpus v2 também constantes montadas e com URL, escopo de variáveis, jQuery, mounts do `ServeMux`, aiohttp, método em variável e bundle de build; desde a etapa 2 do grafo, routers de outros arquivos e pacotes, por parâmetro e em campo de struct — `route-patterns-go/{cmd/crossfile,internal}`, `route-patterns-py/app/crossfile`; desde o item 4, cadeias de rota — `route-patterns-go/cmd/{combo,chain,addsvc}`, `route-patterns-ts/src/chain.ts`), `ts-express-nest`, `csharp-httpclients`
+  `go-http-mix` (net/http 1.22, gorilla, chi, gin+Group, clientes Go), `route-patterns-{go,ts,py,cs}` (uma linha
+  por regra da tabela do §3, com o caso e o contraexemplo que não pode virar rota nem chamada; os casos entre arquivos
+  ficam em subpastas próprias — `route-patterns-go/{cmd/crossfile,internal}`, `route-patterns-py/app/crossfile`,
+  `route-patterns-ts/src/crossfile`, `route-patterns-ts/nest/` com `package.json` próprio), `ts-express-nest`, `csharp-httpclients`
   (HttpClient em 8 formas, Refit, Flurl, RestSharp, controllers) e o par **`csharp-praticis-todos` /
   `csharp-praticis-reports`** (+ `csharp-praticis-projects`) — o padrão .NET do autor em domínio genérico, uma
   fixture por layout (`flat`, `split`, `layered`) (Contracts + controller →
@@ -239,13 +274,40 @@ inspecionar o que o extrator viu num repo específico.
   proposital por fixture), `edges` (`CALLS` com estratégia) e `gaps` (ligações que o grafo ainda não vê — xfail até
   aparecerem; quando aparecem, o teste pede para movê-las a `edges`). Regenerar `expected.json` só depois de
   conferir cada linha na fonte — nunca a partir da saída do extrator sem revisão.
-- **Corpus público** (`scripts/http_corpus.py`, 39 repos fixados por SHA): `--baseline <execução>` lista, por
-  repo, os ids `method path_key evidence` que entraram e saíram — toda mudança no extrator é julgada item a item
-  nesse diff; `--expected` dá precisão/recall contra `tests/corpus_expected/<repo>.json` (spec commitada ou lista
+- **Corpus público** (`scripts/http_corpus.py`, 42 repos fixados por SHA, 41 com gabarito): `--baseline <execução>`
+  lista, por repo, os ids `method path_key evidence` que entraram e saíram — toda mudança no extrator é julgada item a
+  item nesse diff; `--expected` dá precisão/recall contra `tests/corpus_expected/<repo>.json` (spec commitada ou lista
   lida na fonte, com `scope`, a `category` de cada falta e a amostra `checked` julgada na fonte; formato no
   docstring de `scripts/corpus_metrics.py`) e fecha com os resumos por linguagem e por categoria (com o número de
   repos em que cada uma aparece); `--reuse <execução>` pontua uma execução salva sem extrair de novo — só para
   editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`.
+- **O ciclo de uma mudança no extrator** (o do H2b, um commit por categoria):
+  1. fixture com o caso e o contraexemplo, e conferir que ela **falha** sem a mudança;
+  2. a mudança, e `pytest tests/` inteiro;
+  3. o corpus contra a baseline vigente (a última `runs/<data>-v2-baseline-N`, em "Onde estamos" do
+     `H2-roadmap.md`):
+
+     ```bash
+     docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro \
+       -v ~/.cache/aidd-corpus:/corpus --entrypoint python aidd-indexer:local /src/scripts/http_corpus.py \
+       --dir /corpus/repos --json /corpus/runs/<data>-<rótulo> --baseline /corpus/runs/<baseline> --show 20 --expected
+     ```
+
+     Com nomes de repos, roda só esses — para iterar; a medida que vale é a do corpus inteiro. Os nomes vêm antes do
+     `--expected`, que aceita um diretório (`... --show 20 nodebb ghost --expected`);
+  4. julgar o diff **item a item na fonte**: cada item que sai tem de estar errado antes, e cada um que entra, certo.
+     Mudança que a regra não explica é defeito da regra, mesmo com P/R subindo — no H2b, assim apareceram a chamada
+     do k6 engolida por uma candidata a wrapper e a precisão do NodeBB caindo de 94 para 80 % com prefixos de runtime.
+     Nenhum repo pode regredir (H2-D11);
+  5. gabaritos: rota que só existe na spec sai, e rota real fora dela achada ao conferir um item entra (H2-D15); a
+     linguagem é declarada por tipo quando difere da do repo (H2-D17); um item `checked` cuja `evidence` mudou de
+     linha é reconferido, não copiado; depois de editar, `--reuse` pontua de novo;
+  6. docs: linha "sintoma → regra" no §3, seção "Update" no `corpus-report.md`, item e log no `H2-roadmap.md`;
+  7. a execução julgada vira a nova baseline (`runs/<data>-v2-baseline-N+1`) e o docstring do script ganha as
+     contagens novas.
+
+  Tempo: um repo que sai muito do tempo da baseline é rodado sozinho antes de culpar a mudança — no H2b os picos
+  (mattermost 1369 s, bitwarden 813 s) eram da máquina, e sozinhos davam o tempo de sempre.
 - **Amostragem manual**: sortear 10–20 itens por repo e conferir na fonte (`evidence` aponta linha).
   Anotar falsos positivos/negativos na tabela de regras (§3). Precisão importa mais que recall no
   extrator: o linker só liga o que casa; ruído vira aresta errada no grafo.

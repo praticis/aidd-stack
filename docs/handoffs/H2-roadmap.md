@@ -58,15 +58,21 @@
   wrapper de montagem, router de módulo devolvido pela função exportada, parâmetro opcional do Express no fim; rotas
   TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB R 8,7 → 73,1 %). **Clientes gerados TS e requisição descrita por
   objeto (2026-10-17):** SDK do oazapfts (immich, 279) e do openapi-ts (fastapi-template, 23), `channel.post({ url })`,
-  `axios.request({ url, method })`, `$.ajax(url, {..})`; chamadas TS/JS P 59,5 → 91,4 %, R 12,1 → 87,4 %.
-- **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
+  `axios.request({ url, method })`, `$.ajax(url, {..})`; chamadas TS/JS P 59,5 → 91,4 %, R 12,1 → 87,4 %. **Fase 5
+  (2026-10-17), menos o *hold-out*:** os últimos defeitos baratos (`Client()` de teste do Django, `urljoin` com path
+  absoluto, path de URL validado, restrição do Hono, `Sprintf` com constante de segmento, pastas de teste por nome);
+  guia §3 e §5; relatório com "Closing H2b" (do primeiro v2 ao último, nos mesmos gabaritos e 38 repos: rotas
+  C# R 55,6 → 93,1 %, Go 9,4 → 98,0 %, Python fora do Django 9,1 → 98,0 %, TS/JS 4,3 → 85,4 %; chamadas C# 48,3 →
+  96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %) e o destino de cada lacuna; ROADMAP com o **F1.14** (o que o H2
+  deixou para o extrator).
+- **Incremento atual:** H2b — Fase 5, falta o *hold-out* (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-17-v2-baseline-15/` — corpus v2, 42 repos, com os
-  clientes gerados TS (a `2026-10-16-v2-baseline-14` é a dos wrappers de rota TS; a `-13`, a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-17-v2-baseline-16/` — corpus v2, 42 repos, no fechamento
+  do H2b (a `-15` é a dos clientes gerados TS; a `2026-10-16-v2-baseline-14` é a dos wrappers de rota TS; a `-13`, a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -91,9 +97,9 @@
   nas rotas o prefixo montado em runtime, `prefix-as-param`, 119 no NodeBB — limitação; o laço sobre array literal
   do express-boilerplate, 14; o autoload por pasta do fastify-demo, 14; as rotas por arquivo do Next.js, 9; nas
   chamadas, o wrapper de cliente com prefixo próprio, `prefix-in-client-wrapper`, 34, e os wrappers do gitea, 15,
-  que pedem o tipo do receiver em TS). **Próximo: a Fase 5** — o conjunto *hold-out* (repos fora do ajuste, medidos
-  uma vez, para checar sobreajuste ao corpus), o guia (§3 com as regras novas e o sintoma, §5 com `--expected` e
-  `--baseline`), o ROADMAP (F0.4.3b) e o encaminhamento das lacunas que sobram (limitação, F1 ou F2.1).
+  que pedem o tipo do receiver em TS). **Próximo: o *hold-out*, último passo da Fase 5** — repos fora do ajuste,
+  com o perfil do portfólio (H2-D18), gabarito pela spec commitada onde houver, medidos **uma vez** com o extrator
+  como está, para checar sobreajuste ao corpus; depois, F0.4.3b `[x]` no ROADMAP.
 
 ## Decisões
 
@@ -233,7 +239,9 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   só é rota com verbo); no caminho, `http.StripPrefix` monta o router de dentro e um router de outro arquivo
   servido por `http.Serve`/`ListenAndServe` é aplicação (as rotas valem nos dois lugares). Fixtures
   `route-patterns-go/cmd/{combo,chain,addsvc}` e `route-patterns-ts/src/chain.ts`
-- [ ] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+- [x] **5. Chamadas:** `field-in-interpolation` (TS e C#), `url-object-builder` (todas as linguagens), `request-config-object`
+  *(fechado em 2026-10-17; sobram o `adminUrl` do ghost, de `window.location` — limitação — e 2 `url-object-builder`,
+  no F1.14)*
   - [x] *(2026-10-17)* `request-config-object` (TS/JS): objeto com `url` num método de verbo ou em
     `request`/`ajax`/`axios` é a requisição, qualquer que seja o receptor; verbo do nome, do `method` ou do `type` do
     próprio objeto, senão GET — zulip `channel.post({ url })`, gotify `axios.request`, `$.ajax(url, {..})`; o mesmo
@@ -278,38 +286,50 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   wrapper) + candidatos `ts.route.maybe` + `TsScanner.compose`, registros do corpo do wrapper marcados (`ts.wrapped`)
   e descartados só quando o wrapper é usado; router de módulo devolvido pela função exportada; parâmetro opcional do
   Express no fim. Fixture `route-patterns-ts/src/crossfile/wrappers`
-- [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
-  rotas por arquivo do Next.js, flask-restx
+- [x] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
+  rotas por arquivo do Next.js, flask-restx *(2026-10-17: Django e Next.js encaminhados ao F1.14)*
   - [x] *(2026-10-16)* flask-restx (também `flask_restplus`/`flask_restful`), adiantado pelo H2-D18 (o Python do
     portfólio é Flask/FastAPI): `Namespace`/`Api` como routers, `Api(blueprint)` montado no blueprint,
     `add_namespace(ns, path)` como montagem entre arquivos, uma rota por método do `Resource`; no caminho, o
     decorador aplicado à mão (`router.post("/x")(fn)`, dispatch). Fixtures `route-patterns-py/app/{restx,decorcall.py}`
-- [ ] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
+- [x] **9. `test-app-folder`** (agora em 4 repos): exclusão por repo no `atlas.yaml` é a resposta mais segura
+  *(2026-10-17: `e2e-tests/`, `cypress/`, `playwright/` e `testhelpers/` entram no `TEST_FILE` — kratos e mattermost;
+  `integration/` do nest e do fastify, 20 rotas, fica para a config por repo do F1.1)*
 - [x] Decidir H2-D9 e H2-D10 — *(2026-10-15)* as duas recomendações do relatório aceitas (itens 6 e 7)
 
 ### Fase 5 — fechamento
-- [ ] ROADMAP: F0.4.3b `[x]`; gaps encaminhados (base URL → F0.5 linker; spec como fonte → F2.1; resto → F1 ou limitação)
-- [ ] Guia: §3 (regras novas com o sintoma) e §5 (como usar `--expected`/`--baseline`)
+- [ ] ROADMAP: F0.4.3b `[x]` (depois do *hold-out*); gaps encaminhados *(2026-10-17)* — base URL → F0.5 linker; spec
+  como fonte → F2.1; evolução do extrator → **F1.14** (novo); pastas de app de teste com nome de produção → F1.1;
+  resto → limitação no guia. Tabela "Where each remaining gap goes" em `corpus-report.md`
+- [x] *(2026-10-17)* Guia: §3 (composição entre arquivos com o TS, as regras novas com o sintoma, limitações
+  agrupadas por destino) e §5 (o ciclo de uma mudança: fixture que falha sem a regra → corpus `--baseline` →
+  julgamento item a item → gabaritos com H2-D15/H2-D17 → nova baseline; repos antes do `--expected`; picos de tempo)
+- [x] *(2026-10-17)* Últimos defeitos baratos do ranking final, cada um com fixture: `Client()` de teste do Django
+  (zulip, 9 chamadas), `urljoin` com path absoluto (zilencer), path de URL validado (`is_url_literal`, a pendência
+  do `URL_LITERAL`), restrição de regex do Hono, `Sprintf` com constante de segmento (kratos `/schemas`, exposto
+  pela mudança seguinte), `TEST_FILE` com `e2e-tests/`, `cypress/`, `playwright/`, `testhelpers/` (item 9 da Fase 4,
+  em parte: `integration/` fica para a config por repo)
 - [ ] Dívidas registradas na reciclagem de 2026-10-15 (nenhuma bloqueia a Fase 4):
-  - catálogo de frameworks como dado (verbos, nomes de registro, receptores de cliente), extensível pelas
-    convenções do projeto — junto dos itens 7/8, quando entrar o primeiro reconhecedor novo
-  - os scanners leem `CLIENT_RECEIVER` direto em vez de pedir o cliente às convenções
-  - limiares fixos no `built_bundle` (detecção de artefato de build)
-  - um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
+  - [x] *(2026-10-17)* encaminhadas ao **F1.14**: catálogo de frameworks como dado (verbos, nomes de registro,
+    receptores de cliente), com os scanners pedindo o cliente às convenções em vez de ler `CLIENT_RECEIVER`; os
+    limiares fixos do `built_bundle` (nenhum erro no corpus)
+  - [ ] um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
   - [x] *(2026-10-16)* na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda —
     `RepoView` chama o `resolve_import` de cada linguagem
-  - custo do HTTP no netbox: 49 s de 107 s, com 0 rotas e 0 chamadas (zulip 17 s de 47 s) — perfilar junto do F1.13
-- [ ] Pendências do item 6, fora do corpus atual (medir quando a fatia .NET crescer):
+  - [x] *(2026-10-17)* custo do HTTP no netbox (49 s de 107 s, com 0 rotas e 0 chamadas; zulip 17 s de 47 s) —
+    anotado no F1.13, para perfilar junto
+- [x] Pendências do item 6, fora do corpus atual:
   - [x] *(2026-10-16)* linker: rotas ASP.NET casadas sem distinção de caixa (F0.5); o extrator passou à caixa
     declarada, a dos clientes gerados
   - [x] *(2026-10-16)* actions herdadas de controller base abstrato (CRUD genérico) — notifo, 27 rotas
-  - FastEndpoints: `RoutePrefix` global e `Group<T>()` — 0 no corpus
-  - herança de `[Route]` em mais de um nível (H2-D10 decidiu um)
-- [ ] Pendências das chamadas C# (item 5):
+  - [x] *(2026-10-17)* FastEndpoints `RoutePrefix` global e `Group<T>()`, herança de `[Route]` em mais de um nível
+    (0 no corpus) → F1.14, medir quando a fatia .NET crescer
+- [x] Pendências das chamadas C# (item 5):
   - [x] *(2026-10-16)* **fora do HTTP:** chamada genérica com receiver (`obj.Method<T>(...)`) vira call site; tipo de
     pacote no receiver só alcança extensão do repo (ROADMAP, log de 2026-10-16)
-  - `URL_LITERAL` aceita qualquer caractere depois do host (`/x/{param}{param}god_mode=true` passaria)
-  - wrappers de cliente em TS (gitea, 16) e Python: o mesmo caminho, com o tipo do receiver de cada linguagem
+  - [x] *(2026-10-17)* `URL_LITERAL` aceitava qualquer caractere depois do host — `is_url_literal` exige um path de
+    rota depois dele
+  - [x] *(2026-10-17)* wrappers de cliente em TS (gitea, 16; com prefixo, 34) e Python → F1.14
 
 ## Taxonomia de erros
 
@@ -626,3 +646,17 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   da spec sob `/api`, escopo `packages/sdk/`) e do fastapi-template (as 23 rotas, escopo `frontend/src/client/`,
   linguagem TS/JS pelo H2-D17); os 9 `request-config-object` encontrados. Chamadas TS/JS P 59,5 → 91,4 %, R 12,1 →
   87,4 %. HTTP do corpus 106,9 s. Nova baseline `2026-10-17-v2-baseline-15`. O TS fecha no essencial; próximo, a Fase 5.
+- 2026-10-17: **Fase 5, menos o *hold-out*.** Últimos defeitos baratos do ranking final, um fixture cada (e cada um
+  falhando sem a regra): `Client()` de teste do Django numa view de desenvolvimento (zulip −9 chamadas erradas),
+  `urljoin` com path absoluto (zilencer: `GET /api/v1/zulip-services/verify/{param}`), path de URL validado como path
+  de rota (`is_url_literal`, a pendência do `URL_LITERAL`), restrição de regex do Hono (`GET /post/{id}`), pastas de
+  teste por nome (`e2e-tests/`, `cypress/`, `playwright/`, `testhelpers/`: mattermost −33 rotas e −31 chamadas do e2e,
+  kratos −5 rotas e −6 chamadas, fastapi −7 chamadas dos scripts Playwright; nenhuma num gabarito) e, exposto por
+  ela, `Sprintf` com constante de segmento (kratos `GET /schemas`, `/schemas/{id}`, na spec). Diff julgado item a
+  item em duas rodadas; nenhum repo regride; rotas Go R 97,8 → 98,0 %, chamadas Python P amostrada 69,7 → 100 %.
+  HTTP do corpus 105,2 s. Nova baseline `2026-10-17-v2-baseline-16`. Guia §3 (composição com o TS, regras novas,
+  limitações por destino) e §5 (o ciclo de uma mudança); relatório com "Closing H2b": do primeiro v2 ao último, nos
+  mesmos gabaritos e 38 repos, rotas C# R 55,6 → 93,1 %, Go 9,4 → 98,0 %, Python fora do Django 9,1 → 98,0 %, TS/JS
+  4,3 → 85,4 %; chamadas C# 48,3 → 96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %; e o destino de cada lacuna.
+  ROADMAP: **F1.14** (o que o H2 deixou para o extrator, na ordem do portfólio, com as dívidas da reciclagem), custo
+  do HTTP no netbox no F1.13. Falta o *hold-out*; depois, F0.4.3b `[x]`.

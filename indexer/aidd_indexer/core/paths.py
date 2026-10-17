@@ -20,6 +20,16 @@ _NOT_A_PATH_HEAD = {"http", "https", "utf", "bearer", "basic", "true", "false"}
 MIME_TYPE = re.compile(r"^(application|text|image|multipart|audio|video|message|font|model)/[A-Za-z0-9.+\-]+$", re.I)
 
 
+def is_url_literal(s: str) -> bool:
+    """`https://host`, or `https://host/path` with a path a route could have (placeholders masked, the query aside):
+    `https://host/admin/{token}god_mode=true` is not one."""
+    m = URL_LITERAL.match(s)
+    if m is None:
+        return False
+    tail = mask_placeholders(m.group(1) or "/").split("?", 1)[0].split("#", 1)[0]
+    return PATH_LITERAL.match(tail) is not None
+
+
 def unquote(s: str) -> str:
     s = s.strip()
     s = re.sub(r"^[fFrRbBuU$@]{1,3}(?=[\"'`])", "", s)     # f"..", $"..", @"..", rb".."
@@ -62,6 +72,7 @@ def normalize_path(path: str) -> str:
     if m:
         p = m.group(1) or "/"
     p = re.sub(r"\{([./]?):([A-Za-z_][A-Za-z0-9_]*)\}", r"\1{\2}", p)   # Express 5 optional group {:q}, {.:ext}, {/:id} → its parameter
+    p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\{(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # Hono :id{[0-9]+}, before the ?
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # {id:int}, {id:[0-9]{4}} → {id}: before
     #                                                             the query split — a regex constraint may hold `?`
     p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split

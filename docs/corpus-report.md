@@ -3,9 +3,10 @@
 Precision and recall of the HTTP integration extractor (`core/integrations.py` + `languages/<lang>/http.py`)
 on the public calibration corpus. v1 (F0.4.3a, handoff H2a) measured the 15 repositories the extractor was
 calibrated on, pinned to fixed commits and measured against an expected list per repository. The two
-"Update" sections record the cheap fixes that followed. **v2** (the last part of this report) widens the corpus
-to 39 repositories, most of them real applications, and resets the order of H2b (F0.4.3b). Plan, decisions and
-status are in `docs/handoffs/H2-roadmap.md`.
+"Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
+most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
+H2b, and **"Closing H2b"** at the end has where it started, where it ends and where each remaining gap goes. Plan,
+decisions and status are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -1532,3 +1533,113 @@ What TS/JS calls still miss (52):
 **Timing.** HTTP extraction took 106.9 s, against 105.2 s before.
 
 New baseline: `2026-10-17-v2-baseline-15`.
+
+## Update: the last cheap fixes (2026-10-17, H2 Phase 5)
+
+The final ranking still showed a few defects that one line of rule fixes. Each now has a fixture with a case and a
+counterexample, and each fixture fails without its rule:
+
+- **Django's test client.** `client = Client()` with `from django.test import Client` now counts as a test client,
+  like `TestClient(app)`. It was in a development view outside test folders: 9 zulip calls, all judged wrong.
+- **`urljoin` onto an absolute path.** `urljoin(f"https://{hostname}", f"/api/v1/../{token}/")` was recorded as
+  `/https:/{param}/api/v1/..`. Now an absolute second argument is the path, and a join that starts with a URL keeps
+  its host.
+- **The path of a URL is checked.** A URL passed validation with anything after the host. Its path must now be a
+  route path, as for a literal without a host: `https://host/admin/${token}god_mode=true` is no call. This was
+  the open item of the C# calls.
+- **Hono's regex constraint.** `/:id{[0-9]+}` is the parameter.
+- **Test folders by name.** `TEST_FILE` now also covers `e2e-tests/`, `cypress/`, `playwright/` and `testhelpers/`
+  (`e2e/` already counted). `integration/` is left out on purpose, because in real apps it often names production
+  code. The test apps of nest and fastify under that name go to the per-repository config of F1.1.
+- **A constant formatted into a path.** `fmt.Sprintf("/%s", SchemasPath)` with `SchemasPath = "schemas"` (kratos).
+  The test-helper change exposed it: a fake server in `testhelpers/` had held the same endpoint id,
+  `GET /{param}`. Now a `%s` or `%v` whose argument the code holds takes its value, under the same rule as an
+  interpolation: a whole-segment constant, or a path at the start, and never in a generic wrapper.
+
+Diff against `2026-10-17-v2-baseline-15`, judged item by item:
+
+- zulip: −9 calls (the test client); the zilencer call moves to `GET /api/v1/zulip-services/verify/{param}`, a real
+  call to a remote server, judged right.
+- mattermost: −33 routes, the Cypress webhook server, and −31 calls from the e2e helpers. Those calls were counted
+  by the baseline (the TS generated clients update says so). They are test code, so they leave, like `e2e/`
+  before them. None was in an expected list. 9 of them were in the sample: 7 judged right as HTTP and 2 wrong.
+- kratos: −5 routes and −6 calls from `testhelpers/`; `GET /schemas` and `GET /schemas/{id}` come out (both in
+  the spec).
+- fastapi: −7 calls, the `scripts/playwright` screenshot scripts.
+- hono-examples: `GET /post/{id}` right.
+
+No repository regressed against its expected list. Go route recall goes from 97.8 % to 98.0 % (1502/1533), and the
+sampled precision of Python calls from 69.7 % to 100 % (17/17). HTTP extraction took 105.2 s.
+
+New baseline: `2026-10-17-v2-baseline-16`.
+
+## Closing H2b (2026-10-17)
+
+H2b set out to widen the corpus and to evolve the extractor on the categories that are general rules. The corpus
+went from 15 repositories to 42, 41 with an expected list. The extractor went through Phase 4's items in the order
+the v2 ranking set, with one change of order by portfolio priority (H2-D18: .NET first, then Go and Python, then
+TS).
+
+### Where it started and where it ends
+
+Same expected lists (today's), same 38 repositories (the three .NET apps added later are left out), the first v2 run
+(`2026-10-15-v2-baseline`) against the last (`2026-10-17-v2-baseline-16`):
+
+| Language | Kind | P expected, first → last | R expected, first → last |
+|---|---|---|---|
+| C# | routes | 72.1 % → 100 % | 55.6 % → 93.1 % (134/144) |
+| C# | calls | 62.2 % → 100 % | 48.3 % → 96.6 % (56/58) |
+| Go | routes | 20.4 % → 99.1 % | 9.4 % → 98.0 % (1502/1533) |
+| Go | calls | 100 % → 100 % | 8.2 % → 93.6 % (103/110) |
+| Python | routes | 26.1 % → 99.0 % | 2.0 % → 21.3 % (387/1815) |
+| Python | calls | 100 % → 100 % | 66.7 % → 66.7 % (2/3) |
+| TS/JS | routes | 7.0 % → 95.6 % | 4.3 % → 85.4 % (944/1105) |
+| TS/JS | calls | 44.6 % → 91.4 % | 6.1 % → 87.4 % (361/413) |
+
+Python route recall is held down by Django, which has no scanner: 1420 of the 1815 expected routes are zulip's and
+netbox's urlconfs. Without them, Python route recall goes from 9.1 % to 98.0 % (387/395).
+
+Sampled precision covers whole repositories, not only what a spec lists. On all 42 repositories it is:
+
+| Language | Routes | Calls |
+|---|---|---|
+| C# | 100 % (152/152) | 100 % (100/100) |
+| Go | 88.1 % (192/218) | 100 % (16/16) |
+| Python | 98.9 % (90/91) | 100 % (17/17) |
+| TS/JS | 71.9 % (115/160) | 71.7 % (104/145) |
+
+- Go routes: chi's mountable profiler (library code, 13), alertmanager's v1 routes passed to a method through a
+  struct field (7), and four small cases.
+- TS/JS routes: the framework's own test apps under `integration/` (nest, fastify; 20), fastify-demo's autoload by
+  folder (10), express-boilerplate's routers mounted in a loop (8), and NodeBB's runtime prefixes (5).
+- TS/JS calls: a client wrapper that prepends its prefix, in NodeBB, argo-cd's UI and mattermost (37), and Ghost's
+  `adminUrl` from `window.location` (4).
+
+### Where each remaining gap goes
+
+| Category | Wrong | Missed | Repos | Goes to |
+|---|---|---|---|---|
+| `django-urlconf` | 0 | 1420 | 2 | F1.14 (new scanner), when a portfolio asks |
+| `prefix-as-param` | 9 | 119 | 3 | limitation: a prefix only known at runtime (NodeBB plugin names); `/{param}/x` links nothing |
+| `prefix-in-client-wrapper` | 37 | 34 | 3 | F1.14, TS/JS client wrappers (C#'s path; TS now resolves imports) |
+| `client-wrapper` | 0 | 16 | 2 | F1.14, same item |
+| `test-app-folder` | 20 | 0 | 2 | F1.1, per-repository excludes (`.aidd/index.yaml`) |
+| `multi-app-repo` | 0 | 16 | 7 | F1.14, the model: the endpoint id is per repository |
+| `prefix-by-folder` | 10 | 14 | 1 | F1.14, routes by folder (`@fastify/autoload`) |
+| `prefix-other-file` | 9 | 14 | 2 | F1.14, routers kept in a list and mounted in a loop (express-boilerplate) |
+| `library-code` | 13 | 0 | 1 | limitation: a library's routes, mounted by its users |
+| `prefix-in-router-type` | 1 | 12 | 1 | F1.14, a router type that adds its prefix (kratos `RouterAdmin`) |
+| `router-as-param` | 10 | 0 | 3 | F1.14 (a method called through a typed struct field, closures called inside groups); gotify's plugin router by interface is a limitation |
+| `route-by-name-convention` | 0 | 10 | 1 | convention (F0.4.5 `route_patterns`) |
+| `route-by-file-path` | 0 | 9 | 1 | F1.14, Next.js file routes |
+| `field-in-interpolation` | 4 | 1 | 2 | limitation: Ghost's `adminUrl` comes from `window.location` |
+| the rest (`router-from-registry`, `custom-registrar`, `url-in-field`, `url-from-helper`, `url-object-builder`, and single cases) | 0 | 27 | — | F1.14, when a portfolio shows them |
+
+The categories that leave the extractor keep the destinations v2 gave them. A prefix carried in the base URL goes
+to the linker (F0.5, done: suffix match with a hint). A spec as the source of routes goes to F2.1. Generated
+servers are in part extracted now (grpc-gateway, go-swagger), and the rest goes to F2.1.
+
+### What a hold-out set will check
+
+Every rule above was written against these 42 repositories, so their numbers can flatter the extractor. The last
+step of H2 measures, once, a set of repositories the rules never saw (see `docs/handoffs/H2-roadmap.md`).

@@ -2540,25 +2540,9 @@
    "path": "/signup/{service}/complete"
   }
  ],
- "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4, plus the routes only the code has, read in it (channel join requests, property field options, the /api/v4/{anything} 404 catch-all, the web package's OAuth routes: 24). Scope server/channels/api4/ and server/channels/web/oauth.go (where /oauth/intune and the OAuth metadata live). Every API route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). Until H2b item 2 step 2 (2026-10-16) the prefix never came out and the roots Handle(\"\", ...) were dropped (prefix-other-file, all 607). GET /.well-known/oauth-authorization-server, registered as MainRouter.PathPrefix(model.OAuthMetadataEndpoint).Handler(h).Methods(GET), was missed until H2b item 4 (2026-10-16) (path-prefix-handler): a PathPrefix with a method is one endpoint. The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured.",
+ "notes": "Endpoints: the spec is committed as fragments of the paths object (api/v4/source/*.yaml, assembled by the repo's own build), unioned here into 608 operations under /api/v4, plus the routes only the code has, read in it (channel join requests, property field options, the /api/v4/{anything} 404 catch-all, the web package's OAuth routes: 24). Scope server/channels/api4/ and server/channels/web/oauth.go (where /oauth/intune and the OAuth metadata live). Every API route is registered on a gorilla subrouter kept in a struct field built in api.go — api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix(\"/users\").Subrouter(), APIRoot = Router.PathPrefix(model.APIURLSuffix) — and used from another file: api.BaseRoutes.Users.Handle(\"/known\", h).Methods(http.MethodGet). Until H2b item 2 step 2 (2026-10-16) the prefix never came out and the roots Handle(\"\", ...) were dropped (prefix-other-file, all 607). GET /.well-known/oauth-authorization-server, registered as MainRouter.PathPrefix(model.OAuthMetadataEndpoint).Handler(h).Methods(GET), was missed until H2b item 4 (2026-10-16) (path-prefix-handler): a PathPrefix with a method is one endpoint. The e2e webhook test server (e2e-tests/cypress) registers routes outside test patterns (test-app-folder). Calls (sample only): the webapp and e2e helpers call `${Client4.getBaseRoute()}/...`, whose /api/v4 lives in the client class (prefix-in-client-wrapper) or in a route helper (url-from-helper); url.JoinPath(serverURL, \"version\") keeps the variable base as a placeholder (url-object-builder). CI scripts and external services are right. The webapp itself calls through Client4 (doFetch with this.getXRoute()), not measured. Since H2 Phase 5 (2026-10-17): e2e-tests/, cypress/ and playwright/ are test code (as e2e/ already was), so the webhook test server and the e2e helpers' calls left the run and the sample — 2 routes judged wrong and 9 calls (7 judged right as HTTP, 2 wrong) — none of them in the expected lists.",
  "checked": {
   "endpoints": [
-   {
-    "evidence": "mattermost:e2e-tests/cypress/webhook_serve.js:22",
-    "method": "POST",
-    "path": "/setup",
-    "raw": "/setup",
-    "ok": false,
-    "category": "test-app-folder"
-   },
-   {
-    "evidence": "mattermost:e2e-tests/cypress/webhook_serve.js:42",
-    "method": "POST",
-    "path": "/slack_compatible_message_response",
-    "raw": "/slack_compatible_message_response",
-    "ok": false,
-    "category": "test-app-folder"
-   },
    {
     "evidence": "mattermost:server/channels/api4/ai_bridge_test_helper.go:15",
     "method": "PUT",
@@ -2744,78 +2728,6 @@
     "raw": "https://api.github.com/repos/{param}/pulls/{param}",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/lib/src/server/keycloak.ts:178",
-    "method": "GET",
-    "path": "/admin/realms/{param}",
-    "raw": "/admin/realms/{param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/lib/src/server/keycloak.ts:44",
-    "method": "POST",
-    "path": "/realms/master/protocol/openid-connect/token",
-    "raw": "/realms/master/protocol/openid-connect/token",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/lib/src/server/keycloak.ts:92",
-    "method": "PUT",
-    "path": "/admin/realms/{param}/users/{param}",
-    "raw": "/admin/realms/{param}/users/{param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/channels/team_settings/helpers.ts:110",
-    "method": "DELETE",
-    "path": "/access_control_policies/{param}/unassign",
-    "raw": "/access_control_policies/{param}/unassign",
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/system_console/abac/burn_on_read/helpers.ts:348",
-    "method": "POST",
-    "path": "/api/v4/posts/schedule",
-    "raw": "/api/v4/posts/schedule",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/system_console/abac/masking/masking_helpers.ts:189",
-    "method": "GET",
-    "path": "/api/v4/access_control_policies/{param}",
-    "raw": "/api/v4/access_control_policies/{param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/system_console/abac/masking/masking_helpers.ts:212",
-    "method": "GET",
-    "path": "/api/v4/access_control_policies/{param}",
-    "raw": "/api/v4/access_control_policies/{param}",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/system_console/abac/masking/masking_helpers.ts:236",
-    "method": "POST",
-    "path": "/api/v4/access_control_policies/search",
-    "raw": "/api/v4/access_control_policies/search",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "mattermost:e2e-tests/playwright/specs/functional/system_console/global_attributes/global_attributes_helpers.ts:116",
-    "method": "GET",
-    "path": "/options",
-    "raw": "/options?{param}",
-    "ok": false,
-    "category": "url-from-helper"
    },
    {
     "evidence": "mattermost:server/channels/app/cloud.go:53",

@@ -98,12 +98,15 @@ class PyScanner(BaseScanner):
                               router=recv)
 
     def _maybe_test_client(self, target: Node | None, value: Node | None) -> None:
-        """`TestClient(app)` / `app.test_client()`: requests through it exercise this app, they are not outbound."""
+        """`TestClient(app)` / `app.test_client()` / Django's `Client()` (`from django.test import Client`, zulip's
+        development views): requests through it exercise this app, they are not outbound."""
         if target is None or value is None or value.type != "call":
             return
         fn = value.child_by_field_name("function")
         name = text(fn, self.src).split(".")[-1] if fn is not None else ""
-        if name in ("TestClient", "test_client"):
+        django = name == "Client" and ((self.imports.get(text(fn, self.src)) or ("",))[0].startswith("django.test")
+                                       or text(fn, self.src).startswith("django.test."))
+        if name in ("TestClient", "test_client") or django:
             self.test_clients.add(text(target, self.src).split(".")[-1])
 
     def _decorated(self, n: Node) -> None:

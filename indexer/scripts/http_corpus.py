@@ -19,15 +19,15 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-17, v2 after H2b's TS generated clients, routes + calls): Go — alertmanager 30+15 · chi 50 ·
+Baseline at the pinned commits (2026-10-17, v2 at the close of H2b, routes + calls): Go — alertmanager 30+15 · chi 50 ·
 fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 ·
-mattermost 691+54 · kratos 80+141 · argo-cd 123+105 · gotify 48+30 · go-feature-flag 18+7 · go-kit-examples 27+11.
+mattermost 658+23 · kratos 76+135 · argo-cd 123+105 · gotify 48+30 · go-feature-flag 18+7 · go-kit-examples 27+11.
 TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166 in the framework's own test apps) ·
 immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate 11 · fastify-demo 10 · hono-examples 31 ·
 taxonomy 0+6 (Next.js file routes). C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support
 18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 671+30 · notifo 130+218 · rapid-blazor 18+17 ·
-azure-saas 35+26 (the last three with NSwag clients). Python — fastapi 87+9 ·
-fastapi-template 23+23 · flask 18 · zulip 0+144 and netbox 0 (Django) · dispatch 291+288 · aiohttp-demos 24+1 ·
+azure-saas 35+26 (the last three with NSwag clients). Python — fastapi 87+2 ·
+fastapi-template 23+23 · flask 18 · zulip 0+135 and netbox 0 (Django) · dispatch 291+288 · aiohttp-demos 24+1 ·
 ctfd 241+84. Whole run ~11 min in Docker (mattermost ~3 min, bitwarden ~2 min); grafana is out (memory, see
 CORPUS). Precision/recall per repo and the ranking of gaps: docs/corpus-report.md.
 """

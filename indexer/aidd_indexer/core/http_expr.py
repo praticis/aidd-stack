@@ -19,7 +19,7 @@ from ..languages.base import node_text as text, walk
 from .http_nodes import (APPEND_NODES, CALL_NODES, CLASS_NODES, CONCAT_NODES, NAME_NODES, OBJECT_NODES, STRING_NODES,
                          STRING_TEXT_NODES, INTERPOLATION_NODES, WRAPPED_ARG_NODES, has_interpolation)
 from .http_scope import END, in_function
-from .paths import (ENV_URL_NAME, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, URL_LITERAL, has_literal_segment,
+from .paths import (ENV_URL_NAME, HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, has_literal_segment, is_url_literal,
                     looks_like_rel_path, mask_placeholders, normalize_path, unquote)
 
 if TYPE_CHECKING:
@@ -100,7 +100,7 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                     ctx.define(nm, parts=parts)
             else:
                 lit = first_string(val, src)
-                if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or URL_LITERAL.match(lit)) and len(lit) > 1:
+                if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or is_url_literal(lit)) and len(lit) > 1:
                     for nm in names:
                         ctx.define(nm, raw=lit)
                 elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _SEGMENT.match(lit):
@@ -161,7 +161,7 @@ def valid_path(lit: str, lenient: bool = False) -> str | None:
         else:
             return None
     check = mask_placeholders(lit).split("?", 1)[0].split("#", 1)[0]    # `items/{id}?api-version=2.0`: the query is not the path
-    if URL_LITERAL.match(lit) or PATH_LITERAL.match(check) or REL_PATH_LITERAL.match(lit):
+    if is_url_literal(lit) or PATH_LITERAL.match(check) or REL_PATH_LITERAL.match(lit):
         return lit if len(check) > 1 else None
     if lenient and looks_like_rel_path(check):
         return "/" + lit
@@ -323,7 +323,7 @@ class PathExpressions:
         if not raw:
             return None
         pattern = re.match(r"^([A-Z]+) /", raw)                 # not "SELECT " + cols + " FROM x"
-        if raw.startswith("/") or URL_LITERAL.match(raw) or REL_PATH_LITERAL.match(raw) or (pattern and pattern.group(1) in HTTP_METHODS):
+        if raw.startswith("/") or is_url_literal(raw) or REL_PATH_LITERAL.match(raw) or (pattern and pattern.group(1) in HTTP_METHODS):
             return raw                                           # "PUT " + base + "/x" is a net/http 1.22 pattern
         if lenient and lead and _ONE_WORD.match(raw):
             return "/" + raw                                     # base + 'message' (gotify)
@@ -360,6 +360,10 @@ class PathExpressions:
                 recv = fn.child_by_field_name("object")
                 rp = self.path_of(recv, lenient, _depth + 1) if recv is not None else None
                 return rp.replace("{}", "{param}") if rp else None
+            if fname == "Sprintf" and len(arg_nodes) > 1:
+                filled = self._sprintf(arg_nodes[0], arg_nodes[1:], lenient, _depth)
+                if filled:
+                    return filled
             return self.path_of(arg_nodes[0], lenient, _depth + 1) if arg_nodes else None
         if fname in ("Replace", "ReplaceAll") and text(fn, self.src).startswith("strings.") and arg_nodes:
             return self.path_of(arg_nodes[0], lenient, _depth + 1)     # Go: strings.Replace(path, "{"+"id"+"}", v, -1)
@@ -373,8 +377,12 @@ class PathExpressions:
             segs = [(unquote(text(a, self.src)) if a.type in STRING_NODES and not has_interpolation(a)
                      else self.path_of(a, lenient, _depth + 1)) or "{param}" for a in arg_nodes]
             segs = [s for s in segs if s]
+            if fname == "urljoin" and len(segs) == 2 and segs[1].startswith("/"):
+                return segs[1]                                   # urljoin(base, "/x"): the absolute path wins
             if len(segs) > 1 and segs[0] == "{param}":           # an unknown first part is the base URL, as in `base + "/x"`
                 segs = segs[1:]
+            if len(segs) > 1 and is_url_literal(segs[0]):         # a URL first keeps its host: the rest joins its path
+                return segs[0].rstrip("/") + "/" + "/".join(s.strip("/") for s in segs[1:])
             return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
         return None
 
@@ -404,24 +412,50 @@ class PathExpressions:
             elif c.type in STRING_TEXT_NODES:
                 tokens.append(text(c, self.src))
             # interpolation_start ($"), string_start/end, quotes: structural, no text
-        if not tokens:
-            raw = unquote(text(n, self.src))
-        else:
-            path_named = [t for t in tokens if isinstance(t, Node) and t.type == "identifier"
-                          and _PATH_NAMED.match(text(t, self.src))]
-            parts = []
-            for i, t in enumerate(tokens):
-                if isinstance(t, str) or t is None:
-                    parts.append(t if t is not None else "{param}")
-                    continue
-                prev, nxt = (tokens[i - 1] if i else ""), (tokens[i + 1] if i + 1 < len(tokens) else "")
-                whole = (i == 0 or (isinstance(prev, str) and prev.endswith("/")),
-                         i + 1 == len(tokens) or (isinstance(nxt, str) and nxt[:1] in ("/", "?", "#")))
-                generic = any(o is not t for o in path_named)
-                v = self._substitution(t, lenient, _depth, generic, whole)
-                parts.append(v if v is not None else "{param}")
-            raw = "".join(parts)
+        raw = self._fill(tokens, lenient, _depth) if tokens else unquote(text(n, self.src))
         return re.sub(r"\{[^}]*\}", "{param}", raw) if n.type == "interpolated_string_expression" else raw
+
+    def _fill(self, tokens: list[str | Node | None], lenient: bool, _depth: int, unknown: str = "{param}") -> str:
+        """Literal text joined with the value of each substitution the code holds (`_substitution`), `unknown` for
+        the others."""
+        path_named = [t for t in tokens if isinstance(t, Node) and t.type == "identifier"
+                      and _PATH_NAMED.match(text(t, self.src))]
+        parts = []
+        for i, t in enumerate(tokens):
+            if isinstance(t, str) or t is None:
+                parts.append(t if t is not None else unknown)
+                continue
+            prev, nxt = (tokens[i - 1] if i else ""), (tokens[i + 1] if i + 1 < len(tokens) else "")
+            whole = (i == 0 or (isinstance(prev, str) and prev.endswith("/")),
+                     i + 1 == len(tokens) or (isinstance(nxt, str) and nxt[:1] in ("/", "?", "#")))
+            generic = any(o is not t for o in path_named)
+            v = self._substitution(t, lenient, _depth, generic, whole)
+            parts.append(v if v is not None else unknown)
+        return "".join(parts)
+
+    def _sprintf(self, fmt: Node, args: list[Node], lenient: bool, _depth: int) -> str | None:
+        """`fmt.Sprintf("/%s/{id}", SchemasPath)`: a `%s`/`%v` whose argument the code holds as whole segments takes
+        its value, as in a template; the other verbs stay, and an argument it does not hold stays a `%s`."""
+        if fmt.type not in STRING_NODES or has_interpolation(fmt):
+            return None
+        lit, tokens, k, at = unquote(text(fmt, self.src)), [], 0, 0
+        for m in re.finditer(r"%[-+# 0-9.]*[a-zA-Z%]", lit):
+            tokens.append(lit[at:m.start()])
+            verb = m.group(0)
+            if verb == "%%":
+                tokens.append("%")
+            elif verb[-1] in "sv" and k < len(args):
+                tokens.append(args[k])
+                k += 1
+            else:
+                tokens.append(verb)
+                k += 1
+            at = m.end()
+        tokens.append(lit[at:])
+        tokens = [t for t in tokens if not (isinstance(t, str) and t == "")]
+        if not any(isinstance(t, Node) for t in tokens):
+            return None
+        return valid_path(self._fill(tokens, lenient, _depth, unknown="%s"), lenient)
 
     def _substitution(self, e: Node, lenient: bool, _depth: int, generic: bool, whole: tuple[bool, bool]) -> str | None:
         """The value of `${e}` when the code holds it:

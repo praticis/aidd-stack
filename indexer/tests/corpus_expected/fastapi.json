@@ -144,60 +144,10 @@
     "category": null
    }
   ],
-  "calls": [
-   {
-    "evidence": "fastapi:scripts/playwright/cookie_param_models/image01.py:32",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/header_param_models/image01.py:31",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/json_base64_bytes/image01.py:30",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/query_param_models/image01.py:34",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/request_form_models/image01.py:31",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/sql_databases/image01.py:30",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   },
-   {
-    "evidence": "fastapi:scripts/playwright/sql_databases/image02.py:30",
-    "method": "GET",
-    "path": "/docs",
-    "ok": true,
-    "category": null
-   }
-  ]
+  "calls": []
  },
  "checked_seed": "1",
- "notes": "Precision: 20 of 84 sampled (seed 1), all correct — single-file tutorials. docs_src holds hundreds of tutorials repeating the same routes, so most collapse into one endpoint (multi-app-repo); 84 is what survives the dedupe. Recall scope: docs_src/bigger_applications/app_an_py310/ — the items routes exist only with another tutorial's evidence (multi-app-repo), POST /admin needs the prefix from app.include_router(admin.router, prefix=\"/admin\") in main.py (prefix-other-file) and GET / is dropped (root-route-dropped). Calls: all 11 checked. The 4 under docs_src/app_testing and docs_src/dependency_testing are TestClient requests inside test functions of tutorial files, outside any test folder (test-client-in-source); the 7 httpx.get calls in scripts/playwright are real. 2026-10-15 (second round): the four TestClient requests left the calls sample — they are no longer extracted (they were its only wrong calls).",
+ "notes": "Precision: 20 of 84 sampled (seed 1), all correct — single-file tutorials. docs_src holds hundreds of tutorials repeating the same routes, so most collapse into one endpoint (multi-app-repo); 84 is what survives the dedupe. Recall scope: docs_src/bigger_applications/app_an_py310/ — the items routes exist only with another tutorial's evidence (multi-app-repo), POST /admin needs the prefix from app.include_router(admin.router, prefix=\"/admin\") in main.py (prefix-other-file) and GET / is dropped (root-route-dropped). Calls: all 11 checked. The 4 under docs_src/app_testing and docs_src/dependency_testing are TestClient requests inside test functions of tutorial files, outside any test folder (test-client-in-source); the 7 httpx.get calls in scripts/playwright are real. 2026-10-15 (second round): the four TestClient requests left the calls sample — they are no longer extracted (they were its only wrong calls). Since H2 Phase 5 (2026-10-17): playwright/ folders are test tooling, so the 7 scripts/playwright calls left the sample.",
  "scope": {
   "endpoints": [
    "docs_src/bigger_applications/app_an_py310/"
