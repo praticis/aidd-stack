@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 
 const app = express();
 app.get('/', home);                // the application itself: GET /
-app.get('/users/:id?', getUser);   // an optional parameter: GET /users/{id}
+app.get('/users/:id?', getUser);   // an optional parameter: GET /users/{id} and GET /users
 
 // A sub-router's "/" is where the file mounts it: GET /orders.
 const orders = express.Router();

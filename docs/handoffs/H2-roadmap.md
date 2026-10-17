@@ -53,15 +53,18 @@
   **Etapa 2 do TS — o Nest (2026-10-16):** `setGlobalPrefix` por pacote, com `exclude` (também lista de outro
   arquivo); argumento de decorator lido pela árvore (array, objeto `path`, constante ou membro de enum de outro
   arquivo); no caminho, o resolvedor de imports TS (`.js` do ESM → `.ts`; aliases a partir do pacote), +9845 arestas
-  `IMPORTS` em 4 repos; rotas TS/JS P 50,7 → 93,9 %, R 32,6 → 60,7 % (immich 0,7 → 100 %).
+  `IMPORTS` em 4 repos; rotas TS/JS P 50,7 → 93,9 %, R 32,6 → 60,7 % (immich 0,7 → 100 %). **Registrars próprios em
+  TS/JS (2026-10-17):** wrapper de rota do projeto (NodeBB `setupApiRoute`/`setupPageRoute`) pelo mesmo mecanismo do
+  wrapper de montagem, router de módulo devolvido pela função exportada, parâmetro opcional do Express no fim; rotas
+  TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB R 8,7 → 73,1 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-13/` — corpus v2, 42 repos, com o
-  `setGlobalPrefix` do Nest (a `-12` é a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-14/` — corpus v2, 42 repos, com os
+  wrappers de rota TS (a `-13` é a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -82,12 +85,12 @@
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
   `client-in-field`). **Python fora do Django fechado no essencial:** rotas P 99,0 % / R 98,0 % (sobram o registro
   de plugins do dispatch, `router-from-registry`, 4, preenchido em runtime — limitação; e `multi-app-repo`, 4, no
-  fastapi). **TS em curso (H2-D19):** as etapas 1 (grafo entre arquivos) e 2 (Nest) estão feitas; rotas TS/JS
-  P 93,9 % / R 60,7 %. Próximo: os clientes gerados TS (oazapfts do immich, 279 operações; openapi-ts do
-  fastapi-template, 23 — item 7) e então a Fase 5. Sobram para decidir, nas rotas TS (410 que faltam): o registrar
-  próprio do NodeBB (`custom-registrar`, 353 — o mesmo mecanismo do wrapper de montagem serviria a um wrapper de
-  rota), o laço sobre array literal do express-boilerplate (14), o autoload por pasta do fastify-demo (14), prefixo
-  como parâmetro (13) e as rotas por arquivo do Next.js (9).
+  fastapi). **TS em curso (H2-D19):** grafo entre arquivos, Nest e registrars próprios feitos; rotas TS/JS P 95,5 % /
+  R 85,3 %. Próximo: os clientes gerados TS (oazapfts do immich, 279 operações; openapi-ts do fastapi-template, 23
+  — item 7) com o objeto de configuração de requisição (`request-config-object`: `channel.post({ url })`,
+  `axios.request({ url, method })`, `$.ajax(url, {..})`), e então a Fase 5. Sobram nas rotas TS (162 que faltam):
+  prefixo montado em runtime (`prefix-as-param`, 119 no NodeBB — limitação), o laço sobre array literal do
+  express-boilerplate (14), o autoload por pasta do fastify-demo (14), as rotas por arquivo do Next.js (9).
 
 ## Decisões
 
@@ -260,6 +263,11 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     decodificado; handler = método gRPC; verbo customizado `:x` literal) e go-swagger (`o.handlers[M][P]` +
     `basePath` publicado pelo `embedded_spec.go`, `go.swagger-base`). Fixtures
     `route-patterns-go/internal/{gateway,swaggerserver}`
+- [x] *(2026-10-17)* **Registrars próprios em TS/JS** (`custom-registrar`, 353 no NodeBB; decisão de 2026-10-17:
+  tratar no H2, pela recomendação — helper de registro é comum em projetos reais): `ts.route-wrapper` (formas do
+  wrapper) + candidatos `ts.route.maybe` + `TsScanner.compose`, registros do corpo do wrapper marcados (`ts.wrapped`)
+  e descartados só quando o wrapper é usado; router de módulo devolvido pela função exportada; parâmetro opcional do
+  Express no fim. Fixture `route-patterns-ts/src/crossfile/wrappers`
 - [ ] **8. Scanners novos, quando um portfólio pedir:** Django + DRF (maior lacuna isolada: 1420 em 2 repos),
   rotas por arquivo do Next.js, flask-restx
   - [x] *(2026-10-16)* flask-restx (também `flask_restplus`/`flask_restful`), adiantado pelo H2-D18 (o Python do
@@ -582,3 +590,20 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   julgadas de novo (certas); `global-prefix` e `const-other-file` saem do ranking. Rotas TS/JS P 50,7 → 93,9 %,
   R 32,6 → 60,7 %. HTTP do corpus 105,0 → 131,1 s, com todos os repos 20–35 % mais lentos, Go inclusive — carga da
   máquina. Nova baseline `2026-10-16-v2-baseline-13`.
+- **2026-10-17** — TS, registrars próprios (decisão do usuário: seguir a recomendação para o NodeBB). Wrapper de rota:
+  função com nome que registra num parâmetro router com o path vindo de um parâmetro (também em template,
+  `` `/api${name}` ``; rest desestruturado `const [router, verb, name] = args`; `router[verb](..)`) publica suas formas
+  (`ts.route-wrapper`); chamada com path e router entre os argumentos é candidata (`ts.route.maybe`, com o handler do
+  último argumento e para onde o router leva), materializada no `compose` antes do grafo de montagem; os registros do
+  corpo ficam como rotas (`ts.wrapped`) até o wrapper ser usado. Achados nas três rodadas: a candidata engolia
+  `http.del(url, null, params)` do k6 (bitwarden: agora nunca interrompe a leitura da chamada); `apiRoutes(router,
+  name)` e `_mounts.post = (app, name) => ..` sumiam (agora o registro só cai quando o wrapper é usado); e chamada com
+  prefixo só conhecido em runtime (`` `/${name}/settings` ``, os mounts remontáveis do NodeBB) gerava `/{param}/..`,
+  que o linker não liga (compara segmentos literais) — não vira rota. No caminho: router de módulo devolvido pela
+  função exportada (`var:` → `ret:`) e parâmetro opcional do Express no fim (`/reset/:code?` → também `/reset`; a
+  fixture `app.ts` passa a esperar as duas formas). Diff contra `-13` (só o NodeBB) julgado certo: 92 → 377 rotas
+  (API de escrita sob `/api/v3/*`, páginas e gêmeos `/api`, formas curtas), sai o template `GET /api{param}`.
+  Gabarito do NodeBB: escopo com `index.js`, `user.js`, `activitypub.js`; +62 rotas reais fora das specs (H2-D15);
+  `POST /api/email/unsubscribe/{token}` só na spec, removida; os bloqueados por prefixo de runtime passam a
+  `prefix-as-param` (119). Rotas TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB P 66,7 → 93,9 %, R 8,7 → 73,1 %).
+  HTTP do corpus 105,2 s. Nova baseline `2026-10-16-v2-baseline-14`.

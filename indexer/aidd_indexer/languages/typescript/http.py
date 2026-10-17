@@ -1,19 +1,22 @@
 """TypeScript / JavaScript: express / koa / fastify / Hono (`app.get('/x', handler)`, also chained on the constructor)
 + NestJS decorators (under the package's `setGlobalPrefix`); axios / fetch / got / ky outbound. Routers cross files
 through ESM imports and CommonJS `require` / `module.exports` (`global_of`), and through a project's own mount wrappers
-(Ghost's `app.lazyUse`)."""
+(Ghost's `app.lazyUse`) and route wrappers (NodeBB's `setupApiRoute(router, 'get', '/x', .., handler)`)."""
 
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, HttpResult, Pending, Region,
                                rebased, replace_endpoints, split_callee, text, unwrap_arg, walk)
+from ...core import ids
+from ...core.http_mounts import APP, TOP, MountedRoot
 from ...core.http_nodes import has_interpolation, member
-from ...core.model import RepoInfo
-from ...core.paths import VERB_BY_NAME, normalize_path, path_key, unquote
+from ...core.model import HttpEndpointInfo, RepoInfo
+from ...core.paths import HTTP_METHODS, VERB_BY_NAME, normalize_path, path_key, unquote
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
@@ -25,6 +28,7 @@ WRAPPERS = {"parenthesized_expression", "await_expression", "as_expression", "sa
             "non_null_expression"}
 FUNCTIONS = {"function_declaration", "function_expression", "function", "arrow_function", "method_definition",
              "generator_function_declaration"}
+OPTIONAL_TAIL = re.compile(r"/:[A-Za-z_$][\w$]*\?$")                     # Express: /reset/:code?
 NEST_DECORATORS = {"Controller", "Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All"}
 JQUERY = {"$", "jQuery"}
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
@@ -37,6 +41,8 @@ class TsScanner(BaseScanner):
     def run(self) -> None:
         controller_prefix: dict[int, list[str]] = {}
         self.maybe_mounts: list[tuple] = []        # calls of a method that may be a mount wrapper (`_wrapper_call`)
+        self.route_calls: list[tuple] = []         # calls of a function that may be a route wrapper
+        self.wrapped: dict[int, str] = {}          # registrations inside a route wrapper → its name (`compose`)
         wraps = b".use(" in self.src
         for n in walk(self.fx.tree.root_node):
             if n.type == "decorator":
@@ -49,8 +55,24 @@ class TsScanner(BaseScanner):
                 if n.parent is not None and n.parent.type == "decorator":
                     continue
                 self._call(n)
-            if wraps and n.type in FUNCTIONS:
-                self._mount_wrapper(n)
+            if n.type in FUNCTIONS:
+                if wraps:
+                    self._mount_wrapper(n)
+                self._route_wrapper(n)
+
+    def add_endpoint(self, node: Node, method: str, raw_pattern: str, framework: str, handler_node: Node | None,
+                     **kw) -> HttpEndpointInfo | None:
+        """Express's optional parameters at the end (`/reset/:code?`, `/chats/:roomid?/:index?`): the route answers
+        without them too — one route per form."""
+        ep = super().add_endpoint(node, method, raw_pattern, framework, handler_node, **kw)
+        m = OPTIONAL_TAIL.search(raw_pattern or "")
+        if m is not None and not isinstance(raw_pattern, MountedRoot):
+            shorter, router = raw_pattern[:m.start()], kw.get("router")
+            if not shorter:                                     # the router's root, as `route_path` gives it
+                pre = self.prefix_for(router, node) if router is not None else None
+                shorter = "/" if router is None or pre or self.is_app(router, node) else MountedRoot("/")
+            self.add_endpoint(node, method, shorter, framework, handler_node, **kw)
+        return ep
 
     def _maybe_router_var(self, n: Node) -> None:
         name = n.child_by_field_name("name") or n.child_by_field_name("left")
@@ -262,6 +284,14 @@ class TsScanner(BaseScanner):
             self.out.publish("ts.string-array", f"{self.fx.file.path}:{text(name, self.src)}", items)
 
     def _call(self, n: Node) -> None:
+        """A registration inside a route wrapper is a route as written until `compose` sees the wrapper used."""
+        before = len(self.out.endpoints)
+        self._read_call(n)
+        owner = self.wrapped.get(n.id)
+        for ep in self.out.endpoints[before:] if owner is not None else ():
+            self.out.pending.append(Pending(ep, "ts.wrapped", (owner,)))
+
+    def _read_call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
@@ -288,6 +318,7 @@ class TsScanner(BaseScanner):
             return
         if self._wrapper_call(n, name, recv_last, arg_nodes):
             return
+        self._wrapped_route_call(n, name, arg_nodes)            # a candidate only: the call may still be a request
         if recv_last in JQUERY:                                     # browser code: `$.get(url, cb)` is a request, cb is no handler
             p = self.path_of(arg_nodes[0], lenient=True) if name in JQUERY_VERBS else None
             if p is not None:
@@ -325,12 +356,7 @@ class TsScanner(BaseScanner):
         """`app.lazyUse = function lazyUse(mountPath, requireFn) { app.use(mountPath, lazyLoad(() => requireFn())) }`:
         a method that mounts what it is given under the path it is given. Published for `compose`, which turns its
         calls in any file into mounts: (position of the path, of the router, whether the method calls the router)."""
-        name = None
-        if fn.type == "method_definition":
-            name = text(fn.child_by_field_name("name"), self.src)
-        elif fn.parent is not None and fn.parent.type == "assignment_expression":
-            _, prop = member(fn.parent.child_by_field_name("left"))
-            name = text(prop, self.src) if prop is not None else None
+        name = self._wrapper_name(fn, declared=False)
         params = self._params(fn) if name else []
         body = fn.child_by_field_name("body")
         if len(params) < 2 or body is None:
@@ -348,6 +374,117 @@ class TsScanner(BaseScanner):
                     f = x.parent.child_by_field_name("function") if x.parent.type == "call_expression" else None
                     self.out.publish("ts.mount-wrapper", name, (i, j, f is not None and f.id == x.id))
             return
+
+    def _wrapper_name(self, fn: Node, declared: bool) -> str | None:
+        """The name a wrapper is called by: a method's, or the property a function is assigned to
+        (`helpers.setupApiRoute = function ..`); with `declared`, also `function x(..)` and `const x = (..) => ..`."""
+        if fn.type == "method_definition":
+            return text(fn.child_by_field_name("name"), self.src)
+        if fn.parent is not None and fn.parent.type == "assignment_expression":
+            _, prop = member(fn.parent.child_by_field_name("left"))
+            return text(prop, self.src) if prop is not None else None
+        name = self._fn_name(fn) if declared else None
+        return name if name != "default" else None
+
+    # -- a project's own route wrappers: `setupApiRoute(router, 'post', '/x', mws, handler)` ------------------------
+    def _route_wrapper(self, fn: Node) -> None:
+        """`helpers.setupApiRoute = function (...args) { const [router, verb, name] = args; .. router[verb](name, ..) }`,
+        `setupPageRoute(router, name, ..)` registering `router.get(name, ..)` and `` router.get(`/api${name}`, ..) ``: a
+        function that registers routes on the router and under the path it is given. Its shapes — (position of the
+        router, the verb or the position of the argument naming it, position of the path, the path around it) — are
+        published for `compose`, which makes its calls in any file routes — and then drops the registrations in its body,
+        which are templates of them (`GET /api{param}`)."""
+        name = self._wrapper_name(fn, declared=True)
+        params = self._wrapper_params(fn) if name else {}
+        body = fn.child_by_field_name("body")
+        if len(params) < 2 or body is None:
+            return
+        shapes = []
+        for c in walk(body):
+            f = c.child_by_field_name("function") if c.type == "call_expression" else None
+            args = c.child_by_field_name("arguments") if f is not None else None
+            if args is None or not args.named_child_count:
+                continue
+            if f.type == "subscript_expression":                     # router[verb](name, ..)
+                obj, idx = f.child_by_field_name("object"), f.child_by_field_name("index")
+                verb = ("arg", params[text(idx, self.src)]) \
+                    if idx is not None and idx.type == "identifier" and text(idx, self.src) in params else None
+            else:
+                obj, prop = member(f)
+                method = TS_CHAIN_VERBS.get(text(prop, self.src)) if prop is not None else None
+                verb = ("verb", method) if method else None
+            if verb is None or obj is None or obj.type != "identifier" or text(obj, self.src) not in params:
+                continue
+            path = self._param_template(args.named_children[0], params)
+            if path is not None:
+                shapes.append((params[text(obj, self.src)], verb, *path))
+                self.wrapped[c.id] = name
+        for shape in dict.fromkeys(shapes):
+            self.out.publish("ts.route-wrapper", name, shape)
+
+    def _wrapper_params(self, fn: Node) -> dict[str, int]:
+        """Positions of `fn`'s parameters by name, and of the names a rest parameter is destructured into
+        (`(...args) => { const [router, verb, name] = args; .. }`)."""
+        params = fn.child_by_field_name("parameters")
+        out: dict[str, int] = {}
+        rest: tuple[str, int] | None = None
+        for i, d in enumerate(params.named_children if params is not None else ()):
+            pat = d.child_by_field_name("pattern") or d                     # TS wraps it in a required_parameter
+            if pat.type == "rest_pattern":
+                ident = next((c for c in pat.named_children if c.type == "identifier"), None)
+                rest = (text(ident, self.src), i) if ident is not None else None
+                continue
+            ident = pat if pat.type == "identifier" else pat.child_by_field_name("left")
+            if ident is not None and ident.type == "identifier":
+                out[text(ident, self.src)] = i
+        body = fn.child_by_field_name("body")
+        decls = [d for st in (body.named_children if rest is not None and body is not None else ())
+                 if st.type in ("lexical_declaration", "variable_declaration") for d in st.named_children]
+        for d in decls:
+            name, value = d.child_by_field_name("name"), d.child_by_field_name("value")
+            if name is None or name.type != "array_pattern" or value is None or text(value, self.src) != rest[0]:
+                continue
+            pos = 0
+            for el in name.children:
+                if el.type == ",":
+                    pos += 1
+                elif el.type == "identifier":
+                    out[text(el, self.src)] = rest[1] + pos
+        return out
+
+    def _param_template(self, n: Node, params: dict[str, int]) -> tuple[int, str] | None:
+        """`name` → (its position, "{}"); `` `/api${name}` `` → (its position, "/api{}"): a path made of one parameter."""
+        if n.type == "identifier":
+            return (params[text(n, self.src)], "{}") if text(n, self.src) in params else None
+        subs = [c for c in n.named_children if c.type == "template_substitution"] if n.type == "template_string" else []
+        inner = subs[0].named_children if len(subs) == 1 else []
+        if len(inner) != 1 or inner[0].type != "identifier" or text(inner[0], self.src) not in params:
+            return None
+        before, _, after = text(n, self.src)[1:-1].partition(text(subs[0], self.src))
+        return (params[text(inner[0], self.src)], before + "{}" + after) if "${" not in before + after else None
+
+    def _wrapped_route_call(self, n: Node, name: str, arg_nodes: list[Node]) -> None:
+        """`setupApiRoute(router, 'post', '/x', mws, handler)`, `helpers.setupPageRoute(app, '/x', .., handler)`: a route if
+        some file defines `name` as a route wrapper (`_route_wrapper`) — a candidate here, made a route in `compose`,
+        with the handler in the last argument. A path with a part this file cannot read (`` `/${name}/x` ``, NodeBB's
+        remountable prefixes) makes none: the linker compares literal segments, so `/{param}/x` would link nothing."""
+        if len(arg_nodes) < 3 or name in TS_REGISTRARS or name in TS_MOUNTS or name in OUTBOUND or name in TS_VERB_ALIASES:
+            return
+        args = []
+        for a in map(unwrap_arg, arg_nodes):
+            lit = unquote(text(a, self.src)).strip() if a.type == "string" else None
+            p = self.path_of(a)                                 # `/${name}/x`: a prefix only known at run time — none
+            p = p if p is not None and p.startswith("/") and "{param}" not in p \
+                else "/" if lit in ("/", "") and lit is not None else None
+            verb = lit.upper() if lit and lit.upper() in HTTP_METHODS else TS_VERB_ALIASES.get(lit or "")
+            args.append((p, verb))
+        routers = {i: text(a, self.src) for i, a in enumerate(arg_nodes) if a.type == "identifier" and args[i] == (None, None)}
+        if not routers or not any(p for p, _ in args):
+            return
+        hname, hid = self.resolve_handler(arg_nodes[-1])
+        base = self.endpoint_info(n, "ANY", "/", "express", hname, hid)
+        self.route_calls.append((name, tuple(args), {i: (self.router_key(r, n), self.prefix_for(r, n) or "")
+                                                     for i, r in routers.items()}, base))
 
     def _wrapper_call(self, n: Node, name: str, recv_last: str, arg_nodes: list[Node]) -> bool:
         """`backendApp.lazyUse('/ghost/api', require('../api'))` on a router, with a method no framework has: a mount if
@@ -561,6 +698,21 @@ class TsScanner(BaseScanner):
                         aliases.append((local, exported))
         return aliases, reexports
 
+    def _returned_module_routers(self) -> list[tuple[str, str]]:
+        """`const router = Router(); .. module.exports = function () { ..; return router; }`: what the function returns
+        is the module's router — (its id, the function's `ret:`)."""
+        out = []
+        for r in (r for r in walk(self.fx.tree.root_node) if r.type == "return_statement") if self.router_vars else ():
+            vals = [c for c in r.named_children if c.type != "comment"]
+            name = text(vals[0], self.src) if len(vals) == 1 and vals[0].type == "identifier" else None
+            fn = r.parent
+            while fn is not None and fn.type not in FUNCTIONS:
+                fn = fn.parent
+            fname = self._fn_name(fn) if fn is not None and name in self.router_vars else None
+            if fname is not None and self.scopes.binding_scope(name, r) == 0 and self.module_binds(name):
+                out.append((f"var:{self.fx.file.path}:{name}", f"ret:{self.fx.file.path}:{fname}"))
+        return out
+
     def _declared_name(self, n: Node) -> str | None:
         """`router` (a name) or `function apiRoutes() {..}` (a named function) — what an export statement exports."""
         if n.type == "identifier":
@@ -578,6 +730,11 @@ class TsScanner(BaseScanner):
         for name, i, j, value, called, parent, prefix in self.maybe_mounts:
             for target, pp in self.mounts.targets(parent, self._global, is_app):
                 self.out.publish("ts.mount.maybe", name, (i, j, value, called, target, pp.rstrip("/") + prefix))
+        for name, args, routers, base in self.route_calls:
+            where = {i: (group, self.mounts.targets(key, self._global, is_app)) for i, (key, group) in routers.items()}
+            self.out.publish("ts.route.maybe", name, (args, where, base))
+        for child, parent in self._returned_module_routers():
+            self.out.publish(f"{self.mount_rule}.edge", child, (parent, ""))
         path = self.fx.file.path
         aliases, reexports = self._exports()
         pairs = [(path, local, exported) for local, exported in aliases]
@@ -596,6 +753,29 @@ class TsScanner(BaseScanner):
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """The mounts a project's own wrappers make: each candidate call (`_wrapper_call`) whose method some file
         defines as a wrapper with the same shape becomes an edge. Then the mount graph (`BaseScanner.compose`)."""
+        routes, used = out.facts.get("ts.route-wrapper", {}), set()
+        for name, calls in out.facts.get("ts.route.maybe", {}).items():
+            shapes = list(dict.fromkeys(routes.get(name, ())))
+            for args, where, base in calls if shapes else ():
+                for r, (kind, v), pos, tmpl in shapes:
+                    method = v if kind == "verb" else args[v][1] if v < len(args) else None
+                    if r not in where or pos >= len(args) or args[pos][0] is None or method is None:
+                        continue
+                    group, targets = where[r]
+                    raws = [tmpl.replace("{}", args[pos][0])]
+                    while (m := OPTIONAL_TAIL.search(raws[-1])) is not None:    # /:code? → also without it
+                        raws.append(raws[-1][:m.start()] or "/")
+                    for raw, target, prefix in ((raw, t, p) for raw in raws for t, p in targets):
+                        ep = _wrapped(repo, base, method, group.rstrip("/") + raw if group else raw, raw)
+                        root = isinstance(ep.raw_pattern, MountedRoot)
+                        if root and not prefix and target == TOP:
+                            continue                        # a sub-router's root nothing mounts
+                        copy = rebased(repo, ep, prefix) if prefix or root and target == APP else ep
+                        out.endpoints.append(copy)
+                        used.add(name)
+                        if target not in (TOP, APP):
+                            out.pending.append(Pending(copy, cls.mount_rule, (target,)))
+        replace_endpoints(out, {id(p.item): [] for p in out.pending if p.rule == "ts.wrapped" and p.key[0] in used})
         wrappers = out.facts.get("ts.mount-wrapper", {})
         for name, calls in out.facts.get("ts.mount.maybe", {}).items():
             for wi, wj, wcalled in set(wrappers.get(name, ())):
@@ -614,6 +794,14 @@ class TsScanner(BaseScanner):
             if not _excluded(p.item.path, excludes):
                 plan[id(p.item)] = [rebased(repo, p.item, next(iter(found))[0])]
         replace_endpoints(out, plan)
+
+
+def _wrapped(repo: RepoInfo, base: HttpEndpointInfo, method: str, path: str, raw: str) -> HttpEndpointInfo:
+    """The route a wrapper call makes, from the endpoint recorded at the call (`base`: evidence, handler)."""
+    path = normalize_path(path)
+    pattern = MountedRoot("/") if path == "/" and raw in ("/", "") else raw
+    return replace(base, method=method, path=path, raw_pattern=pattern,
+                   id=ids.http_endpoint(repo.tenant, repo.name, method, path_key(path)))
 
 
 def _excluded(path: str, patterns: list[str]) -> bool:

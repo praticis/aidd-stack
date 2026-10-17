@@ -1409,3 +1409,64 @@ included, which this change does not touch (kratos 3.8 → 4.8 s, gitea 6.3 → 
 as in the run of the Go generated servers.
 
 New baseline: `2026-10-16-v2-baseline-13`.
+
+## Update: the project's own route registrars in TS/JS (2026-10-17)
+
+After the Nest step, NodeBB alone held most of the TS/JS gap (`custom-registrar`, 353). It registers every route
+through helpers of its own: `setupApiRoute(router, 'post', '/x', mws, handler)` for the write API and
+`setupPageRoute(app, '/x', .., handler)` for each page and its `/api` JSON twin. A helper of this kind is common in
+real projects, so the rule is the general one: the same mechanism as Ghost's mount wrapper, for routes.
+
+**What is read now:**
+
+- **A route wrapper** is a named function (method, `helpers.x = function`, declaration, `const x =`) that registers
+  on a router parameter (`router.get(name, ..)`, `router[verb](name, ..)`). The path comes from a parameter, also
+  inside a template (`` `/api${name}` ``). A rest parameter destructured in the body counts: `(...args) => { const
+  [router, verb, name] = args; .. }`.
+  - Its shapes are published: the router's position; the verb, or the position of the argument that names it; the
+    path's position; the path around it.
+  - A call with a path and a router among its arguments is a candidate, with the handler from its last argument and
+    where its router leads. `compose` makes it a route, before the mount graph.
+  - The registrations in the wrapper's body stay routes as written until `compose` sees the wrapper used. Then they
+    are dropped as the templates they are (`GET /api{param}`, a false positive before).
+  - A candidate never stops the reading of its call. The run showed k6's `http.del(url, null, params)` in bitwarden
+    being taken for one.
+  - A call whose path has a part only known at run time makes no route. NodeBB's remountable prefixes
+    (`` `/${name}/settings` ``) would give `/{param}/settings`, which links nothing, since the linker compares literal
+    segments.
+- **A module router returned by the exported function** (`module.exports = function () { ..; return router }`)
+  follows `require('./users')()`.
+- **Express's optional trailing parameters** (`/reset/:code?`, `/chats/:roomid?/:index?`) give the short forms too.
+
+Diff against `2026-10-16-v2-baseline-13`, judged: only NodeBB changed. Its routes went from 92 to 377:
+
+- the write API under `/api/v3/*`;
+- the read API's pages and their `/api` twins;
+- the optional short forms.
+
+One route left: the helper's template. The other repositories are identical.
+
+Expected lists (NodeBB):
+
+- The scope grew to the files that register the read API: `index.js`, `user.js` and `activitypub.js`.
+- Under H2-D15, 62 real routes that the specs leave out were added: the HTML pages, the ActivityPub routes,
+  `/compose`, `POST /email/unsubscribe/{token}`, `POST /api/user/{userslug}/uploadpicture` and the optional short
+  forms.
+- The spec's `POST /api/email/unsubscribe/{token}` was removed, because the code registers only the GET.
+- The misses blocked by a runtime prefix moved from `custom-registrar` to `prefix-as-param` (119): the remountable
+  mounts, built by a `reduce` that plugins can change, and `/ping` and `/sping` under `${relativePath}`.
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| NodeBB | 66.7 % / 8.7 % | 93.9 % / 73.1 % (439) |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| TS/JS before | 70.4 % (114/162) | 94.0 % | 59.7 % (660/1105) |
+| TS/JS now | 70.4 % (114/162) | 95.5 % | 85.3 % (943/1105) |
+
+The before row is baseline-13 measured against the new lists.
+
+**Timing.** HTTP extraction took 105.2 s, back from the 131.1 s of the loaded Nest run. NodeBB took 3.4 s.
+
+New baseline: `2026-10-16-v2-baseline-14`.

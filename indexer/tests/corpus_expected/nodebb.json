@@ -12,7 +12,10 @@
   "endpoints": [
    "src/routes/write/",
    "src/routes/api.js",
-   "src/routes/admin.js"
+   "src/routes/admin.js",
+   "src/routes/index.js",
+   "src/routes/user.js",
+   "src/routes/activitypub.js"
   ],
   "calls": [
    "public/src/admin/manage/api.js",
@@ -22,18 +25,33 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/api",
-   "category": "custom-registrar"
+   "path": "/actor"
+  },
+  {
+   "method": "GET",
+   "path": "/actor/admins"
+  },
+  {
+   "method": "GET",
+   "path": "/actor/following"
+  },
+  {
+   "method": "GET",
+   "path": "/ap"
+  },
+  {
+   "method": "GET",
+   "path": "/api"
   },
   {
    "method": "GET",
    "path": "/api/admin",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/cache",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
@@ -43,37 +61,37 @@
   {
    "method": "GET",
    "path": "/api/admin/advanced/database",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/errors",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/errors/export",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/events",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/hooks",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/jobs",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/advanced/logs",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
@@ -83,17 +101,17 @@
   {
    "method": "GET",
    "path": "/api/admin/appearance/customise",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/appearance/skins",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/appearance/themes",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "POST",
@@ -108,97 +126,97 @@
   {
    "method": "GET",
    "path": "/api/admin/dashboard",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/dashboard/logins",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/dashboard/searches",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/dashboard/topics",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/dashboard/users",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/development/info",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/development/logger",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/extend/plugins",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/extend/rewards",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/extend/widgets",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/analytics",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/content",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/errors",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/general",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/hashtags",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/pruning",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/relays",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/rules",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/federation/safety",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
@@ -208,152 +226,152 @@
   {
    "method": "GET",
    "path": "/api/admin/manage/admins-mods",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/api",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/categories",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/categories/{category_id}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/categories/{category_id}/analytics",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/categories/{category_id}/federation",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/digest",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/groups",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/groups/{slug}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/privileges/{cid}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/tags",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/uploads",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/users",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/users/custom-fields",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/manage/users/custom-reasons",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/advanced",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/chat",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/cookies",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/email",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/general",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/group",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/navigation",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/notifications",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/pagination",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/post",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/reputation",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/tags",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/uploads",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/user",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/admin/settings/web-crawler",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "POST",
@@ -397,13 +415,11 @@
   },
   {
    "method": "GET",
-   "path": "/api/ap",
-   "category": "custom-registrar"
+   "path": "/api/ap"
   },
   {
    "method": "GET",
-   "path": "/api/categories",
-   "category": "custom-registrar"
+   "path": "/api/categories"
   },
   {
    "method": "GET",
@@ -412,22 +428,28 @@
   {
    "method": "GET",
    "path": "/api/category/{category_id}/{slug}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/category/{category_id}/{slug}/{topic_index}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
-   "path": "/api/chats/{roomid}",
-   "category": "custom-registrar"
+   "path": "/api/chats"
   },
   {
    "method": "GET",
-   "path": "/api/chats/{roomid}/{index}",
-   "category": "custom-registrar"
+   "path": "/api/chats/{roomid}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/chats/{roomid}/{index}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/compose"
   },
   {
    "method": "GET",
@@ -435,98 +457,78 @@
   },
   {
    "method": "GET",
-   "path": "/api/confirm/{code}",
-   "category": "custom-registrar"
+   "path": "/api/confirm/{code}"
   },
   {
    "method": "GET",
-   "path": "/api/email/unsubscribe/{token}",
-   "category": "custom-registrar"
-  },
-  {
-   "method": "POST",
-   "path": "/api/email/unsubscribe/{token}",
-   "category": "custom-registrar"
+   "path": "/api/email/unsubscribe/{token}"
   },
   {
    "method": "GET",
-   "path": "/api/flags",
-   "category": "custom-registrar"
+   "path": "/api/flags"
   },
   {
    "method": "GET",
-   "path": "/api/flags/{flagId}",
-   "category": "custom-registrar"
+   "path": "/api/flags/{flagId}"
   },
   {
    "method": "GET",
    "path": "/api/groups",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/groups/{slug}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/groups/{slug}/members",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
-   "path": "/api/intents/{intent}",
-   "category": "custom-registrar"
+   "path": "/api/intents/{intent}"
   },
   {
    "method": "GET",
-   "path": "/api/ip-blacklist",
-   "category": "custom-registrar"
+   "path": "/api/ip-blacklist"
   },
   {
    "method": "GET",
-   "path": "/api/login",
-   "category": "custom-registrar"
+   "path": "/api/login"
   },
   {
    "method": "GET",
-   "path": "/api/me",
-   "category": "custom-registrar"
+   "path": "/api/me"
   },
   {
    "method": "GET",
-   "path": "/api/me/{rest}",
-   "category": "custom-registrar"
+   "path": "/api/me/{rest}"
   },
   {
    "method": "GET",
-   "path": "/api/message/{mid}",
-   "category": "custom-registrar"
+   "path": "/api/message/{mid}"
   },
   {
    "method": "GET",
-   "path": "/api/notifications",
-   "category": "custom-registrar"
+   "path": "/api/notifications"
   },
   {
    "method": "GET",
-   "path": "/api/outgoing",
-   "category": "custom-registrar"
+   "path": "/api/outgoing"
   },
   {
    "method": "GET",
-   "path": "/api/popular",
-   "category": "custom-registrar"
+   "path": "/api/popular"
   },
   {
    "method": "GET",
-   "path": "/api/post-queue",
-   "category": "custom-registrar"
+   "path": "/api/post-queue"
   },
   {
    "method": "GET",
-   "path": "/api/post-queue/{id}",
-   "category": "custom-registrar"
+   "path": "/api/post-queue/{id}"
   },
   {
    "method": "POST",
@@ -535,12 +537,15 @@
   {
    "method": "GET",
    "path": "/api/post/{pid}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
-   "path": "/api/recent",
-   "category": "custom-registrar"
+   "path": "/api/recent"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recent/posts"
   },
   {
    "method": "GET",
@@ -548,33 +553,27 @@
   },
   {
    "method": "GET",
-   "path": "/api/register",
-   "category": "custom-registrar"
+   "path": "/api/register"
   },
   {
    "method": "GET",
-   "path": "/api/register/complete",
-   "category": "custom-registrar"
+   "path": "/api/register/complete"
   },
   {
    "method": "GET",
-   "path": "/api/registration-queue",
-   "category": "custom-registrar"
+   "path": "/api/registration-queue"
   },
   {
    "method": "GET",
-   "path": "/api/reset",
-   "category": "custom-registrar"
+   "path": "/api/reset"
   },
   {
    "method": "GET",
-   "path": "/api/reset/{code}",
-   "category": "custom-registrar"
+   "path": "/api/reset/{code}"
   },
   {
    "method": "GET",
-   "path": "/api/search",
-   "category": "custom-registrar"
+   "path": "/api/search"
   },
   {
    "method": "GET",
@@ -583,17 +582,16 @@
   {
    "method": "GET",
    "path": "/api/tags",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/tags/{tag}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
-   "path": "/api/top",
-   "category": "custom-registrar"
+   "path": "/api/top"
   },
   {
    "method": "GET",
@@ -610,27 +608,25 @@
   {
    "method": "GET",
    "path": "/api/topic/{topic_id}/{slug}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/topic/{topic_id}/{slug}/{post_index}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
-   "path": "/api/tos",
-   "category": "custom-registrar"
+   "path": "/api/tos"
   },
   {
    "method": "GET",
    "path": "/api/uid/{uid{rest}}",
-   "category": "custom-registrar"
+   "category": "route-constraint-syntax"
   },
   {
    "method": "GET",
-   "path": "/api/unread",
-   "category": "custom-registrar"
+   "path": "/api/unread"
   },
   {
    "method": "GET",
@@ -651,1252 +647,1255 @@
   {
    "method": "GET",
    "path": "/api/user/{userslug}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/best",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/blocks",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/bookmarks",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/categories",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/chats/{roomid}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/chats/{roomid}/{index}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/consent",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/controversial",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/downvoted",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/edit",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/edit/email",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/edit/password",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/edit/username",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/followers",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/following",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/groups",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/ignored",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/info",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/posts",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/read",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "DELETE",
    "path": "/api/user/{userslug}/session/{uuid}",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/sessions",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/settings",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/shares",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/tags",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/topics",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/user/{userslug}/uploadpicture"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/uploads",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/upvoted",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/user/{userslug}/watched",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "GET",
    "path": "/api/users",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/blocklists",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/activitypub/blocklists/core",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists/core"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/blocklists/core",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists/core"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/activitypub/blocklists/{url}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists/{url}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/activitypub/blocklists/{url}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists/{url}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/blocklists/{url}/refresh",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/blocklists/{url}/refresh"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/activitypub/hashtags",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/hashtags"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/hashtags",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/hashtags"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/activitypub/hashtags/relay",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/hashtags/relay"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/activitypub/hashtags/relay",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/hashtags/relay"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/activitypub/hashtags/{tag}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/hashtags/{tag}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/relays",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/relays"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/activitypub/relays/{url}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/relays/{url}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/activitypub/rules",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/rules"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/activitypub/rules/order",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/rules/order"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/activitypub/rules/{rid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/activitypub/rules/{rid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/analytics",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/analytics"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/analytics/{set}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/analytics/{set}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/chats/{roomId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/chats/{roomId}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/groups",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/groups"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/plugins/{pluginId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/plugins/{pluginId}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/plugins/{pluginId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/plugins/{pluginId}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/plugins/{pluginId}/active",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/plugins/{pluginId}/active"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/plugins/{pluginId}/upgrade",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/plugins/{pluginId}/upgrade"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/settings/{setting}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/settings/{setting}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/tokens",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/tokens"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/admin/tokens/{token}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/tokens/{token}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/admin/tokens/{token}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/tokens/{token}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/tokens/{token}",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/tokens/{token}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/admin/tokens/{token}/roll",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/tokens/{token}/roll"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/admin/users/custom-fields",
-   "category": "custom-registrar"
+   "path": "/api/v3/admin/users/custom-fields"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories"
   },
   {
    "method": "POST",
-   "path": "/api/v3/categories",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/categories/{cid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}/children",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/children"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}/count",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/count"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/follow"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/categories/{cid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/follow"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/follow/{actor}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/follow/{actor}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/moderator/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/moderator/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/categories/{cid}/moderator/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/moderator/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}/posts",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/posts"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}/privileges",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/privileges"
   },
   {
    "method": "POST",
-   "path": "/api/v3/categories/{cid}/privileges/copy",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/privileges/copy"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/privileges/{privilege}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/privileges/{privilege}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/categories/{cid}/privileges/{privilege}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/privileges/{privilege}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/privileges/{privilege}/{member}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/privileges/{privilege}/{member}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/categories/{cid}/topics",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/topics"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/watch",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/watch"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/categories/{cid}/watch",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/watch"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/categories/{cid}/watch/{member}",
-   "category": "custom-registrar"
+   "path": "/api/v3/categories/{cid}/watch/{member}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats"
   },
   {
    "method": "POST",
-   "path": "/api/v3/chats",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/search",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/search"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/sort",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/sort"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/unread",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/unread"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}"
   },
   {
    "method": "HEAD",
-   "path": "/api/v3/chats/{roomId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/chats/{roomId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/messages",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/messages/pinned",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/pinned"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/ip",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/ip"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/pin",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/pin"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/pin",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/pin"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/raw",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/raw"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/state"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/messages/{mid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/messages/{mid}/state"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/owners/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/owners/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/owners/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/owners/{uid}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/state"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/state"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/typing",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/typing"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/users"
   },
   {
    "method": "GET",
-   "path": "/api/v3/chats/{roomId}/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/users"
   },
   {
    "method": "POST",
-   "path": "/api/v3/chats/{roomId}/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/users"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/users/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/users/{uid}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/chats/{roomId}/watch",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/watch"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/chats/{roomId}/watch",
-   "category": "custom-registrar"
+   "path": "/api/v3/chats/{roomId}/watch"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/files",
-   "category": "custom-registrar"
+   "path": "/api/v3/files"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/files/folder",
-   "category": "custom-registrar"
+   "path": "/api/v3/files/folder"
   },
   {
    "method": "POST",
-   "path": "/api/v3/flags",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/flags/{flagId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/flags/{flagId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/flags/{flagId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/flags/{flagId}/notes",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}/notes"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/flags/{flagId}/notes/{datetime}",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}/notes/{datetime}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/flags/{flagId}/report",
-   "category": "custom-registrar"
+   "path": "/api/v3/flags/{flagId}/report"
   },
   {
    "method": "GET",
-   "path": "/api/v3/groups",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups"
   },
   {
    "method": "POST",
-   "path": "/api/v3/groups",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/groups/{slug}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}"
   },
   {
    "method": "HEAD",
-   "path": "/api/v3/groups/{slug}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/groups/{slug}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/groups/{slug}/invites",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/invites"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/groups/{slug}/invites/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/invites/{uid}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/groups/{slug}/invites/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/invites/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/groups/{slug}/invites/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/invites/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/groups/{slug}/members",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/members"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/groups/{slug}/membership/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/membership/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/groups/{slug}/membership/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/membership/{uid}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/groups/{slug}/ownership/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/ownership/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/groups/{slug}/ownership/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/ownership/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/groups/{slug}/pending",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/pending"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/groups/{slug}/pending/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/pending/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/groups/{slug}/pending/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/groups/{slug}/pending/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/intents/query/{handle}",
-   "category": "custom-registrar"
+   "path": "/api/v3/intents/query/{handle}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/notifications",
-   "category": "custom-registrar"
+   "path": "/api/v3/notifications"
   },
   {
    "method": "GET",
-   "path": "/api/v3/notifications/count",
-   "category": "custom-registrar"
+   "path": "/api/v3/notifications/count"
   },
   {
    "method": "GET",
-   "path": "/api/v3/notifications/{nid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/notifications/{nid}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/notifications/{nid}/read",
-   "category": "custom-registrar"
+   "path": "/api/v3/notifications/{nid}/read"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/notifications/{nid}/read",
-   "category": "custom-registrar"
+   "path": "/api/v3/notifications/{nid}/read"
   },
   {
    "method": "GET",
-   "path": "/api/v3/ping",
-   "category": "custom-registrar"
+   "path": "/api/v3/ping"
   },
   {
    "method": "POST",
-   "path": "/api/v3/ping",
-   "category": "custom-registrar"
+   "path": "/api/v3/ping"
   },
   {
    "method": "POST",
-   "path": "/api/v3/posts/owner",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/owner"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/queue/{id}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/queue/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/posts/queue/{id}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/queue/{id}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/queue/{id}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/queue/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/posts/queue/{id}/notify",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/queue/{id}/notify"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/{pid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/announcers",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/announcers"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/announcers/tooltip",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/announcers/tooltip"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/{pid}/bookmark",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/bookmark"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/bookmark",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/bookmark"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/diffs",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/diffs"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/diffs/{since}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/diffs/{since}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/diffs/{since}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/diffs/{since}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/{pid}/diffs/{timestamp}",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/diffs/{timestamp}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/index",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/index"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/move",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/move"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/owner",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/owner"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/raw",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/raw"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/replies",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/replies"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/{pid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/state"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/state"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/summary",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/summary"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/upvoters",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/upvoters"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/posts/{pid}/vote",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/vote"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/posts/{pid}/vote",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/vote"
   },
   {
    "method": "GET",
-   "path": "/api/v3/posts/{pid}/voters",
-   "category": "custom-registrar"
+   "path": "/api/v3/posts/{pid}/voters"
   },
   {
    "method": "GET",
-   "path": "/api/v3/search/categories",
-   "category": "custom-registrar"
+   "path": "/api/v3/search/categories"
   },
   {
    "method": "GET",
-   "path": "/api/v3/search/chats/{roomId}/messages",
-   "category": "custom-registrar"
+   "path": "/api/v3/search/chats/{roomId}/messages"
   },
   {
    "method": "GET",
-   "path": "/api/v3/search/chats/{roomId}/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/search/chats/{roomId}/users"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/tags/{tag}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/tags/{tag}/follow"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/tags/{tag}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/tags/{tag}/follow"
   },
   {
    "method": "POST",
-   "path": "/api/v3/topics",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/topics/{tid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/topics/{tid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/bump",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/bump"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/crossposts",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/crossposts"
   },
   {
    "method": "GET",
-   "path": "/api/v3/topics/{tid}/crossposts",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/crossposts"
   },
   {
    "method": "POST",
-   "path": "/api/v3/topics/{tid}/crossposts",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/crossposts"
   },
   {
    "method": "GET",
-   "path": "/api/v3/topics/{tid}/events",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/events"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/events/{eventId}",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/events/{eventId}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/follow"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/follow"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/ignore",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/ignore"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/ignore",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/ignore"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/lock",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/lock"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/lock",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/lock"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/move",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/move"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/pin",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/pin"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/pin",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/pin"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/read",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/read"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/read",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/read"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/state"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/state",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/state"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/tags",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/tags"
   },
   {
    "method": "PATCH",
-   "path": "/api/v3/topics/{tid}/tags",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/tags"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/tags",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/tags"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/topics/{tid}/thumbs",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/thumbs"
   },
   {
    "method": "GET",
-   "path": "/api/v3/topics/{tid}/thumbs",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/thumbs"
   },
   {
    "method": "POST",
-   "path": "/api/v3/topics/{tid}/thumbs",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/thumbs"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/topics/{tid}/thumbs/order",
-   "category": "custom-registrar"
+   "path": "/api/v3/topics/{tid}/thumbs/order"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/users"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users",
-   "category": "custom-registrar"
+   "path": "/api/v3/users"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/reauth/verify",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/reauth/verify"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}"
   },
   {
    "method": "HEAD",
-   "path": "/api/v3/users/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/account",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/account"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/ban",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/ban"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/ban",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/ban"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/chat",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/chat"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/content",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/content"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/emails",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/emails"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/{uid}/emails",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/emails"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/emails/{email}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/emails/{email}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/{uid}/emails/{email}/confirm",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/emails/{email}/confirm"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/exports/{type}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/exports/{type}"
   },
   {
    "method": "HEAD",
-   "path": "/api/v3/users/{uid}/exports/{type}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/exports/{type}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/{uid}/exports/{type}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/exports/{type}"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/follow"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/follow",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/follow"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/{uid}/invites",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/invites"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/invites/groups",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/invites/groups"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/mute",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/mute"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/mute",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/mute"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/password",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/password"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/picture",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/picture"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/sessions/{uuid}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/sessions/{uuid}"
   },
   {
    "method": "PUT",
-   "path": "/api/v3/users/{uid}/settings",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/settings"
   },
   {
    "method": "GET",
-   "path": "/api/v3/users/{uid}/status",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/status"
   },
   {
    "method": "HEAD",
-   "path": "/api/v3/users/{uid}/status/{status}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/status/{status}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/users/{uid}/tokens",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/tokens"
   },
   {
    "method": "DELETE",
-   "path": "/api/v3/users/{uid}/tokens/{token}",
-   "category": "custom-registrar"
+   "path": "/api/v3/users/{uid}/tokens/{token}"
   },
   {
    "method": "POST",
-   "path": "/api/v3/utilities/login",
-   "category": "custom-registrar"
+   "path": "/api/v3/utilities/login"
   },
   {
    "method": "GET",
-   "path": "/api/world",
-   "category": "custom-registrar"
+   "path": "/api/world"
+  },
+  {
+   "method": "GET",
+   "path": "/categories"
+  },
+  {
+   "method": "GET",
+   "path": "/category/{cid}"
+  },
+  {
+   "method": "GET",
+   "path": "/category/{cid}/inbox"
+  },
+  {
+   "method": "POST",
+   "path": "/category/{cid}/inbox"
+  },
+  {
+   "method": "GET",
+   "path": "/category/{cid}/moderators"
+  },
+  {
+   "method": "GET",
+   "path": "/category/{cid}/outbox"
+  },
+  {
+   "method": "POST",
+   "path": "/category/{cid}/outbox"
+  },
+  {
+   "method": "GET",
+   "path": "/category/{cid}/{slug}"
+  },
+  {
+   "method": "GET",
+   "path": "/chats"
+  },
+  {
+   "method": "GET",
+   "path": "/chats/{roomid}"
+  },
+  {
+   "method": "GET",
+   "path": "/chats/{roomid}/{index}"
+  },
+  {
+   "method": "GET",
+   "path": "/compose"
+  },
+  {
+   "method": "POST",
+   "path": "/compose"
+  },
+  {
+   "method": "GET",
+   "path": "/confirm/{code}"
+  },
+  {
+   "method": "GET",
+   "path": "/email/unsubscribe/{token}"
+  },
+  {
+   "method": "POST",
+   "path": "/email/unsubscribe/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/emoji/ap/{shortcode}/{hostname}"
+  },
+  {
+   "method": "GET",
+   "path": "/flags"
+  },
+  {
+   "method": "GET",
+   "path": "/flags/{flagId}"
+  },
+  {
+   "method": "POST",
+   "path": "/inbox"
+  },
+  {
+   "method": "GET",
+   "path": "/intents/{intent}"
+  },
+  {
+   "method": "GET",
+   "path": "/ip-blacklist"
+  },
+  {
+   "method": "GET",
+   "path": "/login"
+  },
+  {
+   "method": "GET",
+   "path": "/me"
+  },
+  {
+   "method": "GET",
+   "path": "/me/{rest}"
+  },
+  {
+   "method": "GET",
+   "path": "/message/{mid}"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/outgoing"
   },
   {
    "method": "GET",
    "path": "/ping",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/popular"
+  },
+  {
+   "method": "GET",
+   "path": "/post-queue"
+  },
+  {
+   "method": "GET",
+   "path": "/post-queue/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/post/{pid}"
+  },
+  {
+   "method": "GET",
+   "path": "/post/{pid}/replies"
+  },
+  {
+   "method": "GET",
+   "path": "/recent"
+  },
+  {
+   "method": "GET",
+   "path": "/register"
+  },
+  {
+   "method": "GET",
+   "path": "/register/complete"
+  },
+  {
+   "method": "GET",
+   "path": "/registration-queue"
+  },
+  {
+   "method": "GET",
+   "path": "/reset"
+  },
+  {
+   "method": "GET",
+   "path": "/reset/{code}"
+  },
+  {
+   "method": "GET",
+   "path": "/search"
   },
   {
    "method": "GET",
    "path": "/sping",
-   "category": "custom-registrar"
+   "category": "prefix-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/top"
+  },
+  {
+   "method": "GET",
+   "path": "/topic/{tid}"
+  },
+  {
+   "method": "GET",
+   "path": "/topic/{tid}/{slug}"
+  },
+  {
+   "method": "GET",
+   "path": "/tos"
+  },
+  {
+   "method": "GET",
+   "path": "/uid/{uid}"
+  },
+  {
+   "method": "GET",
+   "path": "/uid/{uid}/followers"
+  },
+  {
+   "method": "GET",
+   "path": "/uid/{uid}/following"
+  },
+  {
+   "method": "GET",
+   "path": "/uid/{uid}/inbox"
+  },
+  {
+   "method": "POST",
+   "path": "/uid/{uid}/inbox"
+  },
+  {
+   "method": "GET",
+   "path": "/uid/{uid}/outbox"
+  },
+  {
+   "method": "POST",
+   "path": "/uid/{uid}/outbox"
+  },
+  {
+   "method": "GET",
+   "path": "/unread"
+  },
+  {
+   "method": "GET",
+   "path": "/user/{userslug}"
+  },
+  {
+   "method": "GET",
+   "path": "/world"
   }
  ],
  "calls": [
@@ -1951,7 +1950,7 @@
    "category": "prefix-in-client-wrapper"
   }
  ],
- "notes": "Endpoints: the committed multi-file OpenAPI specs (public/openapi/read.yaml for /api/*, write.yaml for /api/v3 with servers /api/v3; path items are $ref to other files, which from-openapi now follows), scope = the files that register those APIs (src/routes/write/, api.js, admin.js). Nothing comes out right: the write API registers through a helper, setupApiRoute(router, 'post', '/x', mws, handler), and the read API through setupPageRoute(app, '/x', ...) which also creates the /api twin (custom-registrar, 365); admin.js builds paths from a parameter, router.get(`/api/${name}/config`) (prefix-as-param, 13); api.js does const router = express.Router(); app.use('/api', router) in the same function and the routes still come out without /api (mount-same-scope, 12). The precision sample (whole repo) adds: jQuery $.get(url, callback) in the browser code is taken for a route registration (call-taken-for-route). The ActivityPub, feeds and meta routes are on the root router and are right. Calls: the browser api module (public/src/modules/api.js) prepends /api/v3 unless the route already starts with /api, so api.put('/admin/tokens/x') comes out without it (prefix-in-client-wrapper); api.del() is not read as DELETE (verb-alias); $.ajax(url, {...}) is not seen (request-config-object). Expected calls = every call in two sampled admin files. Since the v2 cheap fixes (2026-10-15): api.del is DELETE — and like the other api.* calls lacks the /api/v3 the module prepends (prefix-in-client-wrapper); $.get is a call, never a route.",
+ "notes": "Endpoints: the committed multi-file OpenAPI specs (public/openapi/read.yaml for /api/*, write.yaml for /api/v3 with servers /api/v3; path items are $ref to other files, which from-openapi now follows), scope = the files that register those APIs (src/routes/write/, api.js, admin.js). Nothing comes out right: the write API registers through a helper, setupApiRoute(router, 'post', '/x', mws, handler), and the read API through setupPageRoute(app, '/x', ...) which also creates the /api twin (custom-registrar, 365); admin.js builds paths from a parameter, router.get(`/api/${name}/config`) (prefix-as-param, 13); api.js does const router = express.Router(); app.use('/api', router) in the same function and the routes still come out without /api (mount-same-scope, 12). The precision sample (whole repo) adds: jQuery $.get(url, callback) in the browser code is taken for a route registration (call-taken-for-route). The ActivityPub, feeds and meta routes are on the root router and are right. Calls: the browser api module (public/src/modules/api.js) prepends /api/v3 unless the route already starts with /api, so api.put('/admin/tokens/x') comes out without it (prefix-in-client-wrapper); api.del() is not read as DELETE (verb-alias); $.ajax(url, {...}) is not seen (request-config-object). Expected calls = every call in two sampled admin files. Since the v2 cheap fixes (2026-10-15): api.del is DELETE — and like the other api.* calls lacks the /api/v3 the module prepends (prefix-in-client-wrapper); $.get is a call, never a route. Since H2b's TS route wrappers (2026-10-17): setupApiRoute/setupPageRoute/setupAdminPageRoute (src/routes/helpers.js, (...args) destructured, router[verb](name, ..) and router.get(`/api${name}`, ..)) are read as route wrappers, so their calls are routes — the write API under /api/v3/* (each router returned by its module's exported function and mounted with router.use('/api/v3/users', require('./users')())), the read API's pages and their /api twins; Express's optional trailing parameters give the short form too. The scope grew to the files registering the read API (index.js, user.js, activitypub.js), and, under H2-D15, 62 real routes the specs leave out were added (the HTML pages of setupPageRoute, the ActivityPub routes, /compose, POST /email/unsubscribe/{token}, POST /api/user/{userslug}/uploadpicture, the optional short forms); the spec's POST /api/email/unsubscribe/{token} was removed (the code registers only the GET). What is left is prefix-as-param: the remountable prefixes (`/${name}/..` with mounts built at run time by a reduce over a list plugins can change) and /ping, /sping under ${relativePath} — wrapper calls with such a path make no route.",
  "checked": {
   "endpoints": [
    {
@@ -2049,14 +2048,6 @@
     "raw": "/top.rss",
     "ok": true,
     "category": null
-   },
-   {
-    "evidence": "nodebb:src/routes/helpers.js:37",
-    "method": "GET",
-    "path": "/api{param}",
-    "raw": "/api{param}",
-    "ok": false,
-    "category": "prefix-as-param"
    },
    {
     "evidence": "nodebb:src/routes/index.js:72",

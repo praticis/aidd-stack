@@ -179,6 +179,56 @@
    "method": "GET",
    "path": "/plain",
    "handler": "list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/users",
+   "handler": "createUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}",
+   "handler": "getUser"
+  },
+  {
+   "method": "GET",
+   "path": "/categories",
+   "handler": "listCategories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories",
+   "handler": "listCategories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}/sessions/{sid}",
+   "handler": "listSessions"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}/sessions",
+   "handler": "listSessions"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/reset/{code}",
+   "handler": "reset"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/reset",
+   "handler": "reset"
+  },
+  {
+   "method": "GET",
+   "path": "/users",
+   "handler": "getUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/{param}/config",
+   "handler": "adminConfig"
   }
  ],
  "calls": [
@@ -261,6 +311,11 @@
    "method": "POST",
    "path": "/api/apps/{appId}/topics/{topic}/events",
    "line": 107
+  },
+  {
+   "method": "DELETE",
+   "path": "/public/groups/{param}",
+   "line": 15
   }
  ]
 }
