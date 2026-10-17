@@ -59,13 +59,17 @@
   TS/JS P 94,0 → 95,5 %, R 59,7 → 85,3 % (NodeBB R 8,7 → 73,1 %). **Clientes gerados TS e requisição descrita por
   objeto (2026-10-17):** SDK do oazapfts (immich, 279) e do openapi-ts (fastapi-template, 23), `channel.post({ url })`,
   `axios.request({ url, method })`, `$.ajax(url, {..})`; chamadas TS/JS P 59,5 → 91,4 %, R 12,1 → 87,4 %. **Fase 5
-  (2026-10-17), menos o *hold-out*:** os últimos defeitos baratos (`Client()` de teste do Django, `urljoin` com path
+  (2026-10-17):** os últimos defeitos baratos (`Client()` de teste do Django, `urljoin` com path
   absoluto, path de URL validado, restrição do Hono, `Sprintf` com constante de segmento, pastas de teste por nome);
   guia §3 e §5; relatório com "Closing H2b" (do primeiro v2 ao último, nos mesmos gabaritos e 38 repos: rotas
   C# R 55,6 → 93,1 %, Go 9,4 → 98,0 %, Python fora do Django 9,1 → 98,0 %, TS/JS 4,3 → 85,4 %; chamadas C# 48,3 →
   96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %) e o destino de cada lacuna; ROADMAP com o **F1.14** (o que o H2
-  deixou para o extrator).
-- **Incremento atual:** H2b — Fase 5, falta o *hold-out* (ver "Próximo passo").
+  deixou para o extrator). **Hold-out (2026-10-17, H2-D20):** 16 repos fora do ajuste, gabarito escrito antes de rodar,
+  medidos uma vez — recall de rotas C# 48,5 %, Go 19,7 %, Python 83,8 %, TS/JS 74,1 %; chamadas TS/JS 76,5 % (no corpus:
+  96,9, 98,0, 98,0 fora do Django e 85,4 %). Sobreajuste nas formas que o corpus não tinha (atributo de rota próprio,
+  OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo) e dois
+  defeitos de precisão (prefixo duplicado num grupo Go passado a função); tudo no F1.14. **H2 concluído; F0.4.3b `[x]`.**
+- **Incremento atual:** nenhum — o H2 fechou em 2026-10-17 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
@@ -97,9 +101,10 @@
   nas rotas o prefixo montado em runtime, `prefix-as-param`, 119 no NodeBB — limitação; o laço sobre array literal
   do express-boilerplate, 14; o autoload por pasta do fastify-demo, 14; as rotas por arquivo do Next.js, 9; nas
   chamadas, o wrapper de cliente com prefixo próprio, `prefix-in-client-wrapper`, 34, e os wrappers do gitea, 15,
-  que pedem o tipo do receiver em TS). **Próximo: o *hold-out*, último passo da Fase 5** — repos fora do ajuste,
-  com o perfil do portfólio (H2-D18), gabarito pela spec commitada onde houver, medidos **uma vez** com o extrator
-  como está, para checar sobreajuste ao corpus; depois, F0.4.3b `[x]` no ROADMAP.
+  que pedem o tipo do receiver em TS). **Próximo: o F1.14** (ROADMAP), a decidir com o autor — pelo hold-out, começar
+  pelos defeitos de precisão (prefixo duplicado no Go) e pelo .NET (atributo de rota próprio, 760 rotas em 2 repos; OData;
+  FastEndpoints atrás de base própria). Os repos do hold-out viram corpus quando forem trabalhados, e o fechamento do
+  F1.14 precisa de um hold-out novo.
 
 ## Decisões
 
@@ -124,6 +129,7 @@
 | H2-D17 | 2026-10-15 | No resumo por linguagem, item da amostra conta na linguagem **do seu arquivo**, e o gabarito declara `language` por tipo quando difere da do repo (a UI React de um servidor Go). Cada categoria traz o **nº de repos** em que aparece | Repos mistos (backend + UI) misturavam linguagens; um repo grande (netbox, 1256 operações) não pode ranquear uma categoria sozinho |
 | H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo (o Python é FastAPI/Flask, não Django), TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus; Django + DRF (item 8) segue adiado | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
 | H2-D19 | 2026-10-16 | **O TS entra no H2**, depois de .NET, Go e Python fechados no essencial: grafo entre arquivos, `setGlobalPrefix` do Nest e clientes gerados TS, em etapas com corpus e commit cada uma | Recomendação de 2026-10-16, seguida no passo seguinte: reaproveita o grafo de montagem e o `compose` que Go e Python já usam; num incremento próprio, o mesmo contexto teria de ser remontado |
+| H2-D20 | 2026-10-17 | **Hold-out do fechamento:** 16 repos que as regras nunca viram, no perfil do portfólio (C#: Umbraco-CMS, Elsa 3, Smartstore, Radarr, Kavita, btcpayserver; Go: photoprism, memos, go-boilerplate, sftpgo, vikunja; Python: mealie, open-webui; TS: directus, outline, docmost — 16), fixados por SHA em `HOLDOUT` (`http_corpus.py --holdout`, gabaritos em `corpus_expected/holdout/`). Gabarito escrito **antes** de rodar o extrator: a spec commitada onde houver, senão uma lista lida no código num escopo fixado antes; precisão por amostra sorteada (20 rotas e 20 chamadas por repo, `--sample 20 --seed 0`) julgada na fonte. Medido **uma vez**, no extrator de `c4ecc34`; nenhuma regra é ajustada por ele no H2 — o que aparecer vai ao F1.14; erro de gabarito achado ao julgar se corrige (H2-D15) | Escolha de 2026-10-17 a partir da lista do autor: fora os repos que já estão no corpus, os frameworks (rotas só em exemplos), os de leitura sabidamente ausente (Django, RPC próprio, Next.js/tRPC, rotas por arquivo, Ruby) e os de escala (odoo); open-webui entra para equilibrar o Python; os 6 da primeira recomendação (Radarr, Kavita, btcpayserver, sftpgo, vikunja, docmost) entram no mesmo dia, a pedido do autor — 5 deles com spec commitada. Medir uma vez e não ajustar é o que mantém o número honesto: um hold-out que orienta regras vira corpus |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -298,7 +304,7 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
 - [x] Decidir H2-D9 e H2-D10 — *(2026-10-15)* as duas recomendações do relatório aceitas (itens 6 e 7)
 
 ### Fase 5 — fechamento
-- [ ] ROADMAP: F0.4.3b `[x]` (depois do *hold-out*); gaps encaminhados *(2026-10-17)* — base URL → F0.5 linker; spec
+- [x] *(2026-10-17)* ROADMAP: F0.4.3b `[x]`; gaps encaminhados — base URL → F0.5 linker; spec
   como fonte → F2.1; evolução do extrator → **F1.14** (novo); pastas de app de teste com nome de produção → F1.1;
   resto → limitação no guia. Tabela "Where each remaining gap goes" em `corpus-report.md`
 - [x] *(2026-10-17)* Guia: §3 (composição entre arquivos com o TS, as regras novas com o sintoma, limitações
@@ -309,11 +315,13 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
   do `URL_LITERAL`), restrição de regex do Hono, `Sprintf` com constante de segmento (kratos `/schemas`, exposto
   pela mudança seguinte), `TEST_FILE` com `e2e-tests/`, `cypress/`, `playwright/`, `testhelpers/` (item 9 da Fase 4,
   em parte: `integration/` fica para a config por repo)
-- [ ] Dívidas registradas na reciclagem de 2026-10-15 (nenhuma bloqueia a Fase 4):
+- [x] Dívidas registradas na reciclagem de 2026-10-15 (nenhuma bloqueia a Fase 4):
   - [x] *(2026-10-17)* encaminhadas ao **F1.14**: catálogo de frameworks como dado (verbos, nomes de registro,
     receptores de cliente), com os scanners pedindo o cliente às convenções em vez de ler `CLIENT_RECEIVER`; os
     limiares fixos do `built_bundle` (nenhum erro no corpus)
-  - [ ] um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar sobreajuste ao corpus
+  - [x] *(2026-10-17)* um conjunto de repos fora do ajuste (*hold-out*), medido só no fechamento, para checar
+    sobreajuste ao corpus — 16 repos (H2-D20), `http_corpus.py --holdout`, gabaritos em `corpus_expected/holdout/`;
+    resultado em `corpus-report.md` ("The hold-out set") e no F1.14
   - [x] *(2026-10-16)* na etapa 2, reaproveitar a resolução de imports do `resolve.py` em vez de uma segunda —
     `RepoView` chama o `resolve_import` de cada linguagem
   - [x] *(2026-10-17)* custo do HTTP no netbox (49 s de 107 s, com 0 rotas e 0 chamadas; zulip 17 s de 47 s) —
@@ -660,3 +668,16 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   4,3 → 85,4 %; chamadas C# 48,3 → 96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %; e o destino de cada lacuna.
   ROADMAP: **F1.14** (o que o H2 deixou para o extrator, na ordem do portfólio, com as dívidas da reciclagem), custo
   do HTTP no netbox no F1.13. Falta o *hold-out*; depois, F0.4.3b `[x]`.
+- 2026-10-17: **Hold-out e fechamento do H2.** 16 repos fora do ajuste (H2-D20; os 10 da lista do autor filtrada e os 6 da
+  primeira recomendação, a pedido), fixados em `HOLDOUT` (`http_corpus.py --holdout`). Gabaritos escritos antes de rodar:
+  9 da spec commitada conferida com o código (photoprism e memos corrigidos pela leitura; Umbraco com as 15 rotas que a
+  spec esconde), 7 lidos no código num escopo fixado antes; `scope_paths` novo no `corpus_metrics` para spec que cobre um
+  subespaço de URL (teste novo). Uma rodada (o Umbraco, 17 mil arquivos, à parte: 112 s, sem estourar a memória), amostra
+  semeada de 20 rotas e 20 chamadas por repo julgada na fonte, faltas categorizadas; correções de gabarito pelo H2-D15
+  (btcpayserver +42 rotas reais e −10 só da spec, directus +8, Radarr +1). Resultado: recall de rotas C# 48,5 %, Go 19,7 %,
+  Python 83,8 %, TS/JS 74,1 %; chamadas TS/JS 76,5 % — contra 96,9 / 98,0 / 98,0 (sem Django) / 85,4 % no corpus. Valem as
+  regras onde o app roteia como o corpus (Kavita, sftpgo, open-webui, docmost, btcpayserver inteiros; SDK hey-api do Umbraco
+  513/513); caem atributo de rota próprio (760), OData (260), prefixo duplicado num grupo Go passado a função (172, defeito),
+  router de pacote atribuído em outro arquivo (165), gateway com verbo em constante e Connect (185), FastEndpoints atrás de
+  base própria (94), Koa sem barra (64), subclasse de `APIRouter` (28) e a base do cliente em outro arquivo/alias/campo
+  (158 chamadas). Tudo no F1.14. ROADMAP: F0.4.3b `[x]`. **H2 concluído.**

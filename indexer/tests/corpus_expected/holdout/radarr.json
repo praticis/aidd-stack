@@ -1,0 +1,1385 @@
+{
+ "source": "openapi",
+ "sha": "7879a635dd5ae22e41bbe75dd39b6aadfe2e2358",
+ "spec": [
+  "src/Radarr.Api.V3/openapi.json"
+ ],
+ "scope": [
+  "src/Radarr.Api.V3/",
+  "src/Radarr.Http/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/alttitle",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/alttitle/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/autotagging",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/autotagging/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/autotagging/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/blocklist",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/blocklist/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/blocklist/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/blocklist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/calendar",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/collection",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/collection",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/collection/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/collection/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/command",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/command",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/command/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/command/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/downloadclient",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/downloadclient/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/downloadclient/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/host",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/host/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/host/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/importlist",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/importlist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/importlist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/indexer",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/indexer/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/indexer/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/mediamanagement",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/mediamanagement/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/mediamanagement/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/metadata",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/metadata/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/metadata/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming/examples",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/naming/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/ui",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/ui/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/ui/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/credit",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/credit/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customfilter",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/customfilter",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customfilter/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customfilter/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customfilter/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/customformat",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customformat/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customformat/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customformat/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customformat/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/delayprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/delayprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/delayprofile/reorder/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/delayprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/delayprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/delayprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/diskspace",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/action/{name}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/downloadclient/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/downloadclient/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/test",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/testall",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/downloadclient/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/downloadclient/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/exclusions",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/exclusions/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/exclusions/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions/paged",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/exclusions/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/exclusions/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/extrafile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem/mediafiles",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem/type",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/health",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/history/failed/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history/since",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/action/{name}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/importlist/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/importlist/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/test",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/testall",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/importlist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/importlist/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/action/{name}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/indexer/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/indexer/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/test",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/testall",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/indexer/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/indexer/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexerflag",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/language",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/language/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/localization",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/localization/language",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/update",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/update/{filename}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/{filename}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/manualimport",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/manualimport",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/mediacover/{movieId}/{filename}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/action/{name}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/test",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/testall",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/metadata/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/metadata/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/movie",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/movie/editor",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/movie/editor",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/movie/import",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup/imdb",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup/tmdb",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/movie/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/movie/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/{id}/folder",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/moviefile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/moviefile/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/editor",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/moviefile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/moviefile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/action/{name}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/test",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/testall",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/notification/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/notification/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/parse",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition/limits",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualitydefinition/update",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualitydefinition/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/qualityprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile/schema",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/qualityprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualityprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/queue/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue/details",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/queue/grab/bulk",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/queue/grab/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue/status",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/queue/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/release",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/release",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/release/push",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/releaseprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/releaseprofile",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/releaseprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/releaseprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/releaseprofile/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/remotepathmapping",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/remotepathmapping",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/remotepathmapping/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/remotepathmapping/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/remotepathmapping/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rename",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rootfolder",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/rootfolder",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/rootfolder/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rootfolder/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/backup",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/backup/restore/upload",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/backup/restore/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/system/backup/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/restart",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/routes",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/routes/duplicate",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/shutdown",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/status",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/task",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/task/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/tag",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/detail",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/detail/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/tag/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/tag/{id}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/update",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/cutoff",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/missing",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/content/{path}",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/feed/v3/calendar/radarr.ics",
+   "category": "custom-route-attribute"
+  },
+  {
+   "method": "GET",
+   "path": "/initialize.json"
+  },
+  {
+   "method": "GET",
+   "path": "/login"
+  },
+  {
+   "method": "POST",
+   "path": "/login"
+  },
+  {
+   "method": "GET",
+   "path": "/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/ping"
+  },
+  {
+   "method": "HEAD",
+   "path": "/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/{path}",
+   "category": "custom-route-attribute"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The 238 operations of the committed src/Radarr.Api.V3/openapi.json (generated from the controllers): the v3 API under /api/v3 plus the host's own /, /api, /login, /logout, /ping, /content/{path} and /feed/v3/... Controllers carry the project's attributes — [V3ApiController] (VersionedApiControllerAttribute, which provides the template api/v3/[controller]) and [RestGetById], [RestPostById], [RestPutById], [RestDeleteById] (IActionHttpMethodProvider + IRouteTemplateProvider: a verb and an {id:int} template, not Http* attributes) — and most CRUD actions are inherited from the generic RestController<TResource>. Added after the run (H2-D15): GET /initialize.json (Radarr.Http's InitializeJsonController, [HttpGet(\"/initialize.json\")]), not in the spec.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/AutoTagging/AutoTaggingController.cs:93",
+    "method": "GET",
+    "path": "/schema",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Blocklist/BlocklistController.cs:61",
+    "method": "GET",
+    "path": "/movie",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Blocklist/BlocklistController.cs:76",
+    "method": "DELETE",
+    "path": "/bulk",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Calendar/CalendarFeedController.cs:30",
+    "method": "GET",
+    "path": "/Radarr.ics",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Config/NamingConfigController.cs:59",
+    "method": "GET",
+    "path": "/examples",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/History/HistoryController.cs:112",
+    "method": "POST",
+    "path": "/failed/{id}",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/ImportLists/ImportListExclusionController.cs:84",
+    "method": "POST",
+    "path": "/bulk",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Localization/LocalizationController.cs:32",
+    "method": "GET",
+    "path": "/language",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Movies/MovieLookupController.cs:58",
+    "method": "GET",
+    "path": "/tmdb",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Qualities/QualityDefinitionController.cs:69",
+    "method": "GET",
+    "path": "/limits",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Queue/QueueActionController.cs:40",
+    "method": "POST",
+    "path": "/grab/bulk",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/System/Backup/BackupController.cs:76",
+    "method": "POST",
+    "path": "/restore/{id}",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/System/SystemController.cs:130",
+    "method": "POST",
+    "path": "/restart",
+    "raw": null,
+    "ok": false,
+    "category": "custom-route-attribute"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/ApiInfoController.cs:9",
+    "method": "GET",
+    "path": "/api",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Authentication/AuthenticationController.cs:92",
+    "method": "GET",
+    "path": "/logout",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/InitializeJsonController.cs:35",
+    "method": "GET",
+    "path": "/initialize.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/StaticResourceController.cs:30",
+    "method": "GET",
+    "path": "/login",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/StaticResourceController.cs:38",
+    "method": "GET",
+    "path": "/content/{{rest}{rest}{regex}(^(",
+    "raw": null,
+    "ok": false,
+    "category": "route-constraint-syntax"
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Ping/PingController.cs:24",
+    "method": "GET",
+    "path": "/ping",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Ping/PingController.cs:25",
+    "method": "HEAD",
+    "path": "/ping",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "radarr:frontend/src/index.ts:8",
+    "method": "GET",
+    "path": "/initialize.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/NzbDrone.Test.Common/NzbDroneRunner.cs:74",
+    "method": "ANY",
+    "path": "/system/status",
+    "raw": null,
+    "ok": false,
+    "category": "test-client-in-source"
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

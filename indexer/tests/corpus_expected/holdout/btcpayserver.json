@@ -1,0 +1,1287 @@
+{
+ "source": "openapi",
+ "sha": "70c07d3bb1e0111c4976a9fbd5aa0ee33dae4bc2",
+ "spec": [
+  "BTCPayServer/wwwroot/swagger/v1/swagger.template.*.json"
+ ],
+ "scope_paths": [
+  "/api/v1/"
+ ],
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/v1/api-keys"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/api-keys/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/api-keys/current"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/api-keys/{apiKeyId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps/crowdfund/{appId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/apps/crowdfund/{appId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps/pos/{appId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/apps/pos/{appId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/apps/{appId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps/{appId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/apps/{appId}/image"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/apps/{appId}/image/{fileId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps/{appId}/sales"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/apps/{appId}/top-items"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/files"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/files"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/files/{fileId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/files/{fileId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/health"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/invitations/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invitations/{token}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invitations/{token}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invoices"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/invoices/{invoiceId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invoices/{invoiceId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/invoices/{invoiceId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invoices/{invoiceId}/payment-methods"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invoices/{invoiceId}/payment-methods/{paymentMethodId}/activate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invoices/{invoiceId}/refund"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/invoices/{invoiceId}/refund/{paymentMethodId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invoices/{invoiceId}/status"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/invoices/{invoiceId}/unarchive"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/payment-requests/{paymentRequestId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/payment-requests/{paymentRequestId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/payment-requests/{paymentRequestId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/payment-requests/{paymentRequestId}/pay"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/payout-processors"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/payouts/{payoutId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/payouts/{payoutId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/payouts/{payoutId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/payouts/{payoutId}/mark"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/payouts/{payoutId}/mark-paid"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/plan-checkout"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/plan-checkout/{checkoutId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/plan-checkout/{checkoutId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/pull-payments/{pullPaymentId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/pull-payments/{pullPaymentId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/pull-payments/{pullPaymentId}/boltcards"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/pull-payments/{pullPaymentId}/lnurl"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/pull-payments/{pullPaymentId}/payouts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/pull-payments/{pullPaymentId}/payouts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/pull-payments/{pullPaymentId}/payouts/{payoutId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/email"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/server/email"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/server/lightning/{cryptoCode}/address"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/balance"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/server/lightning/{cryptoCode}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/server/lightning/{cryptoCode}/connect"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/histogram"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/server/lightning/{cryptoCode}/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/server/lightning/{cryptoCode}/invoices/pay"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/invoices/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/payments"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/lightning/{cryptoCode}/payments/{paymentHash}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/server/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/invoices/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/invoices/{param}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/invoices/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/invoices/{param}/payment-methods"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/invoices/{param}/payment-methods/{param}/activate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/invoices/{param}/refund"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/invoices/{param}/refund/{param}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/invoices/{param}/status"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/invoices/{param}/unarchive"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payment-methods/LNURL"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/payment-methods/LNURLPay/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payment-methods/LNURLPay/{param}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/payment-methods/LNURLPay/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payment-methods/LightningNetwork"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/payment-methods/LightningNetwork/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payment-methods/LightningNetwork/{param}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/payment-methods/LightningNetwork/{param}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/payment-requests/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payment-requests/{param}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/payment-requests/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payout-processors/OnChainAutomatedPayoutSenderFactory"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/payouts/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/payouts/{param}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/payouts/{param}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/payouts/{param}/mark"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/payouts/{param}/mark-paid"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/pull-payments/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/rates/configuration"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/rates/configuration"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/rates/configuration/fallback"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/rates/configuration/primary"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/rates/configuration/primary"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{param}/webhooks/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/webhooks/{param}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{param}/webhooks/{param}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/webhooks/{param}/deliveries/{param}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{param}/webhooks/{param}/deliveries/{param}/redeliver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{param}/webhooks/{param}/deliveries/{param}/request"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/apps"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/apps/crowdfund"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/apps/pos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/email"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/email/send"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/invoices"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning-addresses"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/lightning-addresses/{username}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning-addresses/{username}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning-addresses/{username}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/address"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/balance"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/connect"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/pay"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments/{paymentHash}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/logo"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/logo"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/offerings",
+   "category": "optional-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/offerings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/plans"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/dates"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/suspend"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/unsuspend"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/generate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/histogram"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/broadcast"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/utxos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payment-requests"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-requests"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payout-processors"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethodId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethodId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/payout-processors/{processor}/{paymentMethodId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/payouts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/payouts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/pull-payments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/pull-payments"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/rates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/rates/configuration/fallback"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/rates/configuration/preview"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/reports"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/reports"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/users"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/users",
+   "category": "optional-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/users/invitations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/users/{idOrEmail}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/stores/{storeId}/users/{idOrEmail}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/stores/{storeId}/users/{idOrEmail}/invitation"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/users/{idOrEmail}/invitation"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/stores/{storeId}/webhooks",
+   "category": "optional-param"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/stores/{storeId}/webhooks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/subscriber-portal"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/subscriber-portal/{portalSessionId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/users/me"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/notification-settings"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/users/me/notification-settings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/notifications"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/notifications/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/me/notifications/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/users/me/notifications/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/me/picture"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/me/picture"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{idOrEmail}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{idOrEmail}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{idOrEmail}/api-keys"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{idOrEmail}/api-keys/{apiKeyId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{idOrEmail}/approve"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users/{idOrEmail}/lock"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/webhooks/{webhookId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/webhooks/{webhookId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/webhooks/{webhookId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/request"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The Greenfield API: the 31 committed swagger fragments (BTCPayServer/wwwroot/swagger/v1/swagger.template.*.json), 204 operations — 199 under /api/v1 plus five UI routes they document (/api-keys/authorize, /i/{invoiceId}, /misc/lang, /misc/permissions, /misc/rate-sources). Greenfield controllers live in BTCPayServer/Controllers/GreenField/ and in plugins; the same project has hundreds of MVC UI routes (UI*Controller) the fragments do not cover, so precision against the list counts only paths under /api/v1/ (scope_paths), and the sample judges the rest. BTCPayServer.Client calls the same API from C#, not measured as a list. Added while judging the sample (H2-D15): two real Greenfield routes the fragments do not document, POST /api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay ([HttpPost(\"~/api/v1/..\")]) and GET /api/v1/stores/{storeId}/rates/configuration/fallback. Also added from the code after the run (H2-D15): the 40 routes under /api/v1/ that the run extracted and the fragments leave out — the store-scoped forms the controllers register next to the documented ones (DELETE /api/v1/stores/{storeId}/invoices/{invoiceId} beside /api/v1/invoices/{invoiceId}, the payment-methods, payouts, webhooks and rates/configuration routes) and the PayButton plugin's [Route(\"api/v1/invoices\")] GET and POST; each one checked against an [Http*] or [Route] template in the code.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/GreenField/GreenfieldNotificationsController.cs:80",
+    "method": "DELETE",
+    "path": "/api/v1/users/me/notifications/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/GreenField/GreenfieldPaymentRequestsController.cs:75",
+    "method": "POST",
+    "path": "/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/GreenField/GreenfieldPullPaymentController.cs:592",
+    "method": "DELETE",
+    "path": "/api/v1/pull-payments/{pullPaymentId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/GreenField/GreenfieldStoreRatesConfigurationController.cs:48",
+    "method": "GET",
+    "path": "/api/v1/stores/{storeId}/rates/configuration/fallback",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIAccountController.cs:519",
+    "method": "GET",
+    "path": "/register",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIAccountController.cs:654",
+    "method": "GET",
+    "path": "/login/forgot-password",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIAppsController.cs:65",
+    "method": "GET",
+    "path": "/stores/{storeId}/apps",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UILNURLAuthController.cs:103",
+    "method": "GET",
+    "path": "/lnurlauth/register-callback",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIPaymentRequestController.cs:164",
+    "method": "GET",
+    "path": "/payment-requests/{payReqId}/edit",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIServerController.Storage.cs:245",
+    "method": "POST",
+    "path": "/server/storage/GoogleCloudStorage",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIServerController.Users.cs:353",
+    "method": "POST",
+    "path": "/server/users/{userId}/delete",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIServerController.Users.cs:453",
+    "method": "POST",
+    "path": "/server/users/{userId}/verification-email",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIServerController.cs:599",
+    "method": "POST",
+    "path": "/server/services/{serviceName}/{cryptoCode}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Controllers/UIStoresController.Rates.cs:21",
+    "method": "GET",
+    "path": "/{storeId}/rates",
+    "raw": null,
+    "ok": false,
+    "category": "partial-class-route"
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Emails/Controllers/UIStoreEmailRulesController.cs:28",
+    "method": "GET",
+    "path": "/stores/{storeId}/emails/rules",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Subscriptions/Controllers/GreenfieldOfferingController.cs:310",
+    "method": "GET",
+    "path": "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Subscriptions/Controllers/UIPlanCheckoutController.cs:75",
+    "method": "POST",
+    "path": "/plan-checkout/{checkoutId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Wallets/Controllers/UIWalletsController.cs:1733",
+    "method": "POST",
+    "path": "/wallets/{walletId}/psbt/seed",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Wallets/Controllers/UIWalletsController.cs:2081",
+    "method": "GET",
+    "path": "/wallets/{walletId}/export",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Wallets/Controllers/UIWalletsController.cs:547",
+    "method": "GET",
+    "path": "/wallets",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/BTCTurkRateProvider.cs:29",
+    "method": "GET",
+    "path": "/api/v2/ticker",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/BitbankRateProvider.cs:24",
+    "method": "GET",
+    "path": "/tickers",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/BitflyerRateProvider.cs:22",
+    "method": "GET",
+    "path": "/v1/ticker",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/BitnobRateProvider.cs:22",
+    "method": "GET",
+    "path": "/api/v1/rates/bitcoin/price",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/BitpayRateProvider.cs:22",
+    "method": "GET",
+    "path": "/rates",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/ByllsRateProvider.cs:21",
+    "method": "GET",
+    "path": "/api/price",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/CoinmateRateProvider.cs:22",
+    "method": "GET",
+    "path": "/api/tickerAll",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/HitBTCRateProvider.cs:17",
+    "method": "GET",
+    "path": "/api/2/public/ticker",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/LunoRateProvider.cs:27",
+    "method": "GET",
+    "path": "/api/1/tickers",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/NotbankExchangeRateProvider.cs:24",
+    "method": "POST",
+    "path": "/AP/Ticker",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/RipioExchangeProvider.cs:21",
+    "method": "GET",
+    "path": "/v4/public/tickers",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer.Rating/Providers/YadioRateProvider.cs:21",
+    "method": "GET",
+    "path": "/exrates/BTC",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:114",
+    "method": "POST",
+    "path": "/api/v1/plugins/updates{param}",
+    "raw": null,
+    "ok": false,
+    "category": "query-in-variable"
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:72",
+    "method": "GET",
+    "path": "/api/v1/plugins/directory/{param}{param}",
+    "raw": null,
+    "ok": false,
+    "category": "query-in-variable"
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:82",
+    "method": "GET",
+    "path": "/api/v1/plugins/{param}/versions/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:96",
+    "method": "GET",
+    "path": "/api/v1/plugins/{param}{param}",
+    "raw": null,
+    "ok": false,
+    "category": "query-in-variable"
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Translations/LanguagePackUpdateService.cs:107",
+    "method": "GET",
+    "path": "/btcpayserver/btcpayserver-translator/main/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Plugins/Translations/LanguagePackUpdateService.cs:76",
+    "method": "GET",
+    "path": "/btcpayserver/btcpayserver-translator/main/manifest.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/Services/Fees/MempoolSpaceFeeProvider.cs:79",
+    "method": "GET",
+    "path": "/testnet/api/v1/fees/precise",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "btcpayserver:BTCPayServer/wwwroot/main/site.js:481",
+    "method": "POST",
+    "path": "/invoices/{param}/changestate/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

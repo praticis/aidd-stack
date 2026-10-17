@@ -232,6 +232,19 @@ com os números do corpus):
 - **Wrapper de cliente fora do C#:** o cliente do próprio app que põe a base no path (argo-cd `requests.get('/x')` →
   `` agent.get(`${apiRoot()}${url}`) ``, NodeBB `api.put(..)` → `/api/v3`, gitea `GET(url)`): no TS e no Python a
   chamada sai sem o prefixo, ou não sai.
+- **Vistas no hold-out** (16 repos que as regras nunca viram, `corpus-report.md` "The hold-out set"):
+  - C#: atributo de rota próprio do projeto (`[VersionedApiBackOfficeRoute("x")]` do Umbraco, `[V3ApiController]` e
+    `[RestGetById]` do Radarr, `IRouteTemplateProvider`); convenções OData sem template (Smartstore); FastEndpoints
+    atrás de uma base própria (`ElsaEndpoint<T>`), e o `RoutePrefix` global; `[Route]` em outro arquivo de uma
+    classe `partial`; a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`;
+  - Go: o prefixo **aplicado duas vezes** quando um grupo com prefixo é passado a uma função
+    (`a := e.Group("/api/v1"); registerAPIRoutes(a)`, vikunja — defeito de precisão); router em variável de pacote
+    atribuída por uma chamada em outro arquivo (`APIv1 = router.Group(conf.BaseUri(..))`, photoprism); o grpc-gateway
+    novo com o verbo em constante (`mux.Handle(http.MethodGet, pattern_X, ..)`, memos) e os handlers connect-go;
+  - Python: subclasse de `APIRouter` (`UserAPIRouter(prefix=..)`, mealie) não é router;
+  - TS/JS: path Koa sem barra (`router.post("documents.info", ..)`) e `koa-mount`; o verbo `SEARCH`; restrição
+    interpolada (`/:pk(${UUID_REGEX})`); a base do cliente em outro arquivo ou num alias (`$lib/constants` do
+    SvelteKit, `axios.create({ baseURL })`).
 - **Limitação, não evolução:** prefixo que só existe em runtime (NodeBB `` `/api/${name}/..` `` montado com nomes de
   plugins) — o linker compara segmentos literais, então `/{param}/x` não liga nada e o extrator não grava; router
   entregue por uma interface (gotify `instance.RegisterWebhook(base, g)` aos plugins); rotas de biblioteca que o
@@ -280,7 +293,13 @@ inspecionar o que o extrator viu num repo específico.
   lida na fonte, com `scope`, a `category` de cada falta e a amostra `checked` julgada na fonte; formato no
   docstring de `scripts/corpus_metrics.py`) e fecha com os resumos por linguagem e por categoria (com o número de
   repos em que cada uma aparece); `--reuse <execução>` pontua uma execução salva sem extrair de novo — só para
-  editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`.
+  editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`. Quando a spec
+  cobre um subespaço de URL e os mesmos arquivos servem outros (UI web, páginas de debug), `scope_paths` no gabarito
+  restringe a precisão da lista aos paths dele — e a amostra julga o resto.
+- **Hold-out** (`http_corpus.py --holdout`, `HOLDOUT` no script, gabaritos em `tests/corpus_expected/holdout/`):
+  repos que as regras nunca viram, medidos uma vez no fechamento de um incremento, com o gabarito escrito antes de
+  rodar e a amostra julgada na fonte (H2-D20). Nenhuma regra se ajusta por ele; quando um incremento trabalha sobre
+  esses repos eles viram corpus, e o fechamento seguinte precisa de outro hold-out.
 - **O ciclo de uma mudança no extrator** (o do H2b, um commit por categoria):
   1. fixture com o caso e o contraexemplo, e conferir que ela **falha** sem a mudança;
   2. a mudança, e `pytest tests/` inteiro;

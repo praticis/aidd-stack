@@ -11,6 +11,9 @@ Gabarito, one per repo:
      "spec": ["openapi.yaml"],                          # optional: where the expected routes came from
      "scope": ["src/Catalog.API/"],                     # optional: only extracted items under these count —
                                                         # or per kind: {"endpoints": [...], "calls": [...]}
+     "scope_paths": ["/api/v2/", "/healthz"],           # optional: and only extracted items under these paths —
+                                                        # when a spec covers one URL subspace and the same files
+                                                        # serve others (a web UI); also per kind
      "endpoints": [{"method": "GET", "path": "/api/items/{id}", "category": null}],   # category: why it is missed
      "calls":     [{"method": "GET", "path": "/api/items/{id}"}],   # literal/template paths only, as written
      "checked":   {"endpoints": [{"evidence": "repo:file:line", "method": "GET", "path": "/x", "ok": true,
@@ -98,10 +101,18 @@ def score(run: dict, gabarito: dict, kind: str) -> Score | None:
         return None
     scope = gabarito.get("scope") or ()
     scope = tuple((scope.get(kind) or ()) if isinstance(scope, dict) else scope)
-    x = {item_key(i) for i in run.get(kind, []) if not scope or evidence_file(i["evidence"]).startswith(scope)}
+    paths = gabarito.get("scope_paths") or ()
+    paths = tuple((paths.get(kind) or ()) if isinstance(paths, dict) else paths)
+    x = {item_key(i) for i in run.get(kind, []) if (not scope or evidence_file(i["evidence"]).startswith(scope))
+         and (not paths or _under(normalize_path(i["path"]), paths))}
     e = {item_key(i) for i in gabarito[kind]}
     return Score(len(x), len(e), sorted(k for k in x if not any(_matches(k, j) for j in e)),
                  sorted(k for k in e if not any(_matches(k, j) for j in x)))
+
+
+def _under(path: str, prefixes: tuple[str, ...]) -> bool:
+    """`/v1/items` is under `/v1/` and `/v1`; `/v10` is not."""
+    return any(path == p.rstrip("/") or path.startswith(p.rstrip("/") + "/") for p in prefixes)
 
 
 def miss_categories(gabarito: dict, kind: str, sc: Score) -> dict[tuple[str, str], str | None]:

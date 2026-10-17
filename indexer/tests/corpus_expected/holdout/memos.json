@@ -1,0 +1,1046 @@
+{
+ "source": "openapi",
+ "sha": "1a51572406e1db3e97c24b2497013c8005e88317",
+ "spec": [
+  "proto/gen/openapi.yaml"
+ ],
+ "scope": [
+  "proto/gen/api/"
+ ],
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/ai{transcribe}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/attachments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/attachments/{attachment}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/attachments/{attachment}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/attachments/{attachment}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments{batchDelete}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments{upload}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/auth/me",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/refresh",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/signin",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/signout",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/identity-providers",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/identity-providers",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/identity-providers/{identity-provider}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/identity-providers/{identity-provider}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/identity-providers/{identity-provider}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/profile",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/instance/settings/notification{testEmail}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/instance/settings{batchGet}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/stats",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/{instance}/{rest}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/instance/{instance}/{rest}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/-/linkMetadata",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/-/linkMetadata{batchGet}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/attachments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}/attachments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/comments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/comments",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/reactions",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/reactions",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}/reactions/{reaction}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/relations",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}/relations",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/shares",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/shares",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}/shares/{share}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/shares/{shareToken}/memo",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/spaces/{space}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/invitations",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}/invitations/{invitation}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/invitations/{invitation}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations/{invitation}:accept",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations/{invitation}:decline",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/members",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}/members/{member}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/members/{member}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/spaces/{space}/members/{member}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/linkedIdentities",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/linkedIdentities",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/linkedIdentities/{linkedIdentity}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/linkedIdentities/{linkedIdentity}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/notifications",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/notifications/{notification}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/notifications/{notification}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/personalAccessTokens",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/personalAccessTokens",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/personalAccessTokens/{personalAccessToken}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/settings",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/settings/{setting}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/settings/{setting}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/spaceInvitations",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/stats",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/usage",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/views",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/views",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/views/{view}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/views/{view}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/views/{view}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/webhooks",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/webhooks",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/webhooks/{webhook}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/webhooks/{webhook}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/webhooks/{webhook}:getSigningSecret",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}:exportMemos",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}:getStats",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}:importMemos",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users{batchGet}",
+   "category": "gateway-verb-constant"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AIService/Transcribe",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/BatchDeleteAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/CreateAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/DeleteAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/GetAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/ListAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/UpdateAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/UploadAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/GetCurrentUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/RefreshToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/SignIn",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/SignOut",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/CreateIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/DeleteIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/GetIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/ListIdentityProviders",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/UpdateIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/BatchGetInstanceSettings",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceProfile",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/TestInstanceEmailSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/UpdateInstanceSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/BatchGetLinkMetadata",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemoComment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemoShare",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemoReaction",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemoShare",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetLinkMetadata",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetSharedMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoComments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoReactions",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoRelations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoShares",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/SetMemoAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/SetMemoRelations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/UpdateMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/UpsertMemoReaction",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/AcceptSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/CreateSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/CreateSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeclineSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaceInvitations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaceMembers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaces",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListUserSpaceInvitations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/UpdateSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/UpdateSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/BatchGetUsers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreatePersonalAccessToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateUserWebhook",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeletePersonalAccessToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUserNotification",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUserWebhook",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ExportMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserUsage",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserWebhookSigningSecret",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ImportMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListLinkedIdentities",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListMemoViews",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListPersonalAccessTokens",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserNotifications",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserSettings",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserWebhooks",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUsers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserNotification",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserWebhook",
+   "category": "connect-rpc"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. server/api/api.go serves each proto service twice. One copy goes through the grpc-gateway (apipb.Register<Service>HandlerServer on a runtime.ServeMux, the patterns in proto/gen/api/*.pb.gw.go): the 93 operations of proto/gen/openapi.yaml, which gnostic generates from the same proto, with custom verbs like /api/attachments:batchDelete. The other copy goes through Connect (apiconnect.New<Service>Handler on connectMux): the same 93 RPCs as POST /memos.api.<Service>/<Method>, the paths the web app's Connect clients call. Both sets are expected. Outside the scope: /api/sse and the file server (/file/...), registered in server/.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "memos:server/api/sse_handler.go:24",
+    "method": "ANY",
+    "path": "/api/sse",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/fileserver/fileserver.go:129",
+    "method": "ANY",
+    "path": "/file/attachments/{uid}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/fileserver/fileserver.go:130",
+    "method": "ANY",
+    "path": "/file/attachments/{uid}/{filename}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/fileserver/fileserver.go:131",
+    "method": "ANY",
+    "path": "/file/users/{identifier}/avatar",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/frontend/frontend.go:42",
+    "method": "ANY",
+    "path": "/robots.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/frontend/frontend.go:43",
+    "method": "ANY",
+    "path": "/sitemap.xml",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/mcp/service.go:153",
+    "method": "ANY",
+    "path": "/mcp",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:server/server.go:79",
+    "method": "ANY",
+    "path": "/healthz",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:42",
+    "method": "ANY",
+    "path": "/Public/{param}/ucd/DerivedCoreProperties.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:46",
+    "method": "ANY",
+    "path": "/Public/{param}/ucd/UnicodeData.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:50",
+    "method": "ANY",
+    "path": "/Public/{param}/emoji/emoji-test.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:web/src/hooks/useLiveMemoRefresh.ts:402",
+    "method": "GET",
+    "path": "/api/sse",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

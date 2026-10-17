@@ -1,0 +1,812 @@
+{
+ "source": "manual",
+ "sha": "df0697fd84e8036db71b6f5740e5df23c7eb517e",
+ "scope": [
+  "core/src/modules/Elsa.Workflows.Api/"
+ ],
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/elsa/api/actions/workflow-definitions/refresh",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/actions/workflow-definitions/reload",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-execution-summaries/list",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/by-id",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/count",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/list",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/activity-executions/report",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/{*id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/activity-executions/{id}/call-stack",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/admin/workflow-runtime/force-drain",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/admin/workflow-runtime/pause",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/admin/workflow-runtime/resume",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/admin/workflow-runtime/status",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/bookmark-queue/dead-letters",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bookmark-queue/dead-letters",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "DELETE",
+   "path": "/elsa/api/bookmark-queue/dead-letters/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/bookmark-queue/dead-letters/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bookmark-queue/dead-letters/{id}/replay",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/bookmarks/resume",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bookmarks/resume",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/cancel/workflow-instances/",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/delete/workflow-definitions/by-definition-id",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/delete/workflow-definitions/by-id",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/delete/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/delete/workflow-instances/by-id",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/bulk-actions/export/workflow-definitions",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/export/workflow-definitions",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/bulk-actions/export/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/export/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/import/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/publish/workflow-definitions/by-definition-ids",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/bulk-actions/retract/workflow-definitions/by-definition-ids",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/cancel/workflow-instances/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/activities",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/descriptors/activities/{activityTypeName}/options/{propertyName}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/activities/{typeName}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/commit-strategies/activities",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/commit-strategies/workflows",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/expression-descriptors",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/incident-strategies",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/log-persistence-strategies",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/output-converters",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/storage-drivers",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/variables",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/descriptors/workflow-activation-strategies",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/events/trigger",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/events/{eventName}/trigger",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/features/installed",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/features/installed/{fullName}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/package/version",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/tasks/{taskId}/complete",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/tests/activities",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "DELETE",
+   "path": "/elsa/api/workflow-definition-versions/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/by-definition-id/{definitionId}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/by-id/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/import",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "PUT",
+   "path": "/elsa/api/workflow-definitions/import",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/import-files",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/many-by-id",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/query/count",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/subgraph/segments/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/subgraph/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/validation/is-name-unique",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "DELETE",
+   "path": "/elsa/api/workflow-definitions/{definitionId}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/{definitionId}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/bulk-dispatch",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/consumers",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/dispatch",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/execute",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/execute",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/export",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/export",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/import",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "PUT",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/import",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/publish",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/retract",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/revert/{version}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/update-references",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "DELETE",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/version/{version}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-definitions/{definitionId}/versions",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-instances",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "DELETE",
+   "path": "/elsa/api/workflow-instances/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{id}",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{id}/execution-state",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{id}/export",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-instances/{id}/export",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{id}/journal",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-instances/{id}/journal",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{id}/variables",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "POST",
+   "path": "/elsa/api/workflow-instances/{id}/variables",
+   "category": "endpoint-class-own-base"
+  },
+  {
+   "method": "GET",
+   "path": "/elsa/api/workflow-instances/{workflowInstanceId}/journal/{activityId}",
+   "category": "endpoint-class-own-base"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the workflows API (core/src/modules/Elsa.Workflows.Api/), 79 FastEndpoints endpoints. Each derives from the project's own bases (ElsaEndpoint<TRequest>, ElsaEndpointWithoutRequest, ElsaEndpointWithMapper<..> in Elsa.Api.Common, over FastEndpoints' Endpoint<..>) and declares its routes in Configure(): Get(\"/x\"), Post(\"/a\", \"/b\") with several paths (one a deprecated alias), or Routes(..) + Verbs(Http.GET, Http.POST). Every route sits under the global FastEndpoints RoutePrefix, which MapWorkflowsApi sets to its default \"elsa/api\" (config.Endpoints.RoutePrefix = routePrefix) — the RoutePrefix pending in F1.14. 95 routes. The other modules' endpoints (Elsa.Http, Elsa.Identity, ..) are outside the scope.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "elsa:core/src/apps/Elsa.ModularServer.Web/Catalog/SampleCatalogEndpointExtensions.cs:12",
+    "method": "GET",
+    "path": "/catalog/packages",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/apps/Elsa.ModularServer.Web/Catalog/SampleCatalogEndpointExtensions.cs:15",
+    "method": "GET",
+    "path": "/catalog/load-state",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/apps/Elsa.ModularServer.Web/Catalog/SampleCatalogEndpointExtensions.cs:18",
+    "method": "GET",
+    "path": "/catalog/assemblies",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/apps/Elsa.ModularServer.Web/Catalog/SampleCatalogEndpointExtensions.cs:27",
+    "method": "GET",
+    "path": "/catalog/assemblies/{packageId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/apps/Elsa.ModularServer.Web/Catalog/SampleCatalogEndpointExtensions.cs:35",
+    "method": "GET",
+    "path": "/catalog/plugins",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/apps/Elsa.SamplePackage/SampleEndpointFeature.cs:17",
+    "method": "GET",
+    "path": "/sample-endpoint",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.Diagnostics.OpenTelemetry/Extensions/EndpointRouteBuilderExtensions.cs:31",
+    "method": "POST",
+    "path": "/traces",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.Diagnostics.OpenTelemetry/Extensions/EndpointRouteBuilderExtensions.cs:41",
+    "method": "POST",
+    "path": "/logs",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.Identity/Endpoints/Login/Endpoint.cs:14",
+    "method": "POST",
+    "path": "/identity/login",
+    "raw": null,
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.Identity/Endpoints/RefreshToken/Endpoint.cs:31",
+    "method": "POST",
+    "path": "/identity/refresh-token",
+    "raw": null,
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.UserTasks/Endpoints/UserTasksEndpoints.cs:627",
+    "method": "GET",
+    "path": "/user-task-sessions/current",
+    "raw": null,
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.UserTasks/Endpoints/UserTasksEndpoints.cs:655",
+    "method": "POST",
+    "path": "/user-task-sessions/current/complete",
+    "raw": null,
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "elsa:core/src/modules/Elsa.Workflows.Api/Endpoints/Package/Endpoint.cs:15",
+    "method": "GET",
+    "path": "/package/version",
+    "raw": null,
+    "ok": false,
+    "category": "global-prefix"
+   },
+   {
+    "evidence": "elsa:extensions/samples/workbench/Elsa.Server.Web/Program.cs:364",
+    "method": "GET",
+    "path": "/__fixture/secrets/routes",
+    "raw": null,
+    "ok": false,
+    "category": "evidence-line"
+   },
+   {
+    "evidence": "elsa:extensions/src/http/Elsa.Http.OpenApi/Extensions/EndpointRouteBuilderExtensions.cs:32",
+    "method": "GET",
+    "path": "/documentation",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Authentication.OpenIdConnect.BlazorServer/Controllers/AuthenticationController.cs:18",
+    "method": "GET",
+    "path": "/authentication/login",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Authentication.OpenIdConnect.BlazorServer/Controllers/AuthenticationController.cs:32",
+    "method": "POST",
+    "path": "/authentication/logout",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication.BlazorServer/Controllers/ExternalAuthenticationController.cs:238",
+    "method": "GET",
+    "path": "/authentication/external/logout-callback",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication.BlazorServer/Controllers/ExternalAuthenticationController.cs:39",
+    "method": "GET",
+    "path": "/authentication/external/login/{connectionKey}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication.BlazorServer/Controllers/ExternalAuthenticationController.cs:67",
+    "method": "GET",
+    "path": "/authentication/external/callback",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/ActivityDescriptorOptions/Contracts/IActivityDescriptorOptionsApi.cs:20",
+    "method": "POST",
+    "path": "/descriptors/activities/{activityTypeName}/options/{propertyName}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/ActivityExecutions/Contracts/IActivityExecutionsApi.cs:28",
+    "method": "GET",
+    "path": "/activity-executions/list",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/ExternalAuthentication/Connections/Contracts/IExternalAuthenticationConnectionsApi.cs:28",
+    "method": "POST",
+    "path": "/external-authentication/connections/{connectionId}/disable",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/Features/Contracts/IFeaturesApi.cs:21",
+    "method": "GET",
+    "path": "/features/installed",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/LogPersistenceStrategies/Contracts/ILogPersistenceStrategiesApi.cs:17",
+    "method": "GET",
+    "path": "/descriptors/log-persistence-strategies",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/Tests/ITestsApi.cs:16",
+    "method": "POST",
+    "path": "/tests/activities",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/WorkflowDefinitions/Contracts/IWorkflowDefinitionsApi.cs:23",
+    "method": "GET",
+    "path": "/workflow-definitions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/WorkflowInstances/Contracts/IWorkflowInstancesApi.cs:104",
+    "method": "POST",
+    "path": "/bulk-actions/export/workflow-instances",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:core/src/clients/Elsa.Api.Client/Resources/WorkflowInstances/Contracts/IWorkflowInstancesApi.cs:88",
+    "method": "POST",
+    "path": "/bulk-actions/cancel/workflow-instances",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:extensions/src/cms/Elsa.OrchardCore/Client/Services/DefaultRestApiClient.cs:46",
+    "method": "POST",
+    "path": "/api/content-items",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:extensions/src/telecom/Elsa.Telnyx/Client/Services/ICallsApi.cs:8",
+    "method": "GET",
+    "path": "/v2/calls/{callControlId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Dashboard/Client/IDashboardApi.cs:36",
+    "method": "POST",
+    "path": "/dashboard/workflow-hotspots",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Diagnostics.OpenTelemetry/Client/IOpenTelemetryApi.cs:26",
+    "method": "GET",
+    "path": "/diagnostics/opentelemetry/storage",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication/Client/IExternalAuthenticationBrokerApi.cs:9",
+    "method": "GET",
+    "path": "/external-authentication/login-methods",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication/Client/IExternalAuthenticationConnectionManagementApi.cs:16",
+    "method": "GET",
+    "path": "/external-authentication/connections/{connectionId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication/Client/IExternalAuthenticationConnectionManagementApi.cs:43",
+    "method": "PUT",
+    "path": "/external-authentication/connections/{connectionId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.ExternalAuthentication/Client/IExternalIdentityLinkManagementApi.cs:21",
+    "method": "GET",
+    "path": "/external-authentication/user-options",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Labels/Client/ILabelsApi.cs:38",
+    "method": "POST",
+    "path": "/labels",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Login/Services/ElsaIdentityRefreshTokenService.cs:23",
+    "method": "POST",
+    "path": "/identity/refresh-token",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "elsa:studio/src/modules/Elsa.Studio.Secrets/Client/ISecretsApi.cs:32",
+    "method": "GET",
+    "path": "/secrets/descriptors",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

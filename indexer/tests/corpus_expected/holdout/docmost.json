@@ -1,0 +1,689 @@
+{
+ "source": "manual",
+ "sha": "744c82bdf86f454ca44a2e19dc150900e884a11e",
+ "scope": {
+  "endpoints": [
+   "apps/server/src/core/page/page.controller.ts",
+   "apps/server/src/core/space/space.controller.ts",
+   "apps/server/src/core/comment/comment.controller.ts"
+  ],
+  "calls": [
+   "apps/client/src/features/page/services/",
+   "apps/client/src/features/space/services/",
+   "apps/client/src/features/comment/services/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/delete"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/backlinks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/backlinks-count"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/breadcrumbs"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/created-by-user"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/delete"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/duplicate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/history"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/history/info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/labels"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/labels/add"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/labels/remove"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/move"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/move-to-space"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/recent"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/restore"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/sidebar-pages"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/trash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/delete"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/add"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/change-role"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/remove"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/update"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/comments",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/create",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/delete",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/info",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/resolve",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/comments/update",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/docx-export",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/files/info",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/files/upload",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/breadcrumbs",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/create",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/created-by-user",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/delete",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/duplicate",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/export",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/import",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/import-zip",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/info",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/move",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/move-to-space",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/recent",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/restore",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/sidebar-pages",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/trash",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/unwatch",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/update",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/watch",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/watch-status",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/create",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/delete",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/export",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/info",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/add",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/change-role",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/members/remove",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/unwatch",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/update",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/watch",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/watch-status",
+   "category": "prefix-in-client-wrapper"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Nest + React. Routes, scope: the page, space and comment controllers (34 routes): @Controller('pages') with RPC-style @Post('info'), @Post('/history'), @Post('/') under apps/server/src/main.ts's app.setGlobalPrefix('api', { exclude: ['robots.txt', 'share/:shareId/p/:pageSlug', 'mcp', '.well-known/..', 'docs', ..] }) — none of the three controllers is excluded, so every route is /api/<controller>/<path>. Calls, scope: the client services of the same areas (41 calls): api.post<IPage>(\"/pages/info\", data) on the app's axios instance, axios.create({ baseURL: \"/api\" }) in apps/client/src/lib/api-client.ts, imported as a default from \"@/lib/api-client\" (prefix-in-client-wrapper). 14 of them go to controllers outside the route scope (export, import, watchers, attachments, the EE comments/resolve).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "docmost:apps/server/src/core/attachment/attachment.controller.ts:463",
+    "method": "POST",
+    "path": "/api/attachments/delete",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/auth/auth.controller.ts:124",
+    "method": "POST",
+    "path": "/api/auth/change-password",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/auth/auth.controller.ts:187",
+    "method": "POST",
+    "path": "/api/auth/collab-token",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/favorite/favorite.controller.ts:58",
+    "method": "POST",
+    "path": "/api/favorites/remove",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/group/group.controller.ts:53",
+    "method": "POST",
+    "path": "/api/groups/info",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/integration/integration.controller.ts:33",
+    "method": "POST",
+    "path": "/api/integrations/available",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/label/label.controller.ts:41",
+    "method": "POST",
+    "path": "/api/labels",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/label/label.controller.ts:57",
+    "method": "POST",
+    "path": "/api/labels/pages",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/page/page.controller.ts:203",
+    "method": "POST",
+    "path": "/api/pages/create",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/page/page.controller.ts:312",
+    "method": "POST",
+    "path": "/api/pages/delete",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/share/share-seo.controller.ts:23",
+    "method": "GET",
+    "path": "/api/share/p/{pageSlug}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/share/share.controller.ts:201",
+    "method": "POST",
+    "path": "/api/shares/update",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/share/share.controller.ts:93",
+    "method": "POST",
+    "path": "/api/shares/info",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/watcher/watcher.controller.ts:29",
+    "method": "POST",
+    "path": "/api/pages/watch",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/workspace/controllers/workspace.controller.ts:117",
+    "method": "POST",
+    "path": "/api/workspace/members",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/workspace/controllers/workspace.controller.ts:134",
+    "method": "POST",
+    "path": "/api/workspace/members/deactivate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/workspace/controllers/workspace.controller.ts:328",
+    "method": "POST",
+    "path": "/api/workspace/check-hostname",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/core/workspace/controllers/workspace.controller.ts:68",
+    "method": "POST",
+    "path": "/api/workspace/entitlements",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/integrations/export/export.controller.ts:51",
+    "method": "POST",
+    "path": "/api/pages/export",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "docmost:apps/server/src/integrations/health/health.controller.ts:25",
+    "method": "GET",
+    "path": "/api/health/live",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "docmost:apps/client/src/ee/ai-chat/services/ai-chat-service.ts:26",
+    "method": "POST",
+    "path": "/ai/chats/info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/ai-chat/services/ai-chat-service.ts:42",
+    "method": "POST",
+    "path": "/ai/chats/search",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/audit/services/audit-service.ts:8",
+    "method": "POST",
+    "path": "/audit",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/base/queries/page-expand-loader.ts:39",
+    "method": "POST",
+    "path": "/bases/pages/expand",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/base/services/base-service.ts:39",
+    "method": "POST",
+    "path": "/bases/info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/cloud/service/cloud-service.ts:10",
+    "method": "POST",
+    "path": "/workspace/find-by-email",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/mfa/services/mfa-service.ts:14",
+    "method": "POST",
+    "path": "/mfa/status",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/page-verification/services/page-verification-service.ts:34",
+    "method": "POST",
+    "path": "/pages/delete-verification",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/page-verification/services/page-verification-service.ts:38",
+    "method": "POST",
+    "path": "/pages/verify",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/template/services/template-service.ts:18",
+    "method": "POST",
+    "path": "/templates/info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/ee/template/services/template-service.ts:37",
+    "method": "POST",
+    "path": "/templates/delete",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/favorite/services/favorite-service.ts:25",
+    "method": "POST",
+    "path": "/favorites/ids",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/page/services/page-service.ts:208",
+    "method": "POST",
+    "path": "/files/upload",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/page/services/watcher-service.ts:14",
+    "method": "POST",
+    "path": "/pages/watch-status",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/public-space/services/public-space-service.ts:16",
+    "method": "POST",
+    "path": "/public-spaces",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/public-space/services/public-space-service.ts:46",
+    "method": "POST",
+    "path": "/public-spaces/page-info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/search/services/search-service.ts:27",
+    "method": "POST",
+    "path": "/search/share-search",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/search/services/search-service.ts:34",
+    "method": "POST",
+    "path": "/search/public-space-search",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/session/services/session-service.ts:16",
+    "method": "POST",
+    "path": "/sessions/revoke-all",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "docmost:apps/client/src/features/space/services/space-service.ts:21",
+    "method": "POST",
+    "path": "/spaces/info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

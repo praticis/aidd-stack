@@ -5,8 +5,9 @@ on the public calibration corpus. v1 (F0.4.3a, handoff H2a) measured the 15 repo
 calibrated on, pinned to fixed commits and measured against an expected list per repository. The two
 "Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
-H2b, and **"Closing H2b"** at the end has where it started, where it ends and where each remaining gap goes. Plan,
-decisions and status are in `docs/handoffs/H2-roadmap.md`.
+H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
+set"** measures, once, 16 repositories the rules never saw. Plan, decisions and status are in
+`docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -1639,7 +1640,98 @@ The categories that leave the extractor keep the destinations v2 gave them. A pr
 to the linker (F0.5, done: suffix match with a hint). A spec as the source of routes goes to F2.1. Generated
 servers are in part extracted now (grpc-gateway, go-swagger), and the rest goes to F2.1.
 
-### What a hold-out set will check
+## The hold-out set (2026-10-17)
 
-Every rule above was written against these 42 repositories, so their numbers can flatter the extractor. The last
-step of H2 measures, once, a set of repositories the rules never saw (see `docs/handoffs/H2-roadmap.md`).
+Every rule above was written against the 42 corpus repositories, so their numbers can flatter the extractor. The
+hold-out measures, once, 16 repositories the rules never saw, chosen for the portfolio's profile (H2-D18) from a
+list the author gathered, and pinned in `HOLDOUT` (`http_corpus.py --holdout`). The protocol (H2-D20):
+
+- each expected list was written **before** the extractor ran on the repository. Nine come from a committed spec
+  checked against the code (Umbraco, Radarr, Kavita, btcpayserver, photoprism, memos, sftpgo, vikunja,
+  go-boilerplate); seven were read in the code within a scope fixed first (directus, Elsa, Smartstore, mealie,
+  open-webui, outline, docmost);
+- precision was judged at the source on a seeded sample of 20 routes and 20 calls per repository (`seed 0`);
+- the extractor is the one of `c4ecc34`, and no rule changes because of this result. A list error found while
+  judging was corrected (H2-D15): btcpayserver gained 42 real Greenfield routes its fragments leave out and lost 10
+  that no code registers, directus gained 8, Radarr 1.
+
+A spec often covers one URL subspace while the same files serve others, such as a web UI or debug pages. For those
+repositories the list's precision counts only paths under that subspace. This is a new `scope_paths` field of the
+gabarito (`corpus_metrics.py`), and the sample judges the rest.
+
+### Corpus against hold-out
+
+| Language | Kind | Corpus: P sample · P list · R list | Hold-out: P sample · P list · R list |
+|---|---|---|---|
+| C# | routes | 100 % · 100 % · 96.9 % | 63.3 % (76/120) · 83.8 % · 48.5 % (1053/2170) |
+| C# | calls | 100 % · 100 % · 99.0 % | 91.1 % (41/45) · — · — |
+| Go | routes | 88.1 % · 99.1 % · 98.0 % | 50.6 % (39/77) · 28.0 % · 19.7 % (128/651) |
+| Go | calls | 100 % · 100 % · 93.6 % | 100 % (10/10) · — · — |
+| Python | routes | 98.9 % · 99.0 % · 98.0 % (without Django) | 82.5 % (33/40) · 86.3 % · 83.8 % (145/173) |
+| Python | calls | 100 % · 100 % · 66.7 % | 100 % (9/9) · — · — |
+| TS/JS | routes | 71.9 % · 95.6 % · 85.4 % | 88.3 % (53/60) · 98.3 % · 74.1 % (289/390) |
+| TS/JS | calls | 71.7 % · 91.4 % · 87.4 % | 47.0 % (77/164) · 77.8 % · 76.5 % (513/671) |
+
+| Repo | Routes | Calls | P routes sample | P / R routes list | P calls sample | P / R calls list |
+|---|---|---|---|---|---|---|
+| Umbraco-CMS | 173 | 522 | 0 % (0/20) | 0 % / 0 % (528) | 100 % (20/20) | 100 % / 100 % (513) |
+| Radarr | 39 | 2 | 30 % (6/20) | 17.9 % / 2.9 % (239) | 50 % (1/2) | — |
+| Kavita | 522 | 306 | 100 % (20/20) | 100 % / 100 % (522) | 0 % (0/20) | — |
+| btcpayserver | 636 | 23 | 95 % (19/20) | 100 % / 98.7 % (236) | 85 % (17/20) | — |
+| Smartstore | 314 | 5 | 95 % (19/20) | 98.6 % / 52.8 % (551) | 100 % (5/5) | — |
+| Elsa 3 | 24 | 239 | 60 % (12/20) | 0 % / 0 % (94) | 100 % (20/20) | — |
+| photoprism | 165 | 66 | 0 % (0/20) | 0 % / 0 % (165) | 30 % (6/20) | — |
+| vikunja | 202 | 228 | 10 % (2/20) | 0 % / 0 % (172) | 100 % (20/20) | — |
+| memos | 8 | 4 | 100 % (8/8) | — / 0 % (185) | 100 % (4/4) | — |
+| sftpgo | 285 | 3 | 100 % (20/20) | 100 % / 100 % (119) | 100 % (3/3) | — |
+| go-boilerplate | 9 | 0 | 100 % (9/9) | 100 % / 90 % (10) | — | — |
+| mealie | 268 | 14 | 65 % (13/20) | 64.1 % / 59.4 % (69) | 92.9 % (13/14) | — |
+| open-webui | 595 | 617 | 100 % (20/20) | 100 % / 100 % (104) | 35 % (7/20) | 0 % / 0 % (98) |
+| directus | 260 | 78 | 100 % (20/20) | 98.1 % / 87.3 % (292) | 100 % (20/20) | — |
+| outline | 26 | 90 | 65 % (13/20) | — / 0 % (64) | 5 % (1/20) | 0 % / 0 % (19) |
+| docmost | 149 | 148 | 100 % (20/20) | 100 % / 100 % (34) | 0 % (0/20) | 0 % / 0 % (41) |
+
+### What it says
+
+- **The corpus numbers overfit, and most in the portfolio's first language.** C# route recall falls from 96.9 % to
+  48.5 %, and Go's from 98.0 % to 19.7 %. The rules generalize where a repository routes the way the corpus
+  did: Kavita, sftpgo, open-webui, docmost and btcpayserver come out whole. They fail where it routes another way
+  that is common in real applications:
+  - C#: route attributes of the project's own (Umbraco's `[VersionedApiBackOfficeRoute("x")]`, Radarr's
+    `[V3ApiController]` and `[RestGetById]`);
+  - C#: OData conventions (Smartstore);
+  - C#: FastEndpoints behind the project's own base class (Elsa's `ElsaEndpoint<T>`);
+  - Go: a router variable assigned from a call in another file (photoprism's `APIv1`);
+  - Go: a newer generated-gateway form (memos).
+- **Two precision defects** that the corpus never showed:
+  - vikunja's `a := e.Group("/api/v1"); registerAPIRoutes(a)` applies the prefix twice;
+  - an outbound call in vikunja's Planka migration (`c.get("/api/projects", nil, out)`) is read as a route.
+- **What held up:**
+  - TS routes: 98.3 % against the lists, with the mount graph and Nest's `setGlobalPrefix` on unseen code;
+  - generated clients: Umbraco's hey-api SDK, 513 of 513, through the request described by an object;
+  - calls with literal paths in every language.
+- **Calls lose the client's base path.** Kavita's `this.baseUrl` from the environment, outline's `ApiClient` with
+  `baseUrl` `/api`, docmost's `axios.create({ baseURL: "/api" })` in another file, and open-webui's constants
+  imported through SvelteKit's `$lib` alias all drop it: this is `prefix-in-client-wrapper`, already the largest
+  call gap in the corpus.
+
+### Gaps by category (hold-out)
+
+| Category | Wrong | Missed | Repos | What it is | Goes to |
+|---|---|---|---|---|---|
+| `custom-route-attribute` | 33 | 760 | 2 | The project's own route attribute: Umbraco `[VersionedApiBackOfficeRoute("data-type")]` (builds `/umbraco/management/api/v{version}/x`), Radarr `[V3ApiController]`, `[RestGetById]` (`IRouteTemplateProvider`) | F1.14, .NET |
+| `odata-convention` | 0 | 260 | 1 | OData actions without a template (`Post`, `Put(key)`, ..) routed by convention under the route component `odata/v1` (Smartstore) | F1.14, .NET |
+| `prefix-doubled` (FP) | 16 | 172 | 1 | vikunja: a group with a prefix passed to a function gets the prefix twice (`/api/v1/api/v1/..`) | F1.14, Go, first |
+| `prefix-other-file` | 27 | 165 | 2 | photoprism `APIv1 = router.Group(conf.BaseUri(..))` assigned in another file; outline's `mount("/auth", auth)` (koa-mount) | F1.14, Go and TS |
+| `endpoint-class-own-base` | 0 | 94 | 1 | Elsa's FastEndpoints endpoints derive from `ElsaEndpoint<T>`, the project's own base; the global `RoutePrefix` (`elsa/api`) is not applied either (`global-prefix`, 5 wrong) | F1.14, .NET |
+| `gateway-verb-constant`, `connect-rpc` | 0 | 185 | 1 | memos: `mux.Handle(http.MethodGet, pattern_X, ..)` (the verb as a constant; H2b's rule wants the literal) and connect-go handlers | F1.14, Go (gateway); F2.1 (Connect, from the proto) |
+| `prefix-in-client-wrapper`, `const-other-file` | 72 | 158 | 4 | The client's base path held by the code but lost (see above) | F1.14, TS client wrappers |
+| `no-leading-slash` | 0 | 64 | 1 | Koa paths without `/` (`router.post("documents.info", ..)`, outline) | F1.14, TS |
+| `custom-router-class` | 7 | 28 | 1 | mealie's `UserAPIRouter(prefix=..)`, `AdminAPIRouter`: subclasses of `APIRouter` are not routers | F1.14, Python |
+| `search-verb`, `route-constraint-syntax`, `use-as-route`, `router-from-factory`, `optional-param` | 1 | 40 | 3 | directus `router.search(..)`, `/:pk(${UUID_REGEX})`, `router.use('/', handler)`; C# `{id?}` short form (btcpayserver); Radarr `{**path:regex(..)}` | F1.14 |
+| `url-from-helper`, `query-in-variable`, `field-in-interpolation` | 18 | 0 | 3 | photoprism `this.getEntityResource() + "/like"`; btcpayserver `$"api/v1/..{queryString}"`; mealie `${this.baseRoute}` | F1.14 |
+| `partial-class-route`, `evidence-line`, `call-taken-for-route`, `test-client-in-source` | 4 | 0 | 4 | `[Route]` in another file of a partial class (btcpayserver); a route with the evidence of another line (Elsa's `Program.cs`); vikunja's Planka client; Radarr's test runner in `NzbDrone.Test.Common` | F1.14 |
+| `prefix-as-param`, `root-route-dropped` | 4 | 1 | 4 | A prefix from options or a plugin host (Elsa OpenTelemetry, IconKit, vikunja plugins); chi root in a router built by a function | limitation / F1.14 |
+
+The hold-out repositories are now known to the rules that will follow. When F1.14 works on them they become
+corpus, and the next closing needs a new hold-out (H2-D20).

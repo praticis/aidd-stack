@@ -76,6 +76,16 @@ def test_scope_per_kind():
     assert M.score(RUN, gab, "calls").extracted == 0
 
 
+def test_path_scope_limits_extracted_to_the_spec_subspace():
+    # a spec covers /v1 and /health; the same files also serve other surfaces (a web UI, debug pages)
+    gab = {"scope_paths": ["/v1/", "/health"],
+           "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"},
+                         {"method": "GET", "path": "/health"}]}
+    s = M.score(RUN, gab, "endpoints")
+    assert (s.extracted, s.precision, s.recall) == (3, 1.0, 1.0)
+    assert M.score(RUN, {"scope_paths": {"calls": ["/v2/"]}, "endpoints": []}, "endpoints").extracted == 4
+
+
 def test_calls_are_counted_as_distinct_pairs():
     s = M.score(RUN, {"calls": [{"method": "GET", "path": "/v1/users/{id}"}]}, "calls")
     assert (s.extracted, s.precision, s.recall) == (1, 1.0, 1.0)

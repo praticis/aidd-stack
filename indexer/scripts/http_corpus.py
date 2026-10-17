@@ -12,6 +12,7 @@ heuristics do not drift towards one team's style. Needs network + the grammars c
         [--sample N [--seed S]]        # N routes + N calls per repo, reproducible, to check by hand
         [--show K]                     # list up to K items behind each number (default 10, 0 = none)
         [--reuse runs/<earlier>/]      # score that saved run instead of extracting (editing gabaritos only)
+        [--holdout]                    # the hold-out set (HOLDOUT) and its gabaritos, instead of CORPUS
 
 The measuring is in `corpus_metrics.py` (gabarito format, matching rules).
 
@@ -99,6 +100,31 @@ CORPUS = {                                                    # pinned 2026-10-1
 }
 
 
+# Hold-out (H2 Phase 5, pinned 2026-10-17): repositories the rules were never written against, measured once at the
+# close of H2 to check overfitting to CORPUS (`--holdout`, gabaritos in corpus_expected/holdout/). Never tune a rule
+# against them: what they show goes to the ROADMAP (F1.14). Mixing them into CORPUS needs a new hold-out.
+HOLDOUT = {
+    "umbraco": ("umbraco/Umbraco-CMS", "2b7046f56f1a2beb93aad40b81f469eb11ddf014"),
+    "elsa": ("elsa-workflows/elsa-core", "df0697fd84e8036db71b6f5740e5df23c7eb517e"),
+    "smartstore": ("smartstore/Smartstore", "424752a556c8d1676eec83a6d98c5a126cd6b741"),
+    "photoprism": ("photoprism/photoprism", "d527932ba8a405e228eb4c5e0fc6f77400ea719b"),
+    "memos": ("usememos/memos", "1a51572406e1db3e97c24b2497013c8005e88317"),
+    "go-boilerplate": ("meghrazchi/go-boilerplate", "836d02be2e8bef4cf21a481614cc3c81678ae922"),
+    "mealie": ("mealie-recipes/mealie", "89a14202dd8044749cce444147ea4b301c77af13"),
+    "open-webui": ("open-webui/open-webui", "91ea4e3421d1d8069f13d4a463fcb5986d94ea60"),
+    "directus": ("directus/directus", "8e140f94250834cea0a0fb6eb822cac39ed9faec"),
+    "outline": ("outline/outline", "178e923cb7027ddaa22b69fd44a4b3ea489327cd"),
+    # the first recommendation, added the same day
+    "radarr": ("Radarr/Radarr", "7879a635dd5ae22e41bbe75dd39b6aadfe2e2358"),
+    "kavita": ("Kareadita/Kavita", "2d225367f0310ac7354423b772a4c6a7caf63fd2"),
+    "btcpayserver": ("btcpayserver/btcpayserver", "70c07d3bb1e0111c4976a9fbd5aa0ee33dae4bc2"),
+    "sftpgo": ("drakkan/sftpgo", "305ebb875c0eb37ffe970ebf6af80f5f86a7e070"),
+    "vikunja": ("go-vikunja/vikunja", "de610f2ba58a2efcb5e882eae94c8958c12b47dc"),
+    "docmost": ("docmost/docmost", "744c82bdf86f454ca44a2e19dc150900e884a11e"),
+}
+HOLDOUT_EXPECTED_DIR = EXPECTED_DIR / "holdout"
+
+
 LANGUAGE = {"chi": "Go", "fiber-recipes": "Go", "gin-examples": "Go", "gin-realworld": "Go", "alertmanager": "Go", "gorilla-mux": "Go",
             "nest": "TS/JS", "express": "TS/JS", "express-realworld": "TS/JS", "fastify": "TS/JS",
             "eshop": "C#", "clean-arch-dotnet": "C#", "fastapi": "Python", "fastapi-template": "Python", "flask": "Python",
@@ -108,7 +134,12 @@ LANGUAGE = {"chi": "Go", "fiber-recipes": "Go", "gin-examples": "Go", "gin-realw
             "hono-examples": "TS/JS", "taxonomy": "TS/JS",
             "eshop-on-web": "C#", "eshop-support": "C#", "ardalis-clean-arch": "C#", "jellyfin": "C#", "bitwarden": "C#",
             "notifo": "C#", "rapid-blazor": "C#", "azure-saas": "C#",
-            "zulip": "Python", "netbox": "Python", "dispatch": "Python", "aiohttp-demos": "Python", "ctfd": "Python"}
+            "zulip": "Python", "netbox": "Python", "dispatch": "Python", "aiohttp-demos": "Python", "ctfd": "Python",
+            # hold-out
+            "umbraco": "C#", "elsa": "C#", "smartstore": "C#",
+            "photoprism": "Go", "memos": "Go", "go-boilerplate": "Go",
+            "mealie": "Python", "open-webui": "Python", "directus": "TS/JS", "outline": "TS/JS",
+            "radarr": "C#", "kavita": "C#", "btcpayserver": "C#", "sftpgo": "Go", "vikunja": "Go", "docmost": "TS/JS"}
 
 
 EXT_LANGUAGE = {".go": "Go", ".cs": "C#", ".py": "Python",
@@ -224,8 +255,12 @@ def main() -> int:
     ap.add_argument("--sample", type=int, default=0, help="print N sampled routes and N calls per repo")
     ap.add_argument("--seed", default="0")
     ap.add_argument("--show", type=int, default=10)
+    ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own gabaritos")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
+    pinned = HOLDOUT if args.holdout else CORPUS
+    if args.holdout and args.expected == EXPECTED_DIR:
+        args.expected = HOLDOUT_EXPECTED_DIR
     os.environ.setdefault("AIDD_TENANT", "corpus")
     from aidd_indexer.cli import extract_tree
     from aidd_indexer.core.integrations import extract_http
@@ -234,8 +269,8 @@ def main() -> int:
     base = Path(args.dir)
     base.mkdir(parents=True, exist_ok=True)
     changed, measured = [], {}
-    for name in args.repos or sorted(CORPUS):
-        slug, sha = CORPUS[name]
+    for name in args.repos or sorted(pinned):
+        slug, sha = pinned[name]
         saved = args.reuse / f"{name}.json" if args.reuse else None
         if saved and saved.exists() and json.loads(saved.read_text()).get("sha") == sha:
             run = json.loads(saved.read_text())

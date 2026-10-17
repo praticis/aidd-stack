@@ -1,0 +1,594 @@
+{
+ "source": "manual",
+ "sha": "89a14202dd8044749cce444147ea4b301c77af13",
+ "scope": [
+  "mealie/routes/recipe/",
+  "mealie/routes/organizers/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/organizers/categories"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/categories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/categories/empty"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/categories/merge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/categories/slug/{category_slug}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/organizers/categories/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/categories/{item_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/organizers/categories/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tags/empty"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/tags/merge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tags/slug/{tag_slug}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/organizers/tags/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tags/{item_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/organizers/tags/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tools"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/tools"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tools/empty"
+  },
+  {
+   "method": "POST",
+   "path": "/api/organizers/tools/merge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tools/slug/{tool_slug}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/organizers/tools/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/organizers/tools/{item_id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/organizers/tools/{item_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/recipes",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/recipes",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/bulk-actions/categorize"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/bulk-actions/delete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/bulk-actions/export"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/bulk-actions/export"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/recipes/bulk-actions/export/purge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/bulk-actions/export/{export_id}/download"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/bulk-actions/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/bulk-actions/tag"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/ai",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/ai/stream",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/html-or-json",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/html-or-json/stream",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/image",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/url",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/url/bulk",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/url/stream",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/create/zip",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/exports",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/shared/{token_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/shared/{token_id}/zip"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/suggestions",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/test-scrape-url",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/timeline/events",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/timeline/events",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/recipes/timeline/events/{item_id}",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/timeline/events/{item_id}",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/recipes/timeline/events/{item_id}",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/recipes/timeline/events/{item_id}/image",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/recipes/{slug}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/{slug}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/recipes/{slug}",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/recipes/{slug}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/{slug}/assets",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/{slug}/assets/url",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/{slug}/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/{slug}/duplicate",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "GET",
+   "path": "/api/recipes/{slug}/exports",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/recipes/{slug}/image",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "POST",
+   "path": "/api/recipes/{slug}/image",
+   "category": "custom-router-class"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/recipes/{slug}/image"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/recipes/{slug}/last-made",
+   "category": "custom-router-class"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the recipe and organizer routers (mealie/routes/recipe/, mealie/routes/organizers/), 69 routes. mealie/routes/__init__.py builds router = APIRouter(prefix=\"/api\") and includes each package's router; recipe/__init__.py includes exports and recipe_crud_routes as they are (each has prefix=\"/recipes\") and comments, bulk_actions, shared_routes and timeline_events under prefix=\"/recipes\"; organizers/__init__.py is APIRouter(prefix=\"/organizers\") over categories, tags and tools. Routers are the project's own APIRouter subclasses (UserAPIRouter, MealieCrudRoute as route_class) and most routes are methods of class-based views (@controller(router) class X: @router.get(..)), some decorators over several lines.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "mealie:mealie/routes/admin/admin_management_ai_providers.py:42",
+    "method": "DELETE",
+    "path": "/api/groups/{group_id}/ai-providers/providers/{provider_id}",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/auth/auth.py:279",
+    "method": "POST",
+    "path": "/api/auth/oauth/native/token",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/groups/controller_migrations.py:30",
+    "method": "POST",
+    "path": "/api",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/households/controller_group_notifications.py:54",
+    "method": "GET",
+    "path": "/api/households/events/notifications",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/households/controller_mealplan_ical.py:36",
+    "method": "GET",
+    "path": "/api/households/mealplans/ical",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/households/controller_mealplan_ical.py:46",
+    "method": "DELETE",
+    "path": "/api/households/mealplans/ical",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/households/controller_mealplan_rules.py:50",
+    "method": "DELETE",
+    "path": "/api/{item_id}",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/households/controller_shopping_lists.py:115",
+    "method": "GET",
+    "path": "/api/households/shopping/items",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/media/media_recipe.py:33",
+    "method": "GET",
+    "path": "/api/media/recipes/{recipe_id}/images/timeline/{timeline_event_id}/{file_name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/media/media_user.py:10",
+    "method": "GET",
+    "path": "/api/media/users/{user_id}/{file_name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/organizers/controller_categories.py:77",
+    "method": "POST",
+    "path": "/api/organizers/categories/merge",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/recipe/bulk_actions.py:76",
+    "method": "GET",
+    "path": "/api/recipes/bulk-actions/export",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/recipe/bulk_actions.py:80",
+    "method": "DELETE",
+    "path": "/api/recipes/bulk-actions/export/purge",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/recipe/exports.py:21",
+    "method": "GET",
+    "path": "/api/exports",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/recipe/recipe_crud_routes.py:230",
+    "method": "POST",
+    "path": "/api/create/html-or-json/stream",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/recipe/recipe_crud_routes.py:718",
+    "method": "PATCH",
+    "path": "/api/{slug}",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/spa/__init__.py:284",
+    "method": "GET",
+    "path": "/g/{group_slug}/r/{recipe_slug}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/users/crud.py:42",
+    "method": "PUT",
+    "path": "/api/password",
+    "raw": null,
+    "ok": false,
+    "category": "custom-router-class"
+   },
+   {
+    "evidence": "mealie:mealie/routes/users/forgot_password.py:24",
+    "method": "POST",
+    "path": "/api/users/reset-password",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/routes/users/images.py:19",
+    "method": "POST",
+    "path": "/api/users/{id}/image",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "mealie:dev/code-generation/gen_ts_locales.py:65",
+    "method": "GET",
+    "path": "/api/v2/projects",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:dev/code-generation/gen_ts_locales.py:68",
+    "method": "GET",
+    "path": "/api/v2/projects/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:dev/code-generation/gen_ts_locales.py:76",
+    "method": "GET",
+    "path": "/api/v2/projects/{param}/languages/progress",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-auth-backend.ts:127",
+    "method": "GET",
+    "path": "/api/users/self",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-auth-backend.ts:142",
+    "method": "POST",
+    "path": "/api/auth/token",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-auth-backend.ts:159",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-auth-backend.ts:202",
+    "method": "POST",
+    "path": "/api/auth/refresh",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-mealie-auth.ts:42",
+    "method": "GET",
+    "path": "/api/auth/oauth/callback",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/composables/use-mealie-auth.ts:52",
+    "method": "GET",
+    "path": "/api/auth/reverse-proxy",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/lib/api/user/group-event-notifier.ts:20",
+    "method": "POST",
+    "path": "/{param}/test",
+    "raw": null,
+    "ok": false,
+    "category": "field-in-interpolation"
+   },
+   {
+    "evidence": "mealie:frontend/app/plugins/app-info.client.ts:6",
+    "method": "GET",
+    "path": "/api/app/about",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:frontend/app/plugins/theme.ts:24",
+    "method": "GET",
+    "path": "/api/app/about/theme",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/core/release_checker.py:23",
+    "method": "GET",
+    "path": "/repos/mealie-recipes/mealie/releases/latest",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "mealie:mealie/pkgs/safehttp/flaresolverr.py:45",
+    "method": "POST",
+    "path": "/v1",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

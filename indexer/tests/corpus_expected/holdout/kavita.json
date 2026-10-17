@@ -1,0 +1,2428 @@
+{
+ "source": "openapi",
+ "sha": "2d225367f0310ac7354423b772a4c6a7caf63fd2",
+ "spec": [
+  "openapi.json"
+ ],
+ "scope": [
+  "Kavita.Server/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/Oidc/login"
+  },
+  {
+   "method": "GET",
+   "path": "/Oidc/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Account/auth-key"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/auth-keys"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/clear-oidc-link"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/confirm-email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/confirm-email-update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/confirm-migration-email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/confirm-password-reset"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/create-auth-key"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/email-confirmed"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/forgot-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/invite"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/invite-url"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/is-email-valid"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/login"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/oidc-authenticated"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/opds-url"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/refresh-account"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/refresh-token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/register"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/resend-confirmation-email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Account/roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/rotate-auth-key"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/update/age-restriction"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/update/email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Account/update/username"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Activity/current"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/exists"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Annotation"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Annotation/all"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/all-filtered"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Annotation/all-for-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/bulk-delete"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/export"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/export-filter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/like"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/unlike"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Annotation/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Annotation/{annotationId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Book/{chapterId}/book-info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Book/{chapterId}/book-page"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Book/{chapterId}/book-resources"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Book/{chapterId}/chapters"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Cbl/browse"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/file-import"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/finalize-import"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/re-validate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Cbl/remap-rules"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/remap-rules"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Cbl/remap-rules/all"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Cbl/remap-rules/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/remap-rules/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/remap-rules/{id}/demote"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/remap-rules/{id}/promote"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/repo-import"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/sync"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Cbl/upload-cbl-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Chapter/chapter-detail-plus"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Chapter/delete-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Chapter/update"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Collection"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Collection"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Collection/all-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/delete-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/import-stack"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Collection/mal-stacks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Collection/name-exists"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/promote-multiple"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Collection/single"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/update-for-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Collection/update-series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ColorScape/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ColorScape/series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ColorScape/volume"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Device"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Device"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Device/client/all-devices"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Device/client/device"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Device/client/devices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Device/client/update-name"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Device/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Device/send-series-to"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Device/send-to"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Device/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Download/bookmarks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Download/bulk-chapter-size"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Download/bulk-readinglist-size"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Download/bulk-series-size"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Download/bulk-volume-size"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/chapter-size"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/readinglist-size"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/series-size"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/volume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Download/volume-size"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Email/all"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Filter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Filter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/decode"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/encode/annotation"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/encode/person"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/encode/reading-list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/encode/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/rename"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/update/annotation"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/update/person"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/update/reading-list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Filter/update/series"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Font"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Font"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Font/all"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Font/upload"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Font/upload-by-url"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Health"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/bookmark"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/chapter-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/collection-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/cover-upload"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/external/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/external/series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/external/volume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/library-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/person-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/publisher"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/readinglist-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/series-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/user-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/volume-cover"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Image/web-link"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Koreader/{apiKey}/syncs/progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Koreader/{apiKey}/syncs/progress/{ebookHash}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Koreader/{apiKey}/users/auth"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/copy-settings-from"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/create"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Library/delete"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Library/delete-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/grant-access"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/has-files-at-root"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/jump-bar"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/libraries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/list"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/metadata-enabled-libraries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/metadata-providers"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/name-exists"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/refresh-metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/refresh-metadata-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/scan"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/scan-all"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/scan-folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/scan-multiple"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/scrobble-enabled-libraries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/type"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Library/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Library/user-libraries"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/License"
+  },
+  {
+   "method": "POST",
+   "path": "/api/License"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/License/cancel"
+  },
+  {
+   "method": "POST",
+   "path": "/api/License/change-email"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/has-license"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/products"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/provider-health"
+  },
+  {
+   "method": "POST",
+   "path": "/api/License/renew"
+  },
+  {
+   "method": "POST",
+   "path": "/api/License/resend-license"
+  },
+  {
+   "method": "POST",
+   "path": "/api/License/reset"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/License/valid-license"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Locale"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Manage/matched-series-counts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Manage/series-metadata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/age-ratings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/all-bcp47-languages"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/all-languages"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/genres"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Metadata/genres-with-counts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/language-title"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/languages"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/people"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/people-by-role"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/publication-status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/readinglist-tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/series-detail-plus"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Metadata/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Metadata/tags-with-counts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/OAuth/callback"
+  },
+  {
+   "method": "GET",
+   "path": "/api/OAuth/start"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Opds/{apiKey}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/collections"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/collections/{collectionId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/favicon"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/image"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/libraries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/libraries/{libraryId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/on-deck"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/reading-list"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/reading-list/{readingListId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/recently-added"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/recently-updated"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/series/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/series/{seriesId}/volume/{volumeId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/series/{seriesId}/volume/{volumeId}/chapter/{chapterId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/series/{seriesId}/volume/{volumeId}/chapter/{chapterId}/download/{filename}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/smart-filters"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/smart-filters/{filterId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Opds/{apiKey}/want-to-read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Panels/get-progress"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Panels/save-progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Person/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person/chapters-by-role"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person/coversdb-image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Person/merge"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Person/series-known-for"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Person/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Person/valid-alias"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Plugin/authenticate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Plugin/authkey-expires"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Plugin/parse"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Plugin/parse-bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Plugin/version"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Rating/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Rating/overall-chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Rating/overall-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Rating/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/all-bookmarks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/bookmark"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/bookmark-image"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/bookmark-info"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/bulk-remove-bookmarks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/chapter-bookmarks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/chapter-info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/continue-point"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/create-ptoc"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/file-dimensions"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/first-progress-date"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/get-progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/has-progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-chapter-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-multiple-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-multiple-series-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-multiple-series-unread"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-multiple-unread"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-unread"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-volume-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/mark-volume-unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/next-chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/pdf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/prev-chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/prompt-reread/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/prompt-reread/series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/prompt-reread/volume"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Reader/ptoc"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/ptoc"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/remove-bookmarks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/series-bookmarks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/thumbnail"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/time-left"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/time-left-for-chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Reader/unbookmark"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reader/volume-bookmarks"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ReadingList"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/all-people"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/create"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/delete-item"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/delete-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/export-as-cbl"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/items"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/lists"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/lists-for-chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/lists-for-series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/name-exists"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/next-chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/people"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ReadingList/prev-chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/promote-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/regenerate-cover"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/remove-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-by-chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-by-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-by-multiple-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-by-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-by-volume"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ReadingList/update-position"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Review/all"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Review/chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Review/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Review/my-series"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Review/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Review/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/add-hold"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/bulk-remove-events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/clear-errors"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/expired-tokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/generate-scrobble-events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/generate-scrobble-events-all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/has-hold"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/holds"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/library-allows-scrobbling"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/next-scrobble-time"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Scrobbling/remove-error/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Scrobbling/remove-hold"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/retry-scrobble"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/scrobble-errors"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/scrobble-events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/scrobble-settings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Scrobbling/token-expired"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/update-scrobble-settings"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Scrobbling/update-user-scrobble-provider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Search/chapters-by-series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Search/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Search/series-for-chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Search/series-for-mangafile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/age-rating"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/all-related"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/all-v2"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/analyze"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/chapter"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/currently-reading"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/delete-multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/dont-match"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/external-series-detail"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/match"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/match-info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/metadata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/next-expected"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/on-deck"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/recently-added-v2"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/recently-updated-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/refresh-metadata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/related"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/remove-from-on-deck"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/scan"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/series-by-collection"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/series-by-ids"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/series-detail"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/series-with-annotations"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/update-match"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/update-related"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Series/v2"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/volume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/volumes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Series/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Series/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/activity"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/analyze-files"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/backup-db"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/bust-kavitaplus-cache"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/changelog"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/check-for-updates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/check-out-of-date"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/check-update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/cleanup-want-to-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/clear-cache"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/clear-media-alerts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/convert-media"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/is-task-running"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/jobs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/logs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/media-errors"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/media-errors-for-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/media-errors/dismiss"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/media-errors/undismiss"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Server/server-info-slim"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Server/sync-themes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/base-url"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/import-field-mappings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/is-email-setup"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/is-valid-authority"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/is-valid-cron"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/library-types"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/log-levels"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/metadata-settings"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/metadata-settings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/oidc"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/opds-enabled"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/reset-base-url"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/reset-external-ids"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/reset-ip-addresses"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/run-metadata-mappings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Settings/task-frequencies"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Settings/test-email-url"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/avg-time-by-hour"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/day-breakdown"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/device/client-type"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/device/device-type"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/favorite-authors"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/files-added-over-time"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/genre-breakdown"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/most-active-users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/page-spread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/pages-per-year"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-decades"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-genres"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-libraries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-people"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-reading-list"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-series"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/popular-tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reading-activity"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reading-counts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reading-history"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reading-history/series/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reading-pace"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/reads-by-month"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/server/count/manga-format"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/server/count/publication-status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/server/file-breakdown"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/server/file-extension"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/server/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/tag-breakdown"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/total-reads"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/user-read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/user-stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/word-spread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stats/words-per-year"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/add-dashboard-stream"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/add-sidenav-stream"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/add-sidenav-stream-from-external-source"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/bulk-sidenav-stream-visibility"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/create-external-source"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stream/dashboard"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Stream/delete-external-source"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/external-source-exists"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stream/external-sources"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Stream/sidenav"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Stream/smart-filter-dashboard-stream"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Stream/smart-filter-side-nav-stream"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/update-dashboard-position"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/update-dashboard-stream"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/update-external-source"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/update-sidenav-position"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Stream/update-sidenav-stream"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tachiyomi/latest-chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tachiyomi/mark-chapter-until-as-read"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Theme"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Theme"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Theme/browse"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Theme/download-content"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Theme/download-theme"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Theme/update-default"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Theme/upload-theme"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/chapter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/collection"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/library"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/person"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/reading-list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/upload-by-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/upload-by-url"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/upload-chapter-cover"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/upload-series-cover"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/upload-volume-cover"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/user"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Upload/volume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Users/delete-user"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/get-preferences"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/has-library-access"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/has-profile-shared"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/has-reading-progress"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/names"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/profile-info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Users/tokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Users/update-preferences"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Volume"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Volume"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Volume/multiple"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Volume/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/kavita-plus-audit/entries"
+  },
+  {
+   "method": "GET",
+   "path": "/api/kavita-plus-audit/entries/series/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/kavita-plus-audit/failed-scrobble-events"
+  },
+  {
+   "method": "POST",
+   "path": "/api/kavita-plus-audit/my-activity"
+  },
+  {
+   "method": "GET",
+   "path": "/api/kavita-plus-audit/my-stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/kavita-plus-audit/stats"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/reading-profile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reading-profile/all"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/bulk"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/create"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reading-profile/library"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/reading-profile/library/{libraryId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/library/{libraryId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/promote"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reading-profile/series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/series"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/reading-profile/series/{seriesId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/series/{seriesId}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/set-devices"
+  },
+  {
+   "method": "POST",
+   "path": "/api/reading-profile/update-parent"
+  },
+  {
+   "method": "GET",
+   "path": "/api/reading-profile/{libraryId}/{seriesId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/want-to-read"
+  },
+  {
+   "method": "POST",
+   "path": "/api/want-to-read/add-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/want-to-read/remove-series"
+  },
+  {
+   "method": "POST",
+   "path": "/api/want-to-read/v2"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The 522 operations of the committed openapi.json, one per [Http*] attribute in Kavita.Server/Controllers (522 there too): [Route(\"api/[controller]\")] on a BaseApiController that the controllers derive from, plus the OIDC controller's /Oidc/login and /Oidc/logout. The Angular UI calls the API through HttpClient with a base URL from its environment (this.baseUrl + 'series/..'), not measured as a list.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/CollectionController.cs:54",
+    "method": "GET",
+    "path": "/api/Collection/single",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/CollectionController.cs:97",
+    "method": "POST",
+    "path": "/api/Collection/update",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/DeviceController.cs:83",
+    "method": "DELETE",
+    "path": "/api/Device",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/FontController.cs:48",
+    "method": "GET",
+    "path": "/api/Font",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/LibraryController.cs:462",
+    "method": "POST",
+    "path": "/api/Library/scan-folder",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/LicenseController.cs:55",
+    "method": "GET",
+    "path": "/api/License/has-license",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/OPDSController.cs:697",
+    "method": "GET",
+    "path": "/api/Opds/{apiKey}/image",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/PanelsController.cs:24",
+    "method": "POST",
+    "path": "/api/Panels/save-progress",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/ReaderController.cs:684",
+    "method": "POST",
+    "path": "/api/Reader/progress",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/ReadingListController.cs:141",
+    "method": "POST",
+    "path": "/api/ReadingList/update-position",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/ReadingListController.cs:453",
+    "method": "POST",
+    "path": "/api/ReadingList/update-by-volume",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/ScrobblingController.cs:217",
+    "method": "GET",
+    "path": "/api/Scrobbling/scrobble-errors",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/ServerController.cs:222",
+    "method": "GET",
+    "path": "/api/Server/jobs",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/SettingsController.cs:221",
+    "method": "POST",
+    "path": "/api/Settings/test-email-url",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/SettingsController.cs:294",
+    "method": "POST",
+    "path": "/api/Settings/import-field-mappings",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/StatsController.cs:284",
+    "method": "GET",
+    "path": "/api/Stats/device/device-type",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/StreamController.cs:84",
+    "method": "POST",
+    "path": "/api/Stream/external-source-exists",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/TachiyomiController.cs:40",
+    "method": "POST",
+    "path": "/api/Tachiyomi/mark-chapter-until-as-read",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/UploadController.cs:509",
+    "method": "POST",
+    "path": "/api/Upload/volume",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "kavita:Kavita.Server/Controllers/VolumeController.cs:86",
+    "method": "POST",
+    "path": "/api/Volume/multiple",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/activity.service.ts:14",
+    "method": "GET",
+    "path": "/activity/current",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/annotation.service.ts:189",
+    "method": "POST",
+    "path": "/annotation/export",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/cbl.service.ts:92",
+    "method": "POST",
+    "path": "/cbl/remap-rules/{param}/demote",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/collection-tag.service.ts:63",
+    "method": "GET",
+    "path": "/collection/mal-stacks",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/device.service.ts:73",
+    "method": "GET",
+    "path": "/device/client/devices",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/font.service.ts:74",
+    "method": "DELETE",
+    "path": "/font",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/library.service.ts:106",
+    "method": "GET",
+    "path": "/library",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/member.service.ts:24",
+    "method": "GET",
+    "path": "/users/profile-info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/member.service.ts:56",
+    "method": "POST",
+    "path": "/want-to-read/add-series",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/reader.service.ts:160",
+    "method": "GET",
+    "path": "/reader/chapter-bookmarks",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/reading-list.service.ts:119",
+    "method": "GET",
+    "path": "/readinglist/name-exists",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/reading-profile.service.ts:59",
+    "method": "DELETE",
+    "path": "/reading-profile/series/{param}",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/scrobbling.service.ts:141",
+    "method": "DELETE",
+    "path": "/scrobbling/remove-error/{param}",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/scrobbling.service.ts:40",
+    "method": "GET",
+    "path": "/scrobbling/scrobble-settings",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/series.service.ts:249",
+    "method": "GET",
+    "path": "/series/next-expected",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/server.service.ts:39",
+    "method": "POST",
+    "path": "/server/clear-cache",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/server.service.ts:68",
+    "method": "GET",
+    "path": "/server/changelog",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/statistics.service.ts:139",
+    "method": "GET",
+    "path": "/stats/device/device-type",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/_services/upload.service.ts:53",
+    "method": "POST",
+    "path": "/upload/series",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "kavita:UI/Web/src/app/shared/_services/download.service.ts:552",
+    "method": "POST",
+    "path": "/readinglist/export-as-cbl",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

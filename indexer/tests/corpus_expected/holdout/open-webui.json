@@ -1,0 +1,1259 @@
+{
+ "source": "manual",
+ "sha": "91ea4e3421d1d8069f13d4a463fcb5986d94ea60",
+ "scope": {
+  "endpoints": [
+   "backend/open_webui/routers/auths.py",
+   "backend/open_webui/routers/chats.py",
+   "backend/open_webui/routers/folders.py",
+   "backend/open_webui/routers/models.py"
+  ],
+  "calls": [
+   "src/lib/apis/auths/",
+   "src/lib/apis/chats/",
+   "src/lib/apis/folders/",
+   "src/lib/apis/models/"
+  ]
+ },
+ "language": {
+  "calls": "TS/JS"
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/add"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/ldap"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/ldap"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/ldap/server"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/ldap/server"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/oauth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/oauth"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/details"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/auths/api_key"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/api_key"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/api_key"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/ldap"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/auths/oauth/sessions/{provider:path}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/oauth/{provider}/token/exchange"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signout"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signup"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/profile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/timezone"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/archived"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/db"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/archive/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/archived"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/archived/count"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/config"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/config"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/folder/{folder_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/folder/{folder_id}/list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/import"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/list"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/list/user/{user_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/new"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/pinned"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/share/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/share/{share_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/shared"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/shared/{id}/access"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/shared/{id}/access/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/stats/export"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/stats/export/{chat_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/stats/usage"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/unarchive/all"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/archive"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/clone"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/clone/shared"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/compact"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/folder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/fork"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{id}/messages/{message_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/messages/{message_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/messages/{message_id}/event"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/pin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{id}/pinned"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{id}/share"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/share"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{id}/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{id}/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{id}/unread"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/shared"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/folders/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{id}/access/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{id}/read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/{id}/shared/chats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{id}/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{id}/update/expanded"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{id}/update/parent"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/base"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/base/tags"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/create"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/models/delete/all"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/export"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/import"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/list"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/access/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/delete"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model/history"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/models/model/history/{history_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model/history/{history_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model/profile/image"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/toggle"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/update"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/update/version"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/sync"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/tags"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/add",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/ldap",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/ldap",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/ldap/server",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/ldap/server",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/config/oauth",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/admin/config/oauth",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/admin/details",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/auths/api_key",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths/api_key",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/api_key",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/ldap",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/auths/oauth/sessions/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signin",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signout",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/signup",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/password",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/profile",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auths/update/timezone",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/archived",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/db",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/all/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/archive/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/archived",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/archived/count",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/config",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/config",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/folder/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/folder/{param}/list",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/import",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/list/user/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/new",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/pinned",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/read",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/search",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/share/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/share/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/shared",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/shared/{param}/access",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/shared/{param}/access/update",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/stats/export",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/stats/export/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/unarchive/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/archive",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/clone",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/clone/shared",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/compact",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/folder",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/fork",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{param}/messages/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/messages/{param}/resolve",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/pin",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{param}/pinned",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{param}/share",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/share",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/chats/{param}/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{param}/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{param}/unread",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/shared",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/folders/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{param}/access/update",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{param}/read",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/folders/{param}/shared/chats",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{param}/update",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{param}/update/expanded",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/folders/{param}/update/parent",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/base",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/base/tags",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/create",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/models/delete/all",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/export",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/import",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/list",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/access/update",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/delete",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model/history",
+   "category": "const-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/models/model/history/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/model/history/{param}",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/toggle",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/update",
+   "category": "const-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/models/model/update/version",
+   "category": "const-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/models/tags",
+   "category": "const-other-file"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes, scope: four of the backend's routers (auths, chats, folders, models), 104 routes. backend/open_webui/main.py includes each with app.include_router(x.router, prefix='/api/v1/x'); each module's router = APIRouter() (auths with route_class=MfaRoute) takes @router.get('/x', ..) decorators, some on '/' (the router's root). Calls, scope: the web app's API modules for the same four areas (src/lib/apis/<area>/index.ts), 98 calls: fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, { method: 'POST', .. }), with WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1` and WEBUI_BASE_URL = '' in src/lib/constants.ts, imported through SvelteKit's $lib alias; the verb is the options' method (GET without one); one call takes a local variable (let url = `..`; url += ..), two build the query in a nested template. POST /chats/{id}/messages/{id}/resolve is a call the code makes to a route no backend router serves (it stays expected: the list records calls as written).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "open-webui:backend/open_webui/main.py:3108",
+    "method": "GET",
+    "path": "/health/db",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/main.py:934",
+    "method": "GET",
+    "path": "/api/v1/models",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/auths.py:408",
+    "method": "POST",
+    "path": "/api/v1/auths/ldap",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/channels.py:1826",
+    "method": "POST",
+    "path": "/api/v1/channels/{id}/messages/{message_id}/reactions/add",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/channels.py:1975",
+    "method": "DELETE",
+    "path": "/api/v1/channels/{id}/messages/{message_id}/delete",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/chats.py:1734",
+    "method": "POST",
+    "path": "/api/v1/chats/{id}/pin",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/chats.py:2065",
+    "method": "POST",
+    "path": "/api/v1/chats/{id}/share",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/files.py:718",
+    "method": "POST",
+    "path": "/api/v1/files/{id}/data/content/update",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/folders.py:710",
+    "method": "DELETE",
+    "path": "/api/v1/folders/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/functions.py:58",
+    "method": "GET",
+    "path": "/api/v1/functions/list",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/functions.py:628",
+    "method": "POST",
+    "path": "/api/v1/functions/id/{id}/valves/user/update",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/memories.py:386",
+    "method": "POST",
+    "path": "/api/v1/memories/search",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/memories.py:420",
+    "method": "POST",
+    "path": "/api/v1/memories/path",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/models.py:1378",
+    "method": "DELETE",
+    "path": "/api/v1/models/delete/all",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/models.py:893",
+    "method": "DELETE",
+    "path": "/api/v1/models/model/history/{history_id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/notes.py:169",
+    "method": "GET",
+    "path": "/api/v1/notes/search",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/ollama.py:1413",
+    "method": "POST",
+    "path": "/ollama/v1/messages",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/ollama.py:475",
+    "method": "GET",
+    "path": "/ollama/api/tags",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/scim.py:517",
+    "method": "GET",
+    "path": "/api/v1/scim/v2/Users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/skills.py:616",
+    "method": "GET",
+    "path": "/api/v1/skills/id/{id}/history",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "open-webui:backend/open_webui/retrieval/utils.py:941",
+    "method": "POST",
+    "path": "/embeddings",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/audio/__init__.py:1701",
+    "method": "GET",
+    "path": "/audio/voices",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/openai.py:419",
+    "method": "POST",
+    "path": "/messages/count_tokens",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:backend/open_webui/routers/pipelines.py:325",
+    "method": "POST",
+    "path": "/pipelines/add",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/auths/index.ts:6",
+    "method": "GET",
+    "path": "/auths/admin/details",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/chats/index.ts:1658",
+    "method": "GET",
+    "path": "/chats/stats/export/{param}",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/configs/index.ts:260",
+    "method": "GET",
+    "path": "/api/config",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/configs/index.ts:536",
+    "method": "POST",
+    "path": "/configs/oauth/clients/register{param}",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/configs/index.ts:609",
+    "method": "POST",
+    "path": "/configs/code_execution",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/files/index.ts:154",
+    "method": "GET",
+    "path": "/files",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/functions/index.ts:133",
+    "method": "GET",
+    "path": "/functions/export",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/index.ts:231",
+    "method": "POST",
+    "path": "/api/chat/completed",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/knowledge/index.ts:1099",
+    "method": "DELETE",
+    "path": "/knowledge/{param}/dirs/{param}/delete",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/knowledge/index.ts:226",
+    "method": "POST",
+    "path": "/knowledge/external/source/test",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/models/index.ts:141",
+    "method": "POST",
+    "path": "/models/import",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/models/index.ts:230",
+    "method": "POST",
+    "path": "/models/create",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/notes/index.ts:166",
+    "method": "GET",
+    "path": "/notes",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/ollama/index.ts:326",
+    "method": "POST",
+    "path": "/api/unload",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/retrieval/index.ts:275",
+    "method": "POST",
+    "path": "/reranking/update",
+    "raw": null,
+    "ok": false,
+    "category": "const-other-file"
+   },
+   {
+    "evidence": "open-webui:src/lib/apis/terminal/index.ts:509",
+    "method": "POST",
+    "path": "/files/upload",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}
