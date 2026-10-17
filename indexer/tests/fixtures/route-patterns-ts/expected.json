@@ -134,6 +134,51 @@
    "method": "GET",
    "path": "/v2/legacy/ping",
    "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cats",
+   "handler": "findAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/cats",
+   "handler": "create"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cats/{id}",
+   "handler": "findOne"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/docs/openapi.json",
+   "handler": "openapi"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ping",
+   "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/status",
+   "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dogs",
+   "handler": "list"
+  },
+  {
+   "method": "GET",
+   "path": "/plain",
+   "handler": "list"
   }
  ],
  "calls": [

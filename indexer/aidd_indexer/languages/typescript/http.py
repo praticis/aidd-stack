@@ -1,6 +1,7 @@
 """TypeScript / JavaScript: express / koa / fastify / Hono (`app.get('/x', handler)`, also chained on the constructor)
-+ NestJS decorators; axios / fetch / got / ky outbound. Routers cross files through ESM imports and CommonJS
-`require` / `module.exports` (`global_of`), and through a project's own mount wrappers (Ghost's `app.lazyUse`)."""
++ NestJS decorators (under the package's `setGlobalPrefix`); axios / fetch / got / ky outbound. Routers cross files
+through ESM imports and CommonJS `require` / `module.exports` (`global_of`), and through a project's own mount wrappers
+(Ghost's `app.lazyUse`)."""
 
 from __future__ import annotations
 
@@ -8,11 +9,11 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, HttpResult, Region,
-                               split_callee, text, unwrap_arg, walk)
-from ...core.http_nodes import member
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, HttpResult, Pending, Region,
+                               rebased, replace_endpoints, split_callee, text, unwrap_arg, walk)
+from ...core.http_nodes import has_interpolation, member
 from ...core.model import RepoInfo
-from ...core.paths import VERB_BY_NAME, unquote
+from ...core.paths import VERB_BY_NAME, normalize_path, path_key, unquote
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
@@ -24,6 +25,7 @@ WRAPPERS = {"parenthesized_expression", "await_expression", "as_expression", "sa
             "non_null_expression"}
 FUNCTIONS = {"function_declaration", "function_expression", "function", "arrow_function", "method_definition",
              "generator_function_declaration"}
+NEST_DECORATORS = {"Controller", "Get", "Post", "Put", "Patch", "Delete", "Head", "Options", "All"}
 JQUERY = {"$", "jQuery"}
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
 
@@ -33,7 +35,7 @@ class TsScanner(BaseScanner):
     mount_rule = "ts.mount"
 
     def run(self) -> None:
-        controller_prefix: dict[int, str] = {}
+        controller_prefix: dict[int, list[str]] = {}
         self.maybe_mounts: list[tuple] = []        # calls of a method that may be a mount wrapper (`_wrapper_call`)
         wraps = b".use(" in self.src
         for n in walk(self.fx.tree.root_node):
@@ -41,6 +43,8 @@ class TsScanner(BaseScanner):
                 self._decorator(n, controller_prefix)
             elif n.type in ("variable_declarator", "assignment_expression"):
                 self._maybe_router_var(n)
+                if n.type == "variable_declarator":
+                    self._string_array(n)
             elif n.type == "call_expression":
                 if n.parent is not None and n.parent.type == "decorator":
                     continue
@@ -178,30 +182,84 @@ class TsScanner(BaseScanner):
                         p = self.path_of(val) or ""
         return Region(text(callee.child_by_field_name("object"), self.src).split(".")[-1], p, same_router=False)
 
-    def _decorator(self, n: Node, controller_prefix: dict[int, str]) -> None:
-        txt = text(n, self.src)
-        m = re.match(r"@(Controller|Get|Post|Put|Patch|Delete|Head|Options|All)\s*\(\s*([\"'`]([^\"'`]*)[\"'`])?", txt)
-        if not m:
+    def _decorator(self, n: Node, controller_prefix: dict[int, list[str]]) -> None:
+        """Nest: `@Controller(prefix)` on a class, `@Get(path)` on its methods. A route waits for `compose`, which puts
+        it under its package's `setGlobalPrefix`."""
+        call = next((c for c in n.named_children if c.type == "call_expression"), None)
+        fn = call.child_by_field_name("function") if call is not None else None
+        kind = text(fn, self.src) if fn is not None and fn.type == "identifier" else ""
+        if kind not in NEST_DECORATORS:
             return
-        kind, raw = m.group(1), (m.group(3) or "")
+        args = call.child_by_field_name("arguments")
+        first = args.named_children[0] if args is not None and args.named_child_count else None
+        paths = ["/" + p.strip("/") if p else "" for p in self._nest_paths(first)]
         if kind == "Controller":
             target = n.parent
             if target is not None and target.type == "export_statement":
                 target = next((c for c in target.named_children if c.type in ("class_declaration", "class")), target)
             if target is not None:
-                controller_prefix[target.id] = "/" + raw.strip("/") if raw else ""
+                controller_prefix[target.id] = paths
             return
         cls = n.parent
         while cls is not None and cls.type not in ("class_declaration", "class"):
             cls = cls.parent
-        prefix = controller_prefix.get(cls.id, "") if cls is not None else ""
+        prefixes = controller_prefix.get(cls.id, [""]) if cls is not None else [""]
         sib = n.next_named_sibling
-        while sib is not None and sib.type == "decorator":
+        while sib is not None and sib.type in ("decorator", "comment"):      # `@Get('x')  // why`
             sib = sib.next_named_sibling
         handler_node = sib.child_by_field_name("name") if sib is not None and sib.type in ("method_definition", "public_field_definition") else None
         hname, hid = self.resolve_handler(handler_node) if handler_node is not None else (None, None)
         method = "ANY" if kind == "All" else kind.upper()
-        self.add_endpoint(n, method, ("/" + raw.strip("/")) if raw else "/", "nest", None, prefix=prefix, handler_name=hname, handler_id=hid)
+        for prefix in prefixes:
+            for p in paths:
+                ep = self.add_endpoint(n, method, p or "/", "nest", None, prefix=prefix, handler_name=hname, handler_id=hid)
+                if ep is not None:
+                    self.out.pending.append(Pending(ep, "ts.nest", (self.fx.file.module_id,)))
+
+    def _nest_paths(self, a: Node | None) -> list[str]:
+        """The paths a Nest decorator argument gives: `'cats'`, `['a', 'b']`, `{ path: 'cats' }`, or a constant —
+        `RouteKey.Asset`, an enum member, also of another file. [""] when there is none or it cannot be read."""
+        if a is None:
+            return [""]
+        if a.type == "string" or a.type == "template_string" and not has_interpolation(a):
+            return [unquote(text(a, self.src))]
+        if a.type == "array":
+            return [p for c in a.named_children for p in self._nest_paths(c)] or [""]
+        if a.type == "object":
+            path = next((v for k, v in self._keyed_fields(a) if k == "path"), None)
+            return self._nest_paths(path) if path is not None else [""]
+        if a.type in ("identifier", "member_expression"):
+            name = text(a, self.src)
+            found = self.ctx.route_const(name) or self.ctx.segment_const(name) or self.foreign_const(name, segment=True)
+            return [found] if found is not None else [""]
+        return [""]
+
+    def _global_prefix(self, arg_nodes: list[Node]) -> None:
+        """Nest `app.setGlobalPrefix('api', { exclude: [..] })`: every controller route of this package goes under the
+        prefix but the excluded ones (`compose`). The list may be another file's (`exclude: excludePaths`)."""
+        prefix = self._nest_paths(arg_nodes[0])[0]
+        opts = arg_nodes[1] if len(arg_nodes) > 1 and arg_nodes[1].type == "object" else None
+        ex = next((v for k, v in self._keyed_fields(opts) if k == "exclude"), None) if opts is not None else None
+        ref = None
+        if ex is not None and ex.type == "identifier":
+            local = self.resolve_local(ex)
+            unit = self._function_unit(ex) if local is None else None
+            ex, ref = local, (f"{unit[0]}:{unit[1]}" if unit is not None else None)
+        excludes = tuple(p for c in ex.named_children for p in self._nest_paths(c) if p) \
+            if ex is not None and ex.type == "array" else ()
+        if prefix:
+            self.out.publish("ts.nest-prefix", self.fx.file.module_id, ("/" + prefix.strip("/"), excludes, ref))
+
+    def _string_array(self, n: Node) -> None:
+        """`export const excludePaths = ['/.well-known/immich', ..]`: published for another file's
+        `setGlobalPrefix(.., { exclude: excludePaths })`."""
+        name, val, decl = n.child_by_field_name("name"), n.child_by_field_name("value"), n.parent
+        if name is None or val is None or val.type != "array" or decl is None or decl.parent is None \
+                or decl.parent.type != "export_statement":
+            return
+        items = tuple(unquote(text(c, self.src)) for c in val.named_children if c.type == "string")
+        if items and len(items) == val.named_child_count:
+            self.out.publish("ts.string-array", f"{self.fx.file.path}:{text(name, self.src)}", items)
 
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
@@ -219,6 +277,9 @@ class TsScanner(BaseScanner):
         self._router_arguments(n, fn, arg_nodes)
         if "getHttpServer" in callee or "supertest" in callee or "request(app" in callee:
             return                                                  # supertest-style test clients
+        if name == "setGlobalPrefix":
+            self._global_prefix(arg_nodes)
+            return
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
         if self._mount(n, name, recv_last, arg_nodes):
@@ -543,3 +604,26 @@ class TsScanner(BaseScanner):
                     if child is not None:
                         out.publish(f"{cls.mount_rule}.edge", child, (target, prefix))
         super().compose(out, repo, view)
+        prefixes, arrays = out.facts.get("ts.nest-prefix", {}), out.facts.get("ts.string-array", {})
+        plan = {}
+        for p in out.pending:
+            found = set(prefixes.get(p.key[0], ())) if p.rule == "ts.nest" else set()
+            if len({prefix for prefix, _, _ in found}) != 1:
+                continue                                    # no global prefix in the package, or two that disagree
+            excludes = [e for _, ex, ref in found for e in ex + tuple(x for t in arrays.get(ref, ()) for x in t)]
+            if not _excluded(p.item.path, excludes):
+                plan[id(p.item)] = [rebased(repo, p.item, next(iter(found))[0])]
+        replace_endpoints(out, plan)
+
+
+def _excluded(path: str, patterns: list[str]) -> bool:
+    """A Nest route the global prefix leaves out: `exclude: ['health', 'cats/(.*)', 'docs/{*splat}']`."""
+    key = path_key(path)
+    for e in patterns:
+        e = "/" + e.strip().strip("/")
+        wild = re.search(r"/?(\(\.\*\)|\*|\{\*\w*\})", e)
+        base = path_key(normalize_path(e[:wild.start()] or "/")) if wild else None
+        if base is not None and (key == base or key.startswith(base.rstrip("/") + "/")) \
+                or base is None and key == path_key(normalize_path(e)):
+            return True
+    return False

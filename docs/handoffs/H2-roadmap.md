@@ -50,14 +50,18 @@
   CommonJS, exports e reexportações como arestas, `use` sem path, cadeias no construtor (Hono), genérico no
   construtor, o wrapper de montagem do próprio projeto (`lazyUse` do Ghost) e a aplicação que ninguém monta mantendo a
   raiz; rotas TS/JS P 5,9 → 50,4 %, R 3,7 → 32,9 % (ghost 0 → 100 %, express-realworld 0 → 100 %, hono 67,7 → 93,5 %).
+  **Etapa 2 do TS — o Nest (2026-10-16):** `setGlobalPrefix` por pacote, com `exclude` (também lista de outro
+  arquivo); argumento de decorator lido pela árvore (array, objeto `path`, constante ou membro de enum de outro
+  arquivo); no caminho, o resolvedor de imports TS (`.js` do ESM → `.ts`; aliases a partir do pacote), +9845 arestas
+  `IMPORTS` em 4 repos; rotas TS/JS P 50,7 → 93,9 %, R 32,6 → 60,7 % (immich 0,7 → 100 %).
 - **Incremento atual:** H2b — Fase 4, ordem do H2-D18 (ver "Próximo passo").
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
 - **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
   principal do repo. O H2 é a frente principal desde 2026-10-14.
 - **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-12/` — corpus v2, 42 repos, com o
-  grafo entre arquivos em TS/JS (a `-11` é a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-16-v2-baseline-13/` — corpus v2, 42 repos, com o
+  `setGlobalPrefix` do Nest (a `-12` é a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
 - **Como rodar** (a imagem `aidd-indexer:local` já traz as gramáticas; o código da árvore entra por
@@ -78,13 +82,12 @@
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
   `client-in-field`). **Python fora do Django fechado no essencial:** rotas P 99,0 % / R 98,0 % (sobram o registro
   de plugins do dispatch, `router-from-registry`, 4, preenchido em runtime — limitação; e `multi-app-repo`, 4, no
-  fastapi). **TS em curso (H2-D19):** a etapa 1, o grafo entre arquivos, está feita. Próximo: a etapa 2, o
-  Nest — `setGlobalPrefix` (`global-prefix`, 238), o prefixo do controller num enum de outro arquivo
-  (`const-other-file`, 42 no immich) e, no caminho, o resolvedor de imports TS (o `.js` do ESM que nomeia um `.ts`; o
-  alias `src/*` do `tsconfig` de um pacote abaixo da raiz). Depois os clientes gerados TS (oazapfts, openapi-ts, do
-  item 7) e então a Fase 5. Sobram para decidir: o registrar próprio do NodeBB (`custom-registrar`, 353 — o mesmo
-  mecanismo do wrapper de montagem serviria a um wrapper de rota), o laço sobre array literal do express-boilerplate
-  (14) e o autoload por pasta do fastify-demo (14).
+  fastapi). **TS em curso (H2-D19):** as etapas 1 (grafo entre arquivos) e 2 (Nest) estão feitas; rotas TS/JS
+  P 93,9 % / R 60,7 %. Próximo: os clientes gerados TS (oazapfts do immich, 279 operações; openapi-ts do
+  fastapi-template, 23 — item 7) e então a Fase 5. Sobram para decidir, nas rotas TS (410 que faltam): o registrar
+  próprio do NodeBB (`custom-registrar`, 353 — o mesmo mecanismo do wrapper de montagem serviria a um wrapper de
+  rota), o laço sobre array literal do express-boilerplate (14), o autoload por pasta do fastify-demo (14), prefixo
+  como parâmetro (13) e as rotas por arquivo do Next.js (9).
 
 ## Decisões
 
@@ -198,7 +201,11 @@ Um commit por categoria. Ordem do relatório v1, **revista pelo v2 em 2026-10-15
     `m.router`), router como argumento de função de outro arquivo, `use` sem path, cadeias no construtor ligadas ao
     nome, wrapper de montagem do projeto (`ts.mount-wrapper` + candidatos `ts.mount.maybe` + `TsScanner.compose`);
     aplicação nomeável publicada (`<regra>.app`). Fixture `route-patterns-ts/src/crossfile`
-  - [ ] prefixo global (`setGlobalPrefix`) — etapa 2 do TS
+  - [x] *(2026-10-16)* prefixo global (`setGlobalPrefix` do Nest) — etapa 2 do TS: fato por pacote
+    (`ts.nest-prefix`), rotas Nest esperando o `compose` (`ts.nest`), `exclude` com curingas e lista exportada de
+    outro arquivo (`ts.string-array`); decorator Nest lido pela árvore e membro de enum TS como constante
+    (`Enum.Membro`, `foreign_const` qualificado); resolvedor de imports TS (`.js` → `.ts`, aliases do pacote). Fixture
+    `route-patterns-ts/nest/` (pacote próprio) e `src/plain.controller.ts`; teste `test_resolve_ts.py`
 
   Ordem original:
   mesmo escopo (`app.use('/api', router)` ao lado das rotas, Hono `route`/`basePath`) → mesmo arquivo (closures
@@ -560,3 +567,18 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   de novo (certas). Rotas TS/JS P 5,9 → 50,4 %, R 3,7 → 32,9 %. HTTP do corpus 113,8 → 105,0 s; o bitwarden levou
   813 s nesta rodada e 129,8 s sozinho logo depois — de novo um repo grande lento fora do HTTP numa rodada completa
   (antes o mattermost), provável pressão de memória na VM do Docker. Nova baseline `2026-10-16-v2-baseline-12`.
+- **2026-10-16** — TS, etapa 2: o Nest. `app.setGlobalPrefix('api', { exclude })` vale para os controllers do pacote
+  (módulo do `package.json` mais próximo) — fato `ts.nest-prefix`, rotas Nest como `Pending` `ts.nest`, aplicado no
+  `TsScanner.compose` quando o pacote tem um prefixo só; `exclude` com strings, `{ path }` e curingas, também de uma
+  lista exportada por outro arquivo (`ts.string-array`). Argumento de decorator Nest pela árvore: array (uma rota por
+  path), objeto (`path`), constante ou membro de enum (`Enum.Membro`, coletado pelo `collect_constants`; o
+  `foreign_const` procura o nome qualificado e aceita uma palavra); comentário entre decorator e método não esconde o
+  handler. No caminho, fora do HTTP: o resolvedor de imports TS tenta o `.ts` de um especificador `.js` (ESM com
+  `nodenext`) e os aliases a partir do pacote do arquivo — +9845 arestas `IMPORTS` em immich, nest, ghost e
+  fastify-demo, todas conferidas contra o especificador, nenhuma perdida (ROADMAP, log de 2026-10-16). Diff contra
+  `-12` (immich e nest) julgado certo: immich 246 rotas sob `/api` e 44 também com o prefixo do enum, as 2 excluídas
+  fora; nest, a raiz do `24-serve-static` sob `/api` e os prefixos-objeto dos apps de teste. Gabaritos: immich +16
+  rotas reais fora da spec (H2-D15: 14 `PATCH` com `@ApiExcludeEndpoint()` e as 2 excluídas do prefixo), 20 amostras
+  julgadas de novo (certas); `global-prefix` e `const-other-file` saem do ranking. Rotas TS/JS P 50,7 → 93,9 %,
+  R 32,6 → 60,7 %. HTTP do corpus 105,0 → 131,1 s, com todos os repos 20–35 % mais lentos, Go inclusive — carga da
+  máquina. Nova baseline `2026-10-16-v2-baseline-13`.

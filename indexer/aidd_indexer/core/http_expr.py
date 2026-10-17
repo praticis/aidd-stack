@@ -75,6 +75,9 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
     src = fx.src
     for n in walk(fx.tree.root_node):
         name = val = None
+        if n.type == "enum_assignment":                                            # TS: enum RouteKey { Asset = 'assets' }
+            _enum_member(n, src, ctx)
+            continue
         if n.type in ("const_spec", "var_spec", "variable_declarator"):           # Go, TS/JS, C#
             name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
             if val is None and n.type == "variable_declarator":                    # C#: identifier + equals_value_clause
@@ -107,6 +110,20 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
                 ctx.env_hints.add(lit)
+
+
+def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
+    """A string member of a TS enum, known only as `Enum.Member` (immich `@Controller(RouteKey.Asset)`)."""
+    decl = n.parent.parent if n.parent is not None else None
+    enum = decl.child_by_field_name("name") if decl is not None and decl.type == "enum_declaration" else None
+    kids = [c for c in n.children if c.is_named]
+    if enum is None or len(kids) != 2 or kids[1].type not in STRING_NODES or has_interpolation(kids[1]):
+        return
+    name, lit = f"{text(enum, src)}.{text(kids[0], src)}", first_string(kids[1], src)
+    if lit is not None and len(lit) > 1 and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit)):
+        ctx.define(name, raw=lit)
+    elif lit is not None and _SEGMENT.match(lit):
+        ctx.define(name, segment=lit)
 
 
 def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:

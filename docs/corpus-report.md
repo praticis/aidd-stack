@@ -1327,3 +1327,85 @@ run, one large repository becomes 4–6 times slower outside HTTP, likely from m
 not this change.
 
 New baseline: `2026-10-16-v2-baseline-12`.
+
+## Update: Nest's global prefix and controller constants (2026-10-16)
+
+After the cross-file graph, the largest TS/JS gap was Nest's `app.setGlobalPrefix('api')` (`global-prefix`, 238, all
+but one in immich). Next came the controller prefix held in an enum of another file (`const-other-file`, 42 in immich).
+
+**What is read now:**
+
+- **`setGlobalPrefix`** applies to the controllers of the package that calls it, the module of the nearest
+  `package.json`.
+  - The call is published per package. Every Nest route waits for `compose`, which applies the prefix only when the
+    package has a single one.
+  - `exclude` takes strings, `{ path }` objects and wildcards (`docs/(.*)`, `x/*`, `x/{*splat}`). The list may be
+    another file's: immich's `excludePaths`, an exported array of strings.
+- **The arguments of a Nest decorator are read from the tree:**
+  - a literal;
+  - an array, which gives one route per path (`@Get(['ping', 'status'])`);
+  - an object's `path` (`@Controller({ path: 'host-array', host: [..] })`);
+  - a constant or an enum member, also of another file (`@Controller(RouteKey.Asset)`). String members of a TS enum
+    are now constants named `Enum.Member`.
+- **A comment between a decorator and its method** no longer hides the handler.
+- **Found on the way: the TS import resolver.** Immich imports `src/enum.js` for `server/src/enum.ts`, the ESM
+  convention under `moduleResolution: nodenext`, through a `src/*` alias of its own `server/` package.
+  - The resolver now tries the `.ts`/`.tsx`/`.mts`/`.cts` source of a `.js`/`.jsx`/`.mjs`/`.cjs` specifier.
+  - It tries the aliases (`src/`, `@/`, `~/`, `#`) from the file's package before the repo root.
+  - This changes the `IMPORTS` edges of the code graph, not only the HTTP extractor. Measured on four TS
+    repositories with the code before and after:
+
+| Repo | resolved file imports before → after | unresolved before → after |
+|---|---|---|
+| immich | 76 → 3232 | 3244 → 88 |
+| nest | 54 → 3540 | 3489 → 3 |
+| ghost | 11647 → 14863 | 3817 → 601 |
+| fastify-demo | 0 → 26 | 26 → 0 |
+
+  Every one of the 9845 new edges names the file its specifier names (same path, extension and `index` aside). No
+  edge was lost or moved to another target.
+
+Diff against `2026-10-16-v2-baseline-12`, judged: 2 repositories changed.
+
+- **immich:**
+  - 246 routes take `/api`, and 44 also take the enum's prefix (`/api/assets`, `/api/users`).
+  - 3 routes the dedupe had hidden come back.
+  - `/.well-known/immich` and `/custom.css` stay out of the prefix, as `excludePaths` says.
+- **nest:**
+  - `sample/24-serve-static` puts its root under `/api`.
+  - The integration apps' controller prefixes given as objects are read. Those routes are still the framework's
+    test apps (`test-app-folder`).
+
+Expected lists:
+
+- **immich:** 16 real routes the spec leaves out were added (H2-D15): the 14 `PATCH` aliases marked
+  `@ApiExcludeEndpoint()`, and the two excluded from the prefix. Its 20 samples were judged again, and all are right.
+- **nest:** its 2 changed samples stay `test-app-folder`.
+- **Both:** `global-prefix` and `const-other-file` leave the ranking.
+
+| Repo (routes) | P / R expected before | P / R expected now |
+|---|---|---|
+| immich | 0.7 % / 0.7 % | 100 % / 100 % (295) |
+| nest (`sample/`) | — / 0 % | 100 % / 25 % (the 3 left are `multi-app-repo`) |
+
+| Language (routes) | P sampled | P expected | R expected |
+|---|---|---|---|
+| TS/JS before | 57.7 % (94/163) | 50.7 % | 32.6 % (340/1044) |
+| TS/JS now | 69.9 % (114/163) | 93.9 % | 60.7 % (634/1044) |
+
+The before row is baseline-12 measured against the new lists, which have the 16 immich routes.
+
+What TS/JS routes still miss (410):
+
+- NodeBB's own registrar (`custom-registrar`, 353);
+- fastify-demo's autoload by folder (14);
+- the express-boilerplate mount loop (14);
+- a prefix passed as a parameter (13);
+- the Next.js file routes (9);
+- the multi-app repositories and the rest (7).
+
+**Timing.** HTTP extraction took 131.1 s, against 105.0 s before. Every repository slowed by 20–35 %, the Go ones
+included, which this change does not touch (kratos 3.8 → 4.8 s, gitea 6.3 → 8.5 s). The cause is the machine's load,
+as in the run of the Go generated servers.
+
+New baseline: `2026-10-16-v2-baseline-13`.

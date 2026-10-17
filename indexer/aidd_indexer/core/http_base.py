@@ -328,16 +328,23 @@ class BaseScanner(PathExpressions):
         view = self.ctx.view
         return view.resolve(self.fx.file, spec) if view is not None else None
 
-    def foreign_const(self, name: str) -> str | None:
+    def foreign_const(self, name: str, segment: bool = False) -> str | None:
         """`pkg.NAME` (or `NAME` imported by name), the import being of this repo: the constant as the directory of
-        the imported file or package defines it — `model.APIURLSuffix`, `settings.API_V1_STR`."""
+        the imported file or package defines it — `model.APIURLSuffix`, `settings.API_V1_STR`, the enum member
+        `RouteKey.Asset` (`RouteKey` imported by name). `segment`: a single word counts too (a Nest controller's)."""
         head, _, rest = name.partition(".")
         spec, orig = self.imports.get(head) or (None, None)
         if spec is None or not (rest or orig):
             return None
         target = self.resolve_import(spec)
         ctx = self.ctx.view.constants(target) if target is not None else None
-        return ctx.route_const(rest or orig) if ctx is not None else None
+        if ctx is None:
+            return None
+        for nm in ([f"{orig}.{rest}"] if orig and rest and orig != "default" else []) + [rest or orig]:
+            found = ctx.route_const(nm) or (ctx.segment_const(nm) if segment else None)
+            if found is not None:
+                return found
+        return None
 
     def global_of(self, key: RouterKey) -> str | None:
         """Language hook: the id other files know this router by (`http_mounts`), or None."""

@@ -90,7 +90,8 @@
    {
     "evidence": "nest:integration/route-conflict/src/versioned-wildcard/users-wildcard.controller.ts:12",
     "method": "GET",
-    "path": "/profile",
+    "path": "/users/profile",
+    "raw": "/profile",
     "ok": false,
     "category": "test-app-folder"
    },
@@ -111,7 +112,8 @@
    {
     "evidence": "nest:integration/versioning/src/neutral-middleware.controller.ts:8",
     "method": "GET",
-    "path": "/neutral",
+    "path": "/middleware/neutral",
+    "raw": "/neutral",
     "ok": false,
     "category": "test-app-folder"
    },
@@ -155,7 +157,7 @@
   ]
  },
  "checked_seed": "1",
- "notes": "Precision: 20 of 195 sampled (seed 1); 157 of the 195 come from integration/, the framework's own test apps (test-app-folder) — on sample/ alone the 3 sampled are correct. Recall scope: sample/01-cats-app/src and sample/24-serve-static/src: the cats routes exist only with the evidence of an integration/ app that registered them first (multi-app-repo), and app.setGlobalPrefix(\"api\") is never applied (global-prefix). Calls: the single call (fetch POST in sample/38-webhooks/scripts) is correct.",
+ "notes": "Precision: 20 of 195 sampled (seed 1); 157 of the 195 come from integration/, the framework's own test apps (test-app-folder) — on sample/ alone the 3 sampled are correct. Recall scope: sample/01-cats-app/src and sample/24-serve-static/src: the cats routes exist only with the evidence of an integration/ app that registered them first (multi-app-repo), and app.setGlobalPrefix(\"api\") is never applied (global-prefix). Calls: the single call (fetch POST in sample/38-webhooks/scripts) is correct. Since H2b's Nest step (2026-10-16): sample/24-serve-static's app.setGlobalPrefix('api') puts its root under /api (found); controller prefixes given as objects ({ path: 'host-array', host: [..] }) are read, so the integration apps' routes change path — still test-app-folder.",
  "scope": {
   "endpoints": [
    "sample/01-cats-app/src/",
@@ -165,8 +167,7 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/api",
-   "category": "global-prefix"
+   "path": "/api"
   },
   {
    "method": "POST",
