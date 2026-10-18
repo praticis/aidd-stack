@@ -43,7 +43,7 @@ class GoScanner(BaseScanner):
     relative_on_groups = True
     mount_rule = "go.mount"
     scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
-    global_group_on_edge = True
+    defer_global_group_prefix = True
 
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree

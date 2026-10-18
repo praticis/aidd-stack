@@ -11,7 +11,8 @@ the router a function returns (`ret:<unit>:<function>`), a function's router par
 or a struct field (`field:<unit>:<path>`); the unit is the file, or the package directory in Go. At the end of a
 file (`settle`), a route on such a router waits for the composition; a route whose chain of mounts ends at a router
 no other file can name is final. Each file also publishes, per global router, where its own mounts take it — to
-another global router or to a top (`""`) — and every mount of a router from elsewhere (`settle`'s `foreign`).
+another global router or to a top (`""`) — and every mount of a router from elsewhere (`settle`'s `foreign`). A
+group of a language that defers it publishes its own prefix too, and `compose` puts it after each chain's.
 `compose` follows those edges from each waiting route's router; a router mounted nowhere keeps its routes as they
 are, and drops a sub-router's root (`MountedRoot`), which is a route only under a prefix or on the application.
 """
@@ -119,37 +120,57 @@ class MountGraph:
 
 
 def compose(waiting: list[tuple[E, str]], edges: dict[str, list[tuple[str, str]]], rebase: Callable[[E, str], E],
-            is_root: Callable[[E], bool], apps: frozenset[str] | set[str] = frozenset()) -> dict[int, list[E]]:
+            is_root: Callable[[E], bool], apps: frozenset[str] | set[str] = frozenset(),
+            owns: dict[str, list[str]] | None = None) -> dict[int, list[E]]:
     """The plan for the routes waiting on a global router (`id(route)` → what replaces it): one copy per chain of
     edges up to a top or to a router mounted nowhere. A router mounted nowhere keeps its routes; a sub-router's root
     is a route only under a non-empty prefix, or where the chain ends at an application (`apps`: the global routers
-    that are one, such as a module's `app = express()`)."""
-    memo: dict[str, list[tuple[str, bool]]] = {}
+    that are one, such as a module's `app = express()`). `owns`: the prefix a global router adds to its own routes,
+    after the prefix of the chain that mounts it (`r = r.Group("/v3")`)."""
+    chains = _Chains(edges, apps, owns or {})
+    plan: dict[int, list[E]] = {}
+    for ep, g in waiting:
+        if not edges.get(g) and not chains.owns.get(g):
+            if is_root(ep) and g not in apps:
+                plan[id(ep)] = []
+            continue
+        prefixes = dict.fromkeys(p for p, app in chains.of(g) if p or app or not is_root(ep))
+        plan[id(ep)] = [rebase(ep, p) for p in prefixes]
+    return plan
 
-    def chains(g: str, seen: frozenset) -> list[tuple[str, bool]]:
+
+@dataclass
+class _Chains:
+    """The prefixes of the chains of edges above each global router, as `compose` follows them."""
+    edges: dict[str, list[tuple[str, str]]]
+    apps: frozenset[str] | set[str]
+    owns: dict[str, list[str]]
+    memo: dict[str, list[tuple[str, bool]]] = field(default_factory=dict)
+
+    def of(self, g: str, seen: frozenset = frozenset()) -> list[tuple[str, bool]]:
         """(prefix, whether the chain ends at the application)."""
-        if g in memo:
-            return memo[g]
-        outs = edges.get(g)
+        if g in self.memo:
+            return self.memo[g]
+        res = list(dict.fromkeys(_with_own(self._mounted(g, seen), self.owns.get(g))))[:16]
+        if not seen:
+            self.memo[g] = res
+        return res
+
+    def _mounted(self, g: str, seen: frozenset) -> list[tuple[str, bool]]:
+        outs = self.edges.get(g)
         if not outs:
-            return [("", g in apps)]                      # mounted nowhere: the router is a top
+            return [("", g in self.apps)]                 # mounted nowhere: the router is a top
         res: list[tuple[str, bool]] = []
         for parent, p in outs:
             if parent in (TOP, APP):
                 res.append((p, parent == APP))
             elif parent not in seen and len(seen) < 16:
-                res += [(pp.rstrip("/") + p, app) for pp, app in chains(parent, seen | {g})]
-        res = list(dict.fromkeys(res))[:16]
-        if not seen:
-            memo[g] = res
+                res += [(pp.rstrip("/") + p, app) for pp, app in self.of(parent, seen | {g})]
         return res
 
-    plan: dict[int, list[E]] = {}
-    for ep, g in waiting:
-        if not edges.get(g):
-            if is_root(ep) and g not in apps:
-                plan[id(ep)] = []
-            continue
-        prefixes = dict.fromkeys(p for p, app in chains(g, frozenset()) if p or app or not is_root(ep))
-        plan[id(ep)] = [rebase(ep, p) for p in prefixes]
-    return plan
+
+def _with_own(chains: list[tuple[str, bool]], own: list[str] | None) -> list[tuple[str, bool]]:
+    """Each chain's prefix followed by each prefix the router adds to its own routes."""
+    if not own:
+        return chains
+    return [(p.rstrip("/") + o, app) for p, app in chains for o in dict.fromkeys(own)]

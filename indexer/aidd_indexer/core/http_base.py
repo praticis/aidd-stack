@@ -257,9 +257,10 @@ class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
     mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
     scope_declarations: frozenset[str] | None = None   # what declares a name in a function (`Scopes`); None: any assignment
-    # a group other files can name (a package variable) keeps its own prefix on the edge it publishes, not in what is
-    # registered on it here: another file's routes on it take it too (Go's `APIv1 = router.Group("/api/v1")`, photoprism)
-    global_group_on_edge = False
+    # a group other files can name (a package variable, a returned router, a router parameter) keeps its own prefix out
+    # of what is registered on it here and publishes it as the router's: `compose` puts it on every chain through the
+    # router, so routes of other files take it too (`APIv1 = router.Group("/api/v1")`, `r = r.Group("/v3")`)
+    defer_global_group_prefix = False
 
     def __init__(self, repo: RepoInfo, fx, ctx: PackageContext, out: HttpResult):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
@@ -346,8 +347,8 @@ class BaseScanner(PathExpressions):
             f = f.parent
         key = self.group_key(receiver, at)
         own = self.group_prefix.get(key)
-        if own is not None and self.global_group_on_edge and self.mount_rule and self._global(key) is not None:
-            return ""                                  # on its edge (`finish`)
+        if own is not None and self.defer_global_group_prefix and self.mount_rule and self._global(key) is not None:
+            return ""                                  # published by `finish`, applied by `compose`
         return own
 
     def group_key(self, name: str, at: Node) -> RouterKey:
@@ -390,14 +391,21 @@ class BaseScanner(PathExpressions):
                                             lambda key: key in self.app_vars)
         if self.mount_rule:
             self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
-            own = {g: p for k, p in self.group_prefix.items() if p and (g := self._global(k)) is not None} \
-                if self.global_group_on_edge else {}
             for child, parent, prefix in edges:
-                self.out.publish(f"{self.mount_rule}.edge", child, (parent, own.get(child, "").rstrip("/") + prefix))
+                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+            if self.defer_global_group_prefix:
+                self._publish_own_prefixes()
             for key in self.app_vars:
                 g = self._global(key)
                 if g is not None:                             # an application other files can name
                     self.out.publish(f"{self.mount_rule}.app", g, True)
+
+    def _publish_own_prefixes(self) -> None:
+        """The prefix of each group of this file that other files can name, as that router's own."""
+        for key, prefix in self.group_prefix.items():
+            g = self._global(key) if prefix else None
+            if g is not None:
+                self.out.publish(f"{self.mount_rule}.own", g, prefix)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
@@ -409,8 +417,9 @@ class BaseScanner(PathExpressions):
         if waiting:
             edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
             apps = set(out.facts.get(f"{cls.mount_rule}.app", {}))
+            owns = out.facts.get(f"{cls.mount_rule}.own", {})
             replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root,
-                                                  apps))
+                                                  apps, owns))
 
     # -- what crosses files: imports, routers other files name -----------------------------------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:

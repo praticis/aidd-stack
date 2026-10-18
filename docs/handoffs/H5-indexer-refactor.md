@@ -267,7 +267,9 @@ corrigido num commit separado, com caso de fixture, e entra na baseline por deci
   2. a fase 0a do H4 (reciclar os docs de trabalho);
   3. fazer o H5, que absorve a parte de refatoração do item 7 (o catálogo e os limiares do `built_bundle`). A rede
      de regressão é o corpus e o hold-out novo, idênticos a cada passo;
-  4. só então o SCIP (F1.1/F1.2).
+  4. o handoff do que o hold-out novo mostrar, já no formato de reconhecedores; um defeito de precisão que ele
+     mostre se corrige antes do H5;
+  5. só então o SCIP (F1.1/F1.2).
 
   O P2 (o indexador em repo próprio) também vem antes do SCIP, depois do H5, para levar o código já limpo. A
   posição exata dele fica a confirmar com o autor.
@@ -293,11 +295,12 @@ corrigido num commit separado, com caso de fixture, e entra na baseline por deci
 - **Medir desempenho com o corpus rodando ao lado** distorce o perfil. Meça sozinho, três vezes, e use a mediana.
 - **Não edite o código do indexer com uma rodada do corpus em andamento**, porque ela importa os módulos.
 - **Refatorar e mudar regra no mesmo commit** apaga a rede: o "0 repos differ" deixa de provar alguma coisa.
-- **Um bug conhecido do grafo de montagem que a refatoração não deve "corrigir sem querer":** um router global
-  reatribuído com o mesmo nome (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`) e devolvido pela função
-  perde o prefixo quando nenhum arquivo o monta. O prefixo fica "na aresta" (`global_group_on_edge`), e não há
-  aresta. Está registrado no item 7 do F1.14, com o caso de reprodução. A correção é um commit próprio, com
-  fixture, logo depois do item 2 e antes do H5.
+- **O prefixo próprio de um grupo global é um fato do router, não da aresta.** Um grupo que outros arquivos nomeiam
+  (variável de pacote, router devolvido, parâmetro) publica o próprio prefixo (`go.mount.own`), e o `compose` o põe
+  depois do prefixo de cada cadeia que chega ao router. Pendurá-lo nas arestas do arquivo que o define, como era até
+  2026-10-18, perdia o prefixo quando a reatribuição (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`) dava
+  só uma aresta do router para ele mesmo, e quando outro arquivo montava o router. A fixture
+  `route-patterns-go` (`internal/reassigned/`) cobre os dois casos.
 
 ## Restrições e convenções
 

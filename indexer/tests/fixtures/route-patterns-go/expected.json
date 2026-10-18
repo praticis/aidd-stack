@@ -439,6 +439,21 @@
    "method": "GET",
    "path": "/-/healthy",
    "handler": "healthy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/status",
+   "handler": "status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/healthy",
+   "handler": "healthy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/ping",
+   "handler": "ping"
   }
  ],
  "calls": [

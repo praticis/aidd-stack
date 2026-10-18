@@ -2188,3 +2188,22 @@ this increment found one more defect, recorded under item 7: a global router rea
 that shape.
 
 New baseline: `2026-10-18-v2-baseline-24`.
+
+## F1.14, increment 8: a global group's own prefix belongs to the router (2026-10-18)
+
+This increment pays one debt of item 7, which the review of increment 7 found. No repository moves.
+
+In Go, take a group that other files can name: a package variable, a returned router, or a router parameter. Its own
+prefix does not go into the routes registered on it in its file. It waits for the composition across files. Until now,
+the prefix rode on the edges where the defining file published the group as the child. Two shapes lost it:
+
+- **A router reassigned under its own name.** Examples are `router = router.WithPrefix("/api/v2")`, and
+  `r = r.Group("/v3")` on a parameter. The reassignment gives only an edge from the router to itself. A router that no
+  file mounts then kept its routes without the prefix: `/healthy` instead of `/api/v2/healthy`.
+- **An edge another file publishes when it mounts the router.** That edge never carried the prefix.
+
+Now the group publishes its prefix as the router's own, and `compose` puts it after the prefix of every chain that
+reaches the router. The cases are in `route-patterns-go` (`internal/reassigned/`), and they fail without the change.
+
+**Diff against `2026-10-18-v2-baseline-24`.** All 55 repositories are identical, and so are the hold-out's 3. No
+repository in either set has either shape. The baseline stays `2026-10-18-v2-baseline-24`.
