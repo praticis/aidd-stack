@@ -26,6 +26,7 @@ class RepoView:
         self._setup: set[str] = set()
         self._memo: dict[tuple[str, str], str | None] = {}
         self._paths: set[str] | None = None
+        self._classes: dict[str, list["PackageContext"]] | None = None
 
     def _context(self, language: str) -> ResolveContext:
         if self._ctx is None:
@@ -61,3 +62,13 @@ class RepoView:
         if self._paths is None:
             self._paths = {f.path for f in self._files}
         return self.contexts.get(str(PurePosixPath(path).parent) if path in self._paths else path or ".")
+
+    def classes_named(self, name: str) -> list["PackageContext"]:
+        """The directories that define a class `name` (`PackageContext.classes`): a base named in another file is
+        looked up by its name when the one class of that name in the repo is it."""
+        if self._classes is None:
+            self._classes = {}
+            for ctx in self.contexts.values():
+                for cname in ctx.classes:
+                    self._classes.setdefault(cname, []).append(ctx)
+        return self._classes.get(name, [])

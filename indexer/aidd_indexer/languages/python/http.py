@@ -8,9 +8,12 @@ import re
 from tree_sitter import Node
 
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
+from ...core.http_expr import PREFIX_KEYWORDS
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
+APP_CLASSES = {"FastAPI", "Flask", "Starlette", "Sanic", "Quart"}
+ROUTER_CLASSES = APP_CLASSES | {"APIRouter", "Blueprint", "Router"}
 RESTX = ("flask_restx", "flask_restplus", "flask_restful")                             # Namespace, Api, Resource
 AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": "PATCH", "add_delete": "DELETE",
            "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
@@ -46,19 +49,69 @@ class PyScanner(BaseScanner):
         if fname in ("Namespace", "Api") and self._restx(fn):
             self._restx_router(text(left, self.src), fname, right, n)
             return
-        if fname in ("APIRouter", "Blueprint", "FastAPI", "Flask", "Starlette", "Router", "Sanic", "Quart"):
+        init = None
+        if fname not in ROUTER_CLASSES and fname[:1].isupper():
+            found = self._router_class(fn)
+            if found is not None:
+                fname, init = found
+        if fname in ROUTER_CLASSES:
             name = text(left, self.src)
             self.router_vars.add(name)
-            if fname in ("FastAPI", "Flask", "Starlette", "Sanic", "Quart"):                # the application itself
+            if fname in APP_CLASSES:                                                    # the application itself
                 self.mark_app(name, n)
             args = right.child_by_field_name("arguments")
-            prefix = ""
-            if args is not None:
-                for a in args.children:
-                    if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) in ("prefix", "url_prefix"):
-                        v = a.child_by_field_name("value")
-                        prefix = unquote(text(v, self.src)) if v is not None and v.type == "string" else ""
+            kids = args.children if args is not None else ()
+            kw = {text(a.child_by_field_name("name"), self.src): a.child_by_field_name("value")
+                  for a in kids if a.type == "keyword_argument"}
+            pos = [a for a in kids if a.is_named and a.type not in ("keyword_argument", "comment")]
+            if init is None or init[0] == "none":
+                v = None if init else next((kw[k] for k in PREFIX_KEYWORDS if k in kw), None)
+                prefix = unquote(text(v, self.src)) if v is not None and v.type == "string" else ""
+            elif init[0] == "lit":
+                prefix = init[1]
+            else:                                   # ("param", name, position, default): what the call passes for it
+                _, pname, at, default = init
+                v = kw.get(pname) or (pos[at] if at is not None and at < len(pos) else None)
+                prefix = (unquote(text(v, self.src)) if v.type == "string" else "") if v is not None else default or ""
             self.group_prefix[self.group_key(name, n)] = prefix
+
+    def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
+        """`UserAPIRouter(prefix="/recipes")` (mealie): a class of the repo whose bases reach the framework's router —
+        (that class, what the first `__init__` up the bases makes of the prefix: `http_expr._init_prefix`). The class
+        is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
+        it, its own directory's, else the one class of that name in the repo."""
+        head, _, cname = text(fn, self.src).rpartition(".")
+        spec, orig = self.imports.get(head or cname) or (None, None)
+        view = self.ctx.view
+        if head or spec is not None:                                    # `routers.UserAPIRouter`, or imported by name
+            target = (self._module(spec, orig) if head else self.resolve_import(spec) if orig is not None else None) \
+                if spec is not None else None
+            cname = cname if head else orig
+            ctx = view.constants(target) if target is not None and view is not None else None
+        else:
+            ctx = self.ctx
+        init, seen = None, set()
+        while ctx is not None and cname not in seen and len(seen) < 6:
+            seen.add(cname)
+            info = ctx.classes.get(cname)
+            if info is None:
+                return None
+            bases, own = info
+            init = init or own
+            fw = next((b for b in bases if b in ROUTER_CLASSES), None)
+            if fw is not None:
+                return fw, init
+            for b in bases:
+                there = ctx if b in ctx.classes else None
+                if there is None and view is not None:
+                    named = [c for c in view.classes_named(b) if c.classes.get(b) is not None]
+                    there = named[0] if len(named) == 1 else None
+                if there is not None:
+                    ctx, cname = there, b
+                    break
+            else:
+                return None
+        return None
 
     def _restx(self, fn: Node) -> bool:
         """`Namespace` / `Api` of flask-restx (or flask-restful), not any class of that name."""

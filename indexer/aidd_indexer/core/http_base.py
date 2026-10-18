@@ -128,6 +128,9 @@ class PackageContext:
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
         self.passthrough: dict[str, int | None] = {}   # Go function → the parameter every `return` ends with
         self.verb_lists: dict[str, tuple[str, ...]] = {}   # Go `var MethodsPutPost = []string{http.MethodPut, ..}`
+        # Python class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class
+        # of the project (`class UserAPIRouter(APIRouter)`); None when two files of the directory define it differently
+        self.classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = {}
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 

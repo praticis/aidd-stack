@@ -102,6 +102,31 @@
   },
   {
    "method": "GET",
+   "path": "/api/v1/recipes",
+   "handler": "list_recipes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/recipes/{slug}/exports",
+   "handler": "export_recipe"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/recipes/timeline/events",
+   "handler": "create_event"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{user_id}",
+   "handler": "delete_user"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/audits/daily",
+   "handler": "daily_audit"
+  },
+  {
+   "method": "GET",
    "path": "/api/v2/challenges",
    "handler": "ChallengeList.get"
   },

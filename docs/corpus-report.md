@@ -1963,3 +1963,44 @@ TS/JS calls sample is 73.0% (149/204) with photoprism's web client in. HTTP extr
 repositories of before took 167 s against 160 s, the same ~5% in repositories the change does not touch.
 
 New baseline: `2026-10-18-v2-baseline-20`.
+
+## F1.14, increment 4: the hold-out's Python (2026-10-18)
+
+mealie moved from the hold-out to the corpus (51 repositories; the hold-out keeps 7). The rule has its cases in
+`route-patterns-py` (`app/crossfile/routers.py` and the four routes modules on it), which fail without it.
+
+- **A router class of the project.** `router = UserAPIRouter(prefix="/recipes")` builds a router when the class's
+  bases reach the framework's router (`APIRouter`, `Blueprint`, `Router`) or application (`FastAPI`, `Flask`, ..).
+  The class is found in the file's directory, through the import by name (`from ..routers import UserAPIRouter`), or
+  through the imported module (`routers.AdminAPIRouter`). A base defined in another file is looked up by its name,
+  when it is the only class of that name in the repo. The constant pass records each class's bases and what its
+  `__init__` hands `super().__init__` as `prefix` or `url_prefix`; the first `__init__` up the bases decides. A
+  literal is the prefix. A parameter is what the call passes for it, by name or position, else its default
+  (mealie's `def __init__(self, tags=None, prefix: str = "", **kwargs)` with `super().__init__(prefix=prefix, ..)`).
+  Without an `__init__` of its own, or with one that passes `**kwargs` on without naming the prefix, the call reads
+  as the base's would.
+
+| Repo | Before (list · sample) | Now (list · sample) |
+|---|---|---|
+| mealie (at the hold-out) | P 64.1% · R 59.4% · 13/20 | P 100% · R 100% · 20/20 |
+
+87 mealie routes took their router's prefix (`/api/exports` is `/api/recipes/exports`, `/api/about` is
+`/api/admin/about` under `AdminAPIRouter(prefix="/admin")`), and none was lost. 18 more come out: the roots
+`@router.get("")` of routers whose prefix is now known (`/api/recipes/timeline/events`), and routes of different
+files that had collapsed into one endpoint at a shared prefix-less path (`GET /api/{slug}` and
+`GET /api/{item_id}`). Each of the 105 was read against its router in the code. The sample keeps its items, each at the path its line
+gives now: 3 in the gabarito, 4 outside its scope judged from the code, all right.
+
+**What the rule found elsewhere.** CTFd builds its application as `app = CTFdFlask(__name__)`, a subclass of
+`Flask`. Now that it is the application, the root of the `views` blueprint registered on it,
+`@views.route("/", defaults={"route": "index"})`, is a whole route: `GET /`, right, outside the gabarito's scope.
+
+**Diff against `2026-10-18-v2-baseline-20`.** 49 repositories are identical. CTFd gains `GET /`, and mealie comes
+in. The hold-out's other 7 are identical to its last run. No repository regressed against its expected list.
+
+**Totals.** Python route precision over the list is 99.1% (457/461) and recall 24.2% (456/1884), from 99.0%
+(388/392) and 21.3% (387/1815); the recall is low because zulip's and netbox's Django routes have no scanner yet.
+The Python checked sample is 99.1% (110/111), from 98.9% (90/91). C#, Go and TS/JS routes are unchanged; the TS/JS
+calls sample is 73.7% (157/213) with mealie's web client in. HTTP extraction took 179 s.
+
+New baseline: `2026-10-18-v2-baseline-21`.

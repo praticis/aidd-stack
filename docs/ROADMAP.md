@@ -82,6 +82,7 @@
 - 2026-10-17: **F1.14 incremento 1: os dois defeitos de precisão do hold-out e o .NET que ele mostrou.** O prefixo de grupo passa a ser do par (escopo, nome), como o grafo de montagem: o parâmetro `a` de `registerAPIRoutes(a)` não herda o `a :=` de outra função (vikunja, 176 rotas); método Go não exportado não registra rota; o echo junta prefixo e path como escritos. No .NET, os atributos de rota do projeto viram receitas que o `compose` preenche (Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(x)]`), com Asp.Versioning, OData por convenção, herança em até quatro níveis (`[NonAction]`, sobrecargas) e `[Route]` sem verbo como ANY: Radarr e Smartstore a 100 %/100 %, Umbraco a 100 %/99,8 % com o token do próprio Umbraco lido (sem isso, 0 %: limitação). Os quatro repos viram corpus (46); os 42 anteriores, idênticos. Fronteira com o SCIP registrada (guia §8, ADR-002): o que falta é valor ou convenção, e o que pedir tipo inferido vira `needs-resolver` para o F1.2
 - 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
 - 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
+- 2026-10-18: **F1.14 incremento 4: o Python do hold-out.** Classe do projeto cujas bases chegam ao router do framework constrói um router (`class UserAPIRouter(APIRouter)` do mealie, de outro arquivo), com o prefixo pelo que o `__init__` entrega ao `super().__init__` — literal, ou o argumento da chamada para o parâmetro. mealie de 64,1 % / 59,4 % a 100 % / 100 % e vira corpus (51); o CTFd ganha `GET /` (a aplicação é `CTFdFlask`, subclasse de `Flask`); os outros 49, idênticos.
 - Próximo passo: PR da `feature/phase1-dispatch`; então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`). re-rodar a Q4 .NET com o despacho; então SCIP (F1.1/F1.2). Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
@@ -304,7 +305,7 @@ Em aberto:
      - Go: ~~router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com
        o verbo em constante (memos, 92)~~ *feitos 2026-10-18 (incremento 3)* — os handlers connect-go ficam com o F2.1
        (proto como fonte);
-     - Python: subclasses de `APIRouter` (mealie, 28);
+     - Python: ~~subclasses de `APIRouter` (mealie, 28)~~ *feito 2026-10-18 (incremento 4)*;
      - TS/JS: Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do cliente
        (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit) ou de um
        campo (`this.baseUrl = environment.apiUrl`) — 158 chamadas em 4 repos.
@@ -349,6 +350,15 @@ Em aberto:
        um literal, impresso como parâmetro (`/api/ai{transcribe}`: casa nos dois lados, mas o path sai errado; quem
        sabe que não há parâmetro com `:` é a origem — path de OpenAPI e pattern do gateway; dívida, item 7);
      - Go no corpus: P 99,1 %, R 92,9 % (97,3 % sem os RPCs Connect); 47 dos 48 repos de antes idênticos;
+     **Incremento 4 (2026-10-18)** — o Python do hold-out; mealie passou ao corpus (51 repos):
+     - classe de router do projeto: `UserAPIRouter(prefix="/recipes")` constrói um router quando as bases da classe
+       chegam ao router ou à aplicação do framework (`APIRouter`, `Blueprint`, `Flask`, ..). A classe vem do diretório,
+       do import ou do módulo importado; a base de outro arquivo, pelo nome único no repo. O prefixo é o que o
+       primeiro `__init__` subindo as bases entrega ao `super().__init__`: literal, ou o argumento da chamada para o
+       parâmetro (por nome ou posição, senão o default). mealie: de 64,1 % / 59,4 % (amostra 13/20) a 100 % / 100 %
+       (20/20); o CTFd ganha `GET /`, raiz do blueprint montado em `CTFdFlask(__name__)`, subclasse de `Flask`;
+     - Python no corpus: P 99,1 %, R 24,2 % (o Django do zulip e do netbox ainda sem scanner); 49 dos 50 repos de
+       antes idênticos;
   7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
      cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
      fixos do `built_bundle`.
