@@ -6,8 +6,9 @@ calibrated on, pinned to fixed commits and measured against an expected list per
 "Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
 H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
-set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its first
-increment moved 4 of them to the corpus (46), the second 2 more (48). Plan, decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
+set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its five
+increments moved 13 of them to the corpus (55), and the hold-out keeps 3. Plan, decisions and status of H2 are in
+`docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -2004,3 +2005,91 @@ The Python checked sample is 99.1% (110/111), from 98.9% (90/91). C#, Go and TS/
 calls sample is 73.7% (157/213) with mealie's web client in. HTTP extraction took 179 s.
 
 New baseline: `2026-10-18-v2-baseline-21`.
+
+## F1.14, increment 5: the hold-out's TS/JS (2026-10-18)
+
+outline, directus, docmost and open-webui moved from the hold-out to the corpus (55 repositories; the hold-out keeps
+3: go-boilerplate, Kavita and sftpgo). Each rule below has its case in `route-patterns-ts` (or
+`test_resolve_ts.py`), which fails without it.
+
+**Routes.**
+
+- **Koa's relative paths.** In a file that imports `@koa/router` or `koa-router`, a path without its leading slash
+  on a router of the file is like a sub-router's root: a route only once a mount gives it a prefix, which Koa puts
+  before it as written (`router.use("/", documents.routes())` and `router.post("documents.info", ..)` is
+  `/documents.info`). A router mounted nowhere serves nothing at it. `x.routes()` and `x.middleware()` handed to
+  `use` are the router itself, and `use(mount("/api", api))`, with `mount` imported from `koa-mount`, is
+  `use("/api", api)`.
+- **Express's `SEARCH`.** `router.search(path, ..)` on a router of the file is `SEARCH`; on any other receiver it is
+  nothing. A router's verb is never a project's mount wrapper: directus's `router.search('/:collection',
+  collectionExists, ..)` disappeared as a wrapper candidate once its middleware resolved to another file.
+- **A regex after a parameter.** `/:pk(\d+)` and `` `/:pk(${UUID_REGEX})` `` are `/{pk}`: masked and normalized like
+  Hono's `:id{..}`, but not after a word, so ASP.NET's `{name:minlength(1)}` keeps its meaning. path-to-regexp 8's
+  optional wildcard `{/*path}` is the wildcard (`/mcp/{rest}`, not `/mcp/{/{rest}}`).
+
+**Calls: the client's base.**
+
+- **A module's client with a base.** The constant pass records, per file and name, `X.create({ baseURL })` or
+  `X.extend(..)` (axios, ofetch; `prefixUrl` for ky and got), and `new C(..)` of a class of the directory whose base
+  is a field: `baseUrl = "/api"`, or the constructor's `this.baseUrl = options.baseUrl || "/api"` (outline's
+  ApiClient), where the option the call passes wins over the default. `export default api` names it too. A call on
+  that receiver, in the file or through an import, is under the base, joined with a slash as axios joins them:
+  docmost's `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in `@/lib/api-client` is
+  `/api/pages/info`. Only a path: a base URL's host is the linker's.
+- **Not when the url is rewritten.** A request interceptor of the client that assigns `config.url` or `baseURL`
+  (dispatch: `` config.url = `${currentOrganization}${config.url}` ``) means the base is not all that goes before
+  the path. The call stays as written, which the linker's suffix match links to `/api/v1/{organization}/..`.
+- **A known client is no router.** `api.post("/comments", data)` was dropped because a variable as the last
+  argument looks like a route's handler. On a receiver known as a client it is a request, whatever its name.
+- **A constant built as a template is a constant** (`` `${WEBUI_BASE_URL}/api/v1` `` as
+  `WEBUI_BASE_URL + "/api/v1"`), and `${X}` imported from another file is read there, as `pkg.X` already was.
+  SvelteKit's `$lib` is `src/lib`, its default. A ternary between nothing and a query string
+  (`` ${query ? `?${query}` : ''} ``) is the query, not a segment.
+- **Found on the way:** `await api.post<T>(..)` parses with the `await` inside the callee, so the receiver read as
+  `awaitapi`.
+
+| Repo | Before (at the hold-out; list · sample) | Now (list · sample) |
+|---|---|---|
+| outline, routes | P — · R 0% · 13/20 | P 100% · R 100% · 20/20 |
+| outline, calls | P 0% · R 0% · 1/20 | P 95.0% · R 100% · 19/20 |
+| directus, routes | P 98.1% · R 87.3% · 20/20 | P 98.3% · R 99.0% · 20/20 |
+| docmost, calls | P 0% · R 0% · 0/20 | P 100% · R 100% · 20/20 |
+| open-webui, calls | P 0% · R 0% · 7/20 | P 99.0% · R 100% · 19/20 |
+
+The samples keep their items, each at the path its line gives now, and the changed ones were judged again at the
+source: outline's 7 routes take `/auth` or `/oauth` (koa-mount) and 18 calls take `/api`; docmost's 20 calls and 12
+of open-webui's 13 take their base.
+
+**Gabarito correction (H2-D15).** docmost: `POST /api/spaces/watched-ids`, from
+`api.post<IPagination<string>>("/spaces/watched-ids")` in a file of the scope, which the first reading missed.
+
+**What the rules found elsewhere.** dispatch: 3 calls with a variable last
+(`` API.post(`/${resource}/${caseId}/exportTimeline`, data) ``), among them the one its gabarito listed as missed;
+its calls are at 100% (16/16), still as written (the interceptor). directus: 17 calls of the app's stores
+(`api.patch(`/settings`, updates)`), as written, since its base is `getRootPath()`. outline: 2 more calls of
+`client`. All right.
+
+**What remains in these repositories.**
+
+- outline's `this.post("/batch")` inside ApiClient itself, without the base (`prefix-in-client-wrapper`): a class's
+  own calls on `this`.
+- open-webui's `` /register${searchParams} ``, a query held in a variable and glued to the path
+  (`query-in-variable`); and `ANY /auths/mfa/{param}`, a helper that takes the path and the method (a client
+  wrapper, F1.14 item 4).
+- directus's `/graphql` mounted with `router.use` (`use-as-route`), `POST /auth/login` from a router factory
+  (`router-from-factory`) and the SAML/OpenID routes under a provider name from the configuration.
+- Koa joins a prefix and a relative path as written, so a non-`/` prefix would give `/apidocuments.info`; the
+  extractor reads it with a slash. No repository does that.
+- A client class is looked up in the directory of the instance, and the base must be a path.
+
+**Diff against `2026-10-18-v2-baseline-21`.** 50 repositories are identical. dispatch gains 3 calls, and the four
+come in. The hold-out's other 3 are identical to its last run. No repository regressed against its expected list.
+
+**Totals.** TS/JS route precision over the list is 96.5% (1331/1379) and recall 89.0% (1331/1495), from 95.6%
+(944/987) and 85.4% (944/1105); TS/JS calls are at 96.6% (1034/1070) and 95.3% (1034/1085), from 96.3% (874/908)
+and 94.4% (874/926). The checked samples: TS/JS routes 79.5% (175/220), from 71.9% (115/160); calls 79.9%
+(231/289), from 73.7% (157/213). open-webui's FastAPI backend (104 routes, 100%) moves Python to 99.3% (561/565) and
+28.2% (560/1988). C# and Go are unchanged. The client bases cost about 5% of HTTP time on Ghost (15.1 s against 14.3
+s, the same machine).
+
+New baseline: `2026-10-18-v2-baseline-22`.

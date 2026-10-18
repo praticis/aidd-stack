@@ -20,18 +20,19 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-18, F1.14 increment 4, routes + calls): Go — alertmanager 30+15 · chi 50 ·
-fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 ·
-mattermost 658+23 · kratos 76+135 · argo-cd 123+105 · gotify 51+30 · go-feature-flag 18+7 · go-kit-examples 27+11 ·
-vikunja 198+232 · memos 100+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest
-205+1 (166 in the framework's own test apps) · immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate
-11 · fastify-demo 10 · hono-examples 31 · taxonomy 0+6 (Next.js file routes). C# — eshop 30+24 · clean-arch-dotnet
-1 · eshop-on-web 33+7 · eshop-support 18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 675+30 · notifo
-130+218 · rapid-blazor 18+17 · azure-saas 35+26 (the last three with NSwag clients) · umbraco 540+522 · smartstore
-567+5 · radarr 239+2 · elsa 270+239 · btcpayserver 676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask
-18 · zulip 0+135 and netbox 0 (Django) · dispatch 291+288 · aiohttp-demos 24+1 · ctfd 242+84 · mealie 286+14. Whole
-run ~19 min in Docker (mattermost ~3 min, bitwarden ~2 min); grafana is out (memory, see CORPUS). Precision/recall
-per repo and the ranking of gaps: docs/corpus-report.md.
+Baseline at the pinned commits (2026-10-18, F1.14 increment 5, routes + calls): Go — alertmanager 30+15 · chi 50 ·
+fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 · mattermost
+658+23 · kratos 76+135 · argo-cd 123+105 · gotify 51+30 · go-feature-flag 18+7 · go-kit-examples 27+11 · vikunja
+198+232 · memos 100+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166
+in the framework's own test apps) · immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate 11 ·
+fastify-demo 10 · hono-examples 31 · taxonomy 0+6 (Next.js file routes) · outline 226+101 · directus 294+95 · docmost
+149+247 · open-webui 595+617. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 18+19 ·
+ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 675+30 · notifo 130+218 · rapid-blazor 18+17 · azure-saas 35+26
+(the last three with NSwag clients) · umbraco 540+522 · smartstore 567+5 · radarr 239+2 · elsa 270+239 · btcpayserver
+676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 18 · zulip 0+135 and netbox 0 (Django) · dispatch
+291+291 · aiohttp-demos 24+1 · ctfd 242+84 · mealie 286+14. Whole run ~21 min in Docker (mattermost ~3 min, bitwarden
+~2 min); grafana is out (memory, see CORPUS). Precision/recall per repo and the ranking of gaps:
+docs/corpus-report.md.
 """
 from __future__ import annotations
 
@@ -111,6 +112,11 @@ CORPUS = {                                                    # pinned 2026-10-1
     "photoprism": ("photoprism/photoprism", "d527932ba8a405e228eb4c5e0fc6f77400ea719b"),
     # F1.14 increment 4, Python (2026-10-18)
     "mealie": ("mealie-recipes/mealie", "89a14202dd8044749cce444147ea4b301c77af13"),
+    # F1.14 increment 5, TS/JS (2026-10-18)
+    "outline": ("outline/outline", "178e923cb7027ddaa22b69fd44a4b3ea489327cd"),
+    "directus": ("directus/directus", "8e140f94250834cea0a0fb6eb822cac39ed9faec"),
+    "docmost": ("docmost/docmost", "744c82bdf86f454ca44a2e19dc150900e884a11e"),
+    "open-webui": ("open-webui/open-webui", "91ea4e3421d1d8069f13d4a463fcb5986d94ea60"),
 }
 
 
@@ -120,13 +126,9 @@ CORPUS = {                                                    # pinned 2026-10-1
 # close needs a new hold-out.
 HOLDOUT = {
     "go-boilerplate": ("meghrazchi/go-boilerplate", "836d02be2e8bef4cf21a481614cc3c81678ae922"),
-    "open-webui": ("open-webui/open-webui", "91ea4e3421d1d8069f13d4a463fcb5986d94ea60"),
-    "directus": ("directus/directus", "8e140f94250834cea0a0fb6eb822cac39ed9faec"),
-    "outline": ("outline/outline", "178e923cb7027ddaa22b69fd44a4b3ea489327cd"),
     # the first recommendation, added the same day
     "kavita": ("Kareadita/Kavita", "2d225367f0310ac7354423b772a4c6a7caf63fd2"),
     "sftpgo": ("drakkan/sftpgo", "305ebb875c0eb37ffe970ebf6af80f5f86a7e070"),
-    "docmost": ("docmost/docmost", "744c82bdf86f454ca44a2e19dc150900e884a11e"),
 }
 HOLDOUT_EXPECTED_DIR = EXPECTED_DIR / "holdout"
 

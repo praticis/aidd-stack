@@ -17,11 +17,13 @@ from ...core import ids
 from ...core.http_mounts import APP, TOP, MountedRoot
 from ...core.http_nodes import has_interpolation, member
 from ...core.model import HttpEndpointInfo, RepoInfo
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, normalize_path, path_key, unquote
+from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, is_url_literal, mask_placeholders, normalize_path,
+                           path_key, unquote)
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
 TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, NodeBB's api module
+TS_ROUTER_VERBS = {"search": "SEARCH"}               # Express's other verbs: only on a router of the file (directus)
 TS_MOUNTS = {"use", "route"}
 CHAIN_LINKS = TS_REGISTRARS | TS_MOUNTS | {"mount", "basePath", "on", "notFound", "onError"}   # return the router
 ROUTER_CTOR = re.compile(r"\b(express|Router|Fastify|fastify|Koa|Hono|Elysia)\s*(<[^()]*>)?\s*\(|\.(Router|router)\(\)")
@@ -34,6 +36,8 @@ NEST_DECORATORS = {"Controller", "Get", "Post", "Put", "Patch", "Delete", "Head"
 CONFIG_REQUESTS = {"request", "ajax", "axios"}                            # a request described by an object (`url`)
 OAZAPFTS = {"fetchJson", "fetchText", "fetchBlob"}                       # oazapfts.fetchJson<T>(path, opts)
 JQUERY = {"$", "jQuery"}
+KOA_ROUTERS = ("@koa/router", "koa-router")                              # join a prefix and a path as written
+KOA_ROUTER_METHODS = {"routes", "middleware"}                            # `router.routes()`: the router itself
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
 
 
@@ -47,6 +51,8 @@ class TsScanner(BaseScanner):
         self.route_calls: list[tuple] = []         # calls of a function that may be a route wrapper
         self.wrapped: dict[int, str] = {}          # registrations inside a route wrapper → its name (`compose`)
         wraps = b".use(" in self.src
+        self.koa_router = any(spec in KOA_ROUTERS for spec, _ in self.imports.values())
+        self.koa_mount = {name for name, (spec, orig) in self.imports.items() if spec == "koa-mount" and orig == "default"}
         self.oazapfts = b"generated using oazapfts" in self.src[:1024]
         base = re.search(rb"baseUrl:\s*[\"'](/[^\"']*)[\"']", self.src) if self.oazapfts else None
         self.oazapfts_base = base.group(1).decode().rstrip("/") if base else ""
@@ -80,6 +86,46 @@ class TsScanner(BaseScanner):
             self.add_endpoint(node, method, shorter, framework, handler_node, **kw)
         return ep
 
+    def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
+        """Koa's router (`@koa/router`, `koa-router`) puts the prefix before the path as written: outline's
+        `router.post("documents.info", ..)` under `router.use("/", documents.routes())` is `/documents.info`. A path
+        without its leading slash on a router of the file is, like a sub-router's root, a route only once a mount
+        gives it a prefix (`MountedRoot`); a router mounted nowhere serves nothing at it."""
+        p = super().route_path(n, receiver, at)
+        if p is not None or not self.koa_router or receiver not in self.router_vars or n.type != "string":
+            return p
+        lit = unquote(text(n, self.src)).strip()
+        return MountedRoot(lit) if lit and PATH_LITERAL.match("/" + mask_placeholders(lit)) else None
+
+    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
+        """A request on a client with a base (`PackageContext.client_base`) is at the base, joined with a slash as
+        axios joins them: docmost's `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in another file
+        is `/api/pages/info`."""
+        base = self._client_base(via) if raw_path and not is_url_literal(raw_path) else None
+        if base:
+            raw_path = base.rstrip("/") + "/" + raw_path.lstrip("/")
+        super().add_call(node, method, raw_path, via)
+
+    def _client_base(self, via: str) -> str | None:
+        """The base of the client a call is made on (`_client_of`), when it has a path for one."""
+        found = self._client_of(via)
+        return found[0].client_base(found[1], found[2]) if found is not None else None
+
+    def _client_of(self, via: str) -> tuple | None:
+        """The client a call is made on, as (its directory's context, its file, its name): a module-level client of
+        this file (`PackageContext.client_bases`), or an import of one. A client is no router: `api.post("/x", data)`
+        is a request whatever its last argument looks like."""
+        recv = via.rsplit(".", 1)[0] if "." in via else ""
+        if not re.fullmatch(r"[A-Za-z_$][\w$]*", recv):
+            return None
+        path = self.fx.file.path
+        if (path, recv) in self.ctx.client_bases:
+            return self.ctx, path, recv
+        spec, orig = self.imports.get(recv) or (None, None)
+        target = self.resolve_import(spec) if spec is not None and orig is not None else None
+        ctx = self.ctx.view.constants(target) if target is not None and self.ctx.view is not None else None
+        return (ctx, target, orig) if ctx is not None and (target, orig) in ctx.client_bases else None
+
     def _maybe_router_var(self, n: Node) -> None:
         name = n.child_by_field_name("name") or n.child_by_field_name("left")
         val = n.child_by_field_name("value") or n.child_by_field_name("right")
@@ -106,6 +152,11 @@ class TsScanner(BaseScanner):
         which `compose` follows to that file."""
         if name not in TS_MOUNTS or not recv_last:
             return False
+        if name == "use" and len(arg_nodes) == 1 and self.koa_mount:     # koa-mount: app.use(mount("/api", api))
+            inner = unwrap_arg(arg_nodes[0])
+            f, a = inner.child_by_field_name("function"), inner.child_by_field_name("arguments")
+            if inner.type == "call_expression" and f is not None and text(f, self.src) in self.koa_mount and a is not None:
+                arg_nodes = [c for c in a.children if c.is_named] or arg_nodes
         p = self.path_of(arg_nodes[0])
         has_path = p is not None and p.startswith("/")
         if name == "route" and (len(arg_nodes) != 2 or not has_path):
@@ -114,7 +165,7 @@ class TsScanner(BaseScanner):
             return False
         mounted = False
         for c in (arg_nodes[1:] if has_path else arg_nodes):
-            c = unwrap_arg(c)
+            c = self._koa_router(unwrap_arg(c))
             if c.type == "identifier" and text(c, self.src) in self.router_vars:
                 self.mount(text(c, self.src), c, recv_last, n, p if has_path else "")
                 mounted = True
@@ -125,6 +176,15 @@ class TsScanner(BaseScanner):
                 self.foreign.append((g, self.router_key(recv_last, n), prefix))
                 mounted = True
         return mounted
+
+    def _koa_router(self, c: Node) -> Node:
+        """`documents.routes()`, `router.middleware()` handed to a mount: Koa's router itself."""
+        f, a = c.child_by_field_name("function"), c.child_by_field_name("arguments")
+        obj, prop = member(f) if c.type == "call_expression" and f is not None else (None, None)
+        if obj is None or prop is None or text(prop, self.src) not in KOA_ROUTER_METHODS or a is None \
+                or a.named_child_count or not self.koa_router:
+            return c
+        return obj
 
     def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
         """express `router.route('/x').get(h).post(h)`: each verb a route on the path of `route`. True when `n` is one
@@ -300,6 +360,8 @@ class TsScanner(BaseScanner):
     def _read_call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
+        if fn is not None and fn.type == "await_expression" and fn.named_child_count == 1:
+            fn = fn.named_children[0]                # `await api.post<T>(..)`: the grammar puts the `await` in the callee
         if fn is None or args is None:
             return
         callee = self.callee_of(fn)
@@ -335,21 +397,24 @@ class TsScanner(BaseScanner):
             if p is not None:
                 self.add_call(n, JQUERY_VERBS[name], p, callee)
             return
-        if name in TS_REGISTRARS and len(arg_nodes) >= 2:
+        if (name in TS_REGISTRARS or name in TS_ROUTER_VERBS and recv_last in self.router_vars) and len(arg_nodes) >= 2:
             p = self.route_path(arg_nodes[0], recv_last, n)
-            if p is not None and p.startswith("/") and (self.is_handler_like(arg_nodes[-1]) or recv_last in self.router_vars) \
+            if p is not None and (p.startswith("/") or isinstance(p, MountedRoot)) \
+                    and (self.is_handler_like(arg_nodes[-1]) or recv_last in self.router_vars) \
                     and (recv_last in self.router_vars or not CLIENT_RECEIVER.search(recv_last)):   # `const api = express.Router()`
                 if name == "route":                                  # app.route('/x').get(h) — take the verb from the chain
                     return
-                self.add_endpoint(n, VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1], router=recv_last)
+                self.add_endpoint(n, TS_ROUTER_VERBS.get(name) or VERB_BY_NAME.get(name, "ANY"), p, "express", arg_nodes[-1],
+                                  router=recv_last)
                 return
         if name in OUTBOUND or name in TS_VERB_ALIASES:
             verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES
-            if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]):
+            client = self._client_of(callee) is not None
+            if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]) and not client:
                 return
             if name in GENERIC_OUTBOUND and not CLIENT_RECEIVER.search(recv_last):
                 return
-            if verb and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this")):
+            if verb and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this") or client):
                 return                                                  # cache.get(key), map.delete(k), redis.del(k) ...
             method = OUTBOUND.get(name) or TS_VERB_ALIASES.get(name) or self.method_from_args(arg_nodes)
             if method is None and name in ("fetch", "$fetch", "ofetch") \
@@ -555,7 +620,8 @@ class TsScanner(BaseScanner):
     def _wrapper_call(self, n: Node, name: str, recv_last: str, arg_nodes: list[Node]) -> bool:
         """`backendApp.lazyUse('/ghost/api', require('../api'))` on a router, with a method no framework has: a mount if
         some file defines that method as one (`_mount_wrapper`) — a candidate here, settled in `compose`."""
-        if recv_last not in self.router_vars or name in TS_REGISTRARS or name in TS_MOUNTS or len(arg_nodes) < 2:
+        if recv_last not in self.router_vars or name in TS_REGISTRARS or name in TS_ROUTER_VERBS or name in TS_MOUNTS \
+                or len(arg_nodes) < 2:
             return False
         found = False
         for i, a in enumerate(arg_nodes):

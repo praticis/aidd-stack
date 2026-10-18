@@ -432,7 +432,7 @@
    "category": "prefix-in-client-wrapper"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Koa, RPC-style paths. Routes, scope: the documents, collections and users modules (64 routes). Each module's @koa/router registers router.post(\"documents.info\", auth(), validate(..), handler) — the path without a leading slash —, server/routes/api/index.ts mounts every module with router.use(\"/\", x.routes()) on the API router, served by a Koa app that services/web.ts mounts with app.use(mount(\"/api\", api)): /api/documents.info. Calls, scope: the three matching MobX stores (19 calls): client.post(\"/documents.info\", ..) on the app's own ApiClient, whose baseUrl defaults to \"/api\" in its constructor (prefix-in-client-wrapper). Not expected: client.post(`/users.${action}`, ..) (the action named at runtime) and the base Store's `/${this.apiEndpoint}.create` (a field per store).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Koa, RPC-style paths. Routes, scope: the documents, collections and users modules (64 routes). Each module's @koa/router registers router.post(\"documents.info\", auth(), validate(..), handler) — the path without a leading slash —, server/routes/api/index.ts mounts every module with router.use(\"/\", x.routes()) on the API router, served by a Koa app that services/web.ts mounts with app.use(mount(\"/api\", api)): /api/documents.info. Calls, scope: the three matching MobX stores (19 calls): client.post(\"/documents.info\", ..) on the app's own ApiClient, whose baseUrl defaults to \"/api\" in its constructor (prefix-in-client-wrapper). Not expected: client.post(`/users.${action}`, ..) (the action named at runtime) and the base Store's `/${this.apiEndpoint}.create` (a field per store). Moved to the corpus by F1.14 (2026-10-18): @koa/router's paths without a leading slash under router.use(\"/\", x.routes()), koa-mount's mount(\"/api\", api), and the ApiClient's base (this.baseUrl = options.baseUrl || \"/api\") on its module instance `client`. The checked samples were refreshed: the 7 routes take /auth or /oauth (koa-mount), and 18 calls take /api, all right; this.post(\"/batch\") inside ApiClient itself stays without the base (prefix-in-client-wrapper).",
  "checked": {
   "endpoints": [
    {
@@ -446,10 +446,10 @@
    {
     "evidence": "outline:server/routes/auth/index.ts:37",
     "method": "GET",
-    "path": "/redirect",
+    "path": "/auth/redirect",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/discovery/index.ts:13",
@@ -550,188 +550,188 @@
    {
     "evidence": "outline:server/routes/oauth/index.ts:114",
     "method": "POST",
-    "path": "/token",
+    "path": "/oauth/token",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/oauth/index.ts:183",
     "method": "POST",
-    "path": "/revoke",
+    "path": "/oauth/revoke",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/oauth/index.ts:210",
     "method": "POST",
-    "path": "/register",
+    "path": "/oauth/register",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/oauth/index.ts:293",
     "method": "PUT",
-    "path": "/register/{clientId}",
+    "path": "/oauth/register/{clientId}",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/oauth/index.ts:338",
     "method": "DELETE",
-    "path": "/register/{clientId}",
+    "path": "/oauth/register/{clientId}",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:server/routes/oauth/index.ts:46",
     "method": "POST",
-    "path": "/authorize",
+    "path": "/oauth/authorize",
     "raw": null,
-    "ok": false,
-    "category": "prefix-other-file"
+    "ok": true,
+    "category": null
    }
   ],
   "calls": [
    {
     "evidence": "outline:app/actions/definitions/documents.tsx:838",
     "method": "POST",
-    "path": "/documents.export",
+    "path": "/api/documents.export",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/editor/components/LinkEditor.tsx:72",
     "method": "POST",
-    "path": "/suggestions.mention",
+    "path": "/api/suggestions.mention",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/editor/components/MentionMenu.tsx:218",
     "method": "POST",
-    "path": "/documents.users",
+    "path": "/api/documents.users",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/models/Comment.ts:259",
     "method": "POST",
-    "path": "/reactions.list",
+    "path": "/api/reactions.list",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/models/User.ts:273",
     "method": "POST",
-    "path": "/users.notificationsSubscribe",
+    "path": "/api/users.notificationsSubscribe",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/scenes/Document/components/Document.tsx:150",
     "method": "POST",
-    "path": "/revisions.info",
+    "path": "/api/revisions.info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/scenes/Settings/Authentication.tsx:130",
     "method": "POST",
-    "path": "/authenticationProviders.startGroupSync",
+    "path": "/api/authenticationProviders.startGroupSync",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/DocumentsStore.ts:484",
     "method": "POST",
-    "path": "/documents.search_titles",
+    "path": "/api/documents.search_titles",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/DocumentsStore.ts:612",
     "method": "POST",
-    "path": "/documents.duplicate",
+    "path": "/api/documents.duplicate",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/DocumentsStore.ts:651",
     "method": "POST",
-    "path": "/documents.import",
+    "path": "/api/documents.import",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/DocumentsStore.ts:717",
     "method": "POST",
-    "path": "/documents.archive",
+    "path": "/api/documents.archive",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/GroupUsersStore.ts:35",
     "method": "POST",
-    "path": "/groups.add_user",
+    "path": "/api/groups.add_user",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/ImportsStore.ts:16",
     "method": "POST",
-    "path": "/imports.cancel",
+    "path": "/api/imports.cancel",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/MembershipsStore.ts:66",
     "method": "POST",
-    "path": "/collections.remove_user",
+    "path": "/api/collections.remove_user",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/SharesStore.ts:43",
     "method": "POST",
-    "path": "/shares.revoke",
+    "path": "/api/shares.revoke",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/UnfurlsStore.ts:75",
     "method": "POST",
-    "path": "/urls.unfurl",
+    "path": "/api/urls.unfurl",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/stores/UsersStore.ts:202",
     "method": "POST",
-    "path": "/users.{param}",
+    "path": "/api/users.{param}",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:app/utils/ApiClient.ts:526",
@@ -752,10 +752,10 @@
    {
     "evidence": "outline:plugins/passkeys/client/Settings.tsx:71",
     "method": "POST",
-    "path": "/passkeys.verifyRegistration",
+    "path": "/api/passkeys.verifyRegistration",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    }
   ]
  },

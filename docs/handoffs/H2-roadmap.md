@@ -681,3 +681,6 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
   router de pacote atribuído em outro arquivo (165), gateway com verbo em constante e Connect (185), FastEndpoints atrás de
   base própria (94), Koa sem barra (64), subclasse de `APIRouter` (28) e a base do cliente em outro arquivo/alias/campo
   (158 chamadas). Tudo no F1.14. ROADMAP: F0.4.3b `[x]`. **H2 concluído.**
+- **2026-10-18** — O F1.14 seguiu nesta branch (incrementos 1–5, no ROADMAP): as formas que o hold-out mostrou em .NET,
+  Go, Python e TS/JS. 13 repos do hold-out viraram corpus (55); o hold-out fica com 3 (go-boilerplate, Kavita, sftpgo).
+  PR da `feature/h2-corpus`; o fechamento do F1.14 (itens 1–5 e 7, um hold-out novo) segue numa branch nova.

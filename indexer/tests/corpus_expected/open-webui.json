@@ -928,7 +928,7 @@
    "category": "const-other-file"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Routes, scope: four of the backend's routers (auths, chats, folders, models), 104 routes. backend/open_webui/main.py includes each with app.include_router(x.router, prefix='/api/v1/x'); each module's router = APIRouter() (auths with route_class=MfaRoute) takes @router.get('/x', ..) decorators, some on '/' (the router's root). Calls, scope: the web app's API modules for the same four areas (src/lib/apis/<area>/index.ts), 98 calls: fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, { method: 'POST', .. }), with WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1` and WEBUI_BASE_URL = '' in src/lib/constants.ts, imported through SvelteKit's $lib alias; the verb is the options' method (GET without one); one call takes a local variable (let url = `..`; url += ..), two build the query in a nested template. POST /chats/{id}/messages/{id}/resolve is a call the code makes to a route no backend router serves (it stays expected: the list records calls as written).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes, scope: four of the backend's routers (auths, chats, folders, models), 104 routes. backend/open_webui/main.py includes each with app.include_router(x.router, prefix='/api/v1/x'); each module's router = APIRouter() (auths with route_class=MfaRoute) takes @router.get('/x', ..) decorators, some on '/' (the router's root). Calls, scope: the web app's API modules for the same four areas (src/lib/apis/<area>/index.ts), 98 calls: fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, { method: 'POST', .. }), with WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1` and WEBUI_BASE_URL = '' in src/lib/constants.ts, imported through SvelteKit's $lib alias; the verb is the options' method (GET without one); one call takes a local variable (let url = `..`; url += ..), two build the query in a nested template. POST /chats/{id}/messages/{id}/resolve is a call the code makes to a route no backend router serves (it stays expected: the list records calls as written). Moved to the corpus by F1.14 (2026-10-18): SvelteKit's $lib alias, constants built as templates (`${WEBUI_BASE_URL}/api/v1`), an imported constant in a template, and a ternary that adds the query string (`${query ? `?${query}` : ''}`). The checked calls sample was refreshed: 12 of the 13 calls take their base, right; `/configs/oauth/clients/register${searchParams}` glues a query held in a variable to the path (query-in-variable).",
  "checked": {
   "endpoints": [
    {
@@ -1128,18 +1128,18 @@
    {
     "evidence": "open-webui:src/lib/apis/auths/index.ts:6",
     "method": "GET",
-    "path": "/auths/admin/details",
+    "path": "/api/v1/auths/admin/details",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/chats/index.ts:1658",
     "method": "GET",
-    "path": "/chats/stats/export/{param}",
+    "path": "/api/v1/chats/stats/export/{param}",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/configs/index.ts:260",
@@ -1152,34 +1152,34 @@
    {
     "evidence": "open-webui:src/lib/apis/configs/index.ts:536",
     "method": "POST",
-    "path": "/configs/oauth/clients/register{param}",
+    "path": "/api/v1/configs/oauth/clients/register{param}",
     "raw": null,
     "ok": false,
-    "category": "const-other-file"
+    "category": "query-in-variable"
    },
    {
     "evidence": "open-webui:src/lib/apis/configs/index.ts:609",
     "method": "POST",
-    "path": "/configs/code_execution",
+    "path": "/api/v1/configs/code_execution",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/files/index.ts:154",
     "method": "GET",
-    "path": "/files",
+    "path": "/api/v1/files",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/functions/index.ts:133",
     "method": "GET",
-    "path": "/functions/export",
+    "path": "/api/v1/functions/export",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/index.ts:231",
@@ -1192,58 +1192,58 @@
    {
     "evidence": "open-webui:src/lib/apis/knowledge/index.ts:1099",
     "method": "DELETE",
-    "path": "/knowledge/{param}/dirs/{param}/delete",
+    "path": "/api/v1/knowledge/{param}/dirs/{param}/delete",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/knowledge/index.ts:226",
     "method": "POST",
-    "path": "/knowledge/external/source/test",
+    "path": "/api/v1/knowledge/external/source/test",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/models/index.ts:141",
     "method": "POST",
-    "path": "/models/import",
+    "path": "/api/v1/models/import",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/models/index.ts:230",
     "method": "POST",
-    "path": "/models/create",
+    "path": "/api/v1/models/create",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/notes/index.ts:166",
     "method": "GET",
-    "path": "/notes",
+    "path": "/api/v1/notes",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/ollama/index.ts:326",
     "method": "POST",
-    "path": "/api/unload",
+    "path": "/ollama/api/unload",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/retrieval/index.ts:275",
     "method": "POST",
-    "path": "/reranking/update",
+    "path": "/api/v1/retrieval/reranking/update",
     "raw": null,
-    "ok": false,
-    "category": "const-other-file"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/terminal/index.ts:509",

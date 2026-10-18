@@ -356,9 +356,13 @@
    "method": "POST",
    "path": "/api/spaces/watch-status",
    "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/watched-ids"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Nest + React. Routes, scope: the page, space and comment controllers (34 routes): @Controller('pages') with RPC-style @Post('info'), @Post('/history'), @Post('/') under apps/server/src/main.ts's app.setGlobalPrefix('api', { exclude: ['robots.txt', 'share/:shareId/p/:pageSlug', 'mcp', '.well-known/..', 'docs', ..] }) — none of the three controllers is excluded, so every route is /api/<controller>/<path>. Calls, scope: the client services of the same areas (41 calls): api.post<IPage>(\"/pages/info\", data) on the app's axios instance, axios.create({ baseURL: \"/api\" }) in apps/client/src/lib/api-client.ts, imported as a default from \"@/lib/api-client\" (prefix-in-client-wrapper). 14 of them go to controllers outside the route scope (export, import, watchers, attachments, the EE comments/resolve).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Nest + React. Routes, scope: the page, space and comment controllers (34 routes): @Controller('pages') with RPC-style @Post('info'), @Post('/history'), @Post('/') under apps/server/src/main.ts's app.setGlobalPrefix('api', { exclude: ['robots.txt', 'share/:shareId/p/:pageSlug', 'mcp', '.well-known/..', 'docs', ..] }) — none of the three controllers is excluded, so every route is /api/<controller>/<path>. Calls, scope: the client services of the same areas (41 calls): api.post<IPage>(\"/pages/info\", data) on the app's axios instance, axios.create({ baseURL: \"/api\" }) in apps/client/src/lib/api-client.ts, imported as a default from \"@/lib/api-client\" (prefix-in-client-wrapper). 14 of them go to controllers outside the route scope (export, import, watchers, attachments, the EE comments/resolve). Moved to the corpus by F1.14 (2026-10-18), which reads a client's base in another file (axios.create({ baseURL }) imported by its alias) and takes a known client's calls as requests whatever their last argument (api.post(\"/comments\", data) looked like a route with a handler). Added from the code (H2-D15): POST /api/spaces/watched-ids, api.post<IPagination<string>>(\"/spaces/watched-ids\") in space-watcher-service.ts — the first reading missed it. The checked calls sample was refreshed: the 20 calls take the /api base, all right.",
  "checked": {
   "endpoints": [
    {
@@ -526,162 +530,162 @@
    {
     "evidence": "docmost:apps/client/src/ee/ai-chat/services/ai-chat-service.ts:26",
     "method": "POST",
-    "path": "/ai/chats/info",
+    "path": "/api/ai/chats/info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/ai-chat/services/ai-chat-service.ts:42",
     "method": "POST",
-    "path": "/ai/chats/search",
+    "path": "/api/ai/chats/search",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/audit/services/audit-service.ts:8",
     "method": "POST",
-    "path": "/audit",
+    "path": "/api/audit",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/base/queries/page-expand-loader.ts:39",
     "method": "POST",
-    "path": "/bases/pages/expand",
+    "path": "/api/bases/pages/expand",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/base/services/base-service.ts:39",
     "method": "POST",
-    "path": "/bases/info",
+    "path": "/api/bases/info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/cloud/service/cloud-service.ts:10",
     "method": "POST",
-    "path": "/workspace/find-by-email",
+    "path": "/api/workspace/find-by-email",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/mfa/services/mfa-service.ts:14",
     "method": "POST",
-    "path": "/mfa/status",
+    "path": "/api/mfa/status",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/page-verification/services/page-verification-service.ts:34",
     "method": "POST",
-    "path": "/pages/delete-verification",
+    "path": "/api/pages/delete-verification",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/page-verification/services/page-verification-service.ts:38",
     "method": "POST",
-    "path": "/pages/verify",
+    "path": "/api/pages/verify",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/template/services/template-service.ts:18",
     "method": "POST",
-    "path": "/templates/info",
+    "path": "/api/templates/info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/ee/template/services/template-service.ts:37",
     "method": "POST",
-    "path": "/templates/delete",
+    "path": "/api/templates/delete",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/favorite/services/favorite-service.ts:25",
     "method": "POST",
-    "path": "/favorites/ids",
+    "path": "/api/favorites/ids",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/page/services/page-service.ts:208",
     "method": "POST",
-    "path": "/files/upload",
+    "path": "/api/files/upload",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/page/services/watcher-service.ts:14",
     "method": "POST",
-    "path": "/pages/watch-status",
+    "path": "/api/pages/watch-status",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/public-space/services/public-space-service.ts:16",
     "method": "POST",
-    "path": "/public-spaces",
+    "path": "/api/public-spaces",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/public-space/services/public-space-service.ts:46",
     "method": "POST",
-    "path": "/public-spaces/page-info",
+    "path": "/api/public-spaces/page-info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/search/services/search-service.ts:27",
     "method": "POST",
-    "path": "/search/share-search",
+    "path": "/api/search/share-search",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/search/services/search-service.ts:34",
     "method": "POST",
-    "path": "/search/public-space-search",
+    "path": "/api/search/public-space-search",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/session/services/session-service.ts:16",
     "method": "POST",
-    "path": "/sessions/revoke-all",
+    "path": "/api/sessions/revoke-all",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "docmost:apps/client/src/features/space/services/space-service.ts:21",
     "method": "POST",
-    "path": "/spaces/info",
+    "path": "/api/spaces/info",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    }
   ]
  },

@@ -28,3 +28,25 @@ def test_js_specifiers_and_package_aliases_resolve_to_ts_files(tmp_path):
     assert ("../enum.js", "server/src/enum.ts") in got
     assert ("src/constants.js", "server/src/constants.ts") in got
     assert ("@nestjs/common", "Package") in got
+
+
+def test_sveltekit_lib_alias_resolves_to_src_lib(tmp_path):
+    """`import { WEBUI_API_BASE_URL } from '$lib/constants'` (open-webui): SvelteKit's `$lib` is src/lib unless
+    svelte.config.js moves it (`kit.files.lib`); `$lib` alone is src/lib's index."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    root = tmp_path / "webui"
+    lib = root / "src" / "lib"
+    (lib / "apis").mkdir(parents=True)
+    (root / "package.json").write_text('{"name": "webui"}')
+    (lib / "constants.ts").write_text("export const WEBUI_API_BASE_URL = '/api/v1';\n")
+    (lib / "index.ts").write_text("export const name = 'webui';\n")
+    (lib / "apis" / "auths.ts").write_text(
+        "import { WEBUI_API_BASE_URL } from '$lib/constants';\nimport { name } from '$lib';\n")
+    repo = RepoInfo(tenant="t", name="webui", ref="main", commit_sha="x", root=str(root))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    files = {f.id: f.path for f in res.files}
+    got = {(e.spec, files.get(e.target_id, e.target_label)) for e in rv.imports}
+    assert ("$lib/constants", "src/lib/constants.ts") in got
+    assert ("$lib", "src/lib/index.ts") in got

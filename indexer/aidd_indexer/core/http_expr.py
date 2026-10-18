@@ -76,8 +76,22 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
     also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
     src = fx.src
     go, py = fx.file.language == "go", fx.file.language == "python"
+    ts = fx.file.language in ("typescript", "tsx", "javascript")
+    ts_nodes = TS_CLIENT_NODES if b".interceptors." in src else TS_CLIENT_NODES - {"call_expression"}
     for n in walk(fx.tree.root_node):
         name = val = None
+        t = n.type if ts else ""
+        if t in ts_nodes:                                           # a client with a base (`client_bases`)
+            if t == "variable_declarator":
+                _ts_client(n, src, ctx, fx.file.path)
+            elif t == "call_expression":
+                _ts_interceptor(n, src, ctx, fx.file.path)
+            elif t == "export_statement":
+                v = n.child_by_field_name("value")
+                if v is not None and v.type == "identifier" and any(c.type == "default" for c in n.children):
+                    ctx.client_bases.setdefault((fx.file.path, "default"), ("alias", text(v, src)))
+            else:
+                _ts_client_class(n, src, ctx)
         if go and n.type in ("function_declaration", "method_declaration"):
             _passthrough(n, src, ctx)
             continue
@@ -108,6 +122,7 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
             owner = owner_class(n, src)
             names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
             parts = _concat_parts(val, src) if val.type in CONCAT_NODES else \
+                _template_parts(val, src) if val.type == "template_string" and has_interpolation(val) else \
                 [("ref", text(val, src))] if n.type == "const_spec" and val.type == "identifier" else None   # Go `A = B`
             if parts:
                 for nm in names:
@@ -258,6 +273,129 @@ def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
     elif lit is not None and _SEGMENT.match(lit):
         ctx.define(name, segment=lit)
 
+
+
+
+CLIENT_BASE_KEYS = frozenset({"baseURL", "baseUrl", "prefixUrl"})   # axios, ofetch / a class's field, ky and got
+TS_CLIENT_NODES = frozenset({"variable_declarator", "call_expression", "export_statement", "class_declaration", "class"})
+CLIENT_FACTORIES = frozenset({"create", "extend"})                   # axios.create({..}), ky.extend({..})
+
+
+def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
+    """A module's client with a base (`PackageContext.client_bases`): `const api = axios.create({ baseURL: "/api" })`
+    (docmost), `ky.extend({ prefixUrl })`; `export const client = new ApiClient({ baseUrl: .. })`, whose class says
+    which option gives its base (`_ts_client_class`)."""
+    name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
+    while val is not None and val.type in ("await_expression", "as_expression", "parenthesized_expression",
+                                           "non_null_expression", "satisfies_expression") and val.named_child_count:
+        val = val.named_children[0]
+    if name is None or val is None or name.type != "identifier" or val.type not in ("call_expression", "new_expression") \
+            or in_function(n):
+        return
+    args = val.child_by_field_name("arguments")
+    obj = next((a for a in args.named_children if a.type == "object"), None) if args is not None else None
+    given = {k: parts for k, v in _object_pairs(obj, src) if k in CLIENT_BASE_KEYS and (parts := _base_parts(v, src))}
+    if val.type == "new_expression":
+        ctor = val.child_by_field_name("constructor")
+        if ctor is not None and ctor.type == "identifier":
+            ctx.client_bases[(path, text(name, src))] = ("new", text(ctor, src), given)
+        return
+    fn = val.child_by_field_name("function")
+    prop = fn.child_by_field_name("property") if fn is not None and fn.type == "member_expression" else None
+    if prop is not None and text(prop, src) in CLIENT_FACTORIES and given:
+        ctx.client_bases[(path, text(name, src))] = ("parts", next(iter(given.values())))
+
+
+
+def _ts_interceptor(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
+    """`api.interceptors.request.use(config => { config.url = `${org}${config.url}` })` (dispatch): the request's url
+    or base is rewritten at runtime, so the client's base is not all that goes before a path — none is applied."""
+    fn, args = n.child_by_field_name("function"), n.child_by_field_name("arguments")
+    m = re.fullmatch(r"([A-Za-z_$][\w$]*)\.interceptors\.request\.use", text(fn, src)) if fn is not None else None
+    if m is None or args is None or in_function(n):
+        return
+    for a in walk(args):
+        left = a.child_by_field_name("left") if a.type in ("assignment_expression", "augmented_assignment_expression") else None
+        if left is not None and re.search(r"\.(url|baseURL)$", text(left, src)):
+            ctx.client_rewritten.add((path, m.group(1)))
+            return
+
+def _ts_client_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
+    """A class whose base is a field: `baseUrl = "/api"`, or the constructor's `this.baseUrl = options.baseUrl ||
+    "/api"` (outline's ApiClient) — the option that gives it (`baseUrl`) and its default."""
+    cname, body = n.child_by_field_name("name"), n.child_by_field_name("body")
+    if cname is None or body is None:
+        return
+    found: tuple[str | None, list] | None = None
+    for m in body.named_children:
+        key = m.child_by_field_name("name") or m.child_by_field_name("property")
+        if m.type in ("public_field_definition", "field_definition") and key is not None \
+                and text(key, src) in CLIENT_BASE_KEYS and (parts := _base_parts(m.child_by_field_name("value"), src)):
+            found = (None, parts)
+        if m.type == "method_definition" and key is not None and text(key, src) == "constructor":
+            for a in walk(m):
+                left, right = a.child_by_field_name("left"), a.child_by_field_name("right")
+                if a.type != "assignment_expression" or left is None or right is None \
+                        or not re.fullmatch(r"this\.(baseURL|baseUrl|prefixUrl)", text(left, src)):
+                    continue
+                option = None
+                if right.type == "binary_expression" and text(right.child_by_field_name("operator"), src) in ("||", "??"):
+                    given = right.child_by_field_name("left")
+                    option = text(given.child_by_field_name("property"), src) \
+                        if given is not None and given.type == "member_expression" else None
+                    right = right.child_by_field_name("right")
+                parts = _base_parts(right, src)
+                if parts:
+                    found = (option, parts)
+    if found is not None:
+        nm = text(cname, src)
+        ctx.client_classes[nm] = found if ctx.client_classes.get(nm, found) == found else None
+
+
+def _object_pairs(obj: Node | None, src: bytes) -> list[tuple[str, Node]]:
+    """(key, value) of an object literal's own pairs."""
+    out = []
+    for d in obj.named_children if obj is not None else ():
+        key, value = d.child_by_field_name("key"), d.child_by_field_name("value")
+        if d.type == "pair" and key is not None and value is not None:
+            out.append((unquote(text(key, src)), value))
+    return out
+
+
+def _base_parts(v: Node | None, src: bytes) -> list[tuple[str, str | None]] | None:
+    """A base as `PackageContext._joined` reads it: a literal, a constant, `A + "/x"`, `` `${A}/x` ``."""
+    if v is None:
+        return None
+    if v.type in STRING_NODES and not has_interpolation(v):
+        lit = first_string(v, src)
+        return [("lit", lit)] if lit else None
+    if v.type == "template_string":
+        return _template_parts(v, src)
+    if v.type in CONCAT_NODES:
+        return _concat_parts(v, src)
+    return [("ref", text(v, src))] if v.type in ("identifier", "member_expression") else None
+
+
+def _query_choice(e: Node, src: bytes) -> bool:
+    """A conditional between nothing and a query string (open-webui `${query ? `?${query}` : ''}`)."""
+    branches = [e.child_by_field_name(f) for f in ("consequence", "alternative")]
+    if any(b is None or b.type not in STRING_NODES for b in branches):
+        return False
+    texts = sorted(unquote(text(b, src)) for b in branches)
+    return texts[0] == "" and texts[1][:1] in ("?", "&")
+
+def _template_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
+    """A JS template built from constants — open-webui's `` `${WEBUI_BASE_URL}/api/v1` `` — as `A + "/x"` is:
+    [("ref", "WEBUI_BASE_URL"), ("lit", "/api/v1")]. A substitution that is not a name is a parameter
+    (`("ref", "")`); None without a literal part."""
+    parts: list[tuple[str, str | None]] = []
+    for c in n.named_children:
+        if c.type == "template_substitution":
+            e = c.named_children[0] if c.named_child_count == 1 else None
+            parts.append(("ref", text(e, src) if e is not None and e.type in ("identifier", "member_expression") else ""))
+        else:
+            parts.append(("lit", text(c, src)))
+    return parts if any(k == "lit" for k, _ in parts) else None
 
 def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
     """`A + "/x" + B.C` → [("ref", "A"), ("lit", "/x"), ("ref", "C")]; None unless a `+` with a literal in it."""
@@ -622,6 +760,8 @@ class PathExpressions:
         - a word (a local or a constant: `resource = "cases"`) standing for one whole segment (`/${resource}/${id}`);
         - a call that is a path (`CombineUri(base, "api/orders")`), as whole segments; C# `nameof(X)`: the text `X`."""
         starts, ends = whole
+        if e.type in ("ternary_expression", "conditional_expression") and ends and _query_choice(e, self.src):
+            return ""                                # `${query ? `?${query}` : ''}`: the query string, not the path
         if e.type == "identifier":
             bound, val = self.scopes.binding(e)
             if bound:
@@ -649,7 +789,8 @@ class PathExpressions:
 
     def _constant(self, n: Node) -> tuple[str, bool] | None:
         """(value, holds a path) of the module or class constant an identifier names — this class's own first, then the
-        directory's; a name the directory defines twice is this file's."""
+        directory's, then the import's (open-webui's `${WEBUI_API_BASE_URL}`, from `$lib/constants`); a name the
+        directory defines twice is this file's."""
         name = text(n, self.src)
         if name.split(".")[0] in ("this", "self"):                 # `this.base`: this class's own
             name = name.split(".")[-1]
@@ -658,6 +799,12 @@ class PathExpressions:
             if (v := self.ctx.route_const(key)) is not None:
                 return v, True
             if (w := self.ctx.segment_const(key)) is not None:
+                return w, False
+        foreign = getattr(self, "foreign_const", None)
+        if foreign is not None:
+            if (v := foreign(name)) is not None:
+                return v, True
+            if (w := foreign(name, segment=True)) is not None:
                 return w, False
         if "." not in name and name in self.ctx.ambiguous:
             val = self.scopes.assigned_before(self.scopes.root, END, name)

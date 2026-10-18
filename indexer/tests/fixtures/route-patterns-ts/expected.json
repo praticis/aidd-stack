@@ -234,6 +234,51 @@
    "method": "GET",
    "path": "/api/{param}/config",
    "handler": "adminConfig"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.info",
+   "handler": "documentsInfo"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "handler": "documentsList"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users.me",
+   "handler": "usersMe"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/redirect",
+   "handler": "authRedirect"
+  },
+  {
+   "method": "ANY",
+   "path": "/auth/{rest}",
+   "handler": "authNotFound"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/shares",
+   "handler": "searchShares"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/{pk}",
+   "handler": "readShare"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/info/{pk}",
+   "handler": "shareInfo"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/shares/{kind}",
+   "handler": "searchByKind"
   }
  ],
  "calls": [
@@ -361,6 +406,46 @@
    "method": "GET",
    "path": "/api/v1/users",
    "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/info",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/documents.info",
+   "line": 5
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/duplicate",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/all",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/cases",
+   "line": 5
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/create",
+   "line": 14
   }
  ]
 }

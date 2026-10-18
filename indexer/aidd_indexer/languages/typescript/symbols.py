@@ -80,10 +80,10 @@ class TypeScriptSupport(LanguageSupport):
         if spec.startswith("."):
             t = _try_paths(ctx, PurePosixPath(posixpath.normpath(str(here / spec))))
             return (t.id, "File") if t else None
-        if spec.startswith(("@/", "~/", "src/", "#")):
-            tail = re.sub(r"^(@/|~/|#)", "", spec)          # path alias — a few conventional roots, in the file's
-            mod = ctx.module_by_id.get(file.module_id)       # package first (its tsconfig's `paths`), then the repo's
-            pkg = mod.path if mod is not None and mod.path not in ("", ".") else ""
+        if spec.startswith(("@/", "~/", "src/", "#", "$lib/")) or spec == "$lib":   # `$lib`: SvelteKit's, src/lib
+            tail = re.sub(r"^\$lib\b", "lib", re.sub(r"^(@/|~/|#)", "", spec))   # path alias — conventional roots,
+            mod = ctx.module_by_id.get(file.module_id)       # in the file's package first (its tsconfig's `paths`),
+            pkg = mod.path if mod is not None and mod.path not in ("", ".") else ""   # then the repo's
             for base in dict.fromkeys((pkg, "")):
                 for root in ("src", "", "app", "lib"):
                     t = _try_paths(ctx, PurePosixPath(*[p for p in (base, root, tail) if p]))

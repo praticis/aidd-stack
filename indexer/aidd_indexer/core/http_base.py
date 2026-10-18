@@ -131,6 +131,13 @@ class PackageContext:
         # Python class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class
         # of the project (`class UserAPIRouter(APIRouter)`); None when two files of the directory define it differently
         self.classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = {}
+        # TS/JS (file, name) → a client that puts a base before its paths: ("parts", the base) for
+        # `axios.create({ baseURL })`, ("new", class, {option: parts}) for `new ApiClient(..)`, ("alias", name) for
+        # `export default api`; and a class whose base is a field (`this.baseUrl = options.baseUrl || "/api"`) →
+        # (the option that gives it, the default), None when two of the directory differ
+        self.client_bases: dict[tuple[str, str], tuple] = {}
+        self.client_classes: dict[str, tuple[str | None, list] | None] = {}
+        self.client_rewritten: set[tuple[str, str]] = set()   # (file, client) a request interceptor rewrites the url of
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
@@ -171,15 +178,42 @@ class PackageContext:
         parts = self.const_parts.get(name)
         if parts is None or name in _seen or len(_seen) > 4:
             return None
+        raw = self._joined(parts, _seen + (name,))
+        if raw is not None:
+            self.route_consts[name] = raw
+        return raw
+
+    def _joined(self, parts: list[tuple[str, str | None]], _seen: tuple[str, ...] = ()) -> str | None:
+        """`A + "/x"` as parts, each constant by `route_const`; one the directory does not hold is a parameter, and a
+        parameter at the start is a base (`{param}/api/v1` is `/api/v1`). None unless a path or a URL."""
         raw = ""
         for kind, v in parts:
-            r = v if kind == "lit" else (self.route_const(v, _seen + (name,)) if kind == "ref" and v else None)
+            r = v if kind == "lit" else (self.route_const(v, _seen) if kind == "ref" and v else None)
             raw += r if r is not None else "{param}"
         raw = re.sub(r"^\{param\}(?=/)", "", raw)
         if len(raw) < 2 or not (PATH_LITERAL.match(mask_placeholders(raw)) or REL_PATH_LITERAL.match(raw) or is_url_literal(raw)):
             return None
-        self.route_consts[name] = raw
         return raw
+
+    def client_base(self, path: str, name: str, _depth: int = 0) -> str | None:
+        """The base path the client `name` of the file `path` puts before its requests' paths (`client_bases`):
+        docmost's `axios.create({ baseURL: "/api" })`, outline's `new ApiClient()` with `this.baseUrl =
+        options.baseUrl || "/api"`. Only a path: a base URL's host is the linker's (`target_hint`)."""
+        v = self.client_bases.get((path, name))
+        if v is None or _depth > 3 or (path, name) in self.client_rewritten:
+            return None
+        if v[0] == "alias":
+            return self.client_base(path, v[1], _depth + 1)
+        if v[0] == "new":
+            cls = self.client_classes.get(v[1])
+            if cls is None:
+                return None
+            option, default = cls
+            parts = (v[2].get(option) if option else None) or default
+        else:
+            parts = v[1]
+        raw = self._joined(parts) if parts else None
+        return raw if raw is not None and raw.startswith("/") else None
 
 
 def dir_of(file_path: str) -> str:

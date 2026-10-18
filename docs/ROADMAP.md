@@ -83,7 +83,8 @@
 - 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
 - 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
 - 2026-10-18: **F1.14 incremento 4: o Python do hold-out.** Classe do projeto cujas bases chegam ao router do framework constrói um router (`class UserAPIRouter(APIRouter)` do mealie, de outro arquivo), com o prefixo pelo que o `__init__` entrega ao `super().__init__` — literal, ou o argumento da chamada para o parâmetro. mealie de 64,1 % / 59,4 % a 100 % / 100 % e vira corpus (51); o CTFd ganha `GET /` (a aplicação é `CTFdFlask`, subclasse de `Flask`); os outros 49, idênticos.
-- Próximo passo: PR da `feature/phase1-dispatch`; então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`). re-rodar a Q4 .NET com o despacho; então SCIP (F1.1/F1.2). Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
+- 2026-10-18: **F1.14 incremento 5: o TS/JS do hold-out — o item 6 fecha.** Rotas Koa sem barra montadas por `router.use("/", x.routes())` e `koa-mount`, o `SEARCH` do Express, a regex depois de um parâmetro e o curinga opcional do path-to-regexp 8; nas chamadas, a base do cliente de módulo (`axios.create({ baseURL })`, a classe com campo `baseUrl`), também por import e alias (`@/`, `$lib`), salvo com interceptor que reescreve a `url`, e constantes em template. outline, directus, docmost e open-webui viram corpus (55); o dispatch ganha 3 chamadas; os outros 50, idênticos. Do item 6 sobram limitações e o connect-go (F2.1). Próximo: PR da `feature/h2-corpus`; depois, numa branch nova, os itens 1–5 e 7 e um hold-out novo para fechar o F1.14; então o SCIP (F1.1/F1.2).
+- Próximo passo (2026-10-18): PR da `feature/h2-corpus` (H2b e o item 6 do F1.14); depois, numa branch nova, fechar o F1.14 (itens 1–5 e 7 e um hold-out novo, H2-D20); então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`); re-rodar a Q4 .NET com o despacho. Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
 
@@ -306,9 +307,10 @@ Em aberto:
        o verbo em constante (memos, 92)~~ *feitos 2026-10-18 (incremento 3)* — os handlers connect-go ficam com o F2.1
        (proto como fonte);
      - Python: ~~subclasses de `APIRouter` (mealie, 28)~~ *feito 2026-10-18 (incremento 4)*;
-     - TS/JS: Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do cliente
-       (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit) ou de um
-       campo (`this.baseUrl = environment.apiUrl`) — 158 chamadas em 4 repos.
+     - TS/JS: ~~Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do
+       cliente (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit)
+       ou de um campo (`this.baseUrl = environment.apiUrl`) — 158 chamadas em 4 repos~~ *feitos 2026-10-18
+       (incremento 5)*.
      Ao trabalhar sobre eles, esses repos viram corpus: o fechamento do F1.14 precisa de um hold-out novo.
      **Incremento 1 (2026-10-17)** — vikunja, Umbraco, Radarr e Smartstore passaram ao corpus (46 repos):
      - precisão: o prefixo de grupo é do par (escopo, nome), não do nome no arquivo (vikunja: 176 rotas
@@ -359,6 +361,20 @@ Em aberto:
        (20/20); o CTFd ganha `GET /`, raiz do blueprint montado em `CTFdFlask(__name__)`, subclasse de `Flask`;
      - Python no corpus: P 99,1 %, R 24,2 % (o Django do zulip e do netbox ainda sem scanner); 49 dos 50 repos de
        antes idênticos;
+     **Incremento 5 (2026-10-18)** — o TS/JS do hold-out; outline, directus, docmost e open-webui passaram ao corpus
+     (55 repos; o hold-out fica com 3):
+     - rotas: path sem barra do Koa (`@koa/router`, `koa-router`) como a raiz de um sub-router, que a montagem prefixa;
+       `x.routes()` é o router; `use(mount("/api", api))` do `koa-mount` é montagem; `router.search(..)` é `SEARCH` e
+       nunca wrapper de montagem; a regex depois de um parâmetro (`/:pk(${UUID_REGEX})`) e o curinga opcional
+       `{/*path}`. outline: de 0 % a 100 % / 100 %; directus: R de 87,3 % a 99,0 %;
+     - chamadas: o cliente de módulo com base — `axios.create({ baseURL })` e afins, ou `new C()` de classe cuja base é
+       campo (`this.baseUrl = options.baseUrl || "/api"`) — põe a base nas chamadas no arquivo e por import, salvo
+       quando um interceptor reescreve a `url` (dispatch: a organização entra entre a base e o path); cliente conhecido
+       nunca é router; template de constantes é constante; `${X}` importado; `$lib`; ternário de query. outline,
+       docmost e open-webui de 0 % a 95–100 % de precisão e 100 % de recall; o dispatch ganha 3 chamadas (100 %);
+     - ficam: as chamadas da própria classe cliente em `this` (`this.post("/batch")`), a query numa variável colada ao
+       path (`query-in-variable`) e o helper que recebe path e método (item 4);
+     - TS/JS no corpus: rotas P 96,5 %, R 89,0 %; chamadas P 96,6 %, R 95,3 %; 50 dos 51 repos de antes idênticos;
   7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
      cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
      fixos do `built_bundle`.

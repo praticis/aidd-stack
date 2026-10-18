@@ -38,6 +38,8 @@ def unquote(s: str) -> str:
     return s
 
 
+# Express 4's regex after a parameter (`/:pk(\d+)`, `/:pk(${UUID_REGEX})`); not ASP.NET's `{name:minlength(1)}`
+EXPRESS_CONSTRAINT = re.compile(r"(?<!\w):([A-Za-z_][A-Za-z0-9_]*)\((?:[^()]|\([^()]*\))*\)")
 PLACEHOLDER = re.compile(r"\{(?:[^{}]|\{[^{}]*\})*\}|<[^<>]*>")        # a regex constraint may hold braces: {id:[0-9]{4}}
 _ALTERNATIVES = re.compile(r"(?:(?<=/)|^)\{[A-Za-z_]\w*\s*:\s*\(?((?:[\w.-]+\|)+[\w.-]+|[\w.-]+(?=\(\?:\\*/\)\?))\)?"
                            r"(?:\(\?:\\*/\)\?)?\}(?=/|$)")        # a whole segment: `{sha}.{diffType:diff|patch}` stays a parameter
@@ -57,7 +59,8 @@ def mask_placeholders(pattern: str) -> str:
     """Every placeholder → `{p}`, so that what a route placeholder may hold — constraints and converters
     (`{id:int?}`, `{name:minlength(1)}`, `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`) and optional
     markers (`:id?`) — does not make the literal check reject the whole pattern."""
-    return re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", PLACEHOLDER.sub("{p}", pattern))
+    masked = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", PLACEHOLDER.sub("{p}", pattern))
+    return EXPRESS_CONSTRAINT.sub(r":\1", masked)
 
 
 def path_key(path: str) -> str:
@@ -72,7 +75,9 @@ def normalize_path(path: str) -> str:
     if m:
         p = m.group(1) or "/"
     p = re.sub(r"\{([./]?):([A-Za-z_][A-Za-z0-9_]*)\}", r"\1{\2}", p)   # Express 5 optional group {:q}, {.:ext}, {/:id} → its parameter
+    p = re.sub(r"\{/\*([A-Za-z_][A-Za-z0-9_]*)\}", r"/*\1", p)       # its optional wildcard {/*path} (Express 5, @koa/router)
     p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\{(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # Hono :id{[0-9]+}, before the ?
+    p = EXPRESS_CONSTRAINT.sub(r"{\1}", p)                         # Express :pk(\d+), a regex in parentheses
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # {id:int}, {id:[0-9]{4}} → {id}: before
     #                                                             the query split — a regex constraint may hold `?`
     p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split
