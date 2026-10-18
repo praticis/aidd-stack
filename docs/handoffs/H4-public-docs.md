@@ -5,9 +5,10 @@
 > `indexer/README.md` atuais, os ADRs 002 e 003, `docs/knowledge-contract.md`, `neo4j/SCHEMA.md`, o
 > `docker-compose.yml` (serviços), o `setup/install.sh` (etapas) e as skills em `setup/skills/`.
 >
-> **Estado (2026-10-16):** registrado, não iniciado. Os assets visuais (marca, banner, diagrama de destaque, prévia
-> social) são feitos em outro processo; este handoff define onde eles entram e o que os docs pedem a eles. A separação
-> do indexador espera o H2b sair da `feature/h2-corpus` (ver "Ordem").
+> **Estado (2026-10-18):** registrado, não iniciado. Os assets visuais (marca, banner, diagrama de destaque, prévia
+> social) são feitos em outro processo; este handoff define onde eles entram e o que os docs pedem a eles. O H2b
+> saiu da `feature/h2-corpus` (PR #4, 2026-10-18), e a separação do indexador espera o H5 (ver "Ordem"). Em
+> 2026-10-18 o autor acrescentou o **passo 0**: reciclar os docs de trabalho antes de escrever os públicos.
 
 ## Contexto em um parágrafo
 
@@ -201,9 +202,9 @@ ser reutilizado (decisão do autor; o código continua MIT).
 
 ## Auditoria antes de publicar
 
-- **Nomes reais** (a regra de sempre, agora com mais gente lendo). Achados na leitura para este handoff, a conferir com
-  o autor: `entry-manager-transaction` no log de 2026-10-12 do ROADMAP e `TERCEL_URL` no `H2-public-corpus.md`. Varrer
-  também o histórico que vai para o repo novo (H4-D9).
+- **Nomes reais** (a regra de sempre, agora com mais gente lendo). Os dois achados na leitura para este handoff (um nome de
+  serviço no log de 2026-10-12 do ROADMAP e uma variável de ambiente no `H2-public-corpus.md`) foram trocados em
+  2026-10-18. Varrer também o histórico que vai para o repo novo (H4-D9).
 - **Segredos** no histórico inteiro dos dois repos (gitleaks ou trufflehog), antes do primeiro push do repo novo.
 - **Números:** todo número dos docs públicos vem de uma fonte reproduzível (relatório do corpus, perguntas douradas),
   com data. Nada de ganho de produtividade ou de tokens até o H3 medir.
@@ -212,22 +213,77 @@ ser reutilizado (decisão do autor; o código continua MIT).
 
 ## Ordem
 
-0. **Decisões** H4-D1…D12 e o que obter do autor (seção acima).
-1. **Arquitetura dos docs em esboço** — títulos e a pergunta que cada página responde, sem o texto. Pode correr já, em
-   paralelo ao H2b, porque não depende de caminhos.
-2. **Separação do indexador**, depois do merge da `feature/h2-corpus` (um `filter-repo` com o H2b no meio obriga a
-   reaplicar o trabalho dele). Mecânica e sem mudar comportamento, como o ADR-003; regressão = `pytest`, o corpus byte a
-   byte igual à baseline vigente e uma **instalação limpa** do aidd-stack com a imagem publicada passando no
-   `install-check`. CI do repo novo: testes, build multi-arquitetura, publicação no GHCR por tag. **Pronto quando** os
-   dois repos se instalam e testam sozinhos e um aponta para o outro.
-3. **Conteúdo em inglês** dos dois repos, aproveitando o que existe: `knowledge-contract.md` → `vault-contract`,
-   `SCHEMA.md` → referência, `corpus-report.md` → explicação, `indexer/README.md` dividido entre README e guias, as
-   skills → `methodology/stages`. **Pronto quando** alguém que nunca viu o projeto — uma pessoa, ou uma sessão nova de
-   agente lendo só os docs — instala e roda o primeiro `scan` sem ajuda.
-4. **Infra de idiomas:** glossário, guia de estilo, `i18n_check.py`, workflow do CI.
-5. **Traduções:** camada 1 em pt-BR (o autor revisa), depois es e zh-CN; camada 2 em pt-BR.
-6. **Assets** conforme forem entregues, arquivos de comunidade, configurações do repo e a primeira release dos dois.
-7. *(Opcional)* site, quando a navegação pedir (H4-D4).
+0. **Reciclar os docs de trabalho** (passo pedido pelo autor em 2026-10-18; detalhes na seção abaixo). Os docs de
+   trabalho viraram um registro de tudo: uns 600 KB, perto de 150 mil tokens, para não perder contexto. O passo deixa
+   neles só o que é e vai continuar importante, para que um colaborador que baixe o projeto consiga hidratar a própria
+   IA com o contexto: o que o projeto é, o que já foi feito, por que, onde estamos e para onde vamos. Os docs públicos
+   (passos 4 em diante) saem dessa base. Duas fases:
+   - **0a, logo depois do fechamento do F1.14** (o autor quis dar ponto final ao H2 antes; reciclar os docs do H2
+     com ele ainda mudando seria retrabalho): a porta de entrada, o histórico compactado, as decisões destiladas e o
+     README mínimo. Só mexe em docs;
+   - **0b, depois do H5:** o `indexer-evolution.md` reescrito para a arquitetura nova (é o passo 11 do H5). Antes
+     disso, reescrever a tabela de regras seria trabalho perdido: ela vira o catálogo de reconhecedores.
+1. **Decisões** H4-D1…D12 e o que obter do autor (seção acima).
+2. **Arquitetura dos docs em esboço** — títulos e a pergunta que cada página responde, sem o texto. Pode correr já,
+   porque não depende de caminhos.
+3. **Separação do indexador**, depois do H5, para levar o código já refatorado. Mecânica e sem mudar comportamento,
+   como o ADR-003; regressão = `pytest`, o corpus byte a byte igual à baseline vigente e uma **instalação limpa** do
+   aidd-stack com a imagem publicada passando no `install-check`. CI do repo novo: testes, build multi-arquitetura,
+   publicação no GHCR por tag. **Pronto quando** os dois repos se instalam e testam sozinhos e um aponta para o outro.
+4. **Conteúdo em inglês** dos dois repos, aproveitando o que existe depois do passo 0: `knowledge-contract.md` →
+   `vault-contract`, `SCHEMA.md` → referência, `corpus-report.md` → explicação, `indexer/README.md` dividido entre
+   README e guias, as skills → `methodology/stages`. **Pronto quando** alguém que nunca viu o projeto — uma pessoa,
+   ou uma sessão nova de agente lendo só os docs — instala e roda o primeiro `scan` sem ajuda.
+5. **Infra de idiomas:** glossário, guia de estilo, `i18n_check.py`, workflow do CI.
+6. **Traduções:** camada 1 em pt-BR (o autor revisa), depois es e zh-CN; camada 2 em pt-BR.
+7. **Assets** conforme forem entregues, arquivos de comunidade, configurações do repo e a primeira release dos dois.
+8. *(Opcional)* site, quando a navegação pedir (H4-D4).
+
+## Passo 0 — reciclar os docs de trabalho
+
+**A regra:** separar a verdade atual do histórico. O git guarda todas as versões, então nada se perde de fato. O que
+tem de sobreviver, destilado, são as decisões e os porquês. Os docs de trabalho seguem em português e **não mudam de
+caminho** (ver "Arquitetura dos docs"). Um handoff fechado vira um resumo curto no mesmo arquivo, e não é apagado.
+
+| Fica | Sai ou é condensado |
+|---|---|
+| estado atual, princípios, o que está aberto | a narrativa de cada incremento (o git e as baselines do corpus a guardam) |
+| decisões com o porquê, de 2 a 4 linhas cada | o log dos handoffs fechados (H1, H2-public-corpus, H2-roadmap), depois de destilar as decisões H2-D1…D20 |
+| como rodar, testar e medir | números repetidos entre docs: cada número vive num lugar, e os outros apontam para ele |
+| o método e o resultado atual do corpus, o ranking de lacunas | catálogos de casos dentro de prosa |
+| os handoffs ativos (H3, H4, H5) | o log diário do ROADMAP, que vira um marco por linha |
+
+**A estrutura:**
+
+- **`AGENTS.md`, na raiz:** a porta de entrada para um colaborador ou para a IA dele, em até ~200 linhas. O nome é o
+  que várias ferramentas de agente já procuram; um `CLAUDE.md` pode só importá-lo. Ele traz:
+  - o que o projeto é, em um parágrafo;
+  - o mapa do repo, a arquitetura em uma figura de texto e os princípios;
+  - como instalar, testar, rodar o corpus e medir;
+  - onde estamos e o foco atual;
+  - onde achar cada coisa.
+- **`docs/ROADMAP.md`:** "Onde estamos" em poucas linhas, os princípios, as fases e as trilhas com os itens abertos.
+  Um item feito vira uma linha com o link para onde está o resultado.
+- **`docs/history.md`:** os marcos do projeto, um por linha, com data e o commit ou PR. O log diário que hoje está no
+  ROADMAP é condensado aqui.
+- **`docs/decisions.md`:** as decisões que não viraram ADR (H2-D1…D20, H4-D*, H5-D*), cada uma com o contexto, a
+  escolha e o porquê. Os ADRs seguem como estão.
+- **`docs/corpus-report.md`:** o método, a tabela por linguagem da baseline vigente, o ranking de lacunas e uma tabela
+  curta de baselines (data, o que mudou, totais). A narrativa de cada incremento sai.
+- **`docs/golden-questions.md`:** as perguntas, o método e o resultado da última rodada; as rodadas antigas viram uma
+  linha cada.
+- **`README.md`:** mínimo até o passo 4: o que é, como instalar e um link para o `AGENTS.md` e o ROADMAP.
+
+**Pronto quando:**
+- os docs de trabalho somam no máximo ~150 KB;
+- uma sessão nova de agente, lendo só o `AGENTS.md` e o que ele indica, responde certo:
+  - o que o projeto faz;
+  - em que fase está;
+  - por que o extrator é tree-sitter e não LLM;
+  - como medir uma mudança no extrator;
+  - o que vem antes do SCIP;
+- nenhum link interno quebra;
+- nenhuma decisão em vigor se perde: cada uma tem uma linha em `decisions.md` ou num ADR.
 
 ## Armadilhas
 
@@ -251,10 +307,12 @@ ser reutilizado (decisão do autor; o código continua MIT).
 
 ## Entregáveis esperados
 
+- Do passo 0: o `AGENTS.md`, o `docs/history.md`, o `docs/decisions.md`, os docs de trabalho compactados (no
+  máximo ~150 KB), os handoffs fechados reduzidos a resumos, e o README mínimo.
 - Dois repositórios com a fronteira acima executada e o aidd-stack instalando a imagem publicada do indexador.
 - READMEs nos quatro idiomas nos dois repos; `docs/<locale>/` com a camada 1 em todos, a 2 em pt-BR e a 3 em inglês.
 - Glossário, guia de estilo, `i18n_check.py` e o workflow do CI.
 - `docs/assets/README.md` com os slots, e os assets entregues no lugar.
 - Arquivos de comunidade, configurações do repo conferidas e a primeira release com `CHANGELOG`.
 - O resultado da auditoria no PR: o que foi achado e o que se fez.
-- ROADMAP: D5 fechado, itens P1–P6 marcados e o ROADMAP do indexador nascido da divisão.
+- ROADMAP: D5 fechado, itens P0–P6 marcados e o ROADMAP do indexador nascido da divisão.

@@ -111,7 +111,7 @@ class HttpCallInfo:
     path: str                      # normalized template
     raw_path: str                  # as written / assembled ("/v1/users/%s")
     via: str                       # PostJSON | http.NewRequest | resty.Get | fetch | axios.post ...
-    target_hint: str               # package/dir hint: "tercel" from adapters/outbound/tercel
+    target_hint: str               # package/dir hint: "partner" from adapters/outbound/partner
     env_hints: list[str]           # env var names seen nearby that look like base URLs
     file_id: str
     line: int

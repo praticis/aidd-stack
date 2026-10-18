@@ -75,7 +75,7 @@ instrumento de medição de verdade: mais repos, mais frameworks, gabarito onde 
   gerados que hoje podem cair em `GENERATED_SUFFIXES`/excludes — decidir se entram como `HttpCall`
   com `via: generated-client`.
 - **Base URL por serviço**: `services.AddHttpClient<CatalogService>(c => c.BaseAddress = new Uri("http://catalog-api"))`
-  e `TERCEL_URL` em config — hoje só `env_hints`; o linker (F0.5) é quem usa. Não resolver no extrator
+  e `PARTNER_API_URL` em config — hoje só `env_hints`; o linker (F0.5) é quem usa. Não resolver no extrator
   além de registrar o dado.
 
 ## Restrições e convenções
