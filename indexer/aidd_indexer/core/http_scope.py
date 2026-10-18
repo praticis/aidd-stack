@@ -40,8 +40,10 @@ END = _End()
 
 
 class Scopes:
-    def __init__(self, root: Node, src: bytes) -> None:
-        self.root, self.src = root, src
+    def __init__(self, root: Node, src: bytes, declarations: frozenset[str] | None = None) -> None:
+        """`declarations`: the nodes that declare a name in a function, where a plain assignment does not (Go's `=`
+        assigns to the variable it finds, a package's when the function declares none); None: any assignment does."""
+        self.root, self.src, self.declarations = root, src, declarations
         self._binds: dict[tuple[int, str], bool] = {}
         self._index: dict[int, dict[str, list[tuple[int, int, bool, Node]]]] = {}
 
@@ -69,11 +71,29 @@ class Scopes:
         while scope is not None:
             key = (scope.id, name)
             if key not in self._binds:
-                self._binds[key] = self.is_parameter(scope, name) or self.assigned_before(scope, END, name) is not None
+                self._binds[key] = self.is_parameter(scope, name) or (
+                    self.assigned_before(scope, END, name) is not None if self.declarations is None
+                    else self._declares(scope, name))
             if self._binds[key]:
                 return scope.id
             scope = enclosing_function(scope)
         return 0
+
+    def _declares(self, scope: Node, name: str) -> bool:
+        """`scope` declares `name` with one of `declarations` (`x := ..`, `var x T`), outside other functions' bodies."""
+        stack = [scope]
+        while stack:
+            d = stack.pop()
+            if d is not scope and d.type in FUNCTION_SCOPES:
+                continue
+            stack.extend(d.children)
+            if d.type in self.declarations and not (d.type == "range_clause" and not any(c.type == ":=" for c in d.children)):
+                left = d.child_by_field_name("left") or d.child_by_field_name("name")
+                names = [c for c in left.children if c.type == "identifier"] if left is not None and left.type == "expression_list" \
+                    else [c for c in d.children if c.type == "identifier"] if left is None or d.type == "var_spec" else [left]
+                if any(text(c, self.src) == name for c in names):
+                    return True
+        return False
 
     def is_parameter(self, scope: Node, name: str) -> bool:
         for field_name in ("parameters", "parameter", "receiver"):

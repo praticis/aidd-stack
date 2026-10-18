@@ -51,8 +51,9 @@ def grpc_gateway_pattern(ops: list[int], pool: list[str], verb: str = "") -> str
             stack.append("**")
         elif op == 4 and 0 < arg <= len(stack):
             stack[-arg:] = ["/".join(stack[-arg:])]
-        elif op == 5 and stack and arg < len(pool):
-            stack[-1] = "{" + pool[arg] + "}"
+        elif op == 5 and stack and arg < len(pool):     # `{name=memos/*}` matches /memos/<x>: the literal stays
+            parts, var = stack[-1].split("/"), "{" + pool[arg] + "}"
+            stack[-1] = "/".join(var if p in ("*", "**") else p for p in parts) if {"*", "**"} & set(parts) else var
         elif op != 0:
             return None
     return ("/" + "/".join(stack) + (":" + verb if verb else "")) if stack else None
@@ -74,8 +75,12 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
     parameter elsewhere would take the value of this function's `url` (`Scopes` reads them). A class-level one is
     also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
     src = fx.src
+    go = fx.file.language == "go"
     for n in walk(fx.tree.root_node):
         name = val = None
+        if go and n.type in ("function_declaration", "method_declaration"):
+            _passthrough(n, src, ctx)
+            continue
         if n.type == "enum_assignment":                                            # TS: enum RouteKey { Asset = 'assets' }
             _enum_member(n, src, ctx)
             continue
@@ -92,6 +97,11 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
         if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
             while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
                 val = val.named_children[0]
+            if go and n.type == "var_spec" and val.type == "composite_literal":     # a list of verbs: gin's Match(..)
+                verbs = verb_list(val, src)
+                if verbs:
+                    ctx.verb_lists[text(name, src)] = verbs
+                    continue
             owner = owner_class(n, src)
             names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
             parts = _concat_parts(val, src) if val.type in CONCAT_NODES else \
@@ -114,6 +124,52 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
                 ctx.env_hints.add(lit)
+
+
+def verb_list(n: Node, src: bytes) -> tuple[str, ...] | None:
+    """`[]string{http.MethodPut, "POST"}`: the verbs, when every element is one."""
+    body = n.child_by_field_name("body")
+    elems = [e.named_children[0] if e.type in ("literal_element", "element") and e.named_child_count else e
+             for e in (body.named_children if body is not None else ())]
+    out = []
+    for e in elems:
+        m = _VERB_CONST.match(text(e, src))
+        v = (m.group(1) or m.group(2) or "").upper() if m else unquote(text(e, src)).upper() if e.type in STRING_NODES else ""
+        if v not in HTTP_METHODS:
+            return None
+        out.append(v)
+    return tuple(out) or None
+
+
+def _passthrough(fn: Node, src: bytes, ctx: "PackageContext") -> None:
+    """A Go function whose every `return` is one of its parameters, or something `+` it — photoprism's
+    `func (c *Config) BaseUri(res string) string { if c.SiteUrl() == "" { return res }; return c.BasePath() + res }`:
+    a call to it is worth that argument (`_path_of_call`), the code's default; what goes before it comes from
+    elsewhere, as a base URL does. Known by its name; two of one name with another parameter give nothing."""
+    name, params, body = (fn.child_by_field_name(f) for f in ("name", "parameters", "body"))
+    if name is None or params is None or body is None:
+        return
+    pnames = [text(c, src) for d in params.named_children for c in d.children if c.type == "identifier"]
+    index, stack, found = None, list(body.children), False
+    while stack:
+        d = stack.pop()
+        if d.type == "func_literal":
+            continue
+        stack.extend(d.children)
+        if d.type != "return_statement":
+            continue
+        exprs = [c for c in d.named_children]
+        e = exprs[0].named_children[0] if len(exprs) == 1 and exprs[0].type == "expression_list" \
+            and exprs[0].named_child_count == 1 else exprs[0] if len(exprs) == 1 else None
+        while e is not None and e.type == "binary_expression" and text(e.child_by_field_name("operator"), src) == "+":
+            e = e.child_by_field_name("right")
+        i = pnames.index(text(e, src)) if e is not None and e.type == "identifier" and text(e, src) in pnames else None
+        if i is None or index not in (None, i):
+            return
+        index, found = i, True
+    if found:
+        nm = text(name, src)
+        ctx.passthrough[nm] = index if ctx.passthrough.get(nm, index) == index else None
 
 
 def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
@@ -388,7 +444,29 @@ class PathExpressions:
             if len(segs) > 1 and is_url_literal(segs[0]):         # a URL first keeps its host: the rest joins its path
                 return segs[0].rstrip("/") + "/" + "/".join(s.strip("/") for s in segs[1:])
             return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
+        index = self._passthrough_index(fn) if fn is not None else None
+        if index is not None and index < len(arg_nodes):                # conf.BaseUri(config.ApiUri): the argument
+            return self.path_of(arg_nodes[index], lenient, _depth + 1)
         return None
+
+    def _passthrough_index(self, fn: Node) -> int | None:
+        """The parameter a Go function of the repo returns (`_passthrough`): `F` of this package, `pkg.F` of an
+        imported one, a method `x.M` by its name when the repo has one `M` of that kind."""
+        if fn.type == "identifier":
+            return self.ctx.passthrough.get(text(fn, self.src))
+        if fn.type != "selector_expression":
+            return None
+        operand, field = fn.child_by_field_name("operand"), text(fn.child_by_field_name("field"), self.src)
+        view = self.ctx.view
+        imports = getattr(self, "imports", {})
+        if operand is not None and operand.type == "identifier" and text(operand, self.src) in imports:
+            target = self.resolve_import(imports[text(operand, self.src)][0]) if view is not None else None
+            ctx = view.contexts.get(target) if target is not None else None
+            return ctx.passthrough.get(field) if ctx is not None else None
+        if view is None:
+            return None
+        found = {c.passthrough[field] for c in view.contexts.values() if field in c.passthrough}
+        return found.pop() if len(found) == 1 else None
 
     def _path_of_append(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """`url += "/" + id`: the earlier value plus the tail. With the base unknown (a URL from a call) the tail is

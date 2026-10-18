@@ -81,6 +81,7 @@
 - 2026-10-17: **F0.4.3b fechado (H2b): corpus de 42 repos e hold-out de 16.** O extrator passou pelos itens da Fase 4 na ordem do ranking do v2 e da prioridade do portfólio (H2-D18); do primeiro v2 ao último, nos mesmos gabaritos e 38 repos, o recall de rotas foi de 55,6 a 93,1 % no C#, de 9,4 a 98,0 % no Go, de 9,1 a 98,0 % no Python fora do Django e de 4,3 a 85,4 % no TS/JS. O **hold-out** — 16 repos no perfil do portfólio, com gabarito escrito antes de rodar e medidos uma vez (H2-D20) — mostrou sobreajuste onde o portfólio mais pesa: recall de rotas C# 48,5 % e Go 19,7 % (Python 83,8 %, TS/JS 74,1 %). As regras valem onde o app roteia como o corpus (Kavita, sftpgo, open-webui, docmost e btcpayserver saem inteiros; o SDK hey-api do Umbraco, 513 de 513) e caem em formas comuns que ele não tinha: atributo de rota próprio, convenções OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo; e dois defeitos de precisão (prefixo aplicado duas vezes num grupo Go passado a função). Tudo isso entrou no **F1.14**, precisão primeiro. Ferramenta: `http_corpus.py --holdout` e o `scope_paths` do gabarito (`corpus_metrics.py`). Relatório: `docs/corpus-report.md`
 - 2026-10-17: **F1.14 incremento 1: os dois defeitos de precisão do hold-out e o .NET que ele mostrou.** O prefixo de grupo passa a ser do par (escopo, nome), como o grafo de montagem: o parâmetro `a` de `registerAPIRoutes(a)` não herda o `a :=` de outra função (vikunja, 176 rotas); método Go não exportado não registra rota; o echo junta prefixo e path como escritos. No .NET, os atributos de rota do projeto viram receitas que o `compose` preenche (Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(x)]`), com Asp.Versioning, OData por convenção, herança em até quatro níveis (`[NonAction]`, sobrecargas) e `[Route]` sem verbo como ANY: Radarr e Smartstore a 100 %/100 %, Umbraco a 100 %/99,8 % com o token do próprio Umbraco lido (sem isso, 0 %: limitação). Os quatro repos viram corpus (46); os 42 anteriores, idênticos. Fronteira com o SCIP registrada (guia §8, ADR-002): o que falta é valor ou convenção, e o que pedir tipo inferido vira `needs-resolver` para o F1.2
 - 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
+- 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
 - Próximo passo: PR da `feature/phase1-dispatch`; então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`). re-rodar a Q4 .NET com o despacho; então SCIP (F1.1/F1.2). Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
@@ -300,8 +301,9 @@ Em aberto:
        (`/umbraco/login`)~~ *feitos 2026-10-18*; o prefixo que vem de opções ou de configuração — o coletor
        OpenTelemetry do Elsa (`IsNullOrWhiteSpace(o.Path) ? "/elsa/otlp/v1" : o.Path`), o `MapGroup(options.RoutePrefix)`
        do IconKit do Smartstore — fica como limitação (`prefix-as-param`);
-     - Go: router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com o
-       verbo em constante (memos, 92) — os handlers connect-go ficam com o F2.1 (proto como fonte);
+     - Go: ~~router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com
+       o verbo em constante (memos, 92)~~ *feitos 2026-10-18 (incremento 3)* — os handlers connect-go ficam com o F2.1
+       (proto como fonte);
      - Python: subclasses de `APIRouter` (mealie, 28);
      - TS/JS: Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do cliente
        (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit) ou de um
@@ -333,9 +335,33 @@ Em aberto:
        herdado da base; `[Route(CONST)]` da própria classe; a evidência de `MapGet` na linha do nome. btcpay: amostra
        de 19/20 a 20/20;
      - C# no corpus: R 99,3 % (1931/1944) a P 100 %; 43 dos 46 repos de antes idênticos;
+     **Incremento 3 (2026-10-18)** — o Go do hold-out; memos e photoprism passaram ao corpus (50 repos):
+     - grpc-gateway v2: o verbo como constante do net/http (`mux.Handle(http.MethodGet, ..)`) e a captura com literais
+       (`{name=memos/*}` é `/api/memos/{name}`). memos: de R 0 % a P 100 % / R 49,7 % — as 92 rotas do gateway; as 93
+       que faltam são as cópias Connect dos mesmos RPCs (F2.1);
+     - em Go, `=` não declara: o nome que a função só atribui é o do pacote. O grupo numa variável de pacote leva o
+       próprio prefixo na aresta que publica, e as rotas de outros arquivos atrás de cada parâmetro o recebem; a
+       função cujo `return` é o parâmetro (ou termina nele) vale o argumento — o que vem antes é do deploy, como o
+       `RoutePrefix` do Elsa; os verbos do `Match` vêm de variável de pacote, de `pkg.X` ou do literal. photoprism:
+       de 0 % / 0 % (amostra 0/20) a 97,5 % / 97,6 % (19/20); gotify: `ANY /health` e `ANY /mcp` com seus verbos;
+     - ficam: o segmento que o helper `SearchFolders` recebe por parâmetro (`segment-from-param`); `/docs`, só no build
+       de debug, registrado por variável de função (`registrar-in-func-var`); e o verbo customizado do gRPC depois de
+       um literal, impresso como parâmetro (`/api/ai{transcribe}`: casa nos dois lados, mas o path sai errado; quem
+       sabe que não há parâmetro com `:` é a origem — path de OpenAPI e pattern do gateway; dívida, item 7);
+     - Go no corpus: P 99,1 %, R 92,9 % (97,3 % sem os RPCs Connect); 47 dos 48 repos de antes idênticos;
   7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
      cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
      fixos do `built_bundle`.
+     Do incremento 3 (2026-10-18): **o verbo customizado do gRPC depois de um literal vira parâmetro.**
+     `normalize_path` (`core/paths.py`, a regra do `:id`) lê o `:transcribe` de `/api/ai:transcribe` como parâmetro
+     do Express e grava `/api/ai{transcribe}` (6 rotas do memos: `ai:transcribe`, `attachments:batchDelete`,
+     `settings:batchGet`, `notification:testEmail`, `linkMetadata:batchGet`, `users:batchGet`; o `{name}:accept`,
+     depois de `}`, já era poupado). Os dois lados normalizam igual, então o par casa, mas o path exibido é falso e
+     o parâmetro casa qualquer sufixo. A sintaxe não decide (Express e httprouter aceitam `/user_:name`); a origem
+     decide: path de OpenAPI e pattern do grpc-gateway nunca têm parâmetro com `:`. Caminho: `normalize_path` com a
+     leitura de `:x` desligável, desligada em `from_openapi` e no `grpc_gateway_pattern`; o gabarito do memos é
+     regerado e as 6 rotas voltam a `:verbo`. Conferir também o lado das chamadas (cliente REST que chama
+     `/x:verbo`).
 
   Pastas de app de teste com nome de produção (`integration/` do nest e do fastify, 20 rotas) ficam para a config por
   repo do F1.1. **Pronto quando** cada item tiver regra com fixture e corpus julgado, ou limitação registrada no guia

@@ -126,6 +126,8 @@ class PackageContext:
         self.relatives: dict[str, str] = {}         # name -> segments without a leading slash (`"security/back-office"`):
                                                     # only C#'s routing attributes read them (`_RouteAttributes`)
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
+        self.passthrough: dict[str, int | None] = {}   # Go function → the parameter every `return` ends with
+        self.verb_lists: dict[str, tuple[str, ...]] = {}   # Go `var MethodsPutPost = []string{http.MethodPut, ..}`
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
@@ -213,11 +215,15 @@ def split_callee(callee: str) -> tuple[str, str, str]:
 class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
     mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
+    scope_declarations: frozenset[str] | None = None   # what declares a name in a function (`Scopes`); None: any assignment
+    # a group other files can name (a package variable) keeps its own prefix on the edge it publishes, not in what is
+    # registered on it here: another file's routes on it take it too (Go's `APIv1 = router.Group("/api/v1")`, photoprism)
+    global_group_on_edge = False
 
     def __init__(self, repo: RepoInfo, fx, ctx: PackageContext, out: HttpResult):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
         self.src = fx.src
-        self.scopes = Scopes(fx.tree.root_node, self.src)
+        self.scopes = Scopes(fx.tree.root_node, self.src, self.scope_declarations)
         self._path_memo: dict[tuple[int, bool], str | None] = {}   # `path_of` per (node, lenient)
         self.mounts = MountGraph()
         self.symbols_by_name: dict[str, list[SymbolInfo]] = {}
@@ -273,7 +279,11 @@ class BaseScanner(PathExpressions):
                     base = self.prefix_for(region.outer, f.parent.parent) or ""
                     return base.rstrip("/") + region.prefix
             f = f.parent
-        return self.group_prefix.get(self.group_key(receiver, at))
+        key = self.group_key(receiver, at)
+        own = self.group_prefix.get(key)
+        if own is not None and self.global_group_on_edge and self.mount_rule and self._global(key) is not None:
+            return ""                                  # on its edge (`finish`)
+        return own
 
     def group_key(self, name: str, at: Node) -> RouterKey:
         """A group variable is the one the function around `at` binds: a parameter named like another function's group
@@ -311,8 +321,10 @@ class BaseScanner(PathExpressions):
                                             lambda key: key in self.app_vars)
         if self.mount_rule:
             self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
+            own = {g: p for k, p in self.group_prefix.items() if p and (g := self._global(k)) is not None} \
+                if self.global_group_on_edge else {}
             for child, parent, prefix in edges:
-                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+                self.out.publish(f"{self.mount_rule}.edge", child, (parent, own.get(child, "").rstrip("/") + prefix))
             for key in self.app_vars:
                 g = self._global(key)
                 if g is not None:                             # an application other files can name

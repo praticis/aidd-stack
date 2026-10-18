@@ -198,6 +198,9 @@ Regras aprendidas no corpus (não regredir):
 | `users.UsersRegister(v1.Group("/users"))` (gin-realworld), `addActionsRoutes(m, ...)` chamado dentro de vários grupos (gitea), `register_blueprints(app)`: o router chega como parâmetro | parâmetro router de função = router global `param:<unidade>:<função>:<i>`; a chamada publica a aresta com o prefixo do argumento ali (inclusive `x.Group("/p")` inline). Só argumentos que são routers do arquivo (registram, montam, foram criados como router ou são parâmetros tipados como router) |
 | vikunja `a := e.Group("/api/v1"); registerAPIRoutes(a)` com `func registerAPIRoutes(a *echo.Group)`: 172 rotas `/api/v1/api/v1/..` | o prefixo de grupo é do par (escopo, nome), como o grafo de montagem (`group_key`): o parâmetro `a` de outra função não herda o `a :=` de `main`, e o prefixo dele chega só pela chamada. Campo ou expressão (`api.BaseRoutes.Users`) continua do arquivo (F1.14) |
 | vikunja `u := a.Group("/user"); u.GET("s", h)` lido como `/user/s` | echo junta o prefixo do grupo e o path como escritos (`g.prefix + path`): no arquivo que importa `labstack/echo`, um path sem barra num grupo com prefixo conhecido é `/users`; gin e fiber põem a barra (`relative_on_groups`) (F1.14) |
+| photoprism: `var APIv1 *gin.RouterGroup` num arquivo, `APIv1 = router.Group(conf.BaseUri(config.ApiUri), ..)` em outro, e `api.GetAlbums(APIv1)` entregando o grupo às funções de outro pacote — 165 rotas sem `/api/v1` | em Go, `=` não declara: dentro de uma função, o nome que ela não declara (`:=`, `var`, parâmetro, `range :=`) é o do pacote (`Scopes`, `scope_declarations`); a variável de pacote com tipo de router (`var X *gin.RouterGroup`) é um router do pacote; e o grupo que outros arquivos nomeiam guarda o próprio prefixo na aresta que publica, não no que se registra nele no arquivo (`global_group_on_edge`) — senão as rotas de outro arquivo nunca o recebem |
+| photoprism `conf.BaseUri(config.ApiUri)`: o prefixo passa por um método que devolve o parâmetro, ou algo antes dele (`return res` / `return c.BasePath() + res`) | função Go do repo cujo todo `return` é um parâmetro, ou algo `+` ele, vale o argumento (`PackageContext.passthrough`, lido na mesma passada das constantes): o default do código, o que vem antes é do deploy, como uma base URL. Pelo nome: no pacote, no pacote importado, ou o método único com esse nome no repo |
+| photoprism `router.Match(MethodsPutPost, "/batch/photos/edit", ..)` com `var MethodsPutPost = []string{http.MethodPut, http.MethodPost}` em outro arquivo: `ANY` | os verbos do `Match` do gin: o `[]string{..}` escrito ali, ou a variável que o guarda — da função, do pacote (`PackageContext.verb_lists`) ou de um pacote importado |
 | `api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix("/users").Subrouter()` em `api.go` e `api.BaseRoutes.Users.Handle("/known", h)` em `user.go` (mattermost, 607 rotas) | router em campo de struct (`field:<pacote>:BaseRoutes.Users`), comum aos arquivos do pacote qualquer que seja o nome da variável |
 | `PathPrefix(model.APIURLSuffix)` (mattermost), `prefix=settings.API_V1_STR` (full-stack-fastapi-template), `mux.Handle(common.LoginEndpoint, h)` (argo-cd): a constante mora em outro pacote/módulo | `foreign_const`: `pkg.NOME` com `pkg` import do arquivo → constante do diretório importado; em Python também `NOME` importado por nome |
 | `APIURLSuffix = APIURLSuffixV4` (Go) e `API_V1_STR: str = "/api/v1"` no corpo de uma classe (Python) não eram constantes | `const` Go que nomeia outra vira referência; atribuição anotada no corpo de classe Python é coletada |
@@ -215,6 +218,7 @@ Regras aprendidas no corpus (não regredir):
 | Cliente openapi-generator Go (`localVarPath := localBasePath + "/admin/identities/{id}"`, `strings.Replace(localVarPath, "{"+"id"+"}", ..)`, `localVarHTTPMethod = http.MethodGet`, `prepareRequest(..)`) e go-swagger (`&runtime.ClientOperation{Method: "GET", PathPattern: "/alerts"}`) | `generated-client`: no arquivo com o cabeçalho do OpenAPI Generator, o `prepareRequest` com o path do 2º argumento e o verbo da variável do 3º (variável ligada a literal ou `http.MethodX` vale como verbo); o literal `runtime.ClientOperation` do go-swagger. O `basePath` da spec vem do transporte em runtime, como uma base URL. `strings.Replace(s, ..)` do Go é o `s` |
 | `huma.Get(api, "/books", h)` lido como chamada GET; `"SELECT " + strings.Join(cols, ", ") + " FROM Posts"` como `GET /SELECT ...` (mattermost) | verbo com um path **antes** do último argumento e handler no fim é registro de rota (o `notify.Get(ctx, client, u.String())`, com a URL no fim, é chamada); `"VERBO /x"` só com verbo HTTP; `strings.Join` não junta path |
 | Servidor grpc-gateway (`*.pb.gw.go`, argo-cd: 106 rotas da API): `mux.Handle("GET", pattern_AccountService_CanI_0, func(..) {..})` com o path só em `runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, ..}, []string{"api", "v1", ..}, ""))` | `Handle(verbo, path, h)` com o verbo literal primeiro é rota (também o do httprouter); o padrão é decodificado (`grpc_gateway_pattern`: o programa de pilha do gateway — literal, segmento, captura `{x}`, `**`, verbo customizado `:sync`); o handler é o método gRPC (`AccountService.CanI`). Variável de pacote construída por chamada vale como último recurso do `path_of`. `{name}:cancel` não vira `{name}{cancel}` (`:x` depois de `}` não é parâmetro) |
+| memos: o grpc-gateway v2 escreve `mux.Handle(http.MethodGet, pattern_X, ..)` — nenhuma das 92 rotas; e `{name=memos/*}` saía `/api/{name}` | o verbo do `Handle` vale como o `method_from_args` lê (literal, `http.MethodGet`, local); a captura guarda os segmentos literais e só o curinga vira a variável (`/api/memos/{name}`, a URL que casa) |
 | Servidor go-swagger (alertmanager `api/v2/restapi`): `o.handlers["GET"]["/alerts"] = alert.NewGetAlerts(..)`, com o `basePath` só no JSON embutido (`embedded_spec.go`, no pacote pai) | a atribuição ao mapa de handlers é rota (`go-swagger`), que espera o `basePath` que o `embedded_spec.go` do pacote pai publica (`go.swagger-base`) e `GoScanner.compose` aplica |
 | flask-restx (CTFd): `@challenges_namespace.route("/<challenge_id>")` numa classe `Resource` com `def get/patch/delete` saía como um `GET` só, sem o `/api/v1/challenges` de `Api(Blueprint(url_prefix="/api/v1"))` + `add_namespace(ns, "/challenges")` em outro arquivo | `Namespace`/`Api` importados de `flask_restx`/`flask_restful` são routers (o `Api` montado no blueprint ou app com que é construído, levando o `url_prefix`); `add_namespace(ns, path)` é montagem, inclusive de namespace de outro arquivo; o `route` numa classe dá uma rota por método HTTP que ela define (`Classe.metodo`). Não aplicado: o path padrão do namespace (`/<nome>`), que só vale quando o `add_namespace` não dá path |
 | `register_user = auth_router.post("/register")(register_user)` (dispatch): o decorador aplicado à mão não era rota | chamada cujo callee é a chamada de um registrar, com um nome como argumento, é a rota desse nome |
@@ -252,23 +256,26 @@ com os números do corpus):
   `` agent.get(`${apiRoot()}${url}`) ``, NodeBB `api.put(..)` → `/api/v3`, gitea `GET(url)`): no TS e no Python a
   chamada sai sem o prefixo, ou não sai.
 - **Vistas no hold-out** (16 repos que as regras nunca viram, `corpus-report.md` "The hold-out set"):
-  - C#: atributo de rota próprio do projeto (`[VersionedApiBackOfficeRoute("x")]` do Umbraco, `[V3ApiController]` e
+  - C#: ~~atributo de rota próprio do projeto (`[VersionedApiBackOfficeRoute("x")]` do Umbraco, `[V3ApiController]` e
     `[RestGetById]` do Radarr, `IRouteTemplateProvider`); convenções OData sem template (Smartstore); FastEndpoints
     atrás de uma base própria (`ElsaEndpoint<T>`), e o `RoutePrefix` global; `[Route]` em outro arquivo de uma
-    classe `partial`; a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`;
-  - Go: o prefixo **aplicado duas vezes** quando um grupo com prefixo é passado a uma função
+    classe `partial`; a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`~~ *feitos (F1.14,
+    incrementos 1 e 2)*;
+  - Go: ~~o prefixo **aplicado duas vezes** quando um grupo com prefixo é passado a uma função
     (`a := e.Group("/api/v1"); registerAPIRoutes(a)`, vikunja — defeito de precisão); router em variável de pacote
     atribuída por uma chamada em outro arquivo (`APIv1 = router.Group(conf.BaseUri(..))`, photoprism); o grpc-gateway
-    novo com o verbo em constante (`mux.Handle(http.MethodGet, pattern_X, ..)`, memos) e os handlers connect-go;
+    novo com o verbo em constante (`mux.Handle(http.MethodGet, pattern_X, ..)`, memos)~~ *feitos (incrementos 1 e 3)*;
+    os handlers connect-go ficam com o F2.1 (proto como fonte);
   - Python: subclasse de `APIRouter` (`UserAPIRouter(prefix=..)`, mealie) não é router;
   - TS/JS: path Koa sem barra (`router.post("documents.info", ..)`) e `koa-mount`; o verbo `SEARCH`; restrição
     interpolada (`/:pk(${UUID_REGEX})`); a base do cliente em outro arquivo ou num alias (`$lib/constants` do
     SvelteKit, `axios.create({ baseURL })`).
 - **Limitação, não evolução:** prefixo que só existe em runtime (NodeBB `` `/api/${name}/..` `` montado com nomes de
   plugins) — o linker compara segmentos literais, então `/{param}/x` não liga nada e o extrator não grava; router
-  entregue por uma interface (gotify `instance.RegisterWebhook(base, g)` aos plugins); rotas de biblioteca que o
-  usuário monta (`middleware.Profiler()` do chi); URL montada em runtime sem literal; gRPC/proto e mensageria
-  (F1/F2.2).
+  entregue por uma interface (gotify `instance.RegisterWebhook(base, g)` aos plugins), ou por uma variável de função
+  que um `init()` de build tag atribui (photoprism `registerAPIDocs = api.GetDocs`, só no build de debug: `/docs`
+  sai sem o prefixo); rotas de biblioteca que o usuário monta (`middleware.Profiler()` do chi); URL montada em
+  runtime sem literal; gRPC/proto e mensageria (F1/F2.2).
 - **Fora do extrator:** o prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é do
   **linker** (match por sufixo + `target_hint`/`env_hints`); a spec como fonte de rotas, do **F2.1**; a mesma rota em
   dois apps do repo (o id do endpoint é por repo), do modelo (F1.14); pastas de app de teste com nome de produção

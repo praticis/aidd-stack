@@ -13,8 +13,10 @@ from dataclasses import replace
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, STRING_NODES, HttpResult, Pending,
-                               Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, ROUTER_TYPE, STRING_NODES,
+                               HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
+from ...core.http_scope import in_function
+from ...core.http_expr import verb_list
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
 from ...core.model import RepoInfo
@@ -38,6 +40,8 @@ GO_KIT_HTTP = "github.com/go-kit/kit/transport/http"                            
 class GoScanner(BaseScanner):
     relative_on_groups = True
     mount_rule = "go.mount"
+    scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
+    global_group_on_edge = True
 
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
@@ -63,6 +67,11 @@ class GoScanner(BaseScanner):
     def _maybe_group(self, n: Node) -> None:
         left = n.child_by_field_name("left") or n.child_by_field_name("name")
         right = n.child_by_field_name("right") or n.child_by_field_name("value")
+        typ = n.child_by_field_name("type") if n.type == "var_spec" else None
+        if right is None and typ is not None and ROUTER_TYPE.search(text(typ, self.src)) and not in_function(n):
+            for c in (c for c in n.children if c.type == "identifier"):   # photoprism `var APIv1 *gin.RouterGroup`, that
+                self.router_vars.add(text(c, self.src))                    # another file of the package assigns
+            return
         if left is None or right is None:
             return
         if left.type == "expression_list" and left.named_child_count == 1:
@@ -160,9 +169,11 @@ class GoScanner(BaseScanner):
                 pre = self.prefix_for(recv_last, n)         # echo joins `g.prefix + path` as written: u.GET("s") on
                 if pre:                                     # "/user" is /users (vikunja)
                     lit, joined = pre + raw_first, ""
-            verb_first = name == "Handle" and len(arg_nodes) >= 3 and (raw_first or "").upper() in HTTP_METHODS
-            if verb_first:                                              # grpc-gateway / httprouter: mux.Handle("GET", pattern, h)
-                method, lit = raw_first.upper(), self.route_path(arg_nodes[1], recv_last, n)
+            # grpc-gateway / httprouter: mux.Handle("GET", pattern, h) — v2 writes `http.MethodGet` (memos)
+            verb = self._method_value(first) if name == "Handle" and len(arg_nodes) >= 3 else None
+            verb_first = verb is not None
+            if verb_first:
+                method, lit = verb, self.route_path(arg_nodes[1], recv_last, n)
             if name == "Handle" and (default_mux or recv_last in self.servemux_vars) and lit and len(lit) > 1 and lit.endswith("/"):
                 return                                                  # mux.Handle("/booking/v1/", sub): a mount, not a route
             if lit and (lit.startswith("/") or re.match(r"^[A-Z]+ /", lit)):
@@ -176,7 +187,10 @@ class GoScanner(BaseScanner):
                     if verb_first:
                         framework = "grpc-gateway" if b"protoc-gen-grpc-gateway" in self.src[:512] else "httprouter"
                     methods = [method or "ANY"]
-                    if method is None:
+                    verbs = self._match_verbs(arg_nodes[0]) if name == "Match" else None
+                    if verbs:                                           # gin: r.Match([]string{..}, "/x", h)
+                        methods = list(verbs)
+                    elif method is None:
                         gm = self._gorilla_methods(n)
                         if gm:
                             methods, framework = gm, "gorilla"
@@ -202,6 +216,23 @@ class GoScanner(BaseScanner):
                 if p is not None:
                     self.add_call(n, method, p, callee)
                     return
+
+    def _match_verbs(self, n: Node) -> tuple[str, ...] | None:
+        """The verbs of gin's `Match`: a `[]string{..}` written there, or a variable holding one — of the function, of
+        the package (another file: photoprism's `MethodsPutPost`) or of an imported package (`api.MethodsPutPost`)."""
+        if n.type == "composite_literal":
+            return verb_list(n, self.src)
+        if n.type == "identifier":
+            bound, val = self.scopes.binding(n)
+            if bound and val is not None and val.type == "composite_literal":
+                return verb_list(val, self.src)
+            return self.ctx.verb_lists.get(text(n, self.src))
+        operand = n.child_by_field_name("operand") if n.type == "selector_expression" else None
+        if operand is not None and text(operand, self.src) in self.imports and self.ctx.view is not None:
+            target = self.resolve_import(self.imports[text(operand, self.src)][0])
+            ctx = self.ctx.view.contexts.get(target) if target is not None else None
+            return ctx.verb_lists.get(text(n.child_by_field_name("field"), self.src)) if ctx is not None else None
+        return None
 
     def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
         """gitea `m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of

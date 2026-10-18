@@ -349,6 +349,36 @@
    "method": "DELETE",
    "path": "/api/v2/silence/{silenceID}",
    "handler": "SilenceDeleteSilenceHandler"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos",
+   "handler": "MemoService.ListMemos"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo.name}",
+   "handler": "MemoService.UpdateMemo"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{name}",
+   "handler": "MemoService.DeleteMemo"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/albums",
+   "handler": "<inline>"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/batch/photos/edit",
+   "handler": "<inline>"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/batch/photos/edit",
+   "handler": "<inline>"
   }
  ],
  "calls": [

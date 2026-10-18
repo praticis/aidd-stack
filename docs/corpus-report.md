@@ -1892,3 +1892,74 @@ in. The hold-out's other 10 are identical to its last run. No repository regress
 the checked sample is 98.8% (249/252). Go, Python and TS/JS are unchanged. HTTP extraction took 160 s.
 
 New baseline: `2026-10-18-v2-baseline-19`.
+
+## F1.14, increment 3: the hold-out's Go (2026-10-18)
+
+memos and photoprism moved from the hold-out to the corpus (50 repositories; the hold-out keeps 8). Each rule below
+is Go's or the framework's own, read from the tree, and has its case in `route-patterns-go`, which fails without it.
+
+- **grpc-gateway v2.** v2's generated code registers with `mux.Handle(http.MethodGet, pattern_X, h)`: the verb is
+  net/http's constant, where v1 wrote `"GET"`, and it is read as every other verb constant. A capture with literals
+  keeps them, with the variable at each wildcard: `{name=memos/*}` is `/api/memos/{name}`, not `/api/{name}`.
+- **Go's `=` declares nothing.** A name belongs to the function that declares it: a parameter, `:=`, `var`, `const`,
+  or a `range` with `:=`. A function that only assigns a name with `=` assigns the package's. photoprism's
+  `APIv1 = router.Group(conf.BaseUri(config.ApiUri), ..)` in `start.go` sets the package variable that `routes.go`
+  declares (`var APIv1 *gin.RouterGroup`), not a local of `Start`.
+- **A group in a package variable carries its prefix to other files.** Its routes are registered by the functions
+  it is handed to (`api.GetAlbums(APIv1)`, 80 files of `internal/api`). The group's own prefix goes on the edge it
+  publishes to its parent, not on what is registered on it in that file, so the routes behind each parameter take it
+  too. It is a flag of the Go scanner; the other scanners keep the prefix where they had it.
+- **A function that returns its parameter is its argument.** When every `return` of a function is one of its
+  parameters, or ends with it (`return c.BasePath() + res`), a call to it is the argument it passes: `/api/v1` for
+  `conf.BaseUri(config.ApiUri)`. What comes before is the deployment's (`SiteUrl`, `BasePath`), and the route is the
+  code's default, as with Elsa's `RoutePrefix`. The function is found in the file's package, through the import of
+  `pkg.F`, or for a method by its name when it is unique in the repo.
+- **`Match` takes its verbs from a variable.** `router.Match(MethodsPutPost, "/batch/photos/edit", h)` reads the
+  `[]string{http.MethodPut, http.MethodPost}` of a package variable in another file, of an imported `pkg.X`, or the
+  literal itself. Before, a `Match` whose verbs were not a literal list was `ANY`.
+
+| Repo | Before (list · sample) | Now (list · sample) |
+|---|---|---|
+| memos (at the hold-out) | P — · R 0% · 8/8 | P 100% · R 49.7% · 20/20 |
+| photoprism (at the hold-out) | P 0% · R 0% · 0/20 | P 97.5% · R 97.6% · 19/20 |
+
+memos's list had none of the gateway's 92 routes; the 93 it still misses are the Connect copies of the same RPCs.
+photoprism's 161 routes had no `/api/v1`. photoprism's sample keeps its items, each at the path its line gives now
+(19 take `/api/v1`). memos's had the 8 net/http routes the extractor found before the gateway was read: it was drawn
+again at 20 with the same seed, all gateway routes.
+
+**Gabarito corrections (H2-D15).** memos: the spec's GET and PATCH `/api/instance/{instance}/*` are
+`/api/{name=instance/settings/*}` in `instance_service.proto`, `/api/instance/settings/{name}`, which gnostic
+renders without the second literal. photoprism: POST `/api/v1/oauth/logout` and `/oauth/userinfo` are routes, because
+`OAuthLogout` and `OAuthUserinfo` call `OAuthLogoutPost(router)` and `OAuthUserinfoPost(router)` themselves. gotify:
+`HEAD /health`, from `g.Match([]string{"GET", "HEAD"}, "/health", ..)`, is outside its swagger.
+
+**What remains in these repositories.**
+
+- **memos's 93 Connect RPCs** (`connect-rpc`): `POST /memos.api.<Service>/<Method>`, registered by connect-go's
+  generated handlers. They stay for F2.1, with the proto as a source.
+- **photoprism's `SearchFolders`** (`segment-from-param`, 4 missed and 2 extra): a helper takes the folder's segment
+  as a parameter and each caller passes a literal (`originals`, `import`). The routes come out as
+  `/api/v1/folders/{param}`.
+- **photoprism's `/docs`** (`registrar-in-func-var`, 2 extra): registered only in the debug build. `routes.go`
+  calls `registerAPIDocs(APIv1)`, a function variable that a build-tagged `init()` sets to `api.GetDocs`, so the
+  routes come out without the prefix.
+- **photoprism's web client** (`url-from-helper`): 14 of the 20 calls checked build the URL in a method of the model
+  (`$api.post(this.getEntityResource() + "/like")`), which each subclass answers. That is TS's turn.
+- **A gRPC custom verb after a literal prints as a parameter.** `normalize_path` reads the `:transcribe` of
+  `/api/ai:transcribe` as an Express parameter, `/api/ai{transcribe}` (6 memos routes; `{name}:accept` was already
+  spared). Both sides normalize alike, so the pair matches, but the path is wrong. The syntax cannot tell: Express
+  and httprouter accept `/user_:name`. The source can: an OpenAPI path and a gateway pattern have no `:` parameters. It is recorded as a debt
+  (ROADMAP, F1.14 item 7).
+
+**Diff against `2026-10-18-v2-baseline-19`.** 47 repositories are identical. gotify's two `Match` routes take their
+verbs (`ANY /health` is GET and HEAD; `ANY /mcp` is GET, POST and DELETE). memos and photoprism come in. The
+hold-out's other 8 are identical to its last run. No repository regressed against its expected list.
+
+**Totals.** Go route precision over the list is 99.1% (1921/1938) and recall 92.9% (1926/2073), with memos's 93
+Connect RPCs among the misses; without them, 97.3% (1926/1980). Before this increment it was 99.2% (1668/1681) and
+97.1% (1670/1720). The Go checked sample is 89.9% (249/277), from 88.6% (210/237). C# and Python are unchanged; the
+TS/JS calls sample is 73.0% (149/204) with photoprism's web client in. HTTP extraction took 178 s: the 48
+repositories of before took 167 s against 160 s, the same ~5% in repositories the change does not touch.
+
+New baseline: `2026-10-18-v2-baseline-20`.
