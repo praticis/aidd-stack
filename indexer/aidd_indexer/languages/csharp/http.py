@@ -15,12 +15,13 @@ from tree_sitter import Node
 from ...core.http_base import (BaseScanner, HttpResult, OUTBOUND, Pending, STRING_NODES, first_string, rebased,
                                replace_endpoints, split_callee, text, valid_path, walk)
 from ...core.http_expr import owner_class
-from ...core.http_nodes import CLASS_NODES, CONCAT_NODES, INTERPOLATION_NODES, STRING_TEXT_NODES, has_interpolation
+from ...core.http_nodes import CLASS_NODES, has_interpolation
 from ...core.http_scope import enclosing_function
+from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
-from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, has_literal_segment, mask_placeholders, normalize_path,
-                           path_key, unquote)
+from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, mask_placeholders, normalize_path, path_key,
+                           unquote)
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
@@ -917,10 +918,9 @@ class CsScanner(BaseScanner):
             if len(shapes) != 1:
                 continue
             idx, before, after, method = next(iter(shapes))
-            raw = valid_path(before + args[idx] + after, lenient=True) if idx < len(args) and args[idx] else None
-            path = normalize_path(raw) if raw else ""
-            if raw and has_literal_segment(path):
-                out.calls.append(replace(p.item, method=method, path=path, raw_path=raw, via=f"{rtype}.{name}"[-60:]))
+            found = wrapped_path(before, args[idx] if idx < len(args) else None, after)
+            if found is not None:
+                out.calls.append(replace(p.item, method=method, path=found[1], raw_path=found[0], via=f"{rtype}.{name}"[-60:]))
 
     def _refit(self, iface: Node) -> None:
         body = iface.child_by_field_name("body")
@@ -1065,7 +1065,7 @@ class CsScanner(BaseScanner):
         pl = m.child_by_field_name("parameters")
         params = [text(p.child_by_field_name("name"), self.src) for p in (pl.children if pl is not None else ())
                   if p.type == "parameter" and p.child_by_field_name("name") is not None]
-        shape = next((sh for a in arg_nodes if (sh := self._param_shape(a, params)) is not None), None)
+        shape = next((sh for a in arg_nodes if (sh := param_shape(self, a, params)) is not None), None)
         cls = m.parent
         while cls is not None and cls.type not in CLASS_NODES:
             cls = cls.parent
@@ -1074,44 +1074,6 @@ class CsScanner(BaseScanner):
         mname = text(m.child_by_field_name("name"), self.src)
         for owner in [text(cls.child_by_field_name("name"), self.src)] + [b.split(".")[-1] for b in self._bases(cls)]:
             self.out.publish("cs.client-wrapper", f"{owner}.{mname}", (*shape, (method or "ANY").upper()))
-
-    def _param_shape(self, a: Node, params: list[str]) -> tuple[int, str, str] | None:
-        """(index of the parameter, text before it, text after it) when the path is built around a parameter of the
-        method — the first one: `uri`, `$"{_apiUrl}{uri}/{id}"`, `_base + uri`."""
-        if a.type == "identifier":
-            if text(a, self.src) in params:
-                return params.index(text(a, self.src)), "", ""
-            a = self.resolve_local(a)
-            if a is None:
-                return None
-        tokens: list[str | int] = []
-        if a.type in STRING_NODES and (a.type == "interpolated_string_expression" or has_interpolation(a)):
-            for c in a.children:
-                if c.type in INTERPOLATION_NODES:
-                    inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]
-                    name = text(inner[0], self.src) if len(inner) == 1 and inner[0].type == "identifier" else None
-                    tokens.append(params.index(name) if name in params else "{param}")
-                elif c.type in STRING_TEXT_NODES:
-                    tokens.append(text(c, self.src))
-        elif a.type in CONCAT_NODES:
-            stack = [a]
-            while stack:
-                c = stack.pop()
-                if c.type == a.type:
-                    stack.extend(reversed([k for k in c.children if k.is_named]))
-                elif c.type == "identifier" and text(c, self.src) in params:
-                    tokens.append(params.index(text(c, self.src)))
-                elif c.type in STRING_NODES and not has_interpolation(c):
-                    tokens.append(unquote(text(c, self.src)))
-                else:
-                    tokens.append(self.path_of(c) or "{param}")
-        slots = [i for i, t in enumerate(tokens) if isinstance(t, int)]
-        if not slots:
-            return None
-        i = slots[0]                                  # the path; a later parameter is a placeholder (`{uri}/{id}`)
-        around = ("".join(t if isinstance(t, str) else "{param}" for t in tokens[:i]),
-                  "".join(t if isinstance(t, str) else "{param}" for t in tokens[i + 1:]))
-        return tokens[i], *(re.sub(r"\{[^}]*\}", "{param}", x) for x in around)
 
     def _wrapped_call(self, n: Node, fn: Node, name: str, arg_nodes: list[Node]) -> None:
         """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument

@@ -2258,3 +2258,49 @@ Telling those apps apart needs the application each route's mounts end at, not t
 recorded in the guide.
 
 New baseline: `2026-10-18-v2-baseline-25`.
+
+## F1.14, increment 10: the app's own client wrappers in Python (2026-10-18)
+
+This increment does item 3. No repository moves. The corpus had no known case before. The rule found 47 calls in two
+repositories. The cases are in `route-patterns-py` (`app/wrappers/`), and they fail without the rule.
+
+**The rule.** A function or method whose outbound call builds its path around one of its parameters is a client
+wrapper. Examples are `_request(self, method, path)` doing `self.client.request(method, path)`, and `legacy_get(path)`
+doing `requests.get(BASE + path)`.
+
+- **Verb.** It is the inner call's. If that call takes its verb from a parameter, it is the argument the caller
+  passes. If the caller passes none, it is that parameter's default (`method: str = 'POST'`).
+- **Calls to the wrapper.** A call that hands a wrapper a literal path is an outbound call, with the wrapper's verb.
+  A call that hands it a parameter of its own function makes that function a wrapper too. That way
+  `_get(self, path)` doing `self._request("GET", path)` resolves, up to four links.
+- **Receiver.** It can be:
+  - `self`: the class first, then its bases by name;
+  - a local or module variable assigned the constructor of a class of the repo;
+  - `self.x` assigned such a constructor in a method of the class.
+
+  A plain name is a function of the module, or one imported from the repo.
+- **Precision guards.** A library's client (`httpx.Client()`) is never a wrapper. Two wrappers with one name and
+  different shapes give nothing.
+- **Shared with C#.** The C# reading of a path built around a parameter moved to `core/http_wrappers.py`, unchanged.
+  Both languages use it now, and C# is identical.
+
+**Diff against `2026-10-18-v2-baseline-25`.** 53 repositories are identical, and so are the hold-out's 3. Two
+repositories gain calls. Read at the source, all of them are right:
+
+- open-webui, +35 calls:
+  - 24 from the Ollama proxy's `send_request(url, method='POST')` and `send_get_request`, to Ollama's own API
+    (`POST /api/chat`, `GET /api/tags`, ..);
+  - 6 from the MinerU loader's `_request_v1_api('POST', '/v1/uploads')`;
+  - 4 from the terminal server's `get_terminal_json(.., '/files/cwd')`;
+  - 1 from the OpenAI proxy (`GET /models`).
+
+  Before the default was read, 15 of them came out as `ANY`.
+- zulip, +12 calls:
+  - 8 to Slack's API, through `get_slack_api_data("https://slack.com/api/users.info", ..)`;
+  - 3 to the push bouncer's registration;
+  - 1 to a video call provider.
+
+Neither gabarito covers these calls. open-webui's list is its TS client, and zulip's spec is its own API. So precision
+and recall over the lists are unchanged.
+
+New baseline: `2026-10-18-v2-baseline-26`.

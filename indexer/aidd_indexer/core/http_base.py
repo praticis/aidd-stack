@@ -693,10 +693,12 @@ class BaseScanner(PathExpressions):
             line=node.start_point[0] + 1, handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
         )
 
-    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
+    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> bool:
+        """Record the outbound call at `node`; False when its path names no segment."""
         c = self.call_info(node, method, raw_path, via)
         if c is not None:
             self.out.calls.append(c)
+        return c is not None
 
     def call_info(self, node: Node, method: str | None, raw_path: str, via: str) -> HttpCallInfo | None:
         """The outbound call at `node`; None when its path names no segment. With an empty `raw_path`, the call still

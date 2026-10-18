@@ -26,10 +26,10 @@ fiber-recipes 263+7 · gin-examples 48+1 · gin-realworld 20 · gorilla-mux 0 (l
 198+232 · memos 101+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 251+1 (166
 in the framework's own test apps) · immich 298+286 · nodebb 379+191 · ghost 334+30 · express-boilerplate 11 ·
 fastify-demo 10 · hono-examples 33 · taxonomy 0+6 (Next.js file routes) · outline 226+101 · directus 294+95 · docmost
-149+247 · open-webui 595+617. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 19+19 ·
+149+247 · open-webui 595+652. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 19+19 ·
 ardalis-clean-arch 24 · jellyfin 422+13 · bitwarden 698+30 · notifo 130+218 · rapid-blazor 18+17 · azure-saas 35+26
 (the last three with NSwag clients) · umbraco 540+522 · smartstore 567+5 · radarr 239+2 · elsa 275+239 · btcpayserver
-676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 20 · zulip 0+135 and netbox 0 (Django) · dispatch
+676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 20 · zulip 0+147 and netbox 0 (Django) · dispatch
 291+291 · aiohttp-demos 34+1 · ctfd 242+84 · mealie 286+14. Whole run ~21 min in Docker (mattermost ~3 min, bitwarden
 ~2 min); grafana is out (memory, see CORPUS). Precision/recall per repo and the ranking of gaps:
 docs/corpus-report.md.
