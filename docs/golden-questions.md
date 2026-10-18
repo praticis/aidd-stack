@@ -309,3 +309,31 @@ handler e consumido no `<svc-accrual>` via Kafka) — F2.2; (2) o que o pacote d
 (3) referência por tipo sem chamada (campo injetado e não usado, registro no DI) — F1.2; (4) validators são
 alcançados pelo pipeline do barramento, sem chamada explícita: aparecem como chamadores sem rota — candidato a
 regra de `dispatch` (`SendAsync(cmd)` → o `AbstractValidator<cmd>`).
+
+## Quarta rodada: Q1, Q2 e Q4 .NET depois do H2 (2026-10-18, build `0.2.14+8553d8007527`)
+
+O que mudou desde a terceira rodada: o extrator HTTP do H2 (`feature/h2-corpus`, PR #4). Para o par .NET, isso
+significa que uma rota ASP.NET guarda a caixa que o código escreve (`[controller]` → `/api/Accounts`, antes
+`/api/accounts`), e que o resolver C# deixou de ligar uma chamada num receptor de pacote a um método do repo
+com o mesmo nome. A rodada conferiu a instalação depois de reinstalar: o fingerprint marcou os 10 snapshots dos 3
+tenants como `outdated`, o refresher reindexou cada um uma vez e um segundo refresh não reindexou nada.
+
+| Q | Resultado | Observação |
+|---|---|---|
+| Q1 `who_consumes` | ✅ o mesmo consumidor, `exact`, agora em `/api/Accounts/{accountId}/details` | perguntada em minúsculas, como o `<svc-accrual>` chama, só achou a rota depois da correção abaixo |
+| Q2 `http_map` | ✅ 2 rotas, 1 chamada com `linked_to` exato, `outbound_unlinked: 0` | igual à segunda rodada, com a caixa do código |
+| Q4a `impact_of` método | ✅ igual à terceira rodada: 1 chamador, a rota e o consumidor | — |
+| Q4b `impact_of` classe | ✅ igual à terceira rodada: 5 chamadores, 2 rotas | — |
+
+**O que a rodada pegou:** o linker compara uma rota ASP.NET sem caixa, mas o `who_consumes` comparava
+`path_key` com caixa. Depois da reindexação, a Q1 perguntada em minúsculas teria voltado vazia. A correção
+(`98b8368`) usa no MCP o mesmo `CASE_INSENSITIVE` do linker. O Cypher novo foi rodado só em leitura no grafo
+antigo antes da reinstalação: ele acha a rota com outra caixa e não muda as rotas Go.
+
+**`CALLS`, `main` × a branch no mesmo checkout (`index --dry-run`):** o `<svc-accrual>` perde 23 arestas, todas
+falsas e ligadas só pelo nome: `tasks.Add(..)` num `List<Task>` → `Rollup.Add`, `DateTime.ToString("yyyyMMdd")` →
+`Rollup.ToString` e `httpClient.GetAsync(..)` → `RollupsController.GetAsync`. O `<svc-transaction>` não muda.
+
+**Lição de operação:** quando o extrator muda o que grava num campo que é chave de junção (`path_key`), todo
+leitor desse campo precisa da mesma regra, e não só o linker. O `test_mcp_protocol` usa um store falso e não
+executa Cypher, então quem prova a query são as perguntas douradas, rodadas contra o grafo.
