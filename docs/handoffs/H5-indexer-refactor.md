@@ -211,8 +211,10 @@ Ao fim do H5:
    - Um teste de integração roda cada query contra um Neo4j de verdade (container efêmero) com um grafo pequeno
      semeado pela fixture. É a lição do `who_consumes`.
 10. **Laço do corpus mais curto.**
-    - `http_corpus.py --jobs N` roda repos em paralelo, por processo, limitado pela memória (mattermost e
-      bitwarden são os maiores).
+    - O paralelismo já existe desde 2026-10-18: `indexer/scripts/corpus.sh` roda um container por repo, os maiores
+      primeiro, com teto de memória em cada um, e junta o relatório no fim. Este passo mede o ganho no que cada repo
+      gasta, não no relógio: a soma dos tempos por repo que o script registra (1.382 s na `baseline-26`, com 3 em
+      paralelo).
     - Os números da docstring são gerados da baseline, em vez de editados à mão a cada incremento.
 11. **Comentários só com o que é estritamente pertinente** (H5-D4). Os docs ainda vão ser reorganizados, então o
     código não aponta para eles. As regras:
@@ -244,7 +246,7 @@ mais seguro e mais barato ao mais estrutural. As redes de teste entram antes de 
 | 6 | Reconhecedores + catálogo YAML, **uma linguagem por commit**, do pior ao menor: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | nenhuma função > 9 nem módulo > 300 linhas nesses pacotes; cada linha da tabela do guia aponta para um reconhecedor |
 | 7 | `compose` tipado por linguagem; `Pending` tipado | nenhuma tupla posicional entre scanner e `compose` |
 | 8 | `core/matching.py`; MCP dividido; Cypher testado contra Neo4j efêmero | `who_consumes` usa `normalize_path`; as 11 ferramentas com teste de integração |
-| 9 | `http_corpus.py --jobs N`; docstring gerada | corpus inteiro em ≤ 60 % do tempo do passo 0 |
+| 9 | docstring gerada; o laço do corpus pelo `corpus.sh` | a soma dos tempos por repo em ≤ 60 % da do passo 0 |
 | 10 | Revisão geral dos comentários e docstrings (arquitetura, item 11), no código, nos testes e nas fixtures; troca dos nomes de projeto | nenhuma referência a docs nem a nome de projeto no código, verificado por teste; os comentários que ficaram dizem um porquê |
 | 11 | Docs: ADR-003 atualizado (ou ADR novo: reconhecedores, catálogo, serviço de tipos); `indexer-evolution.md` §2, §5 e §7 | o guia descreve o código como ele ficou; o relatório de metas no CI mostra zero funções e zero módulos fora (o bloqueio liga quando o autor decidir, H5-D3) |
 

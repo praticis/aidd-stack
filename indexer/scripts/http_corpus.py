@@ -250,6 +250,19 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
     return out
 
 
+def list_repos(names: list[str], pinned: dict, base: Path) -> int:
+    """One name per line, the clone with the most files first: a parallel run starts the longest ones early. A clone
+    not made yet counts as empty."""
+    unknown = [n for n in names if n not in pinned]
+    if unknown:
+        print(f"not pinned: {', '.join(unknown)}", file=sys.stderr)
+        return 2
+    sizes = {n: sum(len(files) for _, _, files in os.walk(base / n)) for n in names}
+    for name in sorted(names, key=lambda n: (-sizes[n], n)):
+        print(name)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("AIDD_CORPUS_DIR", str(Path.home() / ".cache/aidd-corpus/repos")))
@@ -264,9 +277,12 @@ def main() -> int:
     ap.add_argument("--seed", default="0")
     ap.add_argument("--show", type=int, default=10)
     ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own gabaritos")
+    ap.add_argument("--list", action="store_true", help="print the selected repositories, the largest clone first, and exit")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
     pinned = HOLDOUT if args.holdout else CORPUS
+    if args.list:
+        return list_repos(args.repos or sorted(pinned), pinned, Path(args.dir))
     if args.holdout and args.expected == EXPECTED_DIR:
         args.expected = HOLDOUT_EXPECTED_DIR
     os.environ.setdefault("AIDD_TENANT", "corpus")

@@ -349,18 +349,22 @@ inspecionar o que o extrator viu num repo específico.
   esses repos eles viram corpus, e o fechamento seguinte precisa de outro hold-out.
 - **O ciclo de uma mudança no extrator** (o do H2b, um commit por categoria):
   1. fixture com o caso e o contraexemplo, e conferir que ela **falha** sem a mudança;
-  2. a mudança, e `pytest tests/` inteiro;
+  2. a mudança, e a suíte inteira: `indexer/scripts/test.sh` (na imagem de testes, que ele constrói quando falta;
+     argumentos vão para o pytest, como `indexer/scripts/test.sh tests/test_fixtures.py -k route-patterns-go`);
   3. o corpus contra a baseline vigente (a última `runs/<data>-v2-baseline-N`, em "Onde estamos" do
-     `H2-roadmap.md`):
+     `H2-roadmap.md`), em paralelo, um container por repo, com teto de memória em cada um:
 
      ```bash
-     docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro \
-       -v ~/.cache/aidd-corpus:/corpus --entrypoint python aidd-indexer:local /src/scripts/http_corpus.py \
-       --dir /corpus/repos --json /corpus/runs/<data>-<rótulo> --baseline /corpus/runs/<baseline> --show 20 --expected
+     indexer/scripts/corpus.sh --baseline <baseline>              # o corpus inteiro; o relatório sai no fim
+     indexer/scripts/corpus.sh --holdout --baseline <baseline>    # o hold-out
+     indexer/scripts/corpus.sh --baseline <baseline> nodebb ghost # só esses, para iterar
      ```
 
-     Com nomes de repos, roda só esses — para iterar; a medida que vale é a do corpus inteiro. Os nomes vêm antes do
-     `--expected`, que aceita um diretório (`... --show 20 nodebb ghost --expected`);
+     Quantos containers ao mesmo tempo sai da memória do Docker: 3 a partir de 9 GiB, 2 a partir de 7, senão 1.
+     Com 3, o corpus inteiro leva ~8 min, contra ~21 em sequência. `--jobs` e `--memory` (ou `AIDD_CORPUS_JOBS` e
+     `AIDD_CORPUS_MEMORY`) trocam o padrão; o script termina com os maiores picos de memória, que dizem quanto cabe.
+     A medida que vale é a do corpus inteiro. Para pontuar de novo depois de editar gabaritos,
+     `http_corpus.py --reuse <run>` direto (passo 5);
   4. julgar o diff **item a item na fonte**: cada item que sai tem de estar errado antes, e cada um que entra, certo.
      Mudança que a regra não explica é defeito da regra, mesmo com P/R subindo — no H2b, assim apareceram a chamada
      do k6 engolida por uma candidata a wrapper e a precisão do NodeBB caindo de 94 para 80 % com prefixos de runtime.
