@@ -186,3 +186,73 @@ def test_di_registrations_pick_the_implementation_and_walk_decorators(tmp_path):
     assert got == {("App.Use.Go", "App.Outer.Run"),           # outermost decorator
                    ("App.Outer.Run", "App.Base.Run"),         # the decorator's inner instance
                    ("App.Use.Go", "App.Store.Save")}          # two implementers, one registered; IClock: two files, none
+
+
+def test_generic_method_calls_on_a_receiver():
+    """`Groups.FindAsync<string>(id)` and `this.Label<int>()`: the callee is a `generic_name`, still a call site."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {(e.line, sym[e.callee_id].qualified_name, e.strategy) for e in rv.calls
+           if e.caller_id in sym and sym[e.caller_id].name == "Lookup" and sym[e.callee_id].name in ("FindAsync", "Label")}
+    assert got == {(33, "Shop.Api.Infra.GroupReadRepository.FindAsync", "receiver-type"),
+                   (34, "Shop.Api.Controllers.AccountsController.Label", "receiver-type")}
+
+
+def test_package_types_are_not_guessed_by_name_but_extension_methods_are():
+    """`Substitute.For<T>()` is the package's `For`, not the repo's `Messages.For`; `services.AddInfra()` on a
+    package type reaches the repo's extension method; `Shop.Api.Infra.Messages.For(..)` names a repo type through its
+    namespace; `Make().Configure<int>()` — a generic method on a receiver of unknown type — guesses no homonym."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {(e.line, sym[e.callee_id].qualified_name) for e in rv.calls
+           if e.caller_id in sym and sym[e.caller_id].name == "Wire"}
+    assert got == {(43, "Shop.Api.Infra.InfraExtensions.AddInfra"), (45, "Shop.Api.Infra.InfraExtensions.IsNullOrEmpty"),
+                   (46, "Shop.Api.Infra.Messages.For"), (47, "Shop.Api.Controllers.AccountsController.Make"),
+                   (48, "Shop.Api.Infra.InfraExtensions.AddReadModels"), (51, "Shop.Api.Controllers.AccountsController.Make"),
+                   (55, "Shop.Api.Infra.InfraExtensions.Contains")}
+
+
+def test_capitalized_inherited_member_is_not_a_static_type():
+    """`OwnerId.IsNullOrEmpty()` inside a subclass: `OwnerId` is a property of the in-repo base, a `Guid?`, so the
+    repo's extension on `Guid` applies."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {sym[e.callee_id].qualified_name for e in rv.calls if e.caller_id in sym and sym[e.caller_id].name == "Unowned"}
+    assert got == {"Shop.Api.Infra.InfraExtensions.IsNullOrEmpty"}
+
+
+def test_member_of_a_package_base_is_not_a_static_type():
+    """`HttpContext.RemoteIp()` in a controller: `HttpContext` may be `ControllerBase`'s, so the repo's extension stays
+    reachable by name."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    got = {sym[e.callee_id].qualified_name for e in rv.calls if e.caller_id in sym and sym[e.caller_id].name == "Caller"}
+    assert got == {"Shop.Api.Infra.InfraExtensions.RemoteIp"}
+
+
+def test_a_static_class_takes_no_extension_method():
+    """`Assert.Contains("a", names)` in a class with no base outside the repo: `Assert` is a package's static class, and
+    the repo's `Contains(this IEnumerable<string>, ..)` is not its target."""
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    repo = RepoInfo(tenant="t", name=FIX.name, ref="main", commit_sha="x", root=str(FIX))
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, rv = extract_and_resolve(repo)
+    sym = {s.id: s for s in res.symbols}
+    assert not [e for e in rv.calls if e.caller_id in sym and sym[e.caller_id].name == "Check"]

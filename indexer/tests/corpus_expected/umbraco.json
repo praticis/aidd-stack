@@ -1,0 +1,4518 @@
+{
+ "source": "openapi",
+ "sha": "2b7046f56f1a2beb93aad40b81f469eb11ddf014",
+ "spec": [
+  "src/Umbraco.Cms.Api.Management/OpenApi.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "src/Umbraco.Cms.Api.Management/"
+  ],
+  "calls": [
+   "src/Umbraco.Web.UI.Client/src/packages/core/backend-api/"
+  ]
+ },
+ "language": {
+  "calls": "TS/JS"
+ },
+ "endpoints": [
+  {
+   "method": "ANY",
+   "path": "/umbraco/login"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1.1/document/{id}/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/collection/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/collection/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/culture"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/schemas/batch"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/is-used"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dictionary"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dictionary/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/dictionary/{id}/move"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint/from-document"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/audit-log"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/scaffold"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/allowed-at-root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/allowed-in-library"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/allowed-children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/allowed-parents"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/blueprint"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/{id}/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-version"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-version/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-version/{id}/prevent-cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-version/{id}/rollback"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/create-and-publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/root/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/sort"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/urls"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/audit-log"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/available-segment-options"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/domains"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/domains"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/notifications"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/notifications"
+  },
+  {
+   "method": "PATCH",
+   "path": "/umbraco/management/api/v1/document/{id}/patch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/preview-url"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants/result/{taskId}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/published"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/unpublish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/update-and-publish"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dynamic-root/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dynamic-root/steps"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element-version"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element-version/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element-version/{id}/prevent-cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element-version/{id}/rollback"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/create-and-publish"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/referenced-descendants"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/audit-log"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/{id}/copy"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/publish"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/published"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/referenced-by"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/unpublish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/update-and-publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/health-check-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/health-check-group/{name}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/health-check-group/{name}/check"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/health-check/execute-action"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/help"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/imaging/resize/urls"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/import/analyze"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/indexer"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/indexer/{indexName}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/indexer/{indexName}/rebuild"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/install/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/install/setup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/install/validate-database"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/dictionary"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-blueprint"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/folder"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/language"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/language/default"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/allowed"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/folders"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/partial-view"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/relation-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/script"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/static-file"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/stylesheet"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/webhook"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/language"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/language"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/level"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/level-count"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/log"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/message-template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/validate-logs-size"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest/private"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest/public"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/allowed-at-root"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/allowed-children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/allowed-parents"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/configuration"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/root/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/sort"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/urls"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/audit-log"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/validate"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-group"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-group"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/allowed-at-root"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/are-referenced"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member/{id}/validate"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/models-builder/build"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/models-builder/dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/models-builder/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/news-dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/object-types"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/oembed/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/package/created"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created/{id}/download"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/migration-status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/package/{name}/run-migration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/partial-view"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/partial-view/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/partial-view/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/snippet"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/snippet/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/partial-view/{path}/rename"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/preview"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/profiling/status"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/profiling/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/property-type/is-used"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/published-cache/rebuild"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/published-cache/rebuild/status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/published-cache/reload"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/children"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/restore"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/restore"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management/status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/redirect-management/status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/redirect-management/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation/type/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/script"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/script/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/script/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/script/folder/{path}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/script/{path}/rename"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/searcher"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/searcher/{searcherName}/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/ExternalLinkLoginCallback"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/authorize"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/graphics/login-background"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/graphics/login-logo"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/graphics/login-logo-alternative"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/graphics/logo"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/graphics/logo-alternative"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/back-office/link-login"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/link-login-key"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/back-office/login"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/back-office/signout"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/back-office/token"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/back-office/unlink-login"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/back-office/verify-2fa"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password/verify"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/segment"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/information"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/troubleshooting"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/upgrade-check"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/stylesheet"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/stylesheet/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/stylesheet/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/stylesheet/folder/{path}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}/rename"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tag"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/telemetry"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/telemetry/level"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/telemetry/level"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/template/query/execute"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/query/settings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/temporary-file"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/temporary-file/configuration"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/temporary-file/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/temporary-file/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-group/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/siblings"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/upgrade/authorize"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/upgrade/settings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-data/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-data/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group/{id}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-group/{id}/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/avatar/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/avatar/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/2fa"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/current/avatar"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/avatar"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/change-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/login-providers"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/media"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user/current/profile"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/enable"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/create-password"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/resend"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/verify"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/set-user-groups"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/unlock"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/2fa"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}/2fa/{providerName}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/calculate-start-nodes"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/change-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials/{clientId}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/webhook"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/events"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/logs"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/{id}/logs"
+  },
+  {
+   "method": "ANY",
+   "path": "/umbraco/management/api/v1/document"
+  }
+ ],
+ "calls": [
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1.1/document/{id}/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/collection/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/collection/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/culture"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/schemas/batch"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/data-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/is-used"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/data-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/data-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dictionary"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dictionary/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/dictionary/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dictionary/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/dictionary/{id}/move"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-blueprint/from-document"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/audit-log"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-blueprint/{id}/scaffold"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/allowed-at-root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/allowed-in-library"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/allowed-children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/allowed-parents"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/blueprint"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-type/{id}/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-type/{id}/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-version"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document-version/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document-version/{id}/prevent-cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document-version/{id}/rollback"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/create-and-publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/root/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/sort"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/urls"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/audit-log"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/available-segment-options"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/domains"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/domains"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/notifications"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/notifications"
+  },
+  {
+   "method": "PATCH",
+   "path": "/umbraco/management/api/v1/document/{id}/patch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/preview-url"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/public-access"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants/result/{taskId}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/published"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/document/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/unpublish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/document/{id}/update-and-publish"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/dynamic-root/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/dynamic-root/steps"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element-version"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element-version/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element-version/{id}/prevent-cleanup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element-version/{id}/rollback"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/create-and-publish"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/folder/{id}/referenced-descendants"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/audit-log"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/element/{id}/copy"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/publish"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/published"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/element/{id}/referenced-by"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/unpublish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/update-and-publish"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/element/{id}/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/filter/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/health-check-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/health-check-group/{name}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/health-check-group/{name}/check"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/health-check/execute-action"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/help"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/imaging/resize/urls"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/import/analyze"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/indexer"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/indexer/{indexName}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/indexer/{indexName}/rebuild"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/install/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/install/setup"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/install/validate-database"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/data-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/dictionary"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-blueprint"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/document/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/folder"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/element/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/language"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/language/default"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/allowed"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/folders"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/media/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/member/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/partial-view"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/relation-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/script"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/static-file"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/stylesheet"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/template/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/item/webhook"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/language"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/language"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/language/{isoCode}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/level"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/level-count"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/log"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/message-template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/log-viewer/validate-logs-size"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest/private"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/manifest/manifest/public"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/allowed-at-root"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/allowed-children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/allowed-parents"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/are-referenced"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/configuration"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/root/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/sort"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/urls"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/media/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/audit-log"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/move"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/move-to-recycle-bin"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/media/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/sort-children"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/media/{id}/validate"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-group"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-group"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-group/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/allowed-at-root"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/available-compositions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/folder/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/import"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/composition-references"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member-type/{id}/copy"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/export"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}/import"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member-type/{id}/move"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member-type/{id}/schema"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/are-referenced"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/member/validate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/member/{id}/referenced-descendants"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/member/{id}/validate"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/models-builder/build"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/models-builder/dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/models-builder/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/news-dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/object-types"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/oembed/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/package/created"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/package/created/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/created/{id}/download"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/package/migration-status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/package/{name}/run-migration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/partial-view"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/partial-view/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/partial-view/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/snippet"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/snippet/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/partial-view/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/partial-view/{path}/rename"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/preview"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/profiling/status"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/profiling/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/property-type/is-used"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/published-cache/rebuild"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/published-cache/rebuild/status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/published-cache/reload"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/children"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/restore"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/restore"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/media"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/referenced-by"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/siblings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/original-parent"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/restore"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management/status"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/redirect-management/status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/redirect-management/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/redirect-management/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation-type"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation-type/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/relation/type/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/script"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/script/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/script/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/script/folder/{path}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/script/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/script/{path}/rename"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/searcher"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/searcher/{searcherName}/query"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/security/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/security/forgot-password/verify"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/segment"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/information"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/status"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/troubleshooting"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/server/upgrade-check"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/stylesheet"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/stylesheet/folder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/stylesheet/folder/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/stylesheet/folder/{path}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/stylesheet/{path}/rename"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tag"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/telemetry"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/telemetry/level"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/telemetry/level"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/template"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/configuration"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/template/query/execute"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/query/settings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/template/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/temporary-file"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/temporary-file/configuration"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/temporary-file/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/temporary-file/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/data-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/dictionary/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-blueprint/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/search"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/document/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/element/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/media/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-group/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/member-type/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/partial-view/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/script/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/static-file/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/stylesheet/siblings"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/ancestors"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/children"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/root"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/tree/template/siblings"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/upgrade/authorize"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/upgrade/settings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user-data"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-data/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-data/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-group"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user-group/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user-group/{id}/users"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user-group/{id}/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/avatar/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/avatar/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/batch"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/2fa"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/current/avatar"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/avatar"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/current/change-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/configuration"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/login-providers"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/document"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/element"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/current/permissions/media"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user/current/profile"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/enable"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/create-password"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/resend"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/invite/verify"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/set-user-groups"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/unlock"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/user/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/2fa"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}/2fa/{providerName}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/calculate-start-nodes"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/change-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/user/{id}/client-credentials/{clientId}"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/user/{id}/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook"
+  },
+  {
+   "method": "POST",
+   "path": "/umbraco/management/api/v1/webhook"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/events"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/logs"
+  },
+  {
+   "method": "DELETE",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/umbraco/management/api/v1/webhook/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/umbraco/management/api/v1/webhook/{id}/logs"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes: the 513 operations of the Management API's committed OpenApi.json (generated from its controllers), under /umbraco/management/api/v1; precision counts what is extracted in src/Umbraco.Cms.Api.Management/. The Delivery API and the other projects have no committed spec and are outside the scope. Added from the code (H2-D15): the 15 routes of the three Management controllers marked [ApiExplorerSettings(IgnoreApi = true)], which the spec leaves out — BackOfficeController's 9 under security/back-office, BackOfficeGraphicsController's 5 under security/back-office/graphics, and BackOfficeLoginController's [Route(\"/umbraco/login\")] Index (no verb: ANY). Every Management controller takes its prefix from [VersionedApiBackOfficeRoute(x)], the project's own attribute, which builds /umbraco + /management/api/ + v{version}/ + x. Calls: the backoffice's @hey-api/openapi-ts SDK (src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts) writes each of the same 513 operations as (options.client ?? client).get({ url: '/umbraco/management/api/v1/..' }), so they are the expected calls (language TS/JS under H2-D17). Moved to the corpus by F1.14 (2026-10-17), which reads [VersionedApiBackOfficeRoute(x)] and its two levels over RouteAttribute. The template's first segment is the [umbracoBackOffice] token, which Umbraco's own convention (UmbracoBackofficeToken, from DefaultUmbracoPath \"~/umbraco\") replaces at startup: every route keeps it, so every route misses on that segment alone (route-token-convention, a limitation). Read as /umbraco, the list scores P 100%, R 99.8%; the one left is /umbraco/login, an action with no attribute in a controller with [Route(LoginPath)] (action-without-attribute). F1.14 increment 2 (2026-10-18): the token is read as the convention registers it (Conventions.Add(new UmbracoBackofficeToken(BackOfficeToken, DefaultUmbracoPath.TrimStart(TildeForwardSlash)))), so every route starts with /umbraco; /umbraco/login is the action with no attribute, ANY under the controller's [Route(LoginPath)]. Added from the code (H2-D15): ANY /umbraco/management/api/v1/document, DocumentUrlController's [Obsolete] GetUrls overload with no routing attribute — an action at the controller's route that [ApiExplorerSettings(IgnoreApi = true)] hides from the spec only. The checked sample keeps its items, each at the path its line gives now: 20/20.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Delivery/Controllers/Content/ByIdsContentApiController.cs:28",
+    "method": "GET",
+    "path": "/umbraco/delivery/api/v2/content/items",
+    "raw": "/items",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/BatchDataTypesController.cs:32",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/data-type/batch",
+    "raw": "/batch",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/BatchSchemasDataTypeController.cs:37",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/data-type/schemas/batch",
+    "raw": "/schemas/batch",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/ByKeyDataTypeController.cs:39",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/data-type/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/IsUsedDataTypeController.cs:31",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/data-type/{id}/is-used",
+    "raw": "/{id}/is-used",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/Item/SearchDataTypeItemController.cs:43",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/item/data-type/search",
+    "raw": "/search",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Dictionary/DeleteDictionaryController.cs:32",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/dictionary/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Dictionary/ExportDictionaryController.cs:43",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/dictionary/{id}/export",
+    "raw": "/{id}/export",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/GetPublicAccessDocumentController.cs:51",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/document/{id}/public-access",
+    "raw": "/{id}/public-access",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/PublishDocumentController.cs:64",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/document/{id}/publish",
+    "raw": "/{id}/publish",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/PublishDocumentWithDescendantsController.cs:54",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants",
+    "raw": "/{id}/publish-with-descendants",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/RecycleBin/ReferencedByDocumentRecycleBinController.cs:48",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/recycle-bin/document/referenced-by",
+    "raw": "/referenced-by",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/RecycleBin/RestoreDocumentRecycleBinController.cs:65",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/restore",
+    "raw": "/{id}/restore",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Language/DeleteLanguageController.cs:45",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/language/{isoCode}",
+    "raw": "/{isoCode}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Manifest/PrivateManifestManifestController.cs:65",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/manifest/manifest/private",
+    "raw": "/manifest/private",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/OEmbed/QueryOEmbedController.cs:41",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/oembed/query",
+    "raw": "/query",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Security/BackOfficeGraphicsController.cs:80",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/security/back-office/graphics/login-logo",
+    "raw": "/login-logo",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/User/CalculatedStartNodesUserController.cs:43",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/user/{id}/calculate-start-nodes",
+    "raw": "/{id}/calculate-start-nodes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/User/VerifyInviteUserController.cs:43",
+    "method": "POST",
+    "path": "/umbraco/management/api/v1/user/invite/verify",
+    "raw": "/invite/verify",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/UserGroup/RemoveUsersFromUserGroupController.cs:56",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/user-group/{id}/users",
+    "raw": "/{id}/users",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:1108",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/item/document",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:1843",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/document-type/folder/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:1856",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/document-type/folder/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:2558",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/restore",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:3148",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:3295",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/media/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:3600",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/recycle-bin/media/referenced-by",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:379",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/dictionary",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:3818",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/media-type/{id}/allowed-children",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:435",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/dictionary/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:4943",
+    "method": "PUT",
+    "path": "/umbraco/management/api/v1/package/created/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:5244",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/property-type/is-used",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:60",
+    "method": "DELETE",
+    "path": "/umbraco/management/api/v1/data-type/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:6787",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/user/current/permissions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:6890",
+    "method": "POST",
+    "path": "/umbraco/management/api/v1/user/invite",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:7005",
+    "method": "POST",
+    "path": "/umbraco/management/api/v1/user-data",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:7219",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/item/webhook",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:746",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/document/{id}/notifications",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts:924",
+    "method": "GET",
+    "path": "/umbraco/management/api/v1/document/{id}/referenced-by",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "umbraco:templates/UmbracoExtension/Client/src/api/sdk.gen.ts:21",
+    "method": "GET",
+    "path": "/umbraco/umbracoextension/api/v1/ping",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

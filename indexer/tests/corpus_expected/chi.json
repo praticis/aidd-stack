@@ -1,0 +1,294 @@
+{
+ "source": "manual",
+ "sha": "60755706125129a9f9dfb99ac22f7ba016a1b60c",
+ "scope": {
+  "endpoints": [
+   "_examples/rest/main.go",
+   "_examples/router-walk/main.go",
+   "_examples/todos-resource/todos.go"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/admin"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/accounts"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/users/{userId}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles"
+  },
+  {
+   "method": "POST",
+   "path": "/articles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/search"
+  },
+  {
+   "method": "DELETE",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "PUT",
+   "path": "/articles/{articleID}"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleSlug}"
+  },
+  {
+   "method": "GET",
+   "path": "/panic",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/ping",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "PUT",
+   "path": "/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/road/left"
+  },
+  {
+   "method": "POST",
+   "path": "/road/right"
+  },
+  {
+   "method": "GET",
+   "path": "/todos"
+  },
+  {
+   "method": "POST",
+   "path": "/todos"
+  },
+  {
+   "method": "PUT",
+   "path": "/todos"
+  },
+  {
+   "method": "DELETE",
+   "path": "/todos/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/todos/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}/sync"
+  }
+ ],
+ "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "chi:_examples/custom-method/main.go:29",
+    "method": "ANY",
+    "path": "/everything",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/graceful/main.go:55",
+    "method": "GET",
+    "path": "/slow",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/limits/main.go:32",
+    "method": "GET",
+    "path": "/ping",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/limits/main.go:36",
+    "method": "GET",
+    "path": "/panic",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/limits/main.go:71",
+    "method": "GET",
+    "path": "/throttled",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/pathvalue/main.go:14",
+    "method": "GET",
+    "path": "/users/{userID}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/rest/main.go:225",
+    "method": "GET",
+    "path": "/admin/accounts",
+    "raw": "/accounts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/rest/main.go:82",
+    "method": "GET",
+    "path": "/articles/search",
+    "raw": "/search",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/router-walk/main.go:18",
+    "method": "GET",
+    "path": "/road/left",
+    "raw": "/left",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/router-walk/main.go:21",
+    "method": "POST",
+    "path": "/road/right",
+    "raw": "/right",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/router-walk/main.go:26",
+    "method": "PUT",
+    "path": "/ping",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:_examples/todos-resource/todos.go:25",
+    "method": "GET",
+    "path": "/todos/{id}/sync",
+    "raw": "/sync",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:29",
+    "method": "ANY",
+    "path": "/pprof",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:33",
+    "method": "ANY",
+    "path": "/pprof/{rest}",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:34",
+    "method": "ANY",
+    "path": "/pprof/cmdline",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:35",
+    "method": "ANY",
+    "path": "/pprof/profile",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:36",
+    "method": "ANY",
+    "path": "/pprof/symbol",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:37",
+    "method": "ANY",
+    "path": "/pprof/trace",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:38",
+    "method": "ANY",
+    "path": "/vars",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:40",
+    "method": "ANY",
+    "path": "/pprof/goroutine",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:41",
+    "method": "ANY",
+    "path": "/pprof/threadcreate",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:42",
+    "method": "ANY",
+    "path": "/pprof/mutex",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:43",
+    "method": "ANY",
+    "path": "/pprof/heap",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:44",
+    "method": "ANY",
+    "path": "/pprof/block",
+    "ok": false,
+    "category": "library-code"
+   },
+   {
+    "evidence": "chi:middleware/profiler.go:45",
+    "method": "ANY",
+    "path": "/pprof/allocs",
+    "ok": false,
+    "category": "library-code"
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

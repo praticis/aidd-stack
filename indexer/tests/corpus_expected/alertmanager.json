@@ -1,0 +1,265 @@
+{
+ "source": {
+  "endpoints": "openapi",
+  "calls": "manual + openapi (generated client)"
+ },
+ "sha": "e3f6c51ddbfc527d2b040224f6b49b530da7a73d",
+ "spec": [
+  "api/v2/openapi.yaml"
+ ],
+ "scope": {
+  "endpoints": [
+   "api/v2/"
+  ],
+  "calls": [
+   "notify/opsgenie/",
+   "notify/wechat/",
+   "notify/rocketchat/",
+   "api/v2/client/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v2/alerts"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/alerts"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/alerts/groups"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/receivers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/silence/{silenceID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/silence/{silenceID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/silences"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/silences"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/status"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/v1/chat.postMessage",
+   "category": "client-in-field"
+  },
+  {
+   "method": "GET",
+   "path": "/gettoken"
+  },
+  {
+   "method": "POST",
+   "path": "/message/send"
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts"
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts/{alias}/close"
+  },
+  {
+   "method": "PUT",
+   "path": "/v2/alerts/{alias}/description"
+  },
+  {
+   "method": "PUT",
+   "path": "/v2/alerts/{alias}/message"
+  },
+  {
+   "method": "GET",
+   "path": "/alerts"
+  },
+  {
+   "method": "POST",
+   "path": "/alerts"
+  },
+  {
+   "method": "GET",
+   "path": "/alerts/groups"
+  },
+  {
+   "method": "GET",
+   "path": "/receivers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/silence/{silenceID}"
+  },
+  {
+   "method": "GET",
+   "path": "/silence/{silenceID}"
+  },
+  {
+   "method": "GET",
+   "path": "/silences"
+  },
+  {
+   "method": "POST",
+   "path": "/silences"
+  },
+  {
+   "method": "GET",
+   "path": "/status"
+  }
+ ],
+ "notes": "Recall only: the spec covers /api/v2, served by the go-swagger generated server (api/v2/restapi) mounted with mux.Handle(apiPrefix+\"/api/v2/\", ...) in api/api.go — nothing under api/v2/ registered routes the extractor could see (generated-server) until H2b's generated servers (2026-10-16): o.handlers[\"GET\"][\"/alerts\"] in restapi/operations, under the basePath that restapi/embedded_spec.go embeds; since then all 9 come out. The other routes of the repo (v1 deprecation, /-/healthy, ui) are not in the spec, so precision comes from the manual sample. Precision: all 22 extracted routes checked. The 7 v1 routes are registered on r.WithPrefix(\"/api/v1\") passed into V1DeprecationRouter.Register and come out without the prefix (router-as-param); DELETE /api/v1/silence/:sid uses r.Del (verb-alias) and is missed. Also missed outside the spec: GET / (ui/web.go — a path with no literal segment is dropped) and GET /ui/ (normalized into /ui, merged). Calls: the notifiers take the host from config and append a literal path to a net/url value (u.Path += \"v2/alerts\", fmt.Sprintf into .Path, APIURL.JoinPath(\"api/v1/chat.postMessage\")) and send u.String() later — none extracted until H2b's Go calls (2026-10-16, url-object-builder); since then all but rocketchat's, which posts through a function kept in a struct field (n.postJSONFunc, set to notify.PostJSON: client-in-field). The go-swagger client in api/v2/client declares each operation in a runtime.ClientOperation{Method, PathPattern}: its 9 operations are expected calls with the path as declared (the spec's basePath /api/v2 is added by the transport, like a base URL). Measured on opsgenie, wechat and rocketchat, where method and path are unambiguous; jira does the same with JoinPath(\"/search\") and issue/{key}/transitions. Since the v2 cheap fixes (2026-10-15): the mux.Handle(prefix+\"/api/v1/\", ...) subtree mounts are no longer routes (they were judged right in v1 as catch-all routes; v2 counts them as mounts, mount-as-route).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:36",
+    "method": "GET",
+    "path": "/status",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:37",
+    "method": "GET",
+    "path": "/receivers",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:39",
+    "method": "GET",
+    "path": "/alerts",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:40",
+    "method": "POST",
+    "path": "/alerts",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:42",
+    "method": "GET",
+    "path": "/silences",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:43",
+    "method": "POST",
+    "path": "/silences",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:api/v1_deprecation_router.go:44",
+    "method": "GET",
+    "path": "/silence/{sid}",
+    "ok": false,
+    "category": "router-as-param"
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:29",
+    "method": "GET",
+    "path": "/metrics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:31",
+    "method": "POST",
+    "path": "/-/reload",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:51",
+    "method": "GET",
+    "path": "/-/healthy",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:55",
+    "method": "HEAD",
+    "path": "/-/healthy",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:58",
+    "method": "GET",
+    "path": "/-/ready",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:62",
+    "method": "HEAD",
+    "path": "/-/ready",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:75",
+    "method": "GET",
+    "path": "/debug/{rest}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:httpserver/httpserver.go:76",
+    "method": "POST",
+    "path": "/debug/{rest}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:ui/web.go:208",
+    "method": "GET",
+    "path": "/favicon.ico",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:ui/web.go:212",
+    "method": "GET",
+    "path": "/assets/{rest}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:ui/web.go:216",
+    "method": "GET",
+    "path": "/ui",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "alertmanager:ui/web.go:224",
+    "method": "GET",
+    "path": "/ui/assets/{rest}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

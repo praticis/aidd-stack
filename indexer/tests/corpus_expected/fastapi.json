@@ -1,0 +1,194 @@
+{
+ "source": "manual",
+ "sha": "f5c6e9b4f9cadc1bf0f9a1fd672e621206b63007",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "fastapi:docs_src/bigger_applications/app_an_py310/routers/users.py:6",
+    "method": "GET",
+    "path": "/users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/body_nested_models/tutorial008_py310.py:12",
+    "method": "POST",
+    "path": "/images/multiple",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/body_nested_models/tutorial009_py310.py:6",
+    "method": "POST",
+    "path": "/index-weights",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/custom_response/tutorial006_py310.py:7",
+    "method": "GET",
+    "path": "/typer",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/custom_response/tutorial006c_py310.py:7",
+    "method": "GET",
+    "path": "/pydantic",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/dataclasses_/tutorial002_py310.py:18",
+    "method": "GET",
+    "path": "/items/next",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/dataclasses_/tutorial003_py310.py:27",
+    "method": "GET",
+    "path": "/authors",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/events/tutorial003_py310.py:25",
+    "method": "GET",
+    "path": "/predict",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/handling_errors/tutorial003_py310.py:21",
+    "method": "GET",
+    "path": "/unicorns/{name}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/json_base64_bytes/tutorial001_py310.py:44",
+    "method": "POST",
+    "path": "/data-in-out",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/path_params/tutorial004_py310.py:6",
+    "method": "GET",
+    "path": "/files/{file_path}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/request_files/tutorial001_02_an_py310.py:8",
+    "method": "POST",
+    "path": "/files",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/response_change_status_code/tutorial001_py310.py:8",
+    "method": "PUT",
+    "path": "/get-or-create-task/{task_id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/response_headers/tutorial002_py310.py:6",
+    "method": "GET",
+    "path": "/headers-and-object",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/response_model/tutorial005_py310.py:26",
+    "method": "GET",
+    "path": "/items/{item_id}/name",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/security/tutorial003_an_py310.py:77",
+    "method": "POST",
+    "path": "/token",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/sql_databases/tutorial001_an_py310.py:48",
+    "method": "GET",
+    "path": "/heroes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/sql_databases/tutorial001_an_py310.py:66",
+    "method": "DELETE",
+    "path": "/heroes/{hero_id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/sql_databases/tutorial002_an_py310.py:83",
+    "method": "PATCH",
+    "path": "/heroes/{hero_id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fastapi:docs_src/stream_data/tutorial002_py310.py:30",
+    "method": "GET",
+    "path": "/image/stream-no-async",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": []
+ },
+ "checked_seed": "1",
+ "notes": "Precision: 20 of 84 sampled (seed 1), all correct — single-file tutorials. docs_src holds hundreds of tutorials repeating the same routes, so most collapse into one endpoint (multi-app-repo); 84 is what survives the dedupe. Recall scope: docs_src/bigger_applications/app_an_py310/ — the items routes exist only with another tutorial's evidence (multi-app-repo), POST /admin needs the prefix from app.include_router(admin.router, prefix=\"/admin\") in main.py (prefix-other-file) and GET / is dropped (root-route-dropped). Calls: all 11 checked. The 4 under docs_src/app_testing and docs_src/dependency_testing are TestClient requests inside test functions of tutorial files, outside any test folder (test-client-in-source); the 7 httpx.get calls in scripts/playwright are real. 2026-10-15 (second round): the four TestClient requests left the calls sample — they are no longer extracted (they were its only wrong calls). Since H2 Phase 5 (2026-10-17): playwright/ folders are test tooling, so the 7 scripts/playwright calls left the sample.",
+ "scope": {
+  "endpoints": [
+   "docs_src/bigger_applications/app_an_py310/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/users"
+  },
+  {
+   "method": "GET",
+   "path": "/users/me"
+  },
+  {
+   "method": "GET",
+   "path": "/users/{username}"
+  },
+  {
+   "method": "GET",
+   "path": "/items",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/items/{item_id}",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "PUT",
+   "path": "/items/{item_id}",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "POST",
+   "path": "/admin"
+  }
+ ]
+}

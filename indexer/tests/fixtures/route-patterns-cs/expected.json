@@ -1,0 +1,443 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "Home"
+  },
+  {
+   "method": "GET",
+   "path": "/items/by/{name}",
+   "handler": "GetByName"
+  },
+  {
+   "method": "GET",
+   "path": "/items/type/{typeId}/brand/{brandId}",
+   "handler": "GetByBrand"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "handler": "ListOrders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders/{orderId}",
+   "handler": "GetOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reports",
+   "handler": "List"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Reports/{id}",
+   "handler": "Get"
+  },
+  {
+   "method": "GET",
+   "path": "/Devices",
+   "handler": "GetDevices"
+  },
+  {
+   "method": "GET",
+   "path": "/Devices/Info",
+   "handler": "GetDeviceInfo"
+  },
+  {
+   "method": "POST",
+   "path": "/Devices/Options",
+   "handler": "UpdateOptions"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "Health"
+  },
+  {
+   "method": "GET",
+   "path": "/widgets/{id}",
+   "handler": "One"
+  },
+  {
+   "method": "POST",
+   "path": "/orders",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/orders/{OrderId}",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/ping",
+   "handler": "ExecuteAsync"
+  },
+  {
+   "method": "HEAD",
+   "path": "/ping",
+   "handler": "ExecuteAsync"
+  },
+  {
+   "method": "POST",
+   "path": "/api/authenticate",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Orders/recent",
+   "handler": "HandleAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantId}/Members/List",
+   "handler": "ListAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/admin",
+   "handler": "Admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates",
+   "handler": "GetTemplates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/email-templates/{id}",
+   "handler": "GetTemplate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/email-templates/{code}",
+   "handler": "DeleteTemplate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates",
+   "handler": "GetTemplates"
+  },
+  {
+   "method": "GET",
+   "path": "/api/apps/{appId}/sms-templates/{id}",
+   "handler": "GetTemplate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/apps/{appId}/sms-templates/{code}/all",
+   "handler": "DeleteTemplate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Blocklist",
+   "handler": "GetBlocklist"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Blocklist/movie",
+   "handler": "GetMovieBlocklist"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/Blocklist/{id}",
+   "handler": "DeleteBlocklist"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/Blocklist/bulk",
+   "handler": "Remove"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/wanted/missing",
+   "handler": "Search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/missing/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/DownloadClient",
+   "handler": "GetAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/DownloadClient/test",
+   "handler": "Test"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/DownloadClient/{id}",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/DownloadClient/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Calendar",
+   "handler": "GetCalendar"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/DownloadClient/bulk",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Metadata",
+   "handler": "GetAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/Metadata/test",
+   "handler": "Test"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/Metadata/{id}",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Metadata/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Release",
+   "handler": "Search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/{searcherName}/query",
+   "handler": "Query"
+  },
+  {
+   "method": "ANY",
+   "path": "/login",
+   "handler": "Login"
+  },
+  {
+   "method": "ANY",
+   "path": "/logout",
+   "handler": "Logout"
+  },
+  {
+   "method": "GET",
+   "path": "/content/{path}",
+   "handler": "Content"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/items/{id}",
+   "handler": "Items"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts",
+   "handler": "Get"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "Index"
+  },
+  {
+   "method": "ANY",
+   "path": "/i/{invoiceId}/status/ws",
+   "handler": "Socket"
+  },
+  {
+   "method": "ANY",
+   "path": "/i/{invoiceId}/{paymentMethodId}/status/ws",
+   "handler": "Socket"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/{id}",
+   "handler": "Get"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v1/data-type/{id}",
+   "handler": "ByKey"
+  },
+  {
+   "method": "DELETE",
+   "path": "/management/api/v1/data-type/{id}",
+   "handler": "Delete"
+  },
+  {
+   "method": "PUT",
+   "path": "/management/api/v1.1/data-type/{id}/validate",
+   "handler": "Validate"
+  },
+  {
+   "method": "PUT",
+   "path": "/management/api/v1/document/{id}/publish",
+   "handler": "Publish"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v2/news-dashboard",
+   "handler": "GetDashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v1/security/back-office/graphics/logo",
+   "handler": "Logo"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Get"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Categories",
+   "handler": "Post"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Put"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Patch"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Delete"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/shelves",
+   "handler": "Put"
+  },
+  {
+   "method": "GET",
+   "path": "/portal/pages/{id}",
+   "handler": "Page"
+  },
+  {
+   "method": "GET",
+   "path": "/[tenantRoot]/reports",
+   "handler": "Summary"
+  },
+  {
+   "method": "GET",
+   "path": "/stores/{storeId}",
+   "handler": "Dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/stores/{storeId}/rates",
+   "handler": "Rates"
+  },
+  {
+   "method": "ANY",
+   "path": "/stores/login",
+   "handler": "Index"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/v3/Blocklist",
+   "handler": "Purge"
+  },
+  {
+   "method": "ANY",
+   "path": "/Admin/shipping/Configure/{id}",
+   "handler": "Configure"
+  },
+  {
+   "method": "POST",
+   "path": "/Admin/shipping/Save/{id}",
+   "handler": "Save"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/items/{param}",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/brands",
+   "line": 9
+  },
+  {
+   "method": "POST",
+   "path": "/20141201/schedules",
+   "line": 15
+  },
+  {
+   "method": "GET",
+   "path": "/20141201/lineups",
+   "line": 21
+  },
+  {
+   "method": "GET",
+   "path": "/api/ordering/orders/{param}",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/api/ordering/orders/recent",
+   "line": 11
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{param}",
+   "line": 18
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/drafts",
+   "line": 21
+  },
+  {
+   "method": "GET",
+   "path": "/catalog-items/{param}",
+   "line": 9
+  },
+  {
+   "method": "DELETE",
+   "path": "/catalog-items/{param}",
+   "line": 11
+  },
+  {
+   "method": "POST",
+   "path": "/catalog-items",
+   "line": 13
+  },
+  {
+   "method": "GET",
+   "path": "/catalog-items",
+   "line": 16
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoItems/{id}",
+   "line": 14,
+   "caller": "UpdateAsync"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}",
+   "line": 20,
+   "caller": "TenantsGETAsync"
+  }
+ ]
+}

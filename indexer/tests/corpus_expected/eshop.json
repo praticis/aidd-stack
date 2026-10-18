@@ -1,0 +1,399 @@
+{
+ "source": {
+  "endpoints": "openapi (Catalog) + manual (Ordering, Webhooks)",
+  "calls": "manual"
+ },
+ "sha": "dc7ea499cd356924fb6689b3702964a5869dbae9",
+ "spec": [
+  "src/Catalog.API/Catalog.API.json",
+  "src/Catalog.API/Catalog.API_v2.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "src/Catalog.API/",
+   "src/Ordering.API/Apis/OrdersApi.cs",
+   "src/Webhooks.API/Apis/WebHooksApi.cs"
+  ],
+  "calls": [
+   "src/WebApp/Services/",
+   "src/WebAppComponents/Services/",
+   "src/HybridApp/Services/",
+   "src/WebhookClient/Services/",
+   "src/ClientApp/Services/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogbrands"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogtypes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items"
+  },
+  {
+   "method": "POST",
+   "path": "/api/catalog/items"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/catalog/items"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/by"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/by/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/facets"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/type/all/brand/{brandId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/type/{typeId}/brand/{brandId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/withsemanticrelevance"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/withsemanticrelevance/{text}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/catalog/items/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/catalog/items/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/{id}/pic"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders"
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/orders/cancel"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders/cardtypes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders/draft"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/orders/ship"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders/{orderId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/webhooks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/webhooks"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/webhooks/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/webhooks/{id}"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/Orders"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Orders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogBrands"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogTypes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogbrands",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/catalogtypes",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items",
+   "note": "url-from-helper (GetAllCatalogItemsUri)"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/by",
+   "note": "query-in-template / nested expression in the interpolation"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/facets",
+   "note": "TrimEnd over the interpolation"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/withsemanticrelevance",
+   "note": "query-in-template"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/{catalogItemId}",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/catalog/items/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders",
+   "note": "client-wrapper (ClientApp RequestProvider + UriHelper.CombineUri)"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/orders/cancel",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/orders/{orderId}",
+   "note": "client-wrapper"
+  },
+  {
+   "method": "GET",
+   "path": "/api/webhooks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/webhooks"
+  }
+ ],
+ "notes": "Catalog.API only (the one service with a committed spec); v1 and v2 specs merged because the code serves both versions. The 4 v1 routes the extractor misses all carry route constraints the path literal check rejects: {name:minlength(1)}, {text:minlength(1)}, {brandId?}, {brandId:int?} (category route-constraint-syntax). Calls: every outbound call in the client service folders, written with the prefix the code itself holds (class field / const); the host comes from AddHttpClient BaseAddress (config, linker's job). The prefix \"api/catalog/\" lives in a field interpolated into the URL and is dropped as a base placeholder (field-in-interpolation, wrong per H2-D12). HybridApp repeats the WebAppComponents calls with ?api-version=2.0 in the literal, which makes the template rejected (query-in-template): none extracted. Paths kept as the code writes them (catalogBrands vs catalogbrands) — ASP.NET routing is case-insensitive, which is the linker's concern. Routes: 20 of 23 sampled (seed 1). Identity.API's AccountController uses conventional routing ({controller}/{action}); its [HttpGet]/[HttpPost] without a template come out as GET / and POST / (route-by-name-convention) and the controller's five actions collapse into those two. Recall extended by hand to Ordering.API/Apis/OrdersApi.cs and Webhooks.API/Apis/WebHooksApi.cs: group roots MapGet(\"/\") / MapPost(\"/\") are dropped (root-route-dropped) and MapGet(\"{orderId:int}\") has no leading slash (no-leading-slash). Not in a scope: MapMethods(\"/check\", [HttpMethods.Options]) comes out as ANY — the collection-expression method list is not read. 2026-10-15: the two AccountController items left the sample — the extractor no longer emits a template-less action of a controller without [Route] (they were the sample's only wrong routes). 2026-10-15 (second round): the calls list missed GET /api/webhooks (WebHooksClient.cs:12, GetFromJsonAsync<IEnumerable<...>>) — the grep used to list the calls skipped nested generics, the same reason the extractor did; added. With the query string and .TrimEnd accepted and nested generics read, the catalog calls of WebAppComponents and HybridApp are all extracted now, still without the \"api/catalog/\" of the interpolated field (field-in-interpolation). Since item 5 for C# (2026-10-15): a field or constant interpolated as whole segments is read ($\"{remoteServiceBaseUrl}items/{id}\" → /api/catalog/items/{id}), and so is the app's URL helper (UriHelper.CombineUri(base, ApiUrlBase) inside a template): every call in the client folders comes out right.",
+ "checked": {
+  "calls": [
+   {
+    "evidence": "eshop:src/WebApp/Services/OrderingService.cs:9",
+    "method": "GET",
+    "path": "/api/Orders",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebApp/Services/OrderingService.cs:14",
+    "method": "POST",
+    "path": "/api/Orders",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebAppComponents/Services/CatalogService.cs:14",
+    "method": "GET",
+    "path": "/api/catalog/items/{param}",
+    "raw": "api/catalog/items/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebAppComponents/Services/CatalogService.cs:41",
+    "method": "GET",
+    "path": "/api/catalog/catalogBrands",
+    "raw": "api/catalog/catalogBrands",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebAppComponents/Services/CatalogService.cs:48",
+    "method": "GET",
+    "path": "/api/catalog/catalogTypes",
+    "raw": "api/catalog/catalogTypes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebhookClient/Services/WebHooksClient.cs:7",
+    "method": "POST",
+    "path": "/api/webhooks",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "endpoints": [
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:104",
+    "method": "PUT",
+    "path": "/api/catalog/items/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:109",
+    "method": "POST",
+    "path": "/api/catalog/items",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:113",
+    "method": "DELETE",
+    "path": "/api/catalog/items/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:21",
+    "method": "GET",
+    "path": "/api/catalog/items",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:31",
+    "method": "GET",
+    "path": "/api/catalog/items/by",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:36",
+    "method": "GET",
+    "path": "/api/catalog/items/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:46",
+    "method": "GET",
+    "path": "/api/catalog/items/{id}/pic",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:52",
+    "method": "GET",
+    "path": "/api/catalog/items/facets",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:66",
+    "method": "GET",
+    "path": "/api/catalog/items/withsemanticrelevance",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:83",
+    "method": "GET",
+    "path": "/api/catalog/catalogtypes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Catalog.API/Apis/CatalogApi.cs:90",
+    "method": "GET",
+    "path": "/api/catalog/catalogbrands",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Ordering.API/Apis/OrdersApi.cs:11",
+    "method": "PUT",
+    "path": "/api/orders/cancel",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Ordering.API/Apis/OrdersApi.cs:12",
+    "method": "PUT",
+    "path": "/api/orders/ship",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Ordering.API/Apis/OrdersApi.cs:16",
+    "method": "POST",
+    "path": "/api/orders/draft",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebhookClient/Endpoints/AuthenticationEndpoints.cs:12",
+    "method": "POST",
+    "path": "/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/WebhookClient/Endpoints/WebhookEndpoints.cs:31",
+    "method": "POST",
+    "path": "/webhook-received",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Webhooks.API/Apis/WebHooksApi.cs:20",
+    "method": "GET",
+    "path": "/api/webhooks/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "eshop:src/Webhooks.API/Apis/WebHooksApi.cs:66",
+    "method": "DELETE",
+    "path": "/api/webhooks/{id}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

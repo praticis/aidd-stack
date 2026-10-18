@@ -1,0 +1,190 @@
+{
+ "source": "manual",
+ "sha": "626c372d259472148d93303f74aa9b9a1cdcef24",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "gin-realworld:articles/routers.go:14",
+    "method": "GET",
+    "path": "/api/articles/feed",
+    "raw": "/feed",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:17",
+    "method": "PUT",
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:19",
+    "method": "DELETE",
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:20",
+    "method": "POST",
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/:slug/favorite",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:21",
+    "method": "DELETE",
+    "path": "/api/articles/{slug}/favorite",
+    "raw": "/:slug/favorite",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:22",
+    "method": "POST",
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/:slug/comments",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:23",
+    "method": "DELETE",
+    "path": "/api/articles/{slug}/comments/{id}",
+    "raw": "/:slug/comments/:id",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:29",
+    "method": "GET",
+    "path": "/api/articles/{slug}",
+    "raw": "/:slug",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:articles/routers.go:30",
+    "method": "GET",
+    "path": "/api/articles/{slug}/comments",
+    "raw": "/:slug/comments",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:users/routers.go:13",
+    "method": "POST",
+    "path": "/api/users/login",
+    "raw": "/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:users/routers.go:28",
+    "method": "POST",
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/:username/follow",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-realworld:users/routers.go:29",
+    "method": "DELETE",
+    "path": "/api/profiles/{username}/follow",
+    "raw": "/:username/follow",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Every route is registered in a function that receives a *gin.RouterGroup built in hello.go (v1.Group(\"/users\"), ...), so all 12 come out without /api/<group> (router-as-param). Losing the prefix also makes GET /profiles/:username collide with GET /articles/:slug (both /{param}) and the dedupe keeps one. Routes registered with \"\" (the group root: GET /api/tags, GET /api/articles, POST /api/users, GET|PUT /api/user) are dropped. Recall scope: articles/routers.go and users/routers.go, read whole.",
+ "scope": {
+  "endpoints": [
+   "articles/routers.go",
+   "users/routers.go"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/login"
+  },
+  {
+   "method": "GET",
+   "path": "/api/user"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/user"
+  },
+  {
+   "method": "GET",
+   "path": "/api/profiles/{username}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/profiles/{username}/follow"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/profiles/{username}/follow"
+  },
+  {
+   "method": "GET",
+   "path": "/api/articles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/articles/feed"
+  },
+  {
+   "method": "POST",
+   "path": "/api/articles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/articles/{slug}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/articles/{slug}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/articles/{slug}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/articles/{slug}/favorite"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/articles/{slug}/favorite"
+  },
+  {
+   "method": "GET",
+   "path": "/api/articles/{slug}/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/articles/{slug}/comments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/articles/{slug}/comments/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags"
+  }
+ ]
+}

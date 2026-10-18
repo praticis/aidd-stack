@@ -57,7 +57,8 @@ GENERATED_SUFFIXES = (".pb.go", "_pb2.py", "_pb2_grpc.py", ".min.js", ".d.ts", "
 
 # Test code: skipped by the HTTP extractor, and never a call target for production code (resolve.py).
 TEST_FILE = re.compile(r"(_test\.go$|\.spec\.[tj]sx?$|\.test\.[tj]sx?$|(^|/)test_[^/]*\.py$|_test\.py$|conftest\.py$|"
-                       r"Tests?\.cs$|/tests?/|/testdata/|/mocks?/|/e2e/|/integration[-_]tests?/|/__tests__/|\.Tests?/|/testing/)")
+                       r"Tests?\.cs$|/tests?/|/testdata/|/mocks?/|/e2e/|/e2e[-_]tests?/|/integration[-_]tests?/|"
+                       r"/__tests__/|\.Tests?/|/testing/|/testhelpers?/|/cypress/|/playwright/)")
 
 
 def is_test_path(path: str) -> bool:

@@ -1,0 +1,1545 @@
+{
+ "source": "manual",
+ "sha": "8e140f94250834cea0a0fb6eb822cac39ed9faec",
+ "spec": [
+  "packages/specs/src/openapi.yaml"
+ ],
+ "scope": [
+  "api/src/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/oauth-authorization-server*"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/oauth-protected-resource*"
+  },
+  {
+   "method": "DELETE",
+   "path": "/access"
+  },
+  {
+   "method": "GET",
+   "path": "/access"
+  },
+  {
+   "method": "PATCH",
+   "path": "/access"
+  },
+  {
+   "method": "POST",
+   "path": "/access"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/access",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/access/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/access/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/access/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/activity"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/activity",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/activity/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin"
+  },
+  {
+   "method": "POST",
+   "path": "/ai/chat"
+  },
+  {
+   "method": "POST",
+   "path": "/ai/files"
+  },
+  {
+   "method": "POST",
+   "path": "/ai/object"
+  },
+  {
+   "method": "POST",
+   "path": "/assets/files/"
+  },
+  {
+   "method": "POST",
+   "path": "/assets/folder/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/assets/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/assets/{pk}/{filename}"
+  },
+  {
+   "method": "GET",
+   "path": "/auth"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/login",
+   "category": "router-from-factory"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/logout"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/password/request"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/password/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/refresh"
+  },
+  {
+   "method": "GET",
+   "path": "/collections"
+  },
+  {
+   "method": "PATCH",
+   "path": "/collections"
+  },
+  {
+   "method": "POST",
+   "path": "/collections"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/collections",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/collections/{collection}"
+  },
+  {
+   "method": "GET",
+   "path": "/collections/{collection}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/collections/{collection}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/comments"
+  },
+  {
+   "method": "GET",
+   "path": "/comments"
+  },
+  {
+   "method": "PATCH",
+   "path": "/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/comments"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/comments",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/comments/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/comments/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/comments/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/dashboards"
+  },
+  {
+   "method": "GET",
+   "path": "/dashboards"
+  },
+  {
+   "method": "PATCH",
+   "path": "/dashboards"
+  },
+  {
+   "method": "POST",
+   "path": "/dashboards"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/dashboards",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/dashboards/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/dashboards/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/dashboards/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments"
+  },
+  {
+   "method": "POST",
+   "path": "/deployments"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/deployments",
+   "category": "search-verb"
+  },
+  {
+   "method": "POST",
+   "path": "/deployments/webhooks/{provider}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/deployments/{provider}"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/deployments/{provider}"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/projects"
+  },
+  {
+   "method": "PATCH",
+   "path": "/deployments/{provider}/projects"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/projects/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/deployments/{provider}/projects/{id}/deploy"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/projects/{id}/runs"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/projects/{id}/runs/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/deployments/{provider}/runs/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/deployments/{provider}/runs/{id}/cancel"
+  },
+  {
+   "method": "GET",
+   "path": "/extensions"
+  },
+  {
+   "method": "GET",
+   "path": "/extensions/registry"
+  },
+  {
+   "method": "GET",
+   "path": "/extensions/registry/account/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/extensions/registry/extension/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/extensions/registry/install"
+  },
+  {
+   "method": "POST",
+   "path": "/extensions/registry/reinstall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/extensions/registry/uninstall/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/extensions/sources/{chunk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/extensions/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "PATCH",
+   "path": "/extensions/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/fields"
+  },
+  {
+   "method": "GET",
+   "path": "/fields/{collection}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/fields/{collection}"
+  },
+  {
+   "method": "POST",
+   "path": "/fields/{collection}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/fields/{collection}/{field}"
+  },
+  {
+   "method": "GET",
+   "path": "/fields/{collection}/{field}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/fields/{collection}/{field}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/files"
+  },
+  {
+   "method": "GET",
+   "path": "/files"
+  },
+  {
+   "method": "PATCH",
+   "path": "/files"
+  },
+  {
+   "method": "POST",
+   "path": "/files"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/files",
+   "category": "search-verb"
+  },
+  {
+   "method": "POST",
+   "path": "/files/import"
+  },
+  {
+   "method": "POST",
+   "path": "/files/tus"
+  },
+  {
+   "method": "DELETE",
+   "path": "/files/tus/{id}"
+  },
+  {
+   "method": "HEAD",
+   "path": "/files/tus/{id}"
+  },
+  {
+   "method": "OPTIONS",
+   "path": "/files/tus/{id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/files/tus/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/files/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/files/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/files/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/flows"
+  },
+  {
+   "method": "GET",
+   "path": "/flows"
+  },
+  {
+   "method": "PATCH",
+   "path": "/flows"
+  },
+  {
+   "method": "POST",
+   "path": "/flows"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/flows",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/flows/trigger/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/flows/trigger/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "DELETE",
+   "path": "/flows/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/flows/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/flows/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/folders"
+  },
+  {
+   "method": "GET",
+   "path": "/folders"
+  },
+  {
+   "method": "PATCH",
+   "path": "/folders"
+  },
+  {
+   "method": "POST",
+   "path": "/folders"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/folders",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/folders/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/folders/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/folders/{pk}"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphql",
+   "category": "use-as-route"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphql/system",
+   "category": "use-as-route"
+  },
+  {
+   "method": "DELETE",
+   "path": "/items/{collection}"
+  },
+  {
+   "method": "GET",
+   "path": "/items/{collection}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/items/{collection}"
+  },
+  {
+   "method": "POST",
+   "path": "/items/{collection}"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/items/{collection}",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/items/{collection}/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/items/{collection}/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/items/{collection}/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/license"
+  },
+  {
+   "method": "GET",
+   "path": "/license"
+  },
+  {
+   "method": "PATCH",
+   "path": "/license"
+  },
+  {
+   "method": "POST",
+   "path": "/license"
+  },
+  {
+   "method": "GET",
+   "path": "/license/addons"
+  },
+  {
+   "method": "DELETE",
+   "path": "/license/addons/{id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/license/addons/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/license/pending-resolution"
+  },
+  {
+   "method": "GET",
+   "path": "/license/portal"
+  },
+  {
+   "method": "POST",
+   "path": "/license/preview"
+  },
+  {
+   "method": "POST",
+   "path": "/license/resolve"
+  },
+  {
+   "method": "GET",
+   "path": "/mcp"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp"
+  },
+  {
+   "method": "GET",
+   "path": "/mcp-oauth/authorize"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp-oauth/authorize/decision"
+  },
+  {
+   "method": "DELETE",
+   "path": "/mcp-oauth/clients"
+  },
+  {
+   "method": "GET",
+   "path": "/mcp-oauth/clients"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/mcp-oauth/clients",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/mcp-oauth/clients/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/mcp-oauth/clients/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp-oauth/register"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp-oauth/revoke"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp-oauth/token"
+  },
+  {
+   "method": "GET",
+   "path": "/metrics"
+  },
+  {
+   "method": "DELETE",
+   "path": "/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications"
+  },
+  {
+   "method": "PATCH",
+   "path": "/notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/notifications"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/notifications",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/notifications/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/notifications/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/operations"
+  },
+  {
+   "method": "GET",
+   "path": "/operations"
+  },
+  {
+   "method": "PATCH",
+   "path": "/operations"
+  },
+  {
+   "method": "POST",
+   "path": "/operations"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/operations",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/operations/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/operations/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/operations/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/panels"
+  },
+  {
+   "method": "GET",
+   "path": "/panels"
+  },
+  {
+   "method": "PATCH",
+   "path": "/panels"
+  },
+  {
+   "method": "POST",
+   "path": "/panels"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/panels",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/panels/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/panels/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/panels/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/permissions"
+  },
+  {
+   "method": "GET",
+   "path": "/permissions"
+  },
+  {
+   "method": "PATCH",
+   "path": "/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/permissions"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/permissions",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/permissions/me"
+  },
+  {
+   "method": "GET",
+   "path": "/permissions/me/{collection}"
+  },
+  {
+   "method": "GET",
+   "path": "/permissions/me/{collection}/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/permissions/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/permissions/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/permissions/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/policies"
+  },
+  {
+   "method": "GET",
+   "path": "/policies"
+  },
+  {
+   "method": "PATCH",
+   "path": "/policies"
+  },
+  {
+   "method": "POST",
+   "path": "/policies"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/policies",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/policies/me/globals"
+  },
+  {
+   "method": "DELETE",
+   "path": "/policies/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/policies/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/policies/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/presets"
+  },
+  {
+   "method": "GET",
+   "path": "/presets"
+  },
+  {
+   "method": "PATCH",
+   "path": "/presets"
+  },
+  {
+   "method": "POST",
+   "path": "/presets"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/presets",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/presets/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/presets/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/presets/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/relations"
+  },
+  {
+   "method": "POST",
+   "path": "/relations"
+  },
+  {
+   "method": "GET",
+   "path": "/relations/{collection}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/relations/{collection}/{field}"
+  },
+  {
+   "method": "GET",
+   "path": "/relations/{collection}/{field}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/relations/{collection}/{field}"
+  },
+  {
+   "method": "GET",
+   "path": "/revisions"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/revisions",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/revisions/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/robots.txt"
+  },
+  {
+   "method": "DELETE",
+   "path": "/roles"
+  },
+  {
+   "method": "GET",
+   "path": "/roles"
+  },
+  {
+   "method": "PATCH",
+   "path": "/roles"
+  },
+  {
+   "method": "POST",
+   "path": "/roles"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/roles",
+   "category": "search-verb"
+  },
+  {
+   "method": "GET",
+   "path": "/roles/me"
+  },
+  {
+   "method": "DELETE",
+   "path": "/roles/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/roles/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/roles/{pk}"
+  },
+  {
+   "method": "POST",
+   "path": "/schema/apply"
+  },
+  {
+   "method": "POST",
+   "path": "/schema/diff"
+  },
+  {
+   "method": "GET",
+   "path": "/schema/snapshot"
+  },
+  {
+   "method": "GET",
+   "path": "/server/health"
+  },
+  {
+   "method": "GET",
+   "path": "/server/info"
+  },
+  {
+   "method": "GET",
+   "path": "/server/ping"
+  },
+  {
+   "method": "POST",
+   "path": "/server/setup"
+  },
+  {
+   "method": "GET",
+   "path": "/server/specs/graphql"
+  },
+  {
+   "method": "GET",
+   "path": "/server/specs/graphql/{scope}"
+  },
+  {
+   "method": "GET",
+   "path": "/server/specs/oas"
+  },
+  {
+   "method": "GET",
+   "path": "/settings"
+  },
+  {
+   "method": "PATCH",
+   "path": "/settings"
+  },
+  {
+   "method": "POST",
+   "path": "/settings/owner"
+  },
+  {
+   "method": "DELETE",
+   "path": "/shares"
+  },
+  {
+   "method": "GET",
+   "path": "/shares"
+  },
+  {
+   "method": "PATCH",
+   "path": "/shares"
+  },
+  {
+   "method": "POST",
+   "path": "/shares"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/shares",
+   "category": "search-verb"
+  },
+  {
+   "method": "POST",
+   "path": "/shares/auth"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/info/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "POST",
+   "path": "/shares/invite"
+  },
+  {
+   "method": "DELETE",
+   "path": "/shares/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "PATCH",
+   "path": "/shares/{pk}",
+   "category": "route-constraint-syntax"
+  },
+  {
+   "method": "DELETE",
+   "path": "/translations"
+  },
+  {
+   "method": "GET",
+   "path": "/translations"
+  },
+  {
+   "method": "PATCH",
+   "path": "/translations"
+  },
+  {
+   "method": "POST",
+   "path": "/translations"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/translations",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/translations/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/translations/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/translations/{pk}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/users"
+  },
+  {
+   "method": "GET",
+   "path": "/users"
+  },
+  {
+   "method": "PATCH",
+   "path": "/users"
+  },
+  {
+   "method": "POST",
+   "path": "/users"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/users",
+   "category": "search-verb"
+  },
+  {
+   "method": "POST",
+   "path": "/users/invite"
+  },
+  {
+   "method": "POST",
+   "path": "/users/invite/accept"
+  },
+  {
+   "method": "GET",
+   "path": "/users/me"
+  },
+  {
+   "method": "PATCH",
+   "path": "/users/me"
+  },
+  {
+   "method": "POST",
+   "path": "/users/me/tfa/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/users/me/tfa/enable/"
+  },
+  {
+   "method": "POST",
+   "path": "/users/me/tfa/generate/"
+  },
+  {
+   "method": "PATCH",
+   "path": "/users/me/track/page"
+  },
+  {
+   "method": "POST",
+   "path": "/users/register"
+  },
+  {
+   "method": "GET",
+   "path": "/users/register/verify-email"
+  },
+  {
+   "method": "DELETE",
+   "path": "/users/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/users/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/users/{pk}"
+  },
+  {
+   "method": "POST",
+   "path": "/users/{pk}/tfa/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/cache/clear"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/export/{collection}"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/import"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/import/{collection}"
+  },
+  {
+   "method": "GET",
+   "path": "/utils/random/string"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/resolve-redirect"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/revert/{revision}"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/sort/{collection}"
+  },
+  {
+   "method": "POST",
+   "path": "/utils/translations/generate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/versions"
+  },
+  {
+   "method": "GET",
+   "path": "/versions"
+  },
+  {
+   "method": "PATCH",
+   "path": "/versions"
+  },
+  {
+   "method": "POST",
+   "path": "/versions"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/versions",
+   "category": "search-verb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/versions/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/versions/{pk}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/versions/{pk}"
+  },
+  {
+   "method": "GET",
+   "path": "/versions/{pk}/compare"
+  },
+  {
+   "method": "POST",
+   "path": "/versions/{pk}/promote"
+  },
+  {
+   "method": "POST",
+   "path": "/versions/{pk}/save"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Express: api/src/app.ts mounts each controller's router with app.use('/x', xRouter) (imported from ./controllers/x.js), and each controller registers on its module router — router.get('/', ..), router.search('/', ..) (the SEARCH verb), '/:pk', '/:collection/:pk', multi-line calls, a UUID-constrained `/:pk(${UUID_REGEX})`. The list is read from the code: 277 registrations under their mounts, plus /graphql and /graphql/system (router.use, ANY), the /ai routers built as chains on the constructor (Router().post('/chat', ..).post('/object', ..)), POST /auth/login (router.use('/login', createLocalAuthRouter(..)), whose router posts on '/') and GET /assets/{pk} (the optional :filename?). The committed packages/specs is partial and partly stale: it agrees on 127; its /relations/{id}, /extensions/{bundle}/{name} and /auth/oauth are no longer in the code, and its newer areas (dashboards, panels, policies, deployments, ai, mcp, translations..) are missing. Not expected: the per-provider /auth/login/<provider> routers (names from the configuration) and extension endpoints (extensionManager.getEndpointRouter(), at runtime). Added after the run (H2-D15), each checked at the source: the routes app.ts registers itself (GET /, /robots.txt, /admin and /server/ping — the spec's /server/ping is real, there), the short forms of optional parameters (/permissions/me/:collection/:pk?, /server/specs/graphql/:scope?) and tus's HEAD and OPTIONS on /files/tus/:id (verbs the first reading did not list). Still counted against the extractor: /callback, /acs, /metadata and /logout of the SAML and OpenID drivers, which serve under /auth/login/<provider> (a name from the configuration) and come out without it. Moved to the corpus by F1.14 (2026-10-18), which reads Express's SEARCH on a router of the file (never a mount wrapper, even with a middleware of another file before the handler) and a regex constraint after a parameter, written or interpolated (`/:pk(${UUID_REGEX})`). Left: /graphql and /graphql/system mounted with router.use (use-as-route), POST /auth/login from a router factory (router-from-factory), and the SAML/OpenID routes under a provider name from the configuration.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "directus:api/src/controllers/access.ts:186",
+    "method": "DELETE",
+    "path": "/access/{pk}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/auth.ts:196",
+    "method": "POST",
+    "path": "/auth/password/request",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/fields.ts:86",
+    "method": "POST",
+    "path": "/fields/{collection}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/flows.ts:208",
+    "method": "DELETE",
+    "path": "/flows/{pk}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/items.ts:235",
+    "method": "DELETE",
+    "path": "/items/{collection}/{pk}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/license.ts:151",
+    "method": "GET",
+    "path": "/license/portal",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/mcp/oauth.ts:590",
+    "method": "POST",
+    "path": "/mcp-oauth/authorize/decision",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/operations.ts:154",
+    "method": "DELETE",
+    "path": "/operations",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/operations.ts:73",
+    "method": "GET",
+    "path": "/operations",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/permissions.ts:18",
+    "method": "POST",
+    "path": "/permissions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/policies.ts:129",
+    "method": "PATCH",
+    "path": "/policies",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/presets.ts:101",
+    "method": "PATCH",
+    "path": "/presets",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/relations.ts:30",
+    "method": "GET",
+    "path": "/relations/{collection}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/revisions.ts:34",
+    "method": "GET",
+    "path": "/revisions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/schema.ts:54",
+    "method": "POST",
+    "path": "/schema/diff",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/shares.ts:26",
+    "method": "POST",
+    "path": "/shares/auth",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/translations.ts:101",
+    "method": "PATCH",
+    "path": "/translations",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/users.ts:380",
+    "method": "POST",
+    "path": "/users/me/tfa/enable",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/versions.ts:138",
+    "method": "PATCH",
+    "path": "/versions/{pk}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:api/src/controllers/versions.ts:83",
+    "method": "GET",
+    "path": "/versions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "directus:app/src/ai/stores/use-ai-context.ts:173",
+    "method": "GET",
+    "path": "/assets/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/composables/use-revisions.ts:134",
+    "method": "GET",
+    "path": "/revisions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/composables/use-tfa-setup.ts:98",
+    "method": "POST",
+    "path": "/users/me/tfa/disable",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/modules/flows/use-duplicate.ts:93",
+    "method": "DELETE",
+    "path": "/flows/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/modules/settings/routes/policies/use-duplicate.ts:32",
+    "method": "GET",
+    "path": "/permissions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/modules/users/composables/use-navigation.ts:77",
+    "method": "GET",
+    "path": "/roles",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/extensions.ts:109",
+    "method": "POST",
+    "path": "/extensions/registry/reinstall",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/extensions.ts:114",
+    "method": "DELETE",
+    "path": "/extensions/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/extensions.ts:51",
+    "method": "GET",
+    "path": "/extensions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/extensions.ts:93",
+    "method": "PATCH",
+    "path": "/extensions/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/fields.ts:102",
+    "method": "GET",
+    "path": "/fields",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/fields.ts:320",
+    "method": "DELETE",
+    "path": "/fields/{param}/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/insights.ts:257",
+    "method": "POST",
+    "path": "/graphql/system",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/notifications.ts:32",
+    "method": "GET",
+    "path": "/notifications",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/relations.ts:22",
+    "method": "GET",
+    "path": "/relations",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/stores/server.ts:152",
+    "method": "GET",
+    "path": "/auth",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/utils/delete-folder.ts:30",
+    "method": "GET",
+    "path": "/folders",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/utils/upload-file.ts:75",
+    "method": "GET",
+    "path": "/files/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/views/private/components/comparison/use-comparison.ts:231",
+    "method": "GET",
+    "path": "/users/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "directus:app/src/views/private/components/comparison/use-comparison.ts:345",
+    "method": "GET",
+    "path": "/versions/{param}/compare",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

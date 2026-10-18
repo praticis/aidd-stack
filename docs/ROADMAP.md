@@ -5,7 +5,7 @@
 
 ## Onde estamos
 
-- Fase atual: **Fase 0 — Fundação** — concluída no essencial (2026-10-03): infra, indexador, linker, MCP com 11 tools, 5 golden questions respondidas pelo grafo em Go e .NET. F0.4.2 .NET feito (2026-10-12, extensão `dotnet-praticis`); resta F0.4.3a (`corpus-report.md` v1, ver `docs/handoffs/H2-roadmap.md`). **Fase 1 iniciada (2026-10-13)** pelo F0.7.3
+- Fase atual: **Fase 0 — Fundação** — concluída no essencial (2026-10-03): infra, indexador, linker, MCP com 11 tools, 5 golden questions respondidas pelo grafo em Go e .NET. F0.4.2 .NET feito (2026-10-12, extensão `dotnet-praticis`); F0.4.3a feito (2026-10-14, `docs/corpus-report.md` v1); a Fase 0 está fechada; o F0.4.3b (H2b) fechou em 2026-10-17 (corpus de 42 repos e um hold-out de 16; o que falta ao extrator é o F1.14), ver `docs/handoffs/H2-roadmap.md`. **Fase 1 iniciada (2026-10-13)** pelo F0.7.3
 - Último marco concluído (2026-09-09): D1 decidido (Neo4j, ADR-001), Neo4j + `neo4j-init` + `mcp-neo4j` no compose (porta 3004, `atlas` no `.mcp.json`), esquema v1 em `neo4j/SCHEMA.md` (inglês)
 - Branch de trabalho: `feature/refine-business` (já contém `refine-business` v1 e `scan` com vault por projeto)
 - 2026-09-10: compose subiu; credenciais centralizadas no `.env` (`NEO4J_USER`/`NEO4J_PASSWORD`, geradas pelo `install.sh`); compose falha rápido sem senha
@@ -68,7 +68,23 @@
 - 2026-10-14: **Gap .NET (2) — registros do DI e cadeia de decorators (indexer 0.2.14, `refresh` reindexa). Fixtures sem nenhum gap.** O C# lê os registros (`AddScoped/AddTransient/AddSingleton<I, Impl>()`, `TryAdd*`, `AddKeyed*` e o `Decorate<I, D>()` do Scrutor — bibliotecas públicas, embutidas) e monta, por interface, o que o container entrega: `[base, decorator 1, ..., mais externo]`. Uma chamada em I de fora da cadeia vai para o mais externo; de dentro de um decorator (o `processor.ProcessAsync()` que ele embrulha), para o próximo para dentro — `receiver-type-impl`, como o implementador único. Serve também ao caso comum sem decorator: interface com dois implementadores em que o registro diz qual vale. Interface registrada em mais de um arquivo (ambientes, testes) fica sem escolha. Medido: a cadeia real de 5 decorators do accrual saiu inteira e na ordem do registro (handler → `CheckAccountStep` → `CheckGroupStep` → `CheckCategoryStep` → `CommitTransactionStep` → `UpdateCacheStep`); +3 e +10 `receiver-type-impl`, +2 `inherited-impl` (repositórios de leitura com dois implementadores agora seguem o registro); nada perdido. 143 testes, 0 gaps
 - 2026-10-14: **Q4 .NET re-rodada (terceira rodada, `docs/golden-questions.md`).** Q4a ✅ (1 chamador, rota, consumidor cross-repo `exact` — na segunda rodada eram 6 falsos); Q4b ✅ pelo grafo: a classe `CategoryReadRepository` → handler e validators (1 hop) → controller pelo `dispatch` (2 hops) → `POST /api/transactions`, com `impact_of` num tipo agora contando os chamadores dos membros. Lição: a primeira Q4b respondeu com grafo velho — commits que mudaram a saída do indexer sem subir a versão não reindexam; 0.2.14 + `aidd refresh --repos .. --wait` resolveu
 - 2026-10-14: **Build do indexer no snapshot — reindexar não depende mais de lembrar a versão.** `Snapshot.indexer_build` = `<versão>+<impressão digital>`: hash do código que dá forma ao grafo (`core/`, `languages/`, `conventions/`, `cli.py` e os pacotes de convenção instalados), não dos servidores MCP (mudar uma tool não reindexa). Snapshot de outra build volta com sha vazio para o `refresh`, que o reindexa — reinstalar basta. `atlas_status` mostra `indexer_build` e, por snapshot, `outdated: true` quando outra build o escreveu, com a instrução de dizer isso em vez de concluir que o atlas não vê um tipo de ligação (o erro da primeira Q4b); a `scan` roda o `refresh` do repo antes de confiar em quem chama quem. Na primeira reinstalação, todos os snapshots reindexam uma vez (ainda não tinham build). 147 testes
-- Próximo passo: PR da `feature/phase1-dispatch`; então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`). re-rodar a Q4 .NET com o despacho; então SCIP (F1.1/F1.2). Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
+- 2026-10-14: **F0.4.3a — instrumento do corpus e `docs/corpus-report.md` v1 (H2a; extrator intocado, indexer 0.2.14).** Os 15 repos do corpus fixados por SHA; `http_corpus.py` ganhou `--baseline` (diff de ids `method path_key evidence`), `--expected` (P/R contra `indexer/tests/corpus_expected/<repo>.json`, com `scope` e `category` por item) e `--sample` (amostra reprodutível para conferir na fonte); `scripts/corpus_metrics.py` + 12 testes. Gabaritos em 14 repos: OpenAPI commitada em 3 (eShop Catalog, alertmanager `/api/v2`, fiber `swagger/`), o resto lido à mão; 235 rotas e as 24 chamadas julgadas na fonte. Resultado: precisão amostrada de rotas Go 61 %, TS/JS 34 %, C# 90 %, Python 63 %; recall Go 6 %, TS/JS 6 %, C# 49 %, Python 31 %. **67 das 103 rotas erradas só perderam o prefixo** (mount em outro arquivo, router por parâmetro, closure) — viram FP e FN ao mesmo tempo; `"/"` nunca vira rota (`path_of` rejeita literal de 1 caractere, 35 FN); restrições `{x:int?}`/`<int:id>` derrubam a rota inteira. Achado de modelo: o id do endpoint é por repo, então a mesma rota em dois apps do repo vira um nó com a evidência e o handler do primeiro (`multi-app-repo` → F1). Ordem do H2b no fim do relatório: correções baratas, depois o grafo de montagem (prefixos), depois campos em templates de chamada.
+- 2026-10-15: **H2b começou pelas correções baratas do extrator HTTP (indexer 0.2.14; a impressão digital do build reindexa).** Rota raiz (`"/"`, `""`) passa a ser gravada quando o path completo é conhecido — receiver é a aplicação (reconhecida por escopo + nome) ou grupo com prefixo próprio; placeholders com restrição/conversor (`{id:int?}`, `<int:id>`, `{slug:[a-z-]+}`) não derrubam mais a rota (e `{id:int?}` deixou de virar `{id{int}`); padrão sem `/` inicial em grupo (Go, `MapGroup`); `api := r.Group("/api")` deixa de ser confundido com cliente; ação sem template em controller sem `[Route]` não vira `GET /`. Fixtures `route-patterns-{go,ts,py,cs}`. Corpus: recall de rotas C# 49 → 73 %, Go 6 → 15 %, Python 31 → 43 %, TS/JS 6 → 9 %; 74 rotas novas julgadas (68 certas, 6 herdam o prefixo perdido dos irmãos), 2 FPs a menos. Detalhe em `docs/corpus-report.md` ("Update: the cheap fixes") e `docs/handoffs/H2-roadmap.md`.
+- 2026-10-15: **Correções baratas do extrator HTTP concluídas (H2b, item 1).** Query literal não invalida mais o template de chamada; `fetch(url)` sem `method` é GET; requisições de `TestClient`/`app.test_client()` não são chamadas de saída; grupos opcionais do Express 5 normalizados; `Del` (Prometheus `route`) é DELETE; e, achado no caminho, genérico aninhado no C# (`GetFromJsonAsync<List<T>>`) fazia a chamada sumir. Fixtures `route-patterns-*` estendidas. Próximo: ampliar o corpus (Fase 3 do `docs/handoffs/H2-roadmap.md`) antes do grafo de montagem.
+- 2026-10-15: **Corpus v2 do extrator HTTP — 39 repos, apps reais (H2b, fase 3; extrator intocado).** 24 repos novos fixados por SHA (gitea, mattermost, kratos, argo-cd, gotify, go-feature-flag, go-kit; immich, NodeBB, Ghost, Hono, Next.js, Fastify, Express; eShopOnWeb, eShopSupport, CleanArchitecture/FastEndpoints, jellyfin, bitwarden; zulip, netbox, dispatch, aiohttp, CTFd), gabarito em 38 (spec commitada em 14) e amostra julgada na fonte em todos — `docs/corpus-report.md` seção v2. Nos apps reais o recall de rotas fica em Go 8,7 %, TS/JS 1,7 %, Python 1,0 % e C# 73 %: o prefixo é aplicado longe da rota (grafo de montagem, em 23 dos 38 repos) ou a rota vem de estrutura que nenhum scanner lê (Django/DRF, helpers do projeto, `Combo`/builders, rotas por arquivo do Next.js). C# segura (bitwarden e eShopSupport 100 %/100 %); chamadas acertam 56–75 % na amostra e erram sobretudo pelo prefixo do cliente da API. Medidos: H2-D9 (371 operações em 4 clientes gerados, 0 extraídas) e H2-D10 (26 de 60 controllers do jellyfin herdam `[Route]`). Achado de escala: grafana (24 mil arquivos) estoura 7,7 GB de memória no Docker — o repo é mantido inteiro em memória durante a extração. Ordem do H2b revista: grafo de montagem, defeitos baratos do v2, `route-chain`, chamadas, C#, scanners novos quando um portfólio pedir
+- 2026-10-15: **Defeitos baratos do corpus v2 corrigidos (H2b, fase 4 item 3).** Os 15 que o v2 expôs, cada um com fixture: na precisão, variável de outra função, jQuery como rota, mount do `ServeMux` como rota, handler espalhado lido como chamada, bundle de build commitado e chave de cache como GET; no recall, constante montada de outra, constante com URL base, receiver na linha de cima, `application/{id}` tido por MIME, método em keyword/variável, `del`, mux padrão, prefixo pela cadeia do grupo e aiohttp. O julgamento do diff (rotas −37 +49, chamadas −54 +186, item a item) achou e corrigiu 3 defeitos das próprias regras. Chamadas C# P 62 → 84 % e R 48 → 64 % no gabarito, recall de chamadas Go e TS/JS +8–9 pontos, rotas Python P 27 → 38 %. As decisões de clientes gerados e de `[Route]` herdado foram aceitas (extrair `via: generated-client`; seguir um nível de herança). Item novo **F1.13** (repos grandes): o grafana não indexa porque a extração guarda todas as árvores até o fim
+- 2026-10-16: **C#: chamada genérica com receiver vira call site, e tipo de pacote não chuta homônimo (fora do H2, achado nele).** O `queries.scm` só casava genérica sem receiver: `repo.FindAsync<T>(id)`, `_libraryManager.GetItemById<T>(..)`, `sutProvider.GetDependency<T>()` nem eram chamadas. Com elas no grafo, a adivinhação por nome do resolver apareceu em massa (`Substitute.For<T>()` ligado a um `For` do repo), e a regra de precisão ganhou um caso: receiver cujo tipo está escrito no código e é de pacote (`Substitute`, um local `Fixture`, um campo `ILogger`) — ou genérica num receiver de tipo desconhecido — só alcança **método de extensão do repo** (marcado nos fatos do arquivo, `this` depois de atributos e em várias linhas), que estenda aquele tipo (interface, parâmetro de tipo ou `object` valem para qualquer um) e caiba nos argumentos (o método do próprio tipo vence: `list.Contains(x)` é do `List`); classe estática (`Assert.X`) não tem extensão; nome com maiúscula que é membro herdado (`ParentId`, `HttpContext` de uma base de pacote) não é tipo estático; `Ns.Tipo.Metodo()` do repo continua. Medido em 4 repos .NET (conjunto de arestas antes × depois, amostras julgadas na fonte): bitwarden −5.684 +12.244, jellyfin −1.459 +367, eShop −111 +27, eShopOnWeb −8 +15; o que sai é chute (`List.Add`, LINQ, `mock.Setup` do Moq, `Assert.Single`, `JsonSerializer.Serialize`, `_logger.LogX`, `Path.GetExtension`), o que entra é `receiver-type` em genéricos e extensões do repo (`claimsPrincipal.GetValue<T>`, `AddX(this IServiceCollection)`). Resta chute quando o tipo de pacote tem método próprio com o mesmo nome e aridade (`string.Split(',')` × uma extensão `Split`). Fixture `csharp-receiver-types` + 5 testes.
+- 2026-10-16: **Linker: rotas ASP.NET casam sem distinção de caixa (F0.5), e clientes NSwag viram chamadas (H2b item 7).** Os clientes gerados pelo NSwag mostraram a caixa que o ASP.NET publica: `/api/TodoItems`, o nome da classe — o extrator gravava `[controller]` em minúsculas só porque o linker comparava exato. Agora o extrator mantém a caixa declarada e o linker compara sem caixa quando a rota é de `aspnet`, `aspnet-minimal` ou `fastendpoints` (o roteamento do ASP.NET Core não distingue); Go, Express, FastAPI e os demais continuam exatos. O nó `HttpEndpoint` já tinha `framework`; o `link_tenant` passou a lê-lo. Os clientes NSwag C# (`.g.cs` com o cabeçalho do NSwag deixa de ser excluído como gerado) e TS viram `HttpCall` `via: generated-client`: num par .NET com cliente gerado, cada operação liga à rota do serviço. Medido no corpus do H2 com 3 apps .NET novos (145 operações, todas extraídas e com rota); detalhe no `H2-roadmap.md` e no `corpus-report.md`. Teste `test_aspnet_routes_match_without_case_others_with_it` e o par `csharp-praticis-reports` → `-todos` na caixa declarada.
+- 2026-10-16: **Handoff H3 registrado** (`docs/handoffs/H3-ai-dev-efficiency.md`, item S9): medir se o atlas e o conhecimento do processo reduzem tokens no desenvolvimento com IA ou se o ganho está em outro lugar. A estimativa, ainda sem medição: economia modesta em tarefas dentro de um repo e ganho grande, sobretudo em completude e menos retrabalho, nas tarefas entre repos. Desenho: reencenar PRs já mergeados com e sem a stack, medindo tokens, tempo, completude e defeitos contra o que o PR mudou
+- 2026-10-16: **Handoff H4 registrado** (`docs/handoffs/H4-public-docs.md`, trilha **Publicação e documentação**): documentação pública para os dois repositórios — o aidd-stack e o indexador, que sai para um repo próprio —, com inglês como fonte e traduções em pt-BR, es e zh-CN. Proposta de fronteira: o `knowledge` e a política ficam no aidd-stack; o esquema, o corpus, as fixtures e, no primeiro corte, o `dotnet-praticis` vão com o indexador, publicado como imagem no GHCR. Traduções em camadas, com proveniência e checagem de defasagem no CI, e um manifesto como contrato com o processo dos assets visuais. A separação espera o merge do H2b
+- 2026-10-16: **TS: imports `.js` de um arquivo `.ts` e aliases de um pacote abaixo da raiz resolvem (fora do H2, achado nele).** Com `moduleResolution: nodenext`, o TS escreve `import { x } from './enum.js'` para `enum.ts`; o resolvedor só tentava o `.js` e as extensões somadas ao nome, e o import ficava sem destino. Os aliases (`src/`, `@/`, `~/`, `#`) eram tentados só da raiz do repo, e o `src/*` do `tsconfig` de um pacote como o `server/` do immich não resolvia. Agora o resolvedor tenta o `.ts`/`.tsx`/`.mts`/`.cts` de um especificador `.js`/`.jsx`/`.mjs`/`.cjs` e os aliases a partir do pacote do arquivo antes da raiz. Medido com o código antes e depois: +9845 arestas `IMPORTS` para arquivo (immich 76 → 3232, nest 54 → 3540, ghost 11647 → 14863, fastify-demo 0 → 26), não resolvidos 3244 → 88, 3489 → 3, 3817 → 601 e 26 → 0; cada aresta nova nomeia o arquivo do especificador, nenhuma se perdeu ou mudou de destino. Teste `test_resolve_ts.py`; o HTTP (prefixos do Nest em enum de outro arquivo) está no `H2-roadmap.md`.
+- 2026-10-17: **F0.4.3b fechado (H2b): corpus de 42 repos e hold-out de 16.** O extrator passou pelos itens da Fase 4 na ordem do ranking do v2 e da prioridade do portfólio (H2-D18); do primeiro v2 ao último, nos mesmos gabaritos e 38 repos, o recall de rotas foi de 55,6 a 93,1 % no C#, de 9,4 a 98,0 % no Go, de 9,1 a 98,0 % no Python fora do Django e de 4,3 a 85,4 % no TS/JS. O **hold-out** — 16 repos no perfil do portfólio, com gabarito escrito antes de rodar e medidos uma vez (H2-D20) — mostrou sobreajuste onde o portfólio mais pesa: recall de rotas C# 48,5 % e Go 19,7 % (Python 83,8 %, TS/JS 74,1 %). As regras valem onde o app roteia como o corpus (Kavita, sftpgo, open-webui, docmost e btcpayserver saem inteiros; o SDK hey-api do Umbraco, 513 de 513) e caem em formas comuns que ele não tinha: atributo de rota próprio, convenções OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo; e dois defeitos de precisão (prefixo aplicado duas vezes num grupo Go passado a função). Tudo isso entrou no **F1.14**, precisão primeiro. Ferramenta: `http_corpus.py --holdout` e o `scope_paths` do gabarito (`corpus_metrics.py`). Relatório: `docs/corpus-report.md`
+- 2026-10-17: **F1.14 incremento 1: os dois defeitos de precisão do hold-out e o .NET que ele mostrou.** O prefixo de grupo passa a ser do par (escopo, nome), como o grafo de montagem: o parâmetro `a` de `registerAPIRoutes(a)` não herda o `a :=` de outra função (vikunja, 176 rotas); método Go não exportado não registra rota; o echo junta prefixo e path como escritos. No .NET, os atributos de rota do projeto viram receitas que o `compose` preenche (Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(x)]`), com Asp.Versioning, OData por convenção, herança em até quatro níveis (`[NonAction]`, sobrecargas) e `[Route]` sem verbo como ANY: Radarr e Smartstore a 100 %/100 %, Umbraco a 100 %/99,8 % com o token do próprio Umbraco lido (sem isso, 0 %: limitação). Os quatro repos viram corpus (46); os 42 anteriores, idênticos. Fronteira com o SCIP registrada (guia §8, ADR-002): o que falta é valor ou convenção, e o que pedir tipo inferido vira `needs-resolver` para o F1.2
+- 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
+- 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
+- 2026-10-18: **F1.14 incremento 4: o Python do hold-out.** Classe do projeto cujas bases chegam ao router do framework constrói um router (`class UserAPIRouter(APIRouter)` do mealie, de outro arquivo), com o prefixo pelo que o `__init__` entrega ao `super().__init__` — literal, ou o argumento da chamada para o parâmetro. mealie de 64,1 % / 59,4 % a 100 % / 100 % e vira corpus (51); o CTFd ganha `GET /` (a aplicação é `CTFdFlask`, subclasse de `Flask`); os outros 49, idênticos.
+- 2026-10-18: **F1.14 incremento 5: o TS/JS do hold-out — o item 6 fecha.** Rotas Koa sem barra montadas por `router.use("/", x.routes())` e `koa-mount`, o `SEARCH` do Express, a regex depois de um parâmetro e o curinga opcional do path-to-regexp 8; nas chamadas, a base do cliente de módulo (`axios.create({ baseURL })`, a classe com campo `baseUrl`), também por import e alias (`@/`, `$lib`), salvo com interceptor que reescreve a `url`, e constantes em template. outline, directus, docmost e open-webui viram corpus (55); o dispatch ganha 3 chamadas; os outros 50, idênticos. Do item 6 sobram limitações e o connect-go (F2.1). Próximo: PR da `feature/h2-corpus`; depois, numa branch nova, os itens 1–5 e 7 e um hold-out novo para fechar o F1.14; então o SCIP (F1.1/F1.2).
+- Próximo passo (2026-10-18): PR da `feature/h2-corpus` (H2b e o item 6 do F1.14); depois, numa branch nova, fechar o F1.14 (itens 1–5 e 7 e um hold-out novo, H2-D20); então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`); re-rodar a Q4 .NET com o despacho. Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
 
@@ -142,8 +158,8 @@ Objetivo: provar micro + macro com o mínimo: dois repos (Go + Node) que se fala
 - [x] F0.4 Extrator de candidatos de integração v0 (hoje `indexer/aidd_indexer/core/integrations.py` + `languages/<lang>/http.py`, ver F0.4.4): rotas expostas (Go net/http 1.22, gorilla, chi, gin/echo+Group, fiber; express/fastify; Nest; ASP.NET controllers + minimal APIs; FastAPI/Flask) e chamadas HTTP de saída com path literal/template (Go, TS, C#, Python). Calibrado em corpus público (`scripts/http_corpus.py`). `.proto` + stubs ficam para F1 (gRPC)
   - [x] F0.4.2 (handoff H1) Fixtures do padrão do autor por linguagem + `expected.json` — **.NET feito 2026-10-12** (indexer 0.2.10): extensão `dotnet-praticis` (`indexer/conventions/dotnet-praticis/`, entry point `aidd.conventions`; papéis + arquiteturas `flat`/`split`/`layered`), fixtures `csharp-praticis-todos` / `-reports` / `-projects` (um layout cada) com layout, papéis, camadas, entry points, violação proposital, `CALLS` e gaps no `expected.json`; as Go (`go-http-mix`, `go-wrapped-http`, `go-receiver-types`…) já seguem o layout hexagonal do autor — falta escrevê-lo como convenção Go quando houver referência
   - [ ] F0.4.3 (handoff H2, dividido em H2a/H2b em 2026-10-13 — plano, decisões e estado em `docs/handoffs/H2-roadmap.md`)
-    - [ ] F0.4.3a (H2a) Instrumento + `docs/corpus-report.md` v1 com o corpus atual: SHAs fixados, `http_corpus.py --baseline/--expected/--sample`, gabarito OpenAPI onde houver spec commitada, precisão/recall amostrados (recall sorteado da fonte), erros por categoria. Fecha a Fase 0
-    - [ ] F0.4.3b (H2b) Corpus ampliado (~40 repos, preferência por spec commitada) + evolução do extrator nas categorias que forem regra geral (prefixo cross-scope/cross-file, Django, rota por caminho de arquivo); gaps encaminhados a F0.5/F1/F2.1. Não bloqueia a Fase 1
+    - [x] F0.4.3a (H2a) *(2026-10-14)* Instrumento + `docs/corpus-report.md` v1 com o corpus atual: SHAs fixados, `http_corpus.py --baseline/--expected/--sample`, gabarito OpenAPI onde houver spec commitada, precisão/recall amostrados (recall sorteado da fonte), erros por categoria. Fecha a Fase 0
+    - [x] F0.4.3b (H2b) *(2026-10-17)* Corpus ampliado (~40 repos, preferência por spec commitada — *feito 2026-10-15: 39 repos, relatório v2*; 42 no fim) + evolução do extrator nas categorias que forem regra geral (prefixo cross-scope/cross-file, Django, rota por caminho de arquivo); gaps encaminhados a F0.5/F1/F2.1. No corpus, do primeiro v2 ao último (mesmos gabaritos, 38 repos): recall de rotas C# 55,6 → 93,1 %, Go 9,4 → 98,0 %, Python fora do Django 9,1 → 98,0 %, TS/JS 4,3 → 85,4 %; chamadas C# 48,3 → 96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %. O **hold-out** (16 repos que as regras nunca viram, H2-D20) mostrou sobreajuste: recall de rotas C# 48,5 %, Go 19,7 %, Python 83,8 %, TS/JS 74,1 %; chamadas TS/JS 76,5 % — o que falta virou o **F1.14**. Relatório: `docs/corpus-report.md` ("Closing H2b", "The hold-out set")
   - [x] F0.4.4 (ADR-003) Refatorar para `core/` + `languages/<lang>/` sem mudar comportamento (corpus + fixture idênticos) **+ costura de convenções** (registro `aidd.conventions`, contrato `Convention`, `convention.yaml`, exemplo mínimo, `conventions:` no `atlas.yaml`); depois disso H1 escreve o padrão do autor como convenção e H2 edita `languages/` — feito 2026-09-17
   - [x] F0.4.5 Convenções: `route_patterns`/`client_patterns` (`Convention.scan_patterns()` → `ScanPatterns`, aplicados por `BaseScanner.convention_call()` em Go/TS/C#) e `Violation` no MCP (`violations(repo)`, `repo_map.layers`) — feito 2026-10-03 (indexer 0.2.6) e validado no portfólio (0.2.9: 130 endpoints, 90 ligações `exact`, 0 ambíguas)
   - [x] F0.4.1 Validar no portfólio — fechado 2026-10-03 junto com a F0.4.5: rotas com handler resolvido em 31/31, 40/40 e 25/25 nos três serviços Go com HTTP; `HttpCall`s com `target_hint` = nome do serviço (e do provedor externo); `who_consumes` respondendo do grafo (Q1/Q4 em `docs/golden-questions.md`); falsos positivos de `HttpCall` zerados no BFF (18 saídas reais, 17 ligadas; a restante é path dinâmico ambíguo). O que fica sem par no tenant são provedores externos e rotas públicas
@@ -223,7 +239,10 @@ Em aberto:
 ## Fase 1 — Micro completo (SCIP multi-linguagem + retrieval híbrido)
 
 - [ ] F1.1 Integrar indexadores SCIP (Go, TS, .NET, Python) no `indexer/`; detecção automática de stack por manifest; config por repo (`.aidd/index.yaml`: excludes, conectores)
-- [ ] F1.2 Conversor SCIP → grafo (definições, referências resolvidas, IMPLEMENTS/EXTENDS, tipos)
+- [ ] F1.2 Conversor SCIP → grafo (definições, referências resolvidas, IMPLEMENTS/EXTENDS, tipos) + resolvedor para a
+  camada HTTP: um gancho no `http_base` (por nome por padrão, SCIP quando a snapshot tem índice) consultado só nos
+  pontos de indecisão que o F1.14 registrou como `needs-resolver` — sem índice, o HTTP segue como hoje (ADR-002,
+  decisão 3)
 - [ ] F1.3 tree-sitter como fallback para linguagens sem SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Indexação incremental: `git diff` → pacotes tocados → reindex parcial; remoção de órfãos por snapshot `(repo, ref)`
 - [ ] F1.5 Embeddings por **símbolo** (assinatura + docstring + corpo curto) no Qdrant, payload `{node_id, repo, ref, kind}`; trocar modelo para o de código
@@ -234,6 +253,144 @@ Em aberto:
 - [ ] F1.10 Nova skill `flow`: dado um entry point (endpoint/handler/job), narra o fluxo micro usando `trace_flow` + trechos
 - [ ] F1.11 Tabela `index_runs` (repo, ref, sha, duração, contagens, erros) + comando `aidd status`
 - [ ] F1.12 Ampliar perguntas douradas para 20; script `aidd eval` que roda todas e reporta recall
+- [ ] F1.13 **Repos grandes (escala da extração)**: o grafana (24 mil arquivos) é morto por memória a 7,7 GB no Docker
+  Desktop (corpus v2, 2026-10-15), porque `extract_tree` guarda a árvore tree-sitter e o texto de **todos** os arquivos
+  até o fim — só a extração HTTP precisa delas; o `Resolver` lê dados por arquivo (`namespaces`, `facts`). Primeiro
+  medir a memória por fase (discover / extract / http / resolve / escrita) no grafana; depois, em ordem de custo:
+  1. soltar a árvore de cada arquivo assim que nada mais a lê — a extração HTTP diretório a diretório (as constantes e
+     o scan já são por diretório);
+  2. lotes por módulo (pacote Go, `.csproj`, workspace do `package.json`), cada lote gravado no grafo, e as arestas
+     entre lotes resolvidas no fim só com a tabela de símbolos — o mesmo recorte que o F1.4 reindexa e que o SCIP
+     indexa por projeto (F1.1);
+  3. recorte por repo no `atlas.yaml` (subpastas como unidades, excludes) para monorepos em que só uma parte interessa.
+
+  Restrição para quem vier antes: o grafo de montagem do HTTP (H2b) cruza arquivos — deve trabalhar com um resumo por
+  arquivo (quem monta o quê, com que prefixo), nunca segurando árvores de outros diretórios. **Pronto quando** o
+  grafana indexa sob um teto fixo de memória (ex.: 2 GB) e, num repo médio, a extração em lotes é idêntica à inteira
+  (o corpus HTTP com `--baseline` dá o diff). Medir junto o custo do HTTP em repos sem rotas que ele leia (netbox: 49 s
+  de 107 s com 0 rotas e 0 chamadas no corpus v2; zulip 17 s de 47 s)
+- [ ] F1.14 **Extrator HTTP: o que o H2 deixou** (fechamento do F0.4.3b, 2026-10-17). As lacunas que o corpus de 42
+  repos ainda mostra e que são evolução do extrator, com os números de `docs/corpus-report.md` ("Closing H2b"), na
+  ordem do portfólio (H2-D18). Cada uma pelo ciclo do guia (`docs/indexer-evolution.md` §5: fixture → corpus
+  `--baseline` → julgamento item a item → nova baseline). **Fronteira com o SCIP** (2026-10-17, guia §8): o que falta
+  nessas lacunas é quase sempre um valor (template, prefixo) ou uma convenção de framework, que o SCIP não carrega;
+  fica no tree-sitter o que é sintaticamente determinado (tipo declarado, lista de bases, import path, config de alias,
+  valor de constante). Lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** (retorno
+  inferido, injeção de dependência, despacho por interface, sobrecarga) não ganha heurística: vira limitação com
+  categoria `needs-resolver` e espera o resolvedor do F1.2:
+  1. .NET: FastEndpoints `RoutePrefix` global e `Group<T>()`; ~~`[Route]` herdado em mais de um nível (H2-D10 decidiu
+     um)~~ *feito 2026-10-17: até quatro níveis, com as actions das bases e o `[NonAction]` delas — o Radarr pedia*;
+  2. Go: método de router chamado por um campo de tipo declarado (alertmanager
+     `api.deprecationRouter.Register(r.WithPrefix("/api/v1"))`, 7 rotas sem o prefixo); closure de registro chamada
+     dentro de vários grupos (gitea); tipo de router que põe o prefixo nos próprios métodos (kratos `RouterAdmin`, 12);
+  3. Python: wrapper de cliente do app (o caminho do C#, sem caso no corpus); Django urlconf + DRF (1420 rotas em 2
+     repos), quando um portfólio pedir;
+  4. TS/JS: wrapper de cliente que põe a base no path (`prefix-in-client-wrapper`: argo-cd `requests`, NodeBB `api`,
+     37 chamadas erradas e 34 faltando; `client-wrapper` do gitea, 16) — o caminho do C#, agora que o TS resolve
+     imports; router guardado em lista e montado em laço (express-boilerplate, 14); rotas por pasta
+     (`@fastify/autoload`, 14) e por arquivo (Next.js, 9);
+  5. modelo: o id do `HttpEndpoint` é por repo, então a mesma rota em dois apps do repo vira um nó só, com a evidência
+     do primeiro (`multi-app-repo`, 16 rotas em 7 repos);
+  6. **do hold-out (2026-10-17, 16 repos fora do ajuste; `corpus-report.md` "The hold-out set"), que pesa mais que os
+     itens acima — são as formas de apps reais que o corpus não tinha.** Precisão primeiro: o prefixo aplicado duas vezes
+     quando um grupo Go com prefixo é passado a uma função (vikunja, 172 rotas `/api/v1/api/v1/..`) e a chamada lida como
+     rota (`c.get(path, nil, out)`) — *feitos 2026-10-17 (incremento 1, abaixo)*. Depois, na ordem do portfólio:
+     - .NET: ~~atributo de rota próprio (`IRouteTemplateProvider`, subclasse de `RouteAttribute`: Umbraco, Radarr — 760
+       rotas); convenções OData sem template (Smartstore, 260)~~ *feitos 2026-10-17*; ~~FastEndpoints atrás de base
+       própria com o `RoutePrefix` global (Elsa, 94; junto do item 1); `[Route]` em outro arquivo de classe `partial`~~
+       *feitos 2026-10-18*; ~~a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`~~ *feitos*;
+       ~~a evidência com a linha de outro nó num `Program.cs` (Elsa); action sem atributo num controller com `[Route]`
+       (`/umbraco/login`)~~ *feitos 2026-10-18*; o prefixo que vem de opções ou de configuração — o coletor
+       OpenTelemetry do Elsa (`IsNullOrWhiteSpace(o.Path) ? "/elsa/otlp/v1" : o.Path`), o `MapGroup(options.RoutePrefix)`
+       do IconKit do Smartstore — fica como limitação (`prefix-as-param`);
+     - Go: ~~router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com
+       o verbo em constante (memos, 92)~~ *feitos 2026-10-18 (incremento 3)* — os handlers connect-go ficam com o F2.1
+       (proto como fonte);
+     - Python: ~~subclasses de `APIRouter` (mealie, 28)~~ *feito 2026-10-18 (incremento 4)*;
+     - TS/JS: ~~Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do
+       cliente (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit)
+       ou de um campo (`this.baseUrl = environment.apiUrl`) — 158 chamadas em 4 repos~~ *feitos 2026-10-18
+       (incremento 5)*.
+     Ao trabalhar sobre eles, esses repos viram corpus: o fechamento do F1.14 precisa de um hold-out novo.
+     **Incremento 1 (2026-10-17)** — vikunja, Umbraco, Radarr e Smartstore passaram ao corpus (46 repos):
+     - precisão: o prefixo de grupo é do par (escopo, nome), não do nome no arquivo (vikunja: 176 rotas
+       `/api/v1/api/v1/..` e `/dav/dav/..` corrigidas); em Go, método não exportado nunca é registro de framework
+       (4 GETs do cliente Planka voltam a ser chamadas); o echo junta prefixo e path como escritos (`u.GET("s")` é
+       `/users`). Vikunja: P 100 %, R 89,8 % — o resto é o nome do migrador vindo de um método por interface
+       (`segment-from-method`, limitação) e o grupo passado a um método de valor de tipo declarado (item 2);
+     - .NET: os atributos de rota do projeto como receita (classe e action, em cadeia, constantes de outro projeto pelo
+       nome qualificado), Asp.Versioning (versão declarada, ou a padrão), OData por convenção, herança em até quatro
+       níveis com `[NonAction]` e sobrecargas, `[Route]` sem verbo como ANY, templates com regex/`nameof`. Radarr: de P
+       17,9 % / R 2,9 % a 100 % / 100 %; Smartstore: de 98,6 % / 52,8 % a 100 % / 100 %; Umbraco: 0 % / 0 % — o token
+       `[umbracoBackOffice]`, trocado no startup por uma convenção do próprio Umbraco, fica no path
+       (`route-token-convention`, limitação — lido no incremento 2); lido como `/umbraco`, 100 % / 99,8 %. Nenhum dos
+       42 repos de antes mudou na lista;
+     - placar: rota ASP.NET casa sem caixa com o gabarito, como no linker;
+     **Incremento 2 (2026-10-18)** — o resto do .NET do hold-out; Elsa e btcpay passaram ao corpus (48 repos):
+     - token de rota do projeto: o `[x]` que não é do framework recebe o valor com que a convenção que reescreve as
+       rotas de atributo é registrada (`Conventions.Add(new T(token, valor))`), lido como as receitas de atributo;
+       valor de configuração deixa o token como escrito. Umbraco: de 0 % / 0 % a 100 % / 100 %;
+     - FastEndpoints atrás das bases do projeto, `Routes`/`Verbs` em qualquer ordem, e o `RoutePrefix` global —
+       literal, constante ou o default declarado do parâmetro que o método repassa; o valor que o host passa de
+       configuração não é lido. Elsa: de 0 % / 0 % (amostra 12/20) a 100 % / 100 % (18/20);
+     - as metades de uma classe `partial` são uma classe (`[Route]` e `[Area]` da outra metade); action sem atributo de
+       rota pelo teste do ASP.NET (método público de instância, não abstrato, não genérico, não `Dispose`); `[Area]`
+       herdado da base; `[Route(CONST)]` da própria classe; a evidência de `MapGet` na linha do nome. btcpay: amostra
+       de 19/20 a 20/20;
+     - C# no corpus: R 99,3 % (1931/1944) a P 100 %; 43 dos 46 repos de antes idênticos;
+     **Incremento 3 (2026-10-18)** — o Go do hold-out; memos e photoprism passaram ao corpus (50 repos):
+     - grpc-gateway v2: o verbo como constante do net/http (`mux.Handle(http.MethodGet, ..)`) e a captura com literais
+       (`{name=memos/*}` é `/api/memos/{name}`). memos: de R 0 % a P 100 % / R 49,7 % — as 92 rotas do gateway; as 93
+       que faltam são as cópias Connect dos mesmos RPCs (F2.1);
+     - em Go, `=` não declara: o nome que a função só atribui é o do pacote. O grupo numa variável de pacote leva o
+       próprio prefixo na aresta que publica, e as rotas de outros arquivos atrás de cada parâmetro o recebem; a
+       função cujo `return` é o parâmetro (ou termina nele) vale o argumento — o que vem antes é do deploy, como o
+       `RoutePrefix` do Elsa; os verbos do `Match` vêm de variável de pacote, de `pkg.X` ou do literal. photoprism:
+       de 0 % / 0 % (amostra 0/20) a 97,5 % / 97,6 % (19/20); gotify: `ANY /health` e `ANY /mcp` com seus verbos;
+     - ficam: o segmento que o helper `SearchFolders` recebe por parâmetro (`segment-from-param`); `/docs`, só no build
+       de debug, registrado por variável de função (`registrar-in-func-var`); e o verbo customizado do gRPC depois de
+       um literal, impresso como parâmetro (`/api/ai{transcribe}`: casa nos dois lados, mas o path sai errado; quem
+       sabe que não há parâmetro com `:` é a origem — path de OpenAPI e pattern do gateway; dívida, item 7);
+     - Go no corpus: P 99,1 %, R 92,9 % (97,3 % sem os RPCs Connect); 47 dos 48 repos de antes idênticos;
+     **Incremento 4 (2026-10-18)** — o Python do hold-out; mealie passou ao corpus (51 repos):
+     - classe de router do projeto: `UserAPIRouter(prefix="/recipes")` constrói um router quando as bases da classe
+       chegam ao router ou à aplicação do framework (`APIRouter`, `Blueprint`, `Flask`, ..). A classe vem do diretório,
+       do import ou do módulo importado; a base de outro arquivo, pelo nome único no repo. O prefixo é o que o
+       primeiro `__init__` subindo as bases entrega ao `super().__init__`: literal, ou o argumento da chamada para o
+       parâmetro (por nome ou posição, senão o default). mealie: de 64,1 % / 59,4 % (amostra 13/20) a 100 % / 100 %
+       (20/20); o CTFd ganha `GET /`, raiz do blueprint montado em `CTFdFlask(__name__)`, subclasse de `Flask`;
+     - Python no corpus: P 99,1 %, R 24,2 % (o Django do zulip e do netbox ainda sem scanner); 49 dos 50 repos de
+       antes idênticos;
+     **Incremento 5 (2026-10-18)** — o TS/JS do hold-out; outline, directus, docmost e open-webui passaram ao corpus
+     (55 repos; o hold-out fica com 3):
+     - rotas: path sem barra do Koa (`@koa/router`, `koa-router`) como a raiz de um sub-router, que a montagem prefixa;
+       `x.routes()` é o router; `use(mount("/api", api))` do `koa-mount` é montagem; `router.search(..)` é `SEARCH` e
+       nunca wrapper de montagem; a regex depois de um parâmetro (`/:pk(${UUID_REGEX})`) e o curinga opcional
+       `{/*path}`. outline: de 0 % a 100 % / 100 %; directus: R de 87,3 % a 99,0 %;
+     - chamadas: o cliente de módulo com base — `axios.create({ baseURL })` e afins, ou `new C()` de classe cuja base é
+       campo (`this.baseUrl = options.baseUrl || "/api"`) — põe a base nas chamadas no arquivo e por import, salvo
+       quando um interceptor reescreve a `url` (dispatch: a organização entra entre a base e o path); cliente conhecido
+       nunca é router; template de constantes é constante; `${X}` importado; `$lib`; ternário de query. outline,
+       docmost e open-webui de 0 % a 95–100 % de precisão e 100 % de recall; o dispatch ganha 3 chamadas (100 %);
+     - ficam: as chamadas da própria classe cliente em `this` (`this.post("/batch")`), a query numa variável colada ao
+       path (`query-in-variable`) e o helper que recebe path e método (item 4);
+     - TS/JS no corpus: rotas P 96,5 %, R 89,0 %; chamadas P 96,6 %, R 95,3 %; 50 dos 51 repos de antes idênticos;
+  7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
+     cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
+     fixos do `built_bundle`.
+     Do incremento 3 (2026-10-18): **o verbo customizado do gRPC depois de um literal vira parâmetro.**
+     `normalize_path` (`core/paths.py`, a regra do `:id`) lê o `:transcribe` de `/api/ai:transcribe` como parâmetro
+     do Express e grava `/api/ai{transcribe}` (6 rotas do memos: `ai:transcribe`, `attachments:batchDelete`,
+     `settings:batchGet`, `notification:testEmail`, `linkMetadata:batchGet`, `users:batchGet`; o `{name}:accept`,
+     depois de `}`, já era poupado). Os dois lados normalizam igual, então o par casa, mas o path exibido é falso e
+     o parâmetro casa qualquer sufixo. A sintaxe não decide (Express e httprouter aceitam `/user_:name`); a origem
+     decide: path de OpenAPI e pattern do grpc-gateway nunca têm parâmetro com `:`. Caminho: `normalize_path` com a
+     leitura de `:x` desligável, desligada em `from_openapi` e no `grpc_gateway_pattern`; o gabarito do memos é
+     regerado e as 6 rotas voltam a `:verbo`. Conferir também o lado das chamadas (cliente REST que chama
+     `/x:verbo`).
+
+  Pastas de app de teste com nome de produção (`integration/` do nest e do fastify, 20 rotas) ficam para a config por
+  repo do F1.1. **Pronto quando** cada item tiver regra com fixture e corpus julgado, ou limitação registrada no guia
 
 **Saída da fase:** qualquer repo do workspace indexável em 1 comando; `scan` e `flow` respondendo com fatos do grafo.
 
@@ -286,6 +443,7 @@ scan ──► flow / impact ──► refine-business ──► refine-tech ─
 - [ ] S6 `implement`: executa a spec no orquestrador escolhido (harness: testes, cobertura, lições → `record_insight`, trilha **Conhecimento do projeto**)
 - [ ] S7 `review`: contexto injetado (spec + diff + cobertura + convenções do grafo + insights `accepted`/`enforced` da área) → parecer sênior; PR
 - [ ] S8 Definir contrato comum entre skills (frontmatter + formato da nota de saída) para que a saída de uma seja entrada da próxima — a parte do conhecimento (índice do projeto + nota de insight) é o K1
+- [ ] S9 (handoff H3) Medir o efeito do atlas e do conhecimento no desenvolvimento com IA — tokens, tempo, completude e defeitos, em tarefas reais dentro de um repo e entre repos, com e sem a stack (`docs/handoffs/H3-ai-dev-efficiency.md`). Depois do H2b, em outro processo
 
 ## Conhecimento do projeto (trilha própria)
 
@@ -338,6 +496,19 @@ observed ──► recurring ──► accepted ──────────�
 - [ ] K9 *(com volume de insights; backup junto do SO11)* Envelhecimento e backup: `last_seen` mais antigo que `knowledge.archive_after_days` sem novas ocorrências perde peso e vai para `archived`; notas e coleção de insights não se refazem a partir do código → entram no backup (SO11)
 - [ ] K10 Política dentro do repo (`.aidd/policy.yaml`, lida do espelho na branch padrão): em organizações, a política no `~/.aidd` é de cada dev e dois devs podem trabalhar com thresholds diferentes; no repo ela vale igual para todos e só muda por PR (review humano). Camada acima de `overrides` do repo; depois do K1.1 provado
 
+## Publicação e documentação (trilha própria)
+
+> O repo é público e o README tem uma linha. Esta trilha dá aos dois repositórios — o aidd-stack e o indexador, que
+> sai para um repo próprio — documentação para quem chega, em inglês, português, espanhol e chinês. Decisões, fronteira
+> entre os repos e ordem: `docs/handoffs/H4-public-docs.md`.
+
+- [ ] P1 Decisões do H4 (H4-D1…D12, nome do repo do indexador, revisores por idioma) e esboço da arquitetura dos docs — pode correr em paralelo ao H2b
+- [ ] P2 Indexador em repo próprio: `filter-repo` com histórico auditado, imagem multi-arquitetura no GHCR, `knowledge` e política no aidd-stack, esquema aplicado pelo indexador; regressão = testes, corpus idêntico e instalação limpa do aidd-stack com a imagem publicada. Depois do merge do H2b
+- [ ] P3 Conteúdo em inglês dos dois repos (README + `docs/en/`), validado por quem nunca viu o projeto
+- [ ] P4 Idiomas: glossário, guia de estilo, `i18n_check.py` no CI; traduções por camada em pt-BR, es e zh-CN
+- [ ] P5 Assets visuais (manifesto `docs/assets/README.md`), arquivos de comunidade, configurações do GitHub e primeira release dos dois repos
+- [ ] P6 *(opcional)* Site de docs, quando a navegação pedir
+
 ## Decisões pendentes
 
 - [x] D1 Graph DB → **Neo4j Community** (ADR-001): Neo4j Community vs Memgraph (critério: MCP oficial, memória, licença para uso interno)
@@ -355,5 +526,5 @@ observed ──► recurring ──► accepted ──────────�
 - [x] D9 *(revisto pelo D15: a fonte `local` também tem espelho, para o workspace ficar só leitura)* Fonte `local` sem espelhos: `git archive` das remote-tracking refs (read-only); espelhos bare só com providers remotos
 - [x] D10 Defaults da política de refs: `main/master/develop` sempre, ativas ≤14 dias, ≤5 por repo, GC efêmeros 30 dias
 - [x] D11 Áreas: seção opcional `areas:` no `atlas.yaml` (→ `Repo.area`, agrupa o `plan`); nós de domínio e Backstage/Compass adiados para F2
-- [ ] D5 Idioma dos docs: schema e ADR já em inglês (padrão do projeto open source); traduzir `ROADMAP.md` quando estabilizar ou mantê-lo em PT como doc de trabalho interno
+- [ ] D5 Idioma dos docs: schema e ADR já em inglês (padrão do projeto open source); traduzir `ROADMAP.md` quando estabilizar ou mantê-lo em PT como doc de trabalho interno — proposta no H4 (H4-D1): inglês como fonte dos docs públicos, traduções em pt-BR, es e zh-CN; ROADMAP e handoffs seguem em PT
 - [ ] D4 Modelo local mínimo para tarefas agênticas com tool-calling (avaliar Qwen-Coder ≥ 30B); 7B/14B ficam só para sumários e classificação

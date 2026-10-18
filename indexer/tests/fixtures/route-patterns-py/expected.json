@@ -1,0 +1,171 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "index"
+  },
+  {
+   "method": "GET",
+   "path": "/posts/{post_id}/edit",
+   "handler": "edit_post"
+  },
+  {
+   "method": "POST",
+   "path": "/posts/{post_id}/edit",
+   "handler": "edit_post"
+  },
+  {
+   "method": "GET",
+   "path": "/{page}",
+   "handler": "static_page"
+  },
+  {
+   "method": "GET",
+   "path": "/admin",
+   "handler": "admin_index"
+  },
+  {
+   "method": "GET",
+   "path": "/items",
+   "handler": "list_items"
+  },
+  {
+   "method": "GET",
+   "path": "/items/{item_id}",
+   "handler": "get_item"
+  },
+  {
+   "method": "ANY",
+   "path": "/",
+   "handler": "IndexView"
+  },
+  {
+   "method": "GET",
+   "path": "/polls",
+   "handler": "index"
+  },
+  {
+   "method": "POST",
+   "path": "/poll/{question_id}/vote",
+   "handler": "vote"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphql",
+   "handler": "graphql"
+  },
+  {
+   "method": "POST",
+   "path": "/predict",
+   "handler": "predict"
+  },
+  {
+   "method": "GET",
+   "path": "/users",
+   "handler": "list_users"
+  },
+  {
+   "method": "GET",
+   "path": "/users/{user_id}",
+   "handler": "get_user"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard",
+   "handler": "dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/reports/monthly",
+   "handler": "monthly"
+  },
+  {
+   "method": "GET",
+   "path": "/internal/status",
+   "handler": "status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{order_id}",
+   "handler": "read_order"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tags/{tag_id}",
+   "handler": "read_tag"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tags",
+   "handler": "list_tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/recipes",
+   "handler": "list_recipes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/recipes/{slug}/exports",
+   "handler": "export_recipe"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/recipes/timeline/events",
+   "handler": "create_event"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{user_id}",
+   "handler": "delete_user"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/audits/daily",
+   "handler": "daily_audit"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/challenges",
+   "handler": "ChallengeList.get"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/challenges",
+   "handler": "ChallengeList.post"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/challenges/{challenge_id}",
+   "handler": "Challenge.get"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v2/challenges/{challenge_id}",
+   "handler": "Challenge.patch"
+  },
+  {
+   "method": "POST",
+   "path": "/auth/register",
+   "handler": "register_user"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/v1/stock",
+   "line": 17
+  },
+  {
+   "method": "POST",
+   "path": "/v1/flag/configuration",
+   "line": 19
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/services/verify/{param}",
+   "line": 32
+  }
+ ]
+}

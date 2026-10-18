@@ -1,0 +1,83 @@
+{
+ "source": "manual",
+ "sha": "e7c79be54ba0b001a5b332c1efe935f520b9db4b",
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/Contributors"
+  },
+  {
+   "method": "POST",
+   "path": "/Contributors"
+  },
+  {
+   "method": "DELETE",
+   "path": "/Contributors/{ContributorId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Contributors/{ContributorId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/Contributors/{ContributorId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Products"
+  },
+  {
+   "method": "POST",
+   "path": "/Products"
+  },
+  {
+   "method": "GET",
+   "path": "/Products/{ProductId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects"
+  },
+  {
+   "method": "DELETE",
+   "path": "/Projects/{ProjectId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects/{ProjectId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/Projects/{ProjectId}"
+  },
+  {
+   "method": "GET",
+   "path": "/Projects/{ProjectId}/IncompleteItems"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects/{ProjectId}/ToDoItems"
+  },
+  {
+   "method": "POST",
+   "path": "/Projects/{ProjectId}/ToDoItems/{ToDoItemId}"
+  },
+  {
+   "method": "POST",
+   "path": "/cart"
+  },
+  {
+   "method": "GET",
+   "path": "/cart/{CartId}"
+  },
+  {
+   "method": "POST",
+   "path": "/cart/{CartId}/checkout"
+  }
+ ],
+ "notes": "Manual, the three apps of the template (src/, sample/, MinimalClean/). Every route is a FastEndpoints endpoint class that declares it inside Configure() — Get(\"/Contributors\"), Post(CreateContributorRequest.Route) with the constant on the request class — so there is no Map*/attribute call to see and nothing is extracted (endpoint-class; the template's three apps share keys, multi-app-repo). No outbound calls outside tests. Since item 6 (2026-10-15) the endpoint classes are read (Configure() verbs; the Route constant by its qualified name, since every request class of a folder has one; $\"/{nameof(Project)}s\" as /Projects): all 19 come out right."
+}

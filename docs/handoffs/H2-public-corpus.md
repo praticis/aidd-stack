@@ -5,6 +5,10 @@
 > (F0.4), `indexer/aidd_indexer/core/http_base.py` e `indexer/aidd_indexer/languages/<lang>/http.py`, e rodar
 > `python indexer/scripts/http_corpus.py`
 > para ter a baseline em mãos.
+>
+> **Estado e plano (2026-10-13):** o H2 foi dividido em H2a (instrumento + relatório v1 com os 15 repos)
+> e H2b (~40 repos + evolução do extrator). Decisões, checklist e onde estamos: `docs/handoffs/H2-roadmap.md`
+> — ler esse arquivo primeiro.
 
 ## Contexto em um parágrafo
 

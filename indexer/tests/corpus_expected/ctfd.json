@@ -1,0 +1,420 @@
+{
+ "source": "manual",
+ "sha": "6b01b531e8445c781a8bdcdc9409400e19207037",
+ "scope": {
+  "endpoints": [
+   "CTFd/api/v1/challenges.py",
+   "CTFd/auth.py"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/challenges"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/challenges/attempt"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/types"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/challenges/{challenge_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/challenges/{challenge_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/files"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/flags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/hints"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/ratings"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/challenges/{challenge_id}/ratings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/requirements"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/solution"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/solves"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/tags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/challenges/{challenge_id}/topics"
+  },
+  {
+   "method": "GET",
+   "path": "/confirm"
+  },
+  {
+   "method": "POST",
+   "path": "/confirm"
+  },
+  {
+   "method": "GET",
+   "path": "/confirm/{data}"
+  },
+  {
+   "method": "POST",
+   "path": "/confirm/{data}"
+  },
+  {
+   "method": "GET",
+   "path": "/login"
+  },
+  {
+   "method": "POST",
+   "path": "/login"
+  },
+  {
+   "method": "GET",
+   "path": "/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/oauth"
+  },
+  {
+   "method": "GET",
+   "path": "/redirect"
+  },
+  {
+   "method": "GET",
+   "path": "/register"
+  },
+  {
+   "method": "POST",
+   "path": "/register"
+  },
+  {
+   "method": "GET",
+   "path": "/reset_password"
+  },
+  {
+   "method": "POST",
+   "path": "/reset_password"
+  },
+  {
+   "method": "GET",
+   "path": "/reset_password/{data}"
+  },
+  {
+   "method": "POST",
+   "path": "/reset_password/{data}"
+  }
+ ],
+ "notes": "Manual: recall from two files read whole — the challenges REST namespace (CTFd/api/v1/challenges.py) and the auth blueprint (CTFd/auth.py). Flask blueprints without url_prefix (auth, views, admin, challenges) come out right, methods=[...] included. The REST API is flask-restx: @challenges_namespace.route(\"/<challenge_id>/solves\") on a Resource class whose methods are def get/post/patch/delete, the namespace added with CTFd_API_v1.add_namespace(ns, \"/challenges\") on a Blueprint with url_prefix=\"/api/v1\" — until 2026-10-16 the routes came out as GET without /api/v1/<namespace> and the other methods of each Resource were lost (restx-resource), and a namespace route that shadowed a blueprint one (GET /teams, /users) hid it. Since then each method of a Resource is a route under the namespace and the Api's blueprint prefix: 155 routes in 90 classes, the count an ast walk of CTFd/api gives. The themes commit their built, minified bundles (themes/*/static/assets/*.js): calls in them are right but duplicated, and two minified $.get-like calls became routes (build-artifact). Calls: CTFd.fetch(\"/api/v1/...\", {method}) with the full path written out — right; a method held in a local variable (let method = \"PATCH\") comes out ANY (method-variable). Since the v2 cheap fixes (2026-10-15): the committed bundles (themes/*/static/assets/*-<hash>.js) are left out, a method or a path held in a local variable (let method, target +=) is read, and $.get is a call.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "ctfd:CTFd/admin/__init__.py:107",
+    "method": "POST",
+    "path": "/admin/import",
+    "raw": "/admin/import",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/admin/__init__.py:220",
+    "method": "GET",
+    "path": "/admin/reset",
+    "raw": "/admin/reset",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/admin/submissions.py:10",
+    "method": "GET",
+    "path": "/admin/submissions",
+    "raw": "/admin/submissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/admin/teams.py:9",
+    "method": "GET",
+    "path": "/admin/teams",
+    "raw": "/admin/teams",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/audiences.py:106",
+    "method": "GET",
+    "path": "/api/v1/audiences/{audience_id}/members",
+    "raw": "/<int:audience_id>/members",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/challenges.py:1071",
+    "method": "GET",
+    "path": "/api/v1/challenges/{challenge_id}/solves",
+    "raw": "/<challenge_id>/solves",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/modules.py:104",
+    "method": "GET",
+    "path": "/api/v1/modules/{module_id}/challenges",
+    "raw": "/<int:module_id>/challenges",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/statistics/challenges.py:40",
+    "method": "GET",
+    "path": "/api/v1/statistics/challenges/solves",
+    "raw": "/challenges/solves",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/statistics/challenges.py:90",
+    "method": "GET",
+    "path": "/api/v1/statistics/challenges/solves/percentages",
+    "raw": "/challenges/solves/percentages",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/statistics/scores.py:11",
+    "method": "GET",
+    "path": "/api/v1/statistics/scores/distribution",
+    "raw": "/scores/distribution",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/api/v1/teams.py:407",
+    "method": "POST",
+    "path": "/api/v1/teams/me/members",
+    "raw": "/me/members",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/auth.py:118",
+    "method": "GET",
+    "path": "/reset_password/{data}",
+    "raw": "/reset_password/<data>",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/auth.py:234",
+    "method": "GET",
+    "path": "/register",
+    "raw": "/register",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/auth.py:440",
+    "method": "POST",
+    "path": "/login",
+    "raw": "/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/auth.py:676",
+    "method": "GET",
+    "path": "/logout",
+    "raw": "/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/challenges.py:19",
+    "method": "GET",
+    "path": "/challenges",
+    "raw": "/challenges",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/views.py:272",
+    "method": "POST",
+    "path": "/setup/integrations",
+    "raw": "/setup/integrations",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/views.py:566",
+    "method": "GET",
+    "path": "/robots.txt",
+    "raw": "/robots.txt",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/compat/helpers.js:89",
+    "method": "POST",
+    "path": "/api/v1/comments",
+    "raw": "/api/v1/comments",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/audience.js:120",
+    "method": "DELETE",
+    "path": "/api/v1/audiences/{param}/members/{param}",
+    "raw": "/api/v1/audiences/{param}/members/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/challenge.js:226",
+    "method": "DELETE",
+    "path": "/api/v1/challenges/{param}",
+    "raw": "/api/v1/challenges/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/editor.js:30",
+    "method": "PATCH",
+    "path": "/api/v1/pages/{param}",
+    "raw": "/api/v1/pages/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/module.js:146",
+    "method": "PATCH",
+    "path": "/api/v1/challenges/{param}",
+    "raw": "/api/v1/challenges/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/module.js:182",
+    "method": "PATCH",
+    "path": "/api/v1/challenges/{param}",
+    "raw": "/api/v1/challenges/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/module.js:54",
+    "method": "PATCH",
+    "path": "/api/v1/modules/{param}",
+    "raw": "/api/v1/modules/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/pages.js:19",
+    "method": "DELETE",
+    "path": "/api/v1/pages/{param}",
+    "raw": "/api/v1/pages/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/team.js:130",
+    "method": "PATCH",
+    "path": "/api/v1/submissions/{param}",
+    "raw": "/api/v1/submissions/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/team.js:31",
+    "method": "POST",
+    "path": "/api/v1/teams",
+    "raw": "/api/v1/teams",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/team.js:540",
+    "method": "DELETE",
+    "path": "/api/v1/teams/{param}",
+    "raw": "/api/v1/teams/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/team.js:84",
+    "method": "PATCH",
+    "path": "/api/v1/teams/{param}",
+    "raw": "/api/v1/teams/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/admin/assets/js/pages/user.js:352",
+    "method": "POST",
+    "path": "/api/v1/submissions",
+    "raw": "/api/v1/submissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/core-deprecated/assets/js/pages/teams/private.js:20",
+    "method": "POST",
+    "path": "/api/v1/teams/me/members",
+    "raw": "/api/v1/teams/me/members",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/core-deprecated/assets/js/pages/teams/private.js:95",
+    "method": "PATCH",
+    "path": "/api/v1/teams/me",
+    "raw": "/api/v1/teams/me",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "ctfd:CTFd/themes/core/assets/js/notifications.js:9",
+    "method": "GET",
+    "path": "/api/v1/notifications",
+    "raw": "/api/v1/notifications?since_id={param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

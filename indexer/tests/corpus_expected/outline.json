@@ -1,0 +1,763 @@
+{
+ "source": "manual",
+ "sha": "178e923cb7027ddaa22b69fd44a4b3ea489327cd",
+ "scope": {
+  "endpoints": [
+   "server/routes/api/documents/",
+   "server/routes/api/collections/",
+   "server/routes/api/users/"
+  ],
+  "calls": [
+   "app/stores/DocumentsStore.ts",
+   "app/stores/CollectionsStore.ts",
+   "app/stores/UsersStore.ts"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/collections.add_group",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.add_user",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.archive",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.create",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.delete",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.documents",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.duplicate",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.export",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.export_all",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.group_memberships",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.import",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.info",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.list",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.memberships",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.move",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.remove_group",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.remove_user",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.restore",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.update",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.add_group",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.add_user",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.archive",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.archived",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.create",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.delete",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.deleted",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.documents",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.drafts",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.duplicate",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.empty_trash",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.export",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.group_memberships",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.import",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.info",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.insights",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.memberships",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.move",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.remove_group",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.remove_user",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.restore",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.search",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.search_titles",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.templatize",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.unpublish",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.update",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.users",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.viewed",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.activate",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.delete",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.demote",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.info",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.invite",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.list",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.notificationsSubscribe",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.notificationsUnsubscribe",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.promote",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.requestDelete",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.resendInvite",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.suspend",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.update",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users.updateEmail",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.updateEmail",
+   "category": "no-leading-slash"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.update_role",
+   "category": "no-leading-slash"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/collections.archive",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.duplicate",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.export_all",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.import",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.move",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/collections.restore",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.archive",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.duplicate",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.empty_trash",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.import",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.move",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.restore",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.search",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.search_titles",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.unpublish",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/relationships.list",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.invite",
+   "category": "prefix-in-client-wrapper"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users.resendInvite",
+   "category": "prefix-in-client-wrapper"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Koa, RPC-style paths. Routes, scope: the documents, collections and users modules (64 routes). Each module's @koa/router registers router.post(\"documents.info\", auth(), validate(..), handler) — the path without a leading slash —, server/routes/api/index.ts mounts every module with router.use(\"/\", x.routes()) on the API router, served by a Koa app that services/web.ts mounts with app.use(mount(\"/api\", api)): /api/documents.info. Calls, scope: the three matching MobX stores (19 calls): client.post(\"/documents.info\", ..) on the app's own ApiClient, whose baseUrl defaults to \"/api\" in its constructor (prefix-in-client-wrapper). Not expected: client.post(`/users.${action}`, ..) (the action named at runtime) and the base Store's `/${this.apiEndpoint}.create` (a field per store). Moved to the corpus by F1.14 (2026-10-18): @koa/router's paths without a leading slash under router.use(\"/\", x.routes()), koa-mount's mount(\"/api\", api), and the ApiClient's base (this.baseUrl = options.baseUrl || \"/api\") on its module instance `client`. The checked samples were refreshed: the 7 routes take /auth or /oauth (koa-mount), and 18 calls take /api, all right; this.post(\"/batch\") inside ApiClient itself stays without the base (prefix-in-client-wrapper).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "outline:server/main.ts:85",
+    "method": "GET",
+    "path": "/_health",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/auth/index.ts:37",
+    "method": "GET",
+    "path": "/auth/redirect",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/discovery/index.ts:13",
+    "method": "GET",
+    "path": "/opensearch.xml",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/discovery/index.ts:9",
+    "method": "GET",
+    "path": "/robots.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/discovery/mcp.ts:69",
+    "method": "GET",
+    "path": "/sse",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/errors.ts:5",
+    "method": "POST",
+    "path": "/test/error",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:107",
+    "method": "GET",
+    "path": "/locales/{lng}.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:132",
+    "method": "GET",
+    "path": "/s/{shareId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:138",
+    "method": "GET",
+    "path": "/s/{shareId}/doc/{documentSlug}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:139",
+    "method": "GET",
+    "path": "/s/{shareId}/{path}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:143",
+    "method": "GET",
+    "path": "/embeds/dropbox",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:144",
+    "method": "GET",
+    "path": "/embeds/pinterest",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:148",
+    "method": "GET",
+    "path": "/doc/{documentSlug}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/index.ts:155",
+    "method": "GET",
+    "path": "/sitemap.xml",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:114",
+    "method": "POST",
+    "path": "/oauth/token",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:183",
+    "method": "POST",
+    "path": "/oauth/revoke",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:210",
+    "method": "POST",
+    "path": "/oauth/register",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:293",
+    "method": "PUT",
+    "path": "/oauth/register/{clientId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:338",
+    "method": "DELETE",
+    "path": "/oauth/register/{clientId}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:server/routes/oauth/index.ts:46",
+    "method": "POST",
+    "path": "/oauth/authorize",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "outline:app/actions/definitions/documents.tsx:838",
+    "method": "POST",
+    "path": "/api/documents.export",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/editor/components/LinkEditor.tsx:72",
+    "method": "POST",
+    "path": "/api/suggestions.mention",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/editor/components/MentionMenu.tsx:218",
+    "method": "POST",
+    "path": "/api/documents.users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/models/Comment.ts:259",
+    "method": "POST",
+    "path": "/api/reactions.list",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/models/User.ts:273",
+    "method": "POST",
+    "path": "/api/users.notificationsSubscribe",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/scenes/Document/components/Document.tsx:150",
+    "method": "POST",
+    "path": "/api/revisions.info",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/scenes/Settings/Authentication.tsx:130",
+    "method": "POST",
+    "path": "/api/authenticationProviders.startGroupSync",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/DocumentsStore.ts:484",
+    "method": "POST",
+    "path": "/api/documents.search_titles",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/DocumentsStore.ts:612",
+    "method": "POST",
+    "path": "/api/documents.duplicate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/DocumentsStore.ts:651",
+    "method": "POST",
+    "path": "/api/documents.import",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/DocumentsStore.ts:717",
+    "method": "POST",
+    "path": "/api/documents.archive",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/GroupUsersStore.ts:35",
+    "method": "POST",
+    "path": "/api/groups.add_user",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/ImportsStore.ts:16",
+    "method": "POST",
+    "path": "/api/imports.cancel",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/MembershipsStore.ts:66",
+    "method": "POST",
+    "path": "/api/collections.remove_user",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/SharesStore.ts:43",
+    "method": "POST",
+    "path": "/api/shares.revoke",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/UnfurlsStore.ts:75",
+    "method": "POST",
+    "path": "/api/urls.unfurl",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/stores/UsersStore.ts:202",
+    "method": "POST",
+    "path": "/api/users.{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:app/utils/ApiClient.ts:526",
+    "method": "POST",
+    "path": "/batch",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-in-client-wrapper"
+   },
+   {
+    "evidence": "outline:plugins/azure/server/auth/azure.ts:48",
+    "method": "GET",
+    "path": "/v1.0/me/photo/$value",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "outline:plugins/passkeys/client/Settings.tsx:71",
+    "method": "POST",
+    "path": "/api/passkeys.verifyRegistration",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

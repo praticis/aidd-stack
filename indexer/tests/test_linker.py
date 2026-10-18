@@ -35,6 +35,17 @@ def test_never_links_to_own_service():
     assert not r.edges and len(r.unmatched) == 1
 
 
+def test_aspnet_routes_match_without_case_others_with_it():
+    """ASP.NET routing ignores case (`/api/TodoItems` from an NSwag client hits `[Route("api/[controller]")]`); a Go
+    or Express route does not."""
+    calls = [call("web", "GET", "/api/todoitems/{param}", id="c1"), call("web", "GET", "/v1/Users", id="c2")]
+    endpoints = [EndpointRow("e1", "todos", "GET", "/api/TodoItems/{param}", "aspnet"),
+                 EndpointRow("e2", "users", "GET", "/v1/users", "chi/fiber")]
+    r = link(calls, endpoints)
+    assert [(e.call.id, e.endpoint.id, e.confidence) for e in r.edges] == [("c1", "e1", "exact")]
+    assert [c.id for c in r.unmatched] == ["c2"]
+
+
 def test_suffix_needs_segment_alignment_and_a_hint():
     eps = [ep("billing-api", "GET", "/internal/v1/users/{param}")]
     r = link([call("a", "GET", "/v1/users/{param}", target_hint="billing")], eps)
@@ -75,8 +86,8 @@ def _extract(name: str):
     from aidd_indexer.core.model import RepoInfo
     root = FIXTURES / name
     repo = RepoInfo(tenant="t", name=name, ref="main", commit_sha="x", root=str(root))
-    _, extractors = extract_tree(repo)
-    return extract_http(repo, extractors)
+    res, extractors = extract_tree(repo)
+    return extract_http(repo, extractors, modules=res.modules)
 
 
 def test_fixture_pair_links_end_to_end():
@@ -84,7 +95,7 @@ def test_fixture_pair_links_end_to_end():
     endpoints, calls = [], []
     for name in ("go-http-mix", "go-billing-api", "py-notifications-api"):
         hr = _extract(name)
-        endpoints += [EndpointRow(e.id, name, e.method, path_key(e.path)) for e in hr.endpoints]
+        endpoints += [EndpointRow(e.id, name, e.method, path_key(e.path), e.framework) for e in hr.endpoints]
         calls += [CallRow(c.id, name, "main", "x", c.method, path_key(c.path), c.target_hint, tuple(c.env_hints),
                           c.caller_id, c.evidence, c.via, c.line) for c in hr.calls]
     r = link(calls, endpoints)
@@ -100,17 +111,18 @@ def test_fixture_pair_links_end_to_end():
 
 def test_dotnet_praticis_pair_links_end_to_end():
     """The consumer's typed HttpClient (`Infra/Http/Outbound/TodosApi`) reaches the
-    provider's controller route `[Route("api/[controller]")]` + `[HttpGet("{todoId:guid}/details")]`."""
+    provider's controller route `[Route("api/[controller]")]` + `[HttpGet("{todoId:guid}/details")]` — the client
+    writes `api/todos`, the route is `/api/Todos` (ASP.NET matches without case)."""
     from aidd_indexer.core.paths import path_key
     endpoints, calls = [], []
     for name in ("csharp-praticis-reports", "csharp-praticis-projects", "csharp-praticis-todos"):
         hr = _extract(name)
-        endpoints += [EndpointRow(e.id, name, e.method, path_key(e.path)) for e in hr.endpoints]
+        endpoints += [EndpointRow(e.id, name, e.method, path_key(e.path), e.framework) for e in hr.endpoints]
         calls += [CallRow(c.id, name, "main", "x", c.method, path_key(c.path), c.target_hint, tuple(c.env_hints),
                           c.caller_id, c.evidence, c.via, c.line) for c in hr.calls]
     r = link(calls, endpoints)
     assert sorted((e.call.repo, e.endpoint.service, e.endpoint.method, e.endpoint.path_key, e.confidence) for e in r.edges) == [
-        ("csharp-praticis-projects", "csharp-praticis-todos", "GET", "/api/todos/{param}/details", "exact"),   # layered layout
-        ("csharp-praticis-reports", "csharp-praticis-todos", "GET", "/api/todos/{param}/details", "exact")]    # split layout
+        ("csharp-praticis-projects", "csharp-praticis-todos", "GET", "/api/Todos/{param}/details", "exact"),   # layered layout
+        ("csharp-praticis-reports", "csharp-praticis-todos", "GET", "/api/Todos/{param}/details", "exact")]    # split layout
     assert all(e.call.caller_id.endswith(".TodosApiClient.GetTodoDetailsAsync#method") for e in r.edges)
     assert not r.unmatched and not r.ambiguous

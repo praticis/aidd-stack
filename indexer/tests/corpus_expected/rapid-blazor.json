@@ -1,0 +1,450 @@
+{
+ "source": {
+  "endpoints": "nswag + manual",
+  "calls": "nswag"
+ },
+ "sha": "923b6d4537d7c8b499435c7378f4bd8ee69b2271",
+ "spec": [
+  "/corpus/repos/rapid-blazor/src/WebUI/Client/ApiClients.g.cs"
+ ],
+ "scope": {
+  "endpoints": [
+   "src/WebUI/Server/Controllers/"
+  ],
+  "calls": [
+   "src/WebUI/Client/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/_configuration/{clientId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/AccessControl"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/AccessControl"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Admin/Roles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Admin/Roles/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/Roles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/Users/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/TodoItems"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoItems/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoItems/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/TodoLists"
+  },
+  {
+   "method": "POST",
+   "path": "/api/TodoLists"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoLists/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoLists/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/WeatherForecast"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/Admin/AccessControl"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/AccessControl"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Admin/Roles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Admin/Roles/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/Roles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Admin/Users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Admin/Users/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/TodoItems"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoItems/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoItems/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/TodoLists"
+  },
+  {
+   "method": "POST",
+   "path": "/api/TodoLists"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoLists/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoLists/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/WeatherForecast"
+  }
+ ],
+ "notes": "Endpoints: the operations of the NSwag client the Blazor WebAssembly app compiles (src/WebUI/Client/ApiClients.g.cs, generated from the server's OpenAPI document: 17), plus GET /_configuration/{clientId}, hidden from the document by [ApiExplorerSettings(IgnoreApi = true)]. Scope src/WebUI/Server/Controllers/. Routes come from [Route(\"api/[controller]\")] on a shared base (ApiControllerBase) and [Route(\"api/Admin/[controller]\")], with [controller] in the class's case, as the client writes it. Calls: the same 17 operations, as the generated client writes them (urlBuilder_.Append, NSwag v13). Added 2026-10-16 with H2b item 7 (NSwag); every operation is extracted on both sides.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/AccessControlController.cs:12",
+    "method": "GET",
+    "path": "/api/Admin/AccessControl",
+    "raw": "api/Admin/AccessControl",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/AccessControlController.cs:19",
+    "method": "PUT",
+    "path": "/api/Admin/AccessControl",
+    "raw": "api/Admin/AccessControl",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/RolesController.cs:13",
+    "method": "GET",
+    "path": "/api/Admin/Roles",
+    "raw": "api/Admin/Roles",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/RolesController.cs:21",
+    "method": "POST",
+    "path": "/api/Admin/Roles",
+    "raw": "api/Admin/Roles",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/RolesController.cs:33",
+    "method": "PUT",
+    "path": "/api/Admin/Roles/{id}",
+    "raw": "api/Admin/Roles/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/RolesController.cs:47",
+    "method": "DELETE",
+    "path": "/api/Admin/Roles/{id}",
+    "raw": "api/Admin/Roles/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/UsersController.cs:13",
+    "method": "GET",
+    "path": "/api/Admin/Users",
+    "raw": "api/Admin/Users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/UsersController.cs:21",
+    "method": "GET",
+    "path": "/api/Admin/Users/{id}",
+    "raw": "api/Admin/Users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/Admin/UsersController.cs:29",
+    "method": "PUT",
+    "path": "/api/Admin/Users/{id}",
+    "raw": "api/Admin/Users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/OidcConfigurationController.cs:19",
+    "method": "GET",
+    "path": "/_configuration/{clientId}",
+    "raw": "/_configuration/{clientId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoItemsController.cs:10",
+    "method": "POST",
+    "path": "/api/TodoItems",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoItemsController.cs:18",
+    "method": "PUT",
+    "path": "/api/TodoItems/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoItemsController.cs:33",
+    "method": "DELETE",
+    "path": "/api/TodoItems/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoListsController.cs:11",
+    "method": "GET",
+    "path": "/api/TodoLists",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoListsController.cs:18",
+    "method": "POST",
+    "path": "/api/TodoLists",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoListsController.cs:26",
+    "method": "PUT",
+    "path": "/api/TodoLists/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/TodoListsController.cs:41",
+    "method": "DELETE",
+    "path": "/api/TodoLists/{id}",
+    "raw": "/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Server/Controllers/WeatherForecastController.cs:11",
+    "method": "GET",
+    "path": "/api/WeatherForecast",
+    "raw": "/",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1176",
+    "method": "GET",
+    "path": "/api/Admin/AccessControl",
+    "raw": "/api/Admin/AccessControl",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1251",
+    "method": "PUT",
+    "path": "/api/Admin/AccessControl",
+    "raw": "/api/Admin/AccessControl",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1484",
+    "method": "GET",
+    "path": "/api/Admin/Roles",
+    "raw": "/api/Admin/Roles",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1559",
+    "method": "POST",
+    "path": "/api/Admin/Roles",
+    "raw": "/api/Admin/Roles",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1636",
+    "method": "PUT",
+    "path": "/api/Admin/Roles/{id}",
+    "raw": "/api/Admin/Roles/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1717",
+    "method": "DELETE",
+    "path": "/api/Admin/Roles/{id}",
+    "raw": "/api/Admin/Roles/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:175",
+    "method": "PUT",
+    "path": "/api/TodoItems/{id}",
+    "raw": "/api/TodoItems/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:1950",
+    "method": "GET",
+    "path": "/api/Admin/Users",
+    "raw": "/api/Admin/Users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:2022",
+    "method": "GET",
+    "path": "/api/Admin/Users/{id}",
+    "raw": "/api/Admin/Users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:2098",
+    "method": "PUT",
+    "path": "/api/Admin/Users/{id}",
+    "raw": "/api/Admin/Users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:263",
+    "method": "DELETE",
+    "path": "/api/TodoItems/{id}",
+    "raw": "/api/TodoItems/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:497",
+    "method": "GET",
+    "path": "/api/TodoLists",
+    "raw": "/api/TodoLists",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:572",
+    "method": "POST",
+    "path": "/api/TodoLists",
+    "raw": "/api/TodoLists",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:654",
+    "method": "PUT",
+    "path": "/api/TodoLists/{id}",
+    "raw": "/api/TodoLists/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:742",
+    "method": "DELETE",
+    "path": "/api/TodoLists/{id}",
+    "raw": "/api/TodoLists/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:93",
+    "method": "POST",
+    "path": "/api/TodoItems",
+    "raw": "/api/TodoItems",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "rapid-blazor:src/WebUI/Client/ApiClients.g.cs:955",
+    "method": "GET",
+    "path": "/api/WeatherForecast",
+    "raw": "/api/WeatherForecast",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

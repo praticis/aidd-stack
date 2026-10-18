@@ -8,6 +8,7 @@ import os
 
 import pytest
 
+from aidd_indexer.core.linker import CASE_INSENSITIVE
 from aidd_indexer.mcp.server import Store, _collapse_refs, build_server
 
 EXPECTED_TOOLS = {"atlas_status", "repo_map", "find_symbol", "who_calls", "symbol_context", "http_map",
@@ -264,3 +265,21 @@ def test_impact_of_a_type_counts_the_callers_of_its_members(monkeypatch):
     monkeypatch.setenv("AIDD_TENANT", "t")
     out = _call(build_server(store=TypeStore()), "impact_of", {"symbol": "pkg.Svc.Do"})
     assert out["members_included"] == 1 and out["internal_caller_count"] == 1
+
+
+def test_who_consumes_matches_an_aspnet_route_without_case(monkeypatch):
+    """An ASP.NET route keeps the case the code writes (`/api/Todos`), and the framework matches a request without it:
+    a client asking for `/api/todos/{id}` finds it, as the linker links it — the other frameworks keep their case."""
+    class ConsumesStore(FakeStore):
+        def read(self, query, **params):
+            if "AS possible_consumers" in query:
+                self.queries.append(query)
+                assert params["key"] == "/api/todos/{param}" and params["nocase"] == sorted(CASE_INSENSITIVE)
+                assert "toLower($key)" in query and "toLower(c.path_key) = toLower(e.path_key)" in query
+                return [{"service": "a", "endpoint_id": "e1", "method": "GET", "path": "/api/Todos/{todoId}",
+                         "handlers": [], "consumers": [], "possible_consumers": []}]
+            return super().read(query, **params)
+
+    monkeypatch.setenv("AIDD_TENANT", "t")
+    out = _call(build_server(store=ConsumesStore()), "who_consumes", {"path": "/api/todos/{id}"})
+    assert [e["path"] for e in out["endpoints"]] == ["/api/Todos/{todoId}"]

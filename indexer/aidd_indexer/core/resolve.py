@@ -74,6 +74,10 @@ def _fitting(syms: list[SymbolInfo], argc: int | None) -> list[SymbolInfo]:
     return fit or syms
 
 
+def _fits(s: SymbolInfo, argc: int | None) -> bool:
+    return argc is None or s.arity is None or (s.arity[0] <= argc and (s.arity[1] is None or argc <= s.arity[1]))
+
+
 class Resolver:
     def __init__(self, result: ExtractionResult, extractors: list[FileExtractor], dispatch: list[DispatchRule] | None = None):
         self.r = result
@@ -148,6 +152,24 @@ class Resolver:
                         if not impl_typed and not inherited:
                             unresolved += 1
                     continue
+            if c.receiver and caller_file is not None:
+                # a receiver whose type is a package's (`Substitute.For<T>()`, `fixture.Build<T>()`, `_logger.LogX()`),
+                # or a generic method on a receiver of unknown type (`builder.Services.Configure<T>()`): only the
+                # repo's extension methods can be the target — a homonym found by name is not
+                lang = languages.by_id(caller_file.language)
+                guessed = c.receiver == c.receiver_type             # `Foo.Bar()`: a capitalized name taken for a type
+                package = lang.external_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path,
+                                                 self._owner(c.caller_id) if guessed else None) \
+                    if lang is not None and c.receiver_type else None
+                if lang is not None and (package or c.generic):
+                    # an extension needs an instance (`Assert.Contains(..)` is the static class's own) and must take
+                    # the arguments: the type's own method wins over it (`list.Contains(x)` is `List`'s)
+                    static = package is not None and c.receiver == package and not c.receiver_path
+                    cands = [] if static else [s for s in cands if lang.is_extension_method(self.ctx, s, package, unknown=not package)
+                                                and _fits(s, c.arg_count)]
+                    if not cands:
+                        unresolved += 1
+                        continue
             if not cands:
                 unresolved += 1
                 continue

@@ -1,0 +1,128 @@
+{
+ "source": "openapi",
+ "sha": "836d02be2e8bef4cf21a481614cc3c81678ae922",
+ "spec": [
+  "docs/openapi.yaml"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "root-route-dropped"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/users/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/docs/openapi.yaml"
+  },
+  {
+   "method": "GET",
+   "path": "/docs/swagger"
+  },
+  {
+   "method": "GET",
+   "path": "/health"
+  },
+  {
+   "method": "GET",
+   "path": "/ready"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Chi DDD boilerplate: internal/routes/routes.go builds the router, registers /, /docs/openapi.yaml and /docs/swagger itself, passes the router to healthhttp.RegisterRoutes (/health, /ready) and, inside r.Route(\"/api/v1\", func(r) {..}), to userhttp.RegisterRoutes, which nests r.Route(\"/users\", ..) with the five user routes. The 7 routes of docs/openapi.yaml plus the 3 real ones it leaves out (H2-D15).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "go-boilerplate:internal/modules/health/interfaces/http/routes.go:6",
+    "method": "GET",
+    "path": "/health",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/health/interfaces/http/routes.go:7",
+    "method": "GET",
+    "path": "/ready",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/user/interfaces/http/routes.go:10",
+    "method": "PUT",
+    "path": "/api/v1/users/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/user/interfaces/http/routes.go:11",
+    "method": "DELETE",
+    "path": "/api/v1/users/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/user/interfaces/http/routes.go:7",
+    "method": "GET",
+    "path": "/api/v1/users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/user/interfaces/http/routes.go:8",
+    "method": "POST",
+    "path": "/api/v1/users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/modules/user/interfaces/http/routes.go:9",
+    "method": "GET",
+    "path": "/api/v1/users/{id}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/routes/routes.go:39",
+    "method": "GET",
+    "path": "/docs/openapi.yaml",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-boilerplate:internal/routes/routes.go:40",
+    "method": "GET",
+    "path": "/docs/swagger",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

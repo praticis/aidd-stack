@@ -105,7 +105,8 @@ class CSharpSupport(LanguageSupport):
         _, file_ns = self.file_scope(root, src)
         for t in types.values():                       # file-scoped namespace: declarations are siblings, not children
             t["ns"] = t["ns"] or file_ns
-        return {"types": types, "usings": usings, "file_ns": file_ns, "registrations": registrations}
+        return {"types": types, "usings": usings, "file_ns": file_ns, "registrations": registrations,
+                "extensions": _extension_methods(root, src)}
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
         chain: list[str] = []
@@ -233,6 +234,78 @@ class CSharpSupport(LanguageSupport):
                         break
             cur = self._lookup_type(ctx, decl_file, mt) if mt else None
         return cur[0] if cur else None
+
+    def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...],
+                          owner: str | None = None) -> str | None:
+        """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
+        (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`). A name before a path
+        (`Microsoft.eShopWeb.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
+        outside the repo) or a name two repo types share says nothing."""
+        names = ctx.extra.get("cs_type_names")
+        if names is None:
+            names = ctx.extra["cs_type_names"] = {n for fid, facts in ctx.facts.items()
+                                                  if (f := ctx.files_by_id.get(fid)) is not None and f.language == self.id
+                                                  for n in (facts.get("types") or {})}
+        cur = self._lookup_type(ctx, file, receiver_type)
+        if cur is None and not path and owner:
+            # `ParentId.IsEmpty()`: a capitalized name that is not a type may be a member the caller's type inherits —
+            # from a base outside the repo too (`HttpContext` of a controller), and then nothing is known
+            mt = self._inherited_member_type(ctx, owner, receiver_type)
+            if mt == "":
+                return None
+            if mt is not None:
+                return mt if self._lookup_type(ctx, file, mt) is None and mt not in names else None
+        if cur is None:
+            return receiver_type if not path and receiver_type not in names else None
+        for member in path:
+            _, facts, decl_file = cur
+            mt = facts["members"].get(member)
+            if mt is None:
+                for b in facts["bases"]:
+                    bt = self._lookup_type(ctx, decl_file, b)
+                    if bt is not None and member in bt[1]["members"]:
+                        mt, decl_file = bt[1]["members"][member], bt[2]
+                        break
+            if mt is None:
+                return None
+            cur = self._lookup_type(ctx, decl_file, mt)
+            if cur is None:
+                return mt if mt not in names else None
+        return None
+
+    def _inherited_member_type(self, ctx: ResolveContext, owner: str, member: str) -> str | None:
+        """Declared type of `member` on the type `owner` (qualified) or on its bases in this repo, a few levels up;
+        "" when a base outside the repo may declare it; None when no type of the chain has it."""
+        by_q = ctx.extra.get("cs_types_by_q")
+        if by_q is None:
+            by_q = ctx.extra["cs_types_by_q"] = {
+                (t["ns"] + "." if t["ns"] else "") + n: (t, f) for fid, facts in ctx.facts.items()
+                if (f := ctx.files_by_id.get(fid)) is not None and f.language == self.id
+                for n, t in (facts.get("types") or {}).items()}
+        found = by_q.get(owner)
+        for _ in range(4):
+            if found is None:
+                return None
+            facts, decl_file = found
+            if member in facts["members"]:
+                return facts["members"][member]
+            base = next((bt for b in facts["bases"] if (bt := self._lookup_type(ctx, decl_file, b)) is not None), None)
+            if base is None and any(not re.match(r"^I[A-Z]", b) for b in facts["bases"]):
+                return ""                                   # a class base outside the repo
+            found = (base[1], base[2]) if base is not None else None
+        return None
+
+    def is_extension_method(self, ctx: ResolveContext, symbol, receiver_type: str | None = None, unknown: bool = False) -> bool:
+        """An extension method that can take the receiver: with its type known, one extending that type; with it
+        `unknown`, one extending what may be anything — an interface, a type parameter, `object`, a predefined type
+        (`this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver)."""
+        if symbol.kind != "method":
+            return False
+        for name, line, this_type in (ctx.facts.get(symbol.file_id) or {}).get("extensions") or []:
+            if name == symbol.name and line == symbol.line_start:
+                loose = not this_type or this_type == "object" or bool(re.match(r"^I[A-Z]", this_type))
+                return loose or this_type == receiver_type if (receiver_type or unknown) else True
+        return False
 
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """.csproj: `<PackageId>` (else `<AssemblyName>`, else the file stem) publishes;
@@ -363,6 +436,24 @@ _CLOSURES = ("lambda_expression", "anonymous_method_expression", "local_function
 _TYPE_NODES = ("identifier", "qualified_name", "generic_name", "nullable_type", "array_type", "predefined_type")
 _FUNC_NODES = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
                "anonymous_method_expression", "property_declaration", "accessor_declaration")
+
+
+def _extension_methods(root: Node, src: bytes) -> list[list]:
+    """[name, line, the type it extends] of every extension method: the first parameter carries `this` — after
+    attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this Guid? g)`). The type is its simple
+    name, None for a predefined type or one of the method's type parameters."""
+    out = []
+    for n in walk(root):
+        if n.type != "method_declaration" or n.child_by_field_name("name") is None:
+            continue
+        pl = n.child_by_field_name("parameters")
+        first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
+        if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
+            tps = n.child_by_field_name("type_parameters")
+            own = {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
+            t = _type_text(first.child_by_field_name("type"), src)
+            out.append([node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t])
+    return out
 
 
 def _type_text(node: Node | None, src: bytes) -> str | None:

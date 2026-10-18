@@ -1,0 +1,135 @@
+{
+ "source": "manual",
+ "sha": "411ddddd09b6934d1d87eb0fcf9383e7fa104bc0",
+ "scope": {
+  "endpoints": [
+   "demos/"
+  ],
+  "calls": [
+   "demos/moderator/ui/",
+   "demos/moderator_bot/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/"
+  },
+  {
+   "method": "POST",
+   "path": "/add_message"
+  },
+  {
+   "method": "GET",
+   "path": "/create"
+  },
+  {
+   "method": "POST",
+   "path": "/create"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphiql"
+  },
+  {
+   "method": "ANY",
+   "path": "/graphql"
+  },
+  {
+   "method": "POST",
+   "path": "/listen"
+  },
+  {
+   "method": "GET",
+   "path": "/login"
+  },
+  {
+   "method": "POST",
+   "path": "/login"
+  },
+  {
+   "method": "POST",
+   "path": "/logout"
+  },
+  {
+   "method": "POST",
+   "path": "/moderate"
+  },
+  {
+   "method": "GET",
+   "path": "/poll/{question_id}"
+  },
+  {
+   "method": "GET",
+   "path": "/poll/{question_id}/results"
+  },
+  {
+   "method": "POST",
+   "path": "/poll/{question_id}/vote"
+  },
+  {
+   "method": "POST",
+   "path": "/predict"
+  },
+  {
+   "method": "GET",
+   "path": "/public"
+  },
+  {
+   "method": "GET",
+   "path": "/register"
+  },
+  {
+   "method": "POST",
+   "path": "/register"
+  },
+  {
+   "method": "POST",
+   "path": "/shortify"
+  },
+  {
+   "method": "ANY",
+   "path": "/subscriptions"
+  },
+  {
+   "method": "GET",
+   "path": "/{short_id}"
+  },
+  {
+   "method": "POST",
+   "path": "/{username}/follow"
+  },
+  {
+   "method": "POST",
+   "path": "/{username}/unfollow"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/moderate"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/gifs/{part}",
+   "category": "url-object-builder"
+  }
+ ],
+ "notes": "Manual, every demo app (one aiohttp app per folder; keys shared across apps, multi-app-repo). aiohttp registers routes with app.router.add_get('/poll/{question_id}', handler), router.add_post(...) and add_route('GET', '/', handler) — no scanner covers aiohttp, nothing is extracted (aiohttp-router). Static mounts (add_static) not listed. Calls: the moderator UI's fetch(\"/moderate\", {method: \"POST\"}) is right, twice — once in the committed production bundle (static/App.*.js); the Giphy client joins paths onto a yarl URL (self.base_url / part — url-object-builder). Since the v2 cheap fixes (2026-10-15) the aiohttp registrars are read: every listed route is extracted, and the committed bundle (static/App.*.js) is left out as a build artifact.",
+ "checked": {
+  "calls": [
+   {
+    "evidence": "aiohttp-demos:demos/moderator/ui/App/index.js:32",
+    "method": "POST",
+    "path": "/moderate",
+    "raw": "/moderate",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "calls": "TS/JS"
+ }
+}

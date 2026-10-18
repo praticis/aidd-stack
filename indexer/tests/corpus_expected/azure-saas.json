@@ -1,0 +1,594 @@
+{
+ "source": {
+  "endpoints": "nswag + manual",
+  "calls": "nswag"
+ },
+ "sha": "80ac009ec7b7738ab7861ea64af8de01435638de",
+ "spec": [
+  "/corpus/repos/azure-saas/src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs",
+  "/corpus/repos/azure-saas/src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs"
+ ],
+ "scope": {
+  "endpoints": [
+   "src/Saas.Admin/Saas.Admin.Service/Controllers/",
+   "src/Saas.Identity/Saas.Permissions/Saas.Permissions.Service_v1.1/Controllers/",
+   "src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs"
+  ],
+  "calls": [
+   "src/Saas.Admin/Saas.Admin.Client/",
+   "src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantid}/Users"
+  },
+  {
+   "method": "POST",
+   "path": "/Admin/Tenants/{tenantid}/Users"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantid}/Users/AddUserToTenant"
+  },
+  {
+   "method": "POST",
+   "path": "/Admin/Tenants/{tenantid}/Users/AddUserToTenant"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantid}/Users/Delete/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantid}/Users/Details/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/Admin/Tenants/{tenantid}/Users/Edit/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/Admin/Tenants/{tenantid}/Users/Edit/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/CustomClaims/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/CustomClaims/roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddNewTenant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToTenant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToTenantByEmail"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantsForUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetUserPermissionsForTenant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetUsersByIds"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Permissions/RemoveUserPermissionsFromTenant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/IsValidPath/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/tenantinfo/{route}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/user/{userId}/tenants"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/User/{userId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants/{tenantId}/invite"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/users"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/CustomClaims/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/CustomClaims/roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddNewTenant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToTenant"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToTenantByEmail"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Permissions/AddUserPermissionsToUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetTenantsForUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetUserPermissionsForTenant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Permissions/GetUsersByIds"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Permissions/RemoveUserPermissionsFromTenant"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/IsValidPath/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/tenantinfo/{route}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/user/{userId}/tenants"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/Tenants/{tenantId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/User/{userId}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Tenants/{tenantId}/invite"
+  },
+  {
+   "method": "GET",
+   "path": "/api/Tenants/{tenantId}/users"
+  }
+ ],
+ "notes": "Endpoints: the operations of the two NSwag clients the web app uses (Saas.Admin.Client/AdminServiceClient.cs: 14, Saas.Permissions.Client/PermissionsServiceClient.cs: 12, NSwag v14), which are the two API services' controllers; plus the MVC area controller UsersController ([Area(\"Admin\")], [Route(\"[area]/Tenants/{tenantid}/Users\")], 8 routes, read in the code). Not in scope: the area's TenantsController and the app's Home/OnboardingWorkflow controllers, routed by convention (MapControllerRoute with {area:exists}/{controller=Home}/{action=Index}/{id?}), which the extractor does not read; the one attribute route there, [Route(\"{area}/{controller}/admin\")], is sampled (the reserved parameters take the area and controller names: GET /Admin/Tenants/admin). Calls: the 26 operations as the generated clients write them. Added 2026-10-16 with H2b item 7 (NSwag).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:160",
+    "method": "PUT",
+    "path": "/api/Tenants/{tenantId}",
+    "raw": "api/Tenants/{tenantId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:199",
+    "method": "DELETE",
+    "path": "/api/Tenants/{tenantId}",
+    "raw": "api/Tenants/{tenantId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:373",
+    "method": "GET",
+    "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "raw": "api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:41",
+    "method": "GET",
+    "path": "/api/Tenants",
+    "raw": "api/Tenants",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:412",
+    "method": "POST",
+    "path": "/api/Tenants/{tenantId}/invite",
+    "raw": "api/Tenants/{tenantId}/invite",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:435",
+    "method": "DELETE",
+    "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "raw": "api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:453",
+    "method": "GET",
+    "path": "/api/Tenants/user/{userId}/tenants",
+    "raw": "api/Tenants/user/{userId}/tenants",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Service/Controllers/TenantsController.cs:469",
+    "method": "GET",
+    "path": "/api/Tenants/IsValidPath/{path}",
+    "raw": "api/Tenants/IsValidPath/{path}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Service_v1.1/Controllers/PermissionsController.cs:133",
+    "method": "POST",
+    "path": "/api/Permissions/AddNewTenant",
+    "raw": "api/Permissions/AddNewTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Service_v1.1/Controllers/PermissionsController.cs:154",
+    "method": "POST",
+    "path": "/api/Permissions/AddUserPermissionsToTenant",
+    "raw": "api/Permissions/AddUserPermissionsToTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Service_v1.1/Controllers/PermissionsController.cs:18",
+    "method": "GET",
+    "path": "/api/Permissions/GetTenantUsers",
+    "raw": "api/Permissions/GetTenantUsers",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Service_v1.1/Controllers/PermissionsController.cs:222",
+    "method": "DELETE",
+    "path": "/api/Permissions/RemoveUserPermissionsFromTenant",
+    "raw": "api/Permissions/RemoveUserPermissionsFromTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/TenantsController.cs:19",
+    "method": "GET",
+    "path": "/Admin/Tenants/admin",
+    "raw": "/{area}/{controller}/admin",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:109",
+    "method": "POST",
+    "path": "/Admin/Tenants/{tenantid}/Users/Edit/{id}",
+    "raw": "Admin/Tenants/{tenantid}/Users/Edit/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:118",
+    "method": "GET",
+    "path": "/Admin/Tenants/{tenantid}/Users/Details/{id}",
+    "raw": "Admin/Tenants/{tenantid}/Users/Details/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:143",
+    "method": "GET",
+    "path": "/Admin/Tenants/{tenantid}/Users/Delete/{id}",
+    "raw": "Admin/Tenants/{tenantid}/Users/Delete/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:164",
+    "method": "POST",
+    "path": "/Admin/Tenants/{tenantid}/Users",
+    "raw": "Admin/Tenants/{tenantid}/Users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:20",
+    "method": "GET",
+    "path": "/Admin/Tenants/{tenantid}/Users",
+    "raw": "Admin/Tenants/{tenantid}/Users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:36",
+    "method": "GET",
+    "path": "/Admin/Tenants/{tenantid}/Users/AddUserToTenant",
+    "raw": "Admin/Tenants/{tenantid}/Users/AddUserToTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.SignupAdministration/Saas.SignupAdministration.Web/Areas/Admin/Controllers/UsersController.cs:46",
+    "method": "POST",
+    "path": "/Admin/Tenants/{tenantid}/Users/AddUserToTenant",
+    "raw": "Admin/Tenants/{tenantid}/Users/AddUserToTenant",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:1042",
+    "method": "GET",
+    "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "raw": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:1153",
+    "method": "POST",
+    "path": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "raw": "/api/Tenants/{tenantId}/Users/{userId}/permissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:1359",
+    "method": "POST",
+    "path": "/api/Tenants/{tenantId}/invite",
+    "raw": "/api/Tenants/{tenantId}/invite",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:1566",
+    "method": "GET",
+    "path": "/api/Tenants/IsValidPath/{path}",
+    "raw": "/api/Tenants/IsValidPath/{path}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:214",
+    "method": "GET",
+    "path": "/api/Tenants",
+    "raw": "/api/Tenants",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:524",
+    "method": "PUT",
+    "path": "/api/Tenants/{tenantId}",
+    "raw": "/api/Tenants/{tenantId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:630",
+    "method": "DELETE",
+    "path": "/api/Tenants/{tenantId}",
+    "raw": "/api/Tenants/{tenantId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:727",
+    "method": "GET",
+    "path": "/api/Tenants/tenantinfo/{route}",
+    "raw": "/api/Tenants/tenantinfo/{route}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:829",
+    "method": "GET",
+    "path": "/api/Tenants/{tenantId}/users",
+    "raw": "/api/Tenants/{tenantId}/users",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Admin/Saas.Admin.Client/AdminServiceClient.cs:935",
+    "method": "GET",
+    "path": "/api/Tenants/{tenantId}/User/{userId}",
+    "raw": "/api/Tenants/{tenantId}/User/{userId}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:1065",
+    "method": "POST",
+    "path": "/api/Permissions/AddUserPermissionsToTenantByEmail",
+    "raw": "/api/Permissions/AddUserPermissionsToTenantByEmail",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:1177",
+    "method": "DELETE",
+    "path": "/api/Permissions/RemoveUserPermissionsFromTenant",
+    "raw": "/api/Permissions/RemoveUserPermissionsFromTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:1286",
+    "method": "GET",
+    "path": "/api/Permissions/GetTenantsForUser",
+    "raw": "/api/Permissions/GetTenantsForUser",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:189",
+    "method": "POST",
+    "path": "/api/CustomClaims/permissions",
+    "raw": "/api/CustomClaims/permissions",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:401",
+    "method": "GET",
+    "path": "/api/Permissions/GetTenantUsers",
+    "raw": "/api/Permissions/GetTenantUsers",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:511",
+    "method": "GET",
+    "path": "/api/Permissions/GetTenantUser",
+    "raw": "/api/Permissions/GetTenantUser",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:625",
+    "method": "GET",
+    "path": "/api/Permissions/GetUserPermissionsForTenant",
+    "raw": "/api/Permissions/GetUserPermissionsForTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:729",
+    "method": "POST",
+    "path": "/api/Permissions/AddNewTenant",
+    "raw": "/api/Permissions/AddNewTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:841",
+    "method": "POST",
+    "path": "/api/Permissions/AddUserPermissionsToTenant",
+    "raw": "/api/Permissions/AddUserPermissionsToTenant",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "azure-saas:src/Saas.Identity/Saas.Permissions/Saas.Permissions.Client/PermissionsServiceClient.cs:953",
+    "method": "POST",
+    "path": "/api/Permissions/AddUserPermissionsToUser",
+    "raw": "/api/Permissions/AddUserPermissionsToUser",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

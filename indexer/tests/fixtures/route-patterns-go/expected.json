@@ -1,0 +1,461 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "index"
+  },
+  {
+   "method": "GET",
+   "path": "/v1",
+   "handler": "listUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/{id}",
+   "handler": "getUser"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/reports",
+   "handler": "runReport"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "submit"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{slug}",
+   "handler": "getArticle"
+  },
+  {
+   "method": "GET",
+   "path": "/api/health",
+   "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/status",
+   "handler": "status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/silence/{sid}",
+   "handler": "deleteSilence"
+  },
+  {
+   "method": "GET",
+   "path": "/identities/{id}",
+   "handler": "getIdentity"
+  },
+  {
+   "method": "DELETE",
+   "path": "/identities/{id}/credentials/{type}",
+   "handler": "deleteCredential"
+  },
+  {
+   "method": "POST",
+   "path": "/user",
+   "handler": "createUser"
+  },
+  {
+   "method": "ANY",
+   "path": "/uppercase",
+   "handler": "uppercaseHandler"
+  },
+  {
+   "method": "ANY",
+   "path": "/count",
+   "handler": "count"
+  },
+  {
+   "method": "GET",
+   "path": "/metrics",
+   "handler": "metrics"
+  },
+  {
+   "method": "GET",
+   "path": "/admin",
+   "handler": "adminHome"
+  },
+  {
+   "method": "GET",
+   "path": "/manage",
+   "handler": "adminIndex"
+  },
+  {
+   "method": "GET",
+   "path": "/users",
+   "handler": "listAccounts"
+  },
+  {
+   "method": "GET",
+   "path": "/user/profile",
+   "handler": "showProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/docs",
+   "handler": "v3Docs"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/info",
+   "handler": "v3Info"
+  },
+  {
+   "method": "GET",
+   "path": "/v4/ws",
+   "handler": "v4Socket"
+  },
+  {
+   "method": "GET",
+   "path": "/articles",
+   "handler": "listArticles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/search",
+   "handler": "searchArticles"
+  },
+  {
+   "method": "GET",
+   "path": "/articles/{articleID}/comments",
+   "handler": "showArticle"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/api/version",
+   "handler": "version"
+  },
+  {
+   "method": "GET",
+   "path": "/user/login",
+   "handler": "login"
+  },
+  {
+   "method": "POST",
+   "path": "/user/settings/avatar/delete",
+   "handler": "deleteAvatar"
+  },
+  {
+   "method": "GET",
+   "path": "/todos",
+   "handler": "ListTodos"
+  },
+  {
+   "method": "GET",
+   "path": "/todos/{id}",
+   "handler": "GetTodo"
+  },
+  {
+   "method": "GET",
+   "path": "/me",
+   "handler": "Me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users",
+   "handler": "createUser"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/login",
+   "handler": "loginUser"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/openid",
+   "handler": "openID"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/version",
+   "handler": "version"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}",
+   "handler": "listRepos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/repos/{owner}/issues",
+   "handler": "listIssues"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users",
+   "handler": "signUp"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users/login",
+   "handler": "signIn"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/me/profile",
+   "handler": "profile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/{user_id}/image",
+   "handler": "getImage"
+  },
+  {
+   "method": "HEAD",
+   "path": "/api/v4/users/{user_id}/image",
+   "handler": "getImage"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/teams/sync",
+   "handler": "syncKind"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/channels/sync",
+   "handler": "syncKind"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orgs/{org}/hooks",
+   "handler": "listHooks"
+  },
+  {
+   "method": "HEAD",
+   "path": "/",
+   "handler": "uiIndex"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "handler": "postProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "HEAD",
+   "path": "/profiles/{id}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}",
+   "handler": "deleteProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/.well-known/oauth",
+   "handler": "oauthMetadata"
+  },
+  {
+   "method": "ANY",
+   "path": "/sum",
+   "handler": "sum"
+  },
+  {
+   "method": "ANY",
+   "path": "/concat",
+   "handler": "concat"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/sum",
+   "handler": "sum"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/concat",
+   "handler": "concat"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications",
+   "handler": "listNotifications"
+  },
+  {
+   "method": "PUT",
+   "path": "/notifications",
+   "handler": "readNotifications"
+  },
+  {
+   "method": "GET",
+   "path": "/notifications/threads/{id}",
+   "handler": "getThread"
+  },
+  {
+   "method": "GET",
+   "path": "/schemas",
+   "handler": "listSchemas"
+  },
+  {
+   "method": "GET",
+   "path": "/schemas/{id}",
+   "handler": "getSchema"
+  },
+  {
+   "method": "GET",
+   "path": "/tenants/{param}/schemas",
+   "handler": "listSchemas"
+  },
+  {
+   "method": "PATCH",
+   "path": "/notifications/threads/{id}",
+   "handler": "readThread"
+  },
+  {
+   "method": "DELETE",
+   "path": "/token",
+   "handler": "deleteToken"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/can-i/{resource}/{action}/{subresource}",
+   "handler": "AccountService.CanI"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/account/password",
+   "handler": "AccountService.UpdatePassword"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/account/{name}/token/{id}",
+   "handler": "AccountService.DeleteToken"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/account/{name}:sync",
+   "handler": "AccountService.Sync"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/silences",
+   "handler": "SilenceGetSilencesHandler"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/silence/{silenceID}",
+   "handler": "SilenceDeleteSilenceHandler"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos",
+   "handler": "MemoService.ListMemos"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo.name}",
+   "handler": "MemoService.UpdateMemo"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{name}",
+   "handler": "MemoService.DeleteMemo"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/albums",
+   "handler": "<inline>"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/batch/photos/edit",
+   "handler": "<inline>"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/batch/photos/edit",
+   "handler": "<inline>"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/v1/invoices",
+   "line": 18
+  },
+  {
+   "method": "GET",
+   "path": "/repositories/{param}/{param}/src",
+   "line": 53
+  },
+  {
+   "method": "GET",
+   "path": "/gettoken",
+   "line": 23
+  },
+  {
+   "method": "POST",
+   "path": "/v2/alerts/{param}/close",
+   "line": 30
+  },
+  {
+   "method": "GET",
+   "path": "/oauth/userinfo",
+   "line": 39
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chat.postMessage",
+   "line": 44
+  },
+  {
+   "method": "GET",
+   "path": "/api/projects",
+   "line": 88
+  },
+  {
+   "method": "POST",
+   "path": "/profiles",
+   "line": 16
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{param}",
+   "line": 17
+  },
+  {
+   "method": "GET",
+   "path": "/paths",
+   "line": 29
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identities/{id}",
+   "line": 42
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/identities/{id}",
+   "line": 64
+  },
+  {
+   "method": "GET",
+   "path": "/alerts",
+   "line": 15
+  },
+  {
+   "method": "DELETE",
+   "path": "/silence/{silenceID}",
+   "line": 31
+  },
+  {
+   "method": "GET",
+   "path": "/oauth2/v1/userinfo",
+   "line": 58
+  }
+ ]
+}

@@ -39,10 +39,20 @@ def _manifest_kind(p: PurePosixPath) -> tuple[str, str] | None:
     return None
 
 
-def _is_excluded(rel: PurePosixPath) -> bool:
+def _is_excluded(rel: PurePosixPath, root: Path | None = None) -> bool:
     if any(part in DEFAULT_EXCLUDES for part in rel.parts):
         return True
-    return rel.name.endswith(GENERATED_SUFFIXES)
+    return rel.name.endswith(GENERATED_SUFFIXES) and not (root is not None and _generated_client(root / rel))
+
+
+def _generated_client(path: Path) -> bool:
+    """A generated HTTP client is the repo's integration surface, not noise: an NSwag client (`ApiClient.g.cs`) is
+    indexed like the code around it — its methods are what the app calls, and each makes one request."""
+    try:
+        with open(path, "rb") as f:
+            return b"NSwag toolchain" in f.read(4096)
+    except OSError:
+        return False
 
 
 def list_files(root: Path) -> list[str]:
@@ -58,7 +68,7 @@ def list_files(root: Path) -> list[str]:
     out = []
     for r in rels:
         rp = PurePosixPath(r)
-        if _is_excluded(rp):
+        if _is_excluded(rp, root):
             continue
         if (root / r).is_file():
             out.append(r)

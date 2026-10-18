@@ -1,0 +1,6295 @@
+{
+ "source": "openapi",
+ "sha": "9a9770995d2e11476e10bbf364a64c57b668439e",
+ "spec": [
+  "/corpus/repos/netbox/contrib/openapi.json"
+ ],
+ "scope": {
+  "endpoints": [
+   "netbox/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/authentication-check",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/circuit-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/circuit-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-terminations/{id}/paths",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/provider-accounts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/provider-accounts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/provider-accounts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/provider-accounts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/provider-accounts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/provider-accounts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/provider-accounts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/provider-accounts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/provider-accounts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/provider-networks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/provider-networks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/provider-networks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/provider-networks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/provider-networks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/provider-networks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/provider-networks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/provider-networks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/provider-networks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/providers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/providers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/providers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/providers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/providers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/providers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/providers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/providers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/providers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/virtual-circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuit-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuit-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuit-terminations/{id}/paths",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/virtual-circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuit-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuit-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/circuits/virtual-circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuits",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/circuits/virtual-circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/circuits/virtual-circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/circuits/virtual-circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/circuits/virtual-circuits/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-queues",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-queues/{name}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-tasks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-tasks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/background-tasks/{id}/delete",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/background-tasks/{id}/enqueue",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/background-tasks/{id}/requeue",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/background-tasks/{id}/stop",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-workers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/background-workers/{name}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/data-files",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/data-files/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/core/data-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/data-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/core/data-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/data-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/core/data-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/core/data-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/data-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/core/data-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/core/data-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/core/data-sources/{id}/sync",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/jobs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/jobs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/object-changes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/object-changes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/object-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/core/object-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cable-bundles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cable-bundles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cable-bundles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cable-bundles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cable-bundles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cable-bundles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cable-bundles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cable-bundles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cable-bundles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cable-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cable-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cables",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cables",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cables",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cables",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cables",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cables/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cables/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cables/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cables/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/connected-device",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/console-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/console-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-ports/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-server-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-server-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-server-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/console-server-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-server-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-server-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-server-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-server-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-server-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-server-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-server-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-server-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/console-server-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-server-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/console-server-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-server-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/console-server-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/console-server-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/console-server-ports/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-intake-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-intake-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-intake-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-intake-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-intake-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-intake-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-intake-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-intake-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-intake-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-intakes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-intakes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-intakes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-intakes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-intakes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-intakes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-intakes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-intakes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-intakes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-outflow-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-outflow-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-outflow-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-outflow-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-outflow-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-outflow-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-outflow-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-outflow-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-outflow-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-outflows",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-outflows",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-outflows",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-outflows",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-outflows",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-outflows/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-outflows/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-outflows/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-outflows/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/cooling-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-sources",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/cooling-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/cooling-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/cooling-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/cooling-sources/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/device-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/device-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/device-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/device-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/device-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/device-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/device-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/device-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/devices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/devices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/devices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/devices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/devices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/devices/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/devices/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/devices/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/devices/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/devices/{id}/render-config",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/front-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/front-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/front-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/front-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/front-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/front-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/front-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/front-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/front-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/front-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/front-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/front-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/front-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/front-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/front-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/front-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/front-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/front-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/front-ports/{id}/paths",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/interface-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/interface-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/interface-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/interface-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/interface-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/interface-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/interface-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/interface-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/interface-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/interfaces/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-item-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-item-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-item-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/inventory-item-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-item-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-item-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-item-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-item-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-item-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-item-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-item-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-item-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/inventory-item-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-item-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-item-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-item-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-item-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-item-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-items",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-items",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-items",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/inventory-items",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-items",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/inventory-items/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/inventory-items/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/inventory-items/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/inventory-items/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/locations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/locations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/locations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/locations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/locations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/locations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/locations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/locations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/locations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/mac-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/mac-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/mac-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/mac-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/mac-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/mac-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/mac-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/mac-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/mac-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/manufacturers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/manufacturers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/manufacturers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/manufacturers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/manufacturers",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/manufacturers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/manufacturers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/manufacturers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/manufacturers/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/module-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bay-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bay-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bay-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bay-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bay-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/module-bay-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bay-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bay-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bay-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bay-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bay-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/module-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bays",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-bays/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-type-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-type-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-type-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/module-type-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-type-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-type-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-type-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-type-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-type-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/module-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/module-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/module-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/module-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/module-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/modules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/modules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/modules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/modules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/modules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/modules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/modules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/modules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/modules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/platforms",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/platforms",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/platforms",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/platforms",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/platforms",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/platforms/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/platforms/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/platforms/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/platforms/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-feeds",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-feeds/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-feeds/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-outlet-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-outlet-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-outlet-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-outlet-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-outlet-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-outlet-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-outlet-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-outlet-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-outlet-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-outlets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-outlets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-outlets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-outlets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-outlets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-outlets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-outlets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-outlets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-outlets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-outlets/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-panels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-panels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-panels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-panels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-panels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-panels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-panels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-panels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-panels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/power-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/power-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/power-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/power-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/power-ports/{id}/trace",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rack-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-reservations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-reservations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-reservations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rack-reservations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-reservations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-reservations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-reservations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-reservations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-reservations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rack-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rack-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rack-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rack-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rack-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rack-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/racks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/racks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/racks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/racks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/racks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/racks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/racks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/racks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/racks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/racks/{id}/elevation",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rear-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rear-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rear-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rear-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rear-port-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rear-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rear-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rear-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rear-port-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rear-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rear-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rear-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/rear-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rear-ports",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/rear-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rear-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/rear-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/rear-ports/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/rear-ports/{id}/paths",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/regions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/regions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/regions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/regions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/regions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/regions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/regions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/regions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/regions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/site-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/site-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/site-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/site-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/site-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/site-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/site-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/site-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/site-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/sites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/sites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/sites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/sites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/sites",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/sites/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/sites/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/sites/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/sites/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/virtual-chassis",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/virtual-chassis",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/virtual-chassis",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/virtual-chassis",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/virtual-chassis",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/virtual-chassis/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/virtual-chassis/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/virtual-chassis/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/virtual-chassis/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/virtual-device-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/virtual-device-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/virtual-device-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/dcim/virtual-device-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/virtual-device-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/dcim/virtual-device-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dcim/virtual-device-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/dcim/virtual-device-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/dcim/virtual-device-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/bookmarks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/bookmarks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/bookmarks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/bookmarks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/bookmarks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/bookmarks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/bookmarks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/bookmarks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/bookmarks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-context-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-context-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-context-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-context-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-context-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-context-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-context-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-context-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-context-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-context-profiles/{id}/sync",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-contexts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-contexts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-contexts/{id}/sync",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/config-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/config-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/config-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/config-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-templates/{id}/render",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/config-templates/{id}/sync",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-field-choice-sets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-field-choice-sets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-field-choice-sets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/custom-field-choice-sets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-field-choice-sets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-field-choice-sets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-field-choice-sets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-field-choice-sets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-field-choice-sets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-field-choice-sets/{id}/choices",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/custom-fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-fields",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-fields/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-fields/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-fields/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-fields/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/custom-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/custom-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/custom-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/custom-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/custom-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/dashboard",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/dashboard",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/dashboard",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/dashboard",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/event-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/event-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/event-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/event-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/event-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/event-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/event-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/event-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/event-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/export-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/export-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/export-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/export-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/export-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/export-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/export-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/export-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/export-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/export-templates/{id}/sync",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/image-attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/image-attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/image-attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/image-attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/image-attachments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/image-attachments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/image-attachments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/image-attachments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/image-attachments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/journal-entries",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/journal-entries",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/journal-entries",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/journal-entries",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/journal-entries",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/journal-entries/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/journal-entries/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/journal-entries/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/journal-entries/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/notification-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/notification-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/notification-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/notification-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/notification-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/notification-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/notification-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/notification-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/notification-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/notifications",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/notifications",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/notifications",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/notifications",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/notifications",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/notifications/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/notifications/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/notifications/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/notifications/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/saved-filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/saved-filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/saved-filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/saved-filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/saved-filters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/saved-filters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/saved-filters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/saved-filters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/saved-filters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/scripts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/scripts/upload",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/scripts/upload/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/scripts/upload/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/scripts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/scripts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/subscriptions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/subscriptions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/subscriptions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/subscriptions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/subscriptions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/table-configs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/table-configs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/table-configs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/table-configs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/table-configs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/table-configs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/table-configs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/table-configs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/table-configs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/tagged-objects",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/tagged-objects/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/tags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/tags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/tags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/tags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/tags",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/tags/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/tags/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/tags/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/tags/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/webhooks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/webhooks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/webhooks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/extras/webhooks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/webhooks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/extras/webhooks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/extras/webhooks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/extras/webhooks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/extras/webhooks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/aggregates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/aggregates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/aggregates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/aggregates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/aggregates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/aggregates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/aggregates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/aggregates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/aggregates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/asn-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/asn-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/asn-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/asn-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/asn-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/asn-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/asn-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/asn-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/asn-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/asn-ranges/{id}/available-asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/asn-ranges/{id}/available-asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/asns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/asns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/asns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/asns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/asns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/fhrp-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/fhrp-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/fhrp-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/fhrp-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/fhrp-group-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/fhrp-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/fhrp-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/fhrp-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/fhrp-group-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/fhrp-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/fhrp-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/fhrp-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/fhrp-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/fhrp-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/fhrp-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/fhrp-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/fhrp-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/fhrp-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/ip-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/ip-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/ip-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/ip-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/ip-addresses",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/ip-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/ip-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/ip-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/ip-addresses/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/ip-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/ip-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/ip-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/ip-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/ip-ranges",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/ip-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/ip-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/ip-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/ip-ranges/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/ip-ranges/{id}/available-ips",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/ip-ranges/{id}/available-ips",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/prefixes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/prefixes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/prefixes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/prefixes/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/prefixes/{id}/available-ips",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/prefixes/{id}/available-ips",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/prefixes/{id}/available-prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/prefixes/{id}/available-prefixes",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/rirs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/rirs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/rirs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/rirs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/rirs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/rirs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/rirs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/rirs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/rirs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/route-targets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/route-targets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/route-targets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/route-targets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/route-targets",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/route-targets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/route-targets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/route-targets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/route-targets/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/service-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/service-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/service-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/service-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/service-templates",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/service-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/service-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/service-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/service-templates/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/services",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/services",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/services",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/services",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/services",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/services/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/services/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/services/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/services/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vlan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-groups/{id}/available-vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vlan-groups/{id}/available-vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-translation-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-translation-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-translation-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vlan-translation-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-translation-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-translation-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-translation-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-translation-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-translation-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-translation-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-translation-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-translation-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vlan-translation-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-translation-rules",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlan-translation-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlan-translation-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlan-translation-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlan-translation-rules/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vlans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vlans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vlans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vlans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vrfs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vrfs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vrfs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/ipam/vrfs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vrfs",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/ipam/vrfs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ipam/vrfs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/ipam/vrfs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/ipam/vrfs/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/schema",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/status",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/contact-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-assignments",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-assignments/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/contact-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/contact-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-roles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contact-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contact-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contact-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contact-roles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contacts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contacts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contacts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/contacts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contacts",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/contacts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/contacts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/contacts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/contacts/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/tenant-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/tenant-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/tenant-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/tenant-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/tenant-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/tenant-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/tenant-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/tenant-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/tenant-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/tenants",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/tenants",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/tenants",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/tenancy/tenants",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/tenants",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/tenancy/tenants/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tenancy/tenants/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/tenancy/tenants/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/tenancy/tenants/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/config",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/owner-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/owner-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/owner-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/owner-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/owner-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/owner-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/owner-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/owner-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/owner-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/owners",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/owners",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/owners",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/owners",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/owners",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/owners/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/owners/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/owners/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/owners/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/permissions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/permissions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/permissions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/permissions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/permissions",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/permissions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/permissions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/permissions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/permissions/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/tokens",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/tokens",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/tokens",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/tokens",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/tokens",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/tokens/provision",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/tokens/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/tokens/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/tokens/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/tokens/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/users",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/users/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/users/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/users/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/users/users/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/cluster-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/cluster-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/cluster-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/cluster-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/cluster-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/cluster-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/cluster-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/cluster-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/cluster-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/cluster-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/cluster-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/cluster-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/cluster-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/cluster-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/cluster-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/cluster-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/cluster-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/cluster-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/clusters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/clusters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/clusters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/clusters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/clusters",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/clusters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/clusters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/clusters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/clusters/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/interfaces",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/interfaces/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-disks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-disks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-disks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/virtual-disks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-disks",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-disks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-disks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-disks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-disks/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-machine-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-machine-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-machine-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/virtual-machine-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-machine-types",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-machine-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-machine-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-machine-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-machine-types/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-machines",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-machines",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-machines",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/virtual-machines",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-machines",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/virtualization/virtual-machines/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/virtualization/virtual-machines/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/virtualization/virtual-machines/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/virtualization/virtual-machines/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/virtualization/virtual-machines/{id}/render-config",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ike-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ike-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ike-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/ike-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ike-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ike-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ike-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ike-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ike-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ike-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ike-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ike-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/ike-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ike-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ike-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ike-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ike-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ike-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/ipsec-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-policies",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-policies/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/ipsec-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-profiles",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-profiles/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/ipsec-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-proposals",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/ipsec-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/ipsec-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/ipsec-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/ipsec-proposals/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/l2vpn-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/l2vpn-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/l2vpn-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/l2vpn-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/l2vpn-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/l2vpn-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/l2vpn-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/l2vpn-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/l2vpn-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/l2vpns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/l2vpns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/l2vpns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/l2vpns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/l2vpns",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/l2vpns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/l2vpns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/l2vpns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/l2vpns/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnel-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnel-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnel-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/tunnel-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnel-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnel-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnel-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnel-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnel-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnel-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnel-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnel-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/tunnel-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnel-terminations",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnel-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnel-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnel-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnel-terminations/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/vpn/tunnels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnels",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/vpn/tunnels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/vpn/tunnels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/vpn/tunnels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/vpn/tunnels/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-lan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-lan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-lan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/wireless/wireless-lan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-lan-groups",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-lan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-lan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-lan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-lan-groups/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-lans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-lans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-lans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/wireless/wireless-lans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-lans",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-lans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-lans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-lans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-lans/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "POST",
+   "path": "/api/wireless/wireless-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-links",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/wireless/wireless-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "GET",
+   "path": "/api/wireless/wireless-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/wireless/wireless-links/{id}",
+   "category": "django-urlconf"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/wireless/wireless-links/{id}",
+   "category": "django-urlconf"
+  }
+ ],
+ "notes": "Endpoints: the committed OpenAPI spec (contrib/openapi.json, 1256 operations under /api), scope netbox/. The REST API is Django REST Framework routers — router = NetBoxRouter(); router.register('regions', views.RegionViewSet) in each app's api/urls.py, mounted through urlconf include()s — and nothing is extracted (django-urlconf, recall 0; the method set of each path comes from the viewset's actions). The UI views are Django urlconf path() entries, not in the spec. No outbound-call gabarito: the few calls (plugin catalog, release check) take URLs from settings."
+}

@@ -1,0 +1,239 @@
+{
+ "source": {
+  "endpoints": "openapi",
+  "calls": "manual"
+ },
+ "sha": "1edaa79849f2fb70a39bfbad776f800ea69ace92",
+ "spec": [
+  "swagger/docs/swagger.yaml"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/books",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/books",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/books/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/books/{id}"
+  }
+ ],
+ "scope": {
+  "endpoints": [
+   "swagger/"
+  ],
+  "calls": [
+   "entgo-sveltekit/template/src/"
+  ]
+ },
+ "notes": "Only the swagger/ recipe has a spec. GET and POST /api/v1/books are extracted, but endpoint identity is per repo and another recipe registered the same routes first, so they carry that recipe's evidence and fall out of scope (category multi-app-repo — in the graph they point at the other recipe's handler). Precision: 20 of 127 routes sampled (seed 1), all correct — the recipes register on app/Group chains inside one function, which the extractor follows. Calls: all 5 checked; fetch(url) with no options is a GET but comes out as ANY (method-default). 2026-10-15 (second round): fetch(\"/api/v1/todo/list\") is a GET now (it was ANY: method-default).",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "fiber-recipes:auth-jwt/router/router.go:41",
+    "method": "POST",
+    "path": "/api/auth/register",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:auth-jwt/router/router.go:43",
+    "method": "POST",
+    "path": "/api/auth/refresh-token",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:auth-jwt/router/router.go:48",
+    "method": "GET",
+    "path": "/api/users/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:aws-ses-sender/api/route.go:12",
+    "method": "POST",
+    "path": "/v1/messages",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:clean-code/app/server/server.go:18",
+    "method": "GET",
+    "path": "/api/status",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:csrf-with-session/main.go:204",
+    "method": "POST",
+    "path": "/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:csrf-with-session/main.go:245",
+    "method": "POST",
+    "path": "/protected",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:csrf/routes/mainServer.go:137",
+    "method": "POST",
+    "path": "/transfer",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:ent-mysql/main.go:34",
+    "method": "PUT",
+    "path": "/update/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:ent-mysql/main.go:35",
+    "method": "DELETE",
+    "path": "/delete/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:form-data/main.go:53",
+    "method": "POST",
+    "path": "/nested",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:local-development-testcontainers/app/routes/auth.routes.go:13",
+    "method": "POST",
+    "path": "/auth/signup",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:mongodb/main.go:167",
+    "method": "DELETE",
+    "path": "/employee/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:rss-feed/main.go:18",
+    "method": "GET",
+    "path": "/rss",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:sessions-sqlite3/main.go:139",
+    "method": "POST",
+    "path": "/api/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:sse/main.go:71",
+    "method": "GET",
+    "path": "/sse",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:tableflip/main.go:45",
+    "method": "GET",
+    "path": "/version",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:template-asset-bundling/app.go:53",
+    "method": "GET",
+    "path": "/about",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:validation/main.go:32",
+    "method": "POST",
+    "path": "/test",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:websocket-chat/main.go:81",
+    "method": "GET",
+    "path": "/ws",
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "fiber-recipes:entgo-sveltekit/template/src/lib/store/todos.ts:27",
+    "method": "POST",
+    "path": "/api/v1/todo/create",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:entgo-sveltekit/template/src/lib/store/todos.ts:49",
+    "method": "DELETE",
+    "path": "/api/v1/todo/delete/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:entgo-sveltekit/template/src/lib/store/todos.ts:66",
+    "method": "PUT",
+    "path": "/api/v1/todo/update/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:entgo-sveltekit/template/src/routes/+page.ts:7",
+    "method": "GET",
+    "path": "/api/v1/todo/list",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "fiber-recipes:svelte-netlify/handler/handler.go:34",
+    "method": "GET",
+    "path": "/json/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/v1/todo/create"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/todo/delete/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/todo/update/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/todo/list"
+  }
+ ]
+}

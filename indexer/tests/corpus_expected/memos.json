@@ -1,0 +1,1049 @@
+{
+ "source": "openapi",
+ "sha": "1a51572406e1db3e97c24b2497013c8005e88317",
+ "spec": [
+  "proto/gen/openapi.yaml"
+ ],
+ "scope": [
+  "proto/gen/api/"
+ ],
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/ai{transcribe}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/attachments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/attachments/{attachment}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/attachments/{attachment}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/attachments/{attachment}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments{batchDelete}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/attachments{upload}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/auth/me"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/refresh"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/signin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/auth/signout"
+  },
+  {
+   "method": "GET",
+   "path": "/api/identity-providers"
+  },
+  {
+   "method": "POST",
+   "path": "/api/identity-providers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/identity-providers/{identity-provider}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/identity-providers/{identity-provider}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/identity-providers/{identity-provider}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/profile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/instance/settings/notification{testEmail}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/instance/settings{batchGet}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/instance/settings/{name}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/instance/settings/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/-/linkMetadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/-/linkMetadata{batchGet}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/attachments"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}/attachments"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/comments"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/comments"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/reactions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/reactions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}/reactions/{reaction}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/relations"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/memos/{memo}/relations"
+  },
+  {
+   "method": "GET",
+   "path": "/api/memos/{memo}/shares"
+  },
+  {
+   "method": "POST",
+   "path": "/api/memos/{memo}/shares"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/memos/{memo}/shares/{share}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/shares/{shareToken}/memo"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/spaces/{space}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/invitations"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}/invitations/{invitation}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/invitations/{invitation}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations/{invitation}:accept"
+  },
+  {
+   "method": "POST",
+   "path": "/api/spaces/{space}/invitations/{invitation}:decline"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/members"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/spaces/{space}/members/{member}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/spaces/{space}/members/{member}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/spaces/{space}/members/{member}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/linkedIdentities"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/linkedIdentities"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/linkedIdentities/{linkedIdentity}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/linkedIdentities/{linkedIdentity}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/notifications"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/notifications/{notification}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/notifications/{notification}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/personalAccessTokens"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/personalAccessTokens"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/personalAccessTokens/{personalAccessToken}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/settings"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/settings/{setting}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/settings/{setting}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/spaceInvitations"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/stats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/usage"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/views"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/views"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/views/{view}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/views/{view}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/views/{view}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/webhooks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}/webhooks"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/users/{user}/webhooks/{webhook}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{user}/webhooks/{webhook}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}/webhooks/{webhook}:getSigningSecret"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}:exportMemos"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/{user}:getStats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users/{user}:importMemos"
+  },
+  {
+   "method": "POST",
+   "path": "/api/users{batchGet}"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AIService/Transcribe",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/BatchDeleteAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/CreateAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/DeleteAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/GetAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/ListAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/UpdateAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AttachmentService/UploadAttachment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/GetCurrentUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/RefreshToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/SignIn",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.AuthService/SignOut",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/CreateIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/DeleteIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/GetIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/ListIdentityProviders",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.IdentityProviderService/UpdateIdentityProvider",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/BatchGetInstanceSettings",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceProfile",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/GetInstanceStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/TestInstanceEmailSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.InstanceService/UpdateInstanceSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/BatchGetLinkMetadata",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemoComment",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/CreateMemoShare",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemoReaction",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/DeleteMemoShare",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetLinkMetadata",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/GetSharedMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoComments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoReactions",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoRelations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemoShares",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/ListMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/SetMemoAttachments",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/SetMemoRelations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/UpdateMemo",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.MemoService/UpsertMemoReaction",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/AcceptSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/CreateSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/CreateSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeclineSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/DeleteSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpaceInvitation",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/GetSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaceInvitations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaceMembers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListSpaces",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/ListUserSpaceInvitations",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/UpdateSpace",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.SpaceService/UpdateSpaceMember",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/BatchGetUsers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreatePersonalAccessToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/CreateUserWebhook",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeletePersonalAccessToken",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUserNotification",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/DeleteUserWebhook",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ExportMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetLinkedIdentity",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserUsage",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/GetUserWebhookSigningSecret",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ImportMemos",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListLinkedIdentities",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListMemoViews",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListPersonalAccessTokens",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserNotifications",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserSettings",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserStats",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUserWebhooks",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/ListUsers",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateMemoView",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUser",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserNotification",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserSetting",
+   "category": "connect-rpc"
+  },
+  {
+   "method": "POST",
+   "path": "/memos.api.UserService/UpdateUserWebhook",
+   "category": "connect-rpc"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. server/api/api.go serves each proto service twice. One copy goes through the grpc-gateway (apipb.Register<Service>HandlerServer on a runtime.ServeMux, the patterns in proto/gen/api/*.pb.gw.go): the 93 operations of proto/gen/openapi.yaml, which gnostic generates from the same proto, with custom verbs like /api/attachments:batchDelete. The other copy goes through Connect (apiconnect.New<Service>Handler on connectMux): the same 93 RPCs as POST /memos.api.<Service>/<Method>, the paths the web app's Connect clients call. Both sets are expected. Outside the scope: /api/sse and the file server (/file/...), registered in server/. Moved to the corpus by F1.14 (2026-10-18), which reads grpc-gateway v2's verb (`http.MethodGet`) and keeps a capture's literal segments (`{name=memos/*}` is /memos/{name}). Corrected from the proto (H2-D15): the spec's GET and PATCH /api/instance/{instance}/* are /api/{name=instance/settings/*} in instance_service.proto — /api/instance/settings/{name}, which gnostic renders without the second literal. The 93 Connect RPCs stay for F2.1 (proto as a source; connect-rpc). The checked endpoints sample was redrawn at 20 with the same seed (it held the 8 routes the extractor found before the gateway was read): all 20 are gateway routes in the gabarito.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "memos:proto/gen/api/ai_service.pb.gw.go:71",
+    "method": "POST",
+    "path": "/api/ai{transcribe}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/attachment_service.pb.gw.go:393",
+    "method": "PATCH",
+    "path": "/api/attachments/{attachment.name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/auth_service.pb.gw.go:200",
+    "method": "POST",
+    "path": "/api/auth/signout",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/idp_service.pb.gw.go:265",
+    "method": "GET",
+    "path": "/api/identity-providers",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/idp_service.pb.gw.go:305",
+    "method": "POST",
+    "path": "/api/identity-providers",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/idp_service.pb.gw.go:325",
+    "method": "PATCH",
+    "path": "/api/identity-providers/{identity_provider.name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/instance_service.pb.gw.go:320",
+    "method": "PATCH",
+    "path": "/api/instance/settings/{instance_setting.name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/instance_service.pb.gw.go:360",
+    "method": "GET",
+    "path": "/api/instance/stats",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/memo_service.pb.gw.go:1022",
+    "method": "PATCH",
+    "path": "/api/memos/{memo.name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/memo_service.pb.gw.go:1102",
+    "method": "GET",
+    "path": "/api/memos/{parent}/relations",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/memo_service.pb.gw.go:1322",
+    "method": "GET",
+    "path": "/api/memos/-/linkMetadata",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/space_service.pb.gw.go:830",
+    "method": "GET",
+    "path": "/api/spaces/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/space_service.pb.gw.go:890",
+    "method": "DELETE",
+    "path": "/api/spaces/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/space_service.pb.gw.go:970",
+    "method": "DELETE",
+    "path": "/api/spaces/{name}/members/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:1708",
+    "method": "GET",
+    "path": "/api/users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:1948",
+    "method": "GET",
+    "path": "/api/users/{parent}/views",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:1968",
+    "method": "GET",
+    "path": "/api/users/{name}/views/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:1988",
+    "method": "POST",
+    "path": "/api/users/{parent}/views",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:2188",
+    "method": "GET",
+    "path": "/api/users/{name}/webhooks/{name}:getSigningSecret",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:proto/gen/api/user_service.pb.gw.go:2268",
+    "method": "DELETE",
+    "path": "/api/users/{name}/linkedIdentities/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:42",
+    "method": "ANY",
+    "path": "/Public/{param}/ucd/DerivedCoreProperties.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:46",
+    "method": "ANY",
+    "path": "/Public/{param}/ucd/UnicodeData.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:markdown/parser/tagdata/main.go:50",
+    "method": "ANY",
+    "path": "/Public/{param}/emoji/emoji-test.txt",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "memos:web/src/hooks/useLiveMemoRefresh.ts:402",
+    "method": "GET",
+    "path": "/api/sse",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

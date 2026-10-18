@@ -1,0 +1,293 @@
+{
+ "source": "manual",
+ "sha": "e18c82edc2f9c7de3aff9748751d63270c052c1b",
+ "endpoints": [
+  {
+   "method": "ANY",
+   "path": "/addsvc/concat"
+  },
+  {
+   "method": "ANY",
+   "path": "/addsvc/sum"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos/{id}/assign_to_route"
+  },
+  {
+   "method": "POST",
+   "path": "/booking/v1/cargos/{id}/change_destination"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/cargos/{id}/request_routes"
+  },
+  {
+   "method": "GET",
+   "path": "/booking/v1/locations"
+  },
+  {
+   "method": "ANY",
+   "path": "/concat"
+  },
+  {
+   "method": "ANY",
+   "path": "/count"
+  },
+  {
+   "method": "POST",
+   "path": "/handling/v1/incidents"
+  },
+  {
+   "method": "ANY",
+   "path": "/metrics"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles/{id}/addresses"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}/addresses/{addressID}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses/{addressID}"
+  },
+  {
+   "method": "ANY",
+   "path": "/stringsvc/count"
+  },
+  {
+   "method": "ANY",
+   "path": "/stringsvc/uppercase"
+  },
+  {
+   "method": "ANY",
+   "path": "/sum"
+  },
+  {
+   "method": "GET",
+   "path": "/tracking/v1/cargos/{id}"
+  },
+  {
+   "method": "ANY",
+   "path": "/uppercase"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/paths"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/profiles/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses"
+  },
+  {
+   "method": "POST",
+   "path": "/profiles/{id}/addresses"
+  },
+  {
+   "method": "DELETE",
+   "path": "/profiles/{id}/addresses/{addressID}"
+  },
+  {
+   "method": "GET",
+   "path": "/profiles/{id}/addresses/{addressID}"
+  },
+  {
+   "method": "GET",
+   "path": "/uppercase"
+  },
+  {
+   "method": "POST",
+   "path": "/sum",
+   "category": "url-from-helper"
+  },
+  {
+   "method": "POST",
+   "path": "/concat",
+   "category": "url-from-helper"
+  },
+  {
+   "method": "GET",
+   "path": "/count",
+   "category": "url-from-helper"
+  }
+ ],
+ "notes": "Manual, the whole repo (several small apps: stringsvc1-4, addsvc, apigateway, profilesvc, shipping). Expected = every route registration read in the source. Misses: package-level net/http registration http.Handle(\"/uppercase\", h) on the default mux (default-mux-function — http.DefaultServeMux.Handle is extracted, http.Handle is not); gorilla builder chains with the method first, r.Methods(\"POST\").Path(\"/profiles/\").Handler(h) (route-chain); the gateway mounts addsvc under /addsvc with r.PathPrefix(\"/addsvc\").Handler(http.StripPrefix(...)) (prefix-other-file) — both found since H2b item 4 (2026-10-16), and /sum, /concat stay because addsvc's main serves the same handler (http.Serve). Wrong: mux.Handle(\"/booking/v1/\", booking.MakeHandler(...)) is a subtree mount and comes out as the route ANY /booking/v1 (mount-as-route). Calls: go-kit clients take the method in httptransport.NewClient(\"GET\", tgt, enc, dec) and set the path in the request encoder (req.URL.Path = \"/profiles/\" + id) — request-encoder; or on the URL (u.Path = \"/paths\") — url-object-builder. None was extracted until H2b's Go calls (2026-10-16); since then both are. The /uppercase client (stringsvc3, and the gateway's factory) is a GET (it was listed as POST). Added then: addsvc's client, copyURL(u, \"/sum\") with the path a parameter of the helper that sets it, and the gateway's stringsvcFactory(ctx, \"GET\", \"/count\") — url-from-helper. Since the v2 cheap fixes (2026-10-15): http.Handle on the default mux is a route, and a ServeMux pattern ending in / is a mount, not a route.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "go-kit-examples:addsvc/cmd/addsvc/addsvc.go:140",
+    "method": "ANY",
+    "path": "/metrics",
+    "raw": "/metrics",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:addsvc/pkg/addtransport/http.go:51",
+    "method": "ANY",
+    "path": "/sum",
+    "raw": "/sum",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:addsvc/pkg/addtransport/http.go:57",
+    "method": "ANY",
+    "path": "/concat",
+    "raw": "/concat",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:apigateway/main.go:148",
+    "method": "ANY",
+    "path": "/stringsvc/uppercase",
+    "raw": "/stringsvc/uppercase",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:apigateway/main.go:149",
+    "method": "ANY",
+    "path": "/stringsvc/count",
+    "raw": "/stringsvc/count",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:72",
+    "method": "POST",
+    "path": "/booking/v1/cargos",
+    "raw": "/booking/v1/cargos",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:73",
+    "method": "GET",
+    "path": "/booking/v1/cargos",
+    "raw": "/booking/v1/cargos",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:74",
+    "method": "GET",
+    "path": "/booking/v1/cargos/{id}",
+    "raw": "/booking/v1/cargos/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:75",
+    "method": "GET",
+    "path": "/booking/v1/cargos/{id}/request_routes",
+    "raw": "/booking/v1/cargos/{id}/request_routes",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:76",
+    "method": "POST",
+    "path": "/booking/v1/cargos/{id}/assign_to_route",
+    "raw": "/booking/v1/cargos/{id}/assign_to_route",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:77",
+    "method": "POST",
+    "path": "/booking/v1/cargos/{id}/change_destination",
+    "raw": "/booking/v1/cargos/{id}/change_destination",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/booking/transport.go:78",
+    "method": "GET",
+    "path": "/booking/v1/locations",
+    "raw": "/booking/v1/locations",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/handling/transport.go:36",
+    "method": "POST",
+    "path": "/handling/v1/incidents",
+    "raw": "/handling/v1/incidents",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "go-kit-examples:shipping/tracking/transport.go:34",
+    "method": "GET",
+    "path": "/tracking/v1/cargos/{id}",
+    "raw": "/tracking/v1/cargos/{id}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

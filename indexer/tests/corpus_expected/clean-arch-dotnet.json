@@ -1,0 +1,62 @@
+{
+ "source": "manual",
+ "sha": "bf7665ff37780713f68e61b892ba002c1504a696",
+ "scope": {
+  "endpoints": [
+   "src/Web/Endpoints/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/api/TodoItems",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoItems/{id}",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/TodoItems/UpdateDetail/{id}",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoItems/{id}",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "GET",
+   "path": "/api/TodoLists",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "POST",
+   "path": "/api/TodoLists",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/TodoLists/{id}",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/TodoLists/{id}",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "GET",
+   "path": "/api/WeatherForecasts",
+   "category": "route-by-name-convention"
+  },
+  {
+   "method": "POST",
+   "path": "/api/Users/logout",
+   "category": "route-by-name-convention"
+  }
+ ],
+ "notes": "Every endpoint class implements IEndpointGroup; WebApplicationExtensions.MapEndpoints finds them by reflection and mounts each on app.MapGroup($\"/api/{type.Name}\"), and the routes use the project's own wrapper groupBuilder.MapPost(handler, \"pattern\") (handler first, pattern optional). Nothing is extracted and nothing is wrong (route-by-name-convention / custom-map-wrapper): a convention (route_patterns, ADR-003) is the place for it, not the extractor. MapIdentityApi<ApplicationUser>() adds the ASP.NET Identity routes under /api/Users — framework-generated, not listed."
+}

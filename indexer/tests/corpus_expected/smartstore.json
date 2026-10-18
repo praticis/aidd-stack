@@ -1,0 +1,2321 @@
+{
+ "source": "manual",
+ "sha": "424752a556c8d1676eec83a6d98c5a126cd6b741",
+ "scope": [
+  "src/Smartstore.Modules/Smartstore.WebApi/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/odata/v1/Addresses"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Addresses"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Addresses({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Addresses({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Addresses({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Addresses({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Addresses({key})/Country"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Addresses({key})/StateProvince"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Categories"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Categories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Categories({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Categories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories({key})/AppliedDiscounts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Categories({key})/ApplyDiscounts"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories({key})/MediaFile"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributeValues"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CheckoutAttributeValues"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributeValues({key})/CheckoutAttribute"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributeValues({key})/MediaFile"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CheckoutAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CheckoutAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CheckoutAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CheckoutAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CheckoutAttributes({key})/CheckoutAttributeValues"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroupMappings"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CollectionGroupMappings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CollectionGroupMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroupMappings({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CollectionGroupMappings({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CollectionGroupMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroupMappings({key})/CollectionGroup"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroups"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CollectionGroups"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CollectionGroups({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroups({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CollectionGroups({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CollectionGroups({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CollectionGroups({key})/CollectionGroupMappings"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Countries"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Countries"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Countries({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Countries({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Countries({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Countries({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Countries({key})/StateProvinces"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Currencies"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Currencies"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Currencies({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Currencies({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Currencies({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Currencies({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoleMappings"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CustomerRoleMappings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CustomerRoleMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoleMappings({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CustomerRoleMappings({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CustomerRoleMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoleMappings({key})/Customer"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoleMappings({key})/CustomerRole"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoles"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/CustomerRoles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/CustomerRoles({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/CustomerRoles({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/CustomerRoles({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/CustomerRoles({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Customers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Customers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Customers({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Customers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/Addresses"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Customers({key})/Addresses({relatedkey})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Customers({key})/Addresses({relatedkey})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/BillingAddress"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/CustomerRoleMappings"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/Orders"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/ReturnCases"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/RewardPointsHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/ShippingAddress"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/ShoppingCartItems"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Customers({key})/WalletHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DeliveryTimes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/DeliveryTimes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/DeliveryTimes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DeliveryTimes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/DeliveryTimes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/DeliveryTimes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DeliveryTimes/GetDeliveryDate(Id={id})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DiscountUsageHistory"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/DiscountUsageHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DiscountUsageHistory({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DiscountUsageHistory({key})/Discount"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/DiscountUsageHistory({key})/Order"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Discounts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Discounts({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Discounts({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Discounts({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts({key})/AppliedToCategories"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts({key})/AppliedToManufacturers"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts({key})/AppliedToProducts"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Downloads"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Downloads"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Downloads({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Downloads({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Downloads({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Downloads({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Downloads({key})/MediaFile"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GenericAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/GenericAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/GenericAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GenericAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/GenericAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/GenericAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCardUsageHistory"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/GiftCardUsageHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCardUsageHistory({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCardUsageHistory({key})/GiftCard"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCardUsageHistory({key})/UsedWithOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCards"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/GiftCards"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/GiftCards({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCards({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/GiftCards({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/GiftCards({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCards({key})/GiftCardUsageHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/GiftCards({key})/PurchasedWithOrderItem"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ImportProfiles"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ImportProfiles"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ImportProfiles({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ImportProfiles({key})/SaveFiles"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Languages"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Languages"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Languages({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Languages({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Languages({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Languages({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocaleStringResources"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/LocaleStringResources"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/LocaleStringResources({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocaleStringResources({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/LocaleStringResources({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/LocaleStringResources({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocaleStringResources({key})/Language"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocalizedProperties"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/LocalizedProperties"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/LocalizedProperties({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocalizedProperties({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/LocalizedProperties({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/LocalizedProperties({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/LocalizedProperties({key})/Language"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Manufacturers"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Manufacturers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Manufacturers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Manufacturers({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Manufacturers({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Manufacturers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Manufacturers({key})/AppliedDiscounts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Manufacturers({key})/ApplyDiscounts"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Manufacturers({key})/MediaFile"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MeasureDimensions"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MeasureDimensions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/MeasureDimensions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MeasureDimensions({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/MeasureDimensions({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/MeasureDimensions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MeasureWeights"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MeasureWeights"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/MeasureWeights({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MeasureWeights({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/MeasureWeights({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/MeasureWeights({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFiles"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFiles({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles({key})/CopyFile"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles({key})/DeleteFile"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles({key})/MoveFile"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/CheckUniqueFileName"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/CountFiles"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/CountFilesGrouped"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFiles/DownloadFile(id={id})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/FileExists"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/GetFileByPath"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFiles/GetFilesByIds(ids={ids})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/SaveFile"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFiles/SearchFiles"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFolders"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFolders({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/CheckUniqueFolderName"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/CopyFolder"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/CreateFolder"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/DeleteFolder"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/FolderExists"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/GetNodeByPath"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/MediaFolders/GetRootNode"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/MediaFolders/MoveFolder"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/NewsletterSubscriptions"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/NewsletterSubscriptions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/NewsletterSubscriptions({key})/Subscribe"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/NewsletterSubscriptions({key})/Unsubscribe"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/OrderItems"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/OrderItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/OrderItems({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/OrderItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems({key})/AssociatedGiftCards"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems({key})/Order"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems({key})/Product"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderItems/GetShipmentInfo(id={id})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderNotes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/OrderNotes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/OrderNotes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderNotes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/OrderNotes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/OrderNotes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/OrderNotes({key})/Order"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Orders({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Orders({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Orders({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/AddShipment"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/BillingAddress"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/Cancel"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/CompleteOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/Customer"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/DiscountUsageHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/GiftCardUsageHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/OrderItems"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/OrderNotes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/PaymentCapture"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/PaymentPaid"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/PaymentPending"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/PaymentRefund"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Orders({key})/ReOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/RedeemedRewardPointsEntry"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/Shipments"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/ShippingAddress"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders({key})/WalletHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders/DownloadPdf(id={id})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders/GetDetails(id={id})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Orders/GetShipmentInfo(id={id})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/PaymentMethods"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/PaymentMethods"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/PaymentMethods({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/PaymentMethods({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/PaymentMethods({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/PaymentMethods/GetAllPaymentMethods(active={active},storeId={storeId},languageId={languageId})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/PriceLabels"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/PriceLabels"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/PriceLabels({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/PriceLabels({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/PriceLabels({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/PriceLabels({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptions"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductAttributeOptions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductAttributeOptions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptions({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductAttributeOptions({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductAttributeOptions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptions({key})/ProductAttributeOptionsSet"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptionsSets"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductAttributeOptionsSets"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})/ProductAttribute"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})/ProductAttributeOptions"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductAttributes({key})/ProductAttributeOptionsSets"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductBundleItems"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductBundleItems"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductBundleItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductBundleItems({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductBundleItems({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductBundleItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductBundleItems({key})/BundleProduct"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductBundleItems({key})/Product"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductCategories"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductCategories"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductCategories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductCategories({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductCategories({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductCategories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductCategories({key})/Category"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductCategories({key})/Product"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductManufacturers"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductManufacturers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductManufacturers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductManufacturers({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductManufacturers({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductManufacturers({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductManufacturers({key})/Manufacturer"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductManufacturers({key})/Product"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductMediaFiles"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductMediaFiles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductMediaFiles({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductMediaFiles({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductMediaFiles({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductMediaFiles({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductMediaFiles({key})/MediaFile"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductMediaFiles({key})/Product"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductSpecificationAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductSpecificationAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductSpecificationAttributes({key})/SpecificationAttributeOption"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductTags"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductTags"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductTags({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductTags({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductTags({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductTags({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeCombinations"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductVariantAttributeCombinations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})/DeliveryTime"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})/QuantityUnit"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeValues"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductVariantAttributeValues"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributeValues({key})/ProductVariantAttribute"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ProductVariantAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ProductVariantAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ProductVariantAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ProductVariantAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributes({key})/ProductAttribute"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ProductVariantAttributes({key})/ProductVariantAttributeValues"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Products({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Products({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Products({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/AppliedDiscounts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/ApplyDiscounts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/CalculatePrice"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/CountryOfOrigin"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/CreateAttributeCombinations"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/DeliveryTime"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/ManageAttributes"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductBundleItems"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductCategories"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Products({key})/ProductCategories({relatedkey})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/ProductCategories({relatedkey})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductManufacturers"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Products({key})/ProductManufacturers({relatedkey})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/ProductManufacturers({relatedkey})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductMediaFiles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Products({key})/ProductMediaFiles({relatedkey})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/ProductMediaFiles({relatedkey})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductSpecificationAttributes"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductTags"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductVariantAttributeCombinations"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/ProductVariantAttributes"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/QuantityUnit"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/SampleDownload"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/SaveFiles"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products({key})/TierPrices"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products({key})/UpdateProductTags"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products/DeletePermanent"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Products/RecycleBin"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products/Restore"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Products/Search"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/QuantityUnits"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/QuantityUnits"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/QuantityUnits({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/QuantityUnits({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/QuantityUnits({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/QuantityUnits({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPaymentHistory"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RecurringPaymentHistory"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPaymentHistory({key})/RecurringPayment"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPayments"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RecurringPayments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/RecurringPayments({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPayments({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/RecurringPayments({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/RecurringPayments({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RecurringPayments({key})/CancelRecurringPayment"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPayments({key})/InitialOrder"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RecurringPayments({key})/ProcessNextRecurringPayment"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RecurringPayments({key})/RecurringPaymentHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RelatedProducts"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RelatedProducts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/RelatedProducts({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RelatedProducts({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/RelatedProducts({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/RelatedProducts({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RewardPointsHistory"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/RewardPointsHistory"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RewardPointsHistory({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RewardPointsHistory({key})/Customer"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/RewardPointsHistory({key})/UsedWithOrder"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Settings"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Settings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Settings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Settings({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Settings({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Settings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShipmentItems"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShipmentItems"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ShipmentItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShipmentItems({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ShipmentItems({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ShipmentItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShipmentItems({key})/Shipment"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Shipments"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Shipments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Shipments({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Shipments({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Shipments({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Shipments({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Shipments({key})/Deliver"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Shipments({key})/Ship"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Shipments({key})/ShipmentItems"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShippingMethods"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShippingMethods"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/ShippingMethods({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShippingMethods({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/ShippingMethods({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/ShippingMethods({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShoppingCartItems"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShoppingCartItems"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShoppingCartItems({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShoppingCartItems({key})/BundleItem"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShoppingCartItems({key})/Customer"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShoppingCartItems({key})/DeleteItem"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/ShoppingCartItems({key})/Product"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShoppingCartItems({key})/UpdateItem"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShoppingCartItems/AddToCart"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/ShoppingCartItems/DeleteCart"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributeOptions"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/SpecificationAttributeOptions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})/ProductSpecificationAttributes"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributeOptions({key})/SpecificationAttribute"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributes"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/SpecificationAttributes"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/SpecificationAttributes({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributes({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/SpecificationAttributes({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/SpecificationAttributes({key})"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/SpecificationAttributes({key})/ApplyCollectionGroupName"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SpecificationAttributes({key})/SpecificationAttributeOptions"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/StateProvinces"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/StateProvinces"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/StateProvinces({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/StateProvinces({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/StateProvinces({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/StateProvinces({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/StateProvinces({key})/Country"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/StoreMappings"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/StoreMappings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/StoreMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/StoreMappings({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/StoreMappings({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/StoreMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Stores"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Stores"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Stores({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Stores({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Stores({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Stores({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SyncMappings"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/SyncMappings"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/SyncMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/SyncMappings({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/SyncMappings({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/SyncMappings({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/TaxCategories"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/TaxCategories"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/TaxCategories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/TaxCategories({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/TaxCategories({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/TaxCategories({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/TierPrices"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/TierPrices"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/TierPrices({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/TierPrices({key})"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/TierPrices({key})"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/TierPrices({key})"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/UrlRecords"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/UrlRecords"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/UrlRecords({key})"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the Web API module (OData), 65 controllers deriving from WebApiController<TEntity> (Smartstore.Web.Common/Api), which carries [ODataRouteComponent(\"odata/v1\")] and [Route(\"odata/v1\")] — the inherited [Route] of H2-D10, one level. Routes: every templated attribute ([HttpGet(\"Products({key})/ProductTags\"), ApiQueryable], [HttpPost(\"Products({key})/..\")], OData key syntax in parentheses) under /odata/v1/, and the OData conventions of the untemplated actions — Post → POST /odata/v1/<EntitySet>, Put/Patch/Delete(int key) → /odata/v1/<EntitySet>({key}), the entity set named after the controller. 551 routes. Not expected: what OData adds by itself ($metadata, $count), and WebApiAdminController (a conventional MVC admin page). The storefront and admin (Smartstore.Web, Areas/Admin) route by convention (MapLocalizedControllerRoute, slugs) and are outside the scope. Moved to the corpus by F1.14 (2026-10-17). Corrected (H2-D15): 9 controllers declare Put() / Patch() / Delete() without a key, as stubs hidden from the API ([ApiExplorerSettings(IgnoreApi = true)]); OData's conventions need the key, so they route none of them — the 25 <EntitySet>({key}) entries written for them are removed.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductAttributeOptionsSetsController.cs:32",
+    "method": "GET",
+    "path": "/odata/v1/ProductAttributeOptionsSets({key})/ProductAttributeOptions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductAttributesController.cs:18",
+    "method": "GET",
+    "path": "/odata/v1/ProductAttributes({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductBundleItemsController.cs:25",
+    "method": "GET",
+    "path": "/odata/v1/ProductBundleItems({key})/Product",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductMediaFilesController.cs:12",
+    "method": "GET",
+    "path": "/odata/v1/ProductMediaFiles",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductMediaFilesController.cs:19",
+    "method": "GET",
+    "path": "/odata/v1/ProductMediaFiles({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductsController.cs:103",
+    "method": "GET",
+    "path": "/odata/v1/Products({key})/SampleDownload",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductsController.cs:152",
+    "method": "GET",
+    "path": "/odata/v1/Products({key})/AppliedDiscounts",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/ProductsController.cs:75",
+    "method": "GET",
+    "path": "/odata/v1/Products({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Catalog/RelatedProductsController.cs:18",
+    "method": "GET",
+    "path": "/odata/v1/RelatedProducts({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Checkout/OrderNotesController.cs:26",
+    "method": "GET",
+    "path": "/odata/v1/OrderNotes({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Checkout/RecurringPaymentsController.cs:40",
+    "method": "GET",
+    "path": "/odata/v1/RecurringPayments({key})/InitialOrder",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Checkout/ShipmentItemsController.cs:25",
+    "method": "GET",
+    "path": "/odata/v1/ShipmentItems({key})/Shipment",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Common/QuantityUnitsController.cs:16",
+    "method": "GET",
+    "path": "/odata/v1/QuantityUnits({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Content/MediaFilesController.cs:214",
+    "method": "POST",
+    "path": "/odata/v1/MediaFiles/CountFiles",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Content/MediaFilesController.cs:428",
+    "method": "POST",
+    "path": "/odata/v1/MediaFiles/SaveFile",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/DataExchange/ImportProfilesController.cs:40",
+    "method": "GET",
+    "path": "/odata/v1/ImportProfiles",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Localization/LocalizedPropertiesController.cs:11",
+    "method": "GET",
+    "path": "/odata/v1/LocalizedProperties",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Messaging/NewsletterSubscriptionsController.cs:18",
+    "method": "GET",
+    "path": "/odata/v1/NewsletterSubscriptions",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Modules/Smartstore.WebApi/Controllers/Seo/UrlRecordsController.cs:17",
+    "method": "GET",
+    "path": "/odata/v1/UrlRecords({key})",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore/IconKit/Bootstrapping/IconKitEndpointRouteBuilderExtensions.cs:45",
+    "method": "GET",
+    "path": "/render",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-as-param"
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "smartstore:src/Smartstore.Core/Checkout/Tax/Services/ViesTaxationHttpClient.cs:28",
+    "method": "POST",
+    "path": "/taxation_customs/vies/rest-api/check-vat-number",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Core/Common/Services/EcbExchangeRateProvider.cs:34",
+    "method": "GET",
+    "path": "/stats/eurofxref/eurofxref-daily.xml",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Core/Platform/AI/Metadata/RemoteAIMetadataLoader.cs:34",
+    "method": "POST",
+    "path": "/aimetadata/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Core/Platform/Packaging/UpdateChecker.cs:93",
+    "method": "GET",
+    "path": "/api/v1/apprelease/CheckUpdate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "smartstore:src/Smartstore.Web/Areas/Admin/Components/NewsFeedViewComponent.cs:43",
+    "method": "POST",
+    "path": "/Plugins/NewsFeed/JsonFeed",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

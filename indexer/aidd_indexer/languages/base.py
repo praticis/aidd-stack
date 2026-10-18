@@ -182,6 +182,20 @@ class LanguageSupport:
         method of *that* type among homonyms (strategy `receiver-type`)."""
         return None
 
+    def external_receiver(self, ctx: ResolveContext, file: "FileInfo", receiver_type: str, path: tuple[str, ...],
+                          owner: str | None = None) -> str | None:
+        """The receiver's type when it is named in the code and declared outside the repo (`Substitute.For<T>()`, a
+        `Fixture fixture`, an `ILogger _logger`): a method on it is the package's, so the resolver does not guess a
+        homonym of the repo by name — except an extension method (`is_extension_method`). `owner`: the caller's type,
+        whose inherited members a capitalized receiver may name. None otherwise."""
+        return None
+
+    def is_extension_method(self, ctx: ResolveContext, symbol: "SymbolInfo", receiver_type: str | None = None,
+                            unknown: bool = False) -> bool:
+        """A method of the repo callable on a type declared elsewhere (C# `static X M(this T x)`) — on
+        `receiver_type` when it is known, on anything when the receiver's type is `unknown`."""
+        return False
+
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         """Qualified names of the in-repo base types of a type (nearest first), so a method inherited
         from a base class declared in this repo still resolves by receiver type."""

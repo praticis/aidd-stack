@@ -1,0 +1,210 @@
+{
+ "source": "manual",
+ "sha": "439005e6e50c4abc65b0fd0a57aa88ce828cc9ee",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "gin-examples:ace-template/main.go:11",
+    "method": "GET",
+    "path": "/ace-example",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:app-engine/go11x/hello.go:31",
+    "method": "GET",
+    "path": "/ping",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:assets-in-binary/main.go:28",
+    "method": "GET",
+    "path": "/foo",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:cors-middleware/main.go:86",
+    "method": "PUT",
+    "path": "/data/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:custom-validation/server.go:36",
+    "method": "GET",
+    "path": "/bookable",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:form-binding/main.go:18",
+    "method": "POST",
+    "path": "/book",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:forward-proxy/main.go:18",
+    "method": "ANY",
+    "path": "/{rest}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:group-routes/routes/users.go:15",
+    "method": "GET",
+    "path": "/v1/users/comments",
+    "raw": "/comments",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:grpc/example1/gin/main.go:25",
+    "method": "GET",
+    "path": "/rest/n/{name}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:oidc/main.go:151",
+    "method": "GET",
+    "path": "/protected",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:oidc/main.go:93",
+    "method": "GET",
+    "path": "/callback",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:realtime-advanced/main.go:37",
+    "method": "GET",
+    "path": "/room/{roomid}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:realtime-advanced/main.go:38",
+    "method": "POST",
+    "path": "/room-post/{roomid}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:realtime-chat/main.go:20",
+    "method": "POST",
+    "path": "/room/{roomid}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:realtime-chat/main.go:21",
+    "method": "DELETE",
+    "path": "/room/{roomid}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:reverse-proxy/realServer/main.go:16",
+    "method": "GET",
+    "path": "/{path}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:send_chunked_data/send_chunked_data.go:15",
+    "method": "GET",
+    "path": "/test_stream",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:server-sent-event/main.go:56",
+    "method": "GET",
+    "path": "/stream",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:struct-lvl-validations/server.go:46",
+    "method": "POST",
+    "path": "/user",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "gin-examples:websocket/server/server.go:47",
+    "method": "GET",
+    "path": "/echo",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Precision: 20 of 31 sampled (seed 1). Recall scope: versioning/main.go, secure-web-app/main.go, basic/main.go and group-routes/routes/, read whole. Misses: paths written without the leading slash (apiV1.GET(\"users\"), authorized.POST(\"admin\") — no-leading-slash), the group root api.GET(\"/\") under Group(\"/api\") (root-route-dropped), the /v1 and /v2 prefixes of group-routes (the group is a parameter: router-as-param) and basic's GET /ping, merged with app-engine's (multi-app-repo).",
+ "scope": {
+  "endpoints": [
+   "versioning/main.go",
+   "secure-web-app/main.go",
+   "basic/main.go",
+   "group-routes/routes/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/v1/users"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users/add"
+  },
+  {
+   "method": "GET",
+   "path": "/v2/users"
+  },
+  {
+   "method": "POST",
+   "path": "/v2/users/add"
+  },
+  {
+   "method": "GET",
+   "path": "/api"
+  },
+  {
+   "method": "GET",
+   "path": "/ping",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/user/{name}"
+  },
+  {
+   "method": "POST",
+   "path": "/admin"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/comments"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/pictures"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/v2/ping"
+  }
+ ]
+}

@@ -29,7 +29,11 @@ _DECORATOR_ENTRY = re.compile(r"@(Get|Post|Put|Delete|Patch|All|MessagePattern|E
 
 
 def _try_paths(ctx: ResolveContext, base: PurePosixPath) -> FileInfo | None:
-    for cand in [str(base)] + [f"{base}{e}" for e in TS_EXTS] + [f"{base}/index{e}" for e in TS_EXTS]:
+    """The file `base` names: as written, with the usual extensions, as a folder's `index.*` — and a `.js` written for
+    a `.ts` source (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`)."""
+    stem = re.sub(r"\.[mc]?jsx?$", "", str(base))
+    compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts")] if stem != str(base) else []
+    for cand in [str(base)] + compiled + [f"{base}{e}" for e in TS_EXTS] + [f"{base}/index{e}" for e in TS_EXTS]:
         f = ctx.file_at(cand)
         if f:
             return f
@@ -76,12 +80,15 @@ class TypeScriptSupport(LanguageSupport):
         if spec.startswith("."):
             t = _try_paths(ctx, PurePosixPath(posixpath.normpath(str(here / spec))))
             return (t.id, "File") if t else None
-        if spec.startswith(("@/", "~/", "src/", "#")):
-            tail = re.sub(r"^(@/|~/|#)", "", spec)          # path alias — try a few conventional roots
-            for root in ("src", "", "app", "lib"):
-                t = _try_paths(ctx, PurePosixPath(root) / tail if root else PurePosixPath(tail))
-                if t:
-                    return (t.id, "File")
+        if spec.startswith(("@/", "~/", "src/", "#", "$lib/")) or spec == "$lib":   # `$lib`: SvelteKit's, src/lib
+            tail = re.sub(r"^\$lib\b", "lib", re.sub(r"^(@/|~/|#)", "", spec))   # path alias — conventional roots,
+            mod = ctx.module_by_id.get(file.module_id)       # in the file's package first (its tsconfig's `paths`),
+            pkg = mod.path if mod is not None and mod.path not in ("", ".") else ""   # then the repo's
+            for base in dict.fromkeys((pkg, "")):
+                for root in ("src", "", "app", "lib"):
+                    t = _try_paths(ctx, PurePosixPath(*[p for p in (base, root, tail) if p]))
+                    if t:
+                        return (t.id, "File")
             return None
         if spec.startswith("node:"):
             return (pkg("npm", spec, True), "Package")

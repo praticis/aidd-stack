@@ -1,0 +1,146 @@
+{
+ "source": "manual",
+ "sha": "179ae84efec61b14206d0305d941daed6c6d07f9",
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/v1/auth/forgot-password",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/login",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/logout",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/refresh-tokens",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/register",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/reset-password",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/send-verification-email",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/auth/verify-email",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/docs",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/users",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/users/{userId}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/users/{userId}",
+   "category": "prefix-other-file"
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/users/{userId}",
+   "category": "prefix-other-file"
+  }
+ ],
+ "notes": "Manual, the whole API (src/routes/v1). Routers are mounted from a table in routes/v1/index.js — [{path: '/auth', route: authRoute}, ...].forEach(r => router.use(r.path, r.route)) — and that router at app.use('/v1', routes) in app.js, so every auth route comes out without /v1/auth (prefix-other-file; the mount graph would also have to follow the array). The user routes use router.route('/:userId').get(h).patch(h).delete(h): until H2b item 4 (2026-10-16) none came out (route-chain); since then they come out without /v1/users, like the auth ones, and the roots router.route('/') wait for a mount this file does not make (prefix-other-file). No outbound calls.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:10",
+    "method": "POST",
+    "path": "/login",
+    "raw": "/login",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:11",
+    "method": "POST",
+    "path": "/logout",
+    "raw": "/logout",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:12",
+    "method": "POST",
+    "path": "/refresh-tokens",
+    "raw": "/refresh-tokens",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:13",
+    "method": "POST",
+    "path": "/forgot-password",
+    "raw": "/forgot-password",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:14",
+    "method": "POST",
+    "path": "/reset-password",
+    "raw": "/reset-password",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:15",
+    "method": "POST",
+    "path": "/send-verification-email",
+    "raw": "/send-verification-email",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:16",
+    "method": "POST",
+    "path": "/verify-email",
+    "raw": "/verify-email",
+    "ok": false,
+    "category": "prefix-other-file"
+   },
+   {
+    "evidence": "express-boilerplate:src/routes/v1/auth.route.js:9",
+    "method": "POST",
+    "path": "/register",
+    "raw": "/register",
+    "ok": false,
+    "category": "prefix-other-file"
+   }
+  ]
+ },
+ "checked_seed": "1"
+}

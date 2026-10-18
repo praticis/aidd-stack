@@ -44,7 +44,10 @@ Duas famílias de tecnologia poderiam produzir o micro:
 3. A camada de integrações (`integrations.py`: rotas expostas, chamadas HTTP de saída, futuro gRPC e
    mensageria) é **independente do resolvedor** — heurísticas de framework sobre a árvore, calibradas
    em corpus público, com `evidence` e `confidence` em cada candidato. Ela não é provisória: continua
-   por cima do SCIP quando ele existir.
+   por cima do SCIP quando ele existir. *Adendo (2026-10-17, F1.14):* ela consulta um resolvedor — por nome, ou
+   SCIP quando houver índice — só nos pontos em que a decisão pede o tipo de uma expressão não declarado à vista
+   (`needs-resolver`); o resto (valores, convenções, o que é sintaticamente determinado) segue na árvore
+   (`docs/indexer-evolution.md` §8).
 4. LLM não é parser em nenhuma das camadas (princípio do ROADMAP). Onde um padrão não é reconhecível
    estaticamente, a limitação é registrada, não estimada.
 

@@ -1,0 +1,135 @@
+{
+ "source": "manual",
+ "sha": "298a8857c7128a0d121e7f699dfd729f23b3966d",
+ "endpoints": [
+  {
+   "method": "ANY",
+   "path": "/api/auth/{nextauth}",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "GET",
+   "path": "/api/og",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "GET",
+   "path": "/api/posts",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "POST",
+   "path": "/api/posts",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/posts/{postId}",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/posts/{postId}",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/stripe",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{userId}",
+   "category": "route-by-file-path"
+  },
+  {
+   "method": "POST",
+   "path": "/api/webhooks/stripe",
+   "category": "route-by-file-path"
+  }
+ ],
+ "calls": [
+  {
+   "method": "POST",
+   "path": "/api/posts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/posts/{postId}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/posts/{postId}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users/stripe"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/users/{userId}"
+  },
+  {
+   "method": "GET",
+   "path": "/repos/shadcn/taxonomy"
+  }
+ ],
+ "notes": "Manual, the whole app. Next.js App Router: every route is a file, app/api/posts/[postId]/route.ts exporting async function DELETE/PATCH → DELETE/PATCH /api/posts/{postId}; NextAuth's [...nextauth] catch-all is listed once as ANY. Nothing is extracted — there is no route call to see (route-by-file-path, needs a scanner by file convention). The browser calls are plain fetch('/api/posts', {method}) and all six come out right, so a repo like this links its own UI to its API as soon as the routes exist.",
+ "checked": {
+  "calls": [
+   {
+    "evidence": "taxonomy:app/(marketing)/page.tsx:10",
+    "method": "GET",
+    "path": "/repos/shadcn/taxonomy",
+    "raw": "https://api.github.com/repos/shadcn/taxonomy",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "taxonomy:components/billing-form.tsx:37",
+    "method": "GET",
+    "path": "/api/users/stripe",
+    "raw": "/api/users/stripe",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "taxonomy:components/editor.tsx:91",
+    "method": "PATCH",
+    "path": "/api/posts/{param}",
+    "raw": "/api/posts/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "taxonomy:components/post-create-button.tsx:24",
+    "method": "POST",
+    "path": "/api/posts",
+    "raw": "/api/posts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "taxonomy:components/post-operations.tsx:29",
+    "method": "DELETE",
+    "path": "/api/posts/{param}",
+    "raw": "/api/posts/{param}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "taxonomy:components/user-name-form.tsx:49",
+    "method": "PATCH",
+    "path": "/api/users/{param}",
+    "raw": "/api/users/{param}",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "language": {
+  "endpoints": "TS/JS",
+  "calls": "TS/JS"
+ }
+}

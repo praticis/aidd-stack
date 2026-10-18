@@ -1,0 +1,178 @@
+{
+ "source": "manual",
+ "sha": "a419aa7350389a275ab45fde2e849ed1f02449ef",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "express:examples/auth/index.js:100",
+    "method": "GET",
+    "path": "/login",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/auth/index.js:92",
+    "method": "GET",
+    "path": "/logout",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/cookies/index.js:34",
+    "method": "GET",
+    "path": "/forget",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/downloads/index.js:26",
+    "method": "GET",
+    "path": "/files/{rest}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/error-pages/index.js:34",
+    "method": "GET",
+    "path": "/404",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/error/index.js:34",
+    "method": "GET",
+    "path": "/next",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/markdown/index.js:36",
+    "method": "GET",
+    "path": "/fail",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/params/index.js:55",
+    "method": "GET",
+    "path": "/user/{user}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/params/index.js:63",
+    "method": "GET",
+    "path": "/users/{from}-{to}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/resource/index.js:15",
+    "method": "GET",
+    "path": "/{a}..{b}.{format}",
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "express:examples/resource/index.js:22",
+    "method": "DELETE",
+    "path": "/{id}",
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "express:examples/route-middleware/index.js:82",
+    "method": "DELETE",
+    "path": "/user/{id}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/route-separation/index.js:43",
+    "method": "GET",
+    "path": "/user/{id}/view",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/route-separation/index.js:45",
+    "method": "PUT",
+    "path": "/user/{id}/edit",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/route-separation/index.js:49",
+    "method": "GET",
+    "path": "/posts",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/search/index.js:52",
+    "method": "GET",
+    "path": "/search/{query}",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/search/index.js:69",
+    "method": "GET",
+    "path": "/client.js",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/view-locals/index.js:102",
+    "method": "GET",
+    "path": "/middleware-locals",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/view-locals/index.js:64",
+    "method": "GET",
+    "path": "/middleware",
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "express:examples/web-service/index.js:80",
+    "method": "GET",
+    "path": "/api/repos",
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "1",
+ "notes": "Precision: 20 of 31 sampled (seed 1). examples/resource builds routes in an app.resource(path, obj) helper (this.get(path + \"/:id\")): the prefix is a string parameter (prefix-as-param). Express 5 optional groups ({:query}, {.:format}) are normalized into broken templates (optional-segment-syntax). Recall scope: examples/multi-router/ — routers mounted from other files with app.use(\"/api/v1\", require(...)) lose the prefix (prefix-other-file) and the router roots (\"/\") are dropped. 2026-10-15 (second round): Express 5 optional groups are normalized now ({:query} → {query}); the sampled search route became correct. Since H2b's TS cross-file mount graph (2026-10-16): app.use('/api/v1', require('./controllers/api_v1')) is followed to the module's `module.exports = apiv1`, roots included (GET /api/v1, /api/v2).",
+ "scope": {
+  "endpoints": [
+   "examples/multi-router/"
+  ]
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "category": "multi-app-repo"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/users"
+  }
+ ]
+}

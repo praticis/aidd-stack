@@ -1,0 +1,1139 @@
+{
+ "source": "openapi",
+ "sha": "7879a635dd5ae22e41bbe75dd39b6aadfe2e2358",
+ "spec": [
+  "src/Radarr.Api.V3/openapi.json"
+ ],
+ "scope": [
+  "src/Radarr.Api.V3/",
+  "src/Radarr.Http/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/"
+  },
+  {
+   "method": "GET",
+   "path": "/api"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/alttitle"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/alttitle/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/autotagging"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging/schema"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/autotagging/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/autotagging/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/autotagging/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/blocklist"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/blocklist/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/blocklist/movie"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/blocklist/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/calendar"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/collection"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/collection"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/collection/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/collection/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/command"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/command"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/command/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/command/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/downloadclient"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/downloadclient/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/downloadclient/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/host"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/host/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/host/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/importlist"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/importlist/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/importlist/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/indexer"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/indexer/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/indexer/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/mediamanagement"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/mediamanagement/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/mediamanagement/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/metadata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/metadata/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/metadata/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming/examples"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/naming/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/naming/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/ui"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/config/ui/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/config/ui/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/credit"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/credit/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customfilter"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/customfilter"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customfilter/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customfilter/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customfilter/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/customformat"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customformat/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customformat/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat/schema"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/customformat/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/customformat/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/customformat/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/delayprofile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/delayprofile"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/delayprofile/reorder/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/delayprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/delayprofile/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/delayprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/diskspace"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/action/{name}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/downloadclient/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/downloadclient/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/downloadclient/testall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/downloadclient/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/downloadclient/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/downloadclient/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/exclusions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/exclusions/bulk"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/exclusions/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions/paged"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/exclusions/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/exclusions/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/exclusions/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/extrafile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem/mediafiles"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/filesystem/type"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/health"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/history/failed/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history/movie"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/history/since"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/action/{name}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/importlist/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/importlist/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/movie"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/movie"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/importlist/testall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/importlist/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/importlist/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/importlist/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/action/{name}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/indexer/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/indexer/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/indexer/testall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/indexer/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexer/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/indexer/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/indexerflag"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/language"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/language/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/localization"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/localization/language"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/update/{filename}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/log/file/{filename}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/manualimport"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/manualimport"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/mediacover/{movieId}/{filename}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/action/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/metadata/testall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/metadata/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/metadata/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/metadata/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/movie"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/movie/editor"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/movie/editor"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/movie/import"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup/imdb"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/lookup/tmdb"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/movie/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/movie/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/movie/{id}/folder"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/moviefile"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/moviefile/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/editor"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/moviefile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/moviefile/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/moviefile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/action/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification/schema"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/notification/testall"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/notification/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/notification/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/notification/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/parse"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition/limits"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualitydefinition/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualitydefinition/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualitydefinition/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/qualityprofile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile/schema"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/qualityprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/qualityprofile/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/qualityprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/queue/bulk"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue/details"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/queue/grab/bulk"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/queue/grab/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/queue/status"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/queue/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/release"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/release"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/release/push"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/releaseprofile"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/releaseprofile"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/releaseprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/releaseprofile/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/releaseprofile/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/remotepathmapping"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/remotepathmapping"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/remotepathmapping/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/remotepathmapping/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/remotepathmapping/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rename"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rootfolder"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/rootfolder"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/rootfolder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/rootfolder/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/backup"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/backup/restore/upload"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/backup/restore/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/system/backup/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/restart"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/routes"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/routes/duplicate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/system/shutdown"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/task"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/system/task/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/tag"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/detail"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/detail/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/tag/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/tag/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/tag/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/update"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/cutoff"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/missing"
+  },
+  {
+   "method": "GET",
+   "path": "/content/{path}"
+  },
+  {
+   "method": "GET",
+   "path": "/feed/v3/calendar/radarr.ics"
+  },
+  {
+   "method": "GET",
+   "path": "/initialize.json"
+  },
+  {
+   "method": "GET",
+   "path": "/login"
+  },
+  {
+   "method": "POST",
+   "path": "/login"
+  },
+  {
+   "method": "GET",
+   "path": "/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/ping"
+  },
+  {
+   "method": "HEAD",
+   "path": "/ping"
+  },
+  {
+   "method": "GET",
+   "path": "/{path}"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The 238 operations of the committed src/Radarr.Api.V3/openapi.json (generated from the controllers): the v3 API under /api/v3 plus the host's own /, /api, /login, /logout, /ping, /content/{path} and /feed/v3/... Controllers carry the project's attributes — [V3ApiController] (VersionedApiControllerAttribute, which provides the template api/v3/[controller]) and [RestGetById], [RestPostById], [RestPutById], [RestDeleteById] (IActionHttpMethodProvider + IRouteTemplateProvider: a verb and an {id:int} template, not Http* attributes) — and most CRUD actions are inherited from the generic RestController<TResource>. Added after the run (H2-D15): GET /initialize.json (Radarr.Http's InitializeJsonController, [HttpGet(\"/initialize.json\")]), not in the spec. Moved to the corpus by F1.14 (2026-10-17), which reads the project's routing attributes. [controller] gives the class name (AutoTagging) and the spec writes it lowercased (autotagging): ASP.NET matches without case, and so does the scorer since F1.14.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/AutoTagging/AutoTaggingController.cs:93",
+    "method": "GET",
+    "path": "/api/v3/AutoTagging/schema",
+    "raw": "/schema",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Blocklist/BlocklistController.cs:61",
+    "method": "GET",
+    "path": "/api/v3/Blocklist/movie",
+    "raw": "/movie",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Blocklist/BlocklistController.cs:76",
+    "method": "DELETE",
+    "path": "/api/v3/Blocklist/bulk",
+    "raw": "/bulk",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Calendar/CalendarFeedController.cs:30",
+    "method": "GET",
+    "path": "/feed/v3/calendar/Radarr.ics",
+    "raw": "/Radarr.ics",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Config/NamingConfigController.cs:59",
+    "method": "GET",
+    "path": "/api/v3/config/naming/examples",
+    "raw": "/examples",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/History/HistoryController.cs:112",
+    "method": "POST",
+    "path": "/api/v3/History/failed/{id}",
+    "raw": "/failed/{id}",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/ImportLists/ImportListExclusionController.cs:84",
+    "method": "POST",
+    "path": "/api/v3/exclusions/bulk",
+    "raw": "/bulk",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Localization/LocalizationController.cs:32",
+    "method": "GET",
+    "path": "/api/v3/Localization/language",
+    "raw": "/language",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Movies/MovieLookupController.cs:58",
+    "method": "GET",
+    "path": "/api/v3/movie/lookup/tmdb",
+    "raw": "/tmdb",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Qualities/QualityDefinitionController.cs:69",
+    "method": "GET",
+    "path": "/api/v3/QualityDefinition/limits",
+    "raw": "/limits",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/Queue/QueueActionController.cs:40",
+    "method": "POST",
+    "path": "/api/v3/queue/grab/bulk",
+    "raw": "/grab/bulk",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/System/Backup/BackupController.cs:76",
+    "method": "POST",
+    "path": "/api/v3/system/backup/restore/{id}",
+    "raw": "/restore/{id}",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Api.V3/System/SystemController.cs:130",
+    "method": "POST",
+    "path": "/api/v3/System/restart",
+    "raw": "/restart",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/ApiInfoController.cs:9",
+    "method": "GET",
+    "path": "/api",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Authentication/AuthenticationController.cs:92",
+    "method": "GET",
+    "path": "/logout",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/InitializeJsonController.cs:35",
+    "method": "GET",
+    "path": "/initialize.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/StaticResourceController.cs:30",
+    "method": "GET",
+    "path": "/login",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Frontend/StaticResourceController.cs:38",
+    "method": "GET",
+    "path": "/content/{path}",
+    "raw": "/content/{path}",
+    "ok": true
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Ping/PingController.cs:24",
+    "method": "GET",
+    "path": "/ping",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/Radarr.Http/Ping/PingController.cs:25",
+    "method": "HEAD",
+    "path": "/ping",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "radarr:frontend/src/index.ts:8",
+    "method": "GET",
+    "path": "/initialize.json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "radarr:src/NzbDrone.Test.Common/NzbDroneRunner.cs:74",
+    "method": "ANY",
+    "path": "/system/status",
+    "raw": null,
+    "ok": false,
+    "category": "test-client-in-source"
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

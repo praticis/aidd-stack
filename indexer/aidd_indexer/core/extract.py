@@ -313,6 +313,7 @@ class FileExtractor:
                 receiver_path=typed[1] if typed else (),
                 arg_count=self.lang.call_arg_count(cnode, self.src),
                 arg_type=self.lang.call_argument_type(cnode, self.src) if name in self.dispatch_calls else None,
+                generic=callee.parent is not None and callee.parent.type == "generic_name",
             ))
 
     def _node_by_id(self, node_id: int, hint: Node) -> Node:

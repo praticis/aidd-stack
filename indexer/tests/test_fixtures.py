@@ -32,7 +32,7 @@ def _extract(root: Path):
 
     repo = RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
     res, extractors = extract_tree(repo)
-    return extract_http(repo, extractors)
+    return extract_http(repo, extractors, modules=res.modules)
 
 
 @pytest.mark.parametrize("root", FIXTURES, ids=[p.name for p in FIXTURES])
@@ -42,6 +42,10 @@ def test_fixture(root: Path):
     got_eps = sorted({(e.method, e.path, e.handler_name) for e in hr.endpoints})
     exp_eps = sorted({(e["method"], e["path"], e.get("handler")) for e in expected["endpoints"]})
     assert got_eps == exp_eps, f"endpoints differ\n missing={set(exp_eps)-set(got_eps)}\n extra={set(got_eps)-set(exp_eps)}"
+    lines = {(e.method, e.path): e.line for e in hr.endpoints}
+    for e in expected["endpoints"]:
+        if "line" in e:                         # the evidence: where the route is written
+            assert lines[(e["method"], e["path"])] == e["line"], (e, lines[(e["method"], e["path"])])
     got_calls = sorted({(c.method, c.path, c.line) for c in hr.calls})
     exp_calls = sorted({(c["method"], c["path"], c["line"]) for c in expected["calls"]})
     assert got_calls == exp_calls, f"calls differ\n missing={set(exp_calls)-set(got_calls)}\n extra={set(got_calls)-set(exp_calls)}"

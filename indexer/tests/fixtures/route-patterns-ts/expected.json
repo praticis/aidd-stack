@@ -1,0 +1,451 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/",
+   "handler": "home"
+  },
+  {
+   "method": "GET",
+   "path": "/users/{id}",
+   "handler": "getUser"
+  },
+  {
+   "method": "GET",
+   "path": "/status",
+   "handler": "status"
+  },
+  {
+   "method": "GET",
+   "path": "/search/{query}",
+   "handler": "search"
+  },
+  {
+   "method": "GET",
+   "path": "/files/{name}.{ext}",
+   "handler": "getFile"
+  },
+  {
+   "method": "GET",
+   "path": "/orders",
+   "handler": "listOrders"
+  },
+  {
+   "method": "GET",
+   "path": "/english/hello",
+   "handler": "hello"
+  },
+  {
+   "method": "POST",
+   "path": "/api/hello",
+   "handler": "helloHono"
+  },
+  {
+   "method": "GET",
+   "path": "/api/book",
+   "handler": "listBooks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/book/{id}",
+   "handler": "showBook"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/config",
+   "handler": "getConfig"
+  },
+  {
+   "method": "POST",
+   "path": "/members",
+   "handler": "createUser"
+  },
+  {
+   "method": "GET",
+   "path": "/members",
+   "handler": "listUsers"
+  },
+  {
+   "method": "GET",
+   "path": "/members/{memberId}",
+   "handler": "getUserById"
+  },
+  {
+   "method": "DELETE",
+   "path": "/members/{memberId}",
+   "handler": "deleteUser"
+  },
+  {
+   "method": "GET",
+   "path": "/ghost/api/admin/posts",
+   "handler": "browsePosts"
+  },
+  {
+   "method": "POST",
+   "path": "/ghost/api/admin/posts",
+   "handler": "addPost"
+  },
+  {
+   "method": "GET",
+   "path": "/api/tags",
+   "handler": "listTags"
+  },
+  {
+   "method": "GET",
+   "path": "/api/profiles/{username}",
+   "handler": "getProfile"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "receiveWebhook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/todos",
+   "handler": "listTodos"
+  },
+  {
+   "method": "POST",
+   "path": "/api/todos/{id}/complete",
+   "handler": "completeTodo"
+  },
+  {
+   "method": "GET",
+   "path": "/blog/posts",
+   "handler": "listPosts"
+  },
+  {
+   "method": "GET",
+   "path": "/blog/posts/{id}",
+   "handler": "getPost"
+  },
+  {
+   "method": "GET",
+   "path": "/v1",
+   "handler": "v1Root"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/status",
+   "handler": "v1Status"
+  },
+  {
+   "method": "GET",
+   "path": "/ops/healthz",
+   "handler": "healthz"
+  },
+  {
+   "method": "GET",
+   "path": "/v2/legacy/ping",
+   "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cats",
+   "handler": "findAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/cats",
+   "handler": "create"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cats/{id}",
+   "handler": "findOne"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "health"
+  },
+  {
+   "method": "GET",
+   "path": "/docs/openapi.json",
+   "handler": "openapi"
+  },
+  {
+   "method": "GET",
+   "path": "/api/ping",
+   "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/status",
+   "handler": "ping"
+  },
+  {
+   "method": "GET",
+   "path": "/api/dogs",
+   "handler": "list"
+  },
+  {
+   "method": "GET",
+   "path": "/plain",
+   "handler": "list"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/users",
+   "handler": "createUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}",
+   "handler": "getUser"
+  },
+  {
+   "method": "GET",
+   "path": "/categories",
+   "handler": "listCategories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/categories",
+   "handler": "listCategories"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}/sessions/{sid}",
+   "handler": "listSessions"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/users/{uid}/sessions",
+   "handler": "listSessions"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/reset/{code}",
+   "handler": "reset"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/reset",
+   "handler": "reset"
+  },
+  {
+   "method": "GET",
+   "path": "/users",
+   "handler": "getUser"
+  },
+  {
+   "method": "GET",
+   "path": "/api/{param}/config",
+   "handler": "adminConfig"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.info",
+   "handler": "documentsInfo"
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "handler": "documentsList"
+  },
+  {
+   "method": "GET",
+   "path": "/api/users.me",
+   "handler": "usersMe"
+  },
+  {
+   "method": "GET",
+   "path": "/auth/redirect",
+   "handler": "authRedirect"
+  },
+  {
+   "method": "ANY",
+   "path": "/auth/{rest}",
+   "handler": "authNotFound"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/shares",
+   "handler": "searchShares"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/{pk}",
+   "handler": "readShare"
+  },
+  {
+   "method": "GET",
+   "path": "/shares/info/{pk}",
+   "handler": "shareInfo"
+  },
+  {
+   "method": "SEARCH",
+   "path": "/shares/{kind}",
+   "handler": "searchByKind"
+  }
+ ],
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "line": 22
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders",
+   "line": 23
+  },
+  {
+   "method": "ANY",
+   "path": "/api/items",
+   "line": 24
+  },
+  {
+   "method": "GET",
+   "path": "/api/users",
+   "line": 25
+  },
+  {
+   "method": "GET",
+   "path": "/json/realm/subdomain/{param}",
+   "line": 8
+  },
+  {
+   "method": "DELETE",
+   "path": "/application/{param}",
+   "line": 12
+  },
+  {
+   "method": "DELETE",
+   "path": "/message",
+   "line": 16
+  },
+  {
+   "method": "PUT",
+   "path": "/account/password",
+   "line": 24
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/plugins/{param}",
+   "line": 30
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/teams/me",
+   "line": 36
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/users",
+   "line": 44
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{param}/members",
+   "line": 50
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/pages/{param}",
+   "line": 66
+  },
+  {
+   "method": "POST",
+   "path": "/cases/{param}/join",
+   "line": 72
+  },
+  {
+   "method": "GET",
+   "path": "/cases",
+   "line": 73
+  },
+  {
+   "method": "POST",
+   "path": "/api/apps/{appId}/topics/{topic}/events",
+   "line": 107
+  },
+  {
+   "method": "DELETE",
+   "path": "/public/groups/{param}",
+   "line": 15
+  },
+  {
+   "method": "POST",
+   "path": "/auth/local/login",
+   "line": 10
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/suggest",
+   "line": 14
+  },
+  {
+   "method": "POST",
+   "path": "/json/bots",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/activities",
+   "line": 13
+  },
+  {
+   "method": "POST",
+   "path": "/api/activities",
+   "line": 18
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/activities/{param}",
+   "line": 25
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/users/{user_id}",
+   "line": 15
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auths",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/info",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/documents.list",
+   "line": 4
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/documents.info",
+   "line": 5
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/duplicate",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users/all",
+   "line": 9
+  },
+  {
+   "method": "GET",
+   "path": "/cases",
+   "line": 5
+  },
+  {
+   "method": "POST",
+   "path": "/api/pages/create",
+   "line": 14
+  }
+ ]
+}

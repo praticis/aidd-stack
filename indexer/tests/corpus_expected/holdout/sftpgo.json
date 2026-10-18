@@ -1,0 +1,684 @@
+{
+ "source": "openapi",
+ "sha": "305ebb875c0eb37ffe970ebf6af80f5f86a7e070",
+ "spec": [
+  "openapi/openapi.yaml"
+ ],
+ "scope": [
+  "internal/httpd/"
+ ],
+ "scope_paths": [
+  "/api/v2/",
+  "/healthz"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v2/admin/2fa/recoverycodes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admin/2fa/recoverycodes"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/admin/changepwd"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/admin/profile"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/admin/profile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/admin/totp/configs"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admin/totp/generate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admin/totp/save"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admin/totp/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/admins"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admins"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/admins/{username}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/admins/{username}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/admins/{username}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/admins/{username}/2fa/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admins/{username}/forgot-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/admins/{username}/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/apikeys"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/apikeys"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/apikeys/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/apikeys/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/apikeys/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/connections"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/connections/{connectionID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/defender/hosts"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/defender/hosts/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/defender/hosts/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/dumpdata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/eventactions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/eventactions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/eventactions/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/eventactions/{name}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/eventactions/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/eventrules"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/eventrules"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/eventrules/run/{name}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/eventrules/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/eventrules/{name}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/eventrules/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/events/fs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/events/logs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/events/provider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/folders"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/folders"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/folders/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/folders/{name}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/folders/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/groups"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/groups"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/groups/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/groups/{name}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/groups/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/iplists/{type}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/iplists/{type}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/iplists/{type}/{ipornet}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/iplists/{type}/{ipornet}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/iplists/{type}/{ipornet}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/loaddata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/loaddata"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/quotas/folders/scans"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/quotas/folders/{name}/scan"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/quotas/folders/{name}/usage"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/quotas/users/scans"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/quotas/users/{username}/scan"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/quotas/users/{username}/transfer-usage"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/quotas/users/{username}/usage"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/retention/users/checks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/roles"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/roles"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/roles/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/roles/{name}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/roles/{name}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/shares/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/shares/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/shares/{id}/dirs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/shares/{id}/files"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/shares/{id}/{fileName}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/status"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/2fa/recoverycodes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/2fa/recoverycodes"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/user/changepwd"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/user/dirs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/dirs"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v2/user/dirs"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/dirs"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/file-actions/copy"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/file-actions/move"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/user/files"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/files"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v2/user/files"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/files"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v2/user/files/metadata"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/files/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/logout"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/profile"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/user/profile"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/shares"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/shares"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/user/shares/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/shares/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/user/shares/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/streamzip"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/user/totp/configs"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/totp/generate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/totp/save"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/user/totp/validate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v2/users/{username}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/users/{username}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/users/{username}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v2/users/{username}/2fa/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/users/{username}/forgot-password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v2/users/{username}/reset-password"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v2/version"
+  },
+  {
+   "method": "GET",
+   "path": "/healthz"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The REST API of openapi/openapi.yaml under its server /api/v2, except /healthz, which the spec serves from / (a path-level servers override) and the code registers as healthzPath = \"/healthz\". internal/httpd/server.go registers it on chi with path constants of httpd.go (userPath = \"/api/v2/users\", userPath+\"/{username}\"), inside Group(func(router) {..}) blocks without a prefix. The same file registers the web admin and web client UIs (/web/admin/.., /web/client/..) on package variables set at startup (webUsersPath = path.Join(baseURL, webUsersPathDefault)): they are not in the spec, so precision against the list counts only paths under /api/v2/ and /healthz (scope_paths), and the sample judges the rest.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "sftpgo:examples/ldapauthserver/httpd/httpd.go:65",
+    "method": "POST",
+    "path": "/api/v1/check_auth",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1382",
+    "method": "GET",
+    "path": "/api/v2/admin/totp/configs",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1384",
+    "method": "POST",
+    "path": "/api/v2/admin/totp/validate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1424",
+    "method": "POST",
+    "path": "/api/v2/folders",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1427",
+    "method": "GET",
+    "path": "/api/v2/groups",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1429",
+    "method": "POST",
+    "path": "/api/v2/groups",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1447",
+    "method": "PUT",
+    "path": "/api/v2/admins/{username}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1450",
+    "method": "GET",
+    "path": "/api/v2/retention/users/checks",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1484",
+    "method": "POST",
+    "path": "/api/v2/shares/{id}/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1593",
+    "method": "POST",
+    "path": "/web/client/reset-password",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1609",
+    "method": "GET",
+    "path": "/web/client/pubshares/{id}/login",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1618",
+    "method": "GET",
+    "path": "/web/client/pubshares/{id}/upload",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1736",
+    "method": "POST",
+    "path": "/web/admin/forgot-password",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1773",
+    "method": "GET",
+    "path": "/web/admin/user",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1810",
+    "method": "GET",
+    "path": "/web/admin/manager",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1814",
+    "method": "POST",
+    "path": "/web/admin/manager",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1863",
+    "method": "DELETE",
+    "path": "/web/admin/eventaction/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1865",
+    "method": "GET",
+    "path": "/web/admin/eventrules/json",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1877",
+    "method": "DELETE",
+    "path": "/web/admin/eventrule/{name}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:internal/httpd/server.go:1887",
+    "method": "POST",
+    "path": "/web/admin/role",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "sftpgo:examples/OTP/authy/checkpwd/main.go:73",
+    "method": "GET",
+    "path": "/protected/json/verify/{param}/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:examples/OTP/authy/extauth/main.go:73",
+    "method": "GET",
+    "path": "/protected/json/verify/{param}/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "sftpgo:examples/OTP/authy/keyint/main.go:107",
+    "method": "GET",
+    "path": "/protected/json/verify/{param}/{param}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

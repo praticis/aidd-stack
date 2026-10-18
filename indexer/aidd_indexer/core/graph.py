@@ -284,9 +284,9 @@ class GraphWriter:
         """Rebuild every CONSUMES / CALLED_FROM edge of the tenant from what is in the graph now.
         Cross-repo by nature (a call in A matches a route of B), so it runs after the snapshots
         are written — at the end of index/bootstrap/refresh, or `aidd link`. Idempotent."""
-        endpoints = [EndpointRow(r["id"], r["service"], r["method"], r["path_key"]) for r in self._rows("""
+        endpoints = [EndpointRow(r["id"], r["service"], r["method"], r["path_key"], r["framework"] or "") for r in self._rows("""
             MATCH (s:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
-            RETURN DISTINCT e.id AS id, s.name AS service, e.method AS method, e.path_key AS path_key
+            RETURN DISTINCT e.id AS id, s.name AS service, e.method AS method, e.path_key AS path_key, e.framework AS framework
         """, tenant=tenant)]
         calls = [CallRow(r["id"], r["repo"], r["ref"], r["sha"], r["method"], r["path_key"], r["target_hint"] or "",
                          tuple(r["env_hints"] or ()), r["caller_id"], r["evidence"], r["via"] or "", r["line"])
