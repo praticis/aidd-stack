@@ -279,6 +279,16 @@
    "method": "SEARCH",
    "path": "/shares/{kind}",
    "handler": "searchByKind"
+  },
+  {
+   "method": "GET",
+   "path": "/flights/{from}-{to}",
+   "handler": "search"
+  },
+  {
+   "method": "GET",
+   "path": "/user_{name}",
+   "handler": "search"
   }
  ],
  "calls": [
@@ -446,6 +456,11 @@
    "method": "POST",
    "path": "/api/pages/create",
    "line": 14
+  },
+  {
+   "method": "POST",
+   "path": "/speech/transcriptions:transcribe",
+   "line": 43
   }
  ]
 }

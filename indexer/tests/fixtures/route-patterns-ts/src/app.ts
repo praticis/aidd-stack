@@ -33,3 +33,12 @@ function listOrders(req: Request, res: Response) {}
 function status(req: Request, res: Response) {}
 
 app.listen(3000);
+
+// `:x` after `-` or `_` is still a parameter; glued to a name it is a custom verb of the Google API style
+// (`transcriptions:transcribe`), and the query after it stays a query.
+app.get('/flights/:from-:to', search);
+app.get('/user_:name', search);
+
+export async function transcribe() {
+  await fetch('/speech/transcriptions:transcribe?api-version=2024-11-15', { method: 'POST' });
+}

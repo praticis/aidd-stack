@@ -84,7 +84,8 @@
 - 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
 - 2026-10-18: **F1.14 incremento 4: o Python do hold-out.** Classe do projeto cujas bases chegam ao router do framework constrói um router (`class UserAPIRouter(APIRouter)` do mealie, de outro arquivo), com o prefixo pelo que o `__init__` entrega ao `super().__init__` — literal, ou o argumento da chamada para o parâmetro. mealie de 64,1 % / 59,4 % a 100 % / 100 % e vira corpus (51); o CTFd ganha `GET /` (a aplicação é `CTFdFlask`, subclasse de `Flask`); os outros 49, idênticos.
 - 2026-10-18: **F1.14 incremento 5: o TS/JS do hold-out — o item 6 fecha.** Rotas Koa sem barra montadas por `router.use("/", x.routes())` e `koa-mount`, o `SEARCH` do Express, a regex depois de um parâmetro e o curinga opcional do path-to-regexp 8; nas chamadas, a base do cliente de módulo (`axios.create({ baseURL })`, a classe com campo `baseUrl`), também por import e alias (`@/`, `$lib`), salvo com interceptor que reescreve a `url`, e constantes em template. outline, directus, docmost e open-webui viram corpus (55); o dispatch ganha 3 chamadas; os outros 50, idênticos. Do item 6 sobram limitações e o connect-go (F2.1). Próximo: PR da `feature/h2-corpus`; depois, numa branch nova, os itens 1–5 e 7 e um hold-out novo para fechar o F1.14; então o SCIP (F1.1/F1.2).
-- Próximo passo (2026-10-18): PR da `feature/h2-corpus` (H2b e o item 6 do F1.14); depois, numa branch nova, fechar o F1.14 (itens 1–5 e 7 e um hold-out novo, H2-D20); então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`); re-rodar a Q4 .NET com o despacho. Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
+- 2026-10-18: **F1.14 incremento 6, o primeiro do fechamento (branch `feature/f114-close`, depois do merge do PR #4).** Os grupos do FastEndpoints (`Group<T>()`, `SubGroup<TPai>`, item 1): o prefixo do grupo, depois o do pai, antes das rotas declaradas acima da chamada, e o `RoutePrefix` global antes de tudo; `Get("users")`, de um segmento, passa a ser lido. O verbo customizado depois de um nome (item 7): `/api/ai:transcribe` não é mais `/api/ai{transcribe}`. O memos fica com as 93 rotas do gateway (antes 92: `attachments:upload` e `attachments:batchDelete` dividiam a chave), e uma chamada do open-webui sai certa; os outros 53, idênticos. Django fica fora do fechamento (o portfólio é FastAPI e Flask).
+- Próximo passo (2026-10-18): seguir o fechamento do F1.14 na `feature/f114-close`: Go (item 2), TS/JS (item 4), o modelo (item 5), a refatoração do item 7 e um hold-out novo (H2-D20); então SCIP (F1.1/F1.2), e antes dele decidir se o P2 (indexador em repo próprio), desbloqueado pelo merge, vem primeiro. Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`); re-rodar a Q4 .NET com o despacho. Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
 
@@ -278,13 +279,16 @@ Em aberto:
   valor de constante). Lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** (retorno
   inferido, injeção de dependência, despacho por interface, sobrecarga) não ganha heurística: vira limitação com
   categoria `needs-resolver` e espera o resolvedor do F1.2:
-  1. .NET: FastEndpoints `RoutePrefix` global e `Group<T>()`; ~~`[Route]` herdado em mais de um nível (H2-D10 decidiu
-     um)~~ *feito 2026-10-17: até quatro níveis, com as actions das bases e o `[NonAction]` delas — o Radarr pedia*;
+  1. .NET: ~~FastEndpoints `RoutePrefix` global e `Group<T>()`~~ *feitos: o `RoutePrefix` no incremento 2; os grupos
+     (`Group<T>()`, `SubGroup<TPai>`) 2026-10-18, no incremento 6, só com fixture (nenhum repo do corpus os usa)*;
+     ~~`[Route]` herdado em mais de um nível (H2-D10 decidiu um)~~ *feito 2026-10-17: até quatro níveis, com as
+     actions das bases e o `[NonAction]` delas — o Radarr pedia*;
   2. Go: método de router chamado por um campo de tipo declarado (alertmanager
      `api.deprecationRouter.Register(r.WithPrefix("/api/v1"))`, 7 rotas sem o prefixo); closure de registro chamada
      dentro de vários grupos (gitea); tipo de router que põe o prefixo nos próprios métodos (kratos `RouterAdmin`, 12);
   3. Python: wrapper de cliente do app (o caminho do C#, sem caso no corpus); Django urlconf + DRF (1420 rotas em 2
-     repos), quando um portfólio pedir;
+     repos), quando um portfólio pedir — *decidido 2026-10-18: fora do fechamento do F1.14, porque o portfólio é
+     FastAPI e Flask; segue como limitação registrada*;
   4. TS/JS: wrapper de cliente que põe a base no path (`prefix-in-client-wrapper`: argo-cd `requests`, NodeBB `api`,
      37 chamadas erradas e 34 faltando; `client-wrapper` do gitea, 16) — o caminho do C#, agora que o TS resolve
      imports; router guardado em lista e montado em laço (express-boilerplate, 14); rotas por pasta
@@ -378,7 +382,11 @@ Em aberto:
   7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
      cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
      fixos do `built_bundle`.
-     Do incremento 3 (2026-10-18): **o verbo customizado do gRPC depois de um literal vira parâmetro.**
+     ~~Do incremento 3 (2026-10-18): **o verbo customizado do gRPC depois de um literal vira parâmetro.**~~ *Feito
+     2026-10-18 (incremento 6), pelo conteúdo e não pela origem: a origem se perde quando o `rebased` renormaliza o
+     path ao juntar um prefixo, e no corpus os únicos `:x` colados a uma palavra eram esses verbos. `:x` depois de
+     letra ou dígito é verbo; depois de `/`, `-`, `.` ou `_`, parâmetro. O memos ganha também `attachments:upload`, que
+     dividia a chave com `attachments:batchDelete`; uma chamada à Azure do open-webui sai certa.* O registro original:
      `normalize_path` (`core/paths.py`, a regra do `:id`) lê o `:transcribe` de `/api/ai:transcribe` como parâmetro
      do Express e grava `/api/ai{transcribe}` (6 rotas do memos: `ai:transcribe`, `attachments:batchDelete`,
      `settings:batchGet`, `notification:testEmail`, `linkMetadata:batchGet`, `users:batchGet`; o `{name}:accept`,

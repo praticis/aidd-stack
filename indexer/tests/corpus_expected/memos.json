@@ -10,7 +10,7 @@
  "endpoints": [
   {
    "method": "POST",
-   "path": "/api/ai{transcribe}"
+   "path": "/api/ai:transcribe"
   },
   {
    "method": "GET",
@@ -34,11 +34,11 @@
   },
   {
    "method": "POST",
-   "path": "/api/attachments{batchDelete}"
+   "path": "/api/attachments:batchDelete"
   },
   {
    "method": "POST",
-   "path": "/api/attachments{upload}"
+   "path": "/api/attachments:upload"
   },
   {
    "method": "GET",
@@ -82,11 +82,11 @@
   },
   {
    "method": "POST",
-   "path": "/api/instance/settings/notification{testEmail}"
+   "path": "/api/instance/settings/notification:testEmail"
   },
   {
    "method": "POST",
-   "path": "/api/instance/settings{batchGet}"
+   "path": "/api/instance/settings:batchGet"
   },
   {
    "method": "GET",
@@ -114,7 +114,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/memos/-/linkMetadata{batchGet}"
+   "path": "/api/memos/-/linkMetadata:batchGet"
   },
   {
    "method": "DELETE",
@@ -378,7 +378,7 @@
   },
   {
    "method": "POST",
-   "path": "/api/users{batchGet}"
+   "path": "/api/users:batchGet"
   },
   {
    "method": "POST",
@@ -852,7 +852,7 @@
    {
     "evidence": "memos:proto/gen/api/ai_service.pb.gw.go:71",
     "method": "POST",
-    "path": "/api/ai{transcribe}",
+    "path": "/api/ai:transcribe",
     "raw": null,
     "ok": true,
     "category": null

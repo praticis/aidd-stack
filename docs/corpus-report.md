@@ -6,9 +6,9 @@ calibrated on, pinned to fixed commits and measured against an expected list per
 "Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
 H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
-set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its five
-increments moved 13 of them to the corpus (55), and the hold-out keeps 3. Plan, decisions and status of H2 are in
-`docs/handoffs/H2-roadmap.md`.
+set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: increments 1–5
+moved 13 of them to the corpus (55), and the hold-out keeps 3; increment 6 on closes the rest of F1.14. Plan,
+decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -2093,3 +2093,42 @@ and 94.4% (874/926). The checked samples: TS/JS routes 79.5% (175/220), from 71.
 s, the same machine).
 
 New baseline: `2026-10-18-v2-baseline-22`.
+
+## F1.14, increment 6: FastEndpoints groups and custom verbs (2026-10-18)
+
+This is the first increment of F1.14's close, on a new branch. It does item 1 and one debt of item 7. No repository
+moves, since no hold-out repository was worked on. Each rule has its cases in a fixture, which fail without it.
+
+- **FastEndpoints endpoint groups (item 1).** An endpoint's `Configure()` that calls `Group<Administration>()` puts
+  the group's prefix before the routes declared above the call. FastEndpoints throws when there is none, so a route
+  declared after it does not take it. The group is a class under `Group`, or under `SubGroup<TParent>`, whose
+  constructor calls `Configure("admin", ep => ..)`. Its prefix is a literal or a constant. A sub-group's own prefix
+  comes first, then its parent's, as FastEndpoints applies them. The global `RoutePrefix` goes before all of them
+  (`/api/admin/billing/invoices`). A group that is not the repo's only class of that name, or whose prefix cannot be
+  read, leaves the route as written. The argument of `Get`/`Routes` is always a route, so a literal of one segment
+  (`Get("users")`) is now read too. Before, only a path with a slash was. No corpus repository uses groups; the cases
+  are in `route-patterns-cs-fastendpoints`.
+- **A custom verb after a name is not a parameter (item 7).** `normalize_path` read the `:transcribe` of memos'
+  grpc-gateway `/api/ai:transcribe` as an Express parameter (`/api/ai{transcribe}`). Now a `:x` glued to a letter or a
+  digit is a custom verb in the style of Google's APIs. After `/`, `-`, `.` or `_` it is still a parameter
+  (`/flights/:from-:to`, `/user_:name`). The ROADMAP had planned to decide by the route's origin (OpenAPI and the
+  gateway never have a colon parameter). That is not enough: `rebased` normalizes a path again when it joins a prefix,
+  and the origin is lost there. In the corpus and the hold-out, the only `:x` glued to a word outside `{..}` and
+  `<..>` were these verbs, one in a call and the rest in memos. The optional `:x?` rule now has the same guard. Before,
+  it also ate the `?` of a query.
+
+**Diff against `2026-10-18-v2-baseline-22`.** 53 repositories are identical, and so are the hold-out's 3.
+
+- memos: its 6 verb routes keep the verb (`POST /api/attachments:batchDelete`). A seventh comes out:
+  `POST /api/attachments:upload` had the key of `attachments:batchDelete` (`/api/attachments{param}`), so the two had
+  collapsed into one endpoint. Against the OpenAPI list, the gateway is now 93 of 93 (P 100%), from 92. The 93 Connect
+  RPCs stay with F2.1. The gabarito's 7 verb paths, written as the old normalization printed them, were rewritten
+  with the verb (H2-D15).
+- open-webui: the call to Azure's speech API, `transcriptions:transcribe?api-version=2024-11-15`, was recorded as
+  `/speechtotext/transcriptions{transcribeapi}-version=2024-11-15`. It is now `/speechtotext/transcriptions:transcribe`.
+  This is right, and outside the gabarito's scope.
+
+**Totals.** Go route precision over the list is 99.1% (1922/1939) and recall 92.9% (1927/2074), from 1921/1938 and
+1926/2073. C#, Python and TS/JS are unchanged.
+
+New baseline: `2026-10-18-v2-baseline-23`.

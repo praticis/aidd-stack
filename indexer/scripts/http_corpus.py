@@ -20,10 +20,10 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-18, F1.14 increment 5, routes + calls): Go — alertmanager 30+15 · chi 50 ·
+Baseline at the pinned commits (2026-10-18, F1.14 increment 6, routes + calls): Go — alertmanager 30+15 · chi 50 ·
 fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 · mattermost
 658+23 · kratos 76+135 · argo-cd 123+105 · gotify 51+30 · go-feature-flag 18+7 · go-kit-examples 27+11 · vikunja
-198+232 · memos 100+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166
+198+232 · memos 101+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166
 in the framework's own test apps) · immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate 11 ·
 fastify-demo 10 · hono-examples 31 · taxonomy 0+6 (Next.js file routes) · outline 226+101 · directus 294+95 · docmost
 149+247 · open-webui 595+617. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 18+19 ·

@@ -366,6 +366,11 @@
    "handler": "MemoService.DeleteMemo"
   },
   {
+   "method": "POST",
+   "path": "/api/memos:batchDelete",
+   "handler": "MemoService.BatchDeleteMemos"
+  },
+  {
    "method": "GET",
    "path": "/api/v1/albums",
    "handler": "<inline>"
