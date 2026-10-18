@@ -2377,18 +2377,18 @@
    {
     "evidence": "gitea:routers/web/web.go:1315",
     "method": "GET",
-    "path": "/{index}/attachments/{uuid}",
+    "path": "/{username}/{reponame}/{type}/{index}/attachments/{uuid}",
     "raw": "/attachments/{uuid}",
-    "ok": false,
-    "category": "router-as-param"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:1362",
     "method": "POST",
-    "path": "/{username}/{reponame}/{index}/viewed-files",
+    "path": "/{username}/{reponame}/{type}/{index}/viewed-files",
     "raw": "/viewed-files",
-    "ok": false,
-    "category": "router-as-param"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "gitea:routers/web/web.go:1473",

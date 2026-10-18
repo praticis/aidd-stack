@@ -2132,3 +2132,59 @@ moves, since no hold-out repository was worked on. Each rule has its cases in a 
 1926/2073. C#, Python and TS/JS are unchanged.
 
 New baseline: `2026-10-18-v2-baseline-23`.
+
+## F1.14, increment 7: Go routers through declared types and named closures (2026-10-18)
+
+This increment does item 2. No repository moves. Each rule has its cases in `route-patterns-go`, which fail without
+it.
+
+- **A router method called on a value of declared type.** alertmanager's `api.v1.Register(r.WithPrefix("/api/v1"))`
+  now reaches `Register`, so its routes take the prefix. The scanner follows the call when the code declares the
+  value's type. That type can come from a receiver or a parameter of a function around the call, or from a local
+  assigned a composite literal (vikunja's `csvMigrator := &csv.MigratorWeb{}`). It can also come from a field of a
+  struct of the package. The struct may be in any file of the directory, and the scanner reads it from the field types
+  the Go symbol pass already collects. A local assigned anything else (`x := NewT()`) has an inferred type. That
+  belongs to the resolver (`needs-resolver`) and gets no rule. `WithPrefix` from prometheus/common/route now carries a
+  prefix, like `Group`.
+- **A named registration closure.** gitea keeps closures under names, such as `addRoutes := func() { m.Get(..) }`. It
+  gives a closure as the body of a group on `m`, or calls it inside several groups. Its routes now take each use's
+  prefix, once per use. Before, they were recorded once, with no prefix.
+- **A prefix known only at runtime is not taken.** alertmanager builds its prefix as
+  `router.WithPrefix("/" + strings.Trim(opts.RoutePrefix, "/"))`. Every segment of that prefix is a value read at
+  runtime, so it reads as `/{param}`, and the routes now leave it out, as with the option unset. A `/{param}/x` route
+  would link to nothing. The first run of this increment found the case, when alertmanager's other routes came out
+  under `/{param}`.
+
+**Diff against `2026-10-18-v2-baseline-23`.** 52 repositories are identical, and so are the hold-out's 3.
+
+- alertmanager: its 8 v1 routes now carry `/api/v1` (`GET /api/v1/status`). The judged sample had marked 7 of them
+  wrong (`router-as-param`). They are right now, and the sample was updated.
+- vikunja: the CSV migrator's 4 routes come out as `/api/v1/migration/csv/..`. The other migrators' 4 come out as
+  `/api/v1/migration/{param}/..`, because the name comes from a method called through an interface
+  (`segment-from-method`, a limitation). The gabarito's file scope (`pkg/routes/`) left out the migration module where
+  these routes are registered, so they could never match. The scope now includes `pkg/modules/migration/`, and the 4
+  `{param}` routes count as false positives against the spec's literal names.
+- gitea: −79 +192 web routes. 78 registration lines inside named closures were recorded once, without the prefix.
+  They now give one route per use:
+  - 39 lines are used once;
+  - 7 are used three times, for the actions settings of the admin, an org and a user
+    (`/-/admin/actions/scoped-workflows/required`);
+  - 31 are used four times, for the hooks of the admin, an org, a user and a repo (`/-/admin/hooks/msteams/{id}`);
+  - 1 gives eight routes: two verbs on one line, at each of the four uses
+    (`/-/admin/actions/runners/{runnerid}`).
+
+  By path, 75 of the added routes are under `/{username}/{reponame}`, 40 under `/user/settings`, 40 under
+  `/org/{org}` and 37 under `/-/admin`. Read at the source, they are right. The two judged items that were wrong are
+  right now. The gabarito is the API list, so these routes are outside it.
+
+**Totals.** Go route recall over the list is 93.1% (1931/2074), from 92.9% (1927/2074). Precision over the list is
+98.9% (1926/1947), from 99.1% (1922/1939). The drop comes from vikunja's widened scope, not from the extractor. The
+judged sample is at 93.1% (258/277), from 89.9% (249/277). C#, Python and TS/JS are unchanged.
+
+**Left.** kratos' `RouterAdmin` stays a limitation: its `/admin` is a field that only one of its constructors fills,
+at runtime. Telling the two apart needs value flow through a field, which a declared type does not give. A review of
+this increment found one more defect, recorded under item 7: a global router reassigned under the same name
+(`router = router.WithPrefix("/api/v1")`) loses its prefix when nothing serves or mounts it. No corpus repository has
+that shape.
+
+New baseline: `2026-10-18-v2-baseline-24`.

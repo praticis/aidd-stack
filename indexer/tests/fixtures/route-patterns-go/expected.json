@@ -384,6 +384,61 @@
    "method": "POST",
    "path": "/api/v1/batch/photos/edit",
    "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/status",
+   "handler": "handle"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/silence/{sid}",
+   "handler": "handle"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/csv/status",
+   "handler": "Status"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/csv/migrate",
+   "handler": "Migrate"
+  },
+  {
+   "method": "GET",
+   "path": "/{username}/{reponame}/hooks",
+   "handler": "listHooks"
+  },
+  {
+   "method": "POST",
+   "path": "/{username}/{reponame}/hooks/{id}/test",
+   "handler": "testHook"
+  },
+  {
+   "method": "GET",
+   "path": "/-/admin/hooks",
+   "handler": "listHooks"
+  },
+  {
+   "method": "POST",
+   "path": "/-/admin/hooks/{id}/test",
+   "handler": "testHook"
+  },
+  {
+   "method": "GET",
+   "path": "/{username}/{reponame}/{type}/posters",
+   "handler": "listPosters"
+  },
+  {
+   "method": "GET",
+   "path": "/{username}/{reponame}/{type}/{index}/attachments/{uuid}",
+   "handler": "getAttachment"
+  },
+  {
+   "method": "GET",
+   "path": "/-/healthy",
+   "handler": "healthy"
   }
  ],
  "calls": [

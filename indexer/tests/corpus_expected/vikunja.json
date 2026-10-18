@@ -5,7 +5,8 @@
   "pkg/swagger/swagger.json"
  ],
  "scope": [
-  "pkg/routes/"
+  "pkg/routes/",
+  "pkg/modules/migration/"
  ],
  "scope_paths": [
   "/api/v1/"
@@ -125,23 +126,19 @@
   },
   {
    "method": "PUT",
-   "path": "/api/v1/migration/csv/detect",
-   "category": "router-as-param"
+   "path": "/api/v1/migration/csv/detect"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/migration/csv/migrate",
-   "category": "router-as-param"
+   "path": "/api/v1/migration/csv/migrate"
   },
   {
    "method": "PUT",
-   "path": "/api/v1/migration/csv/preview",
-   "category": "router-as-param"
+   "path": "/api/v1/migration/csv/preview"
   },
   {
    "method": "GET",
-   "path": "/api/v1/migration/csv/status",
-   "category": "router-as-param"
+   "path": "/api/v1/migration/csv/status"
   },
   {
    "method": "GET",
@@ -780,7 +777,7 @@
    "path": "/api/v1/{kind}/{id}/reactions/delete"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. The 172 operations of pkg/swagger/swagger.json (swag annotations, basePath /api/v1); pkg/routes/routes.go registers 173 on echo, under a := e.Group(\"/api/v1\") and its subgroups (a.Group(\"\"), a.Group(\"/user\"), ..). The same file serves /.well-known, CalDAV under /dav and /feeds, outside the spec: precision against the list counts only /api/v1/ (scope_paths). Moved to the corpus by F1.14 (2026-10-17), once the doubled prefix was fixed; with the routes visible, the spec turned out stale against routes.go (H2-D15): GET /{username}/avatar is /avatar/:username, PUT /labels/{id} is POST /labels/:label, /backgrounds/unsplash/image/.. is images/.. — removed, the code's added —, and 15 real routes are not in it (GET /projects/:project/tasks, /user/bots x5, /user/sessions x2, /token/test x2, /docs x3, /ws, /metrics). The CSV migrator's 4 routes are literal, on the group handed to a method of a value of declared type (csvFileMigrator.RegisterRoutes(m)): router-as-param. The other migrators' routes are \"/\"+ms.Name()+\"/auth\", the name returned by the Migrator the closure builds: segment-from-method, a limitation.",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The 172 operations of pkg/swagger/swagger.json (swag annotations, basePath /api/v1); pkg/routes/routes.go registers 173 on echo, under a := e.Group(\"/api/v1\") and its subgroups (a.Group(\"\"), a.Group(\"/user\"), ..). The same file serves /.well-known, CalDAV under /dav and /feeds, outside the spec: precision against the list counts only /api/v1/ (scope_paths). Moved to the corpus by F1.14 (2026-10-17), once the doubled prefix was fixed; with the routes visible, the spec turned out stale against routes.go (H2-D15): GET /{username}/avatar is /avatar/:username, PUT /labels/{id} is POST /labels/:label, /backgrounds/unsplash/image/.. is images/.. — removed, the code's added —, and 15 real routes are not in it (GET /projects/:project/tasks, /user/bots x5, /user/sessions x2, /token/test x2, /docs x3, /ws, /metrics). The CSV migrator's 4 routes are literal, on the group handed to a method of a value of declared type (csvFileMigrator.RegisterRoutes(m)), read since 2026-10-18; pkg/modules/migration/ is in scope since then, and the other migrators' routes count as false positives with the name left as {param}. The other migrators' routes are \"/\"+ms.Name()+\"/auth\", the name returned by the Migrator the closure builds: segment-from-method, a limitation.",
  "checked": {
   "endpoints": [
    {
