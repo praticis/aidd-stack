@@ -2207,3 +2207,54 @@ reaches the router. The cases are in `route-patterns-go` (`internal/reassigned/`
 
 **Diff against `2026-10-18-v2-baseline-24`.** All 55 repositories are identical, and so are the hold-out's 3. No
 repository in either set has either shape. The baseline stays `2026-10-18-v2-baseline-24`.
+
+## F1.14, increment 9: one endpoint per app in a monorepo (2026-10-18)
+
+This increment does item 5, the model. An endpoint's id was `svc/<repo>/http/<METHOD> <path_key>`. The same route in
+two apps of one repository became one endpoint, carrying the first app's evidence and handler (`multi-app-repo`).
+
+- **The rule.** Take a route declared in two modules that have a manifest (`go.mod`, `package.json`, a `.csproj`,
+  `pyproject.toml`, ..). It is now two endpoints, one per module. The id gains the module's directory
+  (`svc/<repo>/app/<dir>/http/..`), and the node gains `app`. A route declared once keeps the repository's id, also
+  when it sits in a library that an app references. That way a .NET solution with its controllers in a library project
+  does not change. A package a language implies, such as a Go directory, is not a module here. Several design
+  choices were measured and dropped:
+  - using the nearest module split Go by package;
+  - using the module of every route labelled .NET controller libraries as apps.
+
+  The indexer goes to 0.2.15, and the graph drops the endpoint nodes an older indexer wrote. The case is in
+  `route-patterns-cs`: `src/Worker` exposes the `GET /health` of `src/Api`. Without the rule the two are one
+  endpoint. A call to such a route links to both endpoints, since the service is still the repository.
+
+**Diff against `2026-10-18-v2-baseline-24`.** 42 repositories are identical, and so are the hold-out's 3. Thirteen
+only gain endpoints, which are the copies the merge used to hide:
+
+- fiber-recipes: +99, 64 recipes;
+- nest: +46, its sample apps;
+- bitwarden: +23. Its 14 services each expose `GET /alive` and `GET /now`;
+- aiohttp-demos: +10;
+- gin-examples: +8;
+- ardalis-clean-arch: +5, the template and its sample;
+- elsa: +5, the secrets endpoints of a core module and of an extension module;
+- chi: +3, `_examples/rest`;
+- flask: +2, its examples;
+- hono-examples: +2;
+- nodebb: +2, the web installer;
+- eshop-support: +1, `GET /manual` in the backend and in the staff UI;
+- kratos: +1.
+
+Read at the source, each copy is a route its module declares. The kratos copy is `library-code`.
+`oryx/prometheusx.SetMuxRoutes(mux)` registers `GET /metrics/prometheus` on whatever mux it gets, and nothing outside
+the vendored `oryx` module calls it. Before, it was hidden inside kratos' own `/metrics/prometheus`.
+
+**Totals.** `multi-app-repo` goes from 16 misses in 7 repositories to 8 in 4. Go route recall over the list is 93.3%
+(1936/2074), from 93.1%. TS/JS route recall is 89.2% (1334/1495), from 89.0%. Precision over the lists is unchanged
+(Go 98.9%, TS/JS 96.5%). C# and Python are unchanged. The gabaritos of chi, fiber-recipes and nest lose the category
+on the 8 routes that now match.
+
+**Left.** The other 8 are two apps inside one module: argo-cd's two servers in one `go.mod` (`ANY /api/webhook`,
+`ANY /auth/callback`), express' examples and fastapi's single-file tutorials under one manifest, and one gin example.
+Telling those apps apart needs the application each route's mounts end at, not the module. That is a limitation,
+recorded in the guide.
+
+New baseline: `2026-10-18-v2-baseline-25`.

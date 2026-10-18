@@ -54,7 +54,7 @@ Never store secret values. Environment variables enter by **name only** (`env_va
 | Label | Specific props | Identity |
 |---|---|---|
 | `Service` | `name`, `env_vars[]`, `base_urls[]` | logical deployable; usually 1:1 with `Repo`, may be N:1 (monorepo) |
-| `HttpEndpoint` | `method` (`GET`…`ANY`), `path` (normalized template `/orders/{id}`), `path_key`, `framework`, `first_seen`, `last_seen`, `openapi_operation_id?` | id = `(service, method, path_key)` — placeholders normalized, so `{id}` renamed to `{userId}` on a branch is the same endpoint; `path` keeps the latest spelling written, with the case the code writes (`[controller]` → `/api/Todos`; an ASP.NET route links and is found by `who_consumes` without case). Which refs expose it lives on the `EXPOSES {ref}` edges |
+| `HttpEndpoint` | `method` (`GET`…`ANY`), `path` (normalized template `/orders/{id}`), `path_key`, `framework`, `app`, `first_seen`, `last_seen`, `openapi_operation_id?` | id = `(service, app, method, path_key)` — placeholders normalized, so `{id}` renamed to `{userId}` on a branch is the same endpoint; `path` keeps the latest spelling written, with the case the code writes (`[controller]` → `/api/Todos`; an ASP.NET route links and is found by `who_consumes` without case). `app` is the repo-relative directory of the module (manifest) that declares the route when the repo's routes come from more than one module, else `""`: the same route in two apps of a monorepo is two endpoints, and a call to it links to both; a route declared in a shared library is one. Which refs expose it lives on the `EXPOSES {ref}` edges |
 | `GrpcService` | `name`, `proto_path`, `package` | `package.Service` |
 | `GrpcMethod` | `name`, `request_type`, `response_type`, `streaming` | `package.Service/Method` |
 | `Topic` | `name`, `broker` (`kafka`,`rabbitmq`,`sqs`,`sns`,`pubsub`), `kind` (`topic`,`queue`,`exchange`) | `(broker, name)` |
@@ -120,7 +120,7 @@ Module        <tenant>/<repo>@<ref>/mod/<path>
 File          <tenant>/<repo>@<ref>/file/<path>
 Symbol        <tenant>/<repo>@<ref>/sym/<qualified_name>#<kind>   (fallback: <path>:<line> when nameless)
 Service       <tenant>/svc/<name>
-HttpEndpoint  <tenant>/svc/<name>/http/<METHOD> <path-template>
+HttpEndpoint  <tenant>/svc/<name>/http/<METHOD> <path-template>   (<tenant>/svc/<name>/app/<app>/http/... when `app` is set)
 GrpcService   <tenant>/grpc/<package>.<Service>
 GrpcMethod    <tenant>/grpc/<package>.<Service>/<Method>
 Topic         <tenant>/topic/<broker>/<name>

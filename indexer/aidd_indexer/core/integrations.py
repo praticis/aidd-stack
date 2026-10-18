@@ -12,11 +12,14 @@ A committed build bundle (a minified or hash-named `.js`) is left out: its route
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from .. import languages
+from . import ids
 from .http_base import TEST_FILE, HttpResult, PackageContext, ScanPatterns, collect_constants, dir_of
+from .paths import path_key
 from .http_view import RepoView
-from .model import ModuleInfo, RepoInfo
+from .model import HttpEndpointInfo, ModuleInfo, RepoInfo
 
 
 def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | None" = None,
@@ -57,6 +60,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
             scanner.compose(out, repo, view)
         except Exception as e:  # noqa: BLE001
             out.warnings.append(f"{scanner.__name__}: cross-file composition skipped ({type(e).__name__}: {e})")
+    _assign_apps(out, repo, extractors, modules)
     _dedupe(out)
     return out
 
@@ -74,6 +78,24 @@ def built_bundle(path: str, src: bytes) -> bool:
     if BUILD_HASH.search(path) and longest > 500:
         return True
     return longest > 2000 and len(src) / len(lines) > 200
+
+
+def _assign_apps(out: HttpResult, repo: RepoInfo, extractors: list, modules: list[ModuleInfo] | None) -> None:
+    """The same route declared in two modules with a manifest (`go.mod`, `package.json`, a `.csproj`, ..) is two
+    endpoints, one per module: two apps of a monorepo. A route declared once keeps the repo's id, also when it sits
+    in a library an app references. A package a language implies (a Go directory) is not a module here."""
+    kinds = {k for lang in languages.all() for k in (*lang.manifests.values(), *lang.manifest_suffixes.values())}
+    dirs = [m.path for m in modules or [] if m.path and m.kind in kinds]
+    app_of = {fx.file.id: max((d for d in dirs if fx.file.path.startswith(d + "/")), key=len, default="")
+              for fx in extractors}
+    apps: dict[str, set[str]] = {}
+    for e in out.endpoints:
+        apps.setdefault(e.id, set()).add(app_of.get(e.file_id, ""))
+    out.endpoints = [_in_app(repo, e, app_of.get(e.file_id, "")) if len(apps[e.id]) > 1 else e for e in out.endpoints]
+
+
+def _in_app(repo: RepoInfo, ep: HttpEndpointInfo, app: str) -> HttpEndpointInfo:
+    return replace(ep, app=app, id=ids.http_endpoint(repo.tenant, repo.name, ep.method, path_key(ep.path), app))
 
 
 def _dedupe(out: HttpResult) -> None:

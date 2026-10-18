@@ -100,6 +100,7 @@ class HttpEndpointInfo:
     handler_name: str | None       # bare handler name as written (s.createUser -> createUser)
     handler_id: str | None = None  # Symbol id when resolved in the same module
     evidence: str = ""             # repo:path:line
+    app: str = ""                  # module dir declaring the route when the repo's routes span modules, else ""
 
 
 @dataclass

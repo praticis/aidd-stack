@@ -551,7 +551,8 @@ def build_server(store: Store | None = None):
     @mcp.tool()
     def http_map(repo: str, ref: str | None = None, tenant: str | None = None) -> dict[str, Any]:
         """HTTP surface of one repository at a ref: the routes it EXPOSES (method, path template,
-        framework, handler symbol) and the outbound HTTP calls it makes with a literal path
+        framework, handler symbol; `app`, the module that declares the route when the repo holds
+        several apps, else empty) and the outbound HTTP calls it makes with a literal path
         (method, path template, where in the code, which package/env var hints at the target
         service, and `linked_to`: the endpoint of another service the linker matched it to, or
         null). Extracted deterministically from the source — no runtime data."""
@@ -562,7 +563,7 @@ def build_server(store: Store | None = None):
             MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
             OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
             OPTIONAL MATCH (consumer:Service)-[:CONSUMES]->(e)
-            RETURN e.id AS id, e.method AS method, e.path AS path, e.framework AS framework,
+            RETURN e.id AS id, e.method AS method, e.path AS path, e.framework AS framework, coalesce(e.app, '') AS app,
                    h.id AS handler_id, h.qualified_name AS handler, x.evidence AS evidence,
                    collect(DISTINCT consumer.name) AS consumer_repos
             ORDER BY path, method
@@ -572,7 +573,8 @@ def build_server(store: Store | None = None):
             OPTIONAL MATCH (caller)-[:MAKES_HTTP_CALL]->(c)
             OPTIONAL MATCH (target:HttpEndpoint)-[cf:CALLED_FROM {call_id: c.id}]->()
             WITH c, caller, collect(DISTINCT CASE WHEN target IS NULL THEN null ELSE
-                 {service: target.service, method: target.method, path: target.path, confidence: cf.confidence, hint: cf.hint}
+                 {service: target.service, app: coalesce(target.app, ''), method: target.method, path: target.path,
+                  confidence: cf.confidence, hint: cf.hint}
                  END) AS targets
             RETURN c.id AS id, c.method AS method, c.path AS path, c.via AS via, c.target_hint AS target_hint,
                    c.env_hints AS env_hints, coalesce(caller.qualified_name, caller.path) AS caller, c.evidence AS evidence,
@@ -595,7 +597,8 @@ def build_server(store: Store | None = None):
     def who_consumes(path: str, method: str | None = None, repo: str | None = None, tenant: str | None = None) -> dict[str, Any]:
         """Which repositories call an HTTP route, and from where. `path` is a route template as
         exposed ('/v1/users/{id}' — placeholder names do not matter) or a prefix; `repo` narrows
-        to the service exposing it. Returns each matching endpoint with its handler, its
+        to the service exposing it. Returns each matching endpoint (with its `app` when the repo
+        holds several apps, as the same route can be exposed by each) with its handler, its
         `consumers` (materialized CONSUMES/CALLED_FROM edges, one per repo × caller symbol with the
         `refs` where the call site exists, file:line evidence, confidence exact|suffix and which
         hint broke a tie) and `possible_consumers`: outbound
@@ -629,7 +632,8 @@ def build_server(store: Store | None = None):
               AND NOT EXISTS { MATCH (e)-[x:CALLED_FROM]->() WHERE x.call_id = c.id }
             OPTIONAL MATCH (pc)-[:MAKES_HTTP_CALL]->(c)
             WITH svc, e, handlers, consumers, c, pc ORDER BY c.repo, c.ref, c.line
-            RETURN svc.name AS service, e.id AS endpoint_id, e.method AS method, e.path AS path, handlers, consumers,
+            RETURN svc.name AS service, coalesce(e.app, '') AS app, e.id AS endpoint_id, e.method AS method, e.path AS path,
+                   handlers, consumers,
                    [x IN collect(CASE WHEN c IS NULL THEN null ELSE
                         {repo: c.repo, ref: c.ref, method: c.method, path: c.path,
                          caller: coalesce(pc.qualified_name, pc.path), evidence: c.evidence,
@@ -830,7 +834,7 @@ def build_server(store: Store | None = None):
           (:File)-[:IMPORTS {spec, line}]->(:File|Module|Package {name, ecosystem, internal})
           (:File|Symbol)-[:HAS_VIOLATION]->(:Violation {convention, rule, severity, message, line})
           (:Symbol|File)-[:MAKES_HTTP_CALL]->(:HttpCall {method, path, path_key, raw_path, line})
-          (:Repo)-[:DEPLOYS]->(:Service {name})-[:EXPOSES {ref}]->(:HttpEndpoint {method, path, path_key})
+          (:Repo)-[:DEPLOYS]->(:Service {name})-[:EXPOSES {ref}]->(:HttpEndpoint {method, path, path_key, app})
           (:HttpEndpoint)-[:HANDLED_BY {ref}]->(:Symbol)
           (:Service)-[:CONSUMES {ref, confidence}]->(:HttpEndpoint)
           (:Service)-[:DEPENDS_ON {ref}]->(:Service)            internal packages (manifests)"""

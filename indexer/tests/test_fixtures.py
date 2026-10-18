@@ -39,8 +39,8 @@ def _extract(root: Path):
 def test_fixture(root: Path):
     expected = json.loads((root / "expected.json").read_text())
     hr = _extract(root)
-    got_eps = sorted({(e.method, e.path, e.handler_name) for e in hr.endpoints})
-    exp_eps = sorted({(e["method"], e["path"], e.get("handler")) for e in expected["endpoints"]})
+    got_eps = sorted({(e.method, e.path, e.handler_name, e.app) for e in hr.endpoints})
+    exp_eps = sorted({(e["method"], e["path"], e.get("handler"), e.get("app", "")) for e in expected["endpoints"]})
     assert got_eps == exp_eps, f"endpoints differ\n missing={set(exp_eps)-set(got_eps)}\n extra={set(got_eps)-set(exp_eps)}"
     lines = {(e.method, e.path): e.line for e in hr.endpoints}
     for e in expected["endpoints"]:

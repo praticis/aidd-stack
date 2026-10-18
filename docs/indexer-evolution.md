@@ -250,6 +250,7 @@ Regras aprendidas no corpus (não regredir):
 | alertmanager: `router = router.WithPrefix(routePrefix)` com `routePrefix = "/" + strings.Trim(opts.RoutePrefix, "/")`, lido da configuração — as rotas dos outros pacotes saíam sob `/{param}` | um prefixo de grupo cujos segmentos são todos um valor que o código não fixa (`RUNTIME_PREFIX`, o `{param}` do `path_of`) não se aplica: o padrão sem prefixo é o que o código diz, e `/{param}/x` não liga nada (`prefix-as-param`). Um parâmetro escrito (`/:lang`, `{configType}`) segue valendo (`group_path`, F1.14) |
 | gitea: `addWebhookAddRoutes := func() { m.Post("/gitea/new", ..) }` chamada nos grupos de hooks do repo, da org, do usuário e do admin; `addIssuesPullsViewRoutes` como corpo de `m.Group("/{username}/{reponame}/{type:issues}", addIssuesPullsViewRoutes, ..)` — as rotas saíam sem prefixo nenhum | uma closure guardada num nome, que registra num router de fora dela, é um router próprio no grafo de montagem (`_named_closure`), com uma aresta por uso: chamada dentro de um grupo (o prefixo que o router tem ali) ou corpo de um grupo no mesmo router (o path do grupo). Uma rota sai uma vez por uso (`GET /-/admin/actions/runners`, `/org/{org}/settings/actions/runners`, ..). Um router declarado dentro da closure é dela, como antes (F1.14) |
 | `router = router.WithPrefix("/api/v2")` num router devolvido que nenhum arquivo monta, ou `r = r.Group("/v3")` num parâmetro router: as rotas saíam sem o prefixo (`/healthy`, `/api/ping`). A reatribuição dá uma aresta do router para ele mesmo, e o prefixo de um grupo global só ia nas arestas em que ele era o filho | o prefixo próprio de um grupo que outros arquivos nomeiam é um fato do router (`go.mount.own`, `defer_global_group_prefix`), e o `compose` o põe depois do prefixo de cada cadeia que chega ao router: também quando outro arquivo o monta, e quando nenhum monta (F1.14) |
+| a mesma rota em dois apps de um repo (os serviços do bitwarden com `GET /alive`, as receitas do fiber, as amostras do nest) virava um `HttpEndpoint` só, com a evidência e o handler do primeiro (`multi-app-repo`) | a rota declarada em dois módulos com manifesto é um endpoint por módulo: `app` (o diretório do módulo) no nó e no id (`svc/<repo>/app/<dir>/http/..`), no fim do `extract_http`. Rota declarada uma vez mantém o id do repo, também numa biblioteca que o app referencia; pacote implícito de uma linguagem (diretório Go) não é módulo (F1.14) |
 
 Limitações conhecidas no fechamento do H2 (2026-10-17; as que são evolução do extrator estão no ROADMAP, **F1.14**,
 com os números do corpus):
@@ -266,6 +267,9 @@ com os números do corpus):
 - **Injeção de dependência:** um grupo entregue pelo container (Uber fx:
   `` ProductsGroup *echo.Group `name:"product-echo-group"` ``, provido com `fx.ResultTags`) não tem tipo nem valor
   à vista — `needs-resolver`, não regra.
+- **Dois apps num módulo só:** os tutoriais de um arquivo do fastapi, os exemplos do express sob um
+  `package.json`, os dois servidores do argo-cd num `go.mod` seguem como um endpoint por rota. Separá-los pede a
+  aplicação em que a montagem de cada rota termina, não o módulo (`multi-app-repo`, 8 rotas em 4 repos).
 - **Wrapper de cliente fora do C#:** o cliente do próprio app que põe a base no path (argo-cd `requests.get('/x')` →
   `` agent.get(`${apiRoot()}${url}`) ``, NodeBB `api.put(..)` → `/api/v3`, gitea `GET(url)`): no TS e no Python a
   chamada sai sem o prefixo, ou não sai.
