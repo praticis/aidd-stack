@@ -34,6 +34,7 @@ from neo4j import GraphDatabase
 from .. import INDEXER_VERSION
 from ..core.build import indexer_build
 from ..core.config import is_test_path, ConfigError, Neo4jConfig
+from ..core.linker import CASE_INSENSITIVE
 
 MAX_ROWS = 200
 NO_REFRESH = {"stale": None, "note": "no automatic refresh recorded for this tenant yet (indexed on demand, or the "
@@ -600,6 +601,7 @@ def build_server(store: Store | None = None):
         hint broke a tie) and `possible_consumers`: outbound
         calls with the same path that the linker did NOT link — usually because several services
         expose that path and nothing (target_hint, env var name, convention `targets:`) picks one.
+        An ASP.NET route matches without case, as the framework (and the linker) match it.
         Consumers come from outbound calls with a literal/template path in the consumer's code;
         URLs assembled dynamically are invisible."""
         s = st(tenant)
@@ -608,18 +610,22 @@ def build_server(store: Store | None = None):
             MATCH (svc:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
             WHERE ($repo IS NULL OR svc.name = $repo)
               AND ($method IS NULL OR e.method = toUpper($method) OR e.method = 'ANY')
-              AND (e.path_key = $key OR e.path_key STARTS WITH $key + '/')
-            WITH DISTINCT svc, e
+            WITH svc, e, coalesce(e.framework IN $nocase, false) AS nocase
+            WITH svc, e, nocase, CASE WHEN nocase THEN toLower(e.path_key) ELSE e.path_key END AS ekey,
+                 CASE WHEN nocase THEN toLower($key) ELSE $key END AS qkey
+            WHERE ekey = qkey OR ekey STARTS WITH qkey + '/'
+            WITH DISTINCT svc, e, nocase
             OPTIONAL MATCH (e)-[:HANDLED_BY]->(h:Symbol)
-            WITH svc, e, collect(DISTINCT {ref: h.ref, symbol: h.qualified_name})[0..3] AS handlers
+            WITH svc, e, nocase, collect(DISTINCT {ref: h.ref, symbol: h.qualified_name})[0..3] AS handlers
             OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
-            WITH svc, e, handlers, cf, caller ORDER BY caller.repo, cf.ref, cf.line
-            WITH svc, e, handlers,
+            WITH svc, e, nocase, handlers, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            WITH svc, e, nocase, handlers,
                  [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
                     {repo: caller.repo, ref: cf.ref, method: cf.method, caller: coalesce(caller.qualified_name, caller.path),
                      evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
-            OPTIONAL MATCH (c:HttpCall {tenant: $tenant, path_key: e.path_key})
-            WHERE (c.method = e.method OR e.method = 'ANY' OR c.method = 'ANY') AND c.repo <> svc.name
+            OPTIONAL MATCH (c:HttpCall {tenant: $tenant})
+            WHERE (c.path_key = e.path_key OR nocase AND toLower(c.path_key) = toLower(e.path_key))
+              AND (c.method = e.method OR e.method = 'ANY' OR c.method = 'ANY') AND c.repo <> svc.name
               AND NOT EXISTS { MATCH (e)-[x:CALLED_FROM]->() WHERE x.call_id = c.id }
             OPTIONAL MATCH (pc)-[:MAKES_HTTP_CALL]->(c)
             WITH svc, e, handlers, consumers, c, pc ORDER BY c.repo, c.ref, c.line
@@ -629,7 +635,7 @@ def build_server(store: Store | None = None):
                          caller: coalesce(pc.qualified_name, pc.path), evidence: c.evidence,
                          target_hint: c.target_hint, env_hints: c.env_hints} END) WHERE x IS NOT NULL][0..20] AS possible_consumers
             ORDER BY service, path, method LIMIT 50
-        """, key=key, method=method, repo=repo)
+        """, key=key, method=method, repo=repo, nocase=sorted(CASE_INSENSITIVE))
         for r in rows:
             r["consumers"] = _collapse_refs(r["consumers"])
             r["consumer_repos"] = sorted({c["repo"] for c in r["consumers"]})
