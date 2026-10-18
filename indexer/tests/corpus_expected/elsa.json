@@ -481,7 +481,7 @@
    "category": "endpoint-class-own-base"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the workflows API (core/src/modules/Elsa.Workflows.Api/), 79 FastEndpoints endpoints. Each derives from the project's own bases (ElsaEndpoint<TRequest>, ElsaEndpointWithoutRequest, ElsaEndpointWithMapper<..> in Elsa.Api.Common, over FastEndpoints' Endpoint<..>) and declares its routes in Configure(): Get(\"/x\"), Post(\"/a\", \"/b\") with several paths (one a deprecated alias), or Routes(..) + Verbs(Http.GET, Http.POST). Every route sits under the global FastEndpoints RoutePrefix, which MapWorkflowsApi sets to its default \"elsa/api\" (config.Endpoints.RoutePrefix = routePrefix) — the RoutePrefix pending in F1.14. 95 routes. The other modules' endpoints (Elsa.Http, Elsa.Identity, ..) are outside the scope.",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the workflows API (core/src/modules/Elsa.Workflows.Api/), 79 FastEndpoints endpoints. Each derives from the project's own bases (ElsaEndpoint<TRequest>, ElsaEndpointWithoutRequest, ElsaEndpointWithMapper<..> in Elsa.Api.Common, over FastEndpoints' Endpoint<..>) and declares its routes in Configure(): Get(\"/x\"), Post(\"/a\", \"/b\") with several paths (one a deprecated alias), or Routes(..) + Verbs(Http.GET, Http.POST). Every route sits under the global FastEndpoints RoutePrefix, which MapWorkflowsApi sets to its default \"elsa/api\" (config.Endpoints.RoutePrefix = routePrefix) — the RoutePrefix pending in F1.14. 95 routes. The other modules' endpoints (Elsa.Http, Elsa.Identity, ..) are outside the scope. Moved to the corpus by F1.14 increment 2 (2026-10-18), which reads FastEndpoints behind the project's bases and the global RoutePrefix through MapWorkflowsApi's parameter default: the 94 pairs all match. The checked sample keeps its items at the path their line gives now: the five global-prefix ones and the workbench probe (its evidence line, 797, no longer 364 — the grammar folded the code above into the receiver) are right; POST /traces and /logs stay wrong, their prefix a config value with a default in a ternary (prefix-as-param).",
  "checked": {
   "endpoints": [
    {
@@ -551,50 +551,50 @@
    {
     "evidence": "elsa:core/src/modules/Elsa.Identity/Endpoints/Login/Endpoint.cs:14",
     "method": "POST",
-    "path": "/identity/login",
+    "path": "/elsa/api/identity/login",
     "raw": null,
-    "ok": false,
-    "category": "global-prefix"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "elsa:core/src/modules/Elsa.Identity/Endpoints/RefreshToken/Endpoint.cs:31",
     "method": "POST",
-    "path": "/identity/refresh-token",
+    "path": "/elsa/api/identity/refresh-token",
     "raw": null,
-    "ok": false,
-    "category": "global-prefix"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "elsa:core/src/modules/Elsa.UserTasks/Endpoints/UserTasksEndpoints.cs:627",
     "method": "GET",
-    "path": "/user-task-sessions/current",
+    "path": "/elsa/api/user-task-sessions/current",
     "raw": null,
-    "ok": false,
-    "category": "global-prefix"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "elsa:core/src/modules/Elsa.UserTasks/Endpoints/UserTasksEndpoints.cs:655",
     "method": "POST",
-    "path": "/user-task-sessions/current/complete",
+    "path": "/elsa/api/user-task-sessions/current/complete",
     "raw": null,
-    "ok": false,
-    "category": "global-prefix"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "elsa:core/src/modules/Elsa.Workflows.Api/Endpoints/Package/Endpoint.cs:15",
     "method": "GET",
-    "path": "/package/version",
+    "path": "/elsa/api/package/version",
     "raw": null,
-    "ok": false,
-    "category": "global-prefix"
+    "ok": true,
+    "category": null
    },
    {
-    "evidence": "elsa:extensions/samples/workbench/Elsa.Server.Web/Program.cs:364",
+    "evidence": "elsa:extensions/samples/workbench/Elsa.Server.Web/Program.cs:797",
     "method": "GET",
     "path": "/__fixture/secrets/routes",
     "raw": null,
-    "ok": false,
-    "category": "evidence-line"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "elsa:extensions/src/http/Elsa.Http.OpenApi/Extensions/EndpointRouteBuilderExtensions.cs:32",

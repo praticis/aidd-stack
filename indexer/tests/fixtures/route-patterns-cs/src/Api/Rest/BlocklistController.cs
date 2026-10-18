@@ -21,7 +21,7 @@ public class BlocklistController : Controller
     public IActionResult Remove() => Ok();
 
     [Audit("/purge")]
-    public IActionResult Purge() => Ok();   // a filter alone: not an action route
+    public IActionResult Purge() => Ok();   // a filter alone routes nothing: the controller's route, any verb
 }
 
 // A resource of its own, and the GET {id} its grandparent declares.

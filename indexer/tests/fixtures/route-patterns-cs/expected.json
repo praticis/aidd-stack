@@ -324,6 +324,46 @@
    "method": "PUT",
    "path": "/api/shelves",
    "handler": "Put"
+  },
+  {
+   "method": "GET",
+   "path": "/portal/pages/{id}",
+   "handler": "Page"
+  },
+  {
+   "method": "GET",
+   "path": "/[tenantRoot]/reports",
+   "handler": "Summary"
+  },
+  {
+   "method": "GET",
+   "path": "/stores/{storeId}",
+   "handler": "Dashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/stores/{storeId}/rates",
+   "handler": "Rates"
+  },
+  {
+   "method": "ANY",
+   "path": "/stores/login",
+   "handler": "Index"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/v3/Blocklist",
+   "handler": "Purge"
+  },
+  {
+   "method": "ANY",
+   "path": "/Admin/shipping/Configure/{id}",
+   "handler": "Configure"
+  },
+  {
+   "method": "POST",
+   "path": "/Admin/shipping/Save/{id}",
+   "handler": "Save"
   }
  ],
  "calls": [

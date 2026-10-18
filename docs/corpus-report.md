@@ -7,7 +7,7 @@ calibrated on, pinned to fixed commits and measured against an expected list per
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
 H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
 set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its first
-increment moved 4 of them to the corpus (46). Plan, decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
+increment moved 4 of them to the corpus (46), the second 2 more (48). Plan, decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -1822,3 +1822,73 @@ Without Umbraco it is 99.1% (1075/1085), at 100% precision. Go is 97.1% (vikunja
 without Django and TS/JS are unchanged. HTTP extraction took 148 s.
 
 New baseline: `2026-10-17-v2-baseline-18`.
+
+## F1.14, increment 2: the rest of the hold-out's .NET (2026-10-18)
+
+Elsa and btcpayserver moved from the hold-out to the corpus (48 repositories; the hold-out keeps 10). Each rule below
+is the framework's own, read from the tree, and has its fixture (`route-patterns-cs`,
+`route-patterns-cs-fastendpoints`).
+
+- **A route token of the project.** A `[x]` in a template that is not one of the framework's (`controller`,
+  `action`, `area`, `page`, `handler`) takes the value its convention is registered with. The convention is a class
+  of the repo that implements `IApplicationModelConvention` (or the controller and action ones) and rewrites
+  `AttributeRouteModel`. Of the two arguments of `Conventions.Add(new T(a, b))`, one is the token's name and the
+  other its value, read as the attribute recipes read theirs: a constant of another project by its qualified name, a
+  local declared above, `TrimStart` with the characters of a `char[]` field, a constant built from others. Umbraco's
+  `[umbracoBackOffice]` is `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, so `umbraco`. A value from
+  configuration, or two registrations with different values, leave the token as written.
+- **FastEndpoints behind the project's bases.** A class that overrides `Configure()` under a base of the repo keeps
+  its routes pending, and `compose` takes them when the walk up the bases reaches one over FastEndpoints' own. A name
+  several classes share (Elsa's `ElsaEndpoint<TRequest>`, `<TRequest, TResponse>`) counts when each of them does.
+  `Routes(..)` and `Verbs(..)` are read in either order, the verb also by its qualified name
+  (`FastEndpoints.Http.POST`), the path also without a leading slash.
+- **FastEndpoints' global `RoutePrefix`.** `config.Endpoints.RoutePrefix = x` goes before every FastEndpoints route
+  of the repo when the repo gives it one value: a literal, a constant, or a parameter of the method around it. For a
+  parameter, the value is what each call in the file passes, and the declared default where the caller passes its
+  own parameter on (Elsa's `MapWorkflowsApi(.., string routePrefix = "elsa/api")`). A value a host passes from
+  configuration is not read: the route is the code's default. `RoutePrefixOverride(..)` takes its place.
+- **The halves of a `partial` class are one class.** A half without a `[Route]` of its own looks up the class itself
+  by name before its bases: btcpay's `UIStoresController.Rates.cs` is under `/stores`, `UIManageController`'s halves
+  under `account/{action}`.
+- **An action with no routing attribute**, by ASP.NET's own test (`DefaultApplicationModelProvider`): a public
+  instance method that is not abstract, generic, `Dispose` or `[NonAction]` is an action at the controller's route,
+  with any verb. An `override` takes the attributes of the method it overrides. `[Route(X)]` reads a constant of the
+  class: `/umbraco/login`.
+- **`[Area]` is inherited.** A controller without its own takes the nearest base's, or the other `partial` half's:
+  Smartstore's module controllers under `AdminController`'s `[Area("Admin")]` (20 routes with `[area]` before).
+- **The evidence of a minimal API route** is the line `MapGet` is written on. In Elsa's workbench `Program.cs`, an
+  `#if` between two `else if` loses the C# grammar, and the receiver of `app.MapGet(..)` took in the 430 lines above:
+  the evidence said 364, not 797.
+
+| Repo | Before (list · sample) | Now (list · sample) |
+|---|---|---|
+| Umbraco (after increment 1) | P 0% · R 0% · 0/20 | P 100% · R 100% · 20/20 |
+| Elsa (at the hold-out) | P 0% · R 0% · 12/20 | P 100% · R 100% · 18/20 |
+| btcpayserver (at the hold-out) | P 100% · R 98.7% · 19/20 | P 100% · R 98.7% · 20/20 |
+
+Elsa's list had one route, `/package/version` without the prefix. The samples keep their items, each at the path its
+line gives now, and the ones that changed were judged again: Umbraco's 20 (19 in the spec, and
+`/umbraco/delivery/api/v2/content/items`, real, outside its scope), Elsa's 6 (five under the global prefix, and the
+workbench probe at its right line), btcpay's 1.
+
+**What the action rule found elsewhere.** bitwarden `ANY /bitpay`: `BitPayController.GetIdsFromPosData`, a public
+helper ASP.NET routes as an action. Smartstore: 7 module actions with only filter attributes (`[LoadSetting]`).
+Elsa: Studio's `CultureController.Set`. Umbraco: `ANY /umbraco/management/api/v1/document`, `DocumentUrlController`'s
+`[Obsolete]` overload with no routing attribute, which `[ApiExplorerSettings(IgnoreApi = true)]` hides from the spec
+only; added to the gabarito (H2-D15). All judged right.
+
+**What remains in these repositories.**
+
+- **A prefix from options or configuration** (`prefix-as-param`). Elsa's OpenTelemetry collector maps under
+  `(IsNullOrWhiteSpace(o.HttpEndpointPath) ? "/elsa/otlp/v1" : o.HttpEndpointPath).TrimEnd('/')`; Smartstore's
+  IconKit under `MapGroup(options.RoutePrefix)`. The code fixes no value there.
+- **btcpay's three `optional-param`**, as at the hold-out.
+
+**Diff against `2026-10-17-v2-baseline-18`.** 43 repositories are identical. Umbraco's 538 routes take `/umbraco`
+and gain 2; Smartstore's 20 module routes take their area and gain 7; bitwarden gains 1; Elsa and btcpayserver come
+in. The hold-out's other 10 are identical to its last run. No repository regressed against its expected list.
+
+**Totals.** C# route recall over the list is 99.3% (1931/1944) at 100% precision, with Umbraco, Elsa and btcpay in;
+the checked sample is 98.8% (249/252). Go, Python and TS/JS are unchanged. HTTP extraction took 160 s.
+
+New baseline: `2026-10-18-v2-baseline-19`.

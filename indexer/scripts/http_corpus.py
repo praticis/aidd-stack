@@ -20,17 +20,18 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-17, F1.14 increment 1, routes + calls): Go — alertmanager 30+15 · chi 50 ·
+Baseline at the pinned commits (2026-10-18, F1.14 increment 2, routes + calls): Go — alertmanager 30+15 · chi 50 ·
 fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 ·
 mattermost 658+23 · kratos 76+135 · argo-cd 123+105 · gotify 48+30 · go-feature-flag 18+7 · go-kit-examples 27+11 ·
 vikunja 198+232. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166 in the framework's own
 test apps) · immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate 11 · fastify-demo 10 ·
 hono-examples 31 · taxonomy 0+6 (Next.js file routes). C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 ·
-eshop-support 18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 674+30 · notifo 130+218 · rapid-blazor
-18+17 · azure-saas 35+26 (the last three with NSwag clients) · umbraco 538+522 · smartstore 560+5 · radarr 239+2.
-Python — fastapi 87+2 · fastapi-template 23+23 · flask 18 · zulip 0+135 and netbox 0 (Django) · dispatch 291+288 ·
-aiohttp-demos 24+1 · ctfd 241+84. Whole run ~16 min in Docker (mattermost ~3 min, bitwarden ~2 min); grafana is out
-(memory, see CORPUS). Precision/recall per repo and the ranking of gaps: docs/corpus-report.md.
+eshop-support 18+19 · ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 675+30 · notifo 130+218 · rapid-blazor
+18+17 · azure-saas 35+26 (the last three with NSwag clients) · umbraco 540+522 · smartstore 567+5 · radarr 239+2 ·
+elsa 270+239 · btcpayserver 676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 18 · zulip 0+135 and
+netbox 0 (Django) · dispatch 291+288 · aiohttp-demos 24+1 · ctfd 241+84. Whole run ~16 min in Docker (mattermost ~3
+min, bitwarden ~2 min); grafana is out (memory, see CORPUS). Precision/recall per repo and the ranking of gaps:
+docs/corpus-report.md.
 """
 from __future__ import annotations
 
@@ -102,6 +103,9 @@ CORPUS = {                                                    # pinned 2026-10-1
     "smartstore": ("smartstore/Smartstore", "424752a556c8d1676eec83a6d98c5a126cd6b741"),
     "radarr": ("Radarr/Radarr", "7879a635dd5ae22e41bbe75dd39b6aadfe2e2358"),
     "vikunja": ("go-vikunja/vikunja", "de610f2ba58a2efcb5e882eae94c8958c12b47dc"),
+    # from the hold-out, F1.14 increment 2 (2026-10-18)
+    "elsa": ("elsa-workflows/elsa-core", "df0697fd84e8036db71b6f5740e5df23c7eb517e"),
+    "btcpayserver": ("btcpayserver/btcpayserver", "70c07d3bb1e0111c4976a9fbd5aa0ee33dae4bc2"),
 }
 
 
@@ -110,7 +114,6 @@ CORPUS = {                                                    # pinned 2026-10-1
 # against them: what they show goes to the ROADMAP (F1.14). A repository F1.14 works on moves to CORPUS, and F1.14's
 # close needs a new hold-out.
 HOLDOUT = {
-    "elsa": ("elsa-workflows/elsa-core", "df0697fd84e8036db71b6f5740e5df23c7eb517e"),
     "photoprism": ("photoprism/photoprism", "d527932ba8a405e228eb4c5e0fc6f77400ea719b"),
     "memos": ("usememos/memos", "1a51572406e1db3e97c24b2497013c8005e88317"),
     "go-boilerplate": ("meghrazchi/go-boilerplate", "836d02be2e8bef4cf21a481614cc3c81678ae922"),
@@ -120,7 +123,6 @@ HOLDOUT = {
     "outline": ("outline/outline", "178e923cb7027ddaa22b69fd44a4b3ea489327cd"),
     # the first recommendation, added the same day
     "kavita": ("Kareadita/Kavita", "2d225367f0310ac7354423b772a4c6a7caf63fd2"),
-    "btcpayserver": ("btcpayserver/btcpayserver", "70c07d3bb1e0111c4976a9fbd5aa0ee33dae4bc2"),
     "sftpgo": ("drakkan/sftpgo", "305ebb875c0eb37ffe970ebf6af80f5f86a7e070"),
     "docmost": ("docmost/docmost", "744c82bdf86f454ca44a2e19dc150900e884a11e"),
 }

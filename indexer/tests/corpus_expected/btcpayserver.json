@@ -956,7 +956,7 @@
    "path": "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/request"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. The Greenfield API: the 31 committed swagger fragments (BTCPayServer/wwwroot/swagger/v1/swagger.template.*.json), 204 operations — 199 under /api/v1 plus five UI routes they document (/api-keys/authorize, /i/{invoiceId}, /misc/lang, /misc/permissions, /misc/rate-sources). Greenfield controllers live in BTCPayServer/Controllers/GreenField/ and in plugins; the same project has hundreds of MVC UI routes (UI*Controller) the fragments do not cover, so precision against the list counts only paths under /api/v1/ (scope_paths), and the sample judges the rest. BTCPayServer.Client calls the same API from C#, not measured as a list. Added while judging the sample (H2-D15): two real Greenfield routes the fragments do not document, POST /api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay ([HttpPost(\"~/api/v1/..\")]) and GET /api/v1/stores/{storeId}/rates/configuration/fallback. Also added from the code after the run (H2-D15): the 40 routes under /api/v1/ that the run extracted and the fragments leave out — the store-scoped forms the controllers register next to the documented ones (DELETE /api/v1/stores/{storeId}/invoices/{invoiceId} beside /api/v1/invoices/{invoiceId}, the payment-methods, payouts, webhooks and rates/configuration routes) and the PayButton plugin's [Route(\"api/v1/invoices\")] GET and POST; each one checked against an [Http*] or [Route] template in the code.",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The Greenfield API: the 31 committed swagger fragments (BTCPayServer/wwwroot/swagger/v1/swagger.template.*.json), 204 operations — 199 under /api/v1 plus five UI routes they document (/api-keys/authorize, /i/{invoiceId}, /misc/lang, /misc/permissions, /misc/rate-sources). Greenfield controllers live in BTCPayServer/Controllers/GreenField/ and in plugins; the same project has hundreds of MVC UI routes (UI*Controller) the fragments do not cover, so precision against the list counts only paths under /api/v1/ (scope_paths), and the sample judges the rest. BTCPayServer.Client calls the same API from C#, not measured as a list. Added while judging the sample (H2-D15): two real Greenfield routes the fragments do not document, POST /api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay ([HttpPost(\"~/api/v1/..\")]) and GET /api/v1/stores/{storeId}/rates/configuration/fallback. Also added from the code after the run (H2-D15): the 40 routes under /api/v1/ that the run extracted and the fragments leave out — the store-scoped forms the controllers register next to the documented ones (DELETE /api/v1/stores/{storeId}/invoices/{invoiceId} beside /api/v1/invoices/{invoiceId}, the payment-methods, payouts, webhooks and rates/configuration routes) and the PayButton plugin's [Route(\"api/v1/invoices\")] GET and POST; each one checked against an [Http*] or [Route] template in the code. Moved to the corpus by F1.14 increment 2 (2026-10-18): the halves of a partial controller share its [Route] (UIStoresController's /stores, UIManageController's account/{action}); the sample's GET /{storeId}/rates is /stores/{storeId}/rates now, right: 20/20.",
  "checked": {
   "endpoints": [
    {
@@ -1066,10 +1066,10 @@
    {
     "evidence": "btcpayserver:BTCPayServer/Controllers/UIStoresController.Rates.cs:21",
     "method": "GET",
-    "path": "/{storeId}/rates",
+    "path": "/stores/{storeId}/rates",
     "raw": null,
-    "ok": false,
-    "category": "partial-class-route"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "btcpayserver:BTCPayServer/Plugins/Emails/Controllers/UIStoreEmailRulesController.cs:28",

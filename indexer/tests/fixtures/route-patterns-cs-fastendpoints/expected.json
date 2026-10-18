@@ -1,0 +1,14 @@
+{
+ "endpoints": [
+  {"method": "GET", "path": "/flows/api/workflow-definitions", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/workflow-definitions/{definitionId}/publish", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/workflow-definitions/publish/{definitionId}", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/workflow-definitions/{definitionId}/execute", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/workflow-definitions/import", "handler": "HandleAsync"},
+  {"method": "PUT", "path": "/flows/api/workflow-definitions/import", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/workflow-definitions/{definitionId}/import", "handler": "HandleAsync"},
+  {"method": "PUT", "path": "/flows/api/workflow-definitions/{definitionId}/import", "handler": "HandleAsync"},
+  {"method": "GET", "path": "/__probe/routes", "handler": "<inline>", "line": 22}
+ ],
+ "calls": []
+}

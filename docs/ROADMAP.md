@@ -80,6 +80,7 @@
 - 2026-10-16: **TS: imports `.js` de um arquivo `.ts` e aliases de um pacote abaixo da raiz resolvem (fora do H2, achado nele).** Com `moduleResolution: nodenext`, o TS escreve `import { x } from './enum.js'` para `enum.ts`; o resolvedor só tentava o `.js` e as extensões somadas ao nome, e o import ficava sem destino. Os aliases (`src/`, `@/`, `~/`, `#`) eram tentados só da raiz do repo, e o `src/*` do `tsconfig` de um pacote como o `server/` do immich não resolvia. Agora o resolvedor tenta o `.ts`/`.tsx`/`.mts`/`.cts` de um especificador `.js`/`.jsx`/`.mjs`/`.cjs` e os aliases a partir do pacote do arquivo antes da raiz. Medido com o código antes e depois: +9845 arestas `IMPORTS` para arquivo (immich 76 → 3232, nest 54 → 3540, ghost 11647 → 14863, fastify-demo 0 → 26), não resolvidos 3244 → 88, 3489 → 3, 3817 → 601 e 26 → 0; cada aresta nova nomeia o arquivo do especificador, nenhuma se perdeu ou mudou de destino. Teste `test_resolve_ts.py`; o HTTP (prefixos do Nest em enum de outro arquivo) está no `H2-roadmap.md`.
 - 2026-10-17: **F0.4.3b fechado (H2b): corpus de 42 repos e hold-out de 16.** O extrator passou pelos itens da Fase 4 na ordem do ranking do v2 e da prioridade do portfólio (H2-D18); do primeiro v2 ao último, nos mesmos gabaritos e 38 repos, o recall de rotas foi de 55,6 a 93,1 % no C#, de 9,4 a 98,0 % no Go, de 9,1 a 98,0 % no Python fora do Django e de 4,3 a 85,4 % no TS/JS. O **hold-out** — 16 repos no perfil do portfólio, com gabarito escrito antes de rodar e medidos uma vez (H2-D20) — mostrou sobreajuste onde o portfólio mais pesa: recall de rotas C# 48,5 % e Go 19,7 % (Python 83,8 %, TS/JS 74,1 %). As regras valem onde o app roteia como o corpus (Kavita, sftpgo, open-webui, docmost e btcpayserver saem inteiros; o SDK hey-api do Umbraco, 513 de 513) e caem em formas comuns que ele não tinha: atributo de rota próprio, convenções OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo; e dois defeitos de precisão (prefixo aplicado duas vezes num grupo Go passado a função). Tudo isso entrou no **F1.14**, precisão primeiro. Ferramenta: `http_corpus.py --holdout` e o `scope_paths` do gabarito (`corpus_metrics.py`). Relatório: `docs/corpus-report.md`
 - 2026-10-17: **F1.14 incremento 1: os dois defeitos de precisão do hold-out e o .NET que ele mostrou.** O prefixo de grupo passa a ser do par (escopo, nome), como o grafo de montagem: o parâmetro `a` de `registerAPIRoutes(a)` não herda o `a :=` de outra função (vikunja, 176 rotas); método Go não exportado não registra rota; o echo junta prefixo e path como escritos. No .NET, os atributos de rota do projeto viram receitas que o `compose` preenche (Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(x)]`), com Asp.Versioning, OData por convenção, herança em até quatro níveis (`[NonAction]`, sobrecargas) e `[Route]` sem verbo como ANY: Radarr e Smartstore a 100 %/100 %, Umbraco a 100 %/99,8 % com o token do próprio Umbraco lido (sem isso, 0 %: limitação). Os quatro repos viram corpus (46); os 42 anteriores, idênticos. Fronteira com o SCIP registrada (guia §8, ADR-002): o que falta é valor ou convenção, e o que pedir tipo inferido vira `needs-resolver` para o F1.2
+- 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
 - Próximo passo: PR da `feature/phase1-dispatch`; então SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`). re-rodar a Q4 .NET com o despacho; então SCIP (F1.1/F1.2). Pendências sem bloqueio: PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
 
 ---
@@ -292,10 +293,13 @@ Em aberto:
      quando um grupo Go com prefixo é passado a uma função (vikunja, 172 rotas `/api/v1/api/v1/..`) e a chamada lida como
      rota (`c.get(path, nil, out)`) — *feitos 2026-10-17 (incremento 1, abaixo)*. Depois, na ordem do portfólio:
      - .NET: ~~atributo de rota próprio (`IRouteTemplateProvider`, subclasse de `RouteAttribute`: Umbraco, Radarr — 760
-       rotas); convenções OData sem template (Smartstore, 260)~~ *feitos 2026-10-17*; FastEndpoints atrás de base própria
-       com o `RoutePrefix` global (Elsa, 94; junto do item 1); `[Route]` em outro arquivo de classe `partial`;
-       ~~a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`~~ *feitos*; a evidência com a linha
-       de outro nó num `Program.cs` (Elsa); action sem atributo num controller com `[Route]` (`/umbraco/login`);
+       rotas); convenções OData sem template (Smartstore, 260)~~ *feitos 2026-10-17*; ~~FastEndpoints atrás de base
+       própria com o `RoutePrefix` global (Elsa, 94; junto do item 1); `[Route]` em outro arquivo de classe `partial`~~
+       *feitos 2026-10-18*; ~~a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`~~ *feitos*;
+       ~~a evidência com a linha de outro nó num `Program.cs` (Elsa); action sem atributo num controller com `[Route]`
+       (`/umbraco/login`)~~ *feitos 2026-10-18*; o prefixo que vem de opções ou de configuração — o coletor
+       OpenTelemetry do Elsa (`IsNullOrWhiteSpace(o.Path) ? "/elsa/otlp/v1" : o.Path`), o `MapGroup(options.RoutePrefix)`
+       do IconKit do Smartstore — fica como limitação (`prefix-as-param`);
      - Go: router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com o
        verbo em constante (memos, 92) — os handlers connect-go ficam com o F2.1 (proto como fonte);
      - Python: subclasses de `APIRouter` (mealie, 28);
@@ -311,12 +315,24 @@ Em aberto:
        (`segment-from-method`, limitação) e o grupo passado a um método de valor de tipo declarado (item 2);
      - .NET: os atributos de rota do projeto como receita (classe e action, em cadeia, constantes de outro projeto pelo
        nome qualificado), Asp.Versioning (versão declarada, ou a padrão), OData por convenção, herança em até quatro
-       níveis com `[NonAction]` e sobrecargas, `[Route]` sem verbo como ANY, templates com regex/`nameof`. Radarr: de
-       P 17,9 % / R 2,9 % a 100 % / 100 %; Smartstore: de 98,6 % / 52,8 % a 100 % / 100 %; Umbraco: 0 % / 0 % — o
-       token `[umbracoBackOffice]`, trocado no startup por uma convenção do próprio Umbraco, fica no path
-       (`route-token-convention`, limitação); lido como `/umbraco`, 100 % / 99,8 %. Nenhum dos 42 repos de antes mudou
-       na lista;
+       níveis com `[NonAction]` e sobrecargas, `[Route]` sem verbo como ANY, templates com regex/`nameof`. Radarr: de P
+       17,9 % / R 2,9 % a 100 % / 100 %; Smartstore: de 98,6 % / 52,8 % a 100 % / 100 %; Umbraco: 0 % / 0 % — o token
+       `[umbracoBackOffice]`, trocado no startup por uma convenção do próprio Umbraco, fica no path
+       (`route-token-convention`, limitação — lido no incremento 2); lido como `/umbraco`, 100 % / 99,8 %. Nenhum dos
+       42 repos de antes mudou na lista;
      - placar: rota ASP.NET casa sem caixa com o gabarito, como no linker;
+     **Incremento 2 (2026-10-18)** — o resto do .NET do hold-out; Elsa e btcpay passaram ao corpus (48 repos):
+     - token de rota do projeto: o `[x]` que não é do framework recebe o valor com que a convenção que reescreve as
+       rotas de atributo é registrada (`Conventions.Add(new T(token, valor))`), lido como as receitas de atributo;
+       valor de configuração deixa o token como escrito. Umbraco: de 0 % / 0 % a 100 % / 100 %;
+     - FastEndpoints atrás das bases do projeto, `Routes`/`Verbs` em qualquer ordem, e o `RoutePrefix` global —
+       literal, constante ou o default declarado do parâmetro que o método repassa; o valor que o host passa de
+       configuração não é lido. Elsa: de 0 % / 0 % (amostra 12/20) a 100 % / 100 % (18/20);
+     - as metades de uma classe `partial` são uma classe (`[Route]` e `[Area]` da outra metade); action sem atributo de
+       rota pelo teste do ASP.NET (método público de instância, não abstrato, não genérico, não `Dispose`); `[Area]`
+       herdado da base; `[Route(CONST)]` da própria classe; a evidência de `MapGet` na linha do nome. btcpay: amostra
+       de 19/20 a 20/20;
+     - C# no corpus: R 99,3 % (1931/1944) a P 100 %; 43 dos 46 repos de antes idênticos;
   7. dívidas da reciclagem de 2026-10-15: o catálogo de frameworks como dado (verbos, registrars, receptores de
      cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
      fixos do `built_bundle`.
