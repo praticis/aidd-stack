@@ -19,2642 +19,2642 @@
   {
    "method": "ANY",
    "path": "/umbraco/login",
-   "category": "custom-route-attribute"
+   "category": "action-without-attribute"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1.1/document/{id}/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/collection/document/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/collection/media",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/culture",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/data-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/data-type/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/data-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/data-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/schemas/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/data-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/data-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/data-type/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/{id}/is-used",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/data-type/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/{id}/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/data-type/{id}/schema",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/dictionary",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/dictionary",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/dictionary/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/dictionary/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/dictionary/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/dictionary/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/dictionary/{id}/export",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/dictionary/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-blueprint",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-blueprint/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-blueprint/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-blueprint/from-document",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}/audit-log",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-blueprint/{id}/scaffold",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/allowed-at-root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/allowed-in-library",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type/available-compositions",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/allowed-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/allowed-parents",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/blueprint",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/composition-references",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/export",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-type/{id}/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-type/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-type/{id}/schema",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-type/{id}/template",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-version",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document-version/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document-version/{id}/prevent-cleanup",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document-version/{id}/rollback",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/are-referenced",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document/create-and-publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/root/sort-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/sort",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/urls",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/audit-log",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/available-segment-options",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/domains",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/domains",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/move-to-recycle-bin",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/notifications",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/notifications",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PATCH",
    "path": "/umbraco/management/api/v1/document/{id}/patch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/preview-url",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/document/{id}/public-access",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/public-access",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/document/{id}/public-access",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/public-access",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/publish-with-descendants/result/{taskId}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/published",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/document/{id}/referenced-descendants",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/sort-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/unpublish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/document/{id}/update-and-publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/dynamic-root/query",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/dynamic-root/steps",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element-version",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element-version/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element-version/{id}/prevent-cleanup",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element-version/{id}/rollback",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/are-referenced",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element/create-and-publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/element/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/folder/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/folder/{id}/move-to-recycle-bin",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/folder/{id}/referenced-descendants",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/element/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/{id}/audit-log",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/element/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/move-to-recycle-bin",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/{id}/published",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/element/{id}/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/unpublish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/update-and-publish",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/element/{id}/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/filter/data-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/filter/member",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/filter/user",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/filter/user-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/health-check-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/health-check-group/{name}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/health-check-group/{name}/check",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/health-check/execute-action",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/help",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/imaging/resize/urls",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/import/analyze",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/indexer",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/indexer/{indexName}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/indexer/{indexName}/rebuild",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/install/settings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/install/setup",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/install/validate-database",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/data-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/data-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/data-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/dictionary",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document-blueprint",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/document/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/element",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/element/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/element/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/element/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/language",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/language/default",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media-type/allowed",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media-type/folders",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/media/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/member/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/partial-view",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/relation-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/script",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/static-file",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/stylesheet",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/template",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/template/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/template/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/user",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/user-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/item/webhook",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/language",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/language",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/language/{isoCode}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/language/{isoCode}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/language/{isoCode}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/level",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/level-count",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/log",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/message-template",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/saved-search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/log-viewer/saved-search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/saved-search/{name}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/log-viewer/validate-logs-size",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/manifest/manifest",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/manifest/manifest/private",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/manifest/manifest/public",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/allowed-at-root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media-type/available-compositions",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media-type/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/media-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media-type/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/media-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}/allowed-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}/allowed-parents",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}/composition-references",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media-type/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}/export",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media-type/{id}/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media-type/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media-type/{id}/schema",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/are-referenced",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/root/sort-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/sort",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/urls",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/media/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/media/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/{id}/audit-log",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/{id}/move-to-recycle-bin",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/{id}/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/media/{id}/referenced-descendants",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/{id}/sort-children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/media/{id}/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/member-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/allowed-at-root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-type/available-compositions",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-type/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/member-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member-type/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-type/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/member-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/{id}/composition-references",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member-type/{id}/copy",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/{id}/export",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member-type/{id}/import",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member-type/{id}/move",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member-type/{id}/schema",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member/are-referenced",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/member/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/member/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member/{id}/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/member/{id}/referenced-descendants",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/member/{id}/validate",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/models-builder/build",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/models-builder/dashboard",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/models-builder/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/news-dashboard",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/object-types",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/oembed/query",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/package/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/package/created",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/package/created",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/package/created/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/package/created/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/package/created/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/package/created/{id}/download",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/package/migration-status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/package/{name}/run-migration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/partial-view",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/partial-view/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/partial-view/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/partial-view/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/partial-view/snippet",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/partial-view/snippet/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/partial-view/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/partial-view/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/partial-view/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/partial-view/{path}/rename",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/preview",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/profiling/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/profiling/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/property-type/is-used",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/published-cache/rebuild",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/published-cache/rebuild/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/published-cache/reload",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/document",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/document/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/document/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/document/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/document/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/document/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/original-parent",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/recycle-bin/document/{id}/restore",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/element",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/original-parent",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/recycle-bin/element/folder/{id}/restore",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/element/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/original-parent",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/recycle-bin/element/{id}/restore",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/media",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/media/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/media/referenced-by",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/media/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/media/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/recycle-bin/media/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/original-parent",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/recycle-bin/media/{id}/restore",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/redirect-management",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/redirect-management/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/redirect-management/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/redirect-management/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/redirect-management/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/relation-type",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/relation-type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/relation/type/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/script",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/script/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/script/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/script/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/script/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/script/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/script/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/script/{path}/rename",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/searcher",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/searcher/{searcherName}/query",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/ExternalLinkLoginCallback",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/authorize",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/graphics/login-background",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/graphics/login-logo",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/graphics/login-logo-alternative",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/graphics/logo",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/graphics/logo-alternative",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/back-office/link-login",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/link-login-key",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/back-office/login",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/back-office/signout",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/back-office/token",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/back-office/unlink-login",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/back-office/verify-2fa",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/security/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/forgot-password",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/forgot-password/reset",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/security/forgot-password/verify",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/segment",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/server/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/server/information",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/server/status",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/server/troubleshooting",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/server/upgrade-check",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/stylesheet",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/stylesheet/folder",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/stylesheet/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/stylesheet/folder/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/stylesheet/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/stylesheet/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/stylesheet/{path}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/stylesheet/{path}/rename",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tag",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/telemetry",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/telemetry/level",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/telemetry/level",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/template",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/template/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/template/query/execute",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/template/query/settings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/template/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/template/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/template/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/temporary-file",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/temporary-file/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/temporary-file/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/temporary-file/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/data-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/data-type/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/data-type/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/data-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/data-type/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/dictionary/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/dictionary/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/dictionary/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-blueprint/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-blueprint/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-blueprint/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-blueprint/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-type/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-type/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-type/search",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document-type/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/document/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/element/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/element/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/element/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/element/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media-type/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media-type/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media-type/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/media/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/member-group/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/member-type/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/member-type/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/member-type/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/member-type/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/partial-view/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/partial-view/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/partial-view/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/partial-view/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/script/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/script/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/script/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/script/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/static-file/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/static-file/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/static-file/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/stylesheet/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/stylesheet/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/stylesheet/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/stylesheet/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/template/ancestors",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/template/children",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/template/root",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/tree/template/siblings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/upgrade/authorize",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/upgrade/settings",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user-data",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user-data",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/user-data",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user-data/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user-data/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user-group",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/user-group/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user-group/{id}/users",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user-group/{id}/users",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/avatar/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/avatar/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/batch",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/2fa",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/current/2fa/{providerName}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/current/avatar",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/current/avatar",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/current/change-password",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/configuration",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/login-providers",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/permissions",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/permissions/document",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/permissions/element",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/current/permissions/media",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/user/current/profile",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/disable",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/enable",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/invite",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/invite/create-password",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/invite/resend",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/invite/verify",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/set-user-groups",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/unlock",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/user/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/{id}/2fa",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/{id}/2fa/{providerName}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/{id}/calculate-start-nodes",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/{id}/change-password",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/user/{id}/client-credentials",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/{id}/client-credentials",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/user/{id}/client-credentials/{clientId}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/user/{id}/reset-password",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/webhook",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "POST",
    "path": "/umbraco/management/api/v1/webhook",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/webhook/events",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/webhook/logs",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "DELETE",
    "path": "/umbraco/management/api/v1/webhook/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/webhook/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "PUT",
    "path": "/umbraco/management/api/v1/webhook/{id}",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   },
   {
    "method": "GET",
    "path": "/umbraco/management/api/v1/webhook/{id}/logs",
-   "category": "custom-route-attribute"
+   "category": "route-token-convention"
   }
  ],
  "calls": [
@@ -4711,168 +4711,168 @@
    "path": "/umbraco/management/api/v1/webhook/{id}/logs"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Routes: the 513 operations of the Management API's committed OpenApi.json (generated from its controllers), under /umbraco/management/api/v1; precision counts what is extracted in src/Umbraco.Cms.Api.Management/. The Delivery API and the other projects have no committed spec and are outside the scope. Added from the code (H2-D15): the 15 routes of the three Management controllers marked [ApiExplorerSettings(IgnoreApi = true)], which the spec leaves out — BackOfficeController's 9 under security/back-office, BackOfficeGraphicsController's 5 under security/back-office/graphics, and BackOfficeLoginController's [Route(\"/umbraco/login\")] Index (no verb: ANY). Every Management controller takes its prefix from [VersionedApiBackOfficeRoute(x)], the project's own attribute, which builds /umbraco + /management/api/ + v{version}/ + x. Calls: the backoffice's @hey-api/openapi-ts SDK (src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts) writes each of the same 513 operations as (options.client ?? client).get({ url: '/umbraco/management/api/v1/..' }), so they are the expected calls (language TS/JS under H2-D17).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes: the 513 operations of the Management API's committed OpenApi.json (generated from its controllers), under /umbraco/management/api/v1; precision counts what is extracted in src/Umbraco.Cms.Api.Management/. The Delivery API and the other projects have no committed spec and are outside the scope. Added from the code (H2-D15): the 15 routes of the three Management controllers marked [ApiExplorerSettings(IgnoreApi = true)], which the spec leaves out — BackOfficeController's 9 under security/back-office, BackOfficeGraphicsController's 5 under security/back-office/graphics, and BackOfficeLoginController's [Route(\"/umbraco/login\")] Index (no verb: ANY). Every Management controller takes its prefix from [VersionedApiBackOfficeRoute(x)], the project's own attribute, which builds /umbraco + /management/api/ + v{version}/ + x. Calls: the backoffice's @hey-api/openapi-ts SDK (src/Umbraco.Web.UI.Client/src/packages/core/backend-api/sdk.gen.ts) writes each of the same 513 operations as (options.client ?? client).get({ url: '/umbraco/management/api/v1/..' }), so they are the expected calls (language TS/JS under H2-D17). Moved to the corpus by F1.14 (2026-10-17), which reads [VersionedApiBackOfficeRoute(x)] and its two levels over RouteAttribute. The template's first segment is the [umbracoBackOffice] token, which Umbraco's own convention (UmbracoBackofficeToken, from DefaultUmbracoPath \"~/umbraco\") replaces at startup: every route keeps it, so every route misses on that segment alone (route-token-convention, a limitation). Read as /umbraco, the list scores P 100%, R 99.8%; the one left is /umbraco/login, an action with no attribute in a controller with [Route(LoginPath)] (action-without-attribute).",
  "checked": {
   "endpoints": [
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Delivery/Controllers/Content/ByIdsContentApiController.cs:28",
     "method": "GET",
-    "path": "/items",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/delivery/api/v2/content/items",
+    "raw": "/items",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/BatchDataTypesController.cs:32",
     "method": "GET",
-    "path": "/batch",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/data-type/batch",
+    "raw": "/batch",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/BatchSchemasDataTypeController.cs:37",
     "method": "GET",
-    "path": "/schemas/batch",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/data-type/schemas/batch",
+    "raw": "/schemas/batch",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/ByKeyDataTypeController.cs:39",
     "method": "GET",
-    "path": "/{id}",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/data-type/{id}",
+    "raw": "/{id}",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/IsUsedDataTypeController.cs:31",
     "method": "GET",
-    "path": "/{id}/is-used",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/data-type/{id}/is-used",
+    "raw": "/{id}/is-used",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/DataType/Item/SearchDataTypeItemController.cs:43",
     "method": "GET",
-    "path": "/search",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/item/data-type/search",
+    "raw": "/search",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Dictionary/DeleteDictionaryController.cs:32",
     "method": "DELETE",
-    "path": "/{{{nameof(id)}:guid}}",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/dictionary/{id}",
+    "raw": "/{id}",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Dictionary/ExportDictionaryController.cs:43",
     "method": "GET",
-    "path": "/{id}/export",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/dictionary/{id}/export",
+    "raw": "/{id}/export",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/GetPublicAccessDocumentController.cs:51",
     "method": "GET",
-    "path": "/{id}/public-access",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/document/{id}/public-access",
+    "raw": "/{id}/public-access",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/PublishDocumentController.cs:64",
     "method": "PUT",
-    "path": "/{id}/publish",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/document/{id}/publish",
+    "raw": "/{id}/publish",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/PublishDocumentWithDescendantsController.cs:54",
     "method": "PUT",
-    "path": "/{id}/publish-with-descendants",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/document/{id}/publish-with-descendants",
+    "raw": "/{id}/publish-with-descendants",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/RecycleBin/ReferencedByDocumentRecycleBinController.cs:48",
     "method": "GET",
-    "path": "/referenced-by",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/recycle-bin/document/referenced-by",
+    "raw": "/referenced-by",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Document/RecycleBin/RestoreDocumentRecycleBinController.cs:65",
     "method": "PUT",
-    "path": "/{id}/restore",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/recycle-bin/document/{id}/restore",
+    "raw": "/{id}/restore",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Language/DeleteLanguageController.cs:45",
     "method": "DELETE",
-    "path": "/{{{nameof(isoCode)}}}",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/language/{isoCode}",
+    "raw": "/{isoCode}",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Manifest/PrivateManifestManifestController.cs:65",
     "method": "GET",
-    "path": "/manifest/private",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/manifest/manifest/private",
+    "raw": "/manifest/private",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/OEmbed/QueryOEmbedController.cs:41",
     "method": "GET",
-    "path": "/query",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/oembed/query",
+    "raw": "/query",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/Security/BackOfficeGraphicsController.cs:80",
     "method": "GET",
-    "path": "/login-logo",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/security/back-office/graphics/login-logo",
+    "raw": "/login-logo",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/User/CalculatedStartNodesUserController.cs:43",
     "method": "GET",
-    "path": "/{id}/calculate-start-nodes",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/user/{id}/calculate-start-nodes",
+    "raw": "/{id}/calculate-start-nodes",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/User/VerifyInviteUserController.cs:43",
     "method": "POST",
-    "path": "/invite/verify",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/user/invite/verify",
+    "raw": "/invite/verify",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    },
    {
     "evidence": "umbraco:src/Umbraco.Cms.Api.Management/Controllers/UserGroup/RemoveUsersFromUserGroupController.cs:56",
     "method": "DELETE",
-    "path": "/{id}/users",
-    "raw": null,
+    "path": "/[umbracoBackOffice]/management/api/v1/user-group/{id}/users",
+    "raw": "/{id}/users",
     "ok": false,
-    "category": "custom-route-attribute"
+    "category": "route-token-convention"
    }
   ],
   "calls": [

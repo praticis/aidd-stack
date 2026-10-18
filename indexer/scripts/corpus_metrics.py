@@ -22,8 +22,9 @@ Gabarito, one per repo:
                                                         # repo's (a Go server's React UI) — for the per-language summary
      "notes": "..."}
 
-Matching is by `(method, path_key)` over distinct pairs: placeholder names do not matter, and an
-extracted ANY matches every method of the same path (and the other way round). A kind that is absent
+Matching is by `(method, path_key)` over distinct pairs: placeholder names do not matter, an
+extracted ANY matches every method of the same path (and the other way round), and a route of a framework
+that matches paths without case (ASP.NET, the linker's `CASE_INSENSITIVE`) matches without case. A kind that is absent
 from the gabarito is not measured; present and empty means nothing is expected. `checked` is the
 manual sample of extracted items over the whole repo (H2-D6): precision = ok / checked with a verdict.
 
@@ -39,6 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from aidd_indexer.core.linker import CASE_INSENSITIVE
 from aidd_indexer.core.paths import HTTP_METHODS, normalize_path, path_key
 
 KINDS = ("endpoints", "calls")
@@ -103,11 +105,17 @@ def score(run: dict, gabarito: dict, kind: str) -> Score | None:
     scope = tuple((scope.get(kind) or ()) if isinstance(scope, dict) else scope)
     paths = gabarito.get("scope_paths") or ()
     paths = tuple((paths.get(kind) or ()) if isinstance(paths, dict) else paths)
-    x = {item_key(i) for i in run.get(kind, []) if (not scope or evidence_file(i["evidence"]).startswith(scope))
-         and (not paths or _under(normalize_path(i["path"]), paths))}
+    counted = [i for i in run.get(kind, []) if (not scope or evidence_file(i["evidence"]).startswith(scope))
+               and (not paths or _under(normalize_path(i["path"]), paths))]
+    x = {item_key(i) for i in counted}
+    ci = {item_key(i) for i in counted if i.get("framework") in CASE_INSENSITIVE}   # Radarr's `/api/v3/AutoTagging`
     e = {item_key(i) for i in gabarito[kind]}
-    return Score(len(x), len(e), sorted(k for k in x if not any(_matches(k, j) for j in e)),
-                 sorted(k for k in e if not any(_matches(k, j) for j in x)))
+
+    def match(k: tuple[str, str], j: tuple[str, str]) -> bool:
+        return _matches((k[0], k[1].lower()), (j[0], j[1].lower())) if k in ci else _matches(k, j)
+
+    return Score(len(x), len(e), sorted(k for k in x if not any(match(k, j) for j in e)),
+                 sorted(j for j in e if not any(match(k, j) for k in x)))
 
 
 def _under(path: str, prefixes: tuple[str, ...]) -> bool:

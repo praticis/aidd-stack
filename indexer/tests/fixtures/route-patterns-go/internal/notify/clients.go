@@ -74,3 +74,16 @@ func PostJSON(ctx context.Context, client *http.Client, url string, body io.Read
 	}
 	return client.Do(req)
 }
+
+// vikunja's Planka migration: an unexported method is the package's own, never a framework's route registrar — a GET
+// of the client, not a route GET /api/projects.
+type planka struct{ base string }
+
+type projectsResponse struct{}
+
+func (c *planka) get(path string, query url.Values, out any) error { return nil }
+
+func fetchProjects(c *planka) error {
+	projects := &projectsResponse{}
+	return c.get("/api/projects", nil, projects)
+}

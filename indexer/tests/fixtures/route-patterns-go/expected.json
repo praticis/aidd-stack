@@ -87,6 +87,31 @@
   },
   {
    "method": "GET",
+   "path": "/users",
+   "handler": "listAccounts"
+  },
+  {
+   "method": "GET",
+   "path": "/user/profile",
+   "handler": "showProfile"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/docs",
+   "handler": "v3Docs"
+  },
+  {
+   "method": "GET",
+   "path": "/v3/info",
+   "handler": "v3Info"
+  },
+  {
+   "method": "GET",
+   "path": "/v4/ws",
+   "handler": "v4Socket"
+  },
+  {
+   "method": "GET",
    "path": "/articles",
    "handler": "listArticles"
   },
@@ -356,6 +381,11 @@
    "method": "POST",
    "path": "/api/v1/chat.postMessage",
    "line": 44
+  },
+  {
+   "method": "GET",
+   "path": "/api/projects",
+   "line": 88
   },
   {
    "method": "POST",

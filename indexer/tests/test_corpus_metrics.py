@@ -86,6 +86,15 @@ def test_path_scope_limits_extracted_to_the_spec_subspace():
     assert M.score(RUN, {"scope_paths": {"calls": ["/v2/"]}, "endpoints": []}, "endpoints").extracted == 4
 
 
+def test_aspnet_routes_match_without_case():
+    # ASP.NET routing ignores case (`[controller]` gives `AutoTagging`, Radarr's spec writes `autotagging`); others do not
+    run = {"endpoints": [{**ep("GET", "/api/v3/AutoTagging", "r:a.cs:1"), "framework": "aspnet"},
+                         {**ep("GET", "/Users", "r:b.go:1"), "framework": "gin/echo"}]}
+    gab = {"endpoints": [{"method": "GET", "path": "/api/v3/autotagging"}, {"method": "GET", "path": "/users"}]}
+    s = M.score(run, gab, "endpoints")
+    assert s.false_positives == [("GET", "/Users")] and s.false_negatives == [("GET", "/users")]
+
+
 def test_calls_are_counted_as_distinct_pairs():
     s = M.score(RUN, {"calls": [{"method": "GET", "path": "/v1/users/{id}"}]}, "calls")
     assert (s.extracted, s.precision, s.recall) == (1, 1.0, 1.0)

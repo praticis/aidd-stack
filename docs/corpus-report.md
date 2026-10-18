@@ -6,8 +6,8 @@ calibrated on, pinned to fixed commits and measured against an expected list per
 "Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
 H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
-set"** measures, once, 16 repositories the rules never saw. Plan, decisions and status are in
-`docs/handoffs/H2-roadmap.md`.
+set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its first
+increment moved 4 of them to the corpus (46). Plan, decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -1735,3 +1735,90 @@ gabarito (`corpus_metrics.py`), and the sample judges the rest.
 
 The hold-out repositories are now known to the rules that will follow. When F1.14 works on them they become
 corpus, and the next closing needs a new hold-out (H2-D20).
+
+## F1.14, increment 1: the hold-out's precision defects and its .NET (2026-10-17)
+
+F1.14 started where the hold-out pointed: the two precision defects first, then .NET, the portfolio's first stack
+(H2-D18). Four hold-out repositories were worked on and moved to the corpus (now 46): vikunja, Umbraco, Radarr and
+Smartstore. The next closing needs a new hold-out (H2-D20). Every rule below has a fixture case that fails without it.
+
+**Precision.**
+
+- **A group prefix belongs to its scope.** `group_prefix` was keyed by the variable's name across the file. So the
+  parameter `a` of `registerAPIRoutes(a *echo.Group)` took the prefix of `a := e.Group("/api/v1")` in another
+  function, and the prefix of the call on top. Now the key is (scope, name), the same key as the mount graph.
+  Fields and expressions stay file-wide. This fixed 176 vikunja routes: `/api/v1/api/v1/..`, `/api/v2/api/v1/..` and
+  `/dav/dav/..`.
+- **A Go method that is not exported never registers a route.** `c.get("/api/projects", nil, out)` is vikunja's
+  Planka client: a lowercase method belongs to the package, never to a framework. Only exported verbs register
+  routes, and vikunja's 4 Planka GETs are calls again.
+- **echo joins as written.** `u := a.Group("/user"); u.GET("s", h)` is `/users` in echo (`g.prefix + path`). gin
+  and fiber put a slash in between. This was found once vikunja's prefixes were right.
+
+**.NET.**
+
+- **The project's routing attributes.** An attribute class of the repo qualifies when it derives from
+  `RouteAttribute` or `Http*Attribute`, implements `IRouteTemplateProvider` or `IActionHttpMethodProvider`, or
+  derives from another such attribute. It is published as a recipe: its constructor's parameters with their
+  defaults, what it hands its `base(..)`, its `Template` and its `HttpMethods`. Each use, on a controller or an
+  action, keeps its arguments, and `compose` fills the recipe. A constant from another project is read by its
+  qualified name, and only when the repo gives it one value. Examples: Radarr's `[V3ApiController]` and
+  `[RestGetById]`; Umbraco's `[VersionedApiBackOfficeRoute(Constants.UdiEntityType.DataType)]`, two levels over
+  `RouteAttribute`.
+- **Asp.Versioning.** `v{version:apiVersion}` takes the versions the action (`[MapToApiVersion]`) or the controller
+  (`[ApiVersion]`) declares, in the URL's form (`1.0` → `1`). A controller that declares none gets the default
+  version: the repo's `DefaultApiVersion`, else 1.0.
+- **OData's conventions.** In a controller under `ODataController` or `[ODataRouteComponent]`, `Post` lands on the
+  entity set, and `Put`/`Patch`/`Delete`/`Get` with a `key` land on `Set({key})`. An untemplated action the
+  conventions do not route is no route: Smartstore's keyless stubs.
+- **Inheritance as the framework counts it.** The `[Route]` and the actions of the base classes are taken up to
+  four levels, which closes item 1's "more than one level". A class that is not a controller by itself still
+  publishes its actions to the classes derived from it (Radarr's `ProviderControllerBase`). `[NonAction]` takes an
+  action out there and below (Radarr's `ReleaseControllerBase`). An action is its name plus its parameter count, so
+  `[NonAction]` on one overload keeps the other.
+- **Templates.** An action with `[Route]` and no verb is ANY, one route per `[Route]`. `[HttpGet("")]` written out
+  is the root. A parameter is read with balanced parentheses: `{**path:regex(^(?!(api|feed)/).*)}` → `{path}`, and
+  `{action=Index}` is the action. `$"{{{nameof(id)}:guid}}"` is `{id:guid}`: the C# grammar takes it whole as text.
+  An attribute counts by its simple name (`[Microsoft.AspNetCore.Mvc.HttpGet]`). A constant of several segments
+  without a leading slash (`"security/back-office"`) is kept apart, so that only these recipes read it.
+- **The scorer** matches an ASP.NET route without case, as the linker does. Radarr's `[controller]` gives
+  `AutoTagging`, and its spec writes `autotagging`.
+
+| Repo | At the hold-out (list · sample) | Now (list · sample) |
+|---|---|---|
+| vikunja (Go) | P 0% · R 0% · 2/20 | P 100% · R 89.8% · 18/19 |
+| Radarr | P 17.9% · R 2.9% · 6/20 | P 100% · R 100% · 20/20 |
+| Smartstore | P 98.6% · R 52.8% · 19/20 | P 100% · R 100% · 19/20 |
+| Umbraco | P 0% · R 0% · 0/20 | P 0% · R 0% · 0/20; with its token read as `/umbraco`, P 100% · R 99.8% |
+
+The hold-out column is the hold-out run scored against the gabaritos as written then, before the corrections
+below.
+
+**What remains in these repositories.**
+
+- **Umbraco.** Every route keeps the template's first segment, the `[umbracoBackOffice]` token. Umbraco's own
+  `UmbracoBackofficeToken` convention fills it at startup from `DefaultUmbracoPath` (`route-token-convention`, a
+  limitation). Dropping the token would let the linker's suffix match find these routes, but the path would then
+  hide a segment the code holds: an open choice.
+- **`/umbraco/login`.** An action with no attribute in a controller with `[Route]` (`action-without-attribute`).
+- **vikunja's migrators.** Their routes are `"/"+ms.Name()+"/auth"`, a name returned through an interface by the
+  value a closure builds (`segment-from-method`). Neither the tree nor SCIP gives it.
+- **vikunja's CSV migrator.** Its group goes to a method of a value of declared type (`router-as-param`, item 2).
+
+**Gabarito corrections (H2-D15).**
+
+- **vikunja.** Its spec turned out stale once the routes were visible. `/{username}/avatar` is `/avatar/:username`,
+  `PUT /labels/{id}` is `POST /labels/:label`, and `/backgrounds/unsplash/image/..` is `images/..`. The spec's 4 are
+  removed and the code's added, along with 15 real routes the spec lacks (bots, sessions, docs, ws, metrics, ..).
+- **Smartstore.** 9 controllers declare `Put()`/`Patch()`/`Delete()` without a key, as stubs hidden from the API.
+  The 25 `Set({key})` entries I had written for them are removed.
+
+**Diff against `2026-10-17-v2-baseline-17`.** 41 repositories are identical. bitwarden gains `ANY /Error`,
+`/error` and `/Home/Error`, `[Route]`-only error pages, judged right. vikunja gains `GET /users` in place of
+`/user/s`. No repository regressed against its expected list.
+
+**Totals.** C# route recall over the list is 66.6% (1075/1613), and Umbraco's 528 entries all miss on the token.
+Without Umbraco it is 99.1% (1075/1085), at 100% precision. Go is 97.1% (vikunja's limitations come in), Python
+without Django and TS/JS are unchanged. HTTP extraction took 148 s.
+
+New baseline: `2026-10-17-v2-baseline-18`.

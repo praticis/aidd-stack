@@ -1,0 +1,1087 @@
+{
+ "source": "openapi",
+ "sha": "de610f2ba58a2efcb5e882eae94c8958c12b47dc",
+ "spec": [
+  "pkg/swagger/swagger.json"
+ ],
+ "scope": [
+  "pkg/routes/"
+ ],
+ "scope_paths": [
+  "/api/v1/"
+ ],
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/overview"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/projects"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/projects/{id}/owner"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/users"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/users"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/admin/users/{id}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/users/{id}/admin"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/admin/users/{id}/status"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/openid/{provider}/callback"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/avatar/{username}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/backgrounds/unsplash/images/{image}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/backgrounds/unsplash/images/{image}/thumb"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/backgrounds/unsplash/search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/docs"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/docs.json"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/docs/redoc.standalone.js"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/filters"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/filters/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/filters/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/filters/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/info"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/labels"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/labels"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/labels/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/labels/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/labels/{label}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/login"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/metrics"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/csv/detect",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/csv/migrate",
+   "category": "router-as-param"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/csv/preview",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/csv/status",
+   "category": "router-as-param"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/microsoft-todo/auth",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/migration/microsoft-todo/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/microsoft-todo/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/ticktick/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/ticktick/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/todoist/auth",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/migration/todoist/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/todoist/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/trello/auth",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/migration/trello/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/trello/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/migration/vikunja-file/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/vikunja-file/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/migration/wekan/migrate",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/migration/wekan/status",
+   "category": "segment-from-method"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/notifications/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/oauth/authorize"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/oauth/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{id}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{id}/background"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/background"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{id}/backgrounds/unsplash"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/backgrounds/upload"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/projectusers"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/tasks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/teams"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/teams"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/users"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/users"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/views/{view}/buckets"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/views/{view}/buckets"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/views/{view}/tasks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{id}/webhooks"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{id}/webhooks"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{id}/webhooks/{webhookID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{id}/webhooks/{webhookID}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{projectID}/duplicate"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{projectID}/teams/{teamID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{projectID}/teams/{teamID}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{projectID}/users/{userID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{projectID}/users/{userID}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{projectID}/views/{view}/buckets/{bucketID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{projectID}/views/{view}/buckets/{bucketID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/shares"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{project}/shares"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{project}/shares/{share}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/shares/{share}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/tasks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/tasks/by-index/{index}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/views"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/projects/{project}/views"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/projects/{project}/views/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/projects/{project}/views/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{project}/views/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/projects/{project}/views/{view}/buckets/{bucket}/tasks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/register"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/routes"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/shares/{share}/auth"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/subscriptions/{entity}/{entityID}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/subscriptions/{entity}/{entityID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/bulk"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{id}/attachments"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{id}/attachments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{id}/attachments/{attachmentID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{id}/attachments/{attachmentID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{id}/position"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{projecttask}/read"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{taskID}/assignees"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{taskID}/assignees"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{taskID}/assignees/bulk"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{taskID}/assignees/{userID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{taskID}/comments"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{taskID}/comments"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{taskID}/comments/{commentID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{taskID}/comments/{commentID}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{taskID}/comments/{commentID}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{taskID}/duplicate"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/tasks/{taskID}/labels/bulk"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{taskID}/relations"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{taskID}/relations/{relationKind}/{otherTaskID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tasks/{task}/labels"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tasks/{task}/labels"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tasks/{task}/labels/{label}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/teams"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/teams/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/teams/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/teams/{id}"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/teams/{id}/members"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/teams/{id}/members/{userID}/admin"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/teams/{id}/members/{username}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/test/all"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/test/{table}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/token/test"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/token/test"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/tokens"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/tokens"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/tokens/{tokenID}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/bots"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/bots"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/bots/{bot}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/bots/{bot}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/bots/{bot}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/confirm"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/deletion/cancel"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/deletion/confirm"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/deletion/request"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/export"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/export/download"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/export/request"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/logout"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/password"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/password/reset"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/password/token"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/sessions"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/sessions/{session}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/avatar"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/avatar"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/settings/avatar/upload"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/email"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/general"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/token/caldav"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/settings/token/caldav"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/settings/token/caldav/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/totp"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/totp/disable"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/totp/enable"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/totp/enroll"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/totp/qrcode"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/webhooks"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/user/settings/webhooks"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/settings/webhooks/events"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/user/settings/webhooks/{id}"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/settings/webhooks/{id}"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/user/timezones"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/token"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/user/token/refresh"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/users",
+   "category": "echo-raw-join"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/webhooks/events"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/ws"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/{kind}/{id}/reactions"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/{kind}/{id}/reactions"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/{kind}/{id}/reactions/delete"
+  }
+ ],
+ "notes": "Hold-out (H2-D20), read before the extractor ran. The 172 operations of pkg/swagger/swagger.json (swag annotations, basePath /api/v1); pkg/routes/routes.go registers 173 on echo, under a := e.Group(\"/api/v1\") and its subgroups (a.Group(\"\"), a.Group(\"/user\"), ..). The same file serves /.well-known, CalDAV under /dav and /feeds, outside the spec: precision against the list counts only /api/v1/ (scope_paths). Moved to the corpus by F1.14 (2026-10-17), once the doubled prefix was fixed; with the routes visible, the spec turned out stale against routes.go (H2-D15): GET /{username}/avatar is /avatar/:username, PUT /labels/{id} is POST /labels/:label, /backgrounds/unsplash/image/.. is images/.. — removed, the code's added —, and 15 real routes are not in it (GET /projects/:project/tasks, /user/bots x5, /user/sessions x2, /token/test x2, /docs x3, /ws, /metrics). The CSV migrator's 4 routes are literal, on the group handed to a method of a value of declared type (csvFileMigrator.RegisterRoutes(m)): router-as-param. The other migrators' routes are \"/\"+ms.Name()+\"/auth\", the name returned by the Migrator the closure builds: segment-from-method, a limitation.",
+ "checked": {
+  "endpoints": [
+   {
+    "evidence": "vikunja:examples/plugins/example/main.go:52",
+    "method": "GET",
+    "path": "/user-info",
+    "raw": null,
+    "ok": false,
+    "category": "prefix-as-param"
+   },
+   {
+    "evidence": "vikunja:pkg/routes/metrics.go:82",
+    "method": "GET",
+    "path": "/debug/pprof/{rest}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:265",
+    "method": "GET",
+    "path": "/health",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:533",
+    "method": "POST",
+    "path": "/api/v1/user/password/token",
+    "raw": "/user/password/token",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:535",
+    "method": "POST",
+    "path": "/api/v1/user/confirm",
+    "raw": "/user/confirm",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:560",
+    "method": "PATCH",
+    "path": "/api/v1/test/{table}",
+    "raw": "/test/:table",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:616",
+    "method": "GET",
+    "path": "/api/v1/user/sessions",
+    "raw": "/sessions",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:622",
+    "method": "GET",
+    "path": "/api/v1/user/settings/webhooks/events",
+    "raw": "/settings/webhooks/events",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:629",
+    "method": "GET",
+    "path": "/api/v1/user/settings/totp",
+    "raw": "/settings/totp",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:662",
+    "method": "POST",
+    "path": "/api/v1/projects/{project}",
+    "raw": "/projects/:project",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:665",
+    "method": "GET",
+    "path": "/api/v1/projects/{project}/projectusers",
+    "raw": "/projects/:project/projectusers",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:674",
+    "method": "GET",
+    "path": "/api/v1/projects/{project}/shares",
+    "raw": "/projects/:project/shares",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:817",
+    "method": "PUT",
+    "path": "/api/v1/labels",
+    "raw": "/labels",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:827",
+    "method": "PUT",
+    "path": "/api/v1/projects/{project}/teams",
+    "raw": "/projects/:project/teams",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:868",
+    "method": "DELETE",
+    "path": "/api/v1/teams/{team}/members/{user}",
+    "raw": "/teams/:team/members/:user",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:937",
+    "method": "GET",
+    "path": "/api/v1/projects/{project}/webhooks",
+    "raw": "/projects/:project/webhooks",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:941",
+    "method": "GET",
+    "path": "/api/v1/webhooks/events",
+    "raw": "/webhooks/events",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:992",
+    "method": "PATCH",
+    "path": "/api/v1/admin/users/{id}/status",
+    "raw": "/users/:id/status",
+    "ok": true
+   },
+   {
+    "evidence": "vikunja:pkg/routes/routes.go:995",
+    "method": "PATCH",
+    "path": "/api/v1/admin/projects/{id}/owner",
+    "raw": "/projects/:id/owner",
+    "ok": true
+   }
+  ],
+  "calls": [
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1036",
+    "method": "POST",
+    "path": "/migration/trello/migrate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1078",
+    "method": "POST",
+    "path": "/migration/vikunja-file/migrate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1202",
+    "method": "POST",
+    "path": "/notifications",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:125",
+    "method": "PATCH",
+    "path": "/admin/projects/{id}/owner",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1293",
+    "method": "GET",
+    "path": "/projects",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1438",
+    "method": "POST",
+    "path": "/projects/{projectid}/duplicate",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1499",
+    "method": "PUT",
+    "path": "/projects/{project}/backgrounds/unsplash",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1752",
+    "method": "DELETE",
+    "path": "/projects/{project}/teams/{team}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:1794",
+    "method": "GET",
+    "path": "/projects/{project}/users",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:2337",
+    "method": "GET",
+    "path": "/tasks",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:2708",
+    "method": "GET",
+    "path": "/tasks/{task}/comments/{commentid}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:2857",
+    "method": "DELETE",
+    "path": "/tasks/{task}/labels/{label}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:3330",
+    "method": "GET",
+    "path": "/tokens",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:3349",
+    "method": "POST",
+    "path": "/tokens",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:349",
+    "method": "GET",
+    "path": "/backgrounds/unsplash/images/{image}",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:406",
+    "method": "POST",
+    "path": "/filters",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:4110",
+    "method": "POST",
+    "path": "/user/settings/totp/enroll",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:45",
+    "method": "POST",
+    "path": "/admin/invite-links",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:frontend/src/client/generated/sdk.gen.ts:520",
+    "method": "GET",
+    "path": "/info",
+    "raw": null,
+    "ok": true,
+    "category": null
+   },
+   {
+    "evidence": "vikunja:pkg/modules/migration/trello/trello.go:197",
+    "method": "GET",
+    "path": "/checklists/{param}/checkItems",
+    "raw": null,
+    "ok": true,
+    "category": null
+   }
+  ]
+ },
+ "checked_seed": "0"
+}

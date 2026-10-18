@@ -91,7 +91,7 @@ class TsScanner(BaseScanner):
         if base:
             self.router_vars.add(nm)
             src = re.match(r"^([A-Za-z_$][\w$]*)\.basePath", txt)                   # api = app.basePath('/api')
-            self.group_prefix[nm] = ((self.prefix_for(src.group(1), n) or "") if src else "").rstrip("/") + base.group(1)
+            self.group_prefix[self.group_key(nm, n)] = ((self.prefix_for(src.group(1), n) or "") if src else "").rstrip("/") + base.group(1)
             if src:
                 self.mount(nm, n, src.group(1), n, "", derived=True)
             return

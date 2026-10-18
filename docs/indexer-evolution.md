@@ -108,7 +108,9 @@ Três passes sobre os `FileExtractor`s (que já têm `tree`, `src`, `symbols`, `
 3. **Composição entre arquivos** (`BaseScanner.compose`, uma vez por linguagem depois do scan): cada arquivo deixa
    um resumo só de dados — `out.publish(tipo, nome, fato)` e rotas `Pending` (gravadas como o arquivo as escreve,
    com o que falta para completá-las) — e a linguagem as resolve sem reabrir árvores (F1.13). Hoje:
-   - C#: o `[Route]` herdado (`cs.class`), as actions de base abstrata (`cs.actions`) e os wrappers de cliente do app;
+   - C#: o `[Route]` herdado (`cs.class`, com os usos de atributo e as bases de cada classe), as actions de base
+     abstrata (`cs.actions`, e `cs.attr-actions` as roteadas por atributo do projeto), os atributos de rota do projeto
+     como receita (`cs.route-attr`) e os wrappers de cliente do app;
    - Go, Python e TS/JS: o grafo de montagem entre arquivos (`mount_rule`, com `<regra>.edge` e `<regra>.app`);
    - Go: o path que o encoder de um cliente go-kit põe na request (`go.encoder`) e o `basePath` do servidor
      go-swagger (`go.swagger-base`);
@@ -124,6 +126,7 @@ Regras aprendidas no corpus (não regredir):
 | `auth.Post("/login", h)` lido como chamada de saída | rota se o 2º arg é handler-like **ou** receiver é var de grupo/router |
 | decorator `@Get(':id')` contado como chamada | `call_expression` dentro de `decorator` é ignorado |
 | `cache.get(key)`, `map.delete(k)` | verbo minúsculo só é HTTP com receiver cliente (`CLIENT_RECEIVER`) |
+| `c.get("/api/projects", nil, out)` lido como rota GET (vikunja, o cliente da migração do Planka) | em Go, método não exportado é do próprio pacote, nunca registro de framework: só verbos exportados (`GET`, `Get`) registram rota; o minúsculo vai para as chamadas de saída (F1.14) |
 | `post(ctx, client, "application/json", body)` | MIME (`MIME_TYPE`: dois tokens, sem placeholder) e heads em `_NOT_A_PATH_HEAD` não são path — `` `${url}application/${id}` `` é (gotify) |
 | ``fetch(`${base}${path}`)``, `cache.Get(root + "/" + v + "/" + strings.Join(xs, ","))` | path sem segmento com nome é descartado (`has_literal_segment` exige letra ou dígito) |
 | `var uri = $"{base}items/{id}"; GetFromJsonAsync(uri)` | `resolve_local` + `lenient` |
@@ -165,7 +168,13 @@ Regras aprendidas no corpus (não regredir):
 | `app.use('/api', router)` / Hono `app.route('/book', book)` / chi `r.Mount("/admin", adminRouter())` / `include_router(r, prefix=)` no mesmo arquivo: as rotas do router ficavam sem o prefixo, e a raiz dele era descartada | aresta de montagem + `finish()`; a raiz do sub-router montado vira a rota do prefixo (`GET /admin`) |
 | `r.With(paginate).Get("/", h)` dentro de um `Route`: o receiver era a cadeia, não o `r` da closure | cadeia só de `With`/`Use` é registro no próprio router |
 | bundle de build commitado (`static/assets/main-OdxfRQdf.js`) repetia rotas e chamadas da fonte | `.js` com nome de hash e linha > 500, ou com linha > 2000 e média > 200 por linha, fica fora da extração HTTP |
-| `class DevicesController : BaseJellyfinApiController` sem `[Route]` próprio: rotas sem o `/devices` e ações sem template perdidas (jellyfin: 26 de 60 controllers) | `[Route]` da classe base, **um nível** (H2-D10): cada arquivo publica suas classes com o `[Route]` (`cs.class`), a rota do controller sem prefixo fica `Pending` e `CsScanner.compose` aplica o da base achada pelo nome, com `[controller]` do derivado; nome ambíguo (duas classes não `partial`) não herda; ação sem template só é rota com o prefixo herdado |
+| `class DevicesController : BaseJellyfinApiController` sem `[Route]` próprio: rotas sem o `/devices` e ações sem template perdidas (jellyfin: 26 de 60 controllers) | `[Route]` das classes base (H2-D10 decidiu um nível; o F1.14 sobe até quatro, como o `Inherited = true` do atributo): cada arquivo publica suas classes com o `[Route]` (`cs.class`), a rota do controller sem prefixo fica `Pending` e `CsScanner.compose` aplica o da base mais próxima que tiver um, achada pelo nome, com `[controller]` do derivado; nome ambíguo (duas classes não `partial`) para a subida; ação sem template só é rota com o prefixo herdado |
+| Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(Constants.UdiEntityType.DataType)]` numa base: atributos de rota do projeto ignorados — rotas sem prefixo (`GET /{id}`) e ações sem `Http*` perdidas (760 no hold-out) | atributo de rota do projeto (F1.14): classe que deriva de `RouteAttribute` / `Http*Attribute` ou implementa `IRouteTemplateProvider` / `IActionHttpMethodProvider`, ou deriva de outra dessas, publica uma receita (`cs.route-attr`: os parâmetros do construtor com os defaults, o que ele passa ao `base(..)`, o `Template` e os `HttpMethods`, com `TrimStart('/')`, `nameof`, interpolação e constantes); o uso no controller ou na action guarda os argumentos, e o `compose` preenche — a constante de outro projeto pelo nome qualificado (`Web.ManagementApiPath`), só com valor único no repo. Atributo do framework (`FRAMEWORK_ATTRS`) ou filtro do projeto não muda nada |
+| `[Route("api/v{version:apiVersion}/x")]` com `[ApiVersion("1.0")]` virava `/api/v{version}/x` | Asp.Versioning: o segmento recebe as versões que a action (`[MapToApiVersion]`) ou o controller (`[ApiVersion]`) declara, na forma da URL (`1.0` → `1`, `1.1` → `1.1`), uma rota por versão; controller sem versão declarada é a versão padrão — a `options.DefaultApiVersion = new ApiVersion(..)` do repo, ou o 1.0 da biblioteca (`cs.default-api-version`) |
+| Radarr: `ProviderControllerBase<..> : RestControllerWithSignalR<..>` não passa por controller (nem o nome nem a base dizem), então as ações dele não chegavam aos 5 controllers de provider; `[NonAction] public override GetResourceByIdWithErrorHandler(..)` herdava a rota da base | classe que não é controller por si publica as actions roteadas (`cs.actions`, `cs.attr-actions`) para os derivados, sem rota própria; método `[NonAction]` conta como redeclarado — a action da base não vale ali nem abaixo dali (`cs.non-actions`: o `ReleaseControllerBase` do Radarr tira o GET `{id}` dos derivados). A identidade de uma action é nome + número de parâmetros: `[NonAction]` numa sobrecarga de `UpdateProvider` não tira a outra. Override sem atributo herda os da base, como no framework |
+| `[Microsoft.AspNetCore.Mvc.HttpGet("{searcherName}/query")]` ignorado; `[Route("/umbraco/login")]` sem verbo ignorado; `{**path:regex(^(?!(api\|feed)/).*)}` virava `{rest}{rest}{regex}(^(` | o nome do atributo vale sem namespace e sem `Attribute`; action só com `[Route]` (ou com atributos do projeto que não roteiam) aceita qualquer verbo: ANY; parâmetro de template ASP.NET lido com parênteses balanceados e chaves dobradas — `**`, restrição, default e `?` saem (`_aspnet_template`) (F1.14) |
+| Umbraco `[VersionedApiBackOfficeRoute(Paths.BackOfficeApi.EndpointTemplate + "/graphics")]` com `EndpointTemplate = "security/back-office"`: a constante não entrava na tabela (nem path com barra, nem um segmento) | constante de vários segmentos sem barra inicial fica numa tabela à parte (`PackageContext.relatives`), que só as receitas de atributo C# leem — para as outras linguagens ela continua não sendo path |
+| Smartstore `[HttpPut] Put(int key, Delta<Category> m)` num controller OData: as ações sem template caíam na rota do controller (`PUT /odata/v1`, 260 no hold-out, as 65 entidades num nó só) | convenção do OData (`Microsoft.AspNetCore.OData`): controller que deriva de `ODataController` ou carrega `[ODataRouteComponent]` — nele ou numa base do repo — roteia a ação sem template `Get`/`Post` (ou `Post<EntitySet>`) no entity set, o nome do controller, e `Get`/`Put`/`Patch`/`Delete` com parâmetro `key` numa entidade: `Categories({key})`; ação sem template que a convenção não roteia (os stubs `Put()` sem `key` do Smartstore) não é rota. Fora do OData, o mesmo nome segue a rota do controller (F1.14) |
 | FastEndpoints (`Get("/x")`, `Post(CreateRequest.Route)`, `Verbs(..)` + `Routes(..)` no `Configure()`) e Ardalis.ApiEndpoints (`EndpointBaseAsync.WithRequest<..>` com `[HttpPost("api/x")]`) não eram lidos | classe de endpoint: base `Endpoint<..>`/`EndpointWithoutRequest`/`Ep.*` com `Configure()` → as chamadas sem receiver dele, handler `HandleAsync`/`ExecuteAsync` da classe (`fastendpoints`); base `EndpointBase*` é controller |
 | `Post(UpdateProjectRequest.Route)` com um `Route` em cada classe de request da pasta pegava o último coletado | constante de classe também por `Classe.NOME`, procurado antes do nome solto; nome com dois valores na pasta é ambíguo: vale o do arquivo, senão nada |
 | `Get($"/{nameof(Project)}s")` gravado como `/{param}s`; e no C# a variável local interpolada (`$"{url}/x"`) nunca era resolvida | `nameof(X)` interpolado é o texto `X` (constante de compilação); as chaves da interpolação do C# são nós nomeados (`interpolation_brace`) e ficam fora da conta |
@@ -179,6 +188,8 @@ Regras aprendidas no corpus (não regredir):
 | Cliente NSwag TS: 11 de 102 operações perdidas e as que não são `GET` gravadas como `GET` | `path_of` memoizado por nó, com profundidade 64 (as cadeias `url_ = url_.replace("{x}", ..)` e `url_ += "q=" + ..` passavam de 4); `method_from_args` lê o verbo de uma variável ligada a objeto (`fetch(url_, options_)` com `options_ = {method: "POST"}`) |
 | `r.Mount("/api/v1", apiv1.Routes())` (gitea), `include_router(tag_router, prefix="/tags")` com o router importado (dispatch), `api_router.include_router(login.router)` (full-stack-fastapi-template): as rotas do router de outro arquivo ficavam sem o prefixo, e a raiz dele (`@router.get("")`) era descartada | grafo de montagem entre arquivos: router global (`var:`/`ret:`) + aresta publicada pelo arquivo que monta; `compose` segue as arestas até o topo. O import resolve pelo `RepoView` (o `resolve_import` da linguagem: arquivo Python, diretório de pacote Go) |
 | `users.UsersRegister(v1.Group("/users"))` (gin-realworld), `addActionsRoutes(m, ...)` chamado dentro de vários grupos (gitea), `register_blueprints(app)`: o router chega como parâmetro | parâmetro router de função = router global `param:<unidade>:<função>:<i>`; a chamada publica a aresta com o prefixo do argumento ali (inclusive `x.Group("/p")` inline). Só argumentos que são routers do arquivo (registram, montam, foram criados como router ou são parâmetros tipados como router) |
+| vikunja `a := e.Group("/api/v1"); registerAPIRoutes(a)` com `func registerAPIRoutes(a *echo.Group)`: 172 rotas `/api/v1/api/v1/..` | o prefixo de grupo é do par (escopo, nome), como o grafo de montagem (`group_key`): o parâmetro `a` de outra função não herda o `a :=` de `main`, e o prefixo dele chega só pela chamada. Campo ou expressão (`api.BaseRoutes.Users`) continua do arquivo (F1.14) |
+| vikunja `u := a.Group("/user"); u.GET("s", h)` lido como `/user/s` | echo junta o prefixo do grupo e o path como escritos (`g.prefix + path`): no arquivo que importa `labstack/echo`, um path sem barra num grupo com prefixo conhecido é `/users`; gin e fiber põem a barra (`relative_on_groups`) (F1.14) |
 | `api.BaseRoutes.Users = api.BaseRoutes.APIRoot.PathPrefix("/users").Subrouter()` em `api.go` e `api.BaseRoutes.Users.Handle("/known", h)` em `user.go` (mattermost, 607 rotas) | router em campo de struct (`field:<pacote>:BaseRoutes.Users`), comum aos arquivos do pacote qualquer que seja o nome da variável |
 | `PathPrefix(model.APIURLSuffix)` (mattermost), `prefix=settings.API_V1_STR` (full-stack-fastapi-template), `mux.Handle(common.LoginEndpoint, h)` (argo-cd): a constante mora em outro pacote/módulo | `foreign_const`: `pkg.NOME` com `pkg` import do arquivo → constante do diretório importado; em Python também `NOME` importado por nome |
 | `APIURLSuffix = APIURLSuffixV4` (Go) e `API_V1_STR: str = "/api/v1"` no corpo de uma classe (Python) não eram constantes | `const` Go que nomeia outra vira referência; atribuição anotada no corpo de classe Python é coletada |
@@ -295,7 +306,9 @@ inspecionar o que o extrator viu num repo específico.
   repos em que cada uma aparece); `--reuse <execução>` pontua uma execução salva sem extrair de novo — só para
   editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`. Quando a spec
   cobre um subespaço de URL e os mesmos arquivos servem outros (UI web, páginas de debug), `scope_paths` no gabarito
-  restringe a precisão da lista aos paths dele — e a amostra julga o resto.
+  restringe a precisão da lista aos paths dele — e a amostra julga o resto. Rota de framework que casa sem caixa
+  (ASP.NET, o `CASE_INSENSITIVE` do linker) casa sem caixa com o gabarito: `[controller]` dá `AutoTagging` e a spec
+  do Radarr escreve `autotagging` (F1.14).
 - **Hold-out** (`http_corpus.py --holdout`, `HOLDOUT` no script, gabaritos em `tests/corpus_expected/holdout/`):
   repos que as regras nunca viram, medidos uma vez no fechamento de um incremento, com o gabarito escrito antes de
   rodar e a amostra julgada na fonte (H2-D20). Nenhuma regra se ajusta por ele; quando um incremento trabalha sobre
@@ -335,7 +348,8 @@ inspecionar o que o extrator viu num repo específico.
 
 ## 6. Checklist para mudar o extrator
 
-1. Reproduzir o caso numa fixture pequena antes de mexer na heurística.
+1. Reproduzir o caso numa fixture pequena antes de mexer na heurística — e antes, ver se a decisão é do extrator
+   ou do resolvedor (§8, "Onde o extrator para").
 2. Mudar o scanner da linguagem (`languages/<lang>/http.py`) ou, se for regra comum a todas, `core/http_base.py`;
    rodar fixture + corpus; comparar contagens com o docstring do script.
 3. Se a **semântica dos nós** mudou (novo campo, novo tipo de nó, path normalizado diferente): bump em
@@ -395,3 +409,18 @@ inspecionar o que o extrator viu num repo específico.
   `depends_on`/`depended_by`. É a dependência que o scan HTTP não enxerga (contratos, SDKs internos).
 - **F0.7 perguntas douradas**: `who_consumes('/v1/<rota>')` respondida pelo grafo no par piloto.
 - F1: SCIP para `CALLS` resolvidos, gRPC/proto, mensageria, Qdrant.
+- **Onde o extrator para (fronteira com o SCIP, 2026-10-17).** O SCIP diz *qual definição* um nome referencia
+  (herança, função de outro pacote, tipo de um campo, alias de import), com precisão de compilador; não guarda
+  *valores* (as strings de template e prefixo) nem conhece *convenções de framework* — e exige o build (`dotnet
+  restore` com os feeds do tenant, `npm install`). A camada HTTP precisa funcionar sem ele (ADR-002, decisão 3),
+  então:
+  - fica no tree-sitter o que é **sintaticamente determinado**: tipo declarado de um parâmetro, campo ou variável;
+    lista de bases de uma classe do repo; import path (em Go, o diretório exato); config de alias (`tsconfig`
+    `paths`, `svelte.config.js`); valor de constante; regra da linguagem (em Go, método não exportado nunca é de
+    framework);
+  - lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** — retorno inferido de uma
+    chamada, serviço injetado, despacho por interface, sobrecarga, genérico — não ganha heurística: o gabarito marca
+    a falta com `category: needs-resolver`, o guia registra a limitação, e ela espera o resolvedor do F1.2 (um
+    gancho no `http_base`, por nome por padrão e SCIP quando a snapshot tem índice, consultado só nesses pontos).
+  O sinal de que uma regra está invadindo: ela reimplementa inferência de tipos (seguir retornos entre funções,
+  resolver qual sobrecarga, adivinhar o tipo de `x` por como `x` é usado).

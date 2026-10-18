@@ -11,13 +11,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Addresses",
-   "category": "odata-convention"
+   "path": "/odata/v1/Addresses"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Addresses({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Addresses({key})"
   },
   {
    "method": "GET",
@@ -25,13 +23,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Addresses({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Addresses({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Addresses({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Addresses({key})"
   },
   {
    "method": "GET",
@@ -47,13 +43,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Categories",
-   "category": "odata-convention"
+   "path": "/odata/v1/Categories"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Categories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Categories({key})"
   },
   {
    "method": "GET",
@@ -61,13 +55,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Categories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Categories({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Categories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Categories({key})"
   },
   {
    "method": "GET",
@@ -87,13 +79,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CheckoutAttributeValues",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributeValues"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CheckoutAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
   },
   {
    "method": "GET",
@@ -101,13 +91,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CheckoutAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CheckoutAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributeValues({key})"
   },
   {
    "method": "GET",
@@ -123,13 +111,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CheckoutAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CheckoutAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributes({key})"
   },
   {
    "method": "GET",
@@ -137,13 +123,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CheckoutAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CheckoutAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CheckoutAttributes({key})"
   },
   {
    "method": "GET",
@@ -155,13 +139,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CollectionGroupMappings",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroupMappings"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CollectionGroupMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroupMappings({key})"
   },
   {
    "method": "GET",
@@ -169,13 +151,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CollectionGroupMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroupMappings({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CollectionGroupMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroupMappings({key})"
   },
   {
    "method": "GET",
@@ -187,13 +167,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CollectionGroups",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroups"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CollectionGroups({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroups({key})"
   },
   {
    "method": "GET",
@@ -201,13 +179,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CollectionGroups({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroups({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CollectionGroups({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CollectionGroups({key})"
   },
   {
    "method": "GET",
@@ -219,13 +195,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Countries",
-   "category": "odata-convention"
+   "path": "/odata/v1/Countries"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Countries({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Countries({key})"
   },
   {
    "method": "GET",
@@ -233,13 +207,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Countries({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Countries({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Countries({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Countries({key})"
   },
   {
    "method": "GET",
@@ -251,13 +223,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Currencies",
-   "category": "odata-convention"
+   "path": "/odata/v1/Currencies"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Currencies({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Currencies({key})"
   },
   {
    "method": "GET",
@@ -265,13 +235,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Currencies({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Currencies({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Currencies({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Currencies({key})"
   },
   {
    "method": "GET",
@@ -279,13 +247,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CustomerRoleMappings",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoleMappings"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CustomerRoleMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoleMappings({key})"
   },
   {
    "method": "GET",
@@ -293,13 +259,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CustomerRoleMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoleMappings({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CustomerRoleMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoleMappings({key})"
   },
   {
    "method": "GET",
@@ -315,13 +279,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/CustomerRoles",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoles"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/CustomerRoles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoles({key})"
   },
   {
    "method": "GET",
@@ -329,13 +291,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/CustomerRoles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoles({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/CustomerRoles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/CustomerRoles({key})"
   },
   {
    "method": "GET",
@@ -343,13 +303,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Customers",
-   "category": "odata-convention"
+   "path": "/odata/v1/Customers"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Customers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Customers({key})"
   },
   {
    "method": "GET",
@@ -357,13 +315,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Customers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Customers({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Customers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Customers({key})"
   },
   {
    "method": "GET",
@@ -415,13 +371,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/DeliveryTimes",
-   "category": "odata-convention"
+   "path": "/odata/v1/DeliveryTimes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/DeliveryTimes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/DeliveryTimes({key})"
   },
   {
    "method": "GET",
@@ -429,13 +383,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/DeliveryTimes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/DeliveryTimes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/DeliveryTimes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/DeliveryTimes({key})"
   },
   {
    "method": "GET",
@@ -447,27 +399,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/DiscountUsageHistory",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/DiscountUsageHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/DiscountUsageHistory"
   },
   {
    "method": "GET",
    "path": "/odata/v1/DiscountUsageHistory({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/DiscountUsageHistory({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/DiscountUsageHistory({key})",
-   "category": "odata-convention"
   },
   {
    "method": "GET",
@@ -483,13 +419,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Discounts",
-   "category": "odata-convention"
+   "path": "/odata/v1/Discounts"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Discounts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Discounts({key})"
   },
   {
    "method": "GET",
@@ -497,13 +431,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Discounts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Discounts({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Discounts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Discounts({key})"
   },
   {
    "method": "GET",
@@ -523,13 +455,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Downloads",
-   "category": "odata-convention"
+   "path": "/odata/v1/Downloads"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Downloads({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Downloads({key})"
   },
   {
    "method": "GET",
@@ -537,13 +467,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Downloads({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Downloads({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Downloads({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Downloads({key})"
   },
   {
    "method": "GET",
@@ -555,13 +483,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/GenericAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/GenericAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/GenericAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GenericAttributes({key})"
   },
   {
    "method": "GET",
@@ -569,13 +495,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/GenericAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GenericAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/GenericAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GenericAttributes({key})"
   },
   {
    "method": "GET",
@@ -583,27 +507,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/GiftCardUsageHistory",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/GiftCardUsageHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GiftCardUsageHistory"
   },
   {
    "method": "GET",
    "path": "/odata/v1/GiftCardUsageHistory({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/GiftCardUsageHistory({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/GiftCardUsageHistory({key})",
-   "category": "odata-convention"
   },
   {
    "method": "GET",
@@ -619,13 +527,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/GiftCards",
-   "category": "odata-convention"
+   "path": "/odata/v1/GiftCards"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/GiftCards({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GiftCards({key})"
   },
   {
    "method": "GET",
@@ -633,13 +539,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/GiftCards({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GiftCards({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/GiftCards({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/GiftCards({key})"
   },
   {
    "method": "GET",
@@ -655,27 +559,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ImportProfiles",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/ImportProfiles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ImportProfiles"
   },
   {
    "method": "GET",
    "path": "/odata/v1/ImportProfiles({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/ImportProfiles({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/ImportProfiles({key})",
-   "category": "odata-convention"
   },
   {
    "method": "POST",
@@ -687,13 +575,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Languages",
-   "category": "odata-convention"
+   "path": "/odata/v1/Languages"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Languages({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Languages({key})"
   },
   {
    "method": "GET",
@@ -701,13 +587,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Languages({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Languages({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Languages({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Languages({key})"
   },
   {
    "method": "GET",
@@ -715,13 +599,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/LocaleStringResources",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocaleStringResources"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/LocaleStringResources({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocaleStringResources({key})"
   },
   {
    "method": "GET",
@@ -729,13 +611,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/LocaleStringResources({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocaleStringResources({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/LocaleStringResources({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocaleStringResources({key})"
   },
   {
    "method": "GET",
@@ -747,13 +627,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/LocalizedProperties",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocalizedProperties"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/LocalizedProperties({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocalizedProperties({key})"
   },
   {
    "method": "GET",
@@ -761,13 +639,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/LocalizedProperties({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocalizedProperties({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/LocalizedProperties({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/LocalizedProperties({key})"
   },
   {
    "method": "GET",
@@ -779,13 +655,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Manufacturers",
-   "category": "odata-convention"
+   "path": "/odata/v1/Manufacturers"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Manufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Manufacturers({key})"
   },
   {
    "method": "GET",
@@ -793,13 +667,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Manufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Manufacturers({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Manufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Manufacturers({key})"
   },
   {
    "method": "GET",
@@ -819,13 +691,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/MeasureDimensions",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureDimensions"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/MeasureDimensions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureDimensions({key})"
   },
   {
    "method": "GET",
@@ -833,13 +703,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/MeasureDimensions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureDimensions({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/MeasureDimensions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureDimensions({key})"
   },
   {
    "method": "GET",
@@ -847,13 +715,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/MeasureWeights",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureWeights"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/MeasureWeights({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureWeights({key})"
   },
   {
    "method": "GET",
@@ -861,13 +727,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/MeasureWeights({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureWeights({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/MeasureWeights({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MeasureWeights({key})"
   },
   {
    "method": "GET",
@@ -875,27 +739,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/MediaFiles",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/MediaFiles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MediaFiles"
   },
   {
    "method": "GET",
    "path": "/odata/v1/MediaFiles({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/MediaFiles({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/MediaFiles({key})",
-   "category": "odata-convention"
   },
   {
    "method": "POST",
@@ -951,27 +799,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/MediaFolders",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/MediaFolders({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/MediaFolders"
   },
   {
    "method": "GET",
    "path": "/odata/v1/MediaFolders({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/MediaFolders({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/MediaFolders({key})",
-   "category": "odata-convention"
   },
   {
    "method": "POST",
@@ -1011,13 +843,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/NewsletterSubscriptions",
-   "category": "odata-convention"
+   "path": "/odata/v1/NewsletterSubscriptions"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/NewsletterSubscriptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
   },
   {
    "method": "GET",
@@ -1025,13 +855,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/NewsletterSubscriptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/NewsletterSubscriptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/NewsletterSubscriptions({key})"
   },
   {
    "method": "POST",
@@ -1047,13 +875,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/OrderItems",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderItems"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/OrderItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderItems({key})"
   },
   {
    "method": "GET",
@@ -1061,13 +887,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/OrderItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderItems({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/OrderItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderItems({key})"
   },
   {
    "method": "GET",
@@ -1091,13 +915,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/OrderNotes",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderNotes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/OrderNotes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderNotes({key})"
   },
   {
    "method": "GET",
@@ -1105,13 +927,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/OrderNotes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderNotes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/OrderNotes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/OrderNotes({key})"
   },
   {
    "method": "GET",
@@ -1123,13 +943,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Orders",
-   "category": "odata-convention"
+   "path": "/odata/v1/Orders"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Orders({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Orders({key})"
   },
   {
    "method": "GET",
@@ -1137,13 +955,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Orders({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Orders({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Orders({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Orders({key})"
   },
   {
    "method": "POST",
@@ -1235,13 +1051,7 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/PaymentMethods",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/PaymentMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PaymentMethods"
   },
   {
    "method": "GET",
@@ -1249,13 +1059,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/PaymentMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PaymentMethods({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/PaymentMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PaymentMethods({key})"
   },
   {
    "method": "GET",
@@ -1267,13 +1075,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/PriceLabels",
-   "category": "odata-convention"
+   "path": "/odata/v1/PriceLabels"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/PriceLabels({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PriceLabels({key})"
   },
   {
    "method": "GET",
@@ -1281,13 +1087,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/PriceLabels({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PriceLabels({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/PriceLabels({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/PriceLabels({key})"
   },
   {
    "method": "GET",
@@ -1295,13 +1099,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductAttributeOptions",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptions"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptions({key})"
   },
   {
    "method": "GET",
@@ -1309,13 +1111,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptions({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptions({key})"
   },
   {
    "method": "GET",
@@ -1327,13 +1127,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductAttributeOptionsSets",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptionsSets"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductAttributeOptionsSets({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
   },
   {
    "method": "GET",
@@ -1341,13 +1139,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductAttributeOptionsSets({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductAttributeOptionsSets({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributeOptionsSets({key})"
   },
   {
    "method": "GET",
@@ -1363,13 +1159,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributes({key})"
   },
   {
    "method": "GET",
@@ -1377,13 +1171,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductAttributes({key})"
   },
   {
    "method": "GET",
@@ -1395,13 +1187,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductBundleItems",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductBundleItems"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductBundleItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductBundleItems({key})"
   },
   {
    "method": "GET",
@@ -1409,13 +1199,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductBundleItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductBundleItems({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductBundleItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductBundleItems({key})"
   },
   {
    "method": "GET",
@@ -1431,13 +1219,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductCategories",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductCategories"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductCategories({key})"
   },
   {
    "method": "GET",
@@ -1445,13 +1231,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductCategories({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductCategories({key})"
   },
   {
    "method": "GET",
@@ -1467,13 +1251,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductManufacturers",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductManufacturers"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductManufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductManufacturers({key})"
   },
   {
    "method": "GET",
@@ -1481,13 +1263,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductManufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductManufacturers({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductManufacturers({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductManufacturers({key})"
   },
   {
    "method": "GET",
@@ -1503,13 +1283,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductMediaFiles",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductMediaFiles"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductMediaFiles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductMediaFiles({key})"
   },
   {
    "method": "GET",
@@ -1517,13 +1295,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductMediaFiles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductMediaFiles({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductMediaFiles({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductMediaFiles({key})"
   },
   {
    "method": "GET",
@@ -1539,13 +1315,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductSpecificationAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductSpecificationAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductSpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
   },
   {
    "method": "GET",
@@ -1553,13 +1327,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductSpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductSpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductSpecificationAttributes({key})"
   },
   {
    "method": "GET",
@@ -1571,13 +1343,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductTags",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductTags"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductTags({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductTags({key})"
   },
   {
    "method": "GET",
@@ -1585,13 +1355,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductTags({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductTags({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductTags({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductTags({key})"
   },
   {
    "method": "GET",
@@ -1599,13 +1367,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductVariantAttributeCombinations",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeCombinations"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductVariantAttributeCombinations({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
   },
   {
    "method": "GET",
@@ -1613,13 +1379,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductVariantAttributeCombinations({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductVariantAttributeCombinations({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeCombinations({key})"
   },
   {
    "method": "GET",
@@ -1635,13 +1399,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductVariantAttributeValues",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeValues"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductVariantAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
   },
   {
    "method": "GET",
@@ -1649,13 +1411,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductVariantAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductVariantAttributeValues({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributeValues({key})"
   },
   {
    "method": "GET",
@@ -1667,13 +1427,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ProductVariantAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ProductVariantAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributes({key})"
   },
   {
    "method": "GET",
@@ -1681,13 +1439,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ProductVariantAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ProductVariantAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ProductVariantAttributes({key})"
   },
   {
    "method": "GET",
@@ -1703,13 +1459,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Products",
-   "category": "odata-convention"
+   "path": "/odata/v1/Products"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Products({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Products({key})"
   },
   {
    "method": "GET",
@@ -1717,13 +1471,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Products({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Products({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Products({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Products({key})"
   },
   {
    "method": "GET",
@@ -1851,13 +1603,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/QuantityUnits",
-   "category": "odata-convention"
+   "path": "/odata/v1/QuantityUnits"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/QuantityUnits({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/QuantityUnits({key})"
   },
   {
    "method": "GET",
@@ -1865,13 +1615,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/QuantityUnits({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/QuantityUnits({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/QuantityUnits({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/QuantityUnits({key})"
   },
   {
    "method": "GET",
@@ -1879,13 +1627,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/RecurringPaymentHistory",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPaymentHistory"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/RecurringPaymentHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
   },
   {
    "method": "GET",
@@ -1893,13 +1639,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/RecurringPaymentHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/RecurringPaymentHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPaymentHistory({key})"
   },
   {
    "method": "GET",
@@ -1911,13 +1655,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/RecurringPayments",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPayments"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/RecurringPayments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPayments({key})"
   },
   {
    "method": "GET",
@@ -1925,13 +1667,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/RecurringPayments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPayments({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/RecurringPayments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RecurringPayments({key})"
   },
   {
    "method": "POST",
@@ -1955,13 +1695,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/RelatedProducts",
-   "category": "odata-convention"
+   "path": "/odata/v1/RelatedProducts"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/RelatedProducts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RelatedProducts({key})"
   },
   {
    "method": "GET",
@@ -1969,13 +1707,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/RelatedProducts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RelatedProducts({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/RelatedProducts({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RelatedProducts({key})"
   },
   {
    "method": "GET",
@@ -1983,27 +1719,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/RewardPointsHistory",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/RewardPointsHistory({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/RewardPointsHistory"
   },
   {
    "method": "GET",
    "path": "/odata/v1/RewardPointsHistory({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/RewardPointsHistory({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/RewardPointsHistory({key})",
-   "category": "odata-convention"
   },
   {
    "method": "GET",
@@ -2019,13 +1739,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Settings",
-   "category": "odata-convention"
+   "path": "/odata/v1/Settings"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Settings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Settings({key})"
   },
   {
    "method": "GET",
@@ -2033,13 +1751,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Settings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Settings({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Settings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Settings({key})"
   },
   {
    "method": "GET",
@@ -2047,13 +1763,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ShipmentItems",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShipmentItems"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ShipmentItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShipmentItems({key})"
   },
   {
    "method": "GET",
@@ -2061,13 +1775,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ShipmentItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShipmentItems({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ShipmentItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShipmentItems({key})"
   },
   {
    "method": "GET",
@@ -2079,13 +1791,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Shipments",
-   "category": "odata-convention"
+   "path": "/odata/v1/Shipments"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Shipments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Shipments({key})"
   },
   {
    "method": "GET",
@@ -2093,13 +1803,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Shipments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Shipments({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Shipments({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Shipments({key})"
   },
   {
    "method": "POST",
@@ -2119,13 +1827,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ShippingMethods",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShippingMethods"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/ShippingMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShippingMethods({key})"
   },
   {
    "method": "GET",
@@ -2133,13 +1839,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/ShippingMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShippingMethods({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/ShippingMethods({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShippingMethods({key})"
   },
   {
    "method": "GET",
@@ -2147,27 +1851,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/ShoppingCartItems",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/ShoppingCartItems({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/ShoppingCartItems"
   },
   {
    "method": "GET",
    "path": "/odata/v1/ShoppingCartItems({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/ShoppingCartItems({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/ShoppingCartItems({key})",
-   "category": "odata-convention"
   },
   {
    "method": "GET",
@@ -2203,13 +1891,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/SpecificationAttributeOptions",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributeOptions"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/SpecificationAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
   },
   {
    "method": "GET",
@@ -2217,13 +1903,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/SpecificationAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/SpecificationAttributeOptions({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributeOptions({key})"
   },
   {
    "method": "GET",
@@ -2239,13 +1923,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/SpecificationAttributes",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributes"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/SpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributes({key})"
   },
   {
    "method": "GET",
@@ -2253,13 +1935,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/SpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributes({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/SpecificationAttributes({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SpecificationAttributes({key})"
   },
   {
    "method": "POST",
@@ -2275,13 +1955,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/StateProvinces",
-   "category": "odata-convention"
+   "path": "/odata/v1/StateProvinces"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/StateProvinces({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StateProvinces({key})"
   },
   {
    "method": "GET",
@@ -2289,13 +1967,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/StateProvinces({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StateProvinces({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/StateProvinces({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StateProvinces({key})"
   },
   {
    "method": "GET",
@@ -2307,13 +1983,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/StoreMappings",
-   "category": "odata-convention"
+   "path": "/odata/v1/StoreMappings"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/StoreMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StoreMappings({key})"
   },
   {
    "method": "GET",
@@ -2321,13 +1995,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/StoreMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StoreMappings({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/StoreMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/StoreMappings({key})"
   },
   {
    "method": "GET",
@@ -2335,13 +2007,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/Stores",
-   "category": "odata-convention"
+   "path": "/odata/v1/Stores"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/Stores({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Stores({key})"
   },
   {
    "method": "GET",
@@ -2349,13 +2019,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/Stores({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Stores({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/Stores({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/Stores({key})"
   },
   {
    "method": "GET",
@@ -2363,13 +2031,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/SyncMappings",
-   "category": "odata-convention"
+   "path": "/odata/v1/SyncMappings"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/SyncMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SyncMappings({key})"
   },
   {
    "method": "GET",
@@ -2377,13 +2043,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/SyncMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SyncMappings({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/SyncMappings({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/SyncMappings({key})"
   },
   {
    "method": "GET",
@@ -2391,13 +2055,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/TaxCategories",
-   "category": "odata-convention"
+   "path": "/odata/v1/TaxCategories"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/TaxCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TaxCategories({key})"
   },
   {
    "method": "GET",
@@ -2405,13 +2067,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/TaxCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TaxCategories({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/TaxCategories({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TaxCategories({key})"
   },
   {
    "method": "GET",
@@ -2419,13 +2079,11 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/TierPrices",
-   "category": "odata-convention"
+   "path": "/odata/v1/TierPrices"
   },
   {
    "method": "DELETE",
-   "path": "/odata/v1/TierPrices({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TierPrices({key})"
   },
   {
    "method": "GET",
@@ -2433,13 +2091,11 @@
   },
   {
    "method": "PATCH",
-   "path": "/odata/v1/TierPrices({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TierPrices({key})"
   },
   {
    "method": "PUT",
-   "path": "/odata/v1/TierPrices({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/TierPrices({key})"
   },
   {
    "method": "GET",
@@ -2447,30 +2103,14 @@
   },
   {
    "method": "POST",
-   "path": "/odata/v1/UrlRecords",
-   "category": "odata-convention"
-  },
-  {
-   "method": "DELETE",
-   "path": "/odata/v1/UrlRecords({key})",
-   "category": "odata-convention"
+   "path": "/odata/v1/UrlRecords"
   },
   {
    "method": "GET",
    "path": "/odata/v1/UrlRecords({key})"
-  },
-  {
-   "method": "PATCH",
-   "path": "/odata/v1/UrlRecords({key})",
-   "category": "odata-convention"
-  },
-  {
-   "method": "PUT",
-   "path": "/odata/v1/UrlRecords({key})",
-   "category": "odata-convention"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the Web API module (OData), 65 controllers deriving from WebApiController<TEntity> (Smartstore.Web.Common/Api), which carries [ODataRouteComponent(\"odata/v1\")] and [Route(\"odata/v1\")] — the inherited [Route] of H2-D10, one level. Routes: every templated attribute ([HttpGet(\"Products({key})/ProductTags\"), ApiQueryable], [HttpPost(\"Products({key})/..\")], OData key syntax in parentheses) under /odata/v1/, and the OData conventions of the untemplated actions — Post → POST /odata/v1/<EntitySet>, Put/Patch/Delete(int key) → /odata/v1/<EntitySet>({key}), the entity set named after the controller. 551 routes. Not expected: what OData adds by itself ($metadata, $count), and WebApiAdminController (a conventional MVC admin page). The storefront and admin (Smartstore.Web, Areas/Admin) route by convention (MapLocalizedControllerRoute, slugs) and are outside the scope.",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Scope: the Web API module (OData), 65 controllers deriving from WebApiController<TEntity> (Smartstore.Web.Common/Api), which carries [ODataRouteComponent(\"odata/v1\")] and [Route(\"odata/v1\")] — the inherited [Route] of H2-D10, one level. Routes: every templated attribute ([HttpGet(\"Products({key})/ProductTags\"), ApiQueryable], [HttpPost(\"Products({key})/..\")], OData key syntax in parentheses) under /odata/v1/, and the OData conventions of the untemplated actions — Post → POST /odata/v1/<EntitySet>, Put/Patch/Delete(int key) → /odata/v1/<EntitySet>({key}), the entity set named after the controller. 551 routes. Not expected: what OData adds by itself ($metadata, $count), and WebApiAdminController (a conventional MVC admin page). The storefront and admin (Smartstore.Web, Areas/Admin) route by convention (MapLocalizedControllerRoute, slugs) and are outside the scope. Moved to the corpus by F1.14 (2026-10-17). Corrected (H2-D15): 9 controllers declare Put() / Patch() / Delete() without a key, as stubs hidden from the API ([ApiExplorerSettings(IgnoreApi = true)]); OData's conventions need the key, so they route none of them — the 25 <EntitySet>({key}) entries written for them are removed.",
  "checked": {
   "endpoints": [
    {

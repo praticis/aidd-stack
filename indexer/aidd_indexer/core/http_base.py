@@ -58,6 +58,7 @@ OUTBOUND = {
 }
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
+IDENTIFIER = re.compile(r"^[A-Za-z_$][\w$]*$")
 
 
 ROUTER_TYPE = re.compile(r"\b(Router|RouterGroup|Engine|Echo|Group|Mux|ServeMux|App|APIRouter|FastAPI|Flask|Blueprint|"
@@ -122,11 +123,18 @@ class PackageContext:
         self.patterns = patterns or ScanPatterns()
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
         self.segments: dict[str, str] = {}          # name -> one path segment (`"cases"`): only whole, inside a template
+        self.relatives: dict[str, str] = {}         # name -> segments without a leading slash (`"security/back-office"`):
+                                                    # only C#'s routing attributes read them (`_RouteAttributes`)
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
-    def define(self, name: str, raw: str | None = None, parts: list | None = None, segment: str | None = None) -> None:
+    def define(self, name: str, raw: str | None = None, parts: list | None = None, segment: str | None = None,
+               relative: str | None = None) -> None:
+        if relative is not None:                    # read by name only where a template puts it — never a path alone
+            if self.relatives.setdefault(name, relative) != relative:
+                self.ambiguous.add(name)
+            return
         value = raw if raw is not None else segment if segment is not None else tuple(parts or ())
         if self._values.setdefault(name, value) != value:
             self.ambiguous.add(name)
@@ -215,7 +223,7 @@ class BaseScanner(PathExpressions):
         self.symbols_by_name: dict[str, list[SymbolInfo]] = {}
         for s in fx.symbols:
             self.symbols_by_name.setdefault(s.name, []).append(s)
-        self.group_prefix: dict[str, str] = {}   # router/group variable -> path prefix
+        self.group_prefix: dict[RouterKey, str] = {}   # router/group variable -> path prefix (`group_key`)
         self.router_vars: set[str] = set()       # identifiers known to be routers/groups/apps
         self.app_vars: set[tuple[int, str]] = set()   # (scope, name) of the application itself, not a sub-router
         self.imports: dict[str, tuple[str, str | None]] = self.read_imports()   # local name -> (spec, name in it)
@@ -265,7 +273,13 @@ class BaseScanner(PathExpressions):
                     base = self.prefix_for(region.outer, f.parent.parent) or ""
                     return base.rstrip("/") + region.prefix
             f = f.parent
-        return self.group_prefix.get(receiver)
+        return self.group_prefix.get(self.group_key(receiver, at))
+
+    def group_key(self, name: str, at: Node) -> RouterKey:
+        """A group variable is the one the function around `at` binds: a parameter named like another function's group
+        is another router (vikunja `a := e.Group("/api/v1"); registerAPIRoutes(a)`, whose `a` takes the prefix from the
+        call). A field or an expression (`api.BaseRoutes.Users`, `g.Group("/x").Use(mw)`) is the file's."""
+        return (self.scopes.binding_scope(name, at) if IDENTIFIER.match(name) else 0), name
 
     def router_key(self, name: str, at: Node) -> RouterKey:
         """The router `name` is at `at`. A closure region's router parameter is the outer router — chi's
@@ -616,7 +630,7 @@ class BaseScanner(PathExpressions):
         p = self.path_of(arg_nodes[0]) if arg_nodes else None
         p = p if p is not None else ""
         for nm in names:
-            self.group_prefix[nm] = (base.rstrip("/") + p) if p else base
+            self.group_prefix[self.group_key(nm, call)] = (base.rstrip("/") + p) if p else base
             self.router_vars.add(nm)
             if recv:                                  # the group follows its parent wherever the file mounts it
                 self.mount(nm, call, recv, call, "", derived=True)

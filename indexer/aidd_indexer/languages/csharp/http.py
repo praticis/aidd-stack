@@ -1,6 +1,9 @@
-"""C# / ASP.NET Core: attribute-routed controllers (with the `[Route]` of their base class, one level), endpoint
-classes (FastEndpoints, Ardalis.ApiEndpoints) and minimal APIs (MapGroup chains); HttpClient.*Async,
-HttpRequestMessage, Refit, Flurl, RestSharp outbound."""
+"""C# / ASP.NET Core: attribute-routed controllers — the `[Route]` their base classes carry, the actions those declare
+(`[NonAction]` and overloads as the framework counts them), the project's own routing attributes
+(`IRouteTemplateProvider`, subclasses of `RouteAttribute` / `Http*Attribute`), an action with `[Route]` and no verb as
+ANY, Asp.Versioning's `{version:apiVersion}` and OData's routing conventions —, endpoint classes (FastEndpoints,
+Ardalis.ApiEndpoints) and minimal APIs (MapGroup chains); HttpClient.*Async, HttpRequestMessage, Refit, Flurl,
+RestSharp outbound."""
 
 from __future__ import annotations
 
@@ -22,6 +25,18 @@ CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPat
 ENDPOINT_BASE = re.compile(r"^(EndpointBase(Sync|Async)?|BaseEndpoint|BaseAsyncEndpoint)$")   # Ardalis.ApiEndpoints
 FAST_ENDPOINT = re.compile(r"^(Endpoint|EndpointWithoutRequest|EndpointWithMapping|EndpointWithMapper|Ep)$")
 FE_VERBS = {"Get": "GET", "Post": "POST", "Put": "PUT", "Patch": "PATCH", "Delete": "DELETE", "Head": "HEAD", "Options": "OPTIONS"}
+ROUTE_ATTR_BASES = {"Route": None, **CS_HTTP_ATTR}      # a framework routing attribute a project's own derives from → verb
+ROUTE_PROVIDERS = {"IRouteTemplateProvider", "IActionHttpMethodProvider"}
+# the framework's attributes, never a routing attribute of the project (`_attr_uses` skips them)
+FRAMEWORK_ATTRS = {"Route", "RoutePrefix", "ApiController", "Controller", "NonController", "NonAction", "Area", "ApiVersion",
+                   "MapToApiVersion", "Authorize", "AllowAnonymous", "ApiExplorerSettings", "Produces", "Consumes",
+                   "ProducesResponseType", "ProducesDefaultResponseType", "Tags", "EnableCors", "DisableCors", "Obsolete",
+                   "ResponseCache", "ValidateAntiForgeryToken", "IgnoreAntiforgeryToken", "RequestSizeLimit",
+                   "DisableRequestSizeLimit", "ServiceFilter", "TypeFilter", "FormatFilter", "OutputCache",
+                   "EnableRateLimiting", "DisableRateLimiting", "EndpointSummary", "EndpointDescription", "AcceptVerbs"}
+ODATA_VERBS = {"Get": "GET", "Post": "POST", "Put": "PUT", "Patch": "PATCH", "Delete": "DELETE"}
+API_VERSION = re.compile(r"\{\w+:apiVersion\}", re.I)    # Asp.Versioning's URL segment: `v{version:apiVersion}`
+API_VERSION_NAME = re.compile(r"\{(\w+):apiVersion\}", re.I)
 FLURL_VERBS = {"GetAsync": "GET", "GetJsonAsync": "GET", "GetStringAsync": "GET", "GetStreamAsync": "GET",
                "PostAsync": "POST", "PostJsonAsync": "POST", "PostStringAsync": "POST", "PostUrlEncodedAsync": "POST",
                "PutAsync": "PUT", "PutJsonAsync": "PUT", "PatchAsync": "PATCH", "PatchJsonAsync": "PATCH",
@@ -46,6 +61,8 @@ class CsScanner(BaseScanner):
         for n in walk(self.fx.tree.root_node):
             if n.type == "class_declaration":
                 self._controller(n)
+            elif n.type == "assignment_expression":
+                self._default_api_version(n)
             elif n.type == "interface_declaration":
                 self._refit(n)
             elif n.type == "variable_declarator":
@@ -72,9 +89,19 @@ class CsScanner(BaseScanner):
                     first = next((c for c in args.children if c.type == "attribute_argument"), None)
                     if first is not None:
                         s = first_string(first, self.src)
+                        expr = first.named_children[-1] if first.named_child_count else None
+                        if s is None and expr is not None and expr.type == "string_literal" and not unquote(text(expr, self.src)):
+                            s = ""                              # `[HttpGet("")]`: an empty template, written out
+                        if expr is not None and expr.type == "interpolated_string_expression":
+                            r = self._recipe(expr, {})          # `$"{{{nameof(id)}:guid}}"` → `{id:guid}` (Umbraco)
+                            if r is not None and all(part[0] == "lit" for part in r):
+                                s = "".join(part[1] for part in r)
                         if s is not None and not re.match(r"^(Name|Order)\s*=", text(first, self.src)):
-                            lit = s
-                out.append((text(nm, self.src) if nm is not None else "", lit, a))
+                            lit = _aspnet_template(s)
+                name = text(nm, self.src) if nm is not None else ""
+                if nm is not None and nm.type == "qualified_name":      # `[Microsoft.AspNetCore.Mvc.HttpGet("..")]`
+                    name = name.split(".")[-1]
+                out.append((name.removesuffix("Attribute") if name != "Attribute" else name, lit, a))
         return out
 
     def _bases(self, cls: Node) -> list[str]:
@@ -95,9 +122,13 @@ class CsScanner(BaseScanner):
         cname = cls.child_by_field_name("name")
         cname_txt = text(cname, self.src) if cname is not None else ""
         bases = self._bases(cls)
+        simple_bases = tuple(b.split(".")[-1] for b in bases)
+        uses = self._attr_uses(attrs)
         if cname_txt:                              # what a derived controller in another file inherits
             partial = any(c.type == "modifier" and text(c, self.src) == "partial" for c in cls.children)
-            self.out.publish("cs.class", cname_txt, (tuple(prefixes), partial))
+            self.out.publish("cs.class", cname_txt, (tuple(prefixes), partial, uses, simple_bases))
+            if cname_txt.endswith("Attribute"):
+                self._route_attribute(cls, cname_txt, bases)
         controller = re.sub(r"Controller$", "", cname_txt)
         body = cls.child_by_field_name("body")
         if body is None or self._fast_endpoint(cls, body, bases):
@@ -108,44 +139,332 @@ class CsScanner(BaseScanner):
             bool(prefixes) or cname_txt.endswith("Controller") or bool(names & {"ApiController", "Controller"})
             or any(b.split(".")[-1].endswith(("Controller", "ControllerBase")) for b in bases)
             or any(ENDPOINT_BASE.match(seg) for seg in segments))
-        if not is_controller:
+        # not a controller by itself, but its routed actions are its derived controllers' (Radarr's
+        # `ProviderControllerBase<..> : RestControllerWithSignalR<..>`): published, never routes of its own
+        base_only = not is_controller
+        if base_only and not cname_txt:
             return
         prefix = prefixes[0] if prefixes else ""
         area = next((lit for name, lit, _ in attrs if name == "Area" and lit), "")
-        inherit = not prefixes and bool(bases)     # no [Route] of its own: the base class's, if it has one
+        # no [Route] of its own: what one of its routing attributes gives (`[V3ApiController]`), else its base classes'
+        inherit = not prefixes and (bool(bases) or bool(uses))
         abstract = any(c.type == "modifier" and text(c, self.src) == "abstract" for c in cls.children)
+        versions = self._declared_versions(attrs, "ApiVersion")
+        odata = _is_odata(uses, simple_bases)
         own: set[str] = set()
         for m in body.children:
             if m.type != "method_declaration":
                 continue
-            attrs = self._attrs(m)
-            routes = [(CS_HTTP_ATTR[name], lit, a) for name, lit, a in attrs if name in CS_HTTP_ATTR]
-            extra = [lit for name, lit, _ in attrs if name == "Route" and lit is not None]
-            if not routes:
-                continue
+            mattrs = self._attrs(m)
             mname = m.child_by_field_name("name")
             hname = text(mname, self.src) if mname is not None else None
+            plist = m.child_by_field_name("parameters")
+            arity = sum(1 for c in plist.children if c.type == "parameter") if plist is not None else 0
+            if any(name == "NonAction" for name, _, _ in mattrs):
+                own.add((hname or "", arity))   # `[NonAction] override`: the base's action is not one here (Radarr) —
+                if cname_txt:                   # nor in a class below this one
+                    self.out.publish("cs.non-actions", cname_txt, (hname or "", arity))
+                continue
+            routes = [(CS_HTTP_ATTR[name], lit, a) for name, lit, a in mattrs if name in CS_HTTP_ATTR]
+            extra = [lit for name, lit, _ in mattrs if name == "Route" and lit is not None]
+            if not routes and extra and not self._attr_uses(mattrs):   # `[Route("docs")]` alone: any verb, once per route
+                routes = [("ANY", lit, a) for name, lit, a in mattrs if name == "Route" and lit is not None]
             hid = next((s.id for s in self.symbols_by_name.get(hname or "", []) if s.kind == "method"), None)
-            own.add(hname or "")
+            mversions = self._declared_versions(mattrs, "MapToApiVersion") or versions
+            if not routes:
+                action_uses = self._attr_uses(mattrs)
+                if action_uses and cname_txt:   # maybe a routing attribute of the project (`[RestGetById]`): `compose` knows
+                    first = next(a for name, _, a in mattrs if name == action_uses[0][0])
+                    fact = (self.endpoint_info(first, None, "/", "aspnet", hname, hid), action_uses, extra[0] if extra else "",
+                            hname or "", arity)
+                    self.out.publish("cs.attr-actions", cname_txt, fact)
+                    if not abstract and not base_only:
+                        self.out.pending.append(Pending(None, "cs.attr-action",
+                                                        (fact, controller, tuple(prefixes), uses, simple_bases, area, mversions)))
+                    own.add((hname or "", arity))
+                continue
+            own.add((hname or "", arity))
+            convention = self._odata_convention(m, hname or "", controller) if not extra else None
             for method, lit, a in routes:
                 tmpl = lit if lit is not None else (extra[0] if extra else "")
+                if not tmpl and convention is not None and odata and ODATA_VERBS.get(convention[0]) == method:
+                    tmpl = convention[1]            # OData: `Put(int key, ..)` → `Categories({key})` under the route
+                elif not tmpl and odata:
+                    continue                        # OData routes an action without a template only by convention
                 absolute = tmpl.startswith(("/", "~/"))
                 if cname_txt:                   # what a derived controller in another file takes, under its own route
                     self.out.publish("cs.actions", cname_txt,
-                                     (self.endpoint_info(a, method, "/", "aspnet", hname, hid), tmpl, absolute, hname or ""))
-                if abstract:
+                                     (self.endpoint_info(a, method, "/", "aspnet", hname, hid), tmpl, absolute, hname or "", arity))
+                if abstract or base_only:
                     continue                    # not routable by itself: its actions live under each derived controller
                 if not prefixes and not tmpl and not inherit:
                     continue                    # conventional routing ({controller}/{action}): no path of its own here
                 full = tmpl if absolute else (prefix.rstrip("/") + "/" + tmpl).rstrip("/")
-                full = _tokens(full.replace("~/", "/"), controller, hname or "", area)
-                ep = self.add_endpoint(a, method, full or "/", "aspnet", None, handler_name=hname, handler_id=hid)
-                if inherit and not absolute and ep is not None:
-                    self.out.pending.append(Pending(ep, "cs.inherited-route",
-                                                    (tuple(b.split(".")[-1] for b in bases), controller, hname or "", not tmpl, area)))
-        if bases and not abstract:                  # the actions its base declares are routes of this controller too
+                for path in _version_paths(full, mversions):
+                    path = _tokens(path.replace("~/", "/"), controller, hname or "", area)
+                    ep = self.add_endpoint(a, method, path or "/", "aspnet", None, handler_name=hname, handler_id=hid)
+                    if ep is not None and API_VERSION.search(path):     # no version declared: the default one
+                        self.out.pending.append(Pending(ep, "cs.default-version",
+                                                        tuple(m.group(1) for m in API_VERSION_NAME.finditer(path))))
+                    if inherit and not absolute and ep is not None:
+                        # `[HttpGet("")]`: an empty template written out is the app's root when no class above routes it
+                        explicit = lit == ""
+                        odata_tmpl = (convention[1] if convention is not None and ODATA_VERBS.get(convention[0]) == method
+                                      else "") if not odata and not tmpl else None    # "": OData would not route it
+                        self.out.pending.append(Pending(ep, "cs.inherited-route",
+                                                        (simple_bases, controller, hname or "", not tmpl and not explicit, area,
+                                                         uses, mversions, odata_tmpl)))
+        if bases and not abstract and not base_only:   # the actions its base classes declare are routes of this controller too
             self.out.pending.append(Pending(None, "cs.inherited-actions",
-                                            (tuple(b.split(".")[-1] for b in bases), controller, tuple(prefixes), area, frozenset(own))))
+                                            (simple_bases, controller, tuple(prefixes), area, frozenset(own), uses, versions)))
+
+    # -- the project's own routing attributes ------------------------------------------------------------
+    def _route_attribute(self, cls: Node, name: str, bases: list[str]) -> None:
+        """A routing attribute of the project — Radarr `[V3ApiController]` (`IRouteTemplateProvider`, `Template =
+        $"api/v{version}/{resource}"` in its constructor), `[RestGetById]` (`IActionHttpMethodProvider` with
+        `HttpMethods => new[] { "GET" }`), `[RestDeleteById]` (`: HttpDeleteAttribute`, `base("{id:int}")`), Umbraco
+        `[VersionedApiBackOfficeRoute(x)]` (two levels over `RouteAttribute`). Published as a recipe over its constructor's
+        parameters — what it hands its base, what it sets as `Template` — that `compose` fills with each use's arguments;
+        the constants it names may live in another project. One deriving from another attribute of the project is
+        resolved through it."""
+        simple = [b.split(".")[-1].removesuffix("Attribute") for b in bases]
+        framework = next((b for b in simple if b in ROUTE_ATTR_BASES), None)
+        provider = bool(ROUTE_PROVIDERS & set(simple))
+        parent = None if framework or provider else next((b for b in simple if b and not re.match(r"^I[A-Z]", b)), None)
+        body = cls.child_by_field_name("body")
+        if body is None or not (framework or provider or parent):
+            return
+        params: list[tuple[str, tuple | None]] = []
+        env: dict[str, tuple] = {}
+        assigned: dict[str, tuple] = {}
+        base_args: tuple = ()
+        ctor = next((m for m in body.children if m.type == "constructor_declaration"), None)
+        if ctor is not None:
+            plist = ctor.child_by_field_name("parameters")
+            for prm in (c for c in plist.children if c.type == "parameter") if plist is not None else ():
+                pname = prm.child_by_field_name("name")
+                if pname is None:
+                    continue
+                kids = [c for c in prm.children if c.is_named]
+                default = self._recipe(kids[-1], {}, cls) if any(c.type == "=" for c in prm.children) else None
+                params.append((text(pname, self.src), default))
+                env[text(pname, self.src)] = (("arg", text(pname, self.src)),)
+            init = next((c for c in ctor.children if c.type == "constructor_initializer"), None)
+            alist = next((c for c in init.children if c.type == "argument_list"), None) if init is not None else None
+            if alist is not None:
+                base_args = tuple(self._recipe(a, env, cls) for a in alist.children if a.type == "argument")
+            block = ctor.child_by_field_name("body")
+            for st in block.children if block is not None else ():
+                e = st.named_children[0] if st.type == "expression_statement" and st.named_child_count else None
+                left = e.child_by_field_name("left") if e is not None and e.type == "assignment_expression" else None
+                if left is not None and left.type == "identifier":
+                    r = self._recipe(e.child_by_field_name("right"), env, cls)
+                    if r is not None:                    # `Version = version;` then `Template = $"v{Version}/.."`
+                        env[text(left, self.src)] = assigned[text(left, self.src)] = r
+        template, verbs = assigned.get("Template"), None
+        for m in body.children:
+            arrow = next((c for c in m.children if c.type == "arrow_expression_clause"), None) \
+                if m.type == "property_declaration" else None
+            pname = m.child_by_field_name("name") if arrow is not None else None
+            expr = arrow.named_children[-1] if arrow is not None and arrow.named_child_count else None
+            if pname is None or expr is None:
+                continue
+            if text(pname, self.src) == "Template":
+                template = self._recipe(expr, env, cls)
+            elif text(pname, self.src) == "HttpMethods":
+                verbs = tuple(v for d in walk(expr) if d.type in STRING_NODES
+                              and (v := unquote(text(d, self.src)).upper()) in HTTP_METHODS) or None
+        if provider and template is None and verbs is None:
+            return                                       # nothing this file can read
+        self.out.publish("cs.route-attr", name.removesuffix("Attribute"), (framework, parent, tuple(params), base_args, template, verbs))
+
+    def _attr_uses(self, attrs: list[tuple[str, str | None, Node]]) -> tuple:
+        """The attributes that may be a routing attribute of the project (not the framework's), with their arguments as
+        recipes (`_recipe`): (name without `Attribute`, positional, named by constructor parameter)."""
+        out = []
+        for name, _, a in attrs:
+            simple = name.split(".")[-1].removesuffix("Attribute")
+            if simple in FRAMEWORK_ATTRS or simple in CS_HTTP_ATTR:
+                continue
+            args = next((c for c in a.children if c.type == "attribute_argument_list"), None)
+            pos, kw = [], []
+            for arg in (c for c in args.children if c.type == "attribute_argument") if args is not None else ():
+                kids = [c for c in arg.children if c.is_named]
+                if not kids or kids[0].type == "name_equals":
+                    continue                             # `Name = "x"`: a property, not the route's
+                value = self._recipe(kids[-1], {})
+                if kids[0].type == "name_colon":         # `resource: "x"`: a constructor parameter by name
+                    label = next((c for c in kids[0].children if c.type == "identifier"), None)
+                    kw.append((text(label, self.src) if label is not None else "", value))
+                else:
+                    pos.append(value)
+            out.append((simple, tuple(pos), tuple(kw)))
+        return tuple(out)
+
+    def _recipe(self, n: Node | None, env: dict[str, tuple], cls: Node | None = None, _depth: int = 0) -> tuple | None:
+        """A string expression of an attribute as parts `compose` fills: ("lit", s); ("arg", name) — a constructor
+        parameter, or a property the constructor sets from one; ("const", "A.B.C") — a constant of another directory,
+        read by its qualified name; ("trim", method, parts, chars) — `template.TrimStart('/')`. None for anything else
+        (a call, a field this file cannot read)."""
+        if n is None or _depth > 8:
+            return None
+        t = n.type
+        if t in ("argument", "parenthesized_expression", "attribute_argument"):
+            kids = [c for c in n.children if c.is_named and c.type not in ("name_colon", "name_equals")]
+            return self._recipe(kids[-1], env, cls, _depth + 1) if kids else None
+        if t in ("string_literal", "verbatim_string_literal", "raw_string_literal"):
+            return (("lit", unquote(text(n, self.src))),)
+        if t in ("integer_literal", "real_literal"):
+            return (("lit", text(n, self.src)),)
+        if t == "interpolated_string_expression":
+            parts: list[tuple] = []
+            for c in n.children:
+                if c.type == "string_content":
+                    r = self._content(text(c, self.src), env)
+                    if r is None:
+                        return None
+                    parts.extend(r)
+                elif c.type == "interpolation":
+                    inner = next((k for k in c.children if k.is_named and k.type not in (
+                        "interpolation_brace", "interpolation_alignment_clause", "interpolation_format_clause")), None)
+                    r = self._recipe(inner, env, cls, _depth + 1)
+                    if r is None:
+                        return None
+                    parts.extend(r)
+            return tuple(parts)
+        if t == "binary_expression":
+            op = n.child_by_field_name("operator")
+            left = self._recipe(n.child_by_field_name("left"), env, cls, _depth + 1)
+            right = self._recipe(n.child_by_field_name("right"), env, cls, _depth + 1)
+            ok = op is not None and text(op, self.src) == "+" and left is not None and right is not None
+            return left + right if ok else None
+        if t == "identifier":
+            name = text(n, self.src)
+            if name in env:
+                return env[name]
+            field = self._class_field(cls, name) if cls is not None else None
+            if field is not None:                        # `string resource = CONTROLLER_RESOURCE`: the class's constant
+                return self._recipe(field, {}, cls, _depth + 1)
+            v = self._const_here(name)
+            return (("lit", v),) if v is not None else None
+        if t in ("member_access_expression", "qualified_name"):
+            dotted = re.sub(r"\s+", "", text(n, self.src)).removeprefix("global::")
+            v = self._const_here(dotted)
+            return (("lit", v),) if v is not None else (("const", dotted),)
+        if t == "invocation_expression":
+            fn, args = n.child_by_field_name("function"), n.child_by_field_name("arguments")
+            if fn is None or args is None:
+                return None
+            if text(fn, self.src) == "nameof":           # `nameof(id)` → `id`
+                return (("lit", re.split(r"[.\s]", text(args, self.src).strip("() "))[-1]),)
+            method = fn.child_by_field_name("name") if fn.type == "member_access_expression" else None
+            if method is not None and text(method, self.src) in ("TrimStart", "TrimEnd", "Trim"):
+                chars = ""
+                for a in (c for c in args.children if c.type == "argument"):
+                    e = a.named_children[-1] if a.named_child_count else a
+                    if e.type != "character_literal":
+                        return None
+                    chars += text(e, self.src)[1:-1]
+                inner = self._recipe(fn.child_by_field_name("expression"), env, cls, _depth + 1)
+                return (("trim", text(method, self.src), inner, chars),) if inner is not None else None
+        return None
+
+    @staticmethod
+    def _content(raw: str, env: dict[str, tuple]) -> list[tuple] | None:
+        """The text of an interpolated string: `{{` and `}}` are braces. The grammar takes `$"{{{nameof(id)}:guid}}"` whole
+        as text, so a lone `{..}` here is an interpolation the parser missed — `nameof(x)` or a constructor parameter;
+        anything else is unknown."""
+        parts: list[tuple] = []
+        buf, i = "", 0
+        while i < len(raw):
+            if raw.startswith(("{{", "}}"), i):
+                buf, i = buf + raw[i], i + 2
+                continue
+            if raw[i] == "{":
+                j = raw.find("}", i)
+                expr = raw[i + 1:j].split(":")[0].split(",")[0].strip() if j > i else ""
+                m = re.fullmatch(r"nameof\(\s*([\w.]+)\s*\)", expr)
+                if m is not None:
+                    buf += m.group(1).split(".")[-1]
+                elif expr in env:
+                    parts += [("lit", buf), *env[expr]]
+                    buf = ""
+                else:
+                    return None
+                i = j + 1
+                continue
+            buf, i = buf + raw[i], i + 1
+        return parts + [("lit", buf)]
+
+    def _class_field(self, cls: Node, name: str) -> Node | None:
+        """The value of a field or constant `name` the class declares (`const string CONTROLLER_RESOURCE = "[controller]"`)."""
+        body = cls.child_by_field_name("body")
+        for f in body.children if body is not None else ():
+            if f.type != "field_declaration":
+                continue
+            for d in walk(f):
+                kids = [c for c in d.children if c.is_named] if d.type == "variable_declarator" else []
+                if len(kids) >= 2 and text(kids[0], self.src) == name:
+                    v = kids[-1]
+                    return v.named_children[-1] if v.type == "equals_value_clause" and v.named_child_count else v
+        return None
+
+    def _const_here(self, name: str) -> str | None:
+        """A constant of this directory by its qualified name (`Paths.Root`, `Root`) — never by its last part alone, which
+        another class may also name."""
+        q = ".".join(name.split(".")[-2:])
+        ctx = self.ctx
+        if q in ctx.ambiguous:
+            return None
+        if q in ctx.route_consts or q in ctx.const_parts:
+            return ctx.route_const(q)
+        return ctx.segments.get(q) or ctx.relatives.get(q)
+
+    def _odata_convention(self, m: Node, action: str, entity_set: str) -> tuple[str, str] | None:
+        """OData's routing conventions for an action without a template (`Microsoft.AspNetCore.OData`): `Post` /
+        `Get` on the entity set — the controller's name —, `Put` / `Patch` / `Delete` / `Get` with a `key` parameter
+        on one entity, `Categories({key})`. (verb name, template), or None for an action they do not route."""
+        verb = next((v for v in ODATA_VERBS if action in (v, v + entity_set)), None)
+        if verb is None:
+            return None
+        params = m.child_by_field_name("parameters")
+        names = [text(c.child_by_field_name("name"), self.src) for c in (params.children if params is not None else ())
+                 if c.type == "parameter" and c.child_by_field_name("name") is not None]
+        keyed = any(n == "key" or n.startswith("key") and n[3:4].isupper() for n in names)
+        if verb in ("Put", "Patch", "Delete") and not keyed:
+            return None
+        return verb, entity_set + ("({key})" if keyed else "")
+
+    def _default_api_version(self, n: Node) -> None:
+        """Asp.Versioning's `options.DefaultApiVersion = new ApiVersion(1, 0)`: the version of a controller that
+        declares none (`_RouteAttributes.default_version`)."""
+        left, right = n.child_by_field_name("left"), n.child_by_field_name("right")
+        if left is None or right is None or not text(left, self.src).endswith("DefaultApiVersion") \
+                or right.type != "object_creation_expression" or not re.match(r"^new\s+ApiVersion\b", text(right, self.src)):
+            return
+        args = right.child_by_field_name("arguments")
+        vals = [a.named_children[-1] for a in (args.children if args is not None else ()) if a.type == "argument" and a.named_child_count]
+        lits = [unquote(text(v, self.src)) if v.type == "string_literal" else text(v, self.src) for v in vals
+                if v.type in ("string_literal", "integer_literal", "real_literal")]
+        if lits and len(lits) == len(vals):
+            self.out.publish("cs.default-api-version", "", _version_text(".".join(lits[:2])))
+
+    def _declared_versions(self, attrs: list[tuple[str, str | None, Node]], kind: str) -> tuple[str, ...]:
+        """Asp.Versioning: the versions `[ApiVersion("1.0")]` (on a controller) or `[MapToApiVersion("1.1")]` (on an
+        action) declare, as the URL writes them (`_version_text`)."""
+        out = []
+        for name, _, a in attrs:
+            if name.split(".")[-1].removesuffix("Attribute") != kind:
+                continue
+            args = next((c for c in a.children if c.type == "attribute_argument_list"), None)
+            vals = [c.named_children[-1] for c in (args.children if args is not None else ())
+                    if c.type == "attribute_argument" and c.named_child_count and c.named_children[0].type != "name_equals"]
+            lits = [unquote(text(v, self.src)) if v.type == "string_literal" else text(v, self.src) for v in vals
+                    if v.type in ("string_literal", "integer_literal", "real_literal")]
+            if lits:
+                numeric = all(v.type != "string_literal" for v in vals[:2])
+                out.append(".".join(lits[:2]) if numeric and len(lits) > 1 else lits[0])
+        return tuple(dict.fromkeys(_version_text(v) for v in out))
 
     def _fast_endpoint(self, cls: Node, body: Node, bases: list[str]) -> bool:
         """FastEndpoints: a class deriving from `Endpoint<...>` (`EndpointWithoutRequest`, `Ep.Req<..>.Res<..>`) that
@@ -181,49 +500,90 @@ class CsScanner(BaseScanner):
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
-        """What crosses files in C#: calls to the repo's own client wrappers (`_compose_wrapped_calls`), and the
-        `[Route]` a controller without one of its own takes from its base class (`[Route("[controller]")]` on
-        `BaseApiController`), one level up: the base is found by name in the repo — two classes with that name (not
-        `partial` halves of one) give nothing. An action with no template is a route only under that prefix."""
+        """What crosses files in C#: calls to the repo's own client wrappers (`_compose_wrapped_calls`); the routing
+        attributes of the project (`_RouteAttributes`), on a controller or an action; and the route a controller
+        without a `[Route]` of its own takes from its base classes — their `[Route("[controller]")]`, or what a routing
+        attribute of theirs gives —, walking up while a base has neither: a base is found by name in the repo, and
+        two classes with that name (not `partial` halves of one) give nothing. An action with no template is a route
+        only under that prefix."""
         cls._compose_wrapped_calls(out)
         classes = out.facts.get("cs.class", {})
+        attrs = _RouteAttributes(out.facts.get("cs.route-attr", {}), view, out.facts.get("cs.default-api-version", {}).get(""))
         plan = {}
         for p in out.pending:
             if p.rule != "cs.inherited-route":
                 continue
-            bases, controller, action, root, area = p.key
-            route = _inherited_route(classes, bases)
+            bases, controller, action, root, area, uses, versions, odata_tmpl = p.key
+            route = attrs.route(uses)
+            route = route if route is not None else _inherited_route(classes, bases, attrs)
+            if route is not None and odata_tmpl is not None and _odata_base(classes, bases):
+                if not odata_tmpl:
+                    plan[id(p.item)] = []                          # OData routes an untemplated action only by convention
+                    continue
+                route = route.rstrip("/") + "/" + odata_tmpl       # the OData convention, the base being an ODataController
+                root = False
             if route is not None:
-                plan[id(p.item)] = [rebased(repo, p.item, _tokens(route, controller, action, area))]
+                plan[id(p.item)] = [rebased(repo, p.item, _tokens(r, controller, action, area))
+                                    for r in _version_paths(route, versions or attrs.default_version)]
             elif root:
                 plan[id(p.item)] = []
         replace_endpoints(out, plan)
-        cls._compose_inherited_actions(out, repo, classes)
+        for p in out.pending:
+            if p.rule != "cs.attr-action":
+                continue
+            (proto, action_uses, extra, action, _), controller, prefixes, uses, bases, area, versions = p.key
+            route = prefixes[0] if prefixes else attrs.route(uses)
+            route = route if route is not None else _inherited_route(classes, bases, attrs)
+            _attr_action(out, repo, attrs, proto, action_uses, extra, route, controller, action, area,
+                         versions or attrs.default_version)
+        cls._compose_inherited_actions(out, repo, classes, attrs)
+        plan = {}
+        for p in out.pending:                       # a route of its own whose controller declares no version
+            if p.rule == "cs.default-version" and attrs.default_version:
+                path = p.item.path
+                for name in p.key:
+                    path = path.replace("{" + name + "}", attrs.default_version[0])
+                plan[id(p.item)] = [replace(p.item, path=path, id=ids.http_endpoint(repo.tenant, repo.name, p.item.method,
+                                                                                      path_key(path)))]
+        replace_endpoints(out, plan)
 
     @staticmethod
-    def _compose_inherited_actions(out: HttpResult, repo: RepoInfo, classes: dict[str, list]) -> None:
+    def _compose_inherited_actions(out: HttpResult, repo: RepoInfo, classes: dict[str, list], attrs: "_RouteAttributes") -> None:
         """`EmailTemplatesController : ChannelTemplatesController<T, TDto>` with `[Route("api/apps/{appId}/email-templates")]`
-        and no action of its own: the actions the base declares (one level up, found by name, as the `[Route]`) are its
-        routes, under its route — or the one it inherits — with `[controller]` its name. An action it redeclares is its
-        own; a base two classes share the name of gives nothing."""
+        and no action of its own: the actions its base classes declare (found by name, as the `[Route]`, nearest first)
+        are its routes, under its route — or the one it inherits — with `[controller]` its name; Radarr's
+        `MovieController : RestControllerWithSignalR<..> : RestController<T>` takes `RestController`'s `[RestGetById]`.
+        An action it — or a nearer base — redeclares is that one's; a base two classes share the name of stops the walk."""
         actions = out.facts.get("cs.actions", {})
+        attr_actions = out.facts.get("cs.attr-actions", {})
+        non_actions = out.facts.get("cs.non-actions", {})
         for p in out.pending:
             if p.rule != "cs.inherited-actions":
                 continue
-            bases, controller, prefixes, area, own = p.key
-            base = next((b for b in bases if b in classes), None)
-            if base is None or sum(1 for _, partial in classes[base] if not partial) > 1 or base not in actions:
-                continue
-            route = prefixes[0] if prefixes else _inherited_route(classes, bases)
+            bases, controller, prefixes, area, own, uses, versions = p.key
+            versions = versions or attrs.default_version
+            route = prefixes[0] if prefixes else attrs.route(uses)
+            route = route if route is not None else _inherited_route(classes, bases, attrs)
             if route is None:
                 continue
-            for proto, tmpl, absolute, action in actions[base]:
-                if action in own:
-                    continue
-                full = tmpl if absolute else (route.rstrip("/") + "/" + tmpl).rstrip("/")
-                path = normalize_path(_tokens(full.replace("~/", "/"), controller, action, area) or "/")
-                out.endpoints.append(replace(proto, path=path, raw_pattern=tmpl or "/",
-                                             id=ids.http_endpoint(repo.tenant, repo.name, proto.method, path_key(path))))
+            seen = set(own)                          # (name, arity): an overload is another action
+            for base in _ancestors(classes, bases):
+                seen |= set(non_actions.get(base, ()))   # Radarr's ReleaseControllerBase: `[NonAction] override ..`
+                here: set[tuple[str, int]] = set()
+                for proto, tmpl, absolute, action, arity in actions.get(base, ()):
+                    if (action, arity) in seen:
+                        continue
+                    here.add((action, arity))
+                    full = tmpl if absolute else (route.rstrip("/") + "/" + tmpl).rstrip("/")
+                    for v in _version_paths(full, versions):
+                        path = normalize_path(_tokens(v.replace("~/", "/"), controller, action, area) or "/")
+                        out.endpoints.append(replace(proto, path=path, raw_pattern=tmpl or "/",
+                                                     id=ids.http_endpoint(repo.tenant, repo.name, proto.method, path_key(path))))
+                for proto, action_uses, extra, action, arity in attr_actions.get(base, ()):
+                    if (action, arity) not in seen and _attr_action(out, repo, attrs, proto, action_uses, extra, route,
+                                                                    controller, action, area, versions):
+                        here.add((action, arity))
+                seen |= here
 
     @staticmethod
     def _compose_wrapped_calls(out: HttpResult) -> None:
@@ -552,6 +912,40 @@ class CsScanner(BaseScanner):
                 return
 
 
+def _aspnet_template(t: str) -> str:
+    """An ASP.NET route template's parameters as `{name}`: catch-all stars, constraints with arguments (a regex keeps its
+    parentheses balanced and its braces doubled: Radarr `{**path:regex(^(?!(api|feed)/).*)}`), defaults and the
+    optional `?` (`{id?}`, `{id:int?}`) go; `{{` / `}}` outside a parameter are literal braces and stay."""
+    if "{" not in t:
+        return t
+    out, i = "", 0
+    while i < len(t):
+        if t.startswith(("{{", "}}"), i):
+            out, i = out + t[i:i + 2], i + 2
+            continue
+        if t[i] != "{":
+            out, i = out + t[i], i + 1
+            continue
+        j, depth = i + 1, 0
+        while j < len(t):
+            if t.startswith(("{{", "}}"), j):
+                j += 2
+                continue
+            if t[j] == "(":
+                depth += 1
+            elif t[j] == ")":
+                depth = max(depth - 1, 0)
+            elif t[j] == "}" and depth == 0:
+                break
+            j += 1
+        if j >= len(t):
+            return out + t[i:]                         # not a parameter: left as written
+        name = re.match(r"^\*{0,2}([A-Za-z_][\w.]*)", t[i + 1:j])
+        out += "{" + name.group(1) + "}" if name else t[i:j + 1]
+        i = j + 1
+    return out
+
+
 def _tokens(path: str, controller: str, action: str, area: str = "") -> str:
     """ASP.NET route tokens as the framework fills them — and as its OpenAPI and the clients generated from it write
     them: `[controller]` is the class name without `Controller`, `[action]` the method name without `Async`
@@ -564,13 +958,165 @@ def _tokens(path: str, controller: str, action: str, area: str = "") -> str:
     return re.sub(r"\[action\]|\{action\}", lambda _: re.sub(r"Async$", "", action), path, flags=re.I)
 
 
-def _inherited_route(classes: dict[str, list], bases: tuple[str, ...]) -> str | None:
-    """The `[Route]` of the first base that is a class of this repo; None when it has none or the name is ambiguous."""
-    for b in bases:
-        decls = classes.get(b)
-        if not decls:
-            continue
-        if sum(1 for _, partial in decls if not partial) > 1:
-            return None
-        return next((routes[0] for routes, _ in decls if routes), None)
+def _inherited_route(classes: dict[str, list], bases: tuple[str, ...], attrs: "_RouteAttributes") -> str | None:
+    """The route of the nearest base class of this repo that has one: its `[Route]`, or what one of its routing
+    attributes gives (Umbraco's `DataTypeControllerBase` carries `[VersionedApiBackOfficeRoute(..)]`); None when a
+    name on the way is ambiguous or no base has one."""
+    for base in _ancestors(classes, bases):
+        decls = classes[base]
+        route = next((routes[0] for routes, _, _, _ in decls if routes), None)
+        if route is None:
+            route = next((r for _, _, uses, _ in decls if (r := attrs.route(uses)) is not None), None)
+        if route is not None:
+            return route
     return None
+
+
+def _is_odata(uses: tuple, bases: tuple[str, ...]) -> bool:
+    """A controller OData routes by convention: `[ODataRouteComponent]` on it, or `ODataController` among its bases."""
+    return "ODataController" in bases or any(name == "ODataRouteComponent" for name, _, _ in uses)
+
+
+def _odata_base(classes: dict[str, list], bases: tuple[str, ...]) -> bool:
+    """`_is_odata` for one of the repo's classes above a controller (Smartstore `WebApiController<T>` carries
+    `[ODataRouteComponent("odata/v1")]`, over `SmartODataController<T> : ODataController`)."""
+    return any(_is_odata(uses, own_bases) for base in _ancestors(classes, bases) for _, _, uses, own_bases in classes[base])
+
+
+def _ancestors(classes: dict[str, list], bases: tuple[str, ...], limit: int = 4) -> list[str]:
+    """The repo's classes above a controller, nearest first, found by name; the walk stops at a name two classes (not
+    `partial` halves of one) share, or at a base outside the repo."""
+    out: list[str] = []
+    level = bases
+    while level and len(out) < limit:
+        base = next((b for b in level if b in classes), None)
+        if base is None or base in out or sum(1 for d in classes[base] if not d[1]) > 1:
+            break
+        out.append(base)
+        level = tuple(b for d in classes[base] for b in d[3])
+    return out
+
+
+def _attr_action(out: HttpResult, repo: RepoInfo, attrs: "_RouteAttributes", proto, action_uses: tuple, extra: str,
+                 route: str | None, controller: str, action: str, area: str, versions: tuple[str, ...]) -> bool:
+    """An action routed by a routing attribute of the project (`[RestGetById]` → GET `{id:int}`), under `route`: one
+    route per verb it gives. False when none of its attributes is one."""
+    found = attrs.action(action_uses)
+    if found is None:
+        if not extra:
+            return False
+        found = (("ANY",), extra)                    # `[Route("x")]`, its other attributes routing nothing: any verb
+    verbs, tmpl = found
+    tmpl = tmpl or extra
+    absolute = tmpl.startswith(("/", "~/"))
+    if route is None and not absolute and not tmpl:
+        return False                                 # conventional routing: no path of its own
+    full = tmpl if absolute else ((route or "").rstrip("/") + "/" + tmpl).rstrip("/")
+    for v in _version_paths(full, versions):
+        path = normalize_path(_tokens(v.replace("~/", "/"), controller, action, area) or "/")
+        for verb in verbs:
+            out.endpoints.append(replace(proto, method=verb, path=path, raw_pattern=tmpl or "/",
+                                         id=ids.http_endpoint(repo.tenant, repo.name, verb, path_key(path))))
+    return True
+
+
+def _version_text(v: str) -> str:
+    """Asp.Versioning's URL form of a version (its default `VVV`): `1.0` → `1`, `1.1` → `1.1`, `2.0-beta` → `2-beta`."""
+    m = re.match(r"^(\d+)(?:\.(\d+))?(.*)$", v.strip())
+    if m is None:
+        return v
+    major, minor, rest = m.groups()
+    return major + (f".{minor}" if minor not in (None, "0") else "") + rest
+
+
+def _version_paths(path: str, versions: tuple[str, ...]) -> list[str]:
+    """`api/v{version:apiVersion}/x` once per version the controller or the action declares; as written when none is."""
+    if not versions or not API_VERSION.search(path):
+        return [path]
+    return [API_VERSION.sub(lambda _: v, path) for v in versions]
+
+
+class _RouteAttributes:
+    """The project's routing attributes (`cs.route-attr`), filled with a use's arguments. A constant a recipe names is
+    read by its qualified name in any directory of the repo (`Constants.Web.ManagementApiPath` → `Web.ManagementApiPath`),
+    and only when the repo gives it one value; two attributes with one name give nothing."""
+
+    def __init__(self, facts: dict[str, list], view, default_versions: list | None = None) -> None:
+        self.facts, self.view = facts, view
+        self._consts: dict[str, str | None] = {}
+        # Asp.Versioning: a controller with no `[ApiVersion]` is the default version — the repo's
+        # `DefaultApiVersion` when it sets one, else the library's 1.0
+        found = set(default_versions or ())
+        self.default_version: tuple[str, ...] = (found.pop(),) if len(found) == 1 else ("1",) if not found else ()
+
+    def const(self, dotted: str) -> str | None:
+        if "." not in dotted or self.view is None:
+            return None
+        if dotted not in self._consts:
+            q = ".".join(dotted.split(".")[-2:])
+            values = set()
+            for ctx in self.view.contexts.values():
+                if q in ctx.ambiguous:
+                    continue
+                v = ctx.route_const(q) if q in ctx.route_consts or q in ctx.const_parts else \
+                    ctx.segments.get(q) or ctx.relatives.get(q)
+                if v is not None:
+                    values.add(v)
+            self._consts[dotted] = values.pop() if len(values) == 1 else None
+        return self._consts[dotted]
+
+    def fill(self, recipe: tuple | None, values: dict[str, str | None]) -> str | None:
+        if recipe is None:
+            return None
+        out = ""
+        for part in recipe:
+            if part[0] == "lit":
+                v = part[1]
+            elif part[0] == "arg":
+                v = values.get(part[1])
+            elif part[0] == "const":
+                v = self.const(part[1])
+            elif part[0] == "trim":
+                v = self.fill(part[2], values)
+                chars = part[3] or None
+                v = None if v is None else v.lstrip(chars) if part[1] == "TrimStart" else v.rstrip(chars) \
+                    if part[1] == "TrimEnd" else v.strip(chars)
+            else:
+                v = None
+            if v is None:
+                return None
+            out += v
+        return out
+
+    def resolve(self, name: str, args: list, kwargs: tuple = (), _depth: int = 0):
+        """(verbs or None, template or None) the attribute `name` gives with these argument values; None when it is not a
+        routing attribute of the project."""
+        decls = self.facts.get(name)
+        if not decls or len(decls) > 1 or _depth > 5:
+            return None
+        framework, parent, params, base_args, template, verbs = decls[0]
+        kw = dict(kwargs)
+        values = {pname: kw[pname] if pname in kw else args[i] if i < len(args) else self.fill(default, {})
+                  for i, (pname, default) in enumerate(params)}
+        if parent is not None:
+            return self.resolve(parent, [self.fill(r, values) for r in base_args], (), _depth + 1)
+        if template is not None:
+            return verbs, self.fill(template, values)
+        if framework is not None:                    # `: RouteAttribute` / `: HttpDeleteAttribute`, `base("{id:int}")`
+            verb = ROUTE_ATTR_BASES[framework]
+            return ((verb,) if verb else verbs), (self.fill(base_args[0], values) if base_args else "")
+        return (verbs, None) if verbs else None
+
+    def _uses(self, uses: tuple):
+        for name, pos, kw in uses:
+            r = self.resolve(name, [self.fill(x, {}) for x in pos], tuple((k, self.fill(v, {})) for k, v in kw))
+            if r is not None:
+                yield r
+
+    def route(self, uses: tuple) -> str | None:
+        """The class route the first routing attribute among `uses` gives (`[V3ApiController]` → `api/v3/[controller]`)."""
+        return next((tmpl for verbs, tmpl in self._uses(uses) if tmpl is not None and not verbs), None)
+
+    def action(self, uses: tuple) -> tuple[tuple[str, ...], str] | None:
+        """(verbs, template) of the first of `uses` that routes an action with a verb (`[RestGetById]`)."""
+        return next(((verbs, tmpl) for verbs, tmpl in self._uses(uses) if verbs and tmpl is not None), None)

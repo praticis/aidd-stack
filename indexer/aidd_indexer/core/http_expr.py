@@ -32,6 +32,7 @@ _ONE_WORD = re.compile(r"^[A-Za-z][A-Za-z0-9_\-]{2,}(\?.*)?$")          # `messa
 _PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w*(Path|Url|Uri|_path|_url|_uri))$", re.I)
 _JOIN_CALL = re.compile(r"^(Join|JoinPath|AppendPaths?|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
 _SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
+_RELATIVE = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]*(/[A-Za-z0-9_.\-]+)+$")    # `security/back-office`
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
 
@@ -106,6 +107,9 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                 elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _SEGMENT.match(lit):
                     for nm in names:
                         ctx.define(nm, segment=lit)
+                elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _RELATIVE.match(lit):
+                    for nm in names:
+                        ctx.define(nm, relative=lit)
         if n.type in STRING_NODES:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):

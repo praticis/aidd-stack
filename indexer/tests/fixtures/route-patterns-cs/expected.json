@@ -129,6 +129,201 @@
    "method": "DELETE",
    "path": "/api/apps/{appId}/sms-templates/{code}/all",
    "handler": "DeleteTemplate"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Blocklist",
+   "handler": "GetBlocklist"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Blocklist/movie",
+   "handler": "GetMovieBlocklist"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/Blocklist/{id}",
+   "handler": "DeleteBlocklist"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v3/Blocklist/bulk",
+   "handler": "Remove"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/wanted/missing",
+   "handler": "Search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/wanted/missing/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/DownloadClient",
+   "handler": "GetAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/DownloadClient/test",
+   "handler": "Test"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/DownloadClient/{id}",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/DownloadClient/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Calendar",
+   "handler": "GetCalendar"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/DownloadClient/bulk",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Metadata",
+   "handler": "GetAll"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v3/Metadata/test",
+   "handler": "Test"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v3/Metadata/{id}",
+   "handler": "UpdateProvider"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Metadata/{id}",
+   "handler": "GetResourceById"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v3/Release",
+   "handler": "Search"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/{searcherName}/query",
+   "handler": "Query"
+  },
+  {
+   "method": "ANY",
+   "path": "/login",
+   "handler": "Login"
+  },
+  {
+   "method": "ANY",
+   "path": "/logout",
+   "handler": "Logout"
+  },
+  {
+   "method": "GET",
+   "path": "/content/{path}",
+   "handler": "Content"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/items/{id}",
+   "handler": "Items"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Discounts",
+   "handler": "Get"
+  },
+  {
+   "method": "POST",
+   "path": "/",
+   "handler": "Index"
+  },
+  {
+   "method": "ANY",
+   "path": "/i/{invoiceId}/status/ws",
+   "handler": "Socket"
+  },
+  {
+   "method": "ANY",
+   "path": "/i/{invoiceId}/{paymentMethodId}/status/ws",
+   "handler": "Socket"
+  },
+  {
+   "method": "GET",
+   "path": "/api/audits/{id}",
+   "handler": "Get"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v1/data-type/{id}",
+   "handler": "ByKey"
+  },
+  {
+   "method": "DELETE",
+   "path": "/management/api/v1/data-type/{id}",
+   "handler": "Delete"
+  },
+  {
+   "method": "PUT",
+   "path": "/management/api/v1.1/data-type/{id}/validate",
+   "handler": "Validate"
+  },
+  {
+   "method": "PUT",
+   "path": "/management/api/v1/document/{id}/publish",
+   "handler": "Publish"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v2/news-dashboard",
+   "handler": "GetDashboard"
+  },
+  {
+   "method": "GET",
+   "path": "/management/api/v1/security/back-office/graphics/logo",
+   "handler": "Logo"
+  },
+  {
+   "method": "GET",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Get"
+  },
+  {
+   "method": "POST",
+   "path": "/odata/v1/Categories",
+   "handler": "Post"
+  },
+  {
+   "method": "PUT",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Put"
+  },
+  {
+   "method": "PATCH",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Patch"
+  },
+  {
+   "method": "DELETE",
+   "path": "/odata/v1/Categories({key})",
+   "handler": "Delete"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/shelves",
+   "handler": "Put"
   }
  ],
  "calls": [

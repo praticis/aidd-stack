@@ -58,7 +58,7 @@ class PyScanner(BaseScanner):
                     if a.type == "keyword_argument" and text(a.child_by_field_name("name"), self.src) in ("prefix", "url_prefix"):
                         v = a.child_by_field_name("value")
                         prefix = unquote(text(v, self.src)) if v is not None and v.type == "string" else ""
-            self.group_prefix[name] = prefix
+            self.group_prefix[self.group_key(name, n)] = prefix
 
     def _restx(self, fn: Node) -> bool:
         """`Namespace` / `Api` of flask-restx (or flask-restful), not any class of that name."""
@@ -77,7 +77,7 @@ class PyScanner(BaseScanner):
         kw = {text(a.child_by_field_name("name"), self.src): a.child_by_field_name("value")
               for a in (args.children if args is not None else ()) if a.type == "keyword_argument"}
         own = kw.get("path" if kind == "Namespace" else "prefix")
-        self.group_prefix[name] = (self.path_of(own) or "") if own is not None else ""
+        self.group_prefix[self.group_key(name, at)] = (self.path_of(own) or "") if own is not None else ""
         if kind == "Api" and pos and pos[0].type == "identifier" and text(pos[0], self.src) in self.router_vars:
             self.mount(name, at, text(pos[0], self.src), at, "")
 
