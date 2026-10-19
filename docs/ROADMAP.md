@@ -315,6 +315,10 @@ Open:
     - Django stayed out (the portfolio is FastAPI/Flask);
     - test app folders with production names wait for F1.1's per-repo config.
   - **What needs an inferred type** is `needs-resolver`, for F1.2.
+- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`): the method's mechanical checks
+  as gates on every PR (precision ratchet, no win lost, hold-out untouched, `0 differ` for refactors, one cause per
+  commit), the diff classified for judgment, baselines published on merge, a nightly trend, and a live check on a
+  demo tenant
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
