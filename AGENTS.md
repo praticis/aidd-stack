@@ -82,6 +82,10 @@ The full text is in the ROADMAP, under "Principles".
   - It must give `0 repo(s) differ`, or a diff judged item by item.
   - The hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`.
   - The clones live in `~/.cache/aidd-corpus`, and the numbers in `docs/corpus-report.md`.
+- **The micro graph (files, symbols, `CALLS`, `IMPORTS`):** `indexer/scripts/micro.sh` dry-runs 12 corpus repos with
+  `main` and with the tree, and compares the results record by record.
+  - The HTTP corpus does not run the resolver, so a change to `CALLS` shows only here.
+  - A refactor must give `0 repo(s) differ`. Any other difference is judged at the source, like a corpus diff.
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
