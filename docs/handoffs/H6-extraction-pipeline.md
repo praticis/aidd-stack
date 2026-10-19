@@ -215,8 +215,8 @@ H5 builds pieces with H6's shape:
   28 % between runs of the same code, so a small effect is measured with a microbenchmark on the same trees.
 - Correctness comes before speed. Each prototype's output is compared three ways:
   - with the HTTP baseline (`0 differ`);
-  - with `main`'s full dry-run, record by record, on the 12 repos of step 0, because the HTTP corpus does not run the
-    resolver;
+  - with `main`'s full dry-run, record by record, on the 12 repos of step 0 (`micro.sh`), because the HTTP corpus does
+    not run the resolver;
   - a warm run with a cold one.
 
 ## Steps

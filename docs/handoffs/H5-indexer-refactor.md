@@ -287,12 +287,14 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
 | 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target (blocking turns on when the author decides, H5-D3) |
 
-**Regression protocol (every step):**
+**Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
+first slice). H5's code commits are `refactor:`, so its PR is read as a refactor, where any difference fails. Locally:
+`test.sh`, `corpus.sh`, `micro.sh` and `gates.sh`.
 1. tests green;
 2. the corpus against the starting baseline: "0 repo(s) differ";
 3. the hold-out identical;
-4. **the micro graph identical:** full dry-runs (`aidd index --dry-run --out`) of `main` and of the step, compared
-   record by record. This covers files, symbols, `CALLS`, `IMPORTS` and violations, over H6 step 0's 12 repos:
+4. **the micro graph identical:** `indexer/scripts/micro.sh`, full dry-runs (`aidd index --dry-run --out`) of `main`
+   and of the step, compared record by record. This covers files, symbols, `CALLS`, `IMPORTS` and violations, over H6 step 0's 12 repos:
    - C#: eshop, jellyfin, btcpayserver, umbraco;
    - Go: vikunja, gitea, mattermost, grafana;
    - Python: dispatch, netbox;
