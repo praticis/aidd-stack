@@ -23,7 +23,7 @@ from ...core import ids
 from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, mask_placeholders, normalize_path, path_key,
                            unquote)
 
-CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
+CS_MAP = {"MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
 ENDPOINT_BASE = re.compile(r"^(EndpointBase(Sync|Async)?|BaseEndpoint|BaseAsyncEndpoint)$")   # Ardalis.ApiEndpoints
 FAST_ENDPOINT = re.compile(r"^(Endpoint|EndpointWithoutRequest|EndpointWithMapping|EndpointWithMapper|Ep)$")
