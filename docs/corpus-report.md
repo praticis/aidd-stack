@@ -280,6 +280,7 @@ Each step must give `0 repo(s) differ` on both sets against the starting baselin
 | 4a | 0 differ / 0 differ | 771 s | the language's own package facts (Go's pass-through functions, Python's router classes, TS's clients with a base and enum members) leave `core/http_expr.py` (937 → 699 lines) for `languages/<lang>/package_facts.py`, read through `LanguageSupport.package_facts` in the same pass |
 | 4b | 0 differ / 0 differ | 777 s | Go's own path expressions (`url.URL`, a read of `u.Path`, grpc-gateway's patterns) leave the core's `path_of` for the Go scanner (`languages/go/paths.py`, through a `_call_path` hook); `core/http_expr.py` 699 → 656 lines |
 | 9 (in part) | no change to the extractor | — | `http_corpus.py`'s docstring no longer holds counts edited by hand: `--reuse runs/<baseline> --show 0` prints them, and `corpus.sh` writes them in every report. The summed time is at 54 % of step 0's (777 of 1,449 s), against a target of ≤ 60 %, within the timing noise noted above |
+| 8 (in part) | the MCP is not in the extraction | — | `mcp/server.py` (870 lines; `build_server` at complexity 44) splits into `store.py` and one module per tool group, and the server only assembles them. `tools/list` is byte-identical in fixed and multi-tenant mode: 11 tools, same order, same descriptions and schemas. The 70 Cypher strings are identical too |
 
 Two notes on step 2:
 
