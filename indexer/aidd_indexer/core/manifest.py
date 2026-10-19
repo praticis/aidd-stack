@@ -1,4 +1,4 @@
-"""`atlas.yaml` — what to index, from where, which refs (docs/indexing-process.md §3).
+"""`atlas.yaml` — what to index, from where, which refs.
 
 Location: $AIDD_CONFIG (default /app/atlas.yaml in the container, ~/.aidd/atlas.yaml on
 the host, written by setup/install.sh). Nothing here has an implicit tenant: the file

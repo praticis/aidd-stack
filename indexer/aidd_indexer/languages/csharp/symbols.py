@@ -248,7 +248,7 @@ class CSharpSupport(LanguageSupport):
                           owner: str | None = None) -> str | None:
         """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
         (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`). A name before a path
-        (`Microsoft.eShopWeb.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
+        (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
         outside the repo) or a name two repo types share says nothing."""
         names = ctx.extra.get("cs_type_names")
         if names is None:

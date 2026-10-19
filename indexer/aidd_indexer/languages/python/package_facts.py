@@ -28,7 +28,7 @@ PREFIX_KEYWORDS = ("prefix", "url_prefix")      # APIRouter's, Blueprint's
 
 
 def _py_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
-    """`class UserAPIRouter(APIRouter)` (mealie): its bases' names and what its `__init__` makes of the prefix
+    """`class UserAPIRouter(APIRouter)`: its bases' names and what its `__init__` makes of the prefix
     (`_init_prefix`), so that a call to it in another file reads as the router it builds (`PyScanner._router_class`)."""
     name, sup = n.child_by_field_name("name"), n.child_by_field_name("superclasses")
     bases = tuple(text(b, src).split(".")[-1] for b in (sup.named_children if sup is not None else ())

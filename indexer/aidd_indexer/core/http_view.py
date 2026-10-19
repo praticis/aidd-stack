@@ -1,7 +1,7 @@
 """What a scanner may know about the rest of the repository while it reads one file: the constants every directory
 defines (`PackageContext`, collected before any file is scanned) and where an import points — a file or a package
 directory —, resolved by each language's `resolve_import`, the same resolution the `Resolver` gives `IMPORTS`.
-Data only: a scanner never reads another file's tree (F1.13).
+Data only: a scanner never reads another file's tree.
 """
 
 from __future__ import annotations

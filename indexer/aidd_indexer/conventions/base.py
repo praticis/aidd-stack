@@ -1,4 +1,4 @@
-"""The extension contract for *conventions* — the rules of a development pattern (ADR-003 §conventions).
+"""The extension contract for *conventions* — the rules of a development pattern.
 
 A convention is anything the generic indexer cannot know about a codebase: which directories are
 which architectural layer, which layers may depend on which, where HTTP entry points are allowed

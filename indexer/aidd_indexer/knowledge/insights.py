@@ -1,4 +1,4 @@
-"""Insight notes and the project index's knowledge block (docs/knowledge-contract.md)."""
+"""Insight notes and the project index's knowledge block."""
 
 from __future__ import annotations
 

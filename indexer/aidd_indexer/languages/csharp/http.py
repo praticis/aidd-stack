@@ -105,11 +105,11 @@ class CsScanner(BaseScanner):
                         if s is None and expr is not None and expr.type == "string_literal" and not unquote(text(expr, self.src)):
                             s = ""                              # `[HttpGet("")]`: an empty template, written out
                         if expr is not None and expr.type == "interpolated_string_expression":
-                            r = self._recipe(expr, {})          # `$"{{{nameof(id)}:guid}}"` → `{id:guid}` (Umbraco)
+                            r = self._recipe(expr, {})          # `$"{{{nameof(id)}:guid}}"` → `{id:guid}`
                             if r is not None and all(part[0] == "lit" for part in r):
                                 s = "".join(part[1] for part in r)
                         elif s is None and expr is not None and expr.type in ("identifier", "member_access_expression"):
-                            owner = n                           # `[Route(LoginPath)]`: a constant of the class (Umbraco)
+                            owner = n                           # `[Route(LoginPath)]`: a constant of the class
                             while owner is not None and owner.type != "class_declaration":
                                 owner = owner.parent
                             r = self._recipe(expr, {}, owner)
@@ -151,7 +151,7 @@ class CsScanner(BaseScanner):
             if MODEL_CONVENTIONS & set(simple_bases) and "AttributeRouteModel" in text(cls, self.src):
                 self.out.publish("cs.route-convention", cname_txt, True)    # it rewrites the attribute routes
             if any(FAST_ENDPOINT.match(seg) for b in bases for seg in b.split(".")):
-                self.out.publish("cs.fast-base", cname_txt, simple_bases)   # over FastEndpoints' own: Elsa's ElsaEndpoint
+                self.out.publish("cs.fast-base", cname_txt, simple_bases)   # over FastEndpoints' own: an `AppEndpoint<..>`
             group = self._fe_group(cls, simple_bases)
             if group is not None:
                 self.out.publish("cs.fe-group", cname_txt, group)
@@ -165,8 +165,8 @@ class CsScanner(BaseScanner):
             bool(prefixes) or cname_txt.endswith("Controller") or bool(names & {"ApiController", "Controller"})
             or any(b.split(".")[-1].endswith(("Controller", "ControllerBase")) for b in bases)
             or any(ENDPOINT_BASE.match(seg) for seg in segments))
-        # not a controller by itself, but its routed actions are its derived controllers' (Radarr's
-        # `ProviderControllerBase<..> : RestControllerWithSignalR<..>`): published, never routes of its own
+        # not a controller by itself, but its routed actions are its derived controllers'
+        # (`ProviderControllerBase<..> : RestControllerBase<..>`): published, never routes of its own
         base_only = not is_controller
         if base_only and not cname_txt:
             return
@@ -175,7 +175,7 @@ class CsScanner(BaseScanner):
         if area and cname_txt:                      # `[Area]` is inherited: a derived controller's, if it has none
             self.out.publish("cs.area", cname_txt, area)
         # no [Route] of its own: what one of its routing attributes gives (`[V3ApiController]`), else its base classes' —
-        # a `partial` half looks the class up first, its other halves' (btcpay's `UIStoresController.Rates.cs`)
+        # a `partial` half looks the class up first, its other halves' (`StoresController.Rates.cs`)
         inherit = not prefixes and (bool(bases) or bool(uses) or partial)
         route_bases = ((cname_txt,) if partial and not prefixes and cname_txt else ()) + simple_bases
         abstract = any(c.type == "modifier" and text(c, self.src) == "abstract" for c in cls.children)
@@ -191,7 +191,7 @@ class CsScanner(BaseScanner):
             plist = m.child_by_field_name("parameters")
             arity = sum(1 for c in plist.children if c.type == "parameter") if plist is not None else 0
             if any(name == "NonAction" for name, _, _ in mattrs):
-                own.add((hname or "", arity))   # `[NonAction] override`: the base's action is not one here (Radarr) —
+                own.add((hname or "", arity))   # `[NonAction] override`: the base's action is not one here —
                 if cname_txt:                   # nor in a class below this one
                     self.out.publish("cs.non-actions", cname_txt, (hname or "", arity))
                 continue
@@ -256,7 +256,7 @@ class CsScanner(BaseScanner):
 
     def _plain_action(self, m: Node) -> bool:
         """ASP.NET's test for an action with no routing attribute (`DefaultApplicationModelProvider.IsAction`): a public
-        instance method, not abstract, not generic, not `Dispose` — `/umbraco/login`'s `Index` under `[Route(LoginPath)]`.
+        instance method, not abstract, not generic, not `Dispose` — a login controller's `Index` under `[Route(LoginPath)]`.
         An `override` takes the attributes of the method it overrides: the base's, left to it."""
         mods = {text(c, self.src) for c in m.children if c.type == "modifier"}
         name = m.child_by_field_name("name")
@@ -265,10 +265,10 @@ class CsScanner(BaseScanner):
 
     # -- the project's own routing attributes ------------------------------------------------------------
     def _route_attribute(self, cls: Node, name: str, bases: list[str]) -> None:
-        """A routing attribute of the project — Radarr `[V3ApiController]` (`IRouteTemplateProvider`, `Template =
+        """A routing attribute of the project — `[V3ApiController]` (`IRouteTemplateProvider`, `Template =
         $"api/v{version}/{resource}"` in its constructor), `[RestGetById]` (`IActionHttpMethodProvider` with
-        `HttpMethods => new[] { "GET" }`), `[RestDeleteById]` (`: HttpDeleteAttribute`, `base("{id:int}")`), Umbraco
-        `[VersionedApiBackOfficeRoute(x)]` (two levels over `RouteAttribute`). Published as a recipe over its constructor's
+        `HttpMethods => new[] { "GET" }`), `[RestDeleteById]` (`: HttpDeleteAttribute`, `base("{id:int}")`), or
+        `[VersionedApiRoute(x)]` (two levels over `RouteAttribute`). Published as a recipe over its constructor's
         parameters — what it hands its base, what it sets as `Template` — that `compose` fills with each use's arguments;
         the constants it names may live in another project. One deriving from another attribute of the project is
         resolved through it."""
@@ -580,8 +580,8 @@ class CsScanner(BaseScanner):
 
     def _fast_endpoint(self, cls: Node, body: Node, bases: list[str]) -> bool:
         """FastEndpoints: a class deriving from `Endpoint<...>` (`EndpointWithoutRequest`, `Ep.Req<..>.Res<..>`) — or
-        overriding `Configure()` under a base of the project, which `compose` follows up to one over FastEndpoints' (Elsa's
-        `ElsaEndpoint<..>`) — that declares its routes in `Configure()`: `Get("/x")`, `Post(CreateRequest.Route)`,
+        overriding `Configure()` under a base of the project, which `compose` follows up to one over FastEndpoints'
+        (`AppEndpoint<..>`) — that declares its routes in `Configure()`: `Get("/x")`, `Post(CreateRequest.Route)`,
         `Routes("/x")` with `Verbs(Http.POST)` in either order; the handler is its `HandleAsync`/`ExecuteAsync`.
         `RoutePrefixOverride(..)` takes the place of the global prefix (`_compose_fast_endpoints`)."""
         direct = any(FAST_ENDPOINT.match(seg) for b in bases for seg in b.split("."))
@@ -673,8 +673,8 @@ class CsScanner(BaseScanner):
     def _fe_route_prefix(self, n: Node) -> None:
         """FastEndpoints' global `config.Endpoints.RoutePrefix = "api"`, set where the app maps its endpoints
         (`UseFastEndpoints(c => ..)`): a literal or a constant, or a parameter of the method around it — what each call
-        of that method in this file passes, the declared default of a parameter the caller passes on (Elsa's
-        `MapWorkflowsApi(.., string routePrefix = "elsa/api")`). A value a host passes from configuration is not read."""
+        of that method in this file passes, the declared default of a parameter the caller passes on
+        (`MapWorkflowsApi(.., string routePrefix = "app/api")`). A value a host passes from configuration is not read."""
         left, right = n.child_by_field_name("left"), n.child_by_field_name("right")
         if left is None or right is None or not re.sub(r"\s+", "", text(left, self.src)).endswith("Endpoints.RoutePrefix"):
             return
@@ -813,7 +813,7 @@ class CsScanner(BaseScanner):
     def _compose_fast_endpoints(out: HttpResult, repo: RepoInfo, classes: dict[str, list], attrs: "_RouteAttributes") -> None:
         """FastEndpoints across files: an endpoint under a base of the project takes its routes when the walk up its bases
         reaches one over FastEndpoints' (`cs.fast-base`) — a name several classes share counts when each of them does
-        (Elsa's `ElsaEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the prefix of its group (`cs.fe-group`), and
+        (`AppEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the prefix of its group (`cs.fe-group`), and
         before it the global `RoutePrefix`, when the repo sets one value (`cs.fe-prefix`), unless the route overrides it."""
         fast = out.facts.get("cs.fast-base", {})
         for p in out.pending:
@@ -839,8 +839,8 @@ class CsScanner(BaseScanner):
     def _compose_route_tokens(out: HttpResult, repo: RepoInfo, attrs: "_RouteAttributes") -> None:
         """A route token of the project — `[umbracoBackOffice]`, not one of the framework's — is the value the convention
         that rewrites the attribute routes (`cs.route-convention`) is registered with: of the two arguments of
-        `Conventions.Add(new T(token, value))` one is the token's name, the other a value the code fixes (Umbraco's
-        `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco`). One read from configuration, or two registrations
+        `Conventions.Add(new T(token, value))` one is the token's name, the other a value the code fixes
+        (`DefaultAppPath.TrimStart(TildeForwardSlash)`, `app`). One read from configuration, or two registrations
         with different values, leave the token as written."""
         routes = [ep for ep in out.endpoints if ep.framework == "aspnet" and "[" in ep.path]
         used = {m.group(1) for ep in routes for m in ROUTE_TOKEN.finditer(ep.path)} - FRAMEWORK_TOKENS
@@ -869,8 +869,8 @@ class CsScanner(BaseScanner):
     def _compose_inherited_actions(out: HttpResult, repo: RepoInfo, classes: dict[str, list], attrs: "_RouteAttributes") -> None:
         """`EmailTemplatesController : ChannelTemplatesController<T, TDto>` with `[Route("api/apps/{appId}/email-templates")]`
         and no action of its own: the actions its base classes declare (found by name, as the `[Route]`, nearest first)
-        are its routes, under its route — or the one it inherits — with `[controller]` its name; Radarr's
-        `MovieController : RestControllerWithSignalR<..> : RestController<T>` takes `RestController`'s `[RestGetById]`.
+        are its routes, under its route — or the one it inherits — with `[controller]` its name:
+        `MovieController : RestControllerBase<..> : RestController<T>` takes `RestController`'s `[RestGetById]`.
         An action it — or a nearer base — redeclares is that one's; a base two classes share the name of stops the walk."""
         actions = out.facts.get("cs.actions", {})
         attr_actions = out.facts.get("cs.attr-actions", {})
@@ -887,7 +887,7 @@ class CsScanner(BaseScanner):
                 continue
             seen = set(own)                          # (name, arity): an overload is another action
             for base in _ancestors(classes, bases):
-                seen |= set(non_actions.get(base, ()))   # Radarr's ReleaseControllerBase: `[NonAction] override ..`
+                seen |= set(non_actions.get(base, ()))   # a base controller's `[NonAction] override ..`
                 here: set[tuple[str, int]] = set()
                 for proto, tmpl, absolute, action, arity in actions.get(base, ()):
                     if (action, arity) in seen:
@@ -990,7 +990,7 @@ class CsScanner(BaseScanner):
                 if name == "MapMethods":
                     method = self.method_from_args(arg_nodes[1:2]) or "ANY"
                 # the evidence is where `MapGet` is written: code the parser could not read folds into the receiver
-                # (Elsa's workbench Program.cs, an `else if` without a body 600 lines above)
+                # (a Program.cs with an `else if` without a body 600 lines above)
                 at = fn.child_by_field_name("name") if fn.type == "member_access_expression" else None
                 self.add_endpoint(at or n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], router=recv_last)
                 return
@@ -1009,7 +1009,7 @@ class CsScanner(BaseScanner):
             return
         self._wrapped_call(n, fn, name, arg_nodes)
 
-    # -- NSwag-generated clients (H2-D9) ----------------------------------------------------------------------
+    # -- NSwag-generated clients ----------------------------------------------------------------------
     def _nswag_operation(self, m: Node) -> None:
         """One operation of an NSwag client: the path template from `// Operation Path: "api/x/{id}"` (v14), else from
         the `urlBuilder_.Append(..)` literals (v13: `Append("api/x/{id}")` + `Replace("{id}", ..)`), the base URL before
@@ -1197,7 +1197,7 @@ class CsScanner(BaseScanner):
 
 def _aspnet_template(t: str) -> str:
     """An ASP.NET route template's parameters as `{name}`: catch-all stars, constraints with arguments (a regex keeps its
-    parentheses balanced and its braces doubled: Radarr `{**path:regex(^(?!(api|feed)/).*)}`), defaults and the
+    parentheses balanced and its braces doubled: `{**path:regex(^(?!(api|feed)/).*)}`), defaults and the
     optional `?` (`{id?}`, `{id:int?}`) go; `{{` / `}}` outside a parameter are literal braces and stay."""
     if "{" not in t:
         return t
@@ -1243,7 +1243,7 @@ def _tokens(path: str, controller: str, action: str, area: str = "") -> str:
 
 def _inherited_route(classes: dict[str, list], bases: tuple[str, ...], attrs: "_RouteAttributes") -> str | None:
     """The route of the nearest base class of this repo that has one: its `[Route]`, or what one of its routing
-    attributes gives (Umbraco's `DataTypeControllerBase` carries `[VersionedApiBackOfficeRoute(..)]`); None when a
+    attributes gives (a `DataTypeControllerBase` carrying `[VersionedApiRoute(..)]`); None when a
     name on the way is ambiguous or no base has one."""
     for base in _ancestors(classes, bases):
         decls = classes[base]
@@ -1261,8 +1261,8 @@ def _is_odata(uses: tuple, bases: tuple[str, ...]) -> bool:
 
 
 def _odata_base(classes: dict[str, list], bases: tuple[str, ...]) -> bool:
-    """`_is_odata` for one of the repo's classes above a controller (Smartstore `WebApiController<T>` carries
-    `[ODataRouteComponent("odata/v1")]`, over `SmartODataController<T> : ODataController`)."""
+    """`_is_odata` for one of the repo's classes above a controller (a `WebApiController<T>` carrying
+    `[ODataRouteComponent("odata/v1")]`, over `AppODataController<T> : ODataController`)."""
     return any(_is_odata(uses, own_bases) for base in _ancestors(classes, bases) for _, _, uses, own_bases in classes[base])
 
 
@@ -1281,8 +1281,8 @@ def _ancestors(classes: dict[str, list], bases: tuple[str, ...], limit: int = 4)
 
 
 def _area_of(classes: dict[str, list], areas: dict[str, list], bases: tuple[str, ...]) -> str:
-    """The `[Area]` of the nearest base class of the repo that has one (`AreaAttribute` is inherited: Smartstore's
-    `AmazonPayAdminController : AdminController`, `[Area("Admin")]`); "" when none has, or that class has two."""
+    """The `[Area]` of the nearest base class of the repo that has one (`AreaAttribute` is inherited:
+    `PaymentAdminController : AdminController`, `[Area("Admin")]`); "" when none has, or that class has two."""
     for base in _ancestors(classes, bases):
         found = set(areas.get(base, ()))
         if found:
@@ -1394,8 +1394,8 @@ class _RouteAttributes:
 
     @classmethod
     def _joined(cls, ctx, name: str, _depth: int = 0) -> str | None:
-        """A constant built from others that is not a path by itself (Umbraco `DefaultUmbracoPath = "~/" +
-        UmbracoPathSegment`): every part known in its directory, or nothing."""
+        """A constant built from others that is not a path by itself (`DefaultAppPath = "~/" +
+        AppPathSegment`): every part known in its directory, or nothing."""
         if name in ctx.ambiguous or _depth > 4:
             return None
         if name not in ctx.const_parts:

@@ -1,4 +1,4 @@
-"""The contract every language module implements (ADR-003).
+"""The contract every language module implements.
 
 `core/` never asks "which language is this?" — it asks the registry for the `LanguageSupport`
 of a file and calls these hooks. A new language = a folder under `languages/` with a subclass,

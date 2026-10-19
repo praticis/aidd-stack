@@ -69,7 +69,7 @@ def grpc_gateway_pattern(ops: list[int], pool: list[str], verb: str = "") -> str
             stack.append("**")
         elif op == 4 and 0 < arg <= len(stack):
             stack[-arg:] = ["/".join(stack[-arg:])]
-        elif op == 5 and stack and arg < len(pool):     # `{name=memos/*}` matches /memos/<x>: the literal stays
+        elif op == 5 and stack and arg < len(pool):     # `{name=items/*}` matches /items/<x>: the literal stays
             parts, var = stack[-1].split("/"), "{" + pool[arg] + "}"
             stack[-1] = "/".join(var if p in ("*", "**") else p for p in parts) if {"*", "**"} & set(parts) else var
         elif op != 0:

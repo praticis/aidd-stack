@@ -24,7 +24,7 @@ def read_package_facts(n: Node, src: bytes, ctx: "PackageContext", path: str) ->
 
 
 def _passthrough(fn: Node, src: bytes, ctx: "PackageContext") -> None:
-    """A Go function whose every `return` is one of its parameters, or something `+` it — photoprism's
+    """A Go function whose every `return` is one of its parameters, or something `+` it:
     `func (c *Config) BaseUri(res string) string { if c.SiteUrl() == "" { return res }; return c.BasePath() + res }`:
     a call to it is worth that argument (`_path_of_call`), the code's default; what goes before it comes from
     elsewhere, as a base URL does. Known by its name; two of one name with another parameter give nothing."""

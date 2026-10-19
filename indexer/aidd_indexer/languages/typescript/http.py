@@ -2,7 +2,7 @@
 + NestJS decorators (under the package's `setGlobalPrefix`); axios / fetch / got / ky outbound, a request described by
 an object (`client.post({ url })`, openapi-ts) and oazapfts' generated client. Routers cross files
 through ESM imports and CommonJS `require` / `module.exports` (`global_of`), and through a project's own mount wrappers
-(Ghost's `app.lazyUse`) and route wrappers (NodeBB's `setupApiRoute(router, 'get', '/x', .., handler)`)."""
+(`app.lazyUse`) and route wrappers (`setupApiRoute(router, 'get', '/x', .., handler)`)."""
 
 from __future__ import annotations
 
@@ -26,8 +26,8 @@ from .returns import TsReturns
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
-TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, NodeBB's api module
-TS_ROUTER_VERBS = {"search": "SEARCH"}               # Express's other verbs: only on a router of the file (directus)
+TS_VERB_ALIASES = {"del": "DELETE"}                                       # superagent, and API modules shaped like it
+TS_ROUTER_VERBS = {"search": "SEARCH"}               # Express's other verbs: only on a router of the file
 TS_MOUNTS = {"use", "route"}
 CHAIN_LINKS = TS_REGISTRARS | TS_MOUNTS | {"mount", "basePath", "on", "notFound", "onError"}   # return the router
 ROUTER_CTOR = re.compile(r"\b(express|Router|Fastify|fastify|Koa|Hono|Elysia)\s*(<[^()]*>)?\s*\(|\.(Router|router)\(\)")
@@ -94,7 +94,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         return ep
 
     def route_path(self, n: Node, receiver: str, at: Node) -> str | None:
-        """Koa's router (`@koa/router`, `koa-router`) puts the prefix before the path as written: outline's
+        """Koa's router (`@koa/router`, `koa-router`) puts the prefix before the path as written:
         `router.post("documents.info", ..)` under `router.use("/", documents.routes())` is `/documents.info`. A path
         without its leading slash on a router of the file is, like a sub-router's root, a route only once a mount
         gives it a prefix (`MountedRoot`); a router mounted nowhere serves nothing at it."""
@@ -106,7 +106,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
 
     def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> bool:
         """A request on a client with a base (`PackageContext.client_base`) is at the base, joined with a slash as
-        axios joins them: docmost's `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in another file
+        axios joins them: `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in another file
         is `/api/pages/info`."""
         base = self._client_base(via) or self._own_base(node, via) if raw_path and not is_url_literal(raw_path) else None
         if base:
@@ -354,7 +354,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
             self.out.publish("ts.nest-prefix", self.fx.file.module_id, ("/" + prefix.strip("/"), excludes, ref))
 
     def _string_array(self, n: Node) -> None:
-        """`export const excludePaths = ['/.well-known/immich', ..]`: published for another file's
+        """`export const excludePaths = ['/.well-known/app', ..]`: published for another file's
         `setGlobalPrefix(.., { exclude: excludePaths })`."""
         name, val, decl = n.child_by_field_name("name"), n.child_by_field_name("value"), n.parent
         if name is None or val is None or val.type != "array" or decl is None or decl.parent is None \
@@ -561,7 +561,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
 
     # -- a project's own route wrappers: `setupApiRoute(router, 'post', '/x', mws, handler)` ------------------------
     def _route_wrapper(self, fn: Node) -> None:
-        """A function that registers routes on the router and under the path it is given — NodeBB's
+        """A function that registers routes on the router and under the path it is given:
         `helpers.setupApiRoute = function (...args) { const [router, verb, name] = args; .. router[verb](name, ..) }`,
         `setupPageRoute(router, name, ..)` registering `router.get(name, ..)` and `` router.get(`/api${name}`, ..) ``.
         Its shapes — (position of the router, the verb or the position of the argument naming it, position of the
@@ -641,7 +641,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         """`setupApiRoute(router, 'post', '/x', mws, handler)`, `helpers.setupPageRoute(app, '/x', .., handler)`: a
         route if some file defines `name` as a route wrapper (`_route_wrapper`) — a candidate here, made a route in
         `compose`, with the handler in the last argument. A path with a part this file cannot read
-        (`` `/${name}/x` ``, NodeBB's remountable prefixes) makes none: the linker compares literal segments, so
+        (`` `/${name}/x` ``, remountable prefixes) makes none: the linker compares literal segments, so
         `/{param}/x` would link nothing."""
         if len(arg_nodes) < 3 or name in TS_REGISTRARS or name in TS_MOUNTS or name in OUTBOUND \
                 or name in TS_VERB_ALIASES:
@@ -664,7 +664,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                                                      for i, r in routers.items()}, base))
 
     def _wrapper_call(self, n: Node, name: str, recv_last: str, arg_nodes: list[Node]) -> bool:
-        """`backendApp.lazyUse('/ghost/api', require('../api'))` on a router, with a method no framework has: a mount if
+        """`backendApp.lazyUse('/admin/api', require('../api'))` on a router, with a method no framework has: a mount if
         some file defines that method as one (`_mount_wrapper`) — a candidate here, settled in `compose`."""
         if recv_last not in self.router_vars or name in TS_REGISTRARS or name in TS_ROUTER_VERBS or name in TS_MOUNTS \
                 or len(arg_nodes) < 2:
