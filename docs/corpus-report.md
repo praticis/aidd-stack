@@ -207,3 +207,62 @@ against the previous one was judged item by item. The **current** ones are `2026
 | `-27` | increment 11: TS/JS client wrappers, listed mounts, autoload, Next.js |
 | `-28` | increment 12: two TS wrapper defects the live validation found. **PR #5** |
 | `2026-10-18-v2-holdout-26` | the hold-out's three repositories, unchanged since increment 5 |
+
+## H5 baseline (2026-10-19)
+
+The H5 refactor (`docs/handoffs/H5-indexer-refactor.md`) changes no behavior. At every step the corpus must give
+`0 repo(s) differ` against `2026-10-18-v2-baseline-28`, and the hold-out the same against `2026-10-18-v2-holdout-26`.
+Step 0 measured the starting point, alone on the machine.
+
+**Corpus:**
+
+- `0 repo(s) differ`;
+- 483 s of wall time, 3 containers at once;
+- **1,449 s summed over the repositories**. The largest are mattermost (250 s), bitwarden (140), photoprism (109),
+  umbraco (106), elsa (74) and ghost (68);
+- the largest memory peak is mattermost's, at 2.2 GiB.
+
+The target of step 9 is that sum at ≤ 60 %, so ≤ ~870 s.
+
+**Hold-out:** `0 repo(s) differ`, in 43 s.
+
+**Shape** (`indexer/scripts/shape.py`, also a report-only CI job):
+
+- **58 functions above complexity 9.** The worst are:
+
+  | Function | Complexity |
+  |---|---|
+  | `build_server` | 44 |
+  | Go's `_call` | 34 |
+  | `collect_constants` | 29 |
+  | C#'s `_controller` | 29 |
+  | Go's `file_facts` | 26 |
+  | `resolve_calls` | 25 |
+  | conventions' `apply` | 23 |
+  | C#'s `_recipe` | 23 |
+
+- **14 modules above 300 lines.** The longest are:
+
+  | Module | Lines |
+  |---|---|
+  | `languages/csharp/http.py` | 1,471 |
+  | `languages/typescript/http.py` | 998 |
+  | `core/http_expr.py` | 937 |
+  | `mcp/server.py` | 870 |
+  | `languages/go/http.py` | 766 |
+  | `core/http_base.py` | 734 |
+  | `cli.py` (the P2's) | 710 |
+  | `languages/csharp/symbols.py` | 663 |
+
+**Profiles.** cProfile, one repository at a time, so the absolute times include its overhead. The shares say where
+the time goes:
+
+| Repository | Total | Own time in `walk` | `walk` with what it calls | The next largest |
+|---|---|---|---|---|
+| mattermost | 426 s | 176 s (41 %) | 247 s | Go's `_declared_type`, 215 s cumulative over 395 k calls; `collect_constants`, 64 s |
+| umbraco | 174 s | 56 s (32 %) | 82 s | `collect_constants`, 31 s; C#'s `_local_type`, 28 s |
+| ghost | 106 s | 27 s (25 %) | 37 s | `collect_constants`, 31 s; TS `run`, 36 s |
+| vikunja | 99 s | 37 s (37 %) | 51 s | Go's `_declared_type`, 31 s; `collect_constants`, 14 s |
+
+The tree walk that builds a list of children for every node, and the scope scans repeated for each question (Go's
+declared type, C#'s local type, `Scopes._assignments`), are what steps 2 and 3 (`tree.py` and `FileIndex`) replace.

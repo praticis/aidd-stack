@@ -9,8 +9,15 @@
 > - `docs/corpus-report.md`: o método, onde o extrator está e a tabela de baselines (a vigente é a
 >   `2026-10-18-v2-baseline-28`).
 >
-> **Estado (2026-10-18):** registrado, não iniciado. As decisões do autor estão em "Decisões tomadas". Nasceu de
-> uma revisão pedida no meio do fechamento do F1.14. Depois de 24 commits de regras desde o v2 do corpus, o código
+> **Estado (2026-10-19):** iniciado.
+>
+> - Passo 0 feito:
+>   - a linha de base está no `corpus-report.md`, em "H5 baseline";
+>   - o relatório de forma é o `indexer/scripts/shape.py`, também um job de CI que só relata.
+> - Os passos seguem em ordem, um commit por passo.
+>
+> As decisões do autor estão em "Decisões tomadas". O handoff nasceu de uma revisão pedida no meio do fechamento do
+> F1.14. Depois de 24 commits de regras desde o v2 do corpus, o código
 > do extrator ficou com funções de complexidade muito alta, arquivos grandes e duas implementações paralelas de "qual
 > é o tipo disto". Isso precisa estar resolvido antes do SCIP (F1.1/F1.2), porque o SCIP entra exatamente nessa
 > costura.
