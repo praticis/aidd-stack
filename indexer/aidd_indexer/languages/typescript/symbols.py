@@ -16,6 +16,7 @@ from tree_sitter import Node
 
 from ...core.model import FileInfo
 from ..base import LanguageSupport, PackageFactory, ResolveContext
+from .package_facts import package_facts_reader
 from .http import TsScanner
 
 HERE = Path(__file__).parent
@@ -41,6 +42,10 @@ def _try_paths(ctx: ResolveContext, base: PurePosixPath) -> FileInfo | None:
 
 
 class TypeScriptSupport(LanguageSupport):
+
+    def package_facts(self, src: bytes):
+        return package_facts_reader(src)
+
     def import_bindings(self, stmt_text: str, stmt: Node, spec: str, src: bytes) -> list[str]:
         names: list[str] = []
         m = _IMPORT.search(stmt_text)

@@ -122,6 +122,12 @@ class LanguageSupport:
         """(namespaces declared in the file, file-scoped namespace) — C# only for now."""
         return [], None
 
+    def package_facts(self, src: bytes) -> "Callable[[Node, bytes, Any, str], bool] | None":
+        """A reader of the language's own facts of a package (`PackageContext`), made per file. The constants pass
+        calls it on each node of the file first and skips the node when it answers True. None: the language has
+        none."""
+        return None
+
     def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
         """Per-file facts the resolver may need later (Go: struct field types, import aliases,
         constructor return types). Stored on the extractor and handed to `resolve_receiver` via ctx.facts."""

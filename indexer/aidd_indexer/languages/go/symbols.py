@@ -16,6 +16,7 @@ from ...core.config import is_test_path
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
 from ...tree import NodeCache
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
+from .package_facts import read_package_facts
 from .http import GoScanner
 
 HERE = Path(__file__).parent
@@ -131,6 +132,10 @@ _DECLS = frozenset({"type_declaration", "const_declaration", "var_declaration"})
 
 
 class GoSupport(LanguageSupport):
+
+    def package_facts(self, src: bytes):
+        return read_package_facts
+
     # ---- discovery: every directory with .go files is a package — the unit imports point at
     def discover_modules(self, repo: RepoInfo, rel_files: list[str], modules: dict[str, ModuleInfo]) -> None:
         for r in rel_files:

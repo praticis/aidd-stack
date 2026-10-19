@@ -14,6 +14,7 @@ from tree_sitter import Node
 
 from ...core.model import FileInfo, SymbolInfo
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
+from .package_facts import read_package_facts
 from .http import PyScanner
 
 HERE = Path(__file__).parent
@@ -35,6 +36,10 @@ def _py_requirement(line: str) -> tuple[str, str] | None:
 
 
 class PythonSupport(LanguageSupport):
+
+    def package_facts(self, src: bytes):
+        return read_package_facts
+
     def adjust_kind(self, kind: str, parent: SymbolInfo | None) -> str:
         if kind == "function" and parent is not None and parent.kind == "class":
             return "method"

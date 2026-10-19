@@ -31,7 +31,7 @@ PATH_CONCAT_NODES = CONCAT_NODES | {"concatenated_string"}
 _ONE_WORD = re.compile(r"^[A-Za-z][A-Za-z0-9_\-]{2,}(\?.*)?$")          # `message`, `message?since=1`
 _PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w*(Path|Url|Uri|_path|_url|_uri))$", re.I)
 _JOIN_CALL = re.compile(r"^(Join|JoinPath|AppendPaths?|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
-_SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
+SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
 _RELATIVE = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]*(/[A-Za-z0-9_.\-]+)+$")    # `security/back-office`
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
@@ -75,32 +75,11 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
     parameter elsewhere would take the value of this function's `url` (`Scopes` reads them). A class-level one is
     also known by `Class.NAME`, which `Request.Route` reads when every request class has a `Route`."""
     src = fx.src
-    go, py = fx.file.language == "go", fx.file.language == "python"
-    ts = fx.file.language in ("typescript", "tsx", "javascript")
-    ts_nodes = TS_CLIENT_NODES if b".interceptors." in src else TS_CLIENT_NODES - {"call_expression"}
+    read = fx.lang.package_facts(src)                   # the language's own facts, first: True when the node is its alone
     for n in walk(fx.tree.root_node):
+        if read is not None and read(n, src, ctx, fx.file.path):
+            continue
         name = val = None
-        t = n.type if ts else ""
-        if t in ts_nodes:                                           # a client with a base (`client_bases`)
-            if t == "variable_declarator":
-                _ts_client(n, src, ctx, fx.file.path)
-            elif t == "call_expression":
-                _ts_interceptor(n, src, ctx, fx.file.path)
-            elif t == "export_statement":
-                v = n.child_by_field_name("value")
-                if v is not None and v.type == "identifier" and any(c.type == "default" for c in n.children):
-                    ctx.client_bases.setdefault((fx.file.path, "default"), ("alias", text(v, src)))
-            else:
-                _ts_client_class(n, src, ctx)
-        if go and n.type in ("function_declaration", "method_declaration"):
-            _passthrough(n, src, ctx)
-            continue
-        if py and n.type == "class_definition":
-            _py_class(n, src, ctx)
-            continue
-        if n.type == "enum_assignment":                                            # TS: enum RouteKey { Asset = 'assets' }
-            _enum_member(n, src, ctx)
-            continue
         if n.type in ("const_spec", "var_spec", "variable_declarator"):           # Go, TS/JS, C#
             name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
             if val is None and n.type == "variable_declarator":                    # C#: identifier + equals_value_clause
@@ -116,15 +95,15 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
         if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
             while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
                 val = val.named_children[0]
-            if go and n.type == "var_spec" and val.type == "composite_literal":     # a list of verbs: gin's Match(..)
+            if n.type == "var_spec" and val.type == "composite_literal":     # a list of verbs: gin's Match(..)
                 verbs = verb_list(val, src)
                 if verbs:
                     ctx.verb_lists[text(name, src)] = verbs
                     continue
             owner = owner_class(n, src)
             names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
-            parts = _concat_parts(val, src) if val.type in CONCAT_NODES else \
-                _template_parts(val, src) if val.type == "template_string" and has_interpolation(val) else \
+            parts = concat_parts(val, src) if val.type in CONCAT_NODES else \
+                template_parts(val, src) if val.type == "template_string" and has_interpolation(val) else \
                 [("ref", text(val, src))] if n.type == "const_spec" and val.type == "identifier" else None   # Go `A = B`
             if parts:
                 for nm in names:
@@ -134,7 +113,7 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                 if lit is not None and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit) or is_url_literal(lit)) and len(lit) > 1:
                     for nm in names:
                         ctx.define(nm, raw=lit)
-                elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _SEGMENT.match(lit):
+                elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and SEGMENT.match(lit):
                     for nm in names:
                         ctx.define(nm, segment=lit)
                 elif val.type in STRING_NODES and not has_interpolation(val) and lit is not None and _RELATIVE.match(lit):
@@ -161,223 +140,6 @@ def verb_list(n: Node, src: bytes) -> tuple[str, ...] | None:
     return tuple(out) or None
 
 
-def _passthrough(fn: Node, src: bytes, ctx: "PackageContext") -> None:
-    """A Go function whose every `return` is one of its parameters, or something `+` it — photoprism's
-    `func (c *Config) BaseUri(res string) string { if c.SiteUrl() == "" { return res }; return c.BasePath() + res }`:
-    a call to it is worth that argument (`_path_of_call`), the code's default; what goes before it comes from
-    elsewhere, as a base URL does. Known by its name; two of one name with another parameter give nothing."""
-    name, params, body = (fn.child_by_field_name(f) for f in ("name", "parameters", "body"))
-    if name is None or params is None or body is None:
-        return
-    pnames = [text(c, src) for d in params.named_children for c in d.children if c.type == "identifier"]
-    index, stack, found = None, list(body.children), False
-    while stack:
-        d = stack.pop()
-        if d.type == "func_literal":
-            continue
-        stack.extend(d.children)
-        if d.type != "return_statement":
-            continue
-        exprs = [c for c in d.named_children]
-        e = exprs[0].named_children[0] if len(exprs) == 1 and exprs[0].type == "expression_list" \
-            and exprs[0].named_child_count == 1 else exprs[0] if len(exprs) == 1 else None
-        while e is not None and e.type == "binary_expression" and text(e.child_by_field_name("operator"), src) == "+":
-            e = e.child_by_field_name("right")
-        i = pnames.index(text(e, src)) if e is not None and e.type == "identifier" and text(e, src) in pnames else None
-        if i is None or index not in (None, i):
-            return
-        index, found = i, True
-    if found:
-        nm = text(name, src)
-        ctx.passthrough[nm] = index if ctx.passthrough.get(nm, index) == index else None
-
-
-
-PREFIX_KEYWORDS = ("prefix", "url_prefix")      # APIRouter's, Blueprint's
-
-
-def _py_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
-    """`class UserAPIRouter(APIRouter)` (mealie): its bases' names and what its `__init__` makes of the prefix
-    (`_init_prefix`), so that a call to it in another file reads as the router it builds (`PyScanner._router_class`)."""
-    name, sup = n.child_by_field_name("name"), n.child_by_field_name("superclasses")
-    bases = tuple(text(b, src).split(".")[-1] for b in (sup.named_children if sup is not None else ())
-                  if b.type in ("identifier", "attribute"))
-    if name is None or not bases or in_function(n):
-        return
-    cname, info = text(name, src), (bases, _init_prefix(n, src))
-    ctx.classes[cname] = info if ctx.classes.get(cname, info) == info else None
-
-
-def _init_prefix(cls: Node, src: bytes) -> tuple | None:
-    """What the class's own `__init__` hands `super().__init__` (or `Base.__init__(self, ..)`) as the prefix:
-    ("lit", "/x"); ("param", name, its position after `self` — None when keyword-only —, its literal default): the
-    call's argument for it; ("none",) when it hands none, or something not read. None without an `__init__` of its
-    own, or with one that passes the caller's keywords on (`**kwargs`) without naming the prefix: the call reads as
-    the base's would."""
-    body = cls.child_by_field_name("body")
-    init = next((f for c in (body.named_children if body is not None else ())
-                 for f in [c.child_by_field_name("definition") if c.type == "decorated_definition" else c]
-                 if f is not None and f.type == "function_definition"
-                 and text(f.child_by_field_name("name"), src) == "__init__"), None)
-    call = next((c for c in walk(init) if c.type == "call" and _super_init(c, src)), None) if init is not None else None
-    args = call.child_by_field_name("arguments") if call is not None else None
-    if args is None:
-        return None
-    kw = {text(a.child_by_field_name("name"), src): a.child_by_field_name("value")
-          for a in args.named_children if a.type == "keyword_argument"}
-    v = next((kw[k] for k in PREFIX_KEYWORDS if k in kw), None)
-    if v is None:
-        return None if any(a.type == "dictionary_splat" for a in args.named_children) else ("none",)
-    if v.type in STRING_NODES and not has_interpolation(v):
-        return ("lit", unquote(text(v, src)))
-    return _init_param(init, text(v, src), src) if v.type == "identifier" else ("none",)
-
-
-def _super_init(c: Node, src: bytes) -> bool:
-    fn = c.child_by_field_name("function")
-    attr = fn.child_by_field_name("attribute") if fn is not None and fn.type == "attribute" else None
-    obj = fn.child_by_field_name("object") if attr is not None else None
-    if obj is None or text(attr, src) != "__init__":
-        return False
-    return obj.type == "identifier" or obj.type == "call" and text(obj.child_by_field_name("function"), src) == "super"
-
-
-def _init_param(init: Node, name: str, src: bytes) -> tuple:
-    """`name` among `__init__`'s parameters: ("param", name, position after `self` or None, literal default)."""
-    params = init.child_by_field_name("parameters")
-    i, keyword_only = 0, False
-    for d in params.named_children if params is not None else ():
-        if d.type in ("list_splat_pattern", "keyword_separator"):
-            keyword_only = True
-            continue
-        if d.type not in ("identifier", "typed_parameter", "default_parameter", "typed_default_parameter"):
-            continue
-        ident = d if d.type == "identifier" else d.child_by_field_name("name") or \
-            next((c for c in d.children if c.type == "identifier"), None)
-        if ident is not None and text(ident, src) == name:
-            default = d.child_by_field_name("value") if d.type.endswith("default_parameter") else None
-            lit = unquote(text(default, src)) if default is not None and default.type in STRING_NODES \
-                and not has_interpolation(default) else None
-            return ("param", name, None if keyword_only else i - 1, lit)
-        i += 1
-    return ("none",)                                # a local or a constant: not read
-
-def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
-    """A string member of a TS enum, known only as `Enum.Member` (immich `@Controller(RouteKey.Asset)`)."""
-    decl = n.parent.parent if n.parent is not None else None
-    enum = decl.child_by_field_name("name") if decl is not None and decl.type == "enum_declaration" else None
-    kids = [c for c in n.children if c.is_named]
-    if enum is None or len(kids) != 2 or kids[1].type not in STRING_NODES or has_interpolation(kids[1]):
-        return
-    name, lit = f"{text(enum, src)}.{text(kids[0], src)}", first_string(kids[1], src)
-    if lit is not None and len(lit) > 1 and (PATH_LITERAL.match(lit) or REL_PATH_LITERAL.match(lit)):
-        ctx.define(name, raw=lit)
-    elif lit is not None and _SEGMENT.match(lit):
-        ctx.define(name, segment=lit)
-
-
-
-
-CLIENT_BASE_KEYS = frozenset({"baseURL", "baseUrl", "prefixUrl"})   # axios, ofetch / a class's field, ky and got
-TS_CLIENT_NODES = frozenset({"variable_declarator", "call_expression", "export_statement", "class_declaration", "class"})
-CLIENT_FACTORIES = frozenset({"create", "extend"})                   # axios.create({..}), ky.extend({..})
-
-
-def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
-    """A module's client with a base (`PackageContext.client_bases`): `const api = axios.create({ baseURL: "/api" })`
-    (docmost), `ky.extend({ prefixUrl })`; `export const client = new ApiClient({ baseUrl: .. })`, whose class says
-    which option gives its base (`_ts_client_class`)."""
-    name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
-    while val is not None and val.type in ("await_expression", "as_expression", "parenthesized_expression",
-                                           "non_null_expression", "satisfies_expression") and val.named_child_count:
-        val = val.named_children[0]
-    if name is None or val is None or name.type != "identifier" or val.type not in ("call_expression", "new_expression") \
-            or in_function(n):
-        return
-    args = val.child_by_field_name("arguments")
-    obj = next((a for a in args.named_children if a.type == "object"), None) if args is not None else None
-    given = {k: parts for k, v in _object_pairs(obj, src) if k in CLIENT_BASE_KEYS and (parts := _base_parts(v, src))}
-    if val.type == "new_expression":
-        ctor = val.child_by_field_name("constructor")
-        if ctor is not None and ctor.type == "identifier":
-            ctx.client_bases[(path, text(name, src))] = ("new", text(ctor, src), given)
-        return
-    fn = val.child_by_field_name("function")
-    prop = fn.child_by_field_name("property") if fn is not None and fn.type == "member_expression" else None
-    if prop is not None and text(prop, src) in CLIENT_FACTORIES and given:
-        ctx.client_bases[(path, text(name, src))] = ("parts", next(iter(given.values())))
-
-
-
-def _ts_interceptor(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
-    """`api.interceptors.request.use(config => { config.url = `${org}${config.url}` })` (dispatch): the request's url
-    or base is rewritten at runtime, so the client's base is not all that goes before a path — none is applied."""
-    fn, args = n.child_by_field_name("function"), n.child_by_field_name("arguments")
-    m = re.fullmatch(r"([A-Za-z_$][\w$]*)\.interceptors\.request\.use", text(fn, src)) if fn is not None else None
-    if m is None or args is None or in_function(n):
-        return
-    for a in walk(args):
-        left = a.child_by_field_name("left") if a.type in ("assignment_expression", "augmented_assignment_expression") else None
-        if left is not None and re.search(r"\.(url|baseURL)$", text(left, src)):
-            ctx.client_rewritten.add((path, m.group(1)))
-            return
-
-def _ts_client_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
-    """A class whose base is a field: `baseUrl = "/api"`, or the constructor's `this.baseUrl = options.baseUrl ||
-    "/api"` (outline's ApiClient) — the option that gives it (`baseUrl`) and its default."""
-    cname, body = n.child_by_field_name("name"), n.child_by_field_name("body")
-    if cname is None or body is None:
-        return
-    found: tuple[str | None, list] | None = None
-    for m in body.named_children:
-        key = m.child_by_field_name("name") or m.child_by_field_name("property")
-        if m.type in ("public_field_definition", "field_definition") and key is not None \
-                and text(key, src) in CLIENT_BASE_KEYS and (parts := _base_parts(m.child_by_field_name("value"), src)):
-            found = (None, parts)
-        if m.type == "method_definition" and key is not None and text(key, src) == "constructor":
-            for a in walk(m):
-                left, right = a.child_by_field_name("left"), a.child_by_field_name("right")
-                if a.type != "assignment_expression" or left is None or right is None \
-                        or not re.fullmatch(r"this\.(baseURL|baseUrl|prefixUrl)", text(left, src)):
-                    continue
-                option = None
-                if right.type == "binary_expression" and text(right.child_by_field_name("operator"), src) in ("||", "??"):
-                    given = right.child_by_field_name("left")
-                    option = text(given.child_by_field_name("property"), src) \
-                        if given is not None and given.type == "member_expression" else None
-                    right = right.child_by_field_name("right")
-                parts = _base_parts(right, src)
-                if parts:
-                    found = (option, parts)
-    if found is not None:
-        nm = text(cname, src)
-        ctx.client_classes[nm] = found if ctx.client_classes.get(nm, found) == found else None
-
-
-def _object_pairs(obj: Node | None, src: bytes) -> list[tuple[str, Node]]:
-    """(key, value) of an object literal's own pairs."""
-    out = []
-    for d in obj.named_children if obj is not None else ():
-        key, value = d.child_by_field_name("key"), d.child_by_field_name("value")
-        if d.type == "pair" and key is not None and value is not None:
-            out.append((unquote(text(key, src)), value))
-    return out
-
-
-def _base_parts(v: Node | None, src: bytes) -> list[tuple[str, str | None]] | None:
-    """A base as `PackageContext._joined` reads it: a literal, a constant, `A + "/x"`, `` `${A}/x` ``."""
-    if v is None:
-        return None
-    if v.type in STRING_NODES and not has_interpolation(v):
-        lit = first_string(v, src)
-        return [("lit", lit)] if lit else None
-    if v.type == "template_string":
-        return _template_parts(v, src)
-    if v.type in CONCAT_NODES:
-        return _concat_parts(v, src)
-    return [("ref", text(v, src))] if v.type in ("identifier", "member_expression") else None
-
-
 def _query_choice(e: Node, src: bytes) -> bool:
     """A conditional between nothing and a query string (open-webui `${query ? `?${query}` : ''}`)."""
     branches = [e.child_by_field_name(f) for f in ("consequence", "alternative")]
@@ -386,7 +148,7 @@ def _query_choice(e: Node, src: bytes) -> bool:
     texts = sorted(unquote(text(b, src)) for b in branches)
     return texts[0] == "" and texts[1][:1] in ("?", "&")
 
-def _template_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
+def template_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
     """A JS template built from constants — open-webui's `` `${WEBUI_BASE_URL}/api/v1` `` — as `A + "/x"` is:
     [("ref", "WEBUI_BASE_URL"), ("lit", "/api/v1")]. A substitution that is not a name is a parameter
     (`("ref", "")`); None without a literal part."""
@@ -399,7 +161,7 @@ def _template_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
             parts.append(("lit", text(c, src)))
     return parts if any(k == "lit" for k, _ in parts) else None
 
-def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
+def concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
     """`A + "/x" + B.C` → [("ref", "A"), ("lit", "/x"), ("ref", "C")]; None unless a `+` with a literal in it."""
     op = n.child_by_field_name("operator")
     if op is None or text(op, src) != "+":
@@ -409,7 +171,7 @@ def _concat_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
         if c is None:
             return None
         if c.type == n.type:
-            sub = _concat_parts(c, src)
+            sub = concat_parts(c, src)
             if sub is None:
                 return None
             parts += sub
@@ -934,4 +696,4 @@ def _word(n: Node, src: bytes) -> str | None:
     if n.type not in STRING_NODES or has_interpolation(n):
         return None
     lit = unquote(text(n, src))
-    return lit if _SEGMENT.match(lit) else None
+    return lit if SEGMENT.match(lit) else None
