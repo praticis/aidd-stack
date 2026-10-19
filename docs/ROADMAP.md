@@ -1,353 +1,512 @@
-# AIDD Stack — Roteiro de evolução (code graph + skills)
+# AIDD Stack — Evolution roadmap (code graph + skills)
 
-> Documento vivo. Marque `[x]` ao concluir. Atualize a seção **Onde estamos** a cada sessão
-> para que qualquer agente/pessoa retome do ponto certo.
+> A living document. Mark `[x]` when done. Update the **Where we are** section every session so that any agent or
+> person picks up from the right point.
 
-## Onde estamos
+## Where we are
 
-- **Fases:**
-  - a **Fase 0** (fundação) está concluída;
-  - a **Fase 1** começou em 2026-10-13 pelo F0.7.3;
-  - o **F1.14** (o extrator HTTP medido no corpus público, o H2) fechou em 2026-10-19.
-- **Os marcos e o porquê de cada escolha:** `docs/history.md`, um marco por linha, e `docs/decisions.md`.
-- **Medir o extrator:**
+- **Phases:**
+  - **Phase 0** (foundation) is done;
+  - **Phase 1** started on 2026-10-13 with F0.7.3;
+  - **F1.14** (the HTTP extractor measured on the public corpus, H2) closed on 2026-10-19.
+- **The milestones and why each choice was made:** `docs/history.md`, one milestone per line, and
+  `docs/decisions.md`.
+- **Measuring the extractor:**
   - `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`;
-  - o hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
-  - os números estão em `docs/corpus-report.md`.
-- **Em curso:**
-  - o PR #5 (`feature/f114-close`: o fechamento do F1.14), validado numa instalação ao vivo e esperando o merge;
-  - a fase 0a do H4 (os docs de trabalho reciclados): feita em 2026-10-19 numa branch local, esperando o merge do #5.
-- **A ordem até o SCIP (H5-D1):** H4 fase 0a → H5 (refatoração do indexador, `docs/handoffs/H5-indexer-refactor.md`,
-  sem mudar comportamento) → hold-out novo, medido uma vez, e o handoff dele (H2-D21) → P2 (o indexador em repo
-  próprio) → SCIP (F1.1, F1.2).
-- **Handoffs ativos:** H3 (eficiência do dev com IA), H4 (docs públicos e o indexador em repo próprio) e H5.
-  Fechados: H1 e H2.
-- **Candidatos:**
-  - `dispatch` para validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
-  - re-rodar a Q4 .NET com o despacho.
-- **Pendências sem bloqueio:**
-  - o `raw_path` de uma chamada por wrapper com base terminada em `/` sai com barra dupla (o path normalizado está
-    certo);
-  - PAT com acesso à org do tenant;
-  - validação em WSL (SO14);
-  - lacunas do feedback de code review: Go `who_calls` entre repos, mensageria por tipo de evento.
+  - the hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
+  - the numbers are in `docs/corpus-report.md`.
+- **In progress:**
+  - PR #5 (`feature/f114-close`: the F1.14 close) was validated on a live install and merged on 2026-10-19;
+  - H4 phase 0a (the working docs recycled, every doc in English): done on 2026-10-19, in its own PR.
+- **The order up to SCIP (H5-D1):** H4 phase 0a → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
+  with no behavior change) → the new hold-out, measured once, and its handoff (H2-D21) → P2 (the indexer in its own
+  repo) → SCIP (F1.1, F1.2).
+- **Active handoffs:** H3 (AI dev efficiency), H4 (public docs and the indexer in its own repo) and H5. Closed: H1
+  and H2.
+- **Candidates:**
+  - `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
+  - re-run the .NET Q4 with dispatch.
+- **Non-blocking leftovers:**
+  - the `raw_path` of a call through a wrapper whose base ends in `/` comes out with a double slash (the normalized
+    path is right);
+  - a PAT with access to the tenant's org;
+  - validation on WSL (SO14);
+  - gaps from the code review feedback: Go `who_calls` across repos, messaging by event type.
 
-## Princípios (não negociáveis)
+## Principles (non-negotiable)
 
-- Camada de conhecimento (grafo + vetores + vault) é **independente do orquestrador**: só MCP + skills. Cline, Roo, Goose, Claude Code ou Aider consomem o mesmo backend.
-- Extração **determinística** (SCIP / tree-sitter). LLM só para sumarizar e desambiguar; nunca como parser primário.
-- Todo nó/aresta carrega `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; arestas macro carregam `confidence` + `evidence`.
-- Segredos nunca entram no índice (extrair o *nome* da env var, nunca o valor).
-- Cada fase termina com **perguntas douradas** passando (recall medido, não sentido).
-- **Forma do código** (decidido em 2026-10-18; o H5 leva o código atual até ela): complexidade ciclomática de **um
-  dígito** por função (≤ 9, `ruff C901`) e no máximo **300 linhas por módulo**, contadas no arquivo inteiro. O CI
-  relata hoje e passa a bloquear quando o autor decidir. Código novo já nasce dentro das metas.
-- **Comentários só com o porquê que o código não diz:** um contrato, um caso de borda, a razão de uma ordem. Sem
-  referência a docs nem a itens de planejamento (ROADMAP, `F1.x`, decisões, ADRs, seções de guia), porque os docs
-  mudam e o código não deve apontar para eles. Sem nome de projeto: o exemplo descreve a forma do código, e só se
-  nomeia o framework ou a biblioteca que define o comportamento.
-- **Nenhum nome real de tenant, cliente ou projeto privado** em docs, código, testes ou fixtures. O repositório é
-  público. Onde um exemplo for preciso, usa-se um nome neutro (`orders-api`, `PARTNER_API_URL`).
+- The knowledge layer (graph + vectors + vault) is **orchestrator-independent**: MCP + skills only. Cline, Roo,
+  Goose, Claude Code or Aider consume the same backend.
+- **Deterministic** extraction (SCIP / tree-sitter). An LLM only summarizes and disambiguates; never the primary
+  parser.
+- Every node/edge carries `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; macro edges carry
+  `confidence` + `evidence`.
+- Secrets never enter the index (extract the env var's *name*, never its value).
+- Every phase ends with the **golden questions** passing (recall measured, not felt).
+- **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
+  complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
+  reports today and starts blocking when the author decides. New code meets the targets from the start.
+- **Comments say only the why the code does not:** a contract, an edge case, the reason for an order. No reference to
+  docs or planning items (ROADMAP, `F1.x`, decisions, ADRs, guide sections), because docs change and the code should
+  not point at them. No project name: an example describes the shape of the code, and only the framework or library
+  that defines the behavior is named.
+- **No real tenant, client or private project name** in docs, code, tests or fixtures. The repository is public.
+  Where an example is needed, a neutral name is used (`orders-api`, `PARTNER_API_URL`).
 
-## Stack alvo (open source / baixo custo)
+## Target stack (open source / low cost)
 
-| Camada | Ferramenta | Licença / custo |
+| Layer | Tool | License / cost |
 |---|---|---|
-| Parser universal | tree-sitter | MIT |
-| Indexação precisa | SCIP: scip-go, scip-typescript, scip-dotnet, scip-python | Apache-2.0 |
-| Graph DB | Neo4j Community (alt.: Memgraph Community) | GPLv3 / BSL — gratuitos |
-| Vetores | Qdrant (já no compose) | Apache-2.0 |
+| Universal parser | tree-sitter | MIT |
+| Precise indexing | SCIP: scip-go, scip-typescript, scip-dotnet, scip-python | Apache-2.0 |
+| Graph DB | Neo4j Community (alt.: Memgraph Community) | GPLv3 / BSL — free |
+| Vectors | Qdrant (already in the compose file) | Apache-2.0 |
 | Embeddings | FastEmbed + `jinaai/jina-embeddings-v2-base-code` (alt.: nomic-embed-code via Ollama) | Apache-2.0, local |
-| Docs/ADR | Obsidian + MCP (já no compose) | gratuito (uso comercial liberado desde 2025) |
-| MCP `atlas` | FastMCP (Python) próprio + mcp-neo4j-cypher | Apache-2.0 |
-| LLM local | Ollama (Qwen-Coder / DeepSeek para sumários, classificação) | gratuito |
-| LLM frontier | Claude (planejamento, refinamento, review) | **único custo variável** |
-| Planejamento | Jira via Atlassian MCP | já disponível |
-| Spec | Spec Kit (opcional) | MIT |
-| CI (fase 3) | GitHub Actions / GitLab CI com runner self-hosted | gratuito/baixo |
+| Docs/ADR | Obsidian + MCP (already in the compose file) | free (commercial use allowed since 2025) |
+| `atlas` MCP | our own FastMCP (Python) + mcp-neo4j-cypher | Apache-2.0 |
+| Local LLM | Ollama (Qwen-Coder / DeepSeek for summaries, classification) | free |
+| Frontier LLM | Claude (planning, refinement, review) | **the only variable cost** |
+| Planning | Jira via the Atlassian MCP | already available |
+| Spec | Spec Kit (optional) | MIT |
+| CI (phase 3) | GitHub Actions / GitLab CI with a self-hosted runner | free/low |
 
-## Quando cada coisa fica utilizável (para não se perder)
+## When each thing becomes usable (so as not to get lost)
 
-| Marco | O que você passa a poder fazer | Muda algo nas skills? |
+| Milestone | What you can now do | Does it change the skills? |
 |---|---|---|
-| Compose com Neo4j (feito) | Abrir `localhost:7474`; MCP `atlas` responde `get_neo4j_schema` | **Não.** Grafo vazio; `scan` segue igual |
-| F0.3–F0.5 indexer + linker v0 | `aidd index <repo>` popula o grafo; validar com Cypher / perguntas douradas | Não |
-| F0.6 MCP `atlas` próprio (:3005) | Ferramentas de intenção (`repo_map`, `who_consumes`…) disponíveis no Claude Code | Não, mas habilita o próximo |
-| F0.8 `scan` v2 | `scan` consulta o grafo primeiro, com fallback ao fluxo atual | **Sim** — transparente: mesmo gatilho, mais precisa |
-| F1.10 / F2.7 `flow`, `impact` | Perguntas micro/macro respondidas com evidência | Novas skills |
-| S4/S5 `refine-business`, `refine-tech` | Fluxo de refinamento completo (Jira → contexto → área → spec) | Novas skills; dependem de `impact` |
+| Compose with Neo4j (done) | Open `localhost:7474`; the `atlas` MCP answers `get_neo4j_schema` | **No.** Empty graph; `scan` stays the same |
+| F0.3–F0.5 indexer + linker v0 | `aidd index <repo>` fills the graph; validate with Cypher / golden questions | No |
+| F0.6 our own `atlas` MCP (:3005) | Intent tools (`repo_map`, `who_consumes`…) available in Claude Code | No, but it enables the next one |
+| F0.8 `scan` v2 | `scan` queries the graph first, falling back to the current flow | **Yes** — transparent: same trigger, more precise |
+| F1.10 / F2.7 `flow`, `impact` | Micro/macro questions answered with evidence | New skills |
+| S4/S5 `refine-business`, `refine-tech` | The full refinement flow (Jira → context → area → spec) | New skills; they depend on `impact` |
 
-Regra: o grafo só entra nas skills via MCP `atlas` e **sempre com fallback**. Até o F0.6 ele é infra em preparação — nada a acionar no dia a dia.
+Rule: the graph reaches the skills only through the `atlas` MCP and **always with a fallback**. Up to F0.6 it is
+infra in preparation — nothing to trigger day to day.
 
-### Checklist de validação do compose (validado 2026-09-10/11; `install-check.sh` cobre os itens 2–7 a cada upgrade)
+### Compose validation checklist (validated 2026-09-10/11; `install-check.sh` covers items 2–7 on every upgrade)
 
-Atalho: `~/.aidd/install-check.sh` (copiado pelo `install.sh`) roda os itens 2–7 abaixo e imprime OK/FAIL por check.
+Shortcut: `~/.aidd/install-check.sh` (copied by `install.sh`) runs items 2–7 below and prints OK/FAIL per check.
 
-
-- [x] `.env` tem `NEO4J_USER=neo4j` e `NEO4J_PASSWORD=<senha>` (o `install.sh` gera; se o volume já existia com outra senha: `docker compose down -v` e subir de novo — dev only)
-- [x] `docker compose up -d --build` sem erro; `docker compose ps` mostra `neo4j` *healthy* e `neo4j-init` como *Exited (0)*
-- [x] `docker logs aidd-neo4j-init` sem erro (o cypher-shell é silencioso em sucesso — vazio é bom; erro de sintaxe aparece aqui)
-- [x] **Neo4j Browser** em <http://localhost:7474> (login com o `.env`): `SHOW CONSTRAINTS` lista 14 constraints; `SHOW INDEXES` inclui `symbol_fulltext`; `RETURN apoc.version()` responde
-- [x] `docker logs aidd-mcp-atlas` mostra o Uvicorn escutando em 0.0.0.0:3000; `curl -s http://localhost:3005/healthz` devolve `{"status":"ok","neo4j":true,...}`
-- [x] (debug) `docker compose --profile debug up -d mcp-neo4j` → `curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/mcp/` devolve um status HTTP
-- [x] No Claude Code, com `setup/.mcp.json` aplicado: `/mcp` lista `atlas`; pedir "rode `get_neo4j_schema`" retorna vazio (grafo sem dados) sem erro de autenticação
-- [x] `install.sh` re-executado sincroniza `~/.aidd/neo4j/` e o `docker-compose.yml` novo
-- [x] Docs: `git rm docs/graph-schema.md` (movido para `neo4j/SCHEMA.md`)
+- [x] `.env` has `NEO4J_USER=neo4j` and `NEO4J_PASSWORD=<password>` (`install.sh` generates them; if the volume
+  already existed with another password: `docker compose down -v` and bring it up again — dev only)
+- [x] `docker compose up -d --build` with no error; `docker compose ps` shows `neo4j` *healthy* and `neo4j-init` as
+  *Exited (0)*
+- [x] `docker logs aidd-neo4j-init` with no error (cypher-shell is silent on success — empty is good; a syntax error
+  shows here)
+- [x] **Neo4j Browser** at <http://localhost:7474> (log in with `.env`): `SHOW CONSTRAINTS` lists 14 constraints;
+  `SHOW INDEXES` includes `symbol_fulltext`; `RETURN apoc.version()` answers
+- [x] `docker logs aidd-mcp-atlas` shows Uvicorn listening on 0.0.0.0:3000; `curl -s http://localhost:3005/healthz`
+  returns `{"status":"ok","neo4j":true,...}`
+- [x] (debug) `docker compose --profile debug up -d mcp-neo4j` → `curl -s -o /dev/null -w "%{http_code}"
+  http://localhost:3004/mcp/` returns an HTTP status
+- [x] In Claude Code, with `setup/.mcp.json` applied: `/mcp` lists `atlas`; asking "run `get_neo4j_schema`" returns
+  empty (a graph with no data) with no authentication error
+- [x] Re-running `install.sh` syncs `~/.aidd/neo4j/` and the new `docker-compose.yml`
+- [x] Docs: `git rm docs/graph-schema.md` (moved to `neo4j/SCHEMA.md`)
 
 ---
 
-## Fase 0 — Fundação (PoC ponta a ponta, 2 repos)
+## Phase 0 — Foundation (end-to-end PoC, 2 repos)
 
-Objetivo: provar micro + macro com o mínimo: dois repos (Go + Node) que se falam por gRPC/HTTP, e uma pergunta `who_consumes` respondida a partir do grafo.
+Goal: prove micro + macro with the minimum: two repos (Go + Node) that talk over gRPC/HTTP, and a `who_consumes`
+question answered from the graph.
 
-- [x] F0.1–F0.2 Neo4j Community no compose (D1) e o esquema em `neo4j/SCHEMA.md`
-- [x] F0.3 O indexador `indexer/`: `aidd index`, tree-sitter → nós micro, `MERGE` idempotente, GC de órfãos e
-  `IndexRun`. Também: o F0.3.1 (validado no atlas real), o F0.3.2 (idempotência e GC), o F0.3.5 (processo de
-  indexação: `atlas.yaml`, `plan`/`bootstrap`/`refresh`, `docs/indexing-process.md`), o F0.3.6 (política de refs por
-  repo) e o F0.3.7a (wrapper de host, instalação sem fetch, D12)
-- [x] F0.4 O extrator de integrações HTTP (`core/integrations.py` + `languages/<lang>/http.py`). Também:
-  - F0.4.1, validado no portfólio;
-  - F0.4.2, as fixtures do padrão do autor (.NET: `dotnet-praticis`);
-  - F0.4.3, o corpus público, H2a e H2b: `docs/corpus-report.md`, `docs/handoffs/H2-roadmap.md`;
-  - F0.4.4, o refactor do ADR-003;
-  - F0.4.5, as convenções e o `Violation`.
-- [x] F0.5 O linker: `CONSUMES`/`CALLED_FROM` por `path_key` e método, com desempate por hints. Também o F0.5.1
-  (validado; `DEPENDS_ON` por manifesto)
-- [x] F0.6 O MCP `atlas`, com 11 tools (`indexer/aidd_indexer/mcp/server.py`). Também o F0.6.1, validado no Claude Code
-- [x] F0.7 As 5 perguntas douradas respondidas pelo grafo (`docs/golden-questions.md`). Também:
-  - F0.7.1–F0.7.2b, `CALLS` pelo tipo do receptor em Go e C#;
-  - F0.7.3, interfaces Go e o despacho do mediator.
-- [x] F0.8 A skill `scan` sobre o atlas, com fallback. Também o F0.8.1, validado em 3 cenários
+- [x] F0.1–F0.2 Neo4j Community in the compose file (D1) and the schema in `neo4j/SCHEMA.md`
+- [x] F0.3 The `indexer/`: `aidd index`, tree-sitter → micro nodes, idempotent `MERGE`, orphan GC and `IndexRun`.
+  Also: F0.3.1 (validated on the real atlas), F0.3.2 (idempotency and GC), F0.3.5 (the indexing process:
+  `atlas.yaml`, `plan`/`bootstrap`/`refresh`, `docs/indexing-process.md`), F0.3.6 (per-repo ref policy) and F0.3.7a
+  (host wrapper, install without fetch, D12)
+- [x] F0.4 The HTTP integrations extractor (`core/integrations.py` + `languages/<lang>/http.py`). Also:
+  - F0.4.1, validated on the portfolio;
+  - F0.4.2, the fixtures of the author's pattern (.NET: `dotnet-praticis`);
+  - F0.4.3, the public corpus, H2a and H2b: `docs/corpus-report.md`, `docs/handoffs/H2-roadmap.md`;
+  - F0.4.4, the ADR-003 refactor;
+  - F0.4.5, conventions and `Violation`.
+- [x] F0.5 The linker: `CONSUMES`/`CALLED_FROM` by `path_key` and method, with ties broken by hints. Also F0.5.1
+  (validated; `DEPENDS_ON` by manifest)
+- [x] F0.6 The `atlas` MCP, with 11 tools (`indexer/aidd_indexer/mcp/server.py`). Also F0.6.1, validated in Claude
+  Code
+- [x] F0.7 The 5 golden questions answered by the graph (`docs/golden-questions.md`). Also:
+  - F0.7.1–F0.7.2b, `CALLS` by receiver type in Go and C#;
+  - F0.7.3, Go interfaces and mediator dispatch.
+- [x] F0.8 The `scan` skill over the atlas, with a fallback. Also F0.8.1, validated in 3 scenarios
 
-**Saída da fase:** grafo local com 2 repos, `who_consumes` funcionando, `scan` lendo do grafo. **Obtido (2026-10-03):** 8 repos / 28 snapshots do portfólio + par .NET de referência; 130 endpoints, 90 `CONSUMES` exatas, 45 `DEPENDS_ON`; 11 tools no MCP; Q1–Q5 respondidas pelo grafo em Go e .NET sem leitura de código; 40 testes, corpus de 15 repos como regressão.
+**Phase exit:** a local graph with 2 repos, `who_consumes` working, `scan` reading from the graph. **Achieved
+(2026-10-03):** 8 repos / 28 snapshots of the portfolio + the reference .NET pair; 130 endpoints, 90 exact
+`CONSUMES`, 45 `DEPENDS_ON`; 11 tools in the MCP; Q1–Q5 answered by the graph in Go and .NET without reading code;
+40 tests, a corpus of 15 repos as regression.
 
-## Processo de atualização contínua (trilha própria — MUITO importante)
+## Continuous update process (its own track — VERY important)
 
-> **2026-10-12 — D15:** a atualização contínua saiu do host. O serviço `refresher` do compose
-> (`aidd daemon`) substitui o agendador (U2, U2.1, D14) e o fetch no host (D12/D13 seguem valendo
-> no princípio: PAT somente-leitura, chave pessoal fora); U6 deixa de ser necessário. Itens abaixo
-> ficam como histórico. Detalhes na trilha **Segurança e operação**.
+> **2026-10-12 — D15:** continuous update left the host. The compose `refresher` service (`aidd daemon`) replaces the
+> scheduler (U2, U2.1, D14) and the fetch on the host (D12/D13 still hold in principle: a read-only PAT, the personal
+> key kept out); U6 is no longer needed. The items below stay as history. Details in the **Security and operations**
+> track.
 >
-> Separado da instalação (D12). Sem ele o atlas envelhece e as skills respondem sobre um mapa
-> desatualizado. **U1–U3 validados em 2026-09-11**: refresh agendado via Task Scheduler (WSL),
-> PAT somente-leitura, 14 snapshots do time reindexados sem intervenção, `install-check` verde.
+> Separate from the install (D12). Without it the atlas ages and the skills answer about an outdated map. **U1–U3
+> validated on 2026-09-11**: refresh scheduled through Task Scheduler (WSL), a read-only PAT, 14 of the team's
+> snapshots re-indexed with no intervention, `install-check` green.
 
-- [x] U1 **Credencial do serviço** (D13): PAT **somente-leitura** em `~/.aidd/secrets/git-token` (600), coletado na etapa 6 do `install.sh`; o wrapper usa via `GIT_ASKPASS` e reescreve remotos ssh→https só no fetch. Sua chave pessoal fica fora do agendador. Validado: `fetch: ok (service)` nos 6 repos. Nota: fine-grained exige aprovação de admin na org — classic (escopo `repo`, expiração curta) serve como ponte; **GitHub App** é o alvo para o servidor (F1)
-- [x] U2 **Agendador no host**: `aidd schedule install|status|remove|check [--fix]` — **systemd user timer preferido** (Linux e WSL com `systemd=true`; roda onde Docker e repos vivem, sem janela, `enable-linger`), Task Scheduler oculto (`conhost --headless`) como fallback no WSL sem systemd, cron por último; intervalo em `AIDD_REFRESH_INTERVAL_MINUTES` (.env, default 15); `flock` + `~/.aidd/logs/refresh.log` rotativo. Validado no WSL (`schtasks.exe` a partir do distro)
-- [x] U3 **Observabilidade**: `aidd status` com idade e `trigger` (manual/scheduled/bootstrap); `install-check.sh` seção 6 falha se o último refresh > 2× intervalo
-- [x] U2.1 Agendador dentro do WSL (D14): `systemd=true` + linger + autostart do distro (`.vbs` no Startup); task do Windows removida automaticamente; `aidd schedule check --fix` valida/repara. Validado em instalação limpa 2026-09-11
-- [x] U3.1 Validação ponta a ponta (2026-09-11): instalação limpa → etapa 6 com PAT → task criada → refresh agendado reindexou 14 snapshots (`trigger=scheduled auth=service rc=0`) → `install-check.sh` verde
-- [x] U3.2 Re-validação após o fix das gramáticas (2026-09-11 14:29, imagem offline): push em `<project-a>@feature/<ticket>` → timer systemd → `1 of 26 changed` → extract/resolve/write em 1 s (`orphans_deleted: 1`) → `rc=0` → `aidd status` com o SHA novo, `age=1m`, `trigger=scheduled`. **Trilha U1–U3 concluída.**
-- [ ] U4 **Gatilho por evento (F3)**: webhook/CI em push de branch protegida → `aidd index <repo> --ref <branch>`; substitui o agendador no servidor central
-- [x] U5 **Fetch in-container**: virou o caminho padrão com o refresher (D15) — espelho por repo, PAT como arquivo via `git-askpass.sh`. Validado com remoto local no e2e; **falta validar contra o GitHub com um PAT real**
-- [x] U6 **Portabilidade Linux / macOS** — resolvido pelo D15: nada de agendador nem bash GNU no host (o `aidd` virou cliente fino compatível com bash 3.2). A lista abaixo fica como histórico
-  - Linux nativo: deve funcionar como está (systemd user timer → cron como fallback). Falta só **validar** em uma máquina (Ubuntu/Fedora com Docker Engine ou Docker Desktop)
-  - macOS — ajustes necessários no `setup/aidd` e `install-check.sh` (bash 3.2 e utilitários BSD):
-    - [ ] agendador: sem systemd/`loginctl` → hoje cai no `crontab` (funciona, mas pede permissão de Full Disk Access ao cron e não sobrevive bem a sleep); implementar **launchd agent** (`~/Library/LaunchAgents/com.aidd.refresh.plist`, `StartInterval`) como opção preferida no macOS
-    - [ ] `flock` não existe no macOS → fallback com `mkdir` lock (ou `shlock`/`lockfile`)
-    - [ ] `mapfile` exige bash ≥ 4 (macOS traz 3.2) → trocar por `while read`, ou exigir `brew install bash` e checar `BASH_VERSINFO` no início
-    - [ ] `stat -c %s` / `stat -c %a` → `stat -f %z` / `stat -f %Lp` no BSD (helper `fsize()`/`fperm()` detectando `uname`)
-    - [ ] `date -d "<ts>" +%s` → `date -j -f ... ` no BSD (helper `to_epoch()`), ou gravar epoch no log além do ISO
-    - [ ] `sed -i` sem sufixo no `check --fix` (wsl.conf) é só WSL — ok; padrão `sed -i.bak && rm` já usado no `install.sh`
-    - [ ] ssh-agent in-container (U5, só se `fetch: true`): no Docker Desktop macOS o socket é `/run/host-services/ssh-auth.sock`, não `$SSH_AUTH_SOCK`
-    - [ ] `install-check.sh` seção 6: `schedule check` deve reconhecer launchd (`launchctl list | grep com.aidd.refresh`)
-  - Indexer, compose, Neo4j, Qdrant e MCPs: idênticos nas 3 plataformas (rodam em containers) — sem ajuste
+- [x] U1 **Service credential** (D13): a **read-only** PAT in `~/.aidd/secrets/git-token` (600), collected in step 6
+  of `install.sh`; the wrapper uses it through `GIT_ASKPASS` and rewrites ssh→https remotes only for the fetch. Your
+  personal key stays out of the scheduler. Validated: `fetch: ok (service)` on the 6 repos. Note: fine-grained needs
+  admin approval in the org — classic (scope `repo`, short expiry) works as a bridge; a **GitHub App** is the target
+  for the server (F1)
+- [x] U2 **Scheduler on the host**: `aidd schedule install|status|remove|check [--fix]` — **systemd user timer
+  preferred** (Linux and WSL with `systemd=true`; runs where Docker and the repos live, no window, `enable-linger`),
+  hidden Task Scheduler (`conhost --headless`) as a fallback on WSL without systemd, cron last; interval in
+  `AIDD_REFRESH_INTERVAL_MINUTES` (.env, default 15); `flock` + a rotating `~/.aidd/logs/refresh.log`. Validated on
+  WSL (`schtasks.exe` from the distro)
+- [x] U3 **Observability**: `aidd status` with age and `trigger` (manual/scheduled/bootstrap); `install-check.sh`
+  section 6 fails if the last refresh > 2× the interval
+- [x] U2.1 Scheduler inside WSL (D14): `systemd=true` + linger + distro autostart (`.vbs` in Startup); the Windows
+  task removed automatically; `aidd schedule check --fix` validates/repairs. Validated on a clean install 2026-09-11
+- [x] U3.1 End-to-end validation (2026-09-11): clean install → step 6 with a PAT → task created → the scheduled
+  refresh re-indexed 14 snapshots (`trigger=scheduled auth=service rc=0`) → `install-check.sh` green
+- [x] U3.2 Re-validation after the grammar fix (2026-09-11 14:29, offline image): a push to
+  `<project-a>@feature/<ticket>` → systemd timer → `1 of 26 changed` → extract/resolve/write in 1 s
+  (`orphans_deleted: 1`) → `rc=0` → `aidd status` with the new SHA, `age=1m`, `trigger=scheduled`. **Track U1–U3
+  done.**
+- [ ] U4 **Event trigger (F3)**: a webhook/CI on a push to a protected branch → `aidd index <repo> --ref <branch>`;
+  replaces the scheduler on the central server
+- [x] U5 **In-container fetch**: became the default path with the refresher (D15) — a mirror per repo, the PAT as a
+  file through `git-askpass.sh`. Validated with a local remote in the e2e; **still to validate against GitHub with a
+  real PAT**
+- [x] U6 **Linux / macOS portability** — solved by D15: no scheduler and no GNU bash on the host (`aidd` became a thin
+  client compatible with bash 3.2). The list below stays as history
+  - Native Linux: should work as is (systemd user timer → cron as a fallback). Only needs **validating** on a machine
+    (Ubuntu/Fedora with Docker Engine or Docker Desktop)
+  - macOS — changes needed in `setup/aidd` and `install-check.sh` (bash 3.2 and BSD utilities):
+    - [ ] scheduler: no systemd/`loginctl` → today it falls back to `crontab` (works, but asks for Full Disk Access
+      for cron and does not survive sleep well); implement a **launchd agent**
+      (`~/Library/LaunchAgents/com.aidd.refresh.plist`, `StartInterval`) as the preferred option on macOS
+    - [ ] `flock` does not exist on macOS → a fallback with a `mkdir` lock (or `shlock`/`lockfile`)
+    - [ ] `mapfile` needs bash ≥ 4 (macOS ships 3.2) → switch to `while read`, or require `brew install bash` and check
+      `BASH_VERSINFO` at the start
+    - [ ] `stat -c %s` / `stat -c %a` → `stat -f %z` / `stat -f %Lp` on BSD (a `fsize()`/`fperm()` helper detecting
+      `uname`)
+    - [ ] `date -d "<ts>" +%s` → `date -j -f ... ` on BSD (a `to_epoch()` helper), or write the epoch to the log
+      besides the ISO date
+    - [ ] `sed -i` without a suffix in `check --fix` (wsl.conf) is WSL only — ok; the `sed -i.bak && rm` pattern is
+      already used in `install.sh`
+    - [ ] in-container ssh-agent (U5, only if `fetch: true`): on Docker Desktop macOS the socket is
+      `/run/host-services/ssh-auth.sock`, not `$SSH_AUTH_SOCK`
+    - [ ] `install-check.sh` section 6: `schedule check` must recognize launchd
+      (`launchctl list | grep com.aidd.refresh`)
+  - Indexer, compose, Neo4j, Qdrant and MCPs: identical on the 3 platforms (they run in containers) — no change
 
-## Segurança e operação (trilha própria)
+## Security and operations (its own track)
 
-> Pré-requisito para adoção em organizações. Revisão de 2026-10-12: o stack nasceu como ferramenta
-> local de um dev e expunha mais do que devia (ver "Onde estamos"). Ordem: fechar o que estava exposto,
-> tirar estado e credenciais do host, depois governança.
+> A prerequisite for adoption by organizations. Review of 2026-10-12: the stack was born as one dev's local tool and
+> exposed more than it should. Order: close what was exposed, take state and credentials off the host, then
+> governance.
 
-Feito (2026-10-12, validado no e2e isolado em macOS/Docker Desktop):
+Done (2026-10-12, validated in the isolated e2e on macOS/Docker Desktop):
 
-- [x] SO1 **Exposição**: toda porta publicada em `AIDD_BIND_ADDRESS` (default `127.0.0.1`); os MCPs não publicam nada — o **`mcp-gateway`** (nginx fixado) os serve nas mesmas portas (3001/3002/3003/3005, `.mcp.json` não muda) e devolve 403 quando o `Host` não é localhost/127.0.0.1/[::1] ou quando um navegador manda `Origin` de outro site (DNS rebinding). O `atlas` também valida `Host`/`Origin` sozinho (SDK MCP). `install-check.sh` confere portas e recusas
-- [x] SO2 **Credenciais**: Qdrant exige `QDRANT_API_KEY` (gerada pelo `install.sh`), CORS desligado; `mcp-git` sem chave ssh/ssh-agent (operações locais; push/pull no terminal do dev); o PAT do refresher entra como secret em arquivo (`/run/secrets/git-token`), nunca em variável de ambiente
-- [x] SO3 **Isolamento de tenant (lógico)**: `cypher_readonly` continua oferecido nos dois modos (default `ATLAS_RAW_CYPHER=on`), mas Cypher livre não fica preso a um tenant — num atlas multi-tenant cujos tenants não podem se ver (vários clientes na mesma máquina), `ATLAS_RAW_CYPHER=off` o retira; Neo4j carrega só `apoc.version`, `apoc.meta.*` e os utilitários puros `apoc.coll/text/map.*` (sem `apoc.load`/`export`/`cypher.*` → sem acesso a arquivo/URL nem Cypher dinâmico); telemetria do Neo4j desligada
-- [x] SO4 **Supply chain (parcial)**: imagens e pacotes com versão fixa (neo4j 5.26.30, qdrant v1.19.1, node 24.21.0, python 3.12.15, nginx 1.28.0, `@cyanheads/git-mcp-server@2.15.3`, `mcp-obsidian@0.8.2`, `mcp-proxy@6.7.16`, `mcp-server-qdrant==0.8.1`, `mcp-neo4j-cypher==0.6.0`); o obsidian não baixa mais do npm a cada start
-- [x] SO5 **Refresher em container (D15)**: `aidd daemon` no compose (restart unless-stopped, jitter ± 10 %, SIGTERM termina o snapshot em curso, limites de CPU/memória, log rotativo); `refresh` cobre todos os tenants; workspace **só leitura** + espelho bare por repo (`core/mirror.py`): o clone do dev nunca recebe `FETCH_HEAD`, refs ou arquivos de root; containers como `AIDD_UID`/`AIDD_GID`; `aidd` do host vira cliente fino (bash 3.2) — `schedule install|status|check --fix` gerenciam o container e removem agendadores antigos; `install.sh` migra `fetch: false` → `true` nos manifestos gerados
-- [x] SO6 **Frescor visível**: `status.json` + healthcheck (`aidd daemon-health`), `RefreshState` por tenant no grafo, `atlas_status.refresh.stale` (> 2 intervalos sem rodar) e a skill `scan` avisa; `install-check` confere a idade por tenant; idade de snapshot corrigida
+- [x] SO1 **Exposure**: every published port on `AIDD_BIND_ADDRESS` (default `127.0.0.1`); the MCPs publish nothing
+  — the **`mcp-gateway`** (pinned nginx) serves them on the same ports (3001/3002/3003/3005, `.mcp.json` does not
+  change) and returns 403 when the `Host` is not localhost/127.0.0.1/[::1] or when a browser sends an `Origin` from
+  another site (DNS rebinding). `atlas` also validates `Host`/`Origin` by itself (MCP SDK). `install-check.sh` checks
+  the ports and the refusals
+- [x] SO2 **Credentials**: Qdrant requires `QDRANT_API_KEY` (generated by `install.sh`), CORS off; `mcp-git` without
+  an ssh key/ssh-agent (local operations; push/pull in the dev's terminal); the refresher's PAT comes in as a file
+  secret (`/run/secrets/git-token`), never as an environment variable
+- [x] SO3 **Tenant isolation (logical)**: `cypher_readonly` stays offered in both modes (default
+  `ATLAS_RAW_CYPHER=on`), but free Cypher is not bound to a tenant — on a multi-tenant atlas whose tenants must not
+  see each other (several clients on the same machine), `ATLAS_RAW_CYPHER=off` removes it; Neo4j loads only
+  `apoc.version`, `apoc.meta.*` and the pure utilities `apoc.coll/text/map.*` (no `apoc.load`/`export`/`cypher.*` →
+  no file/URL access and no dynamic Cypher); Neo4j telemetry off
+- [x] SO4 **Supply chain (partial)**: images and packages at fixed versions (neo4j 5.26.30, qdrant v1.19.1, node
+  24.21.0, python 3.12.15, nginx 1.28.0, `@cyanheads/git-mcp-server@2.15.3`, `mcp-obsidian@0.8.2`,
+  `mcp-proxy@6.7.16`, `mcp-server-qdrant==0.8.1`, `mcp-neo4j-cypher==0.6.0`); obsidian no longer downloads from npm
+  on every start
+- [x] SO5 **Refresher in a container (D15)**: `aidd daemon` in the compose file (restart unless-stopped, ± 10 %
+  jitter, SIGTERM finishes the snapshot in progress, CPU/memory limits, rotating log); `refresh` covers every tenant;
+  a **read-only** workspace + a bare mirror per repo (`core/mirror.py`): the dev's clone never receives `FETCH_HEAD`,
+  refs or root-owned files; containers as `AIDD_UID`/`AIDD_GID`; the host's `aidd` becomes a thin client (bash 3.2)
+  — `schedule install|status|check --fix` manage the container and remove old schedulers; `install.sh` migrates
+  `fetch: false` → `true` in the generated manifests
+- [x] SO6 **Visible freshness**: `status.json` + healthcheck (`aidd daemon-health`), `RefreshState` per tenant in the
+  graph, `atlas_status.refresh.stale` (> 2 intervals without running) and the `scan` skill warns; `install-check`
+  checks the age per tenant; snapshot age fixed
 
-Em aberto:
+Open:
 
-- [ ] SO7 **Isolamento forte entre tenants**: hoje Neo4j, Qdrant e vault são compartilhados (Community não tem RBAC nem vários bancos) e qualquer tool aceita `tenant`. Para quem atende várias organizações na mesma máquina: um stack por tenant (projeto compose com portas próprias) ou, no servidor (F3.4), tenant injetado pelo token
-- [ ] SO8 **Autenticação nos MCPs** (token por dev no gateway; hoje a defesa é localhost + Host/Origin) — liga com F3.4; cuidado: o token não pode ir no `.mcp.json` distribuído para dentro dos repos
-- [ ] SO9 **Prompt injection e memória envenenada**: código de terceiros, Jira e notas entram no contexto, e o que o agente grava no vault/Qdrant volta como "convention" em toda sessão. Proveniência nas lições (sessão, repo, sha), revisão humana antes de virar convenção, skills tratando esse conteúdo como dado — para a memória, o mecanismo é a trilha **Conhecimento do projeto** (evidência por insight, só humano promove a `accepted`, K5)
-- [ ] SO10 **Supply chain completo**: digests (`@sha256`) nas imagens, lock com hashes (Python `--require-hashes`, npm `package-lock`), SBOM + scan (Trivy/Grype) no CI, Renovate para bumps deliberados; dependências do `pyproject.toml` do indexer ainda são faixas
-- [ ] SO11 **Backup/restore**: o grafo e os espelhos se refazem; as lições/insights do Qdrant e o vault **não** (`docker compose down -v` apaga as lições). Snapshot do Qdrant agendado + documentar o que é descartável
-- [ ] SO12 **Escala com N devs**: N laptops × M repos a cada 15 min batem no rate limit secundário do GitHub; backoff em falha de fetch; servidor central (F3) para organizações maiores. Espelhos dobram o disco dos repos — GC de espelhos de repos que saíram do workspace
-- [x] SO13 **Skill indexa sob demanda** (2026-10-12): repo fora do atlas → a `scan` roda `~/.aidd/aidd refresh --tenant <t> --repos <repo> --wait 300` (o mesmo plano do refresher: branch padrão + ativas; espera um refresh em curso; não conta como rodada do refresher nem faz GC; repo ausente/excluído = erro com o motivo) e, para a branch em que vai trabalhar, `aidd index <repo> --ref <branch> --ephemeral`; `allowed-tools` da skill libera só esses dois comandos (nunca `aidd:*`)
-- [ ] SO14 **Validar em WSL e Linux nativo** (o e2e foi em macOS): `AIDD_UID`/permissões do workspace (umask 077 deixa o container sem leitura), autostart do Docker; PAT real contra o GitHub (U5)
-- [ ] SO15 **Fluxo de dados / threat model** para quem adota: o que sai da máquina (o que o LLM lê; embeddings são locais; telemetria desligada), onde ficam segredos, o que cada container pode tocar. `mcp-neo4j` (perfil debug) segue com Cypher de escrita em `127.0.0.1:3004` — só para depuração
+- [ ] SO7 **Strong isolation between tenants**: today Neo4j, Qdrant and the vault are shared (Community has no RBAC
+  and no multiple databases) and every tool accepts `tenant`. For whoever serves several organizations on the same
+  machine: one stack per tenant (a compose project with its own ports) or, on the server (F3.4), the tenant injected
+  by the token
+- [ ] SO8 **Authentication on the MCPs** (a per-dev token at the gateway; today the defense is localhost +
+  Host/Origin) — ties in with F3.4; careful: the token cannot go in the `.mcp.json` distributed into the repos
+- [ ] SO9 **Prompt injection and poisoned memory**: third-party code, Jira and notes enter the context, and what the
+  agent writes to the vault/Qdrant comes back as a "convention" in every session. Provenance on the lessons (session,
+  repo, sha), human review before something becomes a convention, skills treating that content as data — for memory,
+  the mechanism is the **Project knowledge** track (evidence per insight, only a human promotes to `accepted`, K5)
+- [ ] SO10 **Full supply chain**: digests (`@sha256`) on the images, a lock with hashes (Python `--require-hashes`,
+  npm `package-lock`), SBOM + scan (Trivy/Grype) in CI, Renovate for deliberate bumps; the indexer's `pyproject.toml`
+  dependencies are still ranges
+- [ ] SO11 **Backup/restore**: the graph and the mirrors can be rebuilt; the Qdrant lessons/insights and the vault
+  **cannot** (`docker compose down -v` deletes the lessons). A scheduled Qdrant snapshot + documenting what is
+  disposable
+- [ ] SO12 **Scale with N devs**: N laptops × M repos every 15 min hit GitHub's secondary rate limit; backoff on a
+  fetch failure; a central server (F3) for larger organizations. Mirrors double the repos' disk — GC of mirrors of
+  repos that left the workspace
+- [x] SO13 **The skill indexes on demand** (2026-10-12): a repo outside the atlas → `scan` runs
+  `~/.aidd/aidd refresh --tenant <t> --repos <repo> --wait 300` (the same plan as the refresher: default branch +
+  active ones; waits for a refresh in progress; does not count as a refresher round and does no GC; a missing or
+  excluded repo is an error with the reason) and, for the branch it is going to work on,
+  `aidd index <repo> --ref <branch> --ephemeral`; the skill's `allowed-tools` allows only those two commands (never
+  `aidd:*`)
+- [ ] SO14 **Validate on WSL and native Linux** (the e2e was on macOS): `AIDD_UID`/workspace permissions (umask 077
+  leaves the container without read access), Docker autostart; a real PAT against GitHub (U5)
+- [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; embeddings are
+  local; telemetry off), where secrets live, what each container can touch. `mcp-neo4j` (debug profile) still has
+  write Cypher on `127.0.0.1:3004` — for debugging only
 
-## Fase 1 — Micro completo (SCIP multi-linguagem + retrieval híbrido)
+## Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)
 
-- [ ] F1.1 Integrar indexadores SCIP (Go, TS, .NET, Python) no `indexer/`; detecção automática de stack por manifest; config por repo (`.aidd/index.yaml`: excludes, conectores)
-- [ ] F1.2 Conversor SCIP → grafo (definições, referências resolvidas, IMPLEMENTS/EXTENDS, tipos) + resolvedor para a
-  camada HTTP: um gancho no `http_base` (por nome por padrão, SCIP quando a snapshot tem índice) consultado só nos
-  pontos de indecisão que o F1.14 registrou como `needs-resolver` — sem índice, o HTTP segue como hoje (ADR-002,
-  decisão 3)
-- [ ] F1.3 tree-sitter como fallback para linguagens sem SCIP (Vue SFC, SQL, YAML, templates)
-- [ ] F1.4 Indexação incremental: `git diff` → pacotes tocados → reindex parcial; remoção de órfãos por snapshot `(repo, ref)`
-- [ ] F1.5 Embeddings por **símbolo** (assinatura + docstring + corpo curto) no Qdrant, payload `{node_id, repo, ref, kind}`; trocar modelo para o de código
-- [ ] F1.6 Sumários hierárquicos via Ollama (arquivo → módulo → repo) armazenados no grafo e no Qdrant
-- [ ] F1.7 MCP `atlas`: `get_callers`, `get_callees`, `trace_flow(entry_point)`, `search(query)` híbrido (vetor → expansão k-hops → rerank)
-- [ ] F1.8 Suporte a `ref`: indexar `main` (baseline) e `develop`; nós/arestas com `ref`; consultas com `ref` opcional (default: develop se existir)
-- [ ] F1.9 Métricas de git como atributos: `last_touched`, `churn_90d`, `authors` (hotspots e "quem mexe aqui")
-- [ ] F1.10 Nova skill `flow`: dado um entry point (endpoint/handler/job), narra o fluxo micro usando `trace_flow` + trechos
-- [ ] F1.11 Tabela `index_runs` (repo, ref, sha, duração, contagens, erros) + comando `aidd status`
-- [ ] F1.12 Ampliar perguntas douradas para 20; script `aidd eval` que roda todas e reporta recall
-- [ ] F1.13 **Repos grandes (escala da extração)**: o grafana (24 mil arquivos) é morto por memória a 7,7 GB no Docker
-  Desktop (corpus v2, 2026-10-15), porque `extract_tree` guarda a árvore tree-sitter e o texto de **todos** os arquivos
-  até o fim — só a extração HTTP precisa delas; o `Resolver` lê dados por arquivo (`namespaces`, `facts`). Primeiro
-  medir a memória por fase (discover / extract / http / resolve / escrita) no grafana; depois, em ordem de custo:
-  1. soltar a árvore de cada arquivo assim que nada mais a lê — a extração HTTP diretório a diretório (as constantes e
-     o scan já são por diretório);
-  2. lotes por módulo (pacote Go, `.csproj`, workspace do `package.json`), cada lote gravado no grafo, e as arestas
-     entre lotes resolvidas no fim só com a tabela de símbolos — o mesmo recorte que o F1.4 reindexa e que o SCIP
-     indexa por projeto (F1.1);
-  3. recorte por repo no `atlas.yaml` (subpastas como unidades, excludes) para monorepos em que só uma parte interessa.
+- [ ] F1.1 Integrate SCIP indexers (Go, TS, .NET, Python) into `indexer/`; automatic stack detection by manifest;
+  per-repo config (`.aidd/index.yaml`: excludes, connectors)
+- [ ] F1.2 SCIP → graph converter (definitions, resolved references, IMPLEMENTS/EXTENDS, types) + a resolver for the
+  HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
+  points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
+  decision 3)
+- [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
+- [ ] F1.4 Incremental indexing: `git diff` → touched packages → partial re-index; orphan removal per snapshot
+  `(repo, ref)`
+- [ ] F1.5 Embeddings per **symbol** (signature + docstring + short body) in Qdrant, payload
+  `{node_id, repo, ref, kind}`; switch the model to the code one
+- [ ] F1.6 Hierarchical summaries via Ollama (file → module → repo) stored in the graph and in Qdrant
+- [ ] F1.7 `atlas` MCP: `get_callers`, `get_callees`, `trace_flow(entry_point)`, a hybrid `search(query)` (vector →
+  k-hop expansion → rerank)
+- [ ] F1.8 `ref` support: index `main` (baseline) and `develop`; nodes/edges with `ref`; queries with an optional
+  `ref` (default: develop if it exists)
+- [ ] F1.9 Git metrics as attributes: `last_touched`, `churn_90d`, `authors` (hotspots and "who touches this")
+- [ ] F1.10 A new `flow` skill: given an entry point (endpoint/handler/job), narrates the micro flow using
+  `trace_flow` + snippets
+- [ ] F1.11 An `index_runs` table (repo, ref, sha, duration, counts, errors) + an `aidd status` command
+- [ ] F1.12 Widen the golden questions to 20; an `aidd eval` script that runs them all and reports recall
+- [ ] F1.13 **Large repos (extraction scale)**: grafana (24 thousand files) is killed for memory at 7.7 GB on Docker
+  Desktop (corpus v2, 2026-10-15), because `extract_tree` keeps the tree-sitter tree and the text of **every** file
+  until the end — only the HTTP extraction needs them; the `Resolver` reads data per file (`namespaces`, `facts`).
+  First measure memory per phase (discover / extract / http / resolve / write) on grafana; then, in order of cost:
+  1. release each file's tree as soon as nothing else reads it — HTTP extraction directory by directory (the
+     constants and the scan are already per directory);
+  2. batches per module (Go package, `.csproj`, `package.json` workspace), each batch written to the graph, and the
+     edges between batches resolved at the end with the symbol table only — the same cut that F1.4 re-indexes and
+     that SCIP indexes per project (F1.1);
+  3. a per-repo cut in `atlas.yaml` (subfolders as units, excludes) for monorepos where only one part matters.
 
-  Restrição para quem vier antes: o grafo de montagem do HTTP (H2b) cruza arquivos — deve trabalhar com um resumo por
-  arquivo (quem monta o quê, com que prefixo), nunca segurando árvores de outros diretórios. **Pronto quando** o
-  grafana indexa sob um teto fixo de memória (ex.: 2 GB) e, num repo médio, a extração em lotes é idêntica à inteira
-  (o corpus HTTP com `--baseline` dá o diff). Medir junto o custo do HTTP em repos sem rotas que ele leia (netbox: 49 s
-  de 107 s com 0 rotas e 0 chamadas no corpus v2; zulip 17 s de 47 s)
-- [x] F1.14 **Extrator HTTP: o que o H2 deixou.** Fechado em 2026-10-18, em 11 incrementos, e no dia seguinte veio o
-  12, na validação do PR #5. Cada item terminou com regra com fixture e corpus julgado, ou com limitação registrada no
-  guia.
-  - **Números finais e destino de cada lacuna:** `docs/corpus-report.md`, "Closing F1.14 and H2".
-  - **Regras:** `docs/indexer-evolution.md` §3.
-  - **Marcos:** `docs/history.md`.
-  - **Mudanças de escopo:**
-    - o hold-out novo foi para depois do H5 (H2-D21);
-    - o catálogo de frameworks como dado e os limiares do `built_bundle` foram para o H5;
-    - o Django ficou fora (o portfólio é FastAPI/Flask);
-    - pastas de app de teste com nome de produção ficam para a config por repo do F1.1.
-  - **O que pede tipo inferido** é `needs-resolver`, para o F1.2.
+  A constraint for whoever comes first: the HTTP mount graph (H2b) crosses files — it must work with a summary per
+  file (who mounts what, with which prefix), never holding the trees of other directories. **Done when** grafana
+  indexes under a fixed memory ceiling (e.g. 2 GB) and, on a medium repo, batched extraction is identical to the
+  whole one (the HTTP corpus with `--baseline` gives the diff). Measure along with it the cost of HTTP on repos
+  without routes it can read (netbox: 49 s of 107 s with 0 routes and 0 calls in corpus v2; zulip 17 s of 47 s)
+- [x] F1.14 **HTTP extractor: what H2 left.** Closed on 2026-10-18, in 11 increments, and the next day came the 12th,
+  in the validation of PR #5. Each item ended with a rule with a fixture and a judged corpus, or with a limitation
+  recorded in the guide.
+  - **Final numbers and where each gap goes:** `docs/corpus-report.md`, "Closing F1.14 and H2".
+  - **Rules:** `docs/indexer-evolution.md` §3.
+  - **Milestones:** `docs/history.md`.
+  - **Scope changes:**
+    - the new hold-out moved to after H5 (H2-D21);
+    - the framework catalog as data and the `built_bundle` thresholds went to H5;
+    - Django stayed out (the portfolio is FastAPI/Flask);
+    - test app folders with production names wait for F1.1's per-repo config.
+  - **What needs an inferred type** is `needs-resolver`, for F1.2.
 
-**Saída da fase:** qualquer repo do workspace indexável em 1 comando; `scan` e `flow` respondendo com fatos do grafo.
+**Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
-## Fase 2 — Macro completo (linker de contratos + governança)
+## Phase 2 — Complete macro (contract linker + governance)
 
-- [ ] F2.1 Conector OpenAPI: specs → `HttpEndpoint`; rotas extraídas do código reconciliadas com a spec (divergência = alerta)
-- [ ] F2.2 Conector mensageria: tópicos/filas em constantes, config e env (Kafka, RabbitMQ, SQS/SNS) → `PUBLISHES`/`SUBSCRIBES`; schemas de evento quando existirem
-- [ ] F2.3 Conector infra: `docker-compose`, k8s/Helm, gateway → resolver `ENV_VAR → URL → repo` para ligar chamadas HTTP de saída ao repo alvo
-- [ ] F2.4 Conector banco: migrations/ORM → `DbTable`, `READS/WRITES`; tabelas compartilhadas entre repos = aresta macro implícita
-- [ ] F2.5 Confiança nas arestas (`exact | heuristic | llm`) + `evidence`; passada LLM só nos ambíguos; resultado vira nota de revisão no Obsidian (`<tenant>/_links-review.md`)
-- [ ] F2.6 MCP `atlas`: `impact_analysis(symbol|endpoint|topic)` transitivo cross-repo, `repo_dependencies(repo)`, `workspace_map(tenant)`
-- [ ] F2.7 Nova skill `impact`: dado um alvo, lista repos/fluxos afetados com confiança e evidência
-- [ ] F2.8 Visualização: export do subgrafo para Obsidian (canvas/notas com wikilinks) ou HTML estático — leitura humana do macro
-- [ ] F2.9 Perguntas douradas macro (≥ 15) + `aidd eval` cobrindo micro e macro
+- [ ] F2.1 OpenAPI connector: specs → `HttpEndpoint`; routes extracted from the code reconciled with the spec
+  (divergence = alert)
+- [ ] F2.2 Messaging connector: topics/queues in constants, config and env (Kafka, RabbitMQ, SQS/SNS) →
+  `PUBLISHES`/`SUBSCRIBES`; event schemas when they exist
+- [ ] F2.3 Infra connector: `docker-compose`, k8s/Helm, gateway → resolve `ENV_VAR → URL → repo` to link outbound
+  HTTP calls to the target repo
+- [ ] F2.4 Database connector: migrations/ORM → `DbTable`, `READS/WRITES`; tables shared between repos = an implicit
+  macro edge
+- [ ] F2.5 Confidence on the edges (`exact | heuristic | llm`) + `evidence`; an LLM pass only on the ambiguous ones;
+  the result becomes a review note in Obsidian (`<tenant>/_links-review.md`)
+- [ ] F2.6 `atlas` MCP: transitive cross-repo `impact_analysis(symbol|endpoint|topic)`, `repo_dependencies(repo)`,
+  `workspace_map(tenant)`
+- [ ] F2.7 A new `impact` skill: given a target, lists the affected repos/flows with confidence and evidence
+- [ ] F2.8 Visualization: export of the subgraph to Obsidian (canvas/notes with wikilinks) or static HTML — human
+  reading of the macro level
+- [ ] F2.9 Macro golden questions (≥ 15) + `aidd eval` covering micro and macro
 
-**Saída da fase:** mapa do workspace consultável; impacto cross-repo com evidência.
+**Phase exit:** a queryable workspace map; cross-repo impact with evidence.
 
-## Fase 3 — Central e contínuo (alvo final)
+## Phase 3 — Central and continuous (the end goal)
 
-- [ ] F3.1 Servidor central (Neo4j + Qdrant + MCPs) com backup; compose "server profile"
-- [ ] F3.2 Job de CI por repo: a cada merge em `main`/`develop` → `aidd index` → push para o central (runner self-hosted com cache de SCIP)
-- [ ] F3.3 Linker agendado/por evento no central; relatório de novas arestas e divergências
-- [ ] F3.4 Auth no MCP por tenant (token por dev/time atrás de reverse proxy); filtro de tenant injetado, nunca confiado ao cliente
-- [ ] F3.5 Dashboard de cobertura/frescor: repos indexados, idade do índice, % de arestas macro por confiança
-- [ ] F3.6 Retenção: manter N snapshots por `(repo, ref)`; GC de refs mortas
-- [ ] F3.7 `install.sh` aponta `.mcp.json` para o central quando configurado; local continua como fallback offline
+- [ ] F3.1 A central server (Neo4j + Qdrant + MCPs) with backup; a compose "server profile"
+- [ ] F3.2 A CI job per repo: on every merge to `main`/`develop` → `aidd index` → push to the central server (a
+  self-hosted runner with a SCIP cache)
+- [ ] F3.3 A scheduled/event-driven linker on the central server; a report of new edges and divergences
+- [ ] F3.4 MCP auth per tenant (a token per dev/team behind a reverse proxy); the tenant filter injected, never
+  trusted to the client
+- [ ] F3.5 A coverage/freshness dashboard: indexed repos, index age, % of macro edges by confidence
+- [ ] F3.6 Retention: keep N snapshots per `(repo, ref)`; GC of dead refs
+- [ ] F3.7 `install.sh` points `.mcp.json` at the central server when configured; local stays as the offline fallback
 
 ---
 
-## Trilha paralela — Skills e fluxo de desenvolvimento
+## Parallel track — Skills and the development flow
 
-Encadeamento alvo (cada skill consome o grafo via MCP e escreve no Obsidian/Qdrant):
+The target chain (each skill consumes the graph through MCP and writes to Obsidian/Qdrant):
 
 ```
 scan ──► flow / impact ──► refine-business ──► refine-tech ──► implement ──► review
- (fatos)   (micro/macro)     (card + contexto)   (spec técnica)   (harness)    (sênior)
+ (facts)   (micro/macro)     (card + context)    (tech spec)      (harness)    (senior)
 ```
 
-- [x] S0 `scan` v1 com vault por projeto (`<tenant>/knowledge/<repo>/<repo>.md`) e `refine-business` v1 (Jira → candidatos via Qdrant → "o que fazer" por projeto → loop → `<tenant>/cards/<card>.md`)
-- [x] S0.1 *(2026-10-12: a `scan` documenta `cards/`, que é onde a `refine-business` grava)* Alinhar layout do vault: `scan` documentava `refine-business/` mas `refine-business` grava em `cards/` — escolher um e corrigir os dois SKILL.md
-- [ ] S1 `scan` v2: lê do grafo, fallback ao fluxo atual; salva convenções com `source: graph|llm`
-- [ ] S2 `flow`: entry point → narrativa do fluxo micro (F1.10)
-- [ ] S3 `impact`: alvo → repos/fluxos afetados (F2.7)
-- [ ] S4 `refine-business` v2 — pontos de encaixe do grafo na skill existente (sem mudar o gatilho):
-  - Step 2 (cobertura): além de "tem conventions no Qdrant?", checar "está indexado no atlas?" (`atlas.repo_map`) e sugerir `aidd index`
-  - Step 4 (projetos afetados): hoje é só busca vetorial nos sumários de convenções; passa a ser híbrido — vetor encontra símbolos/endpoints candidatos → `impact_analysis`/`who_consumes` expande para os repos ligados por contrato. Candidatos ganham `confidence` + `evidence`
-  - Step 5 ("o que fazer"): citar o fluxo micro (`trace_flow`) e as arestas macro que justificam a coordenação entre projetos
-  - Step 7: nota do card passa a incluir a **área de atuação delimitada** (repos, módulos, símbolos de entrada) — é a entrada do `refine-tech`
-- [ ] S5 `refine-tech`: a partir da área delimitada, zoom-in com `flow`/`get_callers`; produz spec técnica (arquivos, contratos, testes, riscos, ADRs); validação humana explícita antes de seguir
-- [ ] S6 `implement`: executa a spec no orquestrador escolhido (harness: testes, cobertura, lições → `record_insight`, trilha **Conhecimento do projeto**)
-- [ ] S7 `review`: contexto injetado (spec + diff + cobertura + convenções do grafo + insights `accepted`/`enforced` da área) → parecer sênior; PR
-- [ ] S8 Definir contrato comum entre skills (frontmatter + formato da nota de saída) para que a saída de uma seja entrada da próxima — a parte do conhecimento (índice do projeto + nota de insight) é o K1
-- [ ] S9 (handoff H3) Medir o efeito do atlas e do conhecimento no desenvolvimento com IA — tokens, tempo, completude e defeitos, em tarefas reais dentro de um repo e entre repos, com e sem a stack (`docs/handoffs/H3-ai-dev-efficiency.md`). Depois do H2b, em outro processo
+- [x] S0 `scan` v1 with a vault per project (`<tenant>/knowledge/<repo>/<repo>.md`) and `refine-business` v1 (Jira →
+  candidates through Qdrant → "what to do" per project → loop → `<tenant>/cards/<card>.md`)
+- [x] S0.1 *(2026-10-12: `scan` documents `cards/`, which is where `refine-business` writes)* Align the vault layout:
+  `scan` documented `refine-business/` but `refine-business` writes to `cards/` — pick one and fix both SKILL.md
+- [ ] S1 `scan` v2: reads from the graph, falls back to the current flow; saves conventions with
+  `source: graph|llm`
+- [ ] S2 `flow`: entry point → a narrative of the micro flow (F1.10)
+- [ ] S3 `impact`: target → affected repos/flows (F2.7)
+- [ ] S4 `refine-business` v2 — where the graph fits into the existing skill (without changing the trigger):
+  - Step 2 (coverage): besides "are there conventions in Qdrant?", check "is it indexed in the atlas?"
+    (`atlas.repo_map`) and suggest `aidd index`
+  - Step 4 (affected projects): today it is only a vector search over the convention summaries; it becomes hybrid —
+    the vector finds candidate symbols/endpoints → `impact_analysis`/`who_consumes` expands to the repos linked by
+    contract. Candidates gain `confidence` + `evidence`
+  - Step 5 ("what to do"): cite the micro flow (`trace_flow`) and the macro edges that justify coordinating between
+    projects
+  - Step 7: the card's note starts to include the **delimited area of work** (repos, modules, entry symbols) — it is
+    `refine-tech`'s input
+- [ ] S5 `refine-tech`: from the delimited area, zoom in with `flow`/`get_callers`; produces a technical spec (files,
+  contracts, tests, risks, ADRs); explicit human validation before moving on
+- [ ] S6 `implement`: runs the spec on the chosen orchestrator (harness: tests, coverage, lessons → `record_insight`,
+  the **Project knowledge** track)
+- [ ] S7 `review`: injected context (spec + diff + coverage + the graph's conventions + the area's
+  `accepted`/`enforced` insights) → a senior opinion; PR
+- [ ] S8 Define a common contract between skills (frontmatter + the format of the output note) so that one's output
+  is the next one's input — the knowledge part (the project index + the insight note) is K1
+- [ ] S9 (handoff H3) Measure the effect of the atlas and of knowledge on AI-assisted development — tokens, time,
+  completeness and defects, on real tasks within a repo and across repos, with and without the stack
+  (`docs/handoffs/H3-ai-dev-efficiency.md`). After H2b, in another process
 
-## Conhecimento do projeto (trilha própria)
+## Project knowledge (its own track)
 
-> Cada projeto tem uma **porta de entrada** no vault (o índice que a `scan` cria) e uma **base de
-> conhecimento** que as etapas do processo alimentam e consultam: o que aparece em code review, Sonar,
-> ferramentas de segurança, incidentes e decisões vira insight filtrado, para o problema não se repetir
-> e para o review já saber o que olhar. Não é uma skill (D16): é um mecanismo da stack que `scan`,
-> `refine-business`, `refine-tech` e `implement` usam pelo mesmo contrato. A skill faz a parte que exige
-> julgamento (o que vale registrar, com que evidência); a stack faz a determinística (dedup, contagem,
-> nota, índice, Qdrant, regras de status).
+> Each project has an **entry point** in the vault (the index `scan` creates) and a **knowledge base** that the
+> process stages feed and consult: what shows up in code review, Sonar, security tools, incidents and decisions
+> becomes a filtered insight, so the problem does not repeat and the review already knows what to look at. It is not
+> a skill (D16): it is a stack mechanism that `scan`, `refine-business`, `refine-tech` and `implement` use through the
+> same contract. The skill does the part that needs judgment (what is worth recording, with what evidence); the stack
+> does the deterministic part (dedup, counting, note, index, Qdrant, status rules).
 >
-> O que o processo **exige** (cobertura mínima, tentativas do harness, quando pedir ADR, quando um
-> insight vira `recurring`) fica no `policy.yaml` (D17), ao lado do `atlas.yaml`: o `atlas.yaml` diz como
-> ler o código, o `policy.yaml` diz o que o processo exige. A `scan` descreve o projeto; a política é
-> decisão humana e não é descoberta.
+> What the process **requires** (minimum coverage, harness attempts, when to ask for an ADR, when an insight becomes
+> `recurring`) lives in `policy.yaml` (D17), next to `atlas.yaml`: `atlas.yaml` says how to read the code,
+> `policy.yaml` says what the process requires. `scan` describes the project; policy is a human decision and is not
+> discovered.
 
-Layout no vault:
+Vault layout:
 
 ```
 <tenant>/knowledge/
 ├── <repo>/
-│   ├── <repo>.md            índice: seções fixas da scan + bloco de conhecimento gerado
-│   └── insights/<slug>.md   um insight por nota (frontmatter)
-└── shared/insights/         o que vale para vários repos do tenant
+│   ├── <repo>.md            index: scan's fixed sections + a generated knowledge block
+│   └── insights/<slug>.md   one insight per note (frontmatter)
+└── shared/insights/         what holds for several of the tenant's repos
 ```
 
-Ciclo de um insight:
+An insight's lifecycle:
 
 ```
 observed ──► recurring ──► accepted ──────────► enforced
-(1 vez)      (N vezes)     (humano aprovou:     (virou regra checável:
-                            o agente segue)      violations / lint)
-        └──────────────► archived (descartado, ou sem ocorrência há muito tempo)
+(once)       (N times)     (a human approved:   (became a checkable rule:
+                            the agent follows)   violations / lint)
+        └──────────────► archived (discarded, or no occurrence for a long time)
 ```
 
-- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contrato v1)* **Contrato do vault** (fecha o S8 para o conhecimento): esqueleto do índice — seções fixas da `scan` (inclusive a política efetiva do repo, só leitura: muda-se no `policy.yaml`) + bloco entre `<!-- aidd:knowledge:start -->`/`<!-- aidd:knowledge:end -->`, gerado a partir das notas e nunca editado à mão; formato da nota de insight — frontmatter `topic` (vocabulário controlado: `architecture`, `review`, `quality`, `security`, `incident`, `decision`, `business`; extensível por um registro de tópicos, não texto livre — evita `security`/`segurança`/`sec`), `status`, `severity`, `scope` (`repo`|`shared`), `occurrences`, `first_seen`/`last_seen`, `evidence[]` (PR, arquivo:linha, sha, ferramenta, sessão), `applies_to` (arquivos, roles, símbolos); payload no Qdrant `{project, type: insight, topic, status}`
-- [x] K1.1 *(2026-10-13: `core/policy.py`, `aidd policy show|check`, `install.sh` cria a partir de `indexer/policy.example.yaml`, `install-check` valida)* **`policy.yaml`** em `~/.aidd` (D17), com camadas como o `atlas.yaml`: defaults embutidos → tenant → área → repo (`overrides`), cada nível sobrescrevendo só o que declara. Conteúdo inicial: `coverage` (`min`, `new_code_min`), `harness` (`max_attempts`), `review` (`spec_approval`, `adr_when`), `knowledge` (`recurring_after`, `archive_after_days`) — tudo o que seria número fixo no código. Validado com erro claro (como o `ConfigError` do `atlas.yaml`); `install.sh` cria um exemplo comentado; `aidd policy show <repo>` imprime a política efetiva com a origem de cada valor
-- [x] K2 *(2026-10-13: `aidd_indexer/knowledge/`, serviço `mcp-knowledge` na porta 3006 do gateway)* **Serviço `knowledge`** no compose (mesma imagem do indexer, atrás do `mcp-gateway`; o único que escreve conhecimento no vault e no Qdrant — o atlas continua só leitura). Três tools:
-  - `policy_for(repo)` → a política efetiva, já combinada, com a origem de cada valor (default/tenant/área/repo) — as skills não fazem o merge das camadas
-  - `insights_for(repo, files?, roles?, topic?)` → `accepted`/`enforced` como regra, `observed`/`recurring` como contexto (rotulados: dado, não instrução)
-  - `record_insight(repo, topic, summary, evidence, applies_to, severity)` → dedup (Qdrant por similaridade + mesmo tópico), incrementa ou cria a nota, `recurring` ao atingir `knowledge.recurring_after` ocorrências (política; default 3), reconstrói o bloco do índice, espelha no Qdrant; nenhuma tool promove para `accepted`
-  - `refresh_index(repo)` → reescreve só o bloco `aidd:knowledge` a partir das notas (a `scan` chama ao terminar a página; uma página nova já nasce com o que foi gravado antes)
-  - Testes: dedup, reconstrução do índice preservando as seções da `scan`, idempotência
-- [x] K3 *(2026-10-13: skill reescrita e validada na instalação real — migração, repetição em outro idioma, página do zero)* `scan` gera o esqueleto do índice e mostra o bloco de conhecimento; a lição de fim de tarefa (hoje `qdrant-store` direto) passa a ser `record_insight`
-- [ ] K4 *(com a revisão da `refine-business`)* `refine-business` adota o contrato: consulta incidentes/decisões dos projetos afetados, registra as decisões de negócio do card. `refine-tech` (S5) e `implement` (S6) já nascem com ele: riscos conhecidos da área na spec; `accepted`/`enforced` como checklist antes de codar e antes do PR
-- [ ] K5 *(nasce com a `refine-tech`, S5)* **Promoção com humano dentro do processo**: a `refine-tech` mostra os `observed`/`recurring` que tocam a área delimitada ("apareceu 3×, vira regra?") e grava a aprovação (`accepted`, quem e quando); editar o frontmatter no Obsidian vale igual. Fecha a parte de memória do SO9
-- [ ] K6 *(nasce com a `implement`, S6)* Fontes dentro da `implement`, onde o motivo de um erro aparece: (1) **reprovação no review** (o parecer sênior que devolve para a execução — o motivo é o insight); (2) **escalada do harness** (`harness.max_attempts` esgotado: o que o modelo não conseguiu corrigir sozinho e por quê); (3) **comentários de review do PR** ao tratar o feedback (`gh`). Em todas, registra só o que não é óbvio
-- [ ] K7 *(quando houver scanner no CI dos tenants)* `aidd ingest <arquivo.sarif>` (Semgrep, CodeQL, Trivy, Snyk): agrupa findings por regra × repo, grava `observed` com contagem e evidência — o bruto fica na ferramenta; roda no CI ou pelo refresher. Sonar pela API depois
-- [ ] K8 *(depois da Fase 1)* `enforced`: insight verificável no grafo vira regra da convenção e aparece em `violations`; o que não é verificável fica como checklist
-- [ ] K9 *(com volume de insights; backup junto do SO11)* Envelhecimento e backup: `last_seen` mais antigo que `knowledge.archive_after_days` sem novas ocorrências perde peso e vai para `archived`; notas e coleção de insights não se refazem a partir do código → entram no backup (SO11)
-- [ ] K10 Política dentro do repo (`.aidd/policy.yaml`, lida do espelho na branch padrão): em organizações, a política no `~/.aidd` é de cada dev e dois devs podem trabalhar com thresholds diferentes; no repo ela vale igual para todos e só muda por PR (review humano). Camada acima de `overrides` do repo; depois do K1.1 provado
+- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contract v1)* **The vault contract** (closes S8 for knowledge):
+  the index skeleton — `scan`'s fixed sections (including the repo's effective policy, read-only: it is changed in
+  `policy.yaml`) + a block between `<!-- aidd:knowledge:start -->`/`<!-- aidd:knowledge:end -->`, generated from the
+  notes and never edited by hand; the insight note format — frontmatter `topic` (a controlled vocabulary:
+  `architecture`, `review`, `quality`, `security`, `incident`, `decision`, `business`; extensible through a topic
+  registry, not free text — avoids `security`/`segurança`/`sec`), `status`, `severity`, `scope` (`repo`|`shared`),
+  `occurrences`, `first_seen`/`last_seen`, `evidence[]` (PR, file:line, sha, tool, session), `applies_to` (files,
+  roles, symbols); payload in Qdrant `{project, type: insight, topic, status}`
+- [x] K1.1 *(2026-10-13: `core/policy.py`, `aidd policy show|check`, `install.sh` creates it from
+  `indexer/policy.example.yaml`, `install-check` validates it)* **`policy.yaml`** in `~/.aidd` (D17), with layers like
+  `atlas.yaml`: built-in defaults → tenant → area → repo (`overrides`), each level overriding only what it declares.
+  Initial content: `coverage` (`min`, `new_code_min`), `harness` (`max_attempts`), `review` (`spec_approval`,
+  `adr_when`), `knowledge` (`recurring_after`, `archive_after_days`) — everything that would be a fixed number in the
+  code. Validated with a clear error (like `atlas.yaml`'s `ConfigError`); `install.sh` creates a commented example;
+  `aidd policy show <repo>` prints the effective policy with the origin of each value
+- [x] K2 *(2026-10-13: `aidd_indexer/knowledge/`, the `mcp-knowledge` service on the gateway's port 3006)* **The
+  `knowledge` service** in the compose file (the same image as the indexer, behind `mcp-gateway`; the only one that
+  writes knowledge to the vault and to Qdrant — the atlas stays read-only). Three tools:
+  - `policy_for(repo)` → the effective policy, already combined, with the origin of each value
+    (default/tenant/area/repo) — the skills do not merge the layers
+  - `insights_for(repo, files?, roles?, topic?)` → `accepted`/`enforced` as rules, `observed`/`recurring` as context
+    (labeled: data, not instructions)
+  - `record_insight(repo, topic, summary, evidence, applies_to, severity)` → dedup (Qdrant by similarity + the same
+    topic), increments or creates the note, `recurring` on reaching `knowledge.recurring_after` occurrences (policy;
+    default 3), rebuilds the index block, mirrors to Qdrant; no tool promotes to `accepted`
+  - `refresh_index(repo)` → rewrites only the `aidd:knowledge` block from the notes (`scan` calls it when it finishes
+    the page; a new page is born with what was recorded before)
+  - Tests: dedup, rebuilding the index while preserving `scan`'s sections, idempotency
+- [x] K3 *(2026-10-13: the skill rewritten and validated on the real install — migration, repetition in another
+  language, a page from scratch)* `scan` generates the index skeleton and shows the knowledge block; the end-of-task
+  lesson (today a direct `qdrant-store`) becomes `record_insight`
+- [ ] K4 *(with the `refine-business` review)* `refine-business` adopts the contract: consults the affected projects'
+  incidents/decisions, records the card's business decisions. `refine-tech` (S5) and `implement` (S6) are born with
+  it: the area's known risks in the spec; `accepted`/`enforced` as a checklist before coding and before the PR
+- [ ] K5 *(born with `refine-tech`, S5)* **Promotion with a human inside the process**: `refine-tech` shows the
+  `observed`/`recurring` items that touch the delimited area ("it showed up 3×, does it become a rule?") and records
+  the approval (`accepted`, who and when); editing the frontmatter in Obsidian counts the same. Closes the memory part
+  of SO9
+- [ ] K6 *(born with `implement`, S6)* Sources inside `implement`, where the reason for an error shows up: (1) **a
+  review rejection** (the senior opinion that sends it back to execution — the reason is the insight); (2) **a
+  harness escalation** (`harness.max_attempts` exhausted: what the model could not fix by itself, and why); (3) **PR
+  review comments** while handling the feedback (`gh`). In all of them, record only what is not obvious
+- [ ] K7 *(when the tenants have a scanner in CI)* `aidd ingest <file.sarif>` (Semgrep, CodeQL, Trivy, Snyk): groups
+  findings by rule × repo, writes `observed` with a count and evidence — the raw data stays in the tool; runs in CI or
+  through the refresher. Sonar through its API later
+- [ ] K8 *(after Phase 1)* `enforced`: an insight checkable on the graph becomes a convention rule and shows up in
+  `violations`; what is not checkable stays as a checklist
+- [ ] K9 *(with a volume of insights; backup together with SO11)* Aging and backup: a `last_seen` older than
+  `knowledge.archive_after_days` with no new occurrences loses weight and goes to `archived`; the notes and the
+  insights collection cannot be rebuilt from the code → they go into the backup (SO11)
+- [ ] K10 Policy inside the repo (`.aidd/policy.yaml`, read from the mirror on the default branch): in organizations,
+  the policy in `~/.aidd` is each dev's, and two devs may work with different thresholds; in the repo it holds the
+  same for everyone and only changes through a PR (human review). A layer above the repo's `overrides`; after K1.1 is
+  proven
 
-## Publicação e documentação (trilha própria)
+## Publishing and documentation (its own track)
 
-> O repo é público e o README tem uma linha. Esta trilha dá aos dois repositórios — o aidd-stack e o indexador, que
-> sai para um repo próprio — documentação para quem chega, em inglês, português, espanhol e chinês. Decisões, fronteira
-> entre os repos e ordem: `docs/handoffs/H4-public-docs.md`.
+> The repo is public and the README has one line. This track gives both repositories — aidd-stack and the indexer,
+> which moves to its own repo — documentation for newcomers, in English, Portuguese, Spanish and Chinese. Decisions,
+> the boundary between the repos and the order: `docs/handoffs/H4-public-docs.md`.
 
-- [ ] P0 Reciclar os docs de trabalho (H4 passo 0, pedido em 2026-10-18): a verdade atual separada do histórico; um `AGENTS.md` na raiz como porta de entrada para um colaborador e a IA dele; o log do ROADMAP condensado em `docs/history.md`; as decisões destiladas em `docs/decisions.md`; o relatório do corpus só com o método, a baseline vigente e as lacunas; de ~600 KB para no máximo ~150 KB. Fase 0a logo depois do fechamento do F1.14; fase 0b (o guia do extrator) depois do H5
-- [ ] P1 Decisões do H4 (H4-D1…D12, nome do repo do indexador, revisores por idioma) e esboço da arquitetura dos docs — pode correr em paralelo ao H2b
-- [ ] P2 Indexador em repo próprio: `filter-repo` com histórico auditado, imagem multi-arquitetura no GHCR, `knowledge` e política no aidd-stack, esquema aplicado pelo indexador; regressão = testes, corpus idêntico e instalação limpa do aidd-stack com a imagem publicada. Depois do merge do H2b
-- [ ] P3 Conteúdo em inglês dos dois repos (README + `docs/en/`), validado por quem nunca viu o projeto
-- [ ] P4 Idiomas: glossário, guia de estilo, `i18n_check.py` no CI; traduções por camada em pt-BR, es e zh-CN
-- [ ] P5 Assets visuais (manifesto `docs/assets/README.md`), arquivos de comunidade, configurações do GitHub e primeira release dos dois repos
-- [ ] P6 *(opcional)* Site de docs, quando a navegação pedir
+- [ ] P0 Recycle the working docs (H4 step 0, asked for on 2026-10-18): the current truth separated from history; an
+  `AGENTS.md` at the root as the entry point for a contributor and their AI; the ROADMAP log condensed into
+  `docs/history.md`; the decisions distilled into `docs/decisions.md`; the corpus report with only the method, the
+  current baseline and the gaps; from ~600 KB to at most ~150 KB. Phase 0a done on 2026-10-19, with every doc in
+  English (H4-D1); phase 0b (the extractor guide, rewritten in English) after H5
+- [ ] P1 H4's decisions (H4-D1…D12, the name of the indexer's repo, reviewers per language) and a sketch of the docs
+  architecture — can run in parallel with H2b
+- [ ] P2 The indexer in its own repo: `filter-repo` with an audited history, a multi-architecture image on GHCR,
+  `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
+  and a clean aidd-stack install with the published image. After the H2b merge
+- [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
+- [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
+- [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files, GitHub settings and the first release of
+  both repos
+- [ ] P6 *(optional)* A docs site, when navigation calls for it
 
-## Decisões pendentes
+## Pending decisions
 
-As decididas (D1, D3, D6–D17) estão em `docs/decisions.md`.
+The decided ones (D1, D3, D6–D17, and D5 through H4-D1) are in `docs/decisions.md`.
 
-- [ ] D2 Orquestrador de execução (Fase S6): Claude Code (já usamos skills nesse formato) vs Cline/Roo Code (VS Code, MCP, modelos locais) vs Goose/Aider (CLI)
-- [ ] D5 Idioma dos docs: schema e ADR já em inglês (padrão do projeto open source); traduzir `ROADMAP.md` quando estabilizar ou mantê-lo em PT como doc de trabalho interno — proposta no H4 (H4-D1): inglês como fonte dos docs públicos, traduções em pt-BR, es e zh-CN; ROADMAP e handoffs seguem em PT
-- [ ] D4 Modelo local mínimo para tarefas agênticas com tool-calling (avaliar Qwen-Coder ≥ 30B); 7B/14B ficam só para sumários e classificação
+- [ ] D2 Execution orchestrator (Phase S6): Claude Code (we already use skills in that format) vs Cline/Roo Code
+  (VS Code, MCP, local models) vs Goose/Aider (CLI)
+- [ ] D4 Minimum local model for agentic tasks with tool calling (evaluate Qwen-Coder ≥ 30B); 7B/14B stay for
+  summaries and classification only

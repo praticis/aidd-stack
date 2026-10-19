@@ -1,88 +1,89 @@
-# Decisões
+# Decisions
 
-> As decisões em vigor que não viraram ADR, com o contexto, a escolha e o porquê. Os ADRs ficam em `docs/adr/`:
-> ADR-002 (tree-sitter como base, SCIP como enriquecimento) e ADR-003 (núcleo + módulos por linguagem). As decisões
-> **pendentes** estão no ROADMAP ("Decisões pendentes"). Os marcos de quando cada uma foi tomada estão em
-> `docs/history.md`, e o texto original fica no git.
+> The decisions in force that did not become an ADR, with the context, the choice and the why. The ADRs live in
+> `docs/adr/`: ADR-002 (tree-sitter as the base, SCIP as an enrichment) and ADR-003 (a core plus per-language
+> modules). **Pending** decisions are in the ROADMAP ("Pending decisions"). When each one was made is in
+> `docs/history.md`, and the original text stays in git.
 
 ## Stack (D1–D17)
 
-| # | Decisão | Porquê |
+| # | Decision | Why |
 |---|---|---|
-| D1 | Banco do grafo: **Neo4j Community**. A alternativa era Memgraph. | MCP oficial, memória e licença para uso interno. Esquema v1 em `neo4j/SCHEMA.md`. |
-| D3 | Refs: `always` do tenant = `[main, master]`. Feature branches entram pela política `active` (≤ 14 dias, ≤ 5 por repo, efêmeras, GC em 30 dias) e por `refs.overrides`. | A organização não usa `develop`, que fica no default do código por compatibilidade (2026-10-03, F0.3.6). |
-| D6 | Nome **Atlas**, para o database Neo4j e para o MCP voltado a agentes (`atlas.*` nas skills). `neo4j/` segue como pasta de infra. | Ferramentas de intenção substituem o Cypher bruto (F0.6). |
-| D7 | Sem default de tenant: `AIDD_TENANT` vem do `install.sh` (`.env`), é `${AIDD_TENANT:?}` no compose e é obrigatório no indexador. Um `auto` que não deriva tenant é erro. | Um tenant errado mistura grafos de clientes. |
-| D8 | Providers: **GitHub primeiro** (F1). O manifesto já aceita N fontes por tenant. | Cada tenant combina providers sem mudar o formato. |
-| D9 | Fonte `local` lida por `git archive` das refs; revisto pelo D15: também com espelho, para o workspace ficar só leitura. | Ler sem tocar no checkout do dev. |
-| D10 | Política de refs por default: `main`, `master` e `develop` sempre; ativas ≤ 14 dias, ≤ 5 por repo; GC das efêmeras em 30 dias. | Limita o custo de indexação por repo. |
-| D11 | Áreas: seção opcional `areas:` no `atlas.yaml` (`Repo.area`, agrupa o `plan`). Nós de domínio e Backstage/Compass ficam para a F2. | Agrupar sem um modelo de domínio prematuro. |
-| D12 | Instalação ≠ atualização. O bootstrap indexa as refs locais como clonadas (sem fetch, sem credencial); manter o atlas atualizado é um processo próprio. | A instalação não pode depender de credencial nem de rede. |
-| D13 | Refresh automático com PAT somente leitura dedicado, nunca a chave pessoal; intervalo de 15 min. O agendador do D13 e do D14 foi trocado pelo D15. | Credencial de serviço revogável e mínima. |
-| D15 | O refresher é um serviço do compose (`aidd daemon`) com espelhos bare em `~/.aidd/mirrors`. O workspace é montado só leitura, e os containers rodam como o usuário do host. Substitui o D14 (systemd no WSL) e o fetch no host do D12. | Funciona igual em macOS, Linux e WSL, e o Docker o reinicia. |
-| D16 | Conhecimento é mecanismo da stack, não skill: um serviço MCP (`knowledge`) que todas as etapas consomem. Quem decide o que registrar é o modelo da etapa; quem grava é o serviço. SARIF e Sonar entram por `aidd ingest`. | As skills espelham as etapas e ficam poucas. Hook roda shell e não distingue padrão de ruído. O atlas segue só leitura. |
-| D17 | A política do processo fica em `policy.yaml` (cobertura, harness, review, conhecimento), separada do `atlas.yaml`, que diz como ler o código. Tem as mesmas camadas (defaults → tenant → área → repo), e as skills leem a política efetiva por `policy_for`. | `profile` já são os profiles do compose; as skills nunca fazem o merge. |
+| D1 | Graph database: **Neo4j Community**. The alternative was Memgraph. | Official MCP, memory and license for internal use. Schema v1 in `neo4j/SCHEMA.md`. |
+| D3 | Refs: the tenant's `always` = `[main, master]`. Feature branches come in through the `active` policy (≤ 14 days, ≤ 5 per repo, ephemeral, GC after 30 days) and through `refs.overrides`. | The organization does not use `develop`, which stays in the code's default for compatibility (2026-10-03, F0.3.6). |
+| D6 | The name **Atlas**, for the Neo4j database and for the agent-facing MCP (`atlas.*` in the skills). `neo4j/` stays as the infra folder. | Intent tools replace raw Cypher (F0.6). |
+| D7 | No default tenant: `AIDD_TENANT` comes from `install.sh` (`.env`), is `${AIDD_TENANT:?}` in the compose file and is required in the indexer. An `auto` that derives no tenant is an error. | A wrong tenant mixes clients' graphs. |
+| D8 | Providers: **GitHub first** (F1). The manifest already accepts N sources per tenant. | Each tenant combines providers without changing the format. |
+| D9 | A `local` source is read through `git archive` of the refs; revised by D15: also with a mirror, so the workspace stays read-only. | Read without touching the dev's checkout. |
+| D10 | Default ref policy: `main`, `master` and `develop` always; active ones ≤ 14 days, ≤ 5 per repo; GC of ephemeral ones after 30 days. | Bounds the indexing cost per repo. |
+| D11 | Areas: an optional `areas:` section in `atlas.yaml` (`Repo.area`, groups the `plan`). Domain nodes and Backstage/Compass wait for F2. | Grouping without a premature domain model. |
+| D12 | Install ≠ update. The bootstrap indexes the local refs as cloned (no fetch, no credential); keeping the atlas current is a process of its own. | The install cannot depend on a credential or on the network. |
+| D13 | Automatic refresh with a dedicated read-only PAT, never the personal key; a 15 min interval. D13's and D14's scheduler was replaced by D15. | A minimal, revocable service credential. |
+| D15 | The refresher is a compose service (`aidd daemon`) with bare mirrors in `~/.aidd/mirrors`. The workspace is mounted read-only, and the containers run as the host user. Replaces D14 (systemd on WSL) and D12's fetch on the host. | Works the same on macOS, Linux and WSL, and Docker restarts it. |
+| D16 | Knowledge is a stack mechanism, not a skill: an MCP service (`knowledge`) that every stage consumes. The stage's model decides what to record; the service writes it. SARIF and Sonar come in through `aidd ingest`. | The skills mirror the stages and stay few. A hook runs shell and cannot tell a pattern from noise. The atlas stays read-only. |
+| D17 | The process policy lives in `policy.yaml` (coverage, harness, review, knowledge), separate from `atlas.yaml`, which says how to read the code. It has the same layers (defaults → tenant → area → repo), and the skills read the effective policy through `policy_for`. | `profile` already means the compose profiles; the skills never do the merge. |
 
-## H2: corpus público e precisão do extrator HTTP (H2-D1–D21)
+## H2: public corpus and HTTP extractor precision (H2-D1–D21)
 
-| # | Decisão | Porquê |
+| # | Decision | Why |
 |---|---|---|
-| H2-D1 | O H2 tem dois incrementos: o H2a (instrumento e relatório v1 com 15 repos) e o H2b (~40 repos e evolução do extrator). | Validar o instrumento num conjunto pequeno antes de ampliar. |
-| H2-D2 | Cada repo do corpus é fixado por SHA, não pelo HEAD. | Com o HEAD, a baseline muda sozinha e o diff deixa de significar algo. |
-| H2-D3 | Clones e saídas ficam fora do repo, em `~/.cache/aidd-corpus/{repos,runs/<data>-<rótulo>}`. | `/tmp` some no reboot, e o corpus não é versionado. |
-| H2-D4 | Gabarito só vem de spec commitada, de dump de rotas publicado ou de leitura do código. Os apps nunca rodam. | Rodar o app executa código de terceiros. |
-| H2-D5 | Rotas e chamadas têm métricas separadas. O recall de chamadas conta só as que têm path literal ou template. | Os perfis de erro diferem; URL montada em runtime não é falha do extrator. |
-| H2-D6 | A precisão sorteia do extraído; o recall sorteia da fonte. | Sortear só do extraído nunca mostra falso negativo. |
-| H2-D7 | tRPC fica fora de escopo. | São procedures, não rotas REST. |
-| H2-D8 | Java/Kotlin ficam fora. | Não são linguagem parseável do indexador. |
-| H2-D9 | Clientes gerados (NSwag, openapi-generator, oazapfts, ..) são extraídos como `HttpCall` com `via: generated-client`, um reconhecedor por gerador. | No v2 eram 371 operações sem nenhuma extraída. Cada gerador escreve sempre a mesma forma, então o risco de FP é baixo. |
-| H2-D10 | `[Route]` herdado no ASP.NET segue a herança; um nome de base ambíguo não herda. Era um nível e passou a quatro no F1.14. | 128 rotas do jellyfin sem prefixo; depois, o Radarr. |
-| H2-D11 | **Precisão antes de recall:** regra que sobe o recall e derruba a precisão em algum repo não entra. | Um FP vira aresta errada no grafo depois do linker. |
-| H2-D12 | Rota ou chamada com prefixo que o código tem e se perdeu conta como erro. Prefixo de config ou env (`BaseAddress`, `*_URL`) não conta, porque é do linker. | O path é a chave do linker. |
-| H2-D13 | Medir o que o grafo recebe (depois do `_dedupe`), sem contornar a fusão de rotas iguais entre apps. | A fusão era um defeito real (`multi-app-repo`, resolvido no F1.14 item 5). |
-| H2-D14 | O H2-D11 julga o erro que a regra introduz. Item novo errado só por herdar um defeito já categorizado conta, mas não bloqueia a regra. | Recusar a regra deixaria de fora os itens certos, e o defeito herdado é de outra regra. |
-| H2-D15 | Gabarito com spec é a spec mais as rotas conferidas no código: rota que só existe na spec sai, e rota real fora da spec entra. | A spec documenta a API pública, não tudo o que o código serve. |
-| H2-D16 | Item que pede mais de uma correção recebe uma categoria só: a mais específica além do grafo de montagem. | O ranking diz qual regra destrava o quê. |
-| H2-D17 | O item conta na linguagem do seu arquivo. O gabarito declara `language` por tipo quando difere da do repo, e cada categoria traz o nº de repos. | Repos mistos misturavam linguagens, e um repo grande não ranqueia uma categoria sozinho. |
-| H2-D18 | **Prioridade do portfólio:** .NET primeiro, Go e Python (FastAPI/Flask) em segundo, TS em terceiro. Django fica adiado. | O corpus pesa pelo volume dos repos públicos, não pelo que os projetos reais usam. |
-| H2-D19 | O TS entra no H2 depois de .NET, Go e Python fechados no essencial, em etapas com corpus e commit cada uma. | Reaproveita o grafo de montagem e o `compose` que Go e Python já usam. |
-| H2-D20 | **Hold-out:** repos que as regras nunca viram, no perfil do portfólio. O gabarito é escrito antes de rodar, a amostra é semeada e julgada na fonte, e ele é medido uma vez, sem ajuste. Repo do hold-out que é trabalhado vira corpus. | Um hold-out que orienta regras vira corpus. Os 16 de 2026-10-17 mostraram sobreajuste (C# R 48,5 %, Go 19,7 %). |
-| H2-D21 | O hold-out novo do fechamento do F1.14 vai para depois do H5, como primeiro passo de um handoff próprio, medido também no commit de antes do H5. | O H5 não muda comportamento; o que ele mostrar se corrige no código refatorado; a diferença entre os dois commits é regressão do H5. Custo aceito: um defeito de precisão não visto fica na instalação durante o H5. |
+| H2-D1 | H2 has two increments: H2a (the instrument and report v1 with 15 repos) and H2b (~40 repos and the extractor's evolution). | Validate the instrument on a small set before widening it. |
+| H2-D2 | Each corpus repo is pinned by SHA, not by HEAD. | With HEAD, the baseline moves by itself and the diff stops meaning anything. |
+| H2-D3 | Clones and outputs live outside the repo, in `~/.cache/aidd-corpus/{repos,runs/<date>-<label>}`. | `/tmp` goes away on reboot, and the corpus is not versioned. |
+| H2-D4 | An expected list comes only from a committed spec, a published route dump or reading the code. The apps never run. | Running the app executes third-party code. |
+| H2-D5 | Routes and calls have separate metrics. Call recall counts only calls with a literal or template path. | The error profiles differ; a URL built at run time is not an extractor failure. |
+| H2-D6 | Precision samples from what was extracted; recall samples from the source. | Sampling only from the extracted never shows a false negative. |
+| H2-D7 | tRPC is out of scope. | They are procedures, not REST routes. |
+| H2-D8 | Java/Kotlin are out. | They are not a language the indexer parses. |
+| H2-D9 | Generated clients (NSwag, openapi-generator, oazapfts, ..) are extracted as `HttpCall` with `via: generated-client`, one recognizer per generator. | In v2 there were 371 operations and none extracted. Each generator always writes the same shape, so the FP risk is low. |
+| H2-D10 | An inherited `[Route]` in ASP.NET follows inheritance; an ambiguous base name does not inherit. It was one level and became four in F1.14. | 128 jellyfin routes without a prefix; later, Radarr. |
+| H2-D11 | **Precision before recall:** a rule that raises recall and drops precision in any repo does not go in. | An FP becomes a wrong edge in the graph after the linker. |
+| H2-D12 | A route or call with a prefix the code has and that got lost counts as an error. A config or env prefix (`BaseAddress`, `*_URL`) does not, because it belongs to the linker. | The path is the linker's key. |
+| H2-D13 | Measure what the graph receives (after `_dedupe`), without working around the merge of equal routes across apps. | The merge was a real defect (`multi-app-repo`, solved in F1.14 item 5). |
+| H2-D14 | H2-D11 judges the error the rule introduces. A new item wrong only because it inherits an already categorized defect counts, but does not block the rule. | Refusing the rule would leave the right items out, and the inherited defect belongs to another rule. |
+| H2-D15 | An expected list with a spec is the spec plus the routes checked in the code: a route that exists only in the spec goes out, and a real route outside the spec goes in. | The spec documents the public API, not everything the code serves. |
+| H2-D16 | An item that needs more than one fix gets a single category: the most specific one beyond the mount graph. | The ranking says which rule unlocks what. |
+| H2-D17 | The item counts in its file's language. The expected list declares `language` per kind when it differs from the repo's, and each category carries its number of repos. | Mixed repos mixed languages, and one large repo does not rank a category alone. |
+| H2-D18 | **Portfolio priority:** .NET first, Go and Python (FastAPI/Flask) second, TS third. Django is deferred. | The corpus weighs by the volume of public repos, not by what the real projects use. |
+| H2-D19 | TS joins H2 after .NET, Go and Python are essentially closed, in stages with a corpus run and a commit each. | Reuses the mount graph and the `compose` that Go and Python already use. |
+| H2-D20 | **Hold-out:** repos the rules never saw, matching the portfolio's profile. The expected list is written before the run, the sample is seeded and judged at the source, and it is measured once, with no tuning. A hold-out repo that gets worked on becomes corpus. | A hold-out that guides rules becomes corpus. The 16 of 2026-10-17 showed overfitting (C# R 48.5 %, Go 19.7 %). |
+| H2-D21 | The new hold-out of the F1.14 close moves to after H5, as the first step of its own handoff, also measured on the commit before H5. | H5 changes no behavior; what the hold-out shows is fixed in the refactored code; a difference between the two commits is an H5 regression. Accepted cost: an unseen precision defect stays in the install during H5. |
 
-## H4: docs públicos e o indexador em repo próprio (H4-D1–D12)
+## H4: public docs and the indexer in its own repo (H4-D1–D12)
 
-São **propostas**: o H4 confirma com o autor antes de executar. O H4-D6 é do autor.
+These are **proposals**: H4 confirms them with the author before executing. H4-D6 is the author's call. H4-D1 was
+decided by the author on 2026-10-19.
 
-| # | Proposta | Porquê |
+| # | Proposal | Why |
 |---|---|---|
-| H4-D1 | A fonte dos docs públicos é em inglês, e as outras línguas são traduções; isso fecha o D5. ROADMAP, handoffs e guias de trabalho seguem em português, fora da navegação pública. | É o padrão do open source e do projeto (esquema e ADRs em inglês). |
-| H4-D2 | Locales `pt-BR`, `es` (neutro) e `zh-CN`, com etiquetas BCP 47 nos arquivos. | `pt` e `zh` sozinhos são ambíguos. |
-| H4-D3 | Tradução em camadas: 1 (READMEs, instalação, visão geral, FAQ) nos quatro idiomas; 2 (guias) em inglês e pt-BR; 3 (referência, contratos, esquema, ADRs, relatório do corpus, CHANGELOG) só em inglês. | A referência muda a cada commit e é a tradução que envelhece primeiro. |
-| H4-D4 | Markdown no GitHub com `docs/<locale>/`. O site só quando a navegação pedir. | O GitHub já renderiza Mermaid e `<picture>`. |
-| H4-D5 | Tradução assistida por LLM com glossário e guia de estilo, e revisão nativa quando houver. Nada de Crowdin/Weblate por ora. | Poucas páginas por camada, e não há tradutor externo. |
-| H4-D6 | O nome do repo do indexador é **do autor**. A sugestão é um nome próprio, com `atlas` mantido como nome do MCP, sem renomear comandos no primeiro corte. | "Atlas" colide com `ariga/atlas` e com o MongoDB Atlas. |
-| H4-D7 | O `knowledge` fica no aidd-stack como pacote próprio. O que ele importa do indexador vira API pública declarada e versionada. | Vault, insights e política são a metodologia, não indexação (D16, D17). |
-| H4-D8 | O `dotnet-praticis` fica com o indexador no primeiro corte, como extensão de referência. | 5 módulos de teste e as fixtures `csharp-praticis-*` dependem dele. |
-| H4-D9 | `git filter-repo` leva o histórico do indexador para o repo novo, com varredura de nomes e segredos antes do primeiro push. | `blame` e log guardam o porquê das regras, e o repo novo é a chance de não republicar o que não devia. |
-| H4-D10 | Imagem no GHCR, multi-arquitetura (amd64 e arm64), por tag. O aidd-stack fixa tag e digest. | O `install.sh` não deve buildar código de outro repo. |
-| H4-D11 | `SCHEMA.md` e `schema.cypher` vão para o indexador, que aplica o esquema. | O esquema bate sempre com a versão de quem escreve. |
-| H4-D12 | SemVer, `CHANGELOG.md` no formato Keep a Changelog, e o README apontando para uma release. | Hoje o `curl \| bash` recebe qualquer commit da `main`. |
+| H4-D1 | **Every doc in the repo is written in English**, the working docs too (ROADMAP, decisions, history, handoffs, the indexer guide). The other languages are translations of the public docs; this closes D5. | It is the open source standard and the project's (code, schema and ADRs in English), and a newcomer or their AI reads one language. The working docs were in Portuguese until 2026-10-19. |
+| H4-D2 | Locales `pt-BR`, `es` (neutral) and `zh-CN`, with BCP 47 tags on the files. | `pt` and `zh` alone are ambiguous. |
+| H4-D3 | Translation in tiers: 1 (READMEs, install, overview, FAQ) in all four languages; 2 (guides) in English and pt-BR; 3 (reference, contracts, schema, ADRs, corpus report, CHANGELOG) in English only. | Reference changes with every commit and is the translation that ages first. |
+| H4-D4 | Markdown on GitHub with `docs/<locale>/`. A site only when navigation calls for it. | GitHub already renders Mermaid and `<picture>`. |
+| H4-D5 | LLM-assisted translation with a glossary and a style guide, and native review when there is one. No Crowdin/Weblate for now. | Few pages per tier, and there is no external translator. |
+| H4-D6 | The name of the indexer's repo is **the author's call**. The suggestion is a name of its own, keeping `atlas` as the MCP's name, without renaming commands in the first cut. | "Atlas" collides with `ariga/atlas` and with MongoDB Atlas. |
+| H4-D7 | `knowledge` stays in aidd-stack as a package of its own. What it imports from the indexer becomes a declared, versioned public API. | Vault, insights and policy are the methodology, not indexing (D16, D17). |
+| H4-D8 | `dotnet-praticis` stays with the indexer in the first cut, as the reference extension. | 5 test modules and the `csharp-praticis-*` fixtures depend on it. |
+| H4-D9 | `git filter-repo` carries the indexer's history to the new repo, with a sweep for names and secrets before the first push. | `blame` and the log keep why the rules are so, and the new repo is the chance not to republish what it shouldn't. |
+| H4-D10 | An image on GHCR, multi-architecture (amd64 and arm64), per tag. aidd-stack pins tag and digest. | `install.sh` should not build another repo's code. |
+| H4-D11 | `SCHEMA.md` and `schema.cypher` move to the indexer, which applies the schema. | The schema always matches the version of whoever writes. |
+| H4-D12 | SemVer, a `CHANGELOG.md` in the Keep a Changelog format, and the README pointing at a release. | Today `curl \| bash` gets any commit on `main`. |
 
-## H5: refatoração do indexador antes do SCIP (H5-D1–D5, decididas pelo autor em 2026-10-18)
+## H5: the indexer refactor before SCIP (H5-D1–D5, decided by the author on 2026-10-18)
 
-| # | Decisão | Porquê |
+| # | Decision | Why |
 |---|---|---|
-| H5-D1 | **A ordem:** fim do F1.14 → fase 0a do H4 → H5 → hold-out novo (H2-D21) → P2 → SCIP (F1.1, F1.2). O H5 absorve o catálogo e os limiares do `built_bundle` (dívidas do item 7 do F1.14). | O SCIP precisa de um lugar só para plugar (um serviço de tipos), e o extrator cresceu em métodos-deus e dois sistemas de tipo paralelos. |
-| H5-D2 | O catálogo de frameworks é YAML, com esquema validado e teste. | É o mesmo formato das convenções. |
-| H5-D3 | As metas são complexidade ≤ 9 e módulos ≤ 300 linhas. No H5, o CI só relata; quem liga o bloqueio é o autor. | Código que cabe numa leitura; o bloqueio vem quando o código inteiro cumprir. |
-| H5-D4 | Revisão geral dos comentários: fica só o pertinente, sem referência a docs e sem nome de projeto. | Os docs vão ser reorganizados, e o código é público. |
-| H5-D5 | O MCP entra no escopo; o `cli.py` fica para o P2. | O P2 vai mexer na CLI ao separar o repo. |
+| H5-D1 | **The order:** end of F1.14 → H4 phase 0a → H5 → new hold-out (H2-D21) → P2 → SCIP (F1.1, F1.2). H5 absorbs the catalog and the `built_bundle` thresholds (debts of F1.14 item 7). | SCIP needs one place to plug into (a type service), and the extractor grew into god methods and two parallel type systems. |
+| H5-D2 | The framework catalog is YAML, with a validated schema and a test. | It is the same format as the conventions. |
+| H5-D3 | The targets are complexity ≤ 9 and modules ≤ 300 lines. During H5 the CI only reports; the author turns on blocking. | Code that fits in one reading; blocking comes once the whole code meets them. |
+| H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
+| H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
 
-## Do processo de trabalho
+## Of the working process
 
-| Decisão | Porquê |
+| Decision | Why |
 |---|---|
-| **Sem LLM como parser.** A extração é determinística (tree-sitter); uma lacuna que pede o tipo de uma expressão não declarada à vista vira `needs-resolver` e espera o resolvedor do F1.2. | Reprodutível e medível no corpus; a fronteira com o SCIP está no ADR-002. |
-| Toda mudança no extrator segue o ciclo: fixture que falha sem a regra → corpus `--baseline` → julgamento item a item na fonte → gabaritos (H2-D15/D17) → nova baseline. | Regressão num repo enquanto outro melhora é o caso comum. |
-| Uma mudança no extrator que vai para o `main` passa por uma validação numa instalação ao vivo antes do merge: dry-run do `main` contra a branch em cada snapshot e fotos do grafo antes e depois da reinstalação. | O PR #5 só mostrou dois defeitos dos wrappers TS no código real, que o corpus não tinha (incremento 12). |
-| Nenhum nome real de tenant ou de projeto privado em docs, código, testes ou fixtures; repos públicos podem ser citados. | O repo é público. |
+| **No LLM as parser.** Extraction is deterministic (tree-sitter); a gap that needs the type of an expression not declared in sight becomes `needs-resolver` and waits for F1.2's resolver. | Reproducible and measurable on the corpus; the boundary with SCIP is in ADR-002. |
+| Every change to the extractor follows the cycle: a fixture that fails without the rule → corpus `--baseline` → item-by-item judgment at the source → expected lists (H2-D15/D17) → a new baseline. | A regression in one repo while another improves is the common case. |
+| A change to the extractor headed for `main` is validated on a live install before the merge: a dry-run of `main` against the branch on each snapshot and pictures of the graph before and after the reinstall. | Only that showed PR #5's two TS wrapper defects in real code, which the corpus did not have (increment 12). |
+| No real tenant or private project name in docs, code, tests or fixtures; public repos may be named. | The repo is public. |

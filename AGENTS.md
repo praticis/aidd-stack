@@ -1,132 +1,132 @@
-# AGENTS.md — porta de entrada do aidd-stack
+# AGENTS.md — the aidd-stack entry point
 
-Leia isto primeiro, seja você uma pessoa chegando ao projeto ou a IA dela. Em poucos minutos dá o contexto e diz
-onde está o resto. Os docs de trabalho são em português; os docs públicos, em inglês, saem do H4.
+Read this first, whether you are a person joining the project or that person's AI. In a few minutes it gives the
+context and says where everything else is.
 
-## O que é
+## What it is
 
-O aidd-stack é uma stack local para desenvolvimento assistido por IA num portfólio de vários repositórios. Ela
-indexa o código de cada repo num **grafo** (Neo4j, database `atlas`). São dois níveis:
+aidd-stack is a local stack for AI-assisted development across a portfolio of repositories. It indexes each repo's
+code into a **graph** (Neo4j, database `atlas`), at two levels:
 
-- **micro:** arquivos, símbolos, `CALLS` e `IMPORTS`;
-- **macro:** as rotas HTTP que um serviço expõe, as chamadas que ele faz e as ligações entre serviços.
+- **micro:** files, symbols, `CALLS` and `IMPORTS`;
+- **macro:** the HTTP routes a service exposes, the calls it makes and the links between services.
 
-As ferramentas do grafo chegam às skills do processo (`scan` → `refine-business` → `refine-tech` → `implement`)
-pelo MCP `atlas`. Junto vão um vault Obsidian, vetores no Qdrant e um serviço `knowledge` com o que o projeto
-aprendeu.
+The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`) through the
+`atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a `knowledge` service holding what the project
+has learned.
 
-A extração é **determinística**: tree-sitter hoje, SCIP como enriquecimento depois. LLM nunca é o parser, e por
-três razões:
+Extraction is **deterministic**: tree-sitter today, SCIP as an enrichment later. An LLM is never the parser, for
+three reasons:
 
-- o grafo tem de ser reprodutível, o mesmo commit dando o mesmo grafo;
-- o grafo tem de ser medível, como no corpus;
-- o grafo tem de ser barato de manter atualizado a cada push.
+- the graph must be reproducible, the same commit giving the same graph;
+- the graph must be measurable, as in the corpus;
+- the graph must be cheap to keep current on every push.
 
-O SCIP entra por repo onde a resolução por nome não basta (ADR-002).
+SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 
-## Mapa do repo
+## Repo map
 
-| Caminho | O que tem |
+| Path | What it holds |
 |---|---|
-| `setup/` | `install.sh` (instala e atualiza em `~/.aidd`), `install-check.sh` (saúde da instalação), o wrapper `aidd`, as skills (`scan`, `refine-business`) e um exemplo de convenção |
-| `docker-compose.yml`, `gateway/`, `neo4j/`, `qdrant/`, `obsidian/`, `git/` | a infra: Neo4j com o esquema (`neo4j/SCHEMA.md`), Qdrant, os MCPs e o gateway nginx, tudo só em localhost |
-| `indexer/` | o pacote `aidd-indexer`: a CLI `aidd`, o refresher (`aidd daemon`), o MCP `atlas` e o serviço `knowledge` |
-| `indexer/aidd_indexer/core/` | o que é comum a todas as linguagens: descoberta, extração, resolução de `CALLS`, o extrator HTTP (`http_*`, `integrations.py`), o linker e a escrita do grafo |
-| `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# e Python: queries tree-sitter, símbolos, resolução e o scanner HTTP de cada uma (ADR-003) |
-| `indexer/conventions/` | as convenções de arquitetura como extensões (a de referência é `dotnet-praticis`) |
-| `indexer/tests/` | as fixtures por linguagem (`fixtures/*/expected.json`), os gabaritos do corpus (`corpus_expected/`) e os testes |
-| `indexer/scripts/` | o corpus público (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`) e os testes (`test.sh`) |
-| `docs/` | o ROADMAP, as decisões, o histórico, o guia do indexador, o relatório do corpus, as perguntas douradas, os ADRs e os handoffs |
+| `setup/` | `install.sh` (installs and updates `~/.aidd`), `install-check.sh` (install health), the `aidd` wrapper, the skills (`scan`, `refine-business`) and an example convention |
+| `docker-compose.yml`, `gateway/`, `neo4j/`, `qdrant/`, `obsidian/`, `git/` | the infra: Neo4j with its schema (`neo4j/SCHEMA.md`), Qdrant, the MCPs and the nginx gateway, all on localhost only |
+| `indexer/` | the `aidd-indexer` package: the `aidd` CLI, the refresher (`aidd daemon`), the `atlas` MCP and the `knowledge` service |
+| `indexer/aidd_indexer/core/` | what all languages share: discovery, extraction, `CALLS` resolution, the HTTP extractor (`http_*`, `integrations.py`), the linker and the graph writer |
+| `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003) |
+| `indexer/conventions/` | architecture conventions as extensions (the reference one is `dotnet-praticis`) |
+| `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
+| `indexer/scripts/` | the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`) and the tests (`test.sh`) |
+| `docs/` | the ROADMAP, the decisions, the history, the indexer guide, the corpus report, the golden questions, the ADRs and the handoffs |
 
-## Arquitetura em uma figura
+## The architecture in one figure
 
 ```
- repos do workspace ──(espelho bare, só leitura)──▶ refresher (aidd daemon, a cada 15 min)
-                                                        │ tree-sitter por linguagem
+ workspace repos ──(bare mirror, read-only)──▶ refresher (aidd daemon, every 15 min)
+                                                        │ tree-sitter per language
                                                         ▼
-            discovery → extract (símbolos, imports) → resolve (CALLS) → HTTP (rotas, chamadas)
-                                                        │ convenções (papéis, camadas, violações)
+            discovery → extract (symbols, imports) → resolve (CALLS) → HTTP (routes, calls)
+                                                        │ conventions (roles, layers, violations)
                                                         ▼
                                   Neo4j "atlas" ◀── linker (CONSUMES, CALLED_FROM, DEPENDS_ON)
                                         │
-                         MCP atlas (:3005, via gateway) ── 11 tools: atlas_status, repo_map, find_symbol,
+                         atlas MCP (:3005, via gateway) ── 11 tools: atlas_status, repo_map, find_symbol,
                                         │                  who_calls, symbol_context, http_map, who_consumes,
                                         ▼                  impact_of, ref_diff, violations, cypher_readonly
-                    skills do processo + MCP knowledge (:3006) + vault Obsidian + Qdrant
+                    process skills + knowledge MCP (:3006) + Obsidian vault + Qdrant
 ```
 
-Cada nó e cada aresta carregam `tenant`, `repo`, `ref` e `commit_sha`; as arestas macro carregam `confidence` e
-`evidence`. Um snapshot é um (repo, ref), e um snapshot escrito por outro build do indexador fica `outdated` até o
-refresh reindexá-lo.
+Every node and edge carries `tenant`, `repo`, `ref` and `commit_sha`; macro edges carry `confidence` and `evidence`.
+A snapshot is one (repo, ref), and a snapshot written by another indexer build stays `outdated` until the refresh
+re-indexes it.
 
-## Princípios
+## Principles
 
-O texto completo está no ROADMAP, em "Princípios".
+The full text is in the ROADMAP, under "Principles".
 
-- **Independente do orquestrador:** só MCP e skills.
-- **Extração determinística:** uma lacuna que pede tipo não declarado à vista vira `needs-resolver` para o F1.2, sem
-  heurística.
-- **Segredos nunca entram no índice:** só o nome da env var.
-- **Cada fase fecha com perguntas douradas passando.**
-- **Forma do código:**
-  - complexidade ≤ 9 por função (`ruff C901`) e módulos de até 300 linhas;
-  - comentários só com o porquê, sem referência a docs ou itens de plano.
-- **Nenhum nome real de tenant, cliente ou projeto privado** em docs, código, testes ou fixtures. O repo é público.
+- **Orchestrator-independent:** MCP and skills only.
+- **Deterministic extraction:** a gap that needs a type not declared in sight becomes `needs-resolver` for F1.2, with
+  no heuristic.
+- **Secrets never enter the index:** only the env var's name.
+- **Every phase closes with the golden questions passing.**
+- **Code shape:**
+  - complexity ≤ 9 per function (`ruff C901`) and modules of at most 300 lines;
+  - comments say only why, with no reference to docs or plan items.
+- **No real tenant, client or private project name** in docs, code, tests or fixtures. The repo is public.
 
-## Como instalar, testar e medir
+## How to install, test and measure
 
-- **Instalar ou atualizar:** `./setup/install.sh` (pergunta pelo terminal), depois `./setup/install-check.sh`, que
-  deve terminar em "All checks passed".
-- **Testes do indexador:** `indexer/scripts/test.sh`, no container de teste, com o código da árvore montado.
-- **Corpus HTTP (a régua do extrator):** `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`.
-  - Deve dar `0 repo(s) differ`, ou um diff julgado item a item.
-  - O hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`.
-  - Os clones ficam em `~/.cache/aidd-corpus`, e os números em `docs/corpus-report.md`.
-- **Uma mudança no extrator segue o ciclo** do guia (`docs/indexer-evolution.md` §5):
-  1. caso de fixture que falha sem a regra;
+- **Install or update:** `./setup/install.sh` (asks in the terminal), then `./setup/install-check.sh`, which must end
+  in "All checks passed".
+- **Indexer tests:** `indexer/scripts/test.sh`, in the test container, with the tree's code mounted.
+- **HTTP corpus (the extractor's yardstick):** `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`.
+  - It must give `0 repo(s) differ`, or a diff judged item by item.
+  - The hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`.
+  - The clones live in `~/.cache/aidd-corpus`, and the numbers in `docs/corpus-report.md`.
+- **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
+  1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
-  3. julgamento na fonte;
-  4. gabaritos (H2-D15);
-  5. nova baseline.
-- **Antes do merge**, validar também numa instalação ao vivo: dry-run do `main` contra a branch em cada snapshot
-  (com `-w` no código montado) e fotos do grafo antes e depois.
-- **Perguntas douradas:** `docs/golden-questions.md`, repetidas depois de mudanças no grafo, no linker ou no MCP.
+  3. judgment at the source;
+  4. expected lists (H2-D15);
+  5. a new baseline.
+- **Before a merge**, also validate on a live install: a dry-run of `main` against the branch on each snapshot (with
+  `-w` on the mounted code) and pictures of the graph before and after.
+- **Golden questions:** `docs/golden-questions.md`, repeated after changes to the graph, the linker or the MCP.
 
-## Onde estamos
+## Where we are
 
-- A **Fase 0** (fundação) está concluída.
-- O **H2/F1.14** (o extrator HTTP medido num corpus público de 55 repos) fechou em 2026-10-19.
-  - Precisão pela lista: 98–100 % em todas as linguagens.
-  - Os números estão no relatório do corpus.
-- **A ordem até o SCIP:**
-  1. H4 fase 0a (esta reciclagem dos docs);
-  2. **H5**, a refatoração do indexador sem mudar comportamento (`docs/handoffs/H5-indexer-refactor.md`);
-  3. o hold-out novo;
-  4. o P2 (o indexador em repo próprio);
-  5. o SCIP (F1.1, F1.2).
-- O estado do dia está no ROADMAP, em "Onde estamos".
+- **Phase 0** (foundation) is done.
+- **H2/F1.14** (the HTTP extractor measured on a public corpus of 55 repos) closed on 2026-10-19.
+  - Precision against the lists: 98–100 % in every language.
+  - The numbers are in the corpus report.
+- **The order up to SCIP:**
+  1. H4 phase 0a (this recycling of the docs);
+  2. **H5**, the indexer refactor that changes no behavior (`docs/handoffs/H5-indexer-refactor.md`);
+  3. the new hold-out;
+  4. P2 (the indexer in its own repo);
+  5. SCIP (F1.1, F1.2).
+- The current state is in the ROADMAP, under "Where we are".
 
-## Onde achar cada coisa
+## Where to find things
 
-| Pergunta | Onde |
+| Question | Where |
 |---|---|
-| O que está aberto, em que ordem | `docs/ROADMAP.md` |
-| Por que tal escolha | `docs/decisions.md` e `docs/adr/` (ADR-002 tree-sitter × SCIP, ADR-003 módulos por linguagem) |
-| O que aconteceu e quando | `docs/history.md`; o texto antigo completo está no git (`git show 1d73bb0:docs/ROADMAP.md`) |
-| Como o indexador decide (regras, o ciclo de uma mudança, o mapa do código) | `docs/indexer-evolution.md` |
-| Os números do extrator HTTP e o que falta | `docs/corpus-report.md` |
-| O modelo do grafo | `neo4j/SCHEMA.md` |
-| O processo de indexação (fontes, refs, refresh) | `docs/indexing-process.md` |
-| O contrato do vault e do conhecimento | `docs/knowledge-contract.md` |
-| Um trabalho em curso | `docs/handoffs/` (ativos: H3, H4, H5; fechados: H1, H2, reduzidos a resumo) |
+| What is open, and in what order | `docs/ROADMAP.md` |
+| Why a choice was made | `docs/decisions.md` and `docs/adr/` (ADR-002 tree-sitter vs SCIP, ADR-003 per-language modules) |
+| What happened, and when | `docs/history.md`; the full old text is in git (`git show 1d73bb0:docs/ROADMAP.md`) |
+| How the indexer decides (rules, the cycle of a change, the code map) | `docs/indexer-evolution.md` |
+| The HTTP extractor's numbers and what is missing | `docs/corpus-report.md` |
+| The graph model | `neo4j/SCHEMA.md` |
+| The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
+| The vault and knowledge contract | `docs/knowledge-contract.md` |
+| Work in progress | `docs/handoffs/` (active: H3, H4, H5; closed: H1, H2, reduced to summaries) |
 
-## Para quem contribui (pessoa ou agente)
+## For contributors (people or agents)
 
-- **Commits:** assunto convencional de uma linha que nomeia a capacidade, sem corpo e sem trailer de atribuição;
-  assinados.
-- **O código novo já nasce nas metas** de forma; o H5 leva o código antigo até elas.
-- **Repos do corpus são de terceiros:** nunca rode código deles. Leia e meça pelo container do indexador.
-- **Comandos longos** (corpus, refresh) rodam em segundo plano. Não edite o indexador nem os gabaritos durante uma
-  rodada do corpus, porque o código está montado nos containers.
-- **Português na conversa e nos docs de trabalho;** inglês no código, nos commits, nos PRs, no relatório do corpus e
-  nos docs públicos.
+- **Commits:** a one-line conventional subject that names the capability, with no body and no attribution trailer;
+  signed.
+- **New code meets the shape targets from the start**; H5 brings the old code up to them.
+- **Corpus repos belong to third parties:** never run their code. Read and measure through the indexer's container.
+- **Long commands** (corpus, refresh) run in the background. Don't edit the indexer or the expected lists during a
+  corpus run, because the code is mounted in the containers.
+- **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). Two docs are still in Portuguese
+  until they are rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b) and the H5 handoff.

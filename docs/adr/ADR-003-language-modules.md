@@ -1,31 +1,31 @@
-# ADR-003 — Indexador em núcleo compartilhado + módulos por linguagem
+# ADR-003 — The indexer as a shared core + per-language modules
 
-**Status:** aceito e implementado em 2026-09-17 (F0.4.4) — ver "Como ficou" no fim · **Data:** 2026-09-14 · **Fase:** 0
+**Status:** accepted and implemented on 2026-09-17 (F0.4.4) — see "How it turned out" at the end · **Date:**
+2026-09-14 · **Phase:** 0
 
-## Contexto
+## Context
 
-Hoje o indexador (`indexer/aidd_indexer/`, ~3,7 k linhas) mistura duas coisas: o **pipeline**
-(descoberta, snapshot, escrita idempotente no grafo, GC, plano de refs, MCP) e o **conhecimento
-por linguagem** (queries tree-sitter, regras de nome qualificado, receivers em Go, namespaces em C#,
-scanners HTTP por framework). O conhecimento por linguagem está espalhado: `extract.py` tem `if
-lang == "csharp"` em vários pontos, `integrations.py` concentra quatro scanners num arquivo de 900
-linhas, `discovery.py` conhece extensões e manifestos de todas as linguagens.
+Today the indexer (`indexer/aidd_indexer/`, ~3.7 k lines) mixes two things: the **pipeline** (discovery, snapshot,
+idempotent graph writes, GC, the ref plan, MCP) and the **per-language knowledge** (tree-sitter queries, qualified
+name rules, receivers in Go, namespaces in C#, HTTP scanners per framework). The per-language knowledge is scattered:
+`extract.py` has `if lang == "csharp"` in several places, `integrations.py` concentrates four scanners in a 900-line
+file, `discovery.py` knows every language's extensions and manifests.
 
-Duas frentes vão evoluir esse conhecimento em paralelo (handoffs H1 e H2) e o SCIP entrará por
-linguagem (ADR-002). Com o layout atual, cada frente edita os mesmos arquivos grandes; conflitos e
-regressões cruzadas são inevitáveis.
+Two efforts are going to evolve that knowledge in parallel (handoffs H1 and H2), and SCIP will come in per language
+(ADR-002). With the current layout, each effort edits the same large files; conflicts and cross regressions are
+inevitable.
 
-## Decisão
+## Decision
 
-Separar em **núcleo** e **módulos de linguagem**, com um contrato explícito:
+Split into a **core** and **language modules**, with an explicit contract:
 
 ```
 aidd_indexer/
-├── core/                      # sem nenhum `if language ==`
+├── core/                      # without any `if language ==`
 │   ├── pipeline.py            # extract_tree(): discovery → per-file extract → integrations → resolve
 │   ├── model.py  ids.py  paths.py (normalize_path, path_key)
-│   ├── discovery.py           # walk + módulos, consultando o registro de linguagens
-│   ├── extract.py             # FileExtractor genérico: parse, queries, símbolos, chamadas, imports
+│   ├── discovery.py           # walk + modules, consulting the language registry
+│   ├── extract.py             # a generic FileExtractor: parse, queries, symbols, calls, imports
 │   ├── resolve.py  graph.py  planner.py  manifest.py  gitinfo.py  config.py
 │   └── http_base.py           # _BaseScanner: path_of, is_handler_like, resolve_local, add_endpoint/add_call
 ├── languages/
@@ -39,102 +39,96 @@ aidd_indexer/
 └── cli.py
 ```
 
-Contrato `LanguageSupport` (o que um módulo declara):
+The `LanguageSupport` contract (what a module declares):
 
-| Membro | Hoje vive em | Exemplo |
+| Member | Lives today in | Example |
 |---|---|---|
 | `id`, `aliases`, `extensions` | `discovery.LANGUAGE_BY_EXT` | `csharp`, `.cs` |
 | `manifests` | `discovery.MANIFESTS` | `go.mod` → `go-module` |
-| `grammar` (nome no language pack) | `extract.load_language` | `csharp` |
-| `queries` (arquivo `.scm` ao lado) | `extract.QUERY_DIR` | `languages/go/queries.scm` |
+| `grammar` (the name in the language pack) | `extract.load_language` | `csharp` |
+| `queries` (a `.scm` file alongside) | `extract.QUERY_DIR` | `languages/go/queries.scm` |
 | `qualified_name(chain, name, file)`, `receiver()`, `visibility()`, `namespaces()` | `extract._make_symbol` + ifs | Go: `pkg.Type.Method`; C#: `Namespace.Class.Method` |
 | `entry_point_hints` | `extract.ENTRY_POINT_HINTS` / `DECORATOR_ENTRY` | `[HttpGet`, `@Get(` |
 | `test_file_patterns` | `integrations.TEST_FILE` | `_test.go`, `Tests.cs` |
-| `http_scanner` (classe) | `integrations._GoScanner` etc. | herda `core.http_base.BaseScanner` |
+| `http_scanner` (a class) | `integrations._GoScanner` etc. | inherits `core.http_base.BaseScanner` |
 | `generated_suffixes` | `config.GENERATED_SUFFIXES` | `.pb.go`, `.g.cs` |
-| `enrichers` (F1.2) | — | `scip-go` → resoluções para `CALLS` |
+| `enrichers` (F1.2) | — | `scip-go` → resolutions for `CALLS` |
 
-Regras:
+Rules:
 
-- O núcleo **nunca** consulta o id da linguagem; só o registro. Adicionar linguagem = criar a pasta e
-  registrar; nada muda em `core/`.
-- Convenções específicas de um tenant (padrão de arquitetura do autor, H1) entram como **camada
-  opcional** por linguagem (`languages/<lang>/conventions/<nome>.py`) ligada por `atlas.yaml`
-  (`conventions: [hexagonal-v1]`), nunca como heurística global.
-- Sem carregamento dinâmico de pacotes externos por enquanto (entry points do Python ficam para
-  quando existir demanda real de plugin de terceiros); o registro é estático e legível.
+- The core **never** looks at the language id; only at the registry. Adding a language = creating the folder and
+  registering it; nothing changes in `core/`.
+- A tenant's specific conventions (the author's architecture pattern, H1) come in as an **optional layer** per
+  language (`languages/<lang>/conventions/<name>.py`) switched on by `atlas.yaml` (`conventions: [hexagonal-v1]`),
+  never as a global heuristic.
+- No dynamic loading of external packages for now (Python entry points wait for a real demand for third-party
+  plugins); the registry is static and readable.
 
-## Convenções como extensões (segunda camada)
+## Conventions as extensions (a second layer)
 
-Acima dos módulos de linguagem, uma camada **plugável e versionada** para os padrões de arquitetura
-de cada organização — que podem ser proprietários e evoluir em ritmo próprio, portanto **não precisam
-viver neste repositório**.
+Above the language modules, a **pluggable, versioned** layer for each organization's architecture patterns — which
+may be proprietary and evolve at their own pace, and therefore **do not need to live in this repository**.
 
-- Um pacote Python (`aidd_conventions_<nome>`, repo próprio ou pasta `conventions/` aqui) registra-se
-  no ponto de extensão `aidd.conventions` (entry point) e implementa o contrato `Convention`, todo
-  opcional:
+- A Python package (`aidd_conventions_<name>`, its own repo or a `conventions/` folder here) registers itself at the
+  `aidd.conventions` extension point (entry point) and implements the `Convention` contract, all of it optional:
 
-| Hook | Devolve | Efeito no grafo / MCP |
+| Hook | Returns | Effect on the graph / MCP |
 |---|---|---|
-| `classify_module(path, module)` | `layer` (`inbound-http`, `usecase`, `port`, `outbound:<svc>`, `domain`, `platform`) | `Module.layer`, `Symbol.role`; `repo_map` mostra camadas nomeadas |
-| `route_patterns(language)` / `client_patterns(language)` | registradores e clientes HTTP extras (ex.: `registerRoutes`+`setHandlerSecurity`, `PostJSON`) | entram no scanner da linguagem com `confidence: exact` (convenção declarada) |
-| `target_of(file, module)` | serviço alvo de um adapter outbound | substitui o `target_hint` heurístico |
-| `entry_point(symbol)` | handler / comando / job / consumer | precisão de `is_entry_point` |
-| `rules()` | verificações estruturais (direção de dependência, um handler por path, decoder único…) | nós `Violation{rule, severity, evidence}` consultáveis pelo MCP — insumo do `refine-tech` |
+| `classify_module(path, module)` | `layer` (`inbound-http`, `usecase`, `port`, `outbound:<svc>`, `domain`, `platform`) | `Module.layer`, `Symbol.role`; `repo_map` shows named layers |
+| `route_patterns(language)` / `client_patterns(language)` | extra HTTP registrars and clients (e.g. `registerRoutes`+`setHandlerSecurity`, `PostJSON`) | go into the language's scanner with `confidence: exact` (a declared convention) |
+| `target_of(file, module)` | the target service of an outbound adapter | replaces the heuristic `target_hint` |
+| `entry_point(symbol)` | handler / command / job / consumer | the precision of `is_entry_point` |
+| `rules()` | structural checks (dependency direction, one handler per path, a single decoder…) | `Violation{rule, severity, evidence}` nodes queryable through the MCP — input for `refine-tech` |
 
-- A parte declarativa vai num `convention.yaml` (mapa pasta → camada, nomes de registradores/clientes,
-  layout do outbound); só regras e resolvedores exigem Python.
-- Ativação por tenant ou por repo no `atlas.yaml`: `conventions: [hexagonal-v1]`. Versões coexistem
-  (`hexagonal-v1`, `-v2`) enquanto os repos migram.
-- O núcleo nunca importa uma convenção; consulta o registro. Convenção ausente ou com erro degrada
-  para o comportamento genérico **com aviso** — nunca derruba a indexação.
-- Regra de ouro: nada específico de uma organização entra em `core/` ou `languages/`; se uma
-  heurística só faz sentido para um padrão, ela é convenção.
+- The declarative part goes in a `convention.yaml` (folder → layer map, registrar/client names, the outbound
+  layout); only rules and resolvers need Python.
+- Activation per tenant or per repo in `atlas.yaml`: `conventions: [hexagonal-v1]`. Versions coexist
+  (`hexagonal-v1`, `-v2`) while the repos migrate.
+- The core never imports a convention; it consults the registry. A missing or failing convention degrades to the
+  generic behavior **with a warning** — it never brings indexing down.
+- Golden rule: nothing specific to one organization goes into `core/` or `languages/`; if a heuristic only makes
+  sense for one pattern, it is a convention.
 
-## Migração
+## Migration
 
-Refatoração **mecânica, sem mudança de comportamento**: os números do corpus público
-(`scripts/http_corpus.py`) e da fixture são a regressão — devem sair idênticos antes e depois.
-`INDEXER_VERSION` não muda (semântica dos nós igual), então não dispara reindexação.
+A **mechanical refactor, with no behavior change**: the numbers of the public corpus (`scripts/http_corpus.py`) and
+of the fixture are the regression — they must come out identical before and after. `INDEXER_VERSION` does not change
+(the nodes' semantics are the same), so it does not trigger a re-index.
 
-1. Mover `normalize_path`/`path_key` para `core/paths.py`; `_BaseScanner` para `core/http_base.py`.
-2. Criar `languages/base.py` + registro; migrar `LANGUAGE_BY_EXT`, `MANIFESTS`, `PARSEABLE`,
-   `GENERATED_SUFFIXES`, `TEST_FILE` para os módulos.
-3. Uma linguagem por commit: mover `.scm`, extrair os `if lang ==` de `extract.py` para `symbols.py`,
-   mover o scanner para `http.py`. Rodar fixture + corpus após cada uma.
-4. `extract.py` e `integrations.py` viram fachadas finas sobre o registro (ou somem).
-5. Criar o registro `aidd.conventions`, o contrato `Convention` e uma convenção-exemplo mínima
-   (`conventions/example/`) que só classifica camadas por pasta — prova a costura sem codificar
-   nenhum padrão real. `atlas.yaml` ganha `conventions:` (opcional).
-6. Atualizar `docs/indexer-evolution.md` (mapa do código, "adicionar linguagem", "escrever uma
-   convenção") e os handoffs.
+1. Move `normalize_path`/`path_key` to `core/paths.py`; `_BaseScanner` to `core/http_base.py`.
+2. Create `languages/base.py` + the registry; migrate `LANGUAGE_BY_EXT`, `MANIFESTS`, `PARSEABLE`,
+   `GENERATED_SUFFIXES`, `TEST_FILE` to the modules.
+3. One language per commit: move the `.scm`, extract the `if lang ==` from `extract.py` into `symbols.py`, move the
+   scanner into `http.py`. Run the fixture + corpus after each one.
+4. `extract.py` and `integrations.py` become thin facades over the registry (or go away).
+5. Create the `aidd.conventions` registry, the `Convention` contract and a minimal example convention
+   (`conventions/example/`) that only classifies layers by folder — it proves the seam without encoding any real
+   pattern. `atlas.yaml` gains `conventions:` (optional).
+6. Update `docs/indexer-evolution.md` (the code map, "adding a language", "writing a convention") and the handoffs.
 
-Ordem: depois do F0.4.1 (validação do extrator genérico no portfólio real — separa bug de refactor)
-e **antes** de H1/H2 começarem a editar. O H1 (padrão do autor) passa a ser a primeira convenção
-real escrita contra o contrato, não código dentro de `integrations.py`.
+Order: after F0.4.1 (validating the generic extractor on the real portfolio — it separates a bug from the refactor)
+and **before** H1/H2 start editing. H1 (the author's pattern) becomes the first real convention written against the
+contract, not code inside `integrations.py`.
 
-## Consequências
+## Consequences
 
-- H1 e H2 trabalham em pastas diferentes (`languages/<lang>/`), e o núcleo fica protegido por
-  regressão.
-- SCIP (ADR-002) tem um lugar natural: `languages/<lang>/enrich.py`.
-- Custo: um refactor de algumas horas agora; o risco é baixo porque a regressão é numérica e já
-  existe.
-- Fica para depois: empacotar linguagens como plugins externos (entry points) e um `LanguageSupport`
-  declarativo em YAML — só se aparecer necessidade de terceiros adicionarem linguagens sem tocar no repo.
+- H1 and H2 work in different folders (`languages/<lang>/`), and the core stays protected by regression.
+- SCIP (ADR-002) has a natural place: `languages/<lang>/enrich.py`.
+- Cost: a refactor of a few hours now; the risk is low because the regression is numeric and already exists.
+- Left for later: packaging languages as external plugins (entry points) and a declarative `LanguageSupport` in YAML
+  — only if third parties need to add languages without touching the repo.
 
-## Como ficou (2026-09-17)
+## How it turned out (2026-09-17)
 
-Implementado em um único conjunto de commits, com a regressão prevista: fixtures 5/5 (3 HTTP + 2 da
-costura de convenções) e o **corpus público byte a byte idêntico** ao baseline — não só os
-candidatos HTTP, mas símbolos, `CALLS`, `IMPORTS`, pacotes e avisos dos 15 repositórios.
-`INDEXER_VERSION` continua `0.2.1`.
+Implemented in a single set of commits, with the planned regression: fixtures 5/5 (3 HTTP + 2 for the conventions
+seam) and the **public corpus byte for byte identical** to the baseline — not only the HTTP candidates, but the
+symbols, `CALLS`, `IMPORTS`, packages and warnings of the 15 repositories. `INDEXER_VERSION` stays `0.2.1`.
 
-Layout final (difere do desenho em detalhes):
+The final layout (differs from the design in details):
 
 ```
 aidd_indexer/
-  cli.py                    extract_tree() ficou aqui (não houve `core/pipeline.py`)
+  cli.py                    extract_tree() stayed here (there was no `core/pipeline.py`)
   core/   config manifest planner gitinfo discovery extract resolve integrations http_base paths graph ids model
   languages/  __init__.py (REGISTRY, by_id, by_extension, parseable, grammars)  base.py (LanguageSupport)
               go/ typescript/ csharp/ python/  → queries.scm  symbols.py  http.py
@@ -142,34 +136,30 @@ aidd_indexer/
   mcp/server.py
 ```
 
-- `LanguageSupport` (`languages/base.py`) tem hooks em quatro grupos: identidade (`id, grammar,
-  extensions, query_file, stack, manifests, manifest_suffixes, builtin_receivers, ecosystem,
-  http_scanner, namespace_nodes, entry_point_hints, decorator_entry`), descoberta
-  (`discover_modules` — pacotes Go), símbolos (`module_prefix, qualified_name, adjust_kind,
-  scope_chain, visibility, doc_extra, import_bindings, file_scope`) e resolução (`resolve_setup,
-  resolve_import, link_symbols`). `core/` não tem mais nenhum `if language ==`.
-- O módulo `typescript` registra três ids (`typescript`, `tsx`, `javascript`) com a mesma classe e
-  dois `.scm` (`queries.scm` para ts/tsx, `queries.javascript.scm` para js).
-- O `Dockerfile` pré-baixa as gramáticas a partir de `languages.grammars()`; o `selftest` itera
-  `languages.parseable()`. Adicionar linguagem = pasta + uma linha em `_MODULES`.
-- **Ficou compartilhado** (decisão consciente, sem ganho em fragmentar agora): `TEST_FILE` e a tabela
-  `OUTBOUND` em `core/http_base.py`, `GENERATED_SUFFIXES` em `core/config.py`. Se um módulo precisar
-  de padrões próprios, vira atributo do `LanguageSupport` na hora.
-- **Convenções** (`aidd_indexer/conventions/`): contrato `Convention` com `configure`, `layer_of`,
-  `target_of`, `is_entry_point`, `check(ctx) -> [ViolationInfo]`. Três formas de plugar, todas via
-  `atlas.yaml` → `tenants.<t>.conventions:` (com `repos:` opcional): `path:` para um
-  `convention.yaml` declarativo (`layers`, `targets`, `entry_points`, `rules`: `forbid_import`,
-  `endpoints_only_in`, `http_calls_only_in`), `id:` para uma classe publicada no entry point
-  `aidd.conventions` ou referenciada como `pacote.modulo:Classe`. Aqui **usamos entry points** ao
-  contrário do que o texto acima dizia para linguagens — convenções são o caso em que código de
-  terceiros (a organização) precisa entrar sem tocar neste repo; o registro de linguagens segue
-  estático.
-- Efeito no grafo: `File.layer`, `Module.layer` (quando todos os arquivos concordam), `HttpCall.target_hint`
-  refinado, `Symbol.is_entry_point`, e nós `Violation{convention, rule, severity, message, line,
-  evidence}` ligados por `HAS_VIOLATION` a `File` (e a `Symbol` quando atribuível); GC por `commit_sha`
-  como os demais nós micro. Constraint/índices em `neo4j/init/schema.cypher`. Sem convenção
-  configurada, nada muda — é o que o teste `test_without_conventions_is_untouched` garante.
-- Ainda não implementado (fica para o H1, que é quem precisa): `route_patterns` / `client_patterns`
-  (registradores e clientes HTTP declarados pela convenção, entrando no scanner da linguagem) e
-  regras além das três declarativas. O lugar é `Convention` + um hook novo no `BaseScanner`; não é
-  mais um `if` em `integrations.py`.
+- `LanguageSupport` (`languages/base.py`) has hooks in four groups: identity (`id, grammar, extensions, query_file,
+  stack, manifests, manifest_suffixes, builtin_receivers, ecosystem, http_scanner, namespace_nodes,
+  entry_point_hints, decorator_entry`), discovery (`discover_modules` — Go packages), symbols (`module_prefix,
+  qualified_name, adjust_kind, scope_chain, visibility, doc_extra, import_bindings, file_scope`) and resolution
+  (`resolve_setup, resolve_import, link_symbols`). `core/` no longer has any `if language ==`.
+- The `typescript` module registers three ids (`typescript`, `tsx`, `javascript`) with the same class and two `.scm`
+  files (`queries.scm` for ts/tsx, `queries.javascript.scm` for js).
+- The `Dockerfile` pre-downloads the grammars from `languages.grammars()`; `selftest` iterates
+  `languages.parseable()`. Adding a language = a folder + one line in `_MODULES`.
+- **Left shared** (a conscious decision, nothing gained by splitting now): `TEST_FILE` and the `OUTBOUND` table in
+  `core/http_base.py`, `GENERATED_SUFFIXES` in `core/config.py`. If a module needs its own patterns, they become a
+  `LanguageSupport` attribute at that point.
+- **Conventions** (`aidd_indexer/conventions/`): a `Convention` contract with `configure`, `layer_of`, `target_of`,
+  `is_entry_point`, `check(ctx) -> [ViolationInfo]`. Three ways to plug in, all through `atlas.yaml` →
+  `tenants.<t>.conventions:` (with optional `repos:`): `path:` for a declarative `convention.yaml` (`layers`,
+  `targets`, `entry_points`, `rules`: `forbid_import`, `endpoints_only_in`, `http_calls_only_in`), `id:` for a class
+  published at the `aidd.conventions` entry point or referenced as `package.module:Class`. Here we **do use entry
+  points**, contrary to what the text above said for languages — conventions are the case where third-party code
+  (the organization's) must come in without touching this repo; the language registry stays static.
+- Effect on the graph: `File.layer`, `Module.layer` (when all the files agree), a refined `HttpCall.target_hint`,
+  `Symbol.is_entry_point`, and `Violation{convention, rule, severity, message, line, evidence}` nodes linked by
+  `HAS_VIOLATION` to `File` (and to `Symbol` when attributable); GC by `commit_sha` like the other micro nodes.
+  Constraint/indexes in `neo4j/init/schema.cypher`. With no convention configured, nothing changes — that is what the
+  test `test_without_conventions_is_untouched` guarantees.
+- Not implemented yet (left to H1, which is who needs it): `route_patterns` / `client_patterns` (HTTP registrars and
+  clients declared by the convention, going into the language's scanner) and rules beyond the three declarative
+  ones. The place is `Convention` + a new hook in `BaseScanner`; no longer another `if` in `integrations.py`.

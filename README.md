@@ -16,6 +16,5 @@ Then run `~/.aidd/install-check.sh`.
 ## Where to start
 
 - [`AGENTS.md`](AGENTS.md): the entry point for a contributor or their AI. It has the repository map, the
-  architecture, and how to test and measure. It is in Portuguese for now; the English docs come with the public
-  docs work.
+  architecture, and how to test and measure.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): what is open, and in what order.

@@ -1,18 +1,18 @@
-# Handoff H1 — apps de referência do padrão do autor (fechado no essencial)
+# Handoff H1 — reference apps of the author's pattern (essentially closed)
 
-O objetivo era que o indexador entendesse o padrão de arquitetura que o autor definiu para os times: hexagonal,
-com um jeito próprio de registrar rotas, encapsular clientes HTTP e nomear camadas. Isso valeria em todas as
-linguagens em que o padrão existe, com fixtures de resultado conhecido como suíte de regressão.
+The goal was for the indexer to understand the architecture pattern the author defined for the teams: hexagonal,
+with its own way of registering routes, wrapping HTTP clients and naming layers. That would hold in every language
+the pattern exists in, with fixtures of known result as a regression suite.
 
-O padrão entra como **convenção** (ADR-003), nunca em `core/` nem em `languages/`.
+The pattern comes in as a **convention** (ADR-003), never in `core/` or `languages/`.
 
-- **Feito (F0.4.2, 2026-10-12, indexer 0.2.10):** o .NET, com a extensão `dotnet-praticis`
-  (`indexer/conventions/dotnet-praticis/`). Ela traz papéis, as arquiteturas `flat`, `split` e `layered`, e as
-  fixtures `csharp-praticis-todos`, `-reports` e `-projects`, com camadas, entry points, uma violação proposital,
-  `CALLS` e gaps no `expected.json`.
-- **As fixtures Go** (`go-http-mix`, `go-wrapped-http`, `go-receiver-types`, ..) já seguem o layout hexagonal do
-  autor.
-- **Falta:** escrever a convenção Go, TS e Python quando houver um app de referência dessas linguagens. Até lá, é
-  item aberto do F0.4.2 no ROADMAP.
+- **Done (F0.4.2, 2026-10-12, indexer 0.2.10):** .NET, with the `dotnet-praticis` extension
+  (`indexer/conventions/dotnet-praticis/`). It brings roles, the `flat`, `split` and `layered` architectures, and the
+  fixtures `csharp-praticis-todos`, `-reports` and `-projects`, with layers, entry points, a deliberate violation,
+  `CALLS` and gaps in `expected.json`.
+- **The Go fixtures** (`go-http-mix`, `go-wrapped-http`, `go-receiver-types`, ..) already follow the author's
+  hexagonal layout.
+- **Missing:** writing the Go, TS and Python convention when there is a reference app in those languages. Until then,
+  it is an open item of F0.4.2 in the ROADMAP.
 
-O texto original do handoff está em `git show 1d73bb0:docs/handoffs/H1-reference-apps.md`.
+The handoff's original text is in `git show 1d73bb0:docs/handoffs/H1-reference-apps.md` (in Portuguese).

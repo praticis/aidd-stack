@@ -1,93 +1,93 @@
-# Handoff H3 — Medir o efeito do atlas e do conhecimento no desenvolvimento com IA
+# Handoff H3 — Measure the effect of the atlas and of knowledge on AI-assisted development
 
-> Cole este arquivo (ou peça para ler `docs/handoffs/H3-ai-dev-efficiency.md`) no início de um chat novo. Antes de
-> qualquer coisa, o chat deve ler `docs/ROADMAP.md` (trilha de skills e conhecimento), `docs/golden-questions.md`
-> (o que o atlas responde e como se confere) e `docs/knowledge-contract.md`. Para a disciplina de medição — gabarito,
-> baseline, julgar o diff, categoria do erro —, o modelo é o do H2 (`docs/handoffs/H2-roadmap.md`).
+> Paste this file (or ask for `docs/handoffs/H3-ai-dev-efficiency.md` to be read) at the start of a new chat. Before
+> anything else, the chat should read `docs/ROADMAP.md` (the skills and knowledge tracks), `docs/golden-questions.md`
+> (what the atlas answers and how it is checked) and `docs/knowledge-contract.md`. For the measurement discipline —
+> expected list, baseline, judging the diff, the error's category — the model is H2's (`docs/handoffs/H2-roadmap.md`).
 >
-> **Estado (2026-10-16):** registrado, não iniciado. Nasceu de uma pergunta durante o H2b: o arcabouço reduz os tokens
-> do desenvolvimento orientado por IA, ou o ganho principal está em outro lugar? A resposta dada foi uma estimativa,
-> não uma medição; este handoff é para transformá-la em dado.
+> **State (2026-10-16):** registered, not started. It was born from a question during H2b: does the framework reduce
+> the tokens of AI-driven development, or is the main gain somewhere else? The answer given was an estimate, not a
+> measurement; this handoff is to turn it into data.
 
-## Contexto em um parágrafo
+## Context in one paragraph
 
-A stack dá ao agente fatos sobre o código que ele não precisa redescobrir: o grafo do atlas (símbolos, chamadas,
-imports, rotas e chamadas HTTP ligadas entre repos e entre refs, via MCP) e o conhecimento do processo (`policy_for`,
-`insights_for`, `record_insight`). O custo de construir isso é alto: indexação, extrator HTTP medido num corpus,
-linker, serviço de conhecimento. Ainda não há número que diga quanto ele devolve, nem em quê. Sem esse número, não dá
-para priorizar o que falta (mais recall do extrator? respostas MCP mais enxutas? as skills S1–S7?) nem defender o
-custo.
+The stack gives the agent facts about the code it does not need to rediscover: the atlas graph (symbols, calls,
+imports, HTTP routes and calls linked across repos and across refs, through MCP) and the process knowledge
+(`policy_for`, `insights_for`, `record_insight`). Building that is costly: indexing, an HTTP extractor measured on a
+corpus, the linker, the knowledge service. There is still no number that says how much it gives back, or in what.
+Without that number, it is not possible to prioritize what is missing (more extractor recall? leaner MCP answers?
+skills S1–S7?) or to defend the cost.
 
-## Hipóteses a confirmar ou derrubar
+## Hypotheses to confirm or overturn
 
-A estimativa de 2026-10-16, sem medição:
+The estimate of 2026-10-16, without measurement:
 
-1. **Tarefa dentro de um repo:** a economia de tokens é modesta. Um agente com grep já é eficiente ali, e a maior parte
-   dos tokens vai para ler o código que vai mudar, raciocinar, escrever e testar — o grafo só encurta a descoberta.
-2. **Tarefa entre repos** (mudar um contrato HTTP, achar quem consome uma rota, impacto de uma branch): a diferença é
-   grande, e sobretudo em **completude**. Sem o grafo, o agente nem sabe em que repos procurar; um consumidor esquecido
-   é uma quebra silenciosa.
-3. **O ganho principal é menos retrabalho, não menos leitura:** dependência inventada, consumidor esquecido e erro já
-   corrigido antes (que o conhecimento do processo evita) custam uma rodada inteira de review, teste e correção.
-4. **Riscos que podem anular o ganho:**
-   - grafo desatualizado ou com recall baixo gera confiança indevida — o agente para de procurar;
-   - respostas MCP grandes (um `repo_map` inteiro de um repo de 10 mil arquivos) custam mais tokens que um grep bem
-     feito.
+1. **A task within one repo:** the token saving is modest. An agent with grep is already efficient there, and most of
+   the tokens go to reading the code that will change, reasoning, writing and testing — the graph only shortens the
+   discovery.
+2. **A task across repos** (changing an HTTP contract, finding who consumes a route, the impact of a branch): the
+   difference is large, above all in **completeness**. Without the graph, the agent does not even know which repos to
+   look in; a forgotten consumer is a silent break.
+3. **The main gain is less rework, not less reading:** an invented dependency, a forgotten consumer and an error
+   already fixed before (which process knowledge prevents) cost a whole round of review, test and fix.
+4. **Risks that may cancel the gain:**
+   - an outdated graph, or one with low recall, creates undue confidence — the agent stops looking;
+   - large MCP answers (a whole `repo_map` of a 10-thousand-file repo) cost more tokens than a well-made grep.
 
-## Desenho do experimento
+## Experiment design
 
-**Tarefas.** Cerca de 10 tarefas reais do portfólio, metade dentro de um repo e metade entre repos, cada uma com
-resposta conhecida. A forma mais barata de ter gabarito é **reencenar PRs já mergeados**:
+**Tasks.** About 10 real tasks from the portfolio, half within one repo and half across repos, each with a known
+answer. The cheapest way to get an expected answer is to **re-enact already merged PRs**:
 
-- partir do commit anterior ao PR;
-- dar ao agente o card ou a descrição original;
-- comparar com o que o PR de fato mudou (arquivos, repos, consumidores ajustados, testes).
+- start from the commit before the PR;
+- give the agent the original card or description;
+- compare with what the PR actually changed (files, repos, adjusted consumers, tests).
 
-Incluir de propósito tarefas em que o PR original esqueceu algo que depois quebrou, se houver: são as que testam a
-hipótese 2.
+Deliberately include tasks where the original PR forgot something that later broke, if there are any: they are the
+ones that test hypothesis 2.
 
-**Condições.** As mesmas tarefas em cada uma, com o mesmo modelo, o mesmo prompt ou skill, o mesmo commit de partida
-e uma sessão nova por execução:
+**Conditions.** The same tasks in each, with the same model, the same prompt or skill, the same starting commit and a
+new session per run:
 
-- **A** — sem atlas e sem conhecimento (leitura, grep, git);
-- **B** — com o atlas;
-- **C** — com o atlas e o conhecimento do processo (só quando houver insights acumulados na área).
+- **A** — no atlas and no knowledge (reading, grep, git);
+- **B** — with the atlas;
+- **C** — with the atlas and the process knowledge (only when there are accumulated insights in the area).
 
-Pelo menos 2 ou 3 repetições por tarefa e condição: a variância do modelo entre execuções pode ser maior que o efeito.
+At least 2 or 3 repetitions per task and condition: the model's variance between runs may be larger than the effect.
 
-**Métricas, por execução:**
+**Metrics, per run:**
 
-- tokens de entrada, saída e cache. As transcrições do Claude Code (`~/.claude/projects/<projeto>/<sessão>.jsonl`)
-  registram o uso por mensagem; um script soma por sessão;
-- quanto desses tokens veio de respostas MCP e quanto de leitura de arquivos;
-- número de chamadas de ferramenta e tempo de parede;
-- **completude** contra o gabarito: arquivos e repos certos, consumidores encontrados;
-- **defeitos:** testes quebrados, o que o review apontaria e iterações até ficar verde.
+- input, output and cache tokens. Claude Code's transcripts (`~/.claude/projects/<project>/<session>.jsonl`) record
+  the usage per message; a script sums it per session;
+- how many of those tokens came from MCP answers and how many from reading files;
+- the number of tool calls and the wall time;
+- **completeness** against the expected answer: the right files and repos, the consumers found;
+- **defects:** broken tests, what review would point out and the iterations until green.
 
-**Análise.** Por tipo de tarefa (local × entre repos), com mediana e dispersão; nada de conclusão com n pequeno sem
-dizer o tamanho da amostra. O resultado esperado é um mapa de onde o atlas paga, não um número único.
+**Analysis.** Per task type (local × across repos), with the median and the spread; no conclusion from a small n
+without stating the sample size. The expected result is a map of where the atlas pays off, not a single number.
 
-## Pré-requisitos
+## Prerequisites
 
-- Recall do extrator suficiente nas linguagens das tarefas. O H2 mede isso; ver os números vigentes no
-  `docs/handoffs/H2-roadmap.md` antes de escolher as tarefas, e preferir as linguagens já fechadas.
-- Os repos do experimento indexados no atlas, nos refs certos, e o linker rodado.
-- Para a condição C: insights registrados na área das tarefas; sem eles, C é igual a B.
+- Enough extractor recall in the tasks' languages. H2 measures that; see the current numbers in
+  `docs/handoffs/H2-roadmap.md` before choosing the tasks, and prefer the languages already closed.
+- The experiment's repos indexed in the atlas, on the right refs, and the linker run.
+- For condition C: insights recorded in the tasks' area; without them, C is the same as B.
 
-## Restrições e convenções
+## Constraints and conventions
 
-- Sem nomes reais de projeto ou tenant nos docs: o relatório descreve tarefas e resultados em forma, não em conteúdo
-  (como o `golden-questions.md`). A lista de tarefas e os gabaritos ficam fora do repo público, no espaço do tenant.
-- Completude e defeitos julgados por gabarito e testes; quando precisar de julgamento, uma pessoa confere uma amostra.
-  LLM não julga o próprio resultado.
-- Não otimizar a stack no meio da medição: uma mudança no atlas entre execuções invalida a comparação. Mudanças viram
-  uma nova rodada.
+- No real project or tenant names in the docs: the report describes tasks and results in shape, not in content (like
+  `golden-questions.md`). The task list and the expected answers stay outside the public repo, in the tenant's space.
+- Completeness and defects are judged by the expected answer and the tests; when judgment is needed, a person checks
+  a sample. An LLM does not judge its own result.
+- Do not optimize the stack in the middle of the measurement: a change to the atlas between runs invalidates the
+  comparison. Changes become a new round.
 
-## Entregáveis esperados
+## Expected deliverables
 
-- Script que soma o uso de tokens por sessão a partir das transcrições, separando MCP de leitura de arquivos.
-- Relatório (`docs/ai-dev-efficiency-report.md`, EN, como o `corpus-report.md`): método, tarefas em forma e resultados
-  por tipo de tarefa e condição.
-- Conclusão acionável: onde o atlas paga, onde não paga e o que mudar. Por exemplo: recortar respostas MCP grandes,
-  priorizar recall em certas linguagens ou adiantar ou adiar skills.
-- ROADMAP: o item S9 marcado, com o resumo no log.
+- A script that sums the token usage per session from the transcripts, separating MCP from file reading.
+- A report (`docs/ai-dev-efficiency-report.md`, like `corpus-report.md`): the method, the tasks in shape and the
+  results per task type and condition.
+- An actionable conclusion: where the atlas pays off, where it does not and what to change. For example: trimming
+  large MCP answers, prioritizing recall in certain languages, or bringing skills forward or postponing them.
+- ROADMAP: item S9 checked, with the summary in `docs/history.md`.
