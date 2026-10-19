@@ -86,6 +86,13 @@ The full text is in the ROADMAP, under "Principles".
   `main` and with the tree, and compares the results record by record.
   - The HTTP corpus does not run the resolver, so a change to `CALLS` shows only here.
   - A refactor must give `0 repo(s) differ`. Any other difference is judged at the source, like a corpus diff.
+- **The gates, in CI on every PR that touches the indexer** (`.github/workflows/indexer.yml`):
+  - it runs the tests, the corpus, the hold-out and the micro set against `main`;
+  - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
+    refactor changes anything;
+  - the labels `refactor`, `holdout-measurement` and `graph-change` change what passes. After adding one, re-run the
+    `gates` job;
+  - the same gates run locally with `corpus.sh --label` on both sides and `gates.sh`.
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
@@ -122,7 +129,7 @@ The full text is in the ROADMAP, under "Principles".
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
-| Work in progress | `docs/handoffs/` (active: H3, H4, H5; closed: H1, H2, reduced to summaries) |
+| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H7; closed: H1, H2, reduced to summaries) |
 
 ## For contributors (people or agents)
 
