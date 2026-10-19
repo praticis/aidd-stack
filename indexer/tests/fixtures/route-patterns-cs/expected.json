@@ -53,7 +53,8 @@
   {
    "method": "GET",
    "path": "/health",
-   "handler": "Health"
+   "handler": "Health",
+   "app": "src/Api"
   },
   {
    "method": "GET",
@@ -364,6 +365,12 @@
    "method": "POST",
    "path": "/Admin/shipping/Save/{id}",
    "handler": "Save"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "handler": "Health",
+   "app": "src/Worker"
   }
  ],
  "calls": [

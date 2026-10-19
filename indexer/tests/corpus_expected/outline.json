@@ -432,7 +432,7 @@
    "category": "prefix-in-client-wrapper"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Koa, RPC-style paths. Routes, scope: the documents, collections and users modules (64 routes). Each module's @koa/router registers router.post(\"documents.info\", auth(), validate(..), handler) — the path without a leading slash —, server/routes/api/index.ts mounts every module with router.use(\"/\", x.routes()) on the API router, served by a Koa app that services/web.ts mounts with app.use(mount(\"/api\", api)): /api/documents.info. Calls, scope: the three matching MobX stores (19 calls): client.post(\"/documents.info\", ..) on the app's own ApiClient, whose baseUrl defaults to \"/api\" in its constructor (prefix-in-client-wrapper). Not expected: client.post(`/users.${action}`, ..) (the action named at runtime) and the base Store's `/${this.apiEndpoint}.create` (a field per store). Moved to the corpus by F1.14 (2026-10-18): @koa/router's paths without a leading slash under router.use(\"/\", x.routes()), koa-mount's mount(\"/api\", api), and the ApiClient's base (this.baseUrl = options.baseUrl || \"/api\") on its module instance `client`. The checked samples were refreshed: the 7 routes take /auth or /oauth (koa-mount), and 18 calls take /api, all right; this.post(\"/batch\") inside ApiClient itself stays without the base (prefix-in-client-wrapper).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Koa, RPC-style paths. Routes, scope: the documents, collections and users modules (64 routes). Each module's @koa/router registers router.post(\"documents.info\", auth(), validate(..), handler) — the path without a leading slash —, server/routes/api/index.ts mounts every module with router.use(\"/\", x.routes()) on the API router, served by a Koa app that services/web.ts mounts with app.use(mount(\"/api\", api)): /api/documents.info. Calls, scope: the three matching MobX stores (19 calls): client.post(\"/documents.info\", ..) on the app's own ApiClient, whose baseUrl defaults to \"/api\" in its constructor (prefix-in-client-wrapper). Not expected: client.post(`/users.${action}`, ..) (the action named at runtime) and the base Store's `/${this.apiEndpoint}.create` (a field per store). Moved to the corpus by F1.14 (2026-10-18): @koa/router's paths without a leading slash under router.use(\"/\", x.routes()), koa-mount's mount(\"/api\", api), and the ApiClient's base (this.baseUrl = options.baseUrl || \"/api\") on its module instance `client`. The checked samples were refreshed: the 7 routes take /auth or /oauth (koa-mount), and 18 calls take /api, all right; this.post(\"/batch\") inside ApiClient itself stays without the base (prefix-in-client-wrapper). Since F1.14 item 4 (2026-10-18): `this.fetch(\"/batch\", \"POST\", ..)` inside ApiClient is under the class's base (POST /api/batch, the sampled item re-judged right), and the stores' `fetchPaginated(endpoint)` doing `client.post(endpoint, params)` is a wrapper under the client's /api base. POST /api/documents.{param} (`fetchNamedPage(request = \"list\")`) is not in the list for the same reason as /api/users.{param}: the RPC name is a parameter.",
  "checked": {
   "endpoints": [
    {
@@ -736,10 +736,10 @@
    {
     "evidence": "outline:app/utils/ApiClient.ts:526",
     "method": "POST",
-    "path": "/batch",
+    "path": "/api/batch",
     "raw": null,
-    "ok": false,
-    "category": "prefix-in-client-wrapper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "outline:plugins/azure/server/auth/azure.ts:48",

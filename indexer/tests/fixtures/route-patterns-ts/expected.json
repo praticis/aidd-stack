@@ -279,6 +279,81 @@
    "method": "SEARCH",
    "path": "/shares/{kind}",
    "handler": "searchByKind"
+  },
+  {
+   "method": "GET",
+   "path": "/flights/{from}-{to}",
+   "handler": "search"
+  },
+  {
+   "method": "GET",
+   "path": "/user_{name}",
+   "handler": "search"
+  },
+  {
+   "method": "POST",
+   "path": "/v4/auth/login",
+   "handler": "<inline>"
+  },
+  {
+   "method": "POST",
+   "path": "/v4/auth/logout",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/v4/users/{userId}",
+   "handler": "<inline>"
+  },
+  {
+   "method": "DELETE",
+   "path": "/v4/users/{userId}",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/v4/docs",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/plugin-state",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/shop",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/shop/orders",
+   "handler": "<inline>"
+  },
+  {
+   "method": "POST",
+   "path": "/shop/orders",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/shop/orders/{id}",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/shop/orders/{id}/items",
+   "handler": "<inline>"
+  },
+  {
+   "method": "DELETE",
+   "path": "/shop/admin/cache",
+   "handler": "<inline>"
+  },
+  {
+   "method": "GET",
+   "path": "/status/live",
+   "handler": "<inline>"
   }
  ],
  "calls": [
@@ -446,6 +521,166 @@
    "method": "POST",
    "path": "/api/pages/create",
    "line": 14
+  },
+  {
+   "method": "POST",
+   "path": "/speech/transcriptions:transcribe",
+   "line": 43
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account",
+   "line": 5
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/account/{param}",
+   "line": 9
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/session",
+   "line": 13
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/account/{param}/token",
+   "line": 17
+  },
+  {
+   "method": "GET",
+   "path": "/partner/v2/orders",
+   "line": 12
+  },
+  {
+   "method": "POST",
+   "path": "/partner/v2/orders/{param}/cancel",
+   "line": 16
+  },
+  {
+   "method": "DELETE",
+   "path": "/partner/v2/orders/{param}",
+   "line": 23
+  },
+  {
+   "method": "GET",
+   "path": "/billing/invoices/{param}",
+   "line": 28
+  },
+  {
+   "method": "GET",
+   "path": "/catalog/items/{param}",
+   "line": 11
+  },
+  {
+   "method": "GET",
+   "path": "/catalog/items/all",
+   "line": 15
+  },
+  {
+   "method": "POST",
+   "path": "/-/web-theme/apply",
+   "line": 6
+  },
+  {
+   "method": "GET",
+   "path": "/user/stopwatches",
+   "line": 7
+  },
+  {
+   "method": "PATCH",
+   "path": "/user/settings",
+   "line": 8
+  },
+  {
+   "method": "GET",
+   "path": "/user/avatar",
+   "line": 9
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v4/users/{param}/status",
+   "line": 34
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/users/search",
+   "line": 38
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users",
+   "line": 42
+  },
+  {
+   "method": "POST",
+   "path": "/v1/files",
+   "line": 8
+  },
+  {
+   "method": "POST",
+   "path": "/rpc/items.{param}",
+   "line": 12
+  },
+  {
+   "method": "POST",
+   "path": "/rpc/groups.list",
+   "line": 18
+  },
+  {
+   "method": "GET",
+   "path": "/user/settings/keys",
+   "line": 10
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/teams/{param}/members/ids",
+   "line": 59
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/users/autocomplete",
+   "line": 64
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/teams/{param}/stats",
+   "line": 69
+  },
+  {
+   "method": "POST",
+   "path": "/api/v4/purge",
+   "line": 73
+  },
+  {
+   "method": "GET",
+   "path": "/api/v4/products",
+   "line": 81
+  },
+  {
+   "method": "GET",
+   "path": "/ledger/v1/balance",
+   "line": 39
+  },
+  {
+   "method": "GET",
+   "path": "/ledger/v1/statements",
+   "line": 43
+  },
+  {
+   "method": "POST",
+   "path": "/ledger/v1/payments",
+   "line": 47
+  },
+  {
+   "method": "DELETE",
+   "path": "/ledger/v1/payments/{param}",
+   "line": 51
+  },
+  {
+   "method": "ANY",
+   "path": "/ledger/v1/accounts/name",
+   "line": 55
   }
  ]
 }

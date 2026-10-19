@@ -10,6 +10,7 @@ from tree_sitter import Node
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
 from ...core.http_expr import PREFIX_KEYWORDS
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from .client_wrappers import PyClientWrappers, compose_wrapped_calls
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
 APP_CLASSES = {"FastAPI", "Flask", "Starlette", "Sanic", "Quart"}
@@ -19,9 +20,14 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
            "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
 
 
-class PyScanner(BaseScanner):
+class PyScanner(PyClientWrappers, BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
     mount_rule = "py.mount"
+
+    @classmethod
+    def compose(cls, out, repo, view=None) -> None:
+        super().compose(out, repo, view)
+        compose_wrapped_calls(out)
 
     def run(self) -> None:
         self.test_clients: set[str] = set()
@@ -35,6 +41,8 @@ class PyScanner(BaseScanner):
         for n in walk(self.fx.tree.root_node):
             if n.type == "decorated_definition":
                 self._decorated(n)
+            elif n.type == "class_definition":
+                self.publish_bases(n)
             elif n.type == "call":
                 if n.parent is not None and n.parent.type == "decorator":
                     continue
@@ -373,23 +381,47 @@ class PyScanner(BaseScanner):
             return
         if fn.type == "identifier":
             self._router_arguments(n, fn, args)
-        if fn.type == "call":                                       # router.post("/register")(register_user)
-            pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
-            if len(pos) == 1 and pos[0].type in ("identifier", "attribute"):
-                self._registration(fn, n, text(pos[0], self.src).split(".")[-1])
+        if fn.type == "call":
+            self._applied_decorator(n, fn, args)
+        elif not self._aiohttp(n, fn, args):
+            self._plain_call(n, fn, args)
+
+    def _applied_decorator(self, n: Node, fn: Node, args: Node) -> None:
+        """`router.post("/register")(register_user)`: the decorator applied by hand."""
+        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
+        if len(pos) == 1 and pos[0].type in ("identifier", "attribute"):
+            self._registration(fn, n, text(pos[0], self.src).split(".")[-1])
+
+    def _plain_call(self, n: Node, fn: Node, args: Node) -> None:
+        """A mount, an outbound call, or a call that may hand a client wrapper its path."""
+        if fn.type != "attribute":
+            self.wrapped_call(n, fn, args)
             return
-        if self._aiohttp(n, fn, args) or fn.type != "attribute" or self._mount(n, fn, args):
+        if self._mount(n, fn, args):
             return
         callee = self.callee_of(fn)
         name, _, recv_last = split_callee(callee)
+        if self._app_call(recv_last):
+            return                                                  # app.get(...) used imperatively, a test client
+        if self._client_call(name, recv_last):
+            self._outbound(n, args, callee, name)
+        else:
+            self.wrapped_call(n, fn, args)
+
+    def _app_call(self, recv_last: str) -> bool:
+        return recv_last in self.router_vars or recv_last in ("app", "router", "bp", "blueprint", "api") \
+            or recv_last in self.test_clients
+
+    @staticmethod
+    def _client_call(name: str, recv_last: str) -> bool:
         if name not in OUTBOUND or name not in VERB_BY_NAME and name != "request":
-            return
-        if recv_last in self.router_vars or recv_last in ("app", "router", "bp", "blueprint", "api"):
-            return                                                  # app.get(...) used imperatively
-        if recv_last in self.test_clients:
-            return
-        if not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("requests", "httpx", "session", "client", "urllib3", "http")):
-            return
+            return False
+        return bool(CLIENT_RECEIVER.search(recv_last)
+                    or recv_last in ("requests", "httpx", "session", "client", "urllib3", "http"))
+
+    def _outbound(self, n: Node, args: Node, callee: str, name: str) -> None:
+        """The first argument with a path is the call's; with no segment of its own, the function around the call may
+        be a client wrapper."""
         arg_nodes = [c for c in args.children if c.is_named]
         method = OUTBOUND.get(name) or self.method_from_args(arg_nodes)
         for a in arg_nodes:
@@ -399,5 +431,7 @@ class PyScanner(BaseScanner):
                 a = a.child_by_field_name("value")
             p = self.path_of(a, lenient=True)
             if p is not None:
-                self.add_call(n, method, p, callee)
+                if not self.add_call(n, method, p, callee):
+                    self.publish_wrapper(n, method, name, arg_nodes)
                 return
+        self.publish_wrapper(n, method, name, arg_nodes)

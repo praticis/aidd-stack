@@ -8,6 +8,9 @@
   {"method": "PUT", "path": "/flows/api/workflow-definitions/import", "handler": "HandleAsync"},
   {"method": "POST", "path": "/flows/api/workflow-definitions/{definitionId}/import", "handler": "HandleAsync"},
   {"method": "PUT", "path": "/flows/api/workflow-definitions/{definitionId}/import", "handler": "HandleAsync"},
+  {"method": "GET", "path": "/flows/api/admin/users", "handler": "HandleAsync"},
+  {"method": "GET", "path": "/flows/api/admin/billing/invoices", "handler": "HandleAsync"},
+  {"method": "POST", "path": "/flows/api/admin/billing/invoices/{invoiceId}/refund", "handler": "HandleAsync"},
   {"method": "GET", "path": "/__probe/routes", "handler": "<inline>", "line": 22}
  ],
  "calls": []

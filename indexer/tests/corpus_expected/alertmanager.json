@@ -129,51 +129,51 @@
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:36",
     "method": "GET",
-    "path": "/status",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/status",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:37",
     "method": "GET",
-    "path": "/receivers",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/receivers",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:39",
     "method": "GET",
-    "path": "/alerts",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/alerts",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:40",
     "method": "POST",
-    "path": "/alerts",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/alerts",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:42",
     "method": "GET",
-    "path": "/silences",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/silences",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:43",
     "method": "POST",
-    "path": "/silences",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/silences",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:api/v1_deprecation_router.go:44",
     "method": "GET",
-    "path": "/silence/{sid}",
-    "ok": false,
-    "category": "router-as-param"
+    "path": "/api/v1/silence/{sid}",
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "alertmanager:httpserver/httpserver.go:29",

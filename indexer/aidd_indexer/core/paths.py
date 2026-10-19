@@ -59,7 +59,7 @@ def mask_placeholders(pattern: str) -> str:
     """Every placeholder → `{p}`, so that what a route placeholder may hold — constraints and converters
     (`{id:int?}`, `{name:minlength(1)}`, `{slug:[a-z-]+}`, `<int:id>`, `<any(a, b):page>`) and optional
     markers (`:id?`) — does not make the literal check reject the whole pattern."""
-    masked = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", PLACEHOLDER.sub("{p}", pattern))
+    masked = re.sub(r"(?<![}A-Za-z0-9]):([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", PLACEHOLDER.sub("{p}", pattern))
     return EXPRESS_CONSTRAINT.sub(r":\1", masked)
 
 
@@ -81,13 +81,15 @@ def normalize_path(path: str) -> str:
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)\s*:(?:[^{}]|\{[^{}]*\})*\}", r"{\1}", p)   # {id:int}, {id:[0-9]{4}} → {id}: before
     #                                                             the query split — a regex constraint may hold `?`
     p = re.sub(r"\{([^{}]*?)\?\}", r"{\1}", p)                  # optional placeholder {id?}, {id:int?} — before the query split
-    p = re.sub(r":([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", p)        # optional :id? (express, gin)
+    p = re.sub(r"(?<![}A-Za-z0-9]):([A-Za-z_][A-Za-z0-9_]*)\?", r":\1", p)   # optional :id? (express, gin)
     p = p.split("?", 1)[0].split("#", 1)[0]
     p = re.sub(r"%[sdvq]", "{param}", p)                          # Sprintf verbs
     p = re.sub(r"\$\{[^}]*\}", "{param}", p)                      # JS template literals
     p = re.sub(r"\{\*+([A-Za-z_][A-Za-z0-9_]*)\}", r"{\1}", p)   # {*rest} (ASP.NET catch-all)
     p = re.sub(r"<(?:[^<>:]+:)?([A-Za-z_][A-Za-z0-9_]*)>", r"{\1}", p)  # <int:id>, <any(a, b):page> (Flask/Werkzeug)
-    p = re.sub(r"(?<!\}):([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)   # :id (gin, express, echo); not `{name}:cancel` (gRPC custom verb)
+    # :id (gin, express, echo), after `/`, `-`, `.` or `_`; glued to a name or a placeholder it is a custom verb of the
+    # Google API style (`/api/ai:transcribe`, `{name}:cancel`, Azure's `transcriptions:transcribe`), never a parameter
+    p = re.sub(r"(?<![}A-Za-z0-9]):([A-Za-z_][A-Za-z0-9_]*)\??", r"{\1}", p)
     p = re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)(\.\.\.)?\}", r"{\1}", p)  # {id...} → {id}
     p = re.sub(r"\{\d+\}", "{param}", p)                             # string.Format("{0}")
     p = re.sub(r"\[controller\]", "{controller}", p, flags=re.I)  # ASP.NET token (resolved later by the linker)

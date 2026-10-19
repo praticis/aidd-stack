@@ -127,9 +127,13 @@
   {
    "method": "GET",
    "path": "/user-agent"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/{route}"
   }
  ],
- "notes": "Manual, every example app in the repo (one Hono app per folder, so routes of different apps share keys — multi-app-repo; expected = the union). Right: plain app.get/post on new Hono(). Misses and errors: new Hono() is not recognised as the application, so the roots app.get('/') are dropped (app-not-recognized); sub-apps mounted in the same file — app.route('/book', book), new Hono().basePath('/api') — lose the prefix (mount-same-scope); the blog's router is named api and taken for an HTTP client (client-named-router); the stytch TodoAPI chain is mounted with .route('/api', TodoAPI) in another file (prefix-other-file); Hono's inline regex constraint /post/:id{[0-9]+} is normalized into /post/{id}{[0-9]+} (route-constraint-syntax). No license file in the repo; only measured locally. Since H2b's TS cross-file mount graph (2026-10-16): routes chained on the constructor (export const TodoAPI = new Hono<..>().get(..).post(..)) belong to the name the chain is bound to, and a router typed with generics (new Hono<{ Bindings }>()) is one — the stytch TodoAPI under /api and the blog's api router come out right. Since H2 Phase 5 (2026-10-17): Hono's regex constraint is read — GET /post/{id}.",
+ "notes": "Manual, every example app in the repo (one Hono app per folder, so routes of different apps share keys — multi-app-repo; expected = the union). Right: plain app.get/post on new Hono(). Misses and errors: new Hono() is not recognised as the application, so the roots app.get('/') are dropped (app-not-recognized); sub-apps mounted in the same file — app.route('/book', book), new Hono().basePath('/api') — lose the prefix (mount-same-scope); the blog's router is named api and taken for an HTTP client (client-named-router); the stytch TodoAPI chain is mounted with .route('/api', TodoAPI) in another file (prefix-other-file); Hono's inline regex constraint /post/:id{[0-9]+} is normalized into /post/{id}{[0-9]+} (route-constraint-syntax). No license file in the repo; only measured locally. Since H2b's TS cross-file mount graph (2026-10-16): routes chained on the constructor (export const TodoAPI = new Hono<..>().get(..).post(..)) belong to the name the chain is bound to, and a router typed with generics (new Hono<{ Bindings }>()) is one — the stytch TodoAPI under /api and the blog's api router come out right. Since H2 Phase 5 (2026-10-17): Hono's regex constraint is read — GET /post/{id}. Since F1.14 item 4 (2026-10-18): nextjs-stack's pages/api/[...route].ts is a Next.js catch-all that hands /api/* to the Hono app; ANY /api/{route} is a real route outside the list and was added (H2-D15).",
  "checked": {
   "endpoints": [
    {

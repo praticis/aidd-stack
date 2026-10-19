@@ -19,6 +19,10 @@ from ...core.http_nodes import has_interpolation, member
 from ...core.model import HttpEndpointInfo, RepoInfo
 from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, is_url_literal, mask_placeholders, normalize_path,
                            path_key, unquote)
+from .client_wrappers import TsClientWrappers, compose_wrapped_calls_ts
+from .file_routes import TsFileRoutes, compose_autoloads
+from .mount_forms import TsMountForms
+from .returns import TsReturns
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
 TS_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("get", "post", "put", "patch", "delete", "head", "options")} | {"all": "ANY"}
@@ -41,7 +45,7 @@ KOA_ROUTER_METHODS = {"routes", "middleware"}                            # `rout
 JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.get(url, data?, success?)
 
 
-class TsScanner(BaseScanner):
+class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseScanner):
     """express / koa / fastify / Hono (`app.get('/x', handler)`) + NestJS decorators."""
     mount_rule = "ts.mount"
 
@@ -67,10 +71,13 @@ class TsScanner(BaseScanner):
                 if n.parent is not None and n.parent.type == "decorator":
                     continue
                 self._call(n)
+            elif n.type in ("class_declaration", "class"):
+                self.publish_bases(n)
             if n.type in FUNCTIONS:
                 if wraps:
                     self._mount_wrapper(n)
                 self._route_wrapper(n)
+        self.file_routes()
 
     def add_endpoint(self, node: Node, method: str, raw_pattern: str, framework: str, handler_node: Node | None,
                      **kw) -> HttpEndpointInfo | None:
@@ -97,14 +104,22 @@ class TsScanner(BaseScanner):
         lit = unquote(text(n, self.src)).strip()
         return MountedRoot(lit) if lit and PATH_LITERAL.match("/" + mask_placeholders(lit)) else None
 
-    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
+    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> bool:
         """A request on a client with a base (`PackageContext.client_base`) is at the base, joined with a slash as
         axios joins them: docmost's `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in another file
         is `/api/pages/info`."""
-        base = self._client_base(via) if raw_path and not is_url_literal(raw_path) else None
+        base = self._client_base(via) or self._own_base(node, via) if raw_path and not is_url_literal(raw_path) else None
         if base:
             raw_path = base.rstrip("/") + "/" + raw_path.lstrip("/")
-        super().add_call(node, method, raw_path, via)
+        return super().add_call(node, method, raw_path, via)
+
+    def _own_base(self, node: Node, via: str) -> str | None:
+        """`this.fetch("/batch", "POST")` inside a client class with a base: the class's request methods put it
+        before the path, as its other callers' requests get it."""
+        cls = self._class_around(node) if via.startswith("this.") else None
+        found = self.ctx.client_classes.get(cls) if cls else None
+        raw = self.ctx._joined(found[1]) if found and found[1] else None
+        return raw if raw is not None and raw.startswith("/") else None
 
     def _client_base(self, via: str) -> str | None:
         """The base of the client a call is made on (`_client_of`), when it has a path for one."""
@@ -375,12 +390,14 @@ class TsScanner(BaseScanner):
         self._router_arguments(n, fn, arg_nodes)
         if "getHttpServer" in callee or "supertest" in callee or "request(app" in callee:
             return                                                  # supertest-style test clients
+        self.wrapped_call(n, fn, arg_nodes)
         if name == "setGlobalPrefix":
             self._global_prefix(arg_nodes)
             return
         if self.convention_call(n, name, recv_last, callee, arg_nodes):
             return
-        if self._mount(n, name, recv_last, arg_nodes):
+        if self.autoload(n, name, recv_last, arg_nodes) or self.plugin_mount(n, name, recv_last, arg_nodes) \
+                or self.listed_mount(n, name, recv_last, arg_nodes) or self._mount(n, name, recv_last, arg_nodes):
             return
         if self._chained_route(n, arg_nodes):
             return
@@ -408,24 +425,40 @@ class TsScanner(BaseScanner):
                                   router=recv_last)
                 return
         if name in OUTBOUND or name in TS_VERB_ALIASES:
-            verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES
-            client = self._client_of(callee) is not None
-            if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]) and not client:
+            self._outbound(n, name, recv_last, callee, arg_nodes)
+
+    def _outbound(self, n: Node, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> None:
+        """A request on a client (`axios.get(url)`, `fetch(url, opts)`): the first argument with a path is the call's.
+        A path the function around builds around its parameter is the caller's (`publish_wrapper`)."""
+        if not self._client_call(name, recv_last, callee, arg_nodes):
+            return
+        named = OUTBOUND.get(name) or TS_VERB_ALIASES.get(name) or self.method_from_args(arg_nodes)
+        method = named
+        if method is None and name in ("fetch", "$fetch", "ofetch") \
+                and not any(re.search(r"\bmethod\s*:", text(a, self.src)) for a in arg_nodes[1:]):
+            method = "GET"                                      # fetch(url) / fetch(url, { headers }) is a GET
+        base = self._client_base(callee) or self._own_base(n, callee)
+        if self.publish_wrapper(n, named, arg_nodes, continuing=True, fallback=method, base=base):
+            return
+        lenient = name in ("fetch", "$fetch", "ofetch") or bool(CLIENT_RECEIVER.search(recv_last))
+        for a in arg_nodes:
+            p = self.path_of(a, lenient=lenient)
+            if p is not None:
+                if not self.add_call(n, method, p, callee):
+                    self.publish_wrapper(n, named, arg_nodes, fallback=method, base=base)
                 return
-            if name in GENERIC_OUTBOUND and not CLIENT_RECEIVER.search(recv_last):
-                return
-            if verb and not (CLIENT_RECEIVER.search(recv_last) or recv_last in ("http", "this") or client):
-                return                                                  # cache.get(key), map.delete(k), redis.del(k) ...
-            method = OUTBOUND.get(name) or TS_VERB_ALIASES.get(name) or self.method_from_args(arg_nodes)
-            if method is None and name in ("fetch", "$fetch", "ofetch") \
-                    and not any(re.search(r"\bmethod\s*:", text(a, self.src)) for a in arg_nodes[1:]):
-                method = "GET"                                      # fetch(url) / fetch(url, { headers }) is a GET
-            lenient = name in ("fetch", "$fetch", "ofetch") or bool(CLIENT_RECEIVER.search(recv_last))
-            for a in arg_nodes:
-                p = self.path_of(a, lenient=lenient)
-                if p is not None:
-                    self.add_call(n, method, p, callee)
-                    return
+        self.publish_wrapper(n, named, arg_nodes, fallback=method, base=base)
+
+    def _client_call(self, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> bool:
+        """Whether a call named like a request is one: not `cache.get(key)`, `map.delete(k)`, `redis.del(k)`, nor a
+        route `x.get('/a', handler)` on something that is no client."""
+        verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES
+        client = self._client_of(callee) is not None or self.library_client(recv_last)
+        if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]) and not client:
+            return False
+        if name in GENERIC_OUTBOUND and not CLIENT_RECEIVER.search(recv_last):
+            return False
+        return not verb or bool(CLIENT_RECEIVER.search(recv_last)) or recv_last in ("http", "this") or client
 
     def _config_request(self, n: Node, name: str, callee: str, arg_nodes: list[Node]) -> bool:
         """A request described by an object — `channel.post({ url: "/json/bots" })`, `axios.request({ url, method:
@@ -440,9 +473,12 @@ class TsScanner(BaseScanner):
         url = fields.get("url")
         if url is None and name == "ajax" and arg_nodes[0].type != "object":
             url = arg_nodes[0]                                       # $.ajax(url, settings)
+        base = self._client_base(callee) or self._own_base(n, callee) if url is not None else None
+        if url is not None and self.publish_wrapper(n, verb, arg_nodes, continuing=True, base=base):
+            return True
         p = self.path_of(url, lenient=True) if url is not None else None
         if p is None:
-            return False
+            return url is not None and self.publish_wrapper(n, verb, arg_nodes, base=base)
         given = fields.get("method") or fields.get("type")
         given = unquote(text(given, self.src)).upper() if given is not None and given.type == "string" else None
         self.add_call(n, verb or (given if given in HTTP_METHODS else None) or "GET", p, callee)
@@ -456,6 +492,16 @@ class TsScanner(BaseScanner):
             if d.type == "pair" and key is not None and value is not None:
                 out.append((unquote(text(key, self.src)), value))
         return out
+
+    def _path_of_string(self, n: Node, lenient: bool, _depth: int) -> str | None:
+        return None if n.type == "template_string" and self.runtime_lead(n) else super()._path_of_string(n, lenient, _depth)
+
+    def _path_of_concat(self, n: Node, lenient: bool, _depth: int) -> str | None:
+        return None if self.runtime_lead(n) else super()._path_of_concat(n, lenient, _depth)
+
+    def _path_of_call(self, n: Node, lenient: bool, _depth: int) -> str | None:
+        found = super()._path_of_call(n, lenient, _depth)
+        return found if found is not None else self.returned_path(n, lenient, _depth)
 
     def _oazapfts_call(self, n: Node, arg_nodes: list[Node]) -> None:
         """oazapfts' generated client: `oazapfts.fetchJson<T>(`/activities/${encodeURIComponent(id)}${QS.query(..)}`,
@@ -867,6 +913,7 @@ class TsScanner(BaseScanner):
             self.out.publish("ts.route.maybe", name, (args, where, base))
         for child, parent in self._returned_module_routers():
             self.out.publish(f"{self.mount_rule}.edge", child, (parent, ""))
+        self.publish_autoloads(is_app)
         path = self.fx.file.path
         aliases, reexports = self._exports()
         pairs = [(path, local, exported) for local, exported in aliases]
@@ -915,6 +962,7 @@ class TsScanner(BaseScanner):
                     child = (called if wcalled else value) if (i, j) == (wi, wj) else None
                     if child is not None:
                         out.publish(f"{cls.mount_rule}.edge", child, (target, prefix))
+        compose_autoloads(out, view, cls.mount_rule)
         super().compose(out, repo, view)
         prefixes, arrays = out.facts.get("ts.nest-prefix", {}), out.facts.get("ts.string-array", {})
         plan = {}
@@ -926,6 +974,7 @@ class TsScanner(BaseScanner):
             if not _excluded(p.item.path, excludes):
                 plan[id(p.item)] = [rebased(repo, p.item, next(iter(found))[0])]
         replace_endpoints(out, plan)
+        compose_wrapped_calls_ts(out)
 
 
 def _wrapped(repo: RepoInfo, base: HttpEndpointInfo, method: str, path: str, raw: str) -> HttpEndpointInfo:

@@ -166,6 +166,46 @@
    "method": "GET",
    "path": "/api/v1/services/verify/{param}",
    "line": 32
+  },
+  {
+   "method": "GET",
+   "path": "/v2/customers/{param}/invoices",
+   "line": 10
+  },
+  {
+   "method": "POST",
+   "path": "/v1/orders/{param}/refund",
+   "line": 14
+  },
+  {
+   "method": "GET",
+   "path": "/v1/orders/{param}/notify",
+   "line": 26
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "line": 13
+  },
+  {
+   "method": "GET",
+   "path": "/v1/orders/{param}",
+   "line": 7
+  },
+  {
+   "method": "POST",
+   "path": "/v1/orders",
+   "line": 10
+  },
+  {
+   "method": "POST",
+   "path": "/v2/events",
+   "line": 21
+  },
+  {
+   "method": "DELETE",
+   "path": "/v2/events/{param}",
+   "line": 22
   }
  ]
 }

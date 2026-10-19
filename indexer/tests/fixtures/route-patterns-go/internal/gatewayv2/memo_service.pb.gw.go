@@ -26,6 +26,10 @@ func RegisterMemoServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 	mux.Handle(http.MethodDelete, pattern_MemoService_DeleteMemo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		forward_MemoService_DeleteMemo_0(ctx, mux, w, req)
 	})
+	// a custom verb after a literal: `/api/memos:batchDelete`, not a parameter
+	mux.Handle(http.MethodPost, pattern_MemoService_BatchDeleteMemos_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		forward_MemoService_BatchDeleteMemos_0(ctx, mux, w, req)
+	})
 	return nil
 }
 
@@ -33,4 +37,5 @@ var (
 	pattern_MemoService_ListMemos_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"api", "memos"}, ""))
 	pattern_MemoService_UpdateMemo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"api", "memos", "memo.name"}, ""))
 	pattern_MemoService_DeleteMemo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 2, 5, 2}, []string{"api", "memos", "name"}, ""))
+	pattern_MemoService_BatchDeleteMemos_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"api", "memos"}, "batchDelete"))
 )

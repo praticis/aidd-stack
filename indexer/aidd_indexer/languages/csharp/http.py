@@ -15,11 +15,13 @@ from tree_sitter import Node
 from ...core.http_base import (BaseScanner, HttpResult, OUTBOUND, Pending, STRING_NODES, first_string, rebased,
                                replace_endpoints, split_callee, text, valid_path, walk)
 from ...core.http_expr import owner_class
-from ...core.http_nodes import CLASS_NODES, CONCAT_NODES, INTERPOLATION_NODES, STRING_TEXT_NODES, has_interpolation
+from ...core.http_nodes import CLASS_NODES, has_interpolation
 from ...core.http_scope import enclosing_function
+from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
-from ...core.paths import HTTP_METHODS, VERB_BY_NAME, has_literal_segment, normalize_path, path_key, unquote
+from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, mask_placeholders, normalize_path, path_key,
+                           unquote)
 
 CS_MAP = {"MapGet": "GET", "MapPost": "POST", "MapPut": "PUT", "MapPatch": "PATCH", "MapDelete": "DELETE", "MapMethods": None, "Map": "ANY"}
 CS_HTTP_ATTR = {"HttpGet": "GET", "HttpPost": "POST", "HttpPut": "PUT", "HttpPatch": "PATCH", "HttpDelete": "DELETE", "HttpHead": "HEAD", "HttpOptions": "OPTIONS"}
@@ -150,6 +152,9 @@ class CsScanner(BaseScanner):
                 self.out.publish("cs.route-convention", cname_txt, True)    # it rewrites the attribute routes
             if any(FAST_ENDPOINT.match(seg) for b in bases for seg in b.split(".")):
                 self.out.publish("cs.fast-base", cname_txt, simple_bases)   # over FastEndpoints' own: Elsa's ElsaEndpoint
+            group = self._fe_group(cls, simple_bases)
+            if group is not None:
+                self.out.publish("cs.fe-group", cname_txt, group)
         controller = re.sub(r"Controller$", "", cname_txt)
         body = cls.child_by_field_name("body")
         if body is None or self._fast_endpoint(cls, body, bases):
@@ -594,8 +599,15 @@ class CsScanner(BaseScanner):
         routes: list[tuple[Node, str, str]] = []
         routed: list[tuple[Node, str]] = []
         override: tuple | None = None
+        groups: list[tuple[int, str]] = []
         for d in walk(configure):
             kids = [c for c in d.children if c.is_named] if d.type == "invocation_expression" else []
+            if len(kids) == 2 and kids[0].type == "generic_name" and kids[1].type == "argument_list" \
+                    and not kids[1].named_child_count and text(kids[0].named_children[0], self.src) == "Group":
+                targs = next((c for c in kids[0].named_children if c.type == "type_argument_list"), None)
+                if targs is not None and targs.named_child_count == 1:     # `Group<Administration>()`
+                    groups.append((d.start_byte, re.sub(r"<.*", "", text(targs.named_children[0], self.src)).split(".")[-1]))
+                continue
             if len(kids) < 2 or kids[0].type != "identifier" or kids[-1].type != "argument_list":
                 continue                        # only the endpoint's own calls: `Get(...)`, not `s.Get(...)`
             name = text(kids[0], self.src)
@@ -606,9 +618,9 @@ class CsScanner(BaseScanner):
                 override = self._recipe(args[0], {}) if args else None
                 override = override if override is not None else (("unknown",),)
             elif name == "Routes":
-                routed += [(d, p) for a in args if (p := self.path_of(a, lenient=True)) is not None]   # `Routes("x/y")` too
+                routed += [(d, p) for a in args if (p := self._fe_route(a)) is not None]
             elif name in FE_VERBS:
-                routes += [(d, FE_VERBS[name], p) for a in args if (p := self.path_of(a, lenient=True)) is not None]
+                routes += [(d, FE_VERBS[name], p) for a in args if (p := self._fe_route(a)) is not None]
         routes += [(d, verb, p) for d, p in routed for verb in verbs]
         if not direct and not routes:
             return False
@@ -619,7 +631,44 @@ class CsScanner(BaseScanner):
             self.out.pending.append(Pending(None, "cs.fast-endpoint", (tuple(b.split(".")[-1] for b in bases), tuple(eps))))
         for ep in eps if override is not None else ():
             self.out.pending.append(Pending(ep, "cs.fe-prefix-override", override))
+        for ep, (d, _, _) in zip(eps, routes):  # a group takes the routes declared before it: FastEndpoints throws if none is
+            names = tuple(g for at, g in groups if at > d.start_byte)
+            if names:
+                self.out.pending.append(Pending(ep, "cs.fe-group", names))
         return True
+
+    def _fe_route(self, a: Node) -> str | None:
+        """A route FastEndpoints declares: what `path_of` reads (`Post(CreateRequest.Route)`, `Routes("x/y")`), or a
+        literal template of one segment — the framework joins every route under its prefix and group (`Get("users")`)."""
+        p = self.path_of(a, lenient=True)
+        if p is not None or a.type not in STRING_NODES or has_interpolation(a):
+            return p
+        lit = unquote(text(a, self.src)).strip().lstrip("/")
+        return "/" + lit if lit and PATH_LITERAL.match("/" + mask_placeholders(lit)) else None
+
+    def _fe_group(self, cls: Node, bases: tuple[str, ...]) -> tuple | None:
+        """A FastEndpoints endpoint group: a class under `Group`, or `SubGroup<TParent>`, whose constructor calls
+        `Configure("admin", ep => ..)`. Its prefix as a recipe (None: one this file cannot read) and its parent's name —
+        `Group<T>()` puts the group's prefix, then the parent's, before the endpoint's routes."""
+        if "Group" not in bases and "SubGroup" not in bases:
+            return None
+        parent = None
+        if "SubGroup" in bases:
+            bl = next((c for c in cls.children if c.type == "base_list"), None)
+            m = re.search(r"\bSubGroup\s*<\s*([\w.]+)\s*>", text(bl, self.src)) if bl is not None else None
+            if m is None:
+                return None
+            parent = m.group(1).split(".")[-1]
+        body = cls.child_by_field_name("body")
+        for ctor in (c for c in body.children if c.type == "constructor_declaration") if body is not None else ():
+            for d in walk(ctor):
+                fn = d.child_by_field_name("function") if d.type == "invocation_expression" else None
+                args = d.child_by_field_name("arguments") if fn is not None else None
+                if args is not None and fn.type == "identifier" and text(fn, self.src) == "Configure":
+                    vals = [c for c in args.children if c.is_named]
+                    if len(vals) == 2:
+                        return (self._recipe(vals[0], {}, cls), parent)
+        return None
 
     def _fe_route_prefix(self, n: Node) -> None:
         """FastEndpoints' global `config.Endpoints.RoutePrefix = "api"`, set where the app maps its endpoints
@@ -764,8 +813,8 @@ class CsScanner(BaseScanner):
     def _compose_fast_endpoints(out: HttpResult, repo: RepoInfo, classes: dict[str, list], attrs: "_RouteAttributes") -> None:
         """FastEndpoints across files: an endpoint under a base of the project takes its routes when the walk up its bases
         reaches one over FastEndpoints' (`cs.fast-base`) — a name several classes share counts when each of them does
-        (Elsa's `ElsaEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the global `RoutePrefix`, when the repo
-        sets one value (`cs.fe-prefix`), goes before every FastEndpoints route that does not override it."""
+        (Elsa's `ElsaEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the prefix of its group (`cs.fe-group`), and
+        before it the global `RoutePrefix`, when the repo sets one value (`cs.fe-prefix`), unless the route overrides it."""
         fast = out.facts.get("cs.fast-base", {})
         for p in out.pending:
             if p.rule == "cs.fast-endpoint" and _reaches_fast(classes, fast, p.key[0]):
@@ -773,13 +822,17 @@ class CsScanner(BaseScanner):
         prefixes = {attrs.fill(r, {}) if r is not None else None for r in out.facts.get("cs.fe-prefix", {}).get("", [])}
         prefix = prefixes.pop() if len(prefixes) == 1 else None
         overrides = {id(p.item): p.key for p in out.pending if p.rule == "cs.fe-prefix-override"}
+        grouped = {id(p.item): p.key for p in out.pending if p.rule == "cs.fe-group"}
+        groups = out.facts.get("cs.fe-group", {})
         plan = {}
         for ep in out.endpoints:
             if ep.framework != "fastendpoints":
                 continue
             own = attrs.fill(overrides[id(ep)], {}) if id(ep) in overrides else prefix
-            if own and own.strip("/"):
-                plan[id(ep)] = [rebased(repo, ep, "/" + own.strip("/"))]
+            group = _fe_group_prefix(groups, grouped[id(ep)], attrs) if id(ep) in grouped else None
+            full = "/".join(s.strip("/") for s in (own, group) if s and s.strip("/"))
+            if full:
+                plan[id(ep)] = [rebased(repo, ep, "/" + full)]
         replace_endpoints(out, plan)
 
     @staticmethod
@@ -865,10 +918,9 @@ class CsScanner(BaseScanner):
             if len(shapes) != 1:
                 continue
             idx, before, after, method = next(iter(shapes))
-            raw = valid_path(before + args[idx] + after, lenient=True) if idx < len(args) and args[idx] else None
-            path = normalize_path(raw) if raw else ""
-            if raw and has_literal_segment(path):
-                out.calls.append(replace(p.item, method=method, path=path, raw_path=raw, via=f"{rtype}.{name}"[-60:]))
+            found = wrapped_path(before, args[idx] if idx < len(args) else None, after)
+            if found is not None:
+                out.calls.append(replace(p.item, method=method, path=found[1], raw_path=found[0], via=f"{rtype}.{name}"[-60:]))
 
     def _refit(self, iface: Node) -> None:
         body = iface.child_by_field_name("body")
@@ -1013,7 +1065,7 @@ class CsScanner(BaseScanner):
         pl = m.child_by_field_name("parameters")
         params = [text(p.child_by_field_name("name"), self.src) for p in (pl.children if pl is not None else ())
                   if p.type == "parameter" and p.child_by_field_name("name") is not None]
-        shape = next((sh for a in arg_nodes if (sh := self._param_shape(a, params)) is not None), None)
+        shape = next((sh for a in arg_nodes if (sh := param_shape(self, a, params)) is not None), None)
         cls = m.parent
         while cls is not None and cls.type not in CLASS_NODES:
             cls = cls.parent
@@ -1022,44 +1074,6 @@ class CsScanner(BaseScanner):
         mname = text(m.child_by_field_name("name"), self.src)
         for owner in [text(cls.child_by_field_name("name"), self.src)] + [b.split(".")[-1] for b in self._bases(cls)]:
             self.out.publish("cs.client-wrapper", f"{owner}.{mname}", (*shape, (method or "ANY").upper()))
-
-    def _param_shape(self, a: Node, params: list[str]) -> tuple[int, str, str] | None:
-        """(index of the parameter, text before it, text after it) when the path is built around a parameter of the
-        method — the first one: `uri`, `$"{_apiUrl}{uri}/{id}"`, `_base + uri`."""
-        if a.type == "identifier":
-            if text(a, self.src) in params:
-                return params.index(text(a, self.src)), "", ""
-            a = self.resolve_local(a)
-            if a is None:
-                return None
-        tokens: list[str | int] = []
-        if a.type in STRING_NODES and (a.type == "interpolated_string_expression" or has_interpolation(a)):
-            for c in a.children:
-                if c.type in INTERPOLATION_NODES:
-                    inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]
-                    name = text(inner[0], self.src) if len(inner) == 1 and inner[0].type == "identifier" else None
-                    tokens.append(params.index(name) if name in params else "{param}")
-                elif c.type in STRING_TEXT_NODES:
-                    tokens.append(text(c, self.src))
-        elif a.type in CONCAT_NODES:
-            stack = [a]
-            while stack:
-                c = stack.pop()
-                if c.type == a.type:
-                    stack.extend(reversed([k for k in c.children if k.is_named]))
-                elif c.type == "identifier" and text(c, self.src) in params:
-                    tokens.append(params.index(text(c, self.src)))
-                elif c.type in STRING_NODES and not has_interpolation(c):
-                    tokens.append(unquote(text(c, self.src)))
-                else:
-                    tokens.append(self.path_of(c) or "{param}")
-        slots = [i for i, t in enumerate(tokens) if isinstance(t, int)]
-        if not slots:
-            return None
-        i = slots[0]                                  # the path; a later parameter is a placeholder (`{uri}/{id}`)
-        around = ("".join(t if isinstance(t, str) else "{param}" for t in tokens[:i]),
-                  "".join(t if isinstance(t, str) else "{param}" for t in tokens[i + 1:]))
-        return tokens[i], *(re.sub(r"\{[^}]*\}", "{param}", x) for x in around)
 
     def _wrapped_call(self, n: Node, fn: Node, name: str, arg_nodes: list[Node]) -> None:
         """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument
@@ -1274,6 +1288,26 @@ def _area_of(classes: dict[str, list], areas: dict[str, list], bases: tuple[str,
         if found:
             return found.pop() if len(found) == 1 else ""
     return ""
+
+
+def _fe_group_prefix(groups: dict[str, list], names: tuple[str, ...], attrs: "_RouteAttributes") -> str | None:
+    """What the endpoint groups `names` (its `Group<T>()` calls, in order) put before its routes: each group's prefix,
+    then its parent's (`SubGroup<TParent>`), each before what is there. None when a group is not the repo's one class of
+    that name, or its prefix cannot be read — the route stays as written."""
+    segments: list[str] = []
+    for name in names:
+        g, depth = name, 0
+        while g is not None:
+            decls = set(groups.get(g, ()))
+            if len(decls) != 1 or depth > 5:
+                return None
+            recipe, g = decls.pop()
+            value = attrs.fill(recipe, {}) if recipe is not None else None
+            if value is None:
+                return None
+            segments.insert(0, value.strip("/"))
+            depth += 1
+    return "/".join(s for s in segments if s)
 
 
 def _reaches_fast(classes: dict[str, list], fast: dict[str, list], bases: tuple[str, ...], _depth: int = 0) -> bool:

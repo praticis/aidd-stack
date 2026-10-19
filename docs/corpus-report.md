@@ -6,9 +6,9 @@ calibrated on, pinned to fixed commits and measured against an expected list per
 "Update" sections record the cheap fixes that followed. **v2** widens the corpus to 39 repositories (42 later),
 most of them real applications, and resets the order of H2b (F0.4.3b); its "Update" sections record each step of
 H2b, **"Closing H2b"** has where it started, where it ends and where each remaining gap goes, and **"The hold-out
-set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: its five
-increments moved 13 of them to the corpus (55), and the hold-out keeps 3. Plan, decisions and status of H2 are in
-`docs/handoffs/H2-roadmap.md`.
+set"** measures, once, 16 repositories the rules never saw. **F1.14**'s sections (ROADMAP) follow: increments 1–5
+moved 13 of them to the corpus (55), and the hold-out keeps 3; increment 6 on closes the rest of F1.14. Plan,
+decisions and status of H2 are in `docs/handoffs/H2-roadmap.md`.
 
 - Measured on 2026-10-14, indexer 0.2.14, commits pinned in `indexer/scripts/http_corpus.py` (`CORPUS`).
 - Expected lists: `indexer/tests/corpus_expected/<repo>.json` (format in `indexer/scripts/corpus_metrics.py`).
@@ -2093,3 +2093,468 @@ and 94.4% (874/926). The checked samples: TS/JS routes 79.5% (175/220), from 71.
 s, the same machine).
 
 New baseline: `2026-10-18-v2-baseline-22`.
+
+## F1.14, increment 6: FastEndpoints groups and custom verbs (2026-10-18)
+
+This is the first increment of F1.14's close, on a new branch. It does item 1 and one debt of item 7. No repository
+moves, since no hold-out repository was worked on. Each rule has its cases in a fixture, which fail without it.
+
+- **FastEndpoints endpoint groups (item 1).** An endpoint's `Configure()` that calls `Group<Administration>()` puts
+  the group's prefix before the routes declared above the call. FastEndpoints throws when there is none, so a route
+  declared after it does not take it. The group is a class under `Group`, or under `SubGroup<TParent>`, whose
+  constructor calls `Configure("admin", ep => ..)`. Its prefix is a literal or a constant. A sub-group's own prefix
+  comes first, then its parent's, as FastEndpoints applies them. The global `RoutePrefix` goes before all of them
+  (`/api/admin/billing/invoices`). A group that is not the repo's only class of that name, or whose prefix cannot be
+  read, leaves the route as written. The argument of `Get`/`Routes` is always a route, so a literal of one segment
+  (`Get("users")`) is now read too. Before, only a path with a slash was. No corpus repository uses groups; the cases
+  are in `route-patterns-cs-fastendpoints`.
+- **A custom verb after a name is not a parameter (item 7).** `normalize_path` read the `:transcribe` of memos'
+  grpc-gateway `/api/ai:transcribe` as an Express parameter (`/api/ai{transcribe}`). Now a `:x` glued to a letter or a
+  digit is a custom verb in the style of Google's APIs. After `/`, `-`, `.` or `_` it is still a parameter
+  (`/flights/:from-:to`, `/user_:name`). The ROADMAP had planned to decide by the route's origin (OpenAPI and the
+  gateway never have a colon parameter). That is not enough: `rebased` normalizes a path again when it joins a prefix,
+  and the origin is lost there. In the corpus and the hold-out, the only `:x` glued to a word outside `{..}` and
+  `<..>` were these verbs, one in a call and the rest in memos. The optional `:x?` rule now has the same guard. Before,
+  it also ate the `?` of a query.
+
+**Diff against `2026-10-18-v2-baseline-22`.** 53 repositories are identical, and so are the hold-out's 3.
+
+- memos: its 6 verb routes keep the verb (`POST /api/attachments:batchDelete`). A seventh comes out:
+  `POST /api/attachments:upload` had the key of `attachments:batchDelete` (`/api/attachments{param}`), so the two had
+  collapsed into one endpoint. Against the OpenAPI list, the gateway is now 93 of 93 (P 100%), from 92. The 93 Connect
+  RPCs stay with F2.1. The gabarito's 7 verb paths, written as the old normalization printed them, were rewritten
+  with the verb (H2-D15).
+- open-webui: the call to Azure's speech API, `transcriptions:transcribe?api-version=2024-11-15`, was recorded as
+  `/speechtotext/transcriptions{transcribeapi}-version=2024-11-15`. It is now `/speechtotext/transcriptions:transcribe`.
+  This is right, and outside the gabarito's scope.
+
+**Totals.** Go route precision over the list is 99.1% (1922/1939) and recall 92.9% (1927/2074), from 1921/1938 and
+1926/2073. C#, Python and TS/JS are unchanged.
+
+New baseline: `2026-10-18-v2-baseline-23`.
+
+## F1.14, increment 7: Go routers through declared types and named closures (2026-10-18)
+
+This increment does item 2. No repository moves. Each rule has its cases in `route-patterns-go`, which fail without
+it.
+
+- **A router method called on a value of declared type.** alertmanager's `api.v1.Register(r.WithPrefix("/api/v1"))`
+  now reaches `Register`, so its routes take the prefix. The scanner follows the call when the code declares the
+  value's type. That type can come from a receiver or a parameter of a function around the call, or from a local
+  assigned a composite literal (vikunja's `csvMigrator := &csv.MigratorWeb{}`). It can also come from a field of a
+  struct of the package. The struct may be in any file of the directory, and the scanner reads it from the field types
+  the Go symbol pass already collects. A local assigned anything else (`x := NewT()`) has an inferred type. That
+  belongs to the resolver (`needs-resolver`) and gets no rule. `WithPrefix` from prometheus/common/route now carries a
+  prefix, like `Group`.
+- **A named registration closure.** gitea keeps closures under names, such as `addRoutes := func() { m.Get(..) }`. It
+  gives a closure as the body of a group on `m`, or calls it inside several groups. Its routes now take each use's
+  prefix, once per use. Before, they were recorded once, with no prefix.
+- **A prefix known only at runtime is not taken.** alertmanager builds its prefix as
+  `router.WithPrefix("/" + strings.Trim(opts.RoutePrefix, "/"))`. Every segment of that prefix is a value read at
+  runtime, so it reads as `/{param}`, and the routes now leave it out, as with the option unset. A `/{param}/x` route
+  would link to nothing. The first run of this increment found the case, when alertmanager's other routes came out
+  under `/{param}`.
+
+**Diff against `2026-10-18-v2-baseline-23`.** 52 repositories are identical, and so are the hold-out's 3.
+
+- alertmanager: its 8 v1 routes now carry `/api/v1` (`GET /api/v1/status`). The judged sample had marked 7 of them
+  wrong (`router-as-param`). They are right now, and the sample was updated.
+- vikunja: the CSV migrator's 4 routes come out as `/api/v1/migration/csv/..`. The other migrators' 4 come out as
+  `/api/v1/migration/{param}/..`, because the name comes from a method called through an interface
+  (`segment-from-method`, a limitation). The gabarito's file scope (`pkg/routes/`) left out the migration module where
+  these routes are registered, so they could never match. The scope now includes `pkg/modules/migration/`, and the 4
+  `{param}` routes count as false positives against the spec's literal names.
+- gitea: −79 +192 web routes. 78 registration lines inside named closures were recorded once, without the prefix.
+  They now give one route per use:
+  - 39 lines are used once;
+  - 7 are used three times, for the actions settings of the admin, an org and a user
+    (`/-/admin/actions/scoped-workflows/required`);
+  - 31 are used four times, for the hooks of the admin, an org, a user and a repo (`/-/admin/hooks/msteams/{id}`);
+  - 1 gives eight routes: two verbs on one line, at each of the four uses
+    (`/-/admin/actions/runners/{runnerid}`).
+
+  By path, 75 of the added routes are under `/{username}/{reponame}`, 40 under `/user/settings`, 40 under
+  `/org/{org}` and 37 under `/-/admin`. Read at the source, they are right. The two judged items that were wrong are
+  right now. The gabarito is the API list, so these routes are outside it.
+
+**Totals.** Go route recall over the list is 93.1% (1931/2074), from 92.9% (1927/2074). Precision over the list is
+98.9% (1926/1947), from 99.1% (1922/1939). The drop is vikunja's 4 migrator routes with `{param}` for the name:
+the extractor did not give them before, and the widened scope counts them (the PR #5 validation, scoring both
+sides with the same gabarito, showed it). The
+judged sample is at 93.1% (258/277), from 89.9% (249/277). C#, Python and TS/JS are unchanged.
+
+**Left.** kratos' `RouterAdmin` stays a limitation: its `/admin` is a field that only one of its constructors fills,
+at runtime. Telling the two apart needs value flow through a field, which a declared type does not give. A review of
+this increment found one more defect, recorded under item 7: a global router reassigned under the same name
+(`router = router.WithPrefix("/api/v1")`) loses its prefix when nothing serves or mounts it. No corpus repository has
+that shape.
+
+New baseline: `2026-10-18-v2-baseline-24`.
+
+## F1.14, increment 8: a global group's own prefix belongs to the router (2026-10-18)
+
+This increment pays one debt of item 7, which the review of increment 7 found. No repository moves.
+
+In Go, take a group that other files can name: a package variable, a returned router, or a router parameter. Its own
+prefix does not go into the routes registered on it in its file. It waits for the composition across files. Until now,
+the prefix rode on the edges where the defining file published the group as the child. Two shapes lost it:
+
+- **A router reassigned under its own name.** Examples are `router = router.WithPrefix("/api/v2")`, and
+  `r = r.Group("/v3")` on a parameter. The reassignment gives only an edge from the router to itself. A router that no
+  file mounts then kept its routes without the prefix: `/healthy` instead of `/api/v2/healthy`.
+- **An edge another file publishes when it mounts the router.** That edge never carried the prefix.
+
+Now the group publishes its prefix as the router's own, and `compose` puts it after the prefix of every chain that
+reaches the router. The cases are in `route-patterns-go` (`internal/reassigned/`), and they fail without the change.
+
+**Diff against `2026-10-18-v2-baseline-24`.** All 55 repositories are identical, and so are the hold-out's 3. No
+repository in either set has either shape. The baseline stays `2026-10-18-v2-baseline-24`.
+
+## F1.14, increment 9: one endpoint per app in a monorepo (2026-10-18)
+
+This increment does item 5, the model. An endpoint's id was `svc/<repo>/http/<METHOD> <path_key>`. The same route in
+two apps of one repository became one endpoint, carrying the first app's evidence and handler (`multi-app-repo`).
+
+- **The rule.** Take a route declared in two modules that have a manifest (`go.mod`, `package.json`, a `.csproj`,
+  `pyproject.toml`, ..). It is now two endpoints, one per module. The id gains the module's directory
+  (`svc/<repo>/app/<dir>/http/..`), and the node gains `app`. A route declared once keeps the repository's id, also
+  when it sits in a library that an app references. That way a .NET solution with its controllers in a library project
+  does not change. A package a language implies, such as a Go directory, is not a module here. Several design
+  choices were measured and dropped:
+  - using the nearest module split Go by package;
+  - using the module of every route labelled .NET controller libraries as apps.
+
+  The indexer goes to 0.2.15, and the graph drops the endpoint nodes an older indexer wrote. The case is in
+  `route-patterns-cs`: `src/Worker` exposes the `GET /health` of `src/Api`. Without the rule the two are one
+  endpoint. A call to such a route links to both endpoints, since the service is still the repository.
+
+**Diff against `2026-10-18-v2-baseline-24`.** 42 repositories are identical, and so are the hold-out's 3. Thirteen
+only gain endpoints, which are the copies the merge used to hide:
+
+- fiber-recipes: +99, 64 recipes;
+- nest: +46, its sample apps;
+- bitwarden: +23. Its 14 services each expose `GET /alive` and `GET /now`;
+- aiohttp-demos: +10;
+- gin-examples: +8;
+- ardalis-clean-arch: +5, the template and its sample;
+- elsa: +5, the secrets endpoints of a core module and of an extension module;
+- chi: +3, `_examples/rest`;
+- flask: +2, its examples;
+- hono-examples: +2;
+- nodebb: +2, the web installer;
+- eshop-support: +1, `GET /manual` in the backend and in the staff UI;
+- kratos: +1.
+
+Read at the source, each copy is a route its module declares. The kratos copy is `library-code`.
+`oryx/prometheusx.SetMuxRoutes(mux)` registers `GET /metrics/prometheus` on whatever mux it gets, and nothing outside
+the vendored `oryx` module calls it. Before, it was hidden inside kratos' own `/metrics/prometheus`.
+
+**Totals.** `multi-app-repo` goes from 16 misses in 7 repositories to 8 in 4. Go route recall over the list is 93.3%
+(1936/2074), from 93.1%. TS/JS route recall is 89.2% (1334/1495), from 89.0%. Precision over the lists is unchanged
+(Go 98.9%, TS/JS 96.5%). C# and Python are unchanged. The gabaritos of chi, fiber-recipes and nest lose the category
+on the 8 routes that now match.
+
+**Left.** The other 8 are two apps inside one module: argo-cd's two servers in one `go.mod` (`ANY /api/webhook`,
+`ANY /auth/callback`), express' examples and fastapi's single-file tutorials under one manifest, and one gin example.
+Telling those apps apart needs the application each route's mounts end at, not the module. That is a limitation,
+recorded in the guide.
+
+New baseline: `2026-10-18-v2-baseline-25`.
+
+## F1.14, increment 10: the app's own client wrappers in Python (2026-10-18)
+
+This increment does item 3. No repository moves. The corpus had no known case before. The rule found 47 calls in two
+repositories. The cases are in `route-patterns-py` (`app/wrappers/`), and they fail without the rule.
+
+**The rule.** A function or method whose outbound call builds its path around one of its parameters is a client
+wrapper. Examples are `_request(self, method, path)` doing `self.client.request(method, path)`, and `legacy_get(path)`
+doing `requests.get(BASE + path)`.
+
+- **Verb.** It is the inner call's. If that call takes its verb from a parameter, it is the argument the caller
+  passes. If the caller passes none, it is that parameter's default (`method: str = 'POST'`).
+- **Calls to the wrapper.** A call that hands a wrapper a literal path is an outbound call, with the wrapper's verb.
+  A call that hands it a parameter of its own function makes that function a wrapper too. That way
+  `_get(self, path)` doing `self._request("GET", path)` resolves, up to four links.
+- **Receiver.** It can be:
+  - `self`: the class first, then its bases by name;
+  - a local or module variable assigned the constructor of a class of the repo;
+  - `self.x` assigned such a constructor in a method of the class.
+
+  A plain name is a function of the module, or one imported from the repo.
+- **Precision guards.** A library's client (`httpx.Client()`) is never a wrapper. Two wrappers with one name and
+  different shapes give nothing.
+- **Shared with C#.** The C# reading of a path built around a parameter moved to `core/http_wrappers.py`, unchanged.
+  Both languages use it now, and C# is identical.
+
+**Diff against `2026-10-18-v2-baseline-25`.** 53 repositories are identical, and so are the hold-out's 3. Two
+repositories gain calls. Read at the source, all of them are right:
+
+- open-webui, +35 calls:
+  - 24 from the Ollama proxy's `send_request(url, method='POST')` and `send_get_request`, to Ollama's own API
+    (`POST /api/chat`, `GET /api/tags`, ..);
+  - 6 from the MinerU loader's `_request_v1_api('POST', '/v1/uploads')`;
+  - 4 from the terminal server's `get_terminal_json(.., '/files/cwd')`;
+  - 1 from the OpenAI proxy (`GET /models`).
+
+  Before the default was read, 15 of them came out as `ANY`.
+- zulip, +12 calls:
+  - 8 to Slack's API, through `get_slack_api_data("https://slack.com/api/users.info", ..)`;
+  - 3 to the push bouncer's registration;
+  - 1 to a video call provider.
+
+Neither gabarito covers these calls. open-webui's list is its TS client, and zulip's spec is its own API. So precision
+and recall over the lists are unchanged.
+
+New baseline: `2026-10-18-v2-baseline-26`.
+
+## F1.14, increment 11: the TS/JS item (2026-10-18)
+
+This increment does item 4, all of it: the app's own client wrappers, the router list mounted in a loop,
+`@fastify/autoload` and Next.js routes by file. The cases are in `route-patterns-ts` (`src/clients/wrappers/`,
+`src/listed/`, `src/autoload/`, and `app/api/ping/route.ts` as a counterexample) and in a new fixture,
+`route-patterns-next`. Each fails without its rule.
+
+**Client wrappers.** These are the Python rules, applied to TS/JS. The chains of wrappers now resolve in one place,
+`core/http_wrappers.py`, for both languages.
+
+- **What a wrapper is.** A function of the module, a `const X = (..) => ..`, a method of an object the module binds
+  or exports (argo-cd's `export default { get(url) { .. } }`), or a method of a class.
+- **Verb.** It comes from:
+  - the call's name;
+  - the `method` option, as written or from a parameter (`request(url, { method = 'GET' })`, gitea);
+  - or, for a `fetch` with no `method` in sight, the `method` of the options a parameter hands on (`fetch(url,
+    options)`, `this.getOptions(options)`, `{ ...options }`).
+
+  GET applies only when the caller gives none. The first run had read mattermost's `doFetch` and ghost's
+  `fetchWithEdgeChallenge` as GET, which is how this rule came about.
+- **Base.** The base of the client the inner call is made on goes before the path (outline's stores:
+  `client.post(endpoint)` on the `/api` client).
+- **The rest of the path.** A parameter right after a word or a placeholder (`${base}${path}`, `"/api/v1" + url`) is
+  the rest of the path, so the call inside is not an outbound call. After `/`, `.`, `-` or `=` it is part of one
+  segment. A first version also stopped at `.`, and lost outline's `` client.post(`/users.${action}`) ``.
+- **A path a function returns.** A call to a function of the file, or to a method of the class through `this`, is the
+  path it returns, with its parameters bound to the call's arguments. Examples: argo-cd's `apiRoot()` returning
+  `toAbsURL('/api/v1')`, and mattermost's `getUsersRoute()` returning `` `${this.getBaseRoute()}/users` ``.
+- **Class fields.** A class field with a literal is a constant (`urlVersion = '/api/v4'`).
+- **Unknown starts.** In a template, a first unknown interpolation is the base, as it already was in a concatenation.
+- **Library receivers.** A receiver imported from an HTTP client library is a client, whatever its name.
+
+**Two path rules the judging asked for.**
+
+- **A link read from the page.** In TS/JS, a path that starts with a link read from the page has no call. That is an
+  attribute, a `dataset` entry, a link's `pathname` or `href`, also through a local
+  (`${el.getAttribute('data-url')}/move`). gitea's runtime links had come out as `/move` and `/info`.
+
+  A stricter version was measured and dropped. It treated any field of a local or a parameter as a runtime value. It
+  removed 27 right calls of open-webui to external servers (`${baseUrl.replace(/\/$/, '')}/files/cwd`) and 2 of
+  ctfd (`CTFd.config.urlRoot + '/api/v1/files'`).
+- **A query string glued to the path.** At the end of a path, right after a word or a placeholder, the following are
+  the query, not the path: a call, a choice between nothing and a query, or a local holding one of them. Examples are
+  `/search${buildQueryString(p)}`, `/stats${param}` with `param = flag ? '' : '?x=1'`, and `let q = ''; if (..) q =
+  '?a=b'`. This holds in every language. C#, Go and Python do not move.
+
+**Routes.**
+
+- **Lists.** A mount that reads the fields of a loop's item, over a module array of object literals, is one mount per
+  element (`defaultRoutes.forEach((route) => router.use(route.path, route.route))`, `for (const r of ..)`).
+- **`@fastify/autoload`.** Every file under the `dir` is a plugin under its folders' path. The router its default
+  export receives is mounted where the `register` leads, with the `prefix` of the `options`. `x.register(plugin)`
+  with a plugin of the repo (`fp(plugin)` included) now mounts the plugin's router on `x`. That is what takes
+  fastify-demo's `GET /` to the application.
+- **Next.js.** This applies in a package whose nearest `package.json` requires `next`:
+  - `app/**/route.ts` exporting the verbs;
+  - `pages/api/**` with a default export, as `ANY`;
+  - `[id]` and `[...rest]` are parameters, and `[[...rest]]` also gives the folder's own path;
+  - `(group)` and `@slot` add nothing, and nothing under a `_private` folder is a route.
+
+**Diff against `2026-10-18-v2-baseline-26`.** 39 repositories are identical, and so is the hold-out's three. C#, Go
+and Python do not move. Read at the source:
+
+| Repository | Change | Reading |
+|---|---|---|
+| mattermost | calls +504 | Client4's `this.doFetch(`${this.getXRoute(..)}/y`, {method})`, the verbs and `/api/v4` right, the query strings left out |
+| argo-cd | calls −100 +100 | the same calls under `/api/v1`, where the server serves them |
+| gitea | calls +19 | the `GET`/`POST` wrappers; 14 of the 15 expected calls |
+| open-webui | calls −2 +18 | notifications and skills under `/api/v1`, and `register` without its query |
+| outline | calls −1 +13 | the stores under `/api`, `POST /api/batch`, and the OAuth calls of the plugins |
+| directus | calls +10 | `fetchAll(..)` and the AI providers' `fetchProvider(url, {method: 'POST'})` |
+| zulip | calls +6 | `save_organization_settings(.., "/json/streams/" + id)` doing `channel.patch({url})` |
+| ghost | calls +6 | the portal's `fetchWithEdgeChallenge`, the export download, Unsplash |
+| photoprism | calls −7 +7 | `this.getPhotoResource() + "/like"` is `/photos/{param}/like`; `rest.js` stays wrong |
+| nodebb, docmost, gotify | calls ±1 | a glued query out; a telemetry call; `axios.put(..)` with the data last |
+| express-boilerplate | routes −11 +14 | the list mounted in a loop, under `/v1` |
+| fastify-demo | routes −10 +14 | autoload |
+| taxonomy | routes +9 | Next.js |
+| hono-examples | routes +1 | the Next.js catch-all `pages/api/[...route].ts` that hands `/api/*` to the Hono app, added to the list (H2-D15) |
+
+**Sampled items.** The rules changed 39 sampled items, and each was re-judged at the source:
+
+- argo-cd: 17, all right now;
+- express-boilerplate: 8, all right now;
+- fastify-demo: 10, all right now;
+- outline: 1, `POST /api/batch`, right now;
+- open-webui: 1, right now;
+- photoprism: 2, one right now. `rest.js`'s `/{param}/links` stays wrong, because the collection comes from static
+  dispatch on the subclass.
+
+**Totals.** C#, Go and Python are unchanged. For TS/JS over the gabaritos:
+
+| | Precision | Recall |
+|---|---|---|
+| Routes | 96.5 → 98.1% | 89.2 → 91.7% (1372/1496) |
+| Calls | 96.6 → 98.4% | 95.3 → 99.0% (1074/1085) |
+
+Precision over the samples is 79.5 → 87.7% for routes and 79.9 → 86.9% for calls.
+
+| Category | Before | After |
+|---|---|---|
+| `prefix-in-client-wrapper` | 38 wrong, 34 missed, 4 repositories | 20 wrong, 9 missed, nodebb and mattermost |
+| `client-wrapper` | 16 missed | 1 missed, a Go call of go-feature-flag |
+| `prefix-by-folder` | 10 wrong, 14 missed | 0 |
+| `route-by-file-path` | 9 missed | 0 |
+| `prefix-other-file` | 9 wrong, 14 missed | 1 wrong, in dispatch |
+| `query-in-variable` (wrong) | 4 | 3, btcpayserver's C# |
+
+gitea's one miss is now `vue-sfc`: `GET /repo/search` is only called from a `.vue` file.
+
+**Left, recorded in the guide.**
+
+- **NodeBB's browser `api` module.** It is reached by an AMD name that RequireJS resolves through its config. It
+  picks its prefix at run time from the path itself (`url.startsWith('/api') ? rel + url : baseUrl + url`). 27 calls
+  stay without `/api/v3`.
+- **mattermost's `${Client4.getBaseRoute()}`.** A method of an instance from another file, 2 calls.
+- **gitea's five extracted calls outside its list.** They are built on a link that another function reads from the
+  page (`parseIssuePageInfo().repoLink`), or that a component gets as a prop.
+- **photoprism's static dispatch.**
+- **outline's RPC name from a parameter** (`/documents.${request}`).
+
+New baseline: `2026-10-18-v2-baseline-27`.
+
+## F1.14, increment 12: two TS wrapper defects the live validation found (2026-10-19)
+
+Before the merge, PR #5 was validated on a live install. That showed two defects of increment 11 in an
+application's own client. The corpus had neither form.
+
+- **Options in a local.**
+  - The form: `_postJSON(endpoint)` builds `const init = { ...this.defaults, method: 'POST', body }` and calls
+    `this._fetch(host + endpoint, init)`.
+  - The rule read only an object literal written in the call, so the verb fell back to `fetch`'s GET.
+  - Now a local that holds an object literal counts as that object.
+  - Options the scanner cannot read, such as a call's result, leave the verb unknown (`ANY`). GET is only for a
+    call that gives no options, or an object without `method`.
+- **A query in parentheses.**
+  - The form: `_get(endpoint, vars)` builds `host + endpoint + (vars ? '?' + qs.stringify(vars) : '')`.
+  - The query-tail rule did not look inside the parentheses, and the wrapper's shape never applied it, so each call
+    came out as `/x{param}`.
+  - Now both do.
+
+On the live application, 34 of the 51 new calls of one ref were wrong. Now all 51 are right, and so are the 58 of
+the other ref.
+
+In the corpus only mattermost changes, in 9 calls. They were wrong in baseline-27, and no sample had drawn them.
+
+- Eight uploads go from GET to POST. Each passes `const request = { method: 'post', body: formData }` to `doFetch`,
+  and the server registers each one as POST:
+  - `uploadBrandImage`, `createCustomEmoji`, `uploadLicense`, `previewLicense`;
+  - `uploadPlugin`, `setSamlIdpCertificateFromMetadata`, `setTeamIcon`, `uploadProfileImage`.
+- `{method: state ? 'put' : 'delete'}` goes from GET to ANY.
+
+The other 54 repositories and the hold-out are identical, and the totals do not move. The fixture case
+(`route-patterns-ts`, `src/clients/wrappers/ledger.js`) fails without the change.
+
+New baseline: `2026-10-18-v2-baseline-28`.
+
+## Closing F1.14 and H2 (2026-10-18)
+
+F1.14 took what H2b and its hold-out left to the extractor, in twelve increments. Items 1 to 6 each end with a rule
+that has a fixture and a judged corpus, or with a limitation recorded in the guide. Of item 7, the gRPC custom verb
+and the reassigned Go router are done. Its framework catalog as data and the `built_bundle` thresholds are
+refactoring, so they go to H5 with the recognizers. Django stays out, because the portfolio is FastAPI and Flask.
+
+The corpus grew from 42 repositories to 55, 54 with an expected list. The 13 hold-out repositories F1.14 worked on
+became corpus, and the hold-out keeps three: Kavita, go-boilerplate and sftpgo. The final baseline is
+`2026-10-18-v2-baseline-28`, with indexer 0.2.15.
+
+**The new hold-out moves after H5.** F1.14 was to close with a new hold-out, measured once (H2-D20). On 2026-10-18
+the author moved it to after the H5 refactor, as the first step of its own handoff:
+
+- H5 changes no behavior, and the corpus stays identical at every step, so the number would be the same before
+  or after;
+- what the hold-out shows would be fixed after H5 anyway, and is then fixed in the refactored code;
+- the measurement also runs the commit before H5, so any difference between the two is an H5 regression in code
+  the corpus does not cover.
+
+The cost is that a precision defect no one has seen yet stays in the extractor during H5. Until the new hold-out,
+H5's regression net is the corpus and the three-repository hold-out.
+
+### The hold-out's repositories, then and now
+
+The 13 repositories as the hold-out measured them on 2026-10-17, against today. Some lists were corrected at the
+source while F1.14 worked on them (H2-D15), so a few expected counts moved: Smartstore 551 → 526, vikunja 172 → 187,
+photoprism 165 → 167, memos 185 → 186, Umbraco 528 → 529, and docmost's calls 41 → 42.
+
+| Language | Kind | Repositories | R list, hold-out | R list, now |
+|---|---|---|---|---|
+| C# | routes | Umbraco, Radarr, btcpayserver, Smartstore, Elsa | 32.2 % (531/1648) | 99.8 % (1621/1624) |
+| Go | routes | photoprism, vikunja, memos | 0 % (0/522) | 79.3 % (428/540); 95.7 % (428/447) without memos' Connect RPCs |
+| Python | routes | mealie, open-webui | 83.8 % (145/173) | 100 % (173/173) |
+| TS/JS | routes | directus, outline, docmost | 74.1 % (289/390) | 99.2 % (387/390) |
+| TS/JS | calls | Umbraco, open-webui, outline, docmost | 76.5 % (513/671), P 77.8 % | 100 % (672/672), P 99.6 % |
+
+Sampled route precision moved the same way:
+
+| Repository | Before | After |
+|---|---|---|
+| Umbraco | 0 % | 100 % |
+| Radarr | 30 % | 100 % |
+| Elsa | 60 % | 90 % |
+| photoprism | 0 % | 95 % |
+| vikunja | 10 % | 94.7 % |
+| mealie | 65 % | 100 % |
+| outline | 65 % | 100 % |
+
+Sampled call precision rose from 5 % to 100 % in outline, from 0 % to 100 % in docmost and from 35 % to 100 % in
+open-webui. photoprism's calls only went from 30 % to 35 %, because `rest.js` dispatches statically on the subclass.
+
+Two notes on the three repositories left in the hold-out:
+
+- Nothing moved on them through F1.14. Kavita's routes are at 100 % / 100 % (522), and go-boilerplate's and
+  sftpgo's together at 100 % / 99.2 % (128/129).
+- Kavita's calls stay at 0/20 on the sample, as measured, because no rule was written for them.
+
+### Where the corpus ends
+
+Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-28`):
+
+| Language | Kind | P sample | P list | R list |
+|---|---|---|---|---|
+| C# | routes | 98.8 % (249/252) | 100 % | 99.3 % (1931/1944) |
+| C# | calls | 97.2 % (141/145) | 100 % | 99.0 % (201/203) |
+| Go | routes | 93.1 % (258/277) | 98.9 % | 93.3 % (1936/2074); 97.7 % (1936/1981) without memos' Connect RPCs |
+| Go | calls | 100 % (23/23) | 100 % | 93.6 % (103/110) |
+| Python | routes | 99.2 % (130/131) | 99.3 % | 28.2 % (560/1988); 98.6 % (560/568) without Django |
+| Python | calls | 100 % (26/26) | 100 % | 66.7 % (2/3) |
+| TS/JS | routes | 87.7 % (193/220) | 98.1 % | 91.7 % (1372/1496) |
+| TS/JS | calls | 86.9 % (251/289) | 98.4 % | 99.0 % (1074/1085) |
+
+### What is left, and where it goes
+
+| Category | Wrong | Missed | Repos | Goes to |
+|---|---|---|---|---|
+| `django-urlconf` | 0 | 1420 | 2 | out of F1.14: a scanner when a portfolio asks |
+| `prefix-as-param` | 13 | 119 | 6 | limitation: a prefix known only at run time (NodeBB's plugin names, options, configuration) |
+| `connect-rpc` | 0 | 93 | 1 | F2.1, with the proto as the source |
+| `prefix-in-client-wrapper` (calls) | 20 | 9 | 2 | limitation: NodeBB's AMD `api` module, whose prefix is picked at run time from the path, and mattermost's `Client4.getBaseRoute()` |
+| `test-app-folder` | 20 | 0 | 2 | F1.1, per-repository excludes |
+| `url-from-helper` (calls) | 13 | 3 | 2 | limitation: photoprism's static dispatch on a subclass; go-kit's paths passed to a helper as a parameter |
+| `segment-from-method` | 0 | 15 | 1 | limitation: vikunja's migrator name, from a method called through an interface |
+| `library-code` | 13 | 0 | 1 | limitation: chi's mountable profiler |
+| `prefix-in-router-type` | 1 | 12 | 1 | limitation: kratos' `RouterAdmin` prefix is a field set at run time |
+| `route-by-name-convention` | 0 | 10 | 1 | the project's convention (F0.4.5 `route_patterns`) |
+| `multi-app-repo` | 0 | 8 | 4 | limitation: two apps inside one module |
+| 24 other categories | 12 | 35 | — | none above 5 items; each is in its gabaritos' notes, for when a portfolio shows it |
+
+The choice of what came next is recorded in the ROADMAP. First comes the H4 recycling of the working docs, then the
+H5 refactor. After it, the new hold-out is measured, then P2, the indexer in its own repository. SCIP (F1.1, F1.2)
+comes last. A gap whose decision needs the type of an expression not declared in sight stays `needs-resolver`, for
+F1.2's resolver.

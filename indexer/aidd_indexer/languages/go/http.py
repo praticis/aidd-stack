@@ -15,7 +15,7 @@ from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, ROUTER_TYPE, STRING_NODES,
                                HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
-from ...core.http_scope import in_function
+from ...core.http_scope import enclosing_function, in_function
 from ...core.http_expr import verb_list
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
@@ -26,7 +26,9 @@ GO_VERB_ALIASES = {"Del": "DELETE"}                                             
 # net/http, gorilla, chi, gin, echo, fiber. Exported only: an unexported method is the package's own, never a framework's
 # (vikunja `c.get("/api/projects", nil, out)` is its Planka client)
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | {v for v in VERB_BY_NAME if v[0].isupper()} | set(GO_VERB_ALIASES)
-GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter"}                       # prefix carriers
+GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter", "WithPrefix"}         # prefix carriers
+# a call that returns its receiver under a prefix: `WithPrefix` is prometheus/common/route's
+GO_PREFIXED = {"Group", "WithPrefix"}
 GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
 GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
 GO_CHAIN_BUILDERS = {"Combo"}                                                             # gitea: m.Combo("/x").Get(h).Put(h)
@@ -41,7 +43,7 @@ class GoScanner(BaseScanner):
     relative_on_groups = True
     mount_rule = "go.mount"
     scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
-    global_group_on_edge = True
+    defer_global_group_prefix = True
 
     def run(self) -> None:
         self.servemux_vars: set[str] = set()     # net/http ServeMux: a pattern ending in "/" is a whole subtree
@@ -52,6 +54,7 @@ class GoScanner(BaseScanner):
         if self.swagger:
             self._swagger_base()
         self._functions: dict[str, Node] | None = None
+        self._idents: dict[int, dict[str, list[Node]]] = {}
         for n in walk(self.fx.tree.root_node):
             if n.type in ("short_var_declaration", "assignment_statement", "var_spec"):
                 self._maybe_group(n)
@@ -460,10 +463,10 @@ class GoScanner(BaseScanner):
         verb = text(field, self.src)
         if verb in ("Use", "With"):                                     # middleware: same prefix
             return self._chain_prefix(operand)
-        if verb != "Group":
+        if verb not in GO_PREFIXED:
             return None
         arg_nodes = [c for c in args.children if c.is_named]
-        p = self.path_of(arg_nodes[0]) if arg_nodes else None
+        p = self.group_path(arg_nodes[0]) if arg_nodes else None
         if p is None:
             return None
         inner = self._chain_prefix(operand)
@@ -487,6 +490,40 @@ class GoScanner(BaseScanner):
         if p is None:
             return None
         return Region(outer, p, same_router=verb == "Group")
+
+    def closure_uses(self, fn: Node, receiver: str) -> list[tuple[Node, str]]:
+        """`addRoutes := func() { m.Get(..) }`: given as the body of a group on `m` (`m.Group("/x", addRoutes)`), under
+        the group's path; called inside a group (`addRoutes()`), under what `m` has there."""
+        name = self._function_name(fn) if fn.type == "func_literal" else None
+        scope = enclosing_function(fn) if name is not None else None
+        if scope is None:
+            return []
+        later = (u for u in self._identifiers(scope).get(name, ()) if u.start_byte >= fn.end_byte)   # not the declaration
+        return [use for use in (self._closure_use(u, receiver) for u in later) if use is not None]
+
+    def _identifiers(self, scope: Node) -> dict[str, list[Node]]:
+        """The identifiers of a function by name, indexed once per function."""
+        if scope.id not in self._idents:
+            idx: dict[str, list[Node]] = {}
+            for d in walk(scope):
+                if d.type == "identifier":
+                    idx.setdefault(text(d, self.src), []).append(d)
+            self._idents[scope.id] = idx
+        return self._idents[scope.id]
+
+    def _closure_use(self, u: Node, receiver: str) -> tuple[Node, str] | None:
+        """`u`, a closure's name, as a use that registers its routes: the callee of a call, or an argument of a group
+        on `receiver`."""
+        parent = u.parent
+        if parent is not None and parent.type == "call_expression":
+            callee = parent.child_by_field_name("function")
+            return (parent, "") if callee is not None and callee.id == u.id else None
+        if parent is None or parent.type != "argument_list" or parent.parent is None:
+            return None
+        region = self.region_of(parent.parent, u)
+        if region is not None and region.same_router and region.outer == receiver:
+            return parent.parent, region.prefix
+        return None
 
     def _router_of(self, n: Node) -> tuple[int, str] | None:
         """The router a Mount argument names: a variable, or the variable a function of this file returns."""
@@ -598,17 +635,18 @@ class GoScanner(BaseScanner):
         verb, operand = text(fn.child_by_field_name("field"), self.src), fn.child_by_field_name("operand")
         if verb in ("Subrouter", "Use", "With"):
             return self._router_expr(operand)
-        if verb not in ("PathPrefix", "Group"):
+        if verb not in GO_PREFIXED | {"PathPrefix"}:
             return None
         args = n.child_by_field_name("arguments")
         first = args.named_children[0] if args is not None and args.named_child_count else None
-        p = self.path_of(first) if first is not None and first.type != "func_literal" else None
+        p = self.group_path(first) if first is not None and first.type != "func_literal" else None
         base = self._router_expr(operand) if p is not None else None
         return (base[0], base[1].rstrip("/") + p) if base is not None else None
 
     def _function_unit(self, fn: Node) -> tuple[str, str] | None:
         """(package directory, name) of the function a call names: `F` of this package, `pkg.F` of an imported one,
-        or the method of a value built in place (`todosResource{}.Routes`)."""
+        the method of a value built in place (`todosResource{}.Routes`), or of a value whose type the code declares
+        (`api.v1.Register(..)`)."""
         if fn.type == "identifier":
             return dir_of(self.fx.file.path), text(fn, self.src)
         operand = fn.child_by_field_name("operand") if fn.type == "selector_expression" else None
@@ -619,10 +657,73 @@ class GoScanner(BaseScanner):
             if "." not in typ:
                 return dir_of(self.fx.file.path), f"{typ}.{text(fn.child_by_field_name('field'), self.src)}"
             return None
+        if operand is not None and not (operand.type == "identifier" and text(operand, self.src) in self.imports):
+            typ = self._value_type(operand)
+            return self._method_unit(typ, text(fn.child_by_field_name("field"), self.src)) if typ is not None else None
         if operand is None or operand.type != "identifier" or text(operand, self.src) not in self.imports:
             return None
         target = self.resolve_import(self.imports[text(operand, self.src)][0])
         return (target or ".", text(fn.child_by_field_name("field"), self.src)) if target is not None else None
+
+    def _value_type(self, n: Node) -> str | None:
+        """The type the code declares for a value: `x` a receiver or a parameter of a function around it
+        (`func (api *API) Register(r *route.Router)`) or a local assigned a composite literal (`m := &pkg.T{}`); `x.f`
+        a field of `x`'s struct. Any other local (`x := NewT()`) has no declared type: None."""
+        if n.type == "selector_expression":
+            return self._field_type(n)
+        return self._local_type(n) if n.type == "identifier" else None
+
+    def _field_type(self, n: Node) -> str | None:
+        """`x.f`: the type of the field `f` of `x`'s struct, declared in any file of the package."""
+        base = self._value_type(n.child_by_field_name("operand"))
+        sname = base.lstrip("*") if base is not None else ""
+        if not re.fullmatch(r"\w+", sname):        # a struct of another package, or a generic one: not read
+            return None
+        field = text(n.child_by_field_name("field"), self.src)
+        return next((fields[field] for facts in self.ctx.file_facts.values()
+                     if field in (fields := facts.get("structs", {}).get(sname, {}))), None)
+
+    def _local_type(self, n: Node) -> str | None:
+        """The identifier `n`: the nearest assignment before it, else a receiver or parameter, from the innermost
+        function out."""
+        name, scope = text(n, self.src), enclosing_function(n)
+        while scope is not None:
+            val = self.scopes.assigned_before(scope, n, name)
+            if val is not None:
+                return self._literal_type(val)
+            decl = self._parameter(scope, name)
+            if decl is not None:
+                typ = decl.child_by_field_name("type")
+                return text(typ, self.src) if typ is not None else None
+            scope = enclosing_function(scope)
+        return None
+
+    def _literal_type(self, val: Node) -> str | None:
+        """The type of a composite literal, also behind `&` or parentheses; None for any other value."""
+        while val.type in ("expression_list", "unary_expression", "parenthesized_expression") and val.named_child_count == 1:
+            val = val.named_children[0]
+        typ = val.child_by_field_name("type") if val.type == "composite_literal" else None
+        return text(typ, self.src) if typ is not None else None
+
+    def _parameter(self, fn: Node, name: str) -> Node | None:
+        """The receiver or parameter declaration of `fn` that declares `name`."""
+        for field_name in ("receiver", "parameters"):
+            params = fn.child_by_field_name(field_name)
+            for decl in params.named_children if params is not None else ():
+                if any(c.type == "identifier" and text(c, self.src) == name for c in decl.children):
+                    return decl
+        return None
+
+    def _method_unit(self, typ: str, method: str) -> tuple[str, str] | None:
+        """(package directory, `T.M`) of the method `M` of the declared type `typ`: `*Router` of this package,
+        `*pkg.API` of an imported one."""
+        pkg, _, tname = typ.lstrip("*").split("[")[0].rpartition(".")
+        if not re.fullmatch(r"\w+", tname):
+            return None
+        if not pkg:
+            return dir_of(self.fx.file.path), f"{tname}.{method}"
+        target = self.resolve_import(self.imports[pkg][0]) if pkg in self.imports else None
+        return (target, f"{tname}.{method}") if target is not None else None
 
     def _returned_router(self, n: Node) -> str | None:
         """`apiv1.Routes()`, `adminRouter()` from another file of the package: the router that function returns."""

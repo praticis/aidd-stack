@@ -36,10 +36,13 @@ def service(tenant: str, name: str) -> str:
     return f"{tenant}/svc/{name}"
 
 
-def http_endpoint(tenant: str, service_name: str, method: str, path_key: str) -> str:
+def http_endpoint(tenant: str, service_name: str, method: str, path_key: str, app: str = "") -> str:
     """Keyed by `path_key` (placeholders normalized to `{param}`): renaming `{id}` to `{userId}`
-    on a branch is the same route, not a second endpoint. The display `path` stays an attribute."""
-    return f"{tenant}/svc/{service_name}/http/{method} {path_key}"
+    on a branch is the same route, not a second endpoint. The display `path` stays an attribute.
+    `app`: the module that declares the route, when the repo's routes come from more than one, so the
+    same route in two apps of a repo is two endpoints."""
+    scope = f"{tenant}/svc/{service_name}" + (f"/app/{app}" if app else "")
+    return f"{scope}/http/{method} {path_key}"
 
 
 def http_call(tenant: str, repo: str, ref: str, file_path: str, line: int) -> str:

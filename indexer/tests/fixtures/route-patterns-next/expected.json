@@ -1,0 +1,60 @@
+{
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/orders",
+   "handler": "GET"
+  },
+  {
+   "method": "POST",
+   "path": "/api/orders",
+   "handler": "POST"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/orders/{orderId}",
+   "handler": "PATCH"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/orders/{orderId}",
+   "handler": "remove"
+  },
+  {
+   "method": "GET",
+   "path": "/api/cart",
+   "handler": "GET"
+  },
+  {
+   "method": "GET",
+   "path": "/api/docs/{slug}",
+   "handler": "GET"
+  },
+  {
+   "method": "GET",
+   "path": "/api/docs",
+   "handler": "GET"
+  },
+  {
+   "method": "ANY",
+   "path": "/api",
+   "handler": "handler"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/health",
+   "handler": "health"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/users/{id}",
+   "handler": "user"
+  },
+  {
+   "method": "ANY",
+   "path": "/api/auth/{nextauth}",
+   "handler": null
+  }
+ ],
+ "calls": []
+}

@@ -107,6 +107,8 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
                 kids = [c for c in n.children if c.is_named]
                 if len(kids) >= 2:
                     name, val = kids[0], kids[-1]
+        elif n.type in ("public_field_definition", "field_definition"):         # TS/JS class: `urlVersion = '/api/v4'`
+            name, val = n.child_by_field_name("name") or n.child_by_field_name("property"), n.child_by_field_name("value")
         elif n.type == "assignment" and n.parent is not None and (
                 n.parent.type in ("module", "expression_statement")
                 or n.parent.type == "block" and n.parent.parent is not None and n.parent.parent.type == "class_definition"):
@@ -584,7 +586,7 @@ class PathExpressions:
                 continue
             p = self._string_text(c, lenient, _depth + 1) if c.type in STRING_NODES else self.path_of(c, lenient, _depth + 1)
             if p is None:
-                if raw:
+                if raw and not (c is operands[-1] and _glued(raw) and self.query_tail(c)):
                     raw += "{param}"
                 else:
                     lead = True
@@ -719,12 +721,38 @@ class PathExpressions:
                 parts.append(t if t is not None else unknown)
                 continue
             prev, nxt = (tokens[i - 1] if i else ""), (tokens[i + 1] if i + 1 < len(tokens) else "")
-            whole = (i == 0 or (isinstance(prev, str) and prev.endswith("/")),
+            after_base = i == 1 and isinstance(prev, Node) and parts[0] == unknown      # `${this.url}${this.urlVersion}`
+            whole = (i == 0 or after_base or (isinstance(prev, str) and prev.endswith("/")),
                      i + 1 == len(tokens) or (isinstance(nxt, str) and nxt[:1] in ("/", "?", "#")))
             generic = any(o is not t for o in path_named)
             v = self._substitution(t, lenient, _depth, generic, whole)
             parts.append(v if v is not None else unknown)
+        if len(parts) > 1 and parts[-1] == unknown and _glued(parts[-2]) and self.query_tail(tokens[-1]):
+            parts[-1] = ""                              # `/search${buildQueryString(params)}`
         return "".join(parts)
+
+    def query_tail(self, e: Node | None) -> bool:
+        """A call glued to the end of a path, a choice between nothing and a query (`flag ? '' : '?all=true'`, also in
+        parentheses), or a local holding one, is its query string (`/search${buildQueryString(params)}`,
+        `"/v1/items" + qs`); a parameter there is part of the path."""
+        e = _unparen(e)
+        if e is not None and e.type == "identifier":
+            bound, val = self.scopes.binding(e)
+            e = _unparen(val) if bound and val is not None else None
+        if e is not None and e.type in ("ternary_expression", "conditional_expression"):
+            return all(self._query_text(e.child_by_field_name(f)) for f in ("consequence", "alternative"))
+        return e is not None and (e.type in CALL_NODES or e.type in STRING_NODES and self._query_text(e))
+
+    def _query_text(self, b: Node | None) -> bool:
+        """Nothing, or text that starts a query (`'?index=' + ids`, `` `&team=${t}` ``)."""
+        while b is not None and b.type in CONCAT_NODES:
+            b = b.child_by_field_name("left")
+        if b is None or b.type not in STRING_NODES:
+            return False
+        first = b.named_children[0] if has_interpolation(b) and b.named_child_count else None
+        lead = (text(first, self.src) if first.type in STRING_TEXT_NODES else "") if first is not None \
+            else unquote(text(b, self.src))
+        return lead == "" and not has_interpolation(b) or lead[:1] in ("?", "&")
 
     def _sprintf(self, fmt: Node, args: list[Node], lenient: bool, _depth: int) -> str | None:
         """`fmt.Sprintf("/%s/{id}", SchemasPath)`: a `%s`/`%v` whose argument the code holds as whole segments takes
@@ -888,6 +916,17 @@ class PathExpressions:
         if n.type in ("identifier", "shorthand_property_identifier"):
             return self._method_value(self.scopes.binding(n)[1], depth + 1)
         return None
+
+
+def _glued(before: str) -> bool:
+    """A path that ends in a word or a placeholder, so what follows with no separator is not a new segment."""
+    return before[-1:].isalnum() or before.endswith("}")
+
+
+def _unparen(e: Node | None) -> Node | None:
+    while e is not None and e.type == "parenthesized_expression":
+        e = e.named_children[0] if e.named_child_count else None
+    return e
 
 
 def _word(n: Node, src: bytes) -> str | None:

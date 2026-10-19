@@ -20,17 +20,17 @@ Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is com
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
 the repository (`--dir`, or `AIDD_CORPUS_DIR`) and are never versioned.
 
-Baseline at the pinned commits (2026-10-18, F1.14 increment 5, routes + calls): Go — alertmanager 30+15 · chi 50 ·
-fiber-recipes 164+7 · gin-examples 40+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1433+4 · mattermost
-658+23 · kratos 76+135 · argo-cd 123+105 · gotify 51+30 · go-feature-flag 18+7 · go-kit-examples 27+11 · vikunja
-198+232 · memos 100+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 205+1 (166
-in the framework's own test apps) · immich 298+286 · nodebb 377+191 · ghost 334+30 · express-boilerplate 11 ·
-fastify-demo 10 · hono-examples 31 · taxonomy 0+6 (Next.js file routes) · outline 226+101 · directus 294+95 · docmost
-149+247 · open-webui 595+617. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 18+19 ·
-ardalis-clean-arch 19 · jellyfin 422+13 · bitwarden 675+30 · notifo 130+218 · rapid-blazor 18+17 · azure-saas 35+26
-(the last three with NSwag clients) · umbraco 540+522 · smartstore 567+5 · radarr 239+2 · elsa 270+239 · btcpayserver
-676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 18 · zulip 0+135 and netbox 0 (Django) · dispatch
-291+291 · aiohttp-demos 24+1 · ctfd 242+84 · mealie 286+14. Whole run ~21 min in Docker (mattermost ~3 min, bitwarden
+Baseline at the pinned commits (2026-10-18, routes + calls): Go — alertmanager 30+15 · chi 53 ·
+fiber-recipes 263+7 · gin-examples 48+1 · gin-realworld 20 · gorilla-mux 0 (library only) · gitea 1546+4 · mattermost
+658+23 · kratos 77+135 · argo-cd 123+105 · gotify 51+30 · go-feature-flag 18+7 · go-kit-examples 27+11 · vikunja
+198+232 · memos 101+4 · photoprism 179+66. TS/JS — express 36 · express-realworld 20 · fastify 8+1 · nest 251+1 (166
+in the framework's own test apps) · immich 298+286 · nodebb 379+191 · ghost 334+30 · express-boilerplate 11 ·
+fastify-demo 10 · hono-examples 33 · taxonomy 0+6 (Next.js file routes) · outline 226+101 · directus 294+95 · docmost
+149+247 · open-webui 595+652. C# — eshop 30+24 · clean-arch-dotnet 1 · eshop-on-web 33+7 · eshop-support 19+19 ·
+ardalis-clean-arch 24 · jellyfin 422+13 · bitwarden 698+30 · notifo 130+218 · rapid-blazor 18+17 · azure-saas 35+26
+(the last three with NSwag clients) · umbraco 540+522 · smartstore 567+5 · radarr 239+2 · elsa 275+239 · btcpayserver
+676+23. Python — fastapi 87+2 · fastapi-template 23+23 · flask 20 · zulip 0+147 and netbox 0 (Django) · dispatch
+291+291 · aiohttp-demos 34+1 · ctfd 242+84 · mealie 286+14. Whole run ~21 min in Docker (mattermost ~3 min, bitwarden
 ~2 min); grafana is out (memory, see CORPUS). Precision/recall per repo and the ranking of gaps:
 docs/corpus-report.md.
 """
@@ -250,6 +250,19 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
     return out
 
 
+def list_repos(names: list[str], pinned: dict, base: Path) -> int:
+    """One name per line, the clone with the most files first: a parallel run starts the longest ones early. A clone
+    not made yet counts as empty."""
+    unknown = [n for n in names if n not in pinned]
+    if unknown:
+        print(f"not pinned: {', '.join(unknown)}", file=sys.stderr)
+        return 2
+    sizes = {n: sum(len(files) for _, _, files in os.walk(base / n)) for n in names}
+    for name in sorted(names, key=lambda n: (-sizes[n], n)):
+        print(name)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("AIDD_CORPUS_DIR", str(Path.home() / ".cache/aidd-corpus/repos")))
@@ -264,9 +277,12 @@ def main() -> int:
     ap.add_argument("--seed", default="0")
     ap.add_argument("--show", type=int, default=10)
     ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own gabaritos")
+    ap.add_argument("--list", action="store_true", help="print the selected repositories, the largest clone first, and exit")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
     pinned = HOLDOUT if args.holdout else CORPUS
+    if args.list:
+        return list_repos(args.repos or sorted(pinned), pinned, Path(args.dir))
     if args.holdout and args.expected == EXPECTED_DIR:
         args.expected = HOLDOUT_EXPECTED_DIR
     os.environ.setdefault("AIDD_TENANT", "corpus")

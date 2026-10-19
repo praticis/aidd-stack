@@ -59,6 +59,9 @@ OUTBOUND = {
 GENERIC_OUTBOUND = {"Do", "DoRequest", "Request", "Call", "Send", "Execute", "request", "SendAsync", "DoJSON"}
 CLIENT_RECEIVER = re.compile(r"(client|cli|http|https|resty|api|axios|fetch|got|ky|superagent|gateway|adapter|hc|requests|httpx|session|sess|aiohttp)$", re.I)
 IDENTIFIER = re.compile(r"^[A-Za-z_$][\w$]*$")
+# a prefix the code does not fix: every segment a value read at runtime
+# (`router.WithPrefix("/" + strings.Trim(opts.RoutePrefix, "/"))`), unlike a parameter it writes (`/:lang`)
+RUNTIME_PREFIX = re.compile(r"^(/?\{param\})+/?$")
 
 
 ROUTER_TYPE = re.compile(r"\b(Router|RouterGroup|Engine|Echo|Group|Mux|ServeMux|App|APIRouter|FastAPI|Flask|Blueprint|"
@@ -128,6 +131,7 @@ class PackageContext:
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
         self.passthrough: dict[str, int | None] = {}   # Go function → the parameter every `return` ends with
         self.verb_lists: dict[str, tuple[str, ...]] = {}   # Go `var MethodsPutPost = []string{http.MethodPut, ..}`
+        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts` (Go: the struct field types)
         # Python class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class
         # of the project (`class UserAPIRouter(APIRouter)`); None when two files of the directory define it differently
         self.classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = {}
@@ -253,9 +257,10 @@ class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
     mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
     scope_declarations: frozenset[str] | None = None   # what declares a name in a function (`Scopes`); None: any assignment
-    # a group other files can name (a package variable) keeps its own prefix on the edge it publishes, not in what is
-    # registered on it here: another file's routes on it take it too (Go's `APIv1 = router.Group("/api/v1")`, photoprism)
-    global_group_on_edge = False
+    # a group other files can name (a package variable, a returned router, a router parameter) keeps its own prefix out
+    # of what is registered on it here and publishes it as the router's: `compose` puts it on every chain through the
+    # router, so routes of other files take it too (`APIv1 = router.Group("/api/v1")`, `r = r.Group("/v3")`)
+    defer_global_group_prefix = False
 
     def __init__(self, repo: RepoInfo, fx, ctx: PackageContext, out: HttpResult):
         self.repo, self.fx, self.ctx, self.out = repo, fx, ctx, out
@@ -274,6 +279,7 @@ class BaseScanner(PathExpressions):
         self.router_args: list[tuple[str, str, Node, str]] = []   # (parameter's global id, name, call, prefix added)
         self._functions_by_id: dict[int, Node] | None = None
         self._globals: dict[RouterKey, str | None] = {}
+        self._closures: dict[RouterKey, RouterKey | None] = {}
 
     def scan(self) -> None:
         self.run()
@@ -303,9 +309,30 @@ class BaseScanner(PathExpressions):
         a prefix — chi `r.Route("/x", func(r chi.Router) {...})`, fastify `register(fn, {prefix})` — say how."""
         return None
 
+    def closure_uses(self, fn: Node, receiver: str) -> list[tuple[Node, str]]:
+        """Language hook: `fn` is a function literal the code keeps under a name and that registers routes on
+        `receiver`, a router from around it. Each place the code uses that name (a call inside a group, or the body of
+        a group on `receiver`), with what it adds to `receiver`'s prefix there."""
+        return []
+
+    def _named_closure(self, f: Node, receiver: str, at: Node) -> RouterKey | None:
+        """The router for routes registered at `at` on `receiver`, a router from outside the named closure `f`: one of
+        `f`'s own, mounted at each use of the closure under that use's prefix, so a helper called in several groups
+        gives its routes once per group. None when `receiver` is bound inside `f`, or no use of `f` is known."""
+        key = (f.id, receiver)
+        if key not in self._closures:
+            self._closures[key] = None
+            outer = self.scopes.binding_scope(receiver, f) == self.scopes.binding_scope(receiver, at)
+            uses = self.closure_uses(f, receiver) if outer else []
+            for use, added in uses:
+                self.mounts.mount(key, self.router_key(receiver, use), (self.prefix_for(receiver, use) or "").rstrip("/") + added)
+            self._closures[key] = key if uses else None
+        return self._closures[key]
+
     def prefix_for(self, receiver: str, at: Node) -> str | None:
         """Prefix of a registration on `receiver` at `at`: the enclosing closure region's, else the group variable's;
-        None when the receiver is neither (a plain router, the application)."""
+        None when the receiver is neither (a plain router, the application). In a named closure, the prefix of each use
+        comes on the edges of its router (`_named_closure`)."""
         f = at.parent
         while f is not None:
             if f.type in HANDLER_NODES and f.parent is not None and f.parent.parent is not None \
@@ -315,11 +342,13 @@ class BaseScanner(PathExpressions):
                                            or (region.same_router and receiver == region.outer)):
                     base = self.prefix_for(region.outer, f.parent.parent) or ""
                     return base.rstrip("/") + region.prefix
+            if f.type in HANDLER_NODES and self._named_closure(f, receiver, at) is not None:
+                return ""
             f = f.parent
         key = self.group_key(receiver, at)
         own = self.group_prefix.get(key)
-        if own is not None and self.global_group_on_edge and self.mount_rule and self._global(key) is not None:
-            return ""                                  # on its edge (`finish`)
+        if own is not None and self.defer_global_group_prefix and self.mount_rule and self._global(key) is not None:
+            return ""                                  # published by `finish`, applied by `compose`
         return own
 
     def group_key(self, name: str, at: Node) -> RouterKey:
@@ -337,6 +366,10 @@ class BaseScanner(PathExpressions):
                     and f.parent.parent.type in CALL_NODES and self.scopes.is_parameter(f, name):
                 region = self.region_of(f.parent.parent, f)
                 return self.router_key(region.outer, f.parent.parent) if region is not None else (f.id, name)
+            if f.type in HANDLER_NODES:
+                key = self._named_closure(f, name, at)
+                if key is not None:
+                    return key
             f = f.parent
         return self.scopes.binding_scope(name, at), name
 
@@ -358,14 +391,21 @@ class BaseScanner(PathExpressions):
                                             lambda key: key in self.app_vars)
         if self.mount_rule:
             self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
-            own = {g: p for k, p in self.group_prefix.items() if p and (g := self._global(k)) is not None} \
-                if self.global_group_on_edge else {}
             for child, parent, prefix in edges:
-                self.out.publish(f"{self.mount_rule}.edge", child, (parent, own.get(child, "").rstrip("/") + prefix))
+                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+            if self.defer_global_group_prefix:
+                self._publish_own_prefixes()
             for key in self.app_vars:
                 g = self._global(key)
                 if g is not None:                             # an application other files can name
                     self.out.publish(f"{self.mount_rule}.app", g, True)
+
+    def _publish_own_prefixes(self) -> None:
+        """The prefix of each group of this file that other files can name, as that router's own."""
+        for key, prefix in self.group_prefix.items():
+            g = self._global(key) if prefix else None
+            if g is not None:
+                self.out.publish(f"{self.mount_rule}.own", g, prefix)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
@@ -377,8 +417,9 @@ class BaseScanner(PathExpressions):
         if waiting:
             edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
             apps = set(out.facts.get(f"{cls.mount_rule}.app", {}))
+            owns = out.facts.get(f"{cls.mount_rule}.own", {})
             replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root,
-                                                  apps))
+                                                  apps, owns))
 
     # -- what crosses files: imports, routers other files name -----------------------------------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:
@@ -652,10 +693,12 @@ class BaseScanner(PathExpressions):
             line=node.start_point[0] + 1, handler_name=handler_name, handler_id=handler_id, evidence=self.evidence(node),
         )
 
-    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> None:
+    def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> bool:
+        """Record the outbound call at `node`; False when its path names no segment."""
         c = self.call_info(node, method, raw_path, via)
         if c is not None:
             self.out.calls.append(c)
+        return c is not None
 
     def call_info(self, node: Node, method: str | None, raw_path: str, via: str) -> HttpCallInfo | None:
         """The outbound call at `node`; None when its path names no segment. With an empty `raw_path`, the call still
@@ -673,10 +716,16 @@ class BaseScanner(PathExpressions):
         )
 
     # -- shared: `x := r.Group("/v1")` style prefix tracking -------------------------------
+    def group_path(self, n: Node) -> str | None:
+        """The path a group or prefix call adds: what `path_of` reads, except a prefix only known at runtime, which the
+        routes do not take, since a `/{param}/x` route would link to nothing."""
+        p = self.path_of(n)
+        return None if p is not None and RUNTIME_PREFIX.match(p) else p
+
     def _record_group(self, names: list[str], call: Node, fn_text: str, arg_nodes: list[Node]) -> None:
         recv = (fn_text.rsplit(".", 1)[0] if "." in fn_text else "").split(".")[-1]
         base = self.prefix_for(recv, call) or ""
-        p = self.path_of(arg_nodes[0]) if arg_nodes else None
+        p = self.group_path(arg_nodes[0]) if arg_nodes else None
         p = p if p is not None else ""
         for nm in names:
             self.group_prefix[self.group_key(nm, call)] = (base.rstrip("/") + p) if p else base

@@ -11,8 +11,7 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/",
-   "category": "multi-app-repo"
+   "path": "/"
   },
   {
    "method": "GET",
@@ -56,13 +55,11 @@
   },
   {
    "method": "GET",
-   "path": "/panic",
-   "category": "multi-app-repo"
+   "path": "/panic"
   },
   {
    "method": "GET",
-   "path": "/ping",
-   "category": "multi-app-repo"
+   "path": "/ping"
   },
   {
    "method": "PUT",
@@ -105,7 +102,7 @@
    "path": "/todos/{id}/sync"
   }
  ],
- "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo).",
+ "notes": "Precision: all 25 routes checked. middleware/profiler.go is the library's own Profiler() router, mounted wherever the consumer chooses (library-code). Recall on three example files read whole: rest/main.go, router-walk/main.go and todos-resource/todos.go (mounted at /todos in main.go). Misses: every r.Get(\"/\") (a path with no literal segment is dropped, so /articles, /articles/{articleID} and the todos root vanish), prefixes from r.Route(...) closures and r.Mount, a regex segment {articleSlug:[a-z-]+} (route-constraint-syntax), and /ping + /panic in rest/main.go, merged with the same routes of the limits example (multi-app-repo). Since 2026-10-18 (F1.14 item 5) the same route declared in two modules with a manifest is two endpoints, one per module, so these routes come out with their own evidence and the multi-app-repo misses are gone.",
  "checked": {
   "endpoints": [
    {

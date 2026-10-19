@@ -178,12 +178,14 @@ class GraphWriter:
             MERGE (r)-[:DEPLOYS]->(s)
         """, id=svc_id, repo_id=ids.repo(repo.tenant, repo.name), **common)
 
-        # Endpoint ids are keyed by `path_key` since 0.2.8; a node written by an older indexer under
-        # the raw `path` would survive on EXPOSES edges of refs not reindexed in this run (ephemeral
-        # branches waiting for their GC) and the linker would link calls to both. Drop them.
+        # Endpoint ids are keyed by `path_key` since 0.2.8, and by the app in a repo whose routes span modules
+        # since 0.2.15; a node written by an older indexer would survive on EXPOSES edges of refs not reindexed
+        # in this run (ephemeral branches waiting for their GC) and the linker would link calls to both. Drop
+        # them: a node without `app` predates 0.2.15.
         self._run("""
             MATCH (e:HttpEndpoint {tenant: $tenant, service: $repo})
-            WHERE e.id <> $tenant + '/svc/' + $repo + '/http/' + e.method + ' ' + coalesce(e.path_key, e.path)
+            WHERE e.app IS NULL OR e.id <> $tenant + '/svc/' + $repo + CASE WHEN e.app = '' THEN '' ELSE '/app/' + e.app END
+                                           + '/http/' + e.method + ' ' + coalesce(e.path_key, e.path)
             DETACH DELETE e
         """, **common)
 
@@ -191,7 +193,7 @@ class GraphWriter:
             UNWIND $rows AS e
             MERGE (n:HttpEndpoint {id: e.id})
             SET n.tenant = $tenant, n.service = $repo, n.method = e.method, n.path = e.path, n.path_key = e.path_key,
-                n.framework = e.framework, n.last_seen = datetime($now)
+                n.framework = e.framework, n.app = e.app, n.last_seen = datetime($now)
             SET n.first_seen = coalesce(n.first_seen, datetime($now))
             WITH n, e
             MATCH (s:Service {id: $svc_id})
