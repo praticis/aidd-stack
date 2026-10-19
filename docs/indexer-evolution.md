@@ -293,7 +293,7 @@ com os números do corpus):
   o `/{owner}/{repo}`, 5); a coleção por despacho estático da subclasse (photoprism
   `this.constructor.getCollectionResource()`, `url-from-helper`); e o nome RPC de um parâmetro
   (`` `/documents.${request}` `` do outline).
-- **Vistas no hold-out** (16 repos que as regras nunca viram, `corpus-report.md` "The hold-out set"):
+- **Vistas no hold-out** (16 repos que as regras nunca viram; a seção "The hold-out set" do relatório está em `git show 1d73bb0:docs/corpus-report.md`):
   - C#: ~~atributo de rota próprio do projeto (`[VersionedApiBackOfficeRoute("x")]` do Umbraco, `[V3ApiController]` e
     `[RestGetById]` do Radarr, `IRouteTemplateProvider`); convenções OData sem template (Smartstore); FastEndpoints
     atrás de uma base própria (`ElsaEndpoint<T>`), e o `RoutePrefix` global; `[Route]` em outro arquivo de uma

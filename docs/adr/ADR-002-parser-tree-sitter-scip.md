@@ -1,68 +1,63 @@
-# ADR-002 — Parser base do indexador: tree-sitter agora, SCIP como enriquecimento
+# ADR-002 — The indexer's parser base: tree-sitter now, SCIP as an enrichment
 
-**Status:** aceito · **Data:** 2026-09-14 · **Fase:** 0 (revisar em F1.2) · **Registra:** o princípio "extração determinística (SCIP / tree-sitter)" do ROADMAP
+**Status:** accepted · **Date:** 2026-09-14 · **Phase:** 0 (review in F1.2) · **Records:** the ROADMAP principle
+"deterministic extraction (SCIP / tree-sitter)"
 
-## Contexto
+## Context
 
-O indexador precisa transformar dezenas de repositórios (Go, .NET, Node/TS, Python), em várias
-branches cada, num grafo micro (símbolos, chamadas, imports) e macro (rotas HTTP expostas, chamadas
-de saída), e manter isso atualizado a cada 15 minutos rodando no Docker de cada dev — sem
-credenciais de registries privados dentro do container e sem exigir que o repositório compile.
+The indexer must turn dozens of repositories (Go, .NET, Node/TS, Python), on several branches each, into a micro
+graph (symbols, calls, imports) and a macro one (exposed HTTP routes, outbound calls), and keep it current every 15
+minutes running in each dev's Docker — without private registry credentials inside the container and without
+requiring the repository to compile.
 
-Duas famílias de tecnologia poderiam produzir o micro:
+Two families of technology could produce the micro level:
 
-- **tree-sitter**: parser incremental por arquivo, gramáticas para todas as linguagens alvo numa
-  única biblioteca (`tree-sitter-language-pack`), sem resolução de tipos. Extrai definições,
-  chamadas por nome e imports; a resolução de `CALLS` é heurística (mesmo arquivo → mesmo módulo →
-  nome único no repo).
-- **SCIP** (Sourcegraph Code Intelligence Protocol): *formato de índice* gerado por um indexador
-  por linguagem (`scip-go`, `scip-typescript`, `scip-dotnet`, `scip-python`), cada um um
-  compilador/type-checker completo. Dá símbolos globais estáveis e referências resolvidas com
-  precisão de compilador.
+- **tree-sitter**: an incremental per-file parser, grammars for every target language in a single library
+  (`tree-sitter-language-pack`), with no type resolution. It extracts definitions, calls by name and imports;
+  `CALLS` resolution is heuristic (same file → same module → unique name in the repo).
+- **SCIP** (Sourcegraph Code Intelligence Protocol): an *index format* produced by a per-language indexer
+  (`scip-go`, `scip-typescript`, `scip-dotnet`, `scip-python`), each one a full compiler/type checker. It gives
+  stable global symbols and references resolved with compiler precision.
 
-## Opções consideradas
+## Options considered
 
 | | tree-sitter | SCIP |
 |---|---|---|
-| Pré-requisito | nenhum: parseia qualquer arquivo isolado | o projeto precisa **compilar**: `go mod download`, `npm install`, `dotnet restore` — com acesso e credenciais aos registries |
-| Toolchain | 1 lib Python, 6 gramáticas pré-baixadas na imagem | 1 indexador + SDK/runtime por linguagem, na versão de cada repo |
-| Tempo por snapshot | segundos (26 snapshots em ~30 s) | minutos (build + análise) |
-| Resolução de chamadas | por nome: ~40 % dos call sites em Go resolvidos (baseline medida) | ~100 % do que compila; interfaces, DI e sobrecargas corretas |
-| Semântica de framework (rotas, clientes HTTP, tópicos) | não vem de graça — heurísticas sobre a árvore | também não vem: SCIP sabe que `HandleFunc` é `net/http.(*ServeMux).HandleFunc`, não que `"POST /v1/x"` é uma rota |
-| Falha parcial | um arquivo com erro de sintaxe não derruba o repo | build quebrado = snapshot sem índice |
-| Adequação à atualização contínua | alta | baixa no Docker do dev; viável num servidor/CI com cache de dependências |
+| Prerequisite | none: parses any file on its own | the project must **compile**: `go mod download`, `npm install`, `dotnet restore` — with access and credentials to the registries |
+| Toolchain | 1 Python lib, 6 grammars pre-downloaded into the image | 1 indexer + SDK/runtime per language, at each repo's version |
+| Time per snapshot | seconds (26 snapshots in ~30 s) | minutes (build + analysis) |
+| Call resolution | by name: ~40 % of Go call sites resolved (measured baseline) | ~100 % of what compiles; interfaces, DI and overloads right |
+| Framework semantics (routes, HTTP clients, topics) | not for free — heuristics over the tree | not either: SCIP knows `HandleFunc` is `net/http.(*ServeMux).HandleFunc`, not that `"POST /v1/x"` is a route |
+| Partial failure | a file with a syntax error does not bring the repo down | a broken build = a snapshot without an index |
+| Fit for continuous update | high | low in the dev's Docker; viable on a server/CI with a dependency cache |
 
-## Decisão
+## Decision
 
-1. **tree-sitter é a base universal** do micro e a única fonte do macro. Todo repositório entra no
-   grafo no primeiro minuto, compile ou não; a atualização contínua (U1–U3) permanece barata.
-2. **SCIP entra na F1.2 como enriquecimento opcional por repositório**, não como substituto: quando
-   o indexador SCIP da linguagem conseguir rodar para uma snapshot, as arestas `CALLS` dessa snapshot
-   ganham `resolved: true` e os nós `Symbol` ganham `scip_symbol`; quando não conseguir, permanece a
-   resolução por nome (`resolved: false`, `strategy`). O esquema já prevê os dois campos
-   (`neo4j/SCHEMA.md`, `Symbol.scip_symbol?`, `CALLS.resolved/strategy`).
-3. A camada de integrações (`integrations.py`: rotas expostas, chamadas HTTP de saída, futuro gRPC e
-   mensageria) é **independente do resolvedor** — heurísticas de framework sobre a árvore, calibradas
-   em corpus público, com `evidence` e `confidence` em cada candidato. Ela não é provisória: continua
-   por cima do SCIP quando ele existir. *Adendo (2026-10-17, F1.14):* ela consulta um resolvedor — por nome, ou
-   SCIP quando houver índice — só nos pontos em que a decisão pede o tipo de uma expressão não declarado à vista
-   (`needs-resolver`); o resto (valores, convenções, o que é sintaticamente determinado) segue na árvore
-   (`docs/indexer-evolution.md` §8).
-4. LLM não é parser em nenhuma das camadas (princípio do ROADMAP). Onde um padrão não é reconhecível
-   estaticamente, a limitação é registrada, não estimada.
+1. **tree-sitter is the universal base** of the micro level and the only source of the macro one. Every repository
+   enters the graph in the first minute, whether it compiles or not; continuous update (U1–U3) stays cheap.
+2. **SCIP comes in F1.2 as an optional per-repository enrichment**, not as a replacement: when the language's SCIP
+   indexer manages to run for a snapshot, that snapshot's `CALLS` edges gain `resolved: true` and the `Symbol` nodes
+   gain `scip_symbol`; when it doesn't, resolution by name stays (`resolved: false`, `strategy`). The schema already
+   has both fields (`neo4j/SCHEMA.md`, `Symbol.scip_symbol?`, `CALLS.resolved/strategy`).
+3. The integrations layer (`integrations.py`: exposed routes, outbound HTTP calls, future gRPC and messaging) is
+   **independent of the resolver** — framework heuristics over the tree, calibrated on a public corpus, with
+   `evidence` and `confidence` on each candidate. It is not provisional: it stays on top of SCIP once SCIP exists.
+   *Addendum (2026-10-17, F1.14):* it consults a resolver — by name, or SCIP when there is an index — only at the
+   points where the decision needs the type of an expression not declared in sight (`needs-resolver`); the rest
+   (values, conventions, what is syntactically determined) stays on the tree (`docs/indexer-evolution.md` §8).
+4. An LLM is not the parser in any of the layers (the ROADMAP principle). Where a pattern is not statically
+   recognizable, the limitation is recorded, not estimated.
 
-## Consequências
+## Consequences
 
-- O `who_calls`/`symbol_context` da Fase 0 têm precisão dependente da disciplina do código (nomes
-  únicos por módulo). A skill `scan` já informa a `strategy` de cada aresta e trata `unique-name`
-  como "provável", não "certo".
-- O gatilho para investir em SCIP é uma métrica, não um princípio: quando o `impact` cross-repo
-  (F2) for limitado pela taxa de resolução (~40 % hoje em Go), a F1.2 entra com esse número para
-  bater. Medir por linguagem antes de escolher por onde começar (Go via `scip-go` é o candidato
-  natural: toolchain única, builds rápidos, `go mod download` cacheável).
-- Rodar SCIP exigirá o cenário servidor/CI (F3): cache de dependências, credenciais de registries
-  via `token_env`, indexadores por linguagem na imagem — e isolamento por repo para que um build
-  quebrado não bloqueie a fila.
-- A modularização por linguagem do indexador (ADR-003, proposta) deve deixar o ponto de entrada do
-  SCIP explícito: um enriquecedor por linguagem que recebe a snapshot já extraída e devolve
-  resoluções, sem reescrever o pipeline.
+- Phase 0's `who_calls`/`symbol_context` have a precision that depends on the code's discipline (unique names per
+  module). The `scan` skill already reports each edge's `strategy` and treats `unique-name` as "probable", not
+  "certain".
+- The trigger to invest in SCIP is a metric, not a principle: when cross-repo `impact` (F2) is limited by the
+  resolution rate (~40 % today in Go), F1.2 comes in with that number to beat. Measure per language before choosing
+  where to start (Go through `scip-go` is the natural candidate: a single toolchain, fast builds, a cacheable
+  `go mod download`).
+- Running SCIP will need the server/CI setting (F3): a dependency cache, registry credentials through `token_env`,
+  per-language indexers in the image — and per-repo isolation so that a broken build does not block the queue.
+- The indexer's per-language modularization (ADR-003, proposed) must make SCIP's entry point explicit: a per-language
+  enricher that receives the already extracted snapshot and returns resolutions, without rewriting the pipeline.

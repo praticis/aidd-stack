@@ -2,10 +2,12 @@
 
 > Cole este arquivo (ou peça para ler `docs/handoffs/H5-indexer-refactor.md`) no início de um chat novo. Antes de
 > qualquer coisa, o chat deve ler:
-> - `docs/ROADMAP.md`: "Onde estamos", "Princípios", F1.1, F1.2, F1.13 e F1.14;
+> - `AGENTS.md`, a porta de entrada;
+> - `docs/ROADMAP.md`: "Onde estamos", "Princípios", F1.1, F1.2 e F1.13;
 > - os ADRs 002 e 003;
 > - `docs/indexer-evolution.md`: §2 Mapa do código, §5 Como medir e §8 a fronteira com o SCIP;
-> - o fim de `docs/corpus-report.md`, a última baseline.
+> - `docs/corpus-report.md`: o método, onde o extrator está e a tabela de baselines (a vigente é a
+>   `2026-10-18-v2-baseline-28`).
 >
 > **Estado (2026-10-18):** registrado, não iniciado. As decisões do autor estão em "Decisões tomadas". Nasceu de
 > uma revisão pedida no meio do fechamento do F1.14. Depois de 24 commits de regras desde o v2 do corpus, o código

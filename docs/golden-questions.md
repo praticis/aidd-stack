@@ -1,30 +1,29 @@
-# Perguntas douradas (F0.7)
+# Golden questions (F0.7)
 
-> Documento vivo em PT. Cada pergunta tem **a ferramenta MCP que responde**, **o Cypher que verifica a
-> resposta direto no grafo** e o **resultado obtido no par piloto** — `<project-a>` (BFF) →
-> `<project-b>` (serviço de auth) e `<project-c>` (serviço de onboarding), tenant fixo, 6 repos Go.
-> Nomes reais nunca entram aqui (repo open-source); o resultado é descrito em forma, não em conteúdo.
+> A living document. Each question has **the MCP tool that answers it**, **the Cypher that checks the answer directly
+> on the graph** and **the result obtained on the pilot pair** — `<project-a>` (BFF) → `<project-b>` (auth service)
+> and `<project-c>` (onboarding service), a fixed tenant, 6 Go repos. Real names never go in here (an open source
+> repo); the result is described in shape, not in content.
 >
-> Uma pergunta só conta como respondida quando a resposta do MCP e a do Cypher coincidem **e** uma
-> amostra foi conferida na fonte (a `evidence` aponta `repo:arquivo:linha`). Regressão: repetir as
-> cinco depois de qualquer mudança em `graph.py`, `linker.py` ou `mcp/server.py`.
+> A question only counts as answered when the MCP's answer and the Cypher's agree **and** a sample was checked at the
+> source (the `evidence` points to `repo:file:line`). Regression: repeat all five after any change to `graph.py`,
+> `linker.py` or `mcp/server.py`.
 
-## Por que estas cinco
+## Why these five
 
-Cobrem os três eixos que o atlas existe para responder e que a leitura do repositório sozinha não
-dá: **dentro de um repo** (Q2), **entre repos** (Q1, Q3, Q4) e **entre refs** (Q5). Q1–Q3 são as
-perguntas do dia a dia da skill `scan` e do `refine-business`; Q4 é a que justifica o grafo
-(impacto cruzando repositórios, que nenhum `grep` responde); Q5 é a que o `refresh` contínuo
-habilita (a branch está indexada antes do merge).
+They cover the three axes the atlas exists to answer and that reading the repository alone does not give: **within a
+repo** (Q2), **across repos** (Q1, Q3, Q4) and **across refs** (Q5). Q1–Q3 are the everyday questions of the `scan`
+skill and of `refine-business`; Q4 is the one that justifies the graph (impact crossing repositories, which no `grep`
+answers); Q5 is the one continuous `refresh` enables (the branch is indexed before the merge).
 
 ---
 
-## Q1 — Quem consome esta rota?
+## Q1 — Who consumes this route?
 
-**Pergunta:** "Quem chama `POST /v1/password-reset/start` do `<project-b>`, e de onde?"
+**Question:** "Who calls `<project-b>`'s `POST /v1/password-reset/start`, and from where?"
 
-**MCP:** `who_consumes(path="/v1/password-reset/start", method="POST")` — sem `repo`, porque a
-mesma rota pode ser exposta por mais de um serviço (o BFF re-expõe rotas do serviço).
+**MCP:** `who_consumes(path="/v1/password-reset/start", method="POST")` — without `repo`, because the same route may
+be exposed by more than one service (the BFF re-exposes the service's routes).
 
 **Cypher:**
 
@@ -36,22 +35,22 @@ RETURN svc.name AS provider, caller.repo AS consumer, caller.qualified_name AS s
 ORDER BY provider, consumer;
 ```
 
-**Esperado:** duas rotas — a do `<project-b>` com um consumidor (`<project-a>`, símbolo do adapter
-outbound, `arquivo:linha`, `confidence: exact`, lista de `refs`) e a re-exposta pelo `<project-a>`
-sem consumidor (quem chama o BFF é o app, que não está indexado). `possible_consumers` vazio.
+**Expected:** two routes — `<project-b>`'s with one consumer (`<project-a>`, the outbound adapter's symbol,
+`file:line`, `confidence: exact`, a list of `refs`) and the one re-exposed by `<project-a>` with no consumer (whoever
+calls the BFF is the app, which is not indexed). `possible_consumers` empty.
 
-**Obtido (2026-09-29):** ✅ exatamente isso. O modelo distinguiu as duas rotas sem ser instruído e
-explicou a ausência de consumidor no BFF. Antes do ajuste, `consumers` vinha com uma linha por ref
-(13 branches = 13 "consumidores"); agora é uma linha por repo × símbolo com `refs[]`.
+**Obtained (2026-09-29):** ✅ exactly that. The model told the two routes apart without being instructed and
+explained why the BFF has no consumer. Before the fix, `consumers` came with one line per ref (13 branches = 13
+"consumers"); now it is one line per repo × symbol with `refs[]`.
 
 ---
 
-## Q2 — O que este repositório chama, e para onde vai?
+## Q2 — What does this repository call, and where does it go?
 
-**Pergunta:** "Quais chamadas HTTP de saída o `<project-a>` faz em `main`, e cada uma bate em que
-serviço/rota?"
+**Question:** "Which outbound HTTP calls does `<project-a>` make on `main`, and which service/route does each one
+hit?"
 
-**MCP:** `http_map(repo="<project-a>")` — olhar `outbound_calls[].linked_to`, `outbound_unlinked`.
+**MCP:** `http_map(repo="<project-a>")` — look at `outbound_calls[].linked_to`, `outbound_unlinked`.
 
 **Cypher:**
 
@@ -62,23 +61,24 @@ RETURN c.method, c.path, c.target_hint, c.evidence, target.service AS linked_ser
 ORDER BY c.path;
 ```
 
-**Esperado:** toda chamada com path literal aparece; as que casam com uma rota de outro repo do
-workspace têm `linked_to` (`exact`); as externas (antifraude, e-mail, WhatsApp) e as com segmento
-literal passado por variável ficam `linked_to: null`.
+**Expected:** every call with a literal path shows up; the ones that match a route of another workspace repo have
+`linked_to` (`exact`); the external ones (anti-fraud, e-mail, WhatsApp) and the ones with a literal segment passed
+through a variable stay `linked_to: null`.
 
-**Obtido (2026-09-29):** ✅ 5 chamadas em `main`, 5 ligadas ao `<project-b>`, `outbound_unlinked: 0`.
-O modelo apontou, pelo `AGENTS.md` do repo, chamadas que não aparecem no mapa (2FA, `users/me`,
-saldo/extrato) — a hipótese dele (path dinâmico ou só em branch) está certa nos dois casos e é o
-gap de recall registrado para o H1 (`docs/handoffs/H1-reference-apps.md`).
+**Obtained (2026-09-29):** ✅ 5 calls on `main`, 5 linked to `<project-b>`, `outbound_unlinked: 0`. The model
+pointed out, from the repo's `AGENTS.md`, calls that do not show up on the map (2FA, `users/me`, balance/statement) —
+its hypothesis (a dynamic path, or only on a branch) is right in both cases and is the recall gap recorded for H1
+(`docs/handoffs/H1-reference-apps.md`).
 
 ---
 
-## Q3 — Mapa do serviço: quem fala com quem no workspace?
+## Q3 — Service map: who talks to whom in the workspace?
 
-**Pergunta:** "Desenhe as integrações HTTP entre os repositórios deste tenant."
+**Question:** "Draw the HTTP integrations between this tenant's repositories."
 
-**MCP:** `cypher_readonly` com a consulta abaixo (é a "workspace map" do `SCHEMA.md` §7; ausente num atlas
-multi-tenant com `ATLAS_RAW_CYPHER=off`); ou `http_map` por repo e somar. Candidata a ferramenta própria (`workspace_map`) na F1.
+**MCP:** `cypher_readonly` with the query below (it is the "workspace map" of `SCHEMA.md` §7; absent on a
+multi-tenant atlas with `ATLAS_RAW_CYPHER=off`); or `http_map` per repo and add them up. A candidate for a tool of its
+own (`workspace_map`) in F1.
 
 **Cypher:**
 
@@ -89,26 +89,26 @@ RETURN a.name AS consumer, b.name AS provider, count(e) AS routes, collect(DISTI
 ORDER BY consumer, provider;
 ```
 
-Atenção: `CONSUMES` e `EXPOSES` são **por ref** — sem o `DISTINCT` a consulta multiplica linhas por
-snapshot (496 linhas para 6 pares na primeira rodada).
+Careful: `CONSUMES` and `EXPOSES` are **per ref** — without the `DISTINCT` the query multiplies rows per snapshot
+(496 rows for 6 pairs in the first round).
 
-**Esperado:** um par por (consumidor, provedor) com o número de rotas; só `exact` depois da regra de
-sufixo com corroboração.
+**Expected:** one pair per (consumer, provider) with the number of routes; only `exact` after the suffix rule with
+corroboration.
 
-**Obtido (2026-09-29):** ✅ `<project-a>` → `<project-b>` (5 rotas) e `<project-a>` → `<project-c>`
-(1 rota). O par `<project-c>` → `<project-a>` que aparecia por sufixo era falso positivo e motivou
-a regra "sufixo só com hint" (`core/linker.py`).
+**Obtained (2026-09-29):** ✅ `<project-a>` → `<project-b>` (5 routes) and `<project-a>` → `<project-c>` (1 route).
+The `<project-c>` → `<project-a>` pair that showed up by suffix was a false positive and led to the "suffix only with
+a hint" rule (`core/linker.py`).
 
 ---
 
-## Q4 — Impacto de mudar um símbolo, cruzando repositórios
+## Q4 — The impact of changing a symbol, across repositories
 
-**Pergunta:** "Se eu mudar `<símbolo do serviço de auth que valida a política de senha>`, o que é
-afetado — dentro do repo e nos outros?"
+**Question:** "If I change `<the auth service symbol that validates the password policy>`, what is affected — within
+the repo and in the others?"
 
-**MCP:** `impact_of(symbol="<qualified_name>", repo="<project-b>")` → `internal_callers` (com
-`hops`), `exposed_through` (rotas cujo handler alcança o símbolo), `consumers` (outros repos:
-serviço, rota, símbolo chamador, `arquivo:linha`, `confidence`).
+**MCP:** `impact_of(symbol="<qualified_name>", repo="<project-b>")` → `internal_callers` (with `hops`),
+`exposed_through` (routes whose handler reaches the symbol), `consumers` (other repos: service, route, calling
+symbol, `file:line`, `confidence`).
 
 **Cypher:**
 
@@ -123,58 +123,45 @@ RETURN h.qualified_name AS reaches_via, hops, e.method + ' ' + e.path AS route,
 ORDER BY hops, route;
 ```
 
-**Esperado:** os callers internos até o handler HTTP (`hops` crescente; `via_ambiguous: true` quando
-alguma aresta `CALLS` do caminho é `*-ambiguous`), a rota `GET /v1/password-policy` em
-`exposed_through`, e `<project-a>` em `consumers` com o adapter outbound e a linha. Se o símbolo não
-é alcançado por handler nenhum, `exposed_through` vazio = mudança interna ao serviço.
+**Expected:** the internal callers up to the HTTP handler (growing `hops`; `via_ambiguous: true` when some `CALLS`
+edge on the path is `*-ambiguous`), the route `GET /v1/password-policy` in `exposed_through`, and `<project-a>` in
+`consumers` with the outbound adapter and the line. If no handler reaches the symbol, an empty `exposed_through` =
+a change internal to the service.
 
-**Obtido (2026-10-03):** ⚠️ respondida, com um limite importante. A pergunta foi feita no repo do
-BFF (`<project-a>`), e o modelo escolheu o adapter outbound (`Client.GetPasswordPolicy`) como alvo.
-A parte **entre repos** veio certa do grafo: a rota `GET /v1/password-policy` é exposta pelo
-`<project-b>`, consumida só pelo BFF (`exact`, sem `possible_consumers`), e a rota re-exposta pelo BFF
-não tem consumidor indexado (app). A parte **dentro do repo** expôs o limite da resolução por nome:
-`who_calls` devolveu só os 5 testes do adapter; o uso de produção passa por uma **interface**
-(`ports.PasswordPolicyGetter`) e a chamada `getter.GetPasswordPolicy()` tem vários candidatos com o
-mesmo nome (método da interface, método concreto, fakes dos testes) em módulos diferentes →
-`unique-name` falha → aresta `CALLS` não existe. O modelo reconstruiu a cadeia correta
-(handler → use case → porta → adapter) por `find_symbol` + leitura, e disse que o grafo não provava.
-Isso é exatamente a métrica que dispara o SCIP (ADR-002, F1.2). Correção barata antes disso:
-ao resolver chamadas de código de produção, descartar candidatos definidos em arquivos de teste
-(`TEST_FILE`) — remove os fakes da disputa e muitos casos voltam a ser `unique-name` (F0.7.1).
+**Obtained (2026-10-03):** ⚠️ answered, with an important limit. The question was asked in the BFF's repo
+(`<project-a>`), and the model picked the outbound adapter (`Client.GetPasswordPolicy`) as the target. The **across
+repos** part came right from the graph: the route `GET /v1/password-policy` is exposed by `<project-b>`, consumed only
+by the BFF (`exact`, no `possible_consumers`), and the route re-exposed by the BFF has no indexed consumer (the app).
+The **within the repo** part exposed the limit of resolution by name: `who_calls` returned only the adapter's 5
+tests; production use goes through an **interface** (`ports.PasswordPolicyGetter`), and the call
+`getter.GetPasswordPolicy()` has several candidates with the same name (the interface method, the concrete method, the
+tests' fakes) in different modules → `unique-name` fails → no `CALLS` edge exists. The model rebuilt the right chain
+(handler → use case → port → adapter) through `find_symbol` + reading, and said the graph did not prove it. That is
+exactly the metric that triggers SCIP (ADR-002, F1.2). A cheap fix before that: when resolving calls from production
+code, discard candidates defined in test files (`TEST_FILE`) — that removes the fakes from the contest, and many cases
+become `unique-name` again (F0.7.1).
 
-**2ª rodada (2026-10-03, `impact_of`, no repo do `<project-b>`):** ✅ ferramenta usada de ponta a
-ponta. Handler: 0 chamadores internos (folha), 1 rota, consumidor cross-repo com símbolo, linha,
-`exact` e 14 refs colapsados. Getters do value object: `hops: 1` até o handler. Construtor: 156
-chamadores, 2 de produção (`main`/`run`) — a injeção de dependência não vira `CALLS`, e o modelo
-explicou. **Ponto cego confirmado:** `Policy.Validate` chamado como `uc.policy.Validate(...)` em dois
-use cases, grafo só via o teste — receiver é campo de struct, vários `Validate` no repo, resolução
-por nome desistia. **F0.7.1 (indexer 0.2.2):** (a) `impact_of` marca `test` por chamador e separa
-`production_caller_count`/`test_caller_count`; (b) código de produção nunca resolve para símbolo de
-arquivo de teste; (c) Go: tipo estático do receiver (receiver do método, parâmetro, `x := T{}`,
-`x := pkg.New()`, campos de struct seguidos pela cadeia `uc.policy`) → estratégia `receiver-type`.
-Fixture `go-receiver-types` cobre os 4 casos + fake de teste; no corpus público os `-ambiguous`
-caíram (alertmanager 1002→641, gorilla 1090→793, gin-realworld 88→8) com 10/10 arestas amostradas
-corretas, e tudo que não é `CALLS` saiu byte a byte igual. Re-rodar esta pergunta após o `refresh`:
-`Validate` deve listar os dois use cases com `hops: 1` e `exposed_through` deve trazer
-`POST /v1/password-reset/complete` (consumida pelo BFF). Interfaces (`ports.X`) continuam sem aresta
-— aí é SCIP ou convenção.
+**2nd round (2026-10-03):** ✅ `impact_of` was used end to end in `<project-b>`'s repo. The blind spot was a receiver
+that is a struct field and resolved by name only. It led to F0.7.1, which brought three things:
 
-Observação de processo: um `refresh` passou no meio da sessão e as linhas da `evidence` mudaram
-entre duas respostas; o modelo percebeu e avisou. É o comportamento desejado — a resposta carrega
-`ref`/`sha`, e a skill manda comparar com o `HEAD` local.
+- the receiver's static type in Go (`receiver-type`);
+- production never resolves to a test;
+- `impact_of` separating production callers from test ones.
 
-Limite conhecido: `CALLS` é resolvido por nome (same-file → same-module → unique-name); em repos
-com muitos homônimos os caminhos `-ambiguous` inflam o raio. É o gatilho do SCIP (ADR-002, F1.2).
+Interfaces were left to SCIP or to a convention, and F0.7.3 resolved an interface with a single implementer.
+
+Known limit: `CALLS` is resolved by name (same-file → same-module → unique-name); in repos with many homonyms the
+`-ambiguous` paths inflate the radius. It is SCIP's trigger (ADR-002, F1.2).
 
 ---
 
-## Q5 — O que esta branch adiciona à superfície do serviço?
+## Q5 — What does this branch add to the service's surface?
 
-**Pergunta:** "Que rotas, entry points e chamadas de saída a branch `<feature/x>` do `<project-a>`
-tem que `main` não tem (e vice-versa)?"
+**Question:** "Which routes, entry points and outbound calls does `<project-a>`'s branch `<feature/x>` have that
+`main` does not (and vice versa)?"
 
-**MCP:** `ref_diff(repo="<project-a>", ref="<feature/x>")` (base = default branch; `base=` para
-comparar duas features).
+**MCP:** `ref_diff(repo="<project-a>", ref="<feature/x>")` (base = the default branch; `base=` to compare two
+features).
 
 **Cypher:**
 
@@ -185,202 +172,97 @@ WHERE '<feature/x>' IN refs XOR 'main' IN refs
 RETURN route, refs ORDER BY route;
 ```
 
-**Esperado:** as rotas de onboarding que só existem nas branches de feature aparecem em
-`endpoints_added` com handler e `evidence`; `entry_points_added` lista os handlers novos por
-`qualified_name`; `http_calls_added` as chamadas novas (por método+path); `*_removed` vazios para
-uma branch que só adiciona. `summary` com as contagens.
+**Expected:** the onboarding routes that exist only on the feature branches show up in `endpoints_added` with a
+handler and `evidence`; `entry_points_added` lists the new handlers by `qualified_name`; `http_calls_added` the new
+calls (by method+path); `*_removed` empty for a branch that only adds. `summary` with the counts.
 
-**Obtido (2026-10-03):** ✅ a ferramenta respondeu e o modelo leu certo — inclusive o caso
-inverso ao esperado: a branch indexada estava **atrás** de `main` (14 rotas × 31; `main` tinha
-acabado de receber o onboarding, 17 rotas em `endpoints_removed` do ponto de vista da branch), e
-localmente a branch já tinha `main` mergeada. O modelo explicou que o `ref_diff` compara os commits
-**indexados** (refs remotas) e não o checkout local, e propôs `git diff main...<branch>` para o
-código local. Também listou, em `main`, as 4 chamadas para o `<project-c>` com 3 sem `linked_to`
-pelo `{param}/{param}` — o gap de recall já registrado. Ajuste feito na ferramenta: `ref_diff` agora
-devolve `snapshots` (sha indexado e `indexed_at` de cada ref) e uma `note` sobre refs locais, para
-que a defasagem fique explícita na própria resposta em vez de depender da leitura do modelo.
+**Obtained (2026-10-03):** ✅ the tool answered and the model read it right — including the reverse of the expected
+case: the indexed branch was **behind** `main` (14 routes × 31; `main` had just received onboarding, 17 routes in
+`endpoints_removed` from the branch's point of view), and locally the branch already had `main` merged. The model
+explained that `ref_diff` compares the **indexed** commits (remote refs), not the local checkout, and proposed
+`git diff main...<branch>` for the local code. It also listed, on `main`, the 4 calls to `<project-c>` with 3 without
+`linked_to` because of `{param}/{param}` — the recall gap already recorded. A fix made in the tool: `ref_diff` now
+returns `snapshots` (each ref's indexed sha and `indexed_at`) and a `note` about local refs, so that the lag is
+explicit in the answer itself instead of depending on the model's reading.
 
 ---
 
-## Como usar este documento
+## How to use this document
 
-- Nova pergunta = novo bloco com os quatro campos (pergunta, MCP, Cypher, esperado) **antes** de
-  implementar a ferramenta; o "obtido" vem depois, com data.
-- Uma resposta que exigiu `cypher_readonly` é sinal de ferramenta faltando (Q3 hoje).
-- Uma resposta certa que o grafo **não prova** (Q4: cadeia reconstruída por leitura porque `CALLS` não
-  atravessa interface) é a métrica da F1.2 — anotar quantas vezes acontece antes de decidir pelo SCIP.
-- Quando o modelo responde certo mas com ruído (Q1 e os refs), o ajuste é no MCP, não no prompt.
-- Cada `[WARN]`/gap anotado aqui tem dono: extrator → tabela de regras em `indexer-evolution.md`
-  §3 e handoffs; linker → `core/linker.py` + `tests/test_linker.py`; MCP → `tests/test_mcp_protocol.py`.
+- A new question = a new block with the four fields (question, MCP, Cypher, expected) **before** implementing the
+  tool; the "obtained" comes later, with a date.
+- An answer that needed `cypher_readonly` is a sign of a missing tool (Q3 today).
+- A right answer that the graph **does not prove** (Q4: a chain rebuilt by reading because `CALLS` does not cross an
+  interface) is F1.2's metric — note how often it happens before deciding on SCIP.
+- When the model answers right but with noise (Q1 and the refs), the fix is in the MCP, not in the prompt.
+- Each `[WARN]`/gap noted here has an owner: extractor → the rules table in `indexer-evolution.md` §3 and the
+  handoffs; linker → `core/linker.py` + `tests/test_linker.py`; MCP → `tests/test_mcp_protocol.py`.
 
 ---
 
-## Segunda rodada: par .NET de referência (2026-10-03)
+## Earlier rounds
 
-Dois repositórios C# preparados para o teste — `<svc-transaction>` (12 rotas em 4 controllers,
-`[Route("api/[controller]")]`, comandos via service bus) e `<svc-accrual>` (2 rotas, 2 consumers
-Kafka e **uma** chamada HTTP de saída: `httpClient.GetAsync($"api/accounts/{id}/details")`, base URL em
-`TRANSACTION_API_URL`). Indexados no mesmo tenant dos repos Go. A comunicação real entre eles é
-majoritariamente por eventos — fora do escopo até a F1 (`Topic`/`PRODUCES`/`CONSUMES_EVENT`).
+The full text of each round is in `git show 1d73bb0:docs/golden-questions.md` (in Portuguese).
 
-| Q | Resultado | Observação |
+- **1st (2026-09-29 and 2026-10-03), pilot Go tenant:**
+  - Q1–Q3 and Q5 ✅;
+  - Q4 ⚠️, because the chain through an interface was not in the graph. That led to F0.7.1–F0.7.2b.
+- **2nd (2026-10-03), the reference .NET pair:**
+  - Q1–Q3 ✅;
+  - Q4a ⚠️ (7 false internal callers, from resolution by name in C#) and Q4b ❌ (the interface without the handler).
+    That led to F0.7.2: the receiver's type and the single implementer in C#.
+- **3rd (2026-10-14, indexer 0.2.14):** the .NET Q4 after F0.7.3, with mediator dispatch, DI and package bases.
+  - Q4a: 1 caller, the route and the consumer;
+  - Q4b: 5 callers and 2 routes.
+- **4th (2026-10-18, build `0.2.14+8553d8007527`):** Q1, Q2 and the .NET Q4 after H2, with the ASP.NET route in the
+  code's case.
+  - What it caught: `who_consumes` compared `path_key` case-sensitively, and that was fixed in `98b8368`.
+  - The lesson: every reader of a join key needs the linker's same rule.
+
+## Fifth round: validating PR #5 on a live install (2026-10-19, build `0.2.15+0377dbb62b98`)
+
+What changed since the fourth round: F1.14 (`feature/f114-close`, PR #5). It brought:
+
+- one endpoint per app in a monorepo, with `app` on the node and in the id (indexer 0.2.15);
+- the app's client wrappers in Python and in TS/JS;
+- Go routes by declared type.
+
+The round was part of a two-phase validation before the merge:
+
+- **offline:** corpus and hold-out of `main` against the branch, the chain of baselines, the expected lists and the
+  tests;
+- **on the install:** 3 tenants and 10 snapshots.
+
+The questions and one call of each of the 11 tools were recorded as JSON, through the MCP's HTTP, before and after the
+reinstall. The comparison leaves out only the time and build fields.
+
+| Q | Result | Note |
 |---|---|---|
-| Q1 `who_consumes` | ✅ consumidor único, símbolo, `arquivo:15`, `exact`, `possible_consumers` vazio | o hint não foi necessário; `env_hints` vazio porque a env var está em `Extensions/`, outra pasta (hint de env é por diretório) |
-| Q2 `http_map` | ✅ 1 chamada, `linked_to` exato, `outbound_unlinked: 0`; rotas de rollup sem consumidor indexado | o modelo apontou que os `Consumers/` são eventos, não HTTP |
-| Q3 mapa | ✅ 3 pares no tenant (BFF→auth 5, BFF→onboarding 1, accrual→transaction 1), todos `exact` | o modelo preferiu `http_map`×8 + Cypher de conferência a uma query só → `workspace_map` como tool (F1) |
-| Q4a `impact_of` handler | ⚠️ cross-repo certo; **7 chamadores internos falsos** | resolução por nome em C#: `this._query.FindByIdAsync()` ligado ao próprio handler (same-file) e os `_xRepository.FindByIdAsync` dos command handlers ligados por homonímia |
-| Q4b `impact_of` query | ❌ `IAccountQuery.FindByIdAsync` com 6 chamadores falsos e sem o handler; `AccountReadRepository.FindByIdAsync` sem nada | o modelo disse "o grafo não prova a cadeia" e reconstruiu por leitura — correto |
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` | the endpoint gains `app: ""` |
+| Q2 `http_map` | ✅ the same | `linked_to` also carries the `app` |
+| Q3 map | ✅ the same on the 3 tenants | one pair, `<svc-accrual>` → `<svc-transaction>`, `exact` |
+| Q4a and Q4b `impact_of` | ✅ the same | — |
+| Q5 `ref_diff` (a TS repo, `develop` against `master`) | ✅ now with the 7 calls only `develop` makes, with the right verb | before, 0: the app's client wrappers hid the calls |
 
-**F0.7.2 (indexer 0.2.3), motivado pela Q4:** C# ganhou os mesmos hooks que o Go — `file_facts`
-(campos, propriedades, parâmetros de construtor primário, `base_list`, `usings`, namespace),
-`call_receiver` (`this._x`, `_x`, propriedade, parâmetro, local com tipo explícito ou `new T()`,
-`base.`), `resolve_receiver` (tipo por nome simples, desambiguado pelos `usings`; cadeia de membros;
-membros herdados de bases do repo) e dois hooks novos no contrato: `supertypes` e
-**`implementations`** — interface com **um único implementador** no repo liga também à implementação
-(`receiver-type-impl`), que é a forma usual de DI em .NET. Regra de precisão: tipo do receiver
-conhecido e sem o método nele, nas bases ou no implementador → **não chuta** por nome (antes virava
-3 arestas ambíguas). Resultado no par: `AccountsController.FindByIdAsync → IAccountQuery.FindByIdAsync`
-(`receiver-type`) **e** `→ AccountReadRepository.FindByIdAsync` (`receiver-type-impl`); os 6
-falsos sumiram; os `_accountRepository.FindByIdAsync` herdados de pacote externo ficam sem aresta
-(correto). Corpus: `-ambiguous` clean-arch 93→22, eShop 1004→787; no Go caiu mais um pouco
-(alertmanager 641→620) porque receiver tipado como **interface** deixou de cair no fallback por nome —
-é o caso que falta (implementador único por conjunto de métodos, F1). 8/8 arestas amostradas no
-eShop corretas; símbolos/imports/HTTP byte a byte iguais; fixture `csharp-receiver-types` + 3 testes.
+**What the round caught.** On the first reinstall, the TS repo gained 51 calls through the app's wrappers, and 34 were
+wrong because of two defects:
 
-**Q4b re-rodada com 0.2.3:** ✅ `IAccountQuery.FindByIdAsync` → 1 chamador (o handler, `hops: 1`, não
-ambíguo), rota e consumidor cross-repo corretos; os 6 falsos sumiram. ⚠️ `AccountReadRepository.FindByIdAsync`
-ainda trazia 6 falsos: campos `IAccountReadRepository` (outra interface da mesma classe, cujo
-`FindByIdAsync` vem de uma interface-base de pacote externo) caíam no implementador único e batiam
-no símbolo da **implementação explícita** `IAccountQuery.FindByIdAsync`. Corrigido no mesmo dia:
-`implementation_target(interface, método)` recusa o implementador quando o método nele é
-implementação explícita de **outra** interface; `_accounts.FindByIdAsync` fica sem aresta (o método
-real vem de pacote externo). Fixture ampliada; corpus inalterado. Esperado agora: a implementação
-com **um** chamador interno (o handler).
+- options in a local fell back to the default GET;
+- a query in parentheses became `{param}`.
 
-**Q4b Go re-rodada com 0.2.3 (`impact_of` no método de domínio `password.Policy.Validate`):**
-⚠️ `internal_callers` trouxe o caso de uso, mas `exposed_through` e `consumers` vieram vazios — a aresta
-handler → `CompletePasswordReset.Execute` não existia no grafo de `main`. O `--dry-run` da mesma
-árvore na branch produzia a aresta (`receiver-type`), o que isolou o problema no código do handler
-em `main`: o struct do servidor **embute** o de configuração (`type Server struct { Config }`) e o
-handler usa o campo promovido (`s.Complete.Execute(...)` em vez de `s.Config.Complete`). A cadeia de
-campos de `resolve_receiver` só olhava campos declarados no struct. Corrigido em 0.2.4
-(`languages/go/symbols.py`): `file_facts` registra os embeds e a busca de campo desce por eles
-(ponteiro ou não, até 4 níveis); de quebra, helpers com retorno múltiplo (`uc, _ := setup(t)`) tipam
-o local pelo índice. Fixture `go-receiver-types` ganhou o handler com embedding; corpus Go só
-melhorou (alertmanager `-ambiguous` 620→425, `receiver-type` 1379→1905). Esperado após o
-`refresh`: `exposed_through` com `POST /v1/password-reset/complete` (e as rotas de criação de
-usuário, que também validam senha) e o BFF em `consumers`.
+The fix is increment 12 (`dfbc8d7`), with a fixture case. On the second reinstall, the 109 new calls (51 and 58 on
+the two refs) match the dry-run and are right. The corpus did not have those shapes. Only real code showed them.
 
-**Q4b Go re-rodada com 0.2.4:** ✅ resposta inteira pelo grafo, sem leitura de código. 58 chamadores
-(7 produção, 51 teste); produção sem nenhuma aresta ambígua: caso de uso (1 hop), handler de reset
-(2 hops, entry point) e a cadeia de criação de usuário até 4 hops (`createUser`/`createOnboardingUser
-→ executeCreateUser → CreateUser.Execute → requiredFieldsPresent → Validate`). `exposed_through`: as 3
-rotas (`POST /v1/password-reset/complete`, `POST /v1/users`, `POST /v1/onboarding/users`);
-`consumers`: o BFF em `/v1/password-reset/complete` (`exact`, evidência com arquivo:linha, 14 refs).
-Resíduo: 29 chamadores de **teste** chegam por `-ambiguous` (locais vindos de helpers/tabelas que a
-tipagem Go ainda não cobre) — não afeta produção, amostra para F0.7.3. Observação: "rota sem
-consumidor = pública" foi inferência do modelo; o atlas só afirma "nenhum consumidor nos repos
-indexados" (vira dado com `Service` externo / `workspace_map`).
+**The rest of the graph.**
 
-## Terceira rodada: Q4 .NET depois do F0.7.3 (2026-10-14, indexer 0.2.14)
+- Outside HTTP, these stayed identical before and after: symbols, `CALLS`, `IMPORTS`, modules, violations,
+  `DEPENDS_ON`, `CONSUMES` and `CALLED_FROM`.
+- In the sample Go monorepo, 3 routes that 3 services with their own `go.mod` declare became one endpoint per service:
+  8 endpoints, where there were 3.
+- The orphan node of the old lower-case route of the .NET pair was removed.
 
-O que mudou desde a segunda rodada: despacho do mediator como aresta (`dispatch`), interface → implementação
-pelo registro no DI e pela cadeia de decorators, serviços resolvidos do container (`GetRequiredService<T>()`)
-e locais vistos de dentro de lambdas, métodos que vêm da base de um pacote (`inherited`), sobrecargas pela
-contagem de argumentos, e `impact_of` num tipo contando os chamadores dos seus membros. Perguntas feitas no
-`<svc-transaction>`, numa sessão nova, no formato da Q4 ("se eu mudar X, o que é afetado — dentro do repo e
-nos outros?").
+**An operations lesson.** `python -m aidd_indexer.cli` in an image with `WORKDIR=/app` runs the image's code, not the
+code mounted through `PYTHONPATH`, because the working directory comes first in `sys.path`.
 
-| Q | Resultado | Observação |
-|---|---|---|
-| Q4a `AccountReadRepository.FindByIdAsync` | ✅ 1 chamador de produção (`AccountsController.FindByIdAsync`, via `IAccountQuery`), `GET /api/accounts/{accountId}/details`, consumidor `<svc-accrual>` `exact` com símbolo e arquivo:linha | na segunda rodada, 6 chamadores falsos e a cadeia reconstruída lendo código; agora o grafo deu a estrutura e a leitura de código foi para o que o grafo não guarda (contrato da resposta: 404 × 200, tipos dos campos) |
-| Q4b classe `CategoryReadRepository` | ✅ pelo grafo (conferido em Cypher): 1 hop — `CategoriesController.ListAsync` (`GET /api/categories`), `CreateTransactionCommandHandler.Handle`, os 2 validators; 2 hops — `TransactionsController.RegisterTransactionAsync` (`dispatch`, `POST /api/transactions`) | a primeira tentativa respondeu com um grafo antigo (ver abaixo); a segunda, já com 0.2.14, o modelo respondeu lendo código e chegou aos mesmos chamadores, sem as rotas |
-
-**Lição de operação:** a primeira Q4b veio com 1 chamador só — o snapshot era de 0.2.13, indexado antes dos
-commits de sobrecargas e registros do DI, que não subiram a versão; o refresher só reindexa quando a versão ou o
-commit mudam. Com 0.2.14 e `aidd refresh --tenant <t> --repos <a>,<b> --wait 600`, a resposta certa saiu do
-grafo. O modelo concluiu, do grafo velho, que "o atlas não captura DI" e recomendou "sempre completar com grep" —
-uma conclusão errada que só não virou insight porque ele não a gravou. Encaminhamento: o snapshot guardar a
-impressão digital do código do indexer e das convenções, para qualquer mudança reindexar após a reinstalação.
-
-**O que segue fora do grafo, com razão:** (1) eventos entre serviços (`TransactionWasCreatedEvent` publicado pelo
-handler e consumido no `<svc-accrual>` via Kafka) — F2.2; (2) o que o pacote do SDK faz por dentro (o
-`BaseRepository` delega as leituras ao `ICategoryReadRepository` injetado) — só com SCIP/metadados do pacote;
-(3) referência por tipo sem chamada (campo injetado e não usado, registro no DI) — F1.2; (4) validators são
-alcançados pelo pipeline do barramento, sem chamada explícita: aparecem como chamadores sem rota — candidato a
-regra de `dispatch` (`SendAsync(cmd)` → o `AbstractValidator<cmd>`).
-
-## Quarta rodada: Q1, Q2 e Q4 .NET depois do H2 (2026-10-18, build `0.2.14+8553d8007527`)
-
-O que mudou desde a terceira rodada: o extrator HTTP do H2 (`feature/h2-corpus`, PR #4). Para o par .NET, isso
-significa que uma rota ASP.NET guarda a caixa que o código escreve (`[controller]` → `/api/Accounts`, antes
-`/api/accounts`), e que o resolver C# deixou de ligar uma chamada num receptor de pacote a um método do repo
-com o mesmo nome. A rodada conferiu a instalação depois de reinstalar: o fingerprint marcou os 10 snapshots dos 3
-tenants como `outdated`, o refresher reindexou cada um uma vez e um segundo refresh não reindexou nada.
-
-| Q | Resultado | Observação |
-|---|---|---|
-| Q1 `who_consumes` | ✅ o mesmo consumidor, `exact`, agora em `/api/Accounts/{accountId}/details` | perguntada em minúsculas, como o `<svc-accrual>` chama, só achou a rota depois da correção abaixo |
-| Q2 `http_map` | ✅ 2 rotas, 1 chamada com `linked_to` exato, `outbound_unlinked: 0` | igual à segunda rodada, com a caixa do código |
-| Q4a `impact_of` método | ✅ igual à terceira rodada: 1 chamador, a rota e o consumidor | — |
-| Q4b `impact_of` classe | ✅ igual à terceira rodada: 5 chamadores, 2 rotas | — |
-
-**O que a rodada pegou:** o linker compara uma rota ASP.NET sem caixa, mas o `who_consumes` comparava
-`path_key` com caixa. Depois da reindexação, a Q1 perguntada em minúsculas teria voltado vazia. A correção
-(`98b8368`) usa no MCP o mesmo `CASE_INSENSITIVE` do linker. O Cypher novo foi rodado só em leitura no grafo
-antigo antes da reinstalação: ele acha a rota com outra caixa e não muda as rotas Go.
-
-**`CALLS`, `main` × a branch no mesmo checkout (`index --dry-run`):** o `<svc-accrual>` perde 23 arestas, todas
-falsas e ligadas só pelo nome: `tasks.Add(..)` num `List<Task>` → `Rollup.Add`, `DateTime.ToString("yyyyMMdd")` →
-`Rollup.ToString` e `httpClient.GetAsync(..)` → `RollupsController.GetAsync`. O `<svc-transaction>` não muda.
-
-**Lição de operação:** quando o extrator muda o que grava num campo que é chave de junção (`path_key`), todo
-leitor desse campo precisa da mesma regra, e não só o linker. O `test_mcp_protocol` usa um store falso e não
-executa Cypher, então quem prova a query são as perguntas douradas, rodadas contra o grafo.
-
-## Quinta rodada: a validação do PR #5 numa instalação ao vivo (2026-10-19, build `0.2.15+0377dbb62b98`)
-
-O que mudou desde a quarta rodada: o F1.14 (`feature/f114-close`, PR #5). Ele trouxe:
-
-- um endpoint por app num monorepo, com o `app` no nó e no id (indexer 0.2.15);
-- os wrappers de cliente do app em Python e em TS/JS;
-- as rotas Go por tipo declarado.
-
-A rodada foi parte de uma validação em duas fases antes do merge:
-
-- **offline:** corpus e hold-out do `main` contra a branch, a cadeia de baselines, os gabaritos e os testes;
-- **na instalação:** 3 tenants e 10 snapshots.
-
-As perguntas e uma chamada de cada uma das 11 tools foram gravadas em JSON, pelo HTTP do MCP, antes e depois da
-reinstalação. A comparação deixa de fora só os campos de tempo e de build.
-
-| Q | Resultado | Observação |
-|---|---|---|
-| Q1 `who_consumes`, em minúsculas e na caixa do código | ✅ o mesmo consumidor, `exact` | o endpoint ganha `app: ""` |
-| Q2 `http_map` | ✅ igual | o `linked_to` também traz o `app` |
-| Q3 mapa | ✅ igual nos 3 tenants | um par, `<svc-accrual>` → `<svc-transaction>`, `exact` |
-| Q4a e Q4b `impact_of` | ✅ iguais | — |
-| Q5 `ref_diff` (um repo TS, `develop` contra `master`) | ✅ agora com as 7 chamadas que só a `develop` faz, com o verbo certo | antes, 0: os wrappers do cliente do app escondiam as chamadas |
-
-**O que a rodada pegou.** Na primeira reinstalação, o repo TS ganhou 51 chamadas pelos wrappers do app, e 34 estavam
-erradas por dois defeitos:
-
-- as opções num local caíam no GET padrão;
-- a query entre parênteses virava `{param}`.
-
-A correção é o incremento 12 (`dfbc8d7`), com caso de fixture. Na segunda reinstalação, as 109 chamadas novas (51 e
-58 nas duas refs) batem com o dry-run e estão certas. O corpus não tinha essas formas. Só o código real as mostrou.
-
-**O resto do grafo.**
-
-- Fora do HTTP, ficaram idênticos antes e depois: símbolos, `CALLS`, `IMPORTS`, módulos, violações, `DEPENDS_ON`,
-  `CONSUMES` e `CALLED_FROM`.
-- No monorepo Go de amostra, 3 rotas que 3 serviços com `go.mod` próprio declaram viraram um endpoint por serviço:
-  são 8 endpoints, onde antes eram 3.
-- O nó órfão da rota antiga, em minúsculas, do par .NET foi removido.
-
-**Lição de operação.** `python -m aidd_indexer.cli` numa imagem com `WORKDIR=/app` roda o código da imagem, e não o
-montado por `PYTHONPATH`, porque o diretório de trabalho vem antes no `sys.path`.
-
-- O dry-run de comparação precisa de `-w` apontando para o código montado.
-- A versão impressa na primeira linha confirma qual código rodou.
+- The comparison dry-run needs `-w` pointing at the mounted code.
+- The version printed on the first line confirms which code ran.

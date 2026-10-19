@@ -1,590 +1,512 @@
-# AIDD Stack — Roteiro de evolução (code graph + skills)
+# AIDD Stack — Evolution roadmap (code graph + skills)
 
-> Documento vivo. Marque `[x]` ao concluir. Atualize a seção **Onde estamos** a cada sessão
-> para que qualquer agente/pessoa retome do ponto certo.
+> A living document. Mark `[x]` when done. Update the **Where we are** section every session so that any agent or
+> person picks up from the right point.
 
-## Onde estamos
+## Where we are
 
-- Fase atual: **Fase 0 — Fundação** — concluída no essencial (2026-10-03): infra, indexador, linker, MCP com 11 tools, 5 golden questions respondidas pelo grafo em Go e .NET. F0.4.2 .NET feito (2026-10-12, extensão `dotnet-praticis`); F0.4.3a feito (2026-10-14, `docs/corpus-report.md` v1); a Fase 0 está fechada; o F0.4.3b (H2b) fechou em 2026-10-17 (corpus de 42 repos e um hold-out de 16; o que falta ao extrator é o F1.14), ver `docs/handoffs/H2-roadmap.md`; o F1.14 fechou em 2026-10-18 e, com ele, o H2 (corpus de 55 repos; o hold-out novo ficou para depois do H5). **Fase 1 iniciada (2026-10-13)** pelo F0.7.3
-- Último marco concluído (2026-09-09): D1 decidido (Neo4j, ADR-001), Neo4j + `neo4j-init` + `mcp-neo4j` no compose (porta 3004, `atlas` no `.mcp.json`), esquema v1 em `neo4j/SCHEMA.md` (inglês)
-- Branch de trabalho: `feature/refine-business` (já contém `refine-business` v1 e `scan` com vault por projeto)
-- 2026-09-10: compose subiu; credenciais centralizadas no `.env` (`NEO4J_USER`/`NEO4J_PASSWORD`, geradas pelo `install.sh`); compose falha rápido sem senha
-- 2026-09-10: `install-check.sh` passou; MCP renomeado para `atlas` (D6)
-- 2026-09-10: F0.3 entregue e validado no atlas real com um repo Go do portfólio (`<project-a>`); `AIDD_TENANT` obrigatório em todo o stack (D7)
-- 2026-09-11: **checkpoint** — infra + indexador funcionando; pausa para desenhar o *processo* de indexação (bootstrap do portfólio, política de branches, refresh) antes do F0.4. Proposta em `docs/indexing-process.md` (D8–D11 em aberto)
-- 2026-09-11: F0.3.5 implementado — `atlas.yaml`, `aidd plan/bootstrap/refresh`, refs via `git archive`, áreas opcionais, etapa "Atlas Bootstrap" no `install.sh` (que agora também builda o profile `tools`). Validado com fixture; **falta rodar numa instalação limpa**
-- 2026-09-11: **instalação limpa validada de ponta a ponta** — `install.sh` → infra → `plan` (6 repos, 22 snapshots) → bootstrap em 26 s, 0 falhas. Baseline de resolução por nome: ~40% dos call sites em Go resolvidos (ex.: `<project-b>` 2549/5131) — métrica a bater com SCIP (F1.2)
-- 2026-09-11: GC validado com commit real (6 changed, orphans removidos). Indexador agora faz `git fetch --all --prune` sozinho (workspace rw, SSH/.gitconfig montados, `openssh-client` na imagem, ssh-agent encaminhado, PAT via `git-askpass.sh`; `--no-fetch` / `fetch: false`). Pendente F0.3.7: agente SSH persistente entre sessões WSL. `<project-b>@develop` confirmado como resquício → remover `develop` desse repo do atlas (ver F0.3.6)
-- 2026-09-11: D12 — instalação sem fetch; trilha "Atualização contínua" (U1–U5) criada
-- 2026-09-11: **atualização contínua validada** (U1–U3.1) — agendador **dentro do WSL** (systemd user timer + linger + autostart do distro via Startup `.vbs`), sem task no Windows; `aidd schedule check --fix` valida/repara os pré-requisitos
-- 2026-09-11: incidente — um build transitório do indexador não carregou gramáticas e gravou 26 snapshots **vazios como sucesso**. Corrigido: versões pinadas, gramática ausente aborta a execução (rc=4), `aidd selftest` (também no `install-check.sh`), contagem de snapshots sem símbolos. Bônus: classes JS nunca eram extraídas (query errada) — corrigido
-- 2026-09-11: **causa-raiz do incidente acima encontrada** no teste de sync: `tree-sitter-language-pack` 1.x não embute gramáticas — baixa um `.so` por linguagem do GitHub Releases no primeiro `get_language()`. Como cada `docker compose run` é um container novo, todo refresh que precisava parsear baixava de novo, e um timeout do GitHub derrubou o refresh agendado (`rc=4`, a proteção funcionou: snapshot não foi gravada). Corrigido: `indexer/Dockerfile` pré-baixa as 6 gramáticas em `/opt/tslp-cache` (`TREE_SITTER_LANGUAGE_PACK_CACHE_DIR`), roda `aidd selftest` no build (build falha se faltar algo) e define `AIDD_GRAMMAR_OFFLINE=1` — em runtime, gramática fora do cache é erro imediato ("rebuild the indexer image"), nunca download. Validado offline no sandbox: 6/6 OK com cache; cache vazio falha em 0,1 s
-- 2026-09-11: **F0.6 implementado** — MCP `atlas` v0 (`aidd serve`, mesma imagem do indexador, serviço `mcp-atlas` na porta **3005**, `/healthz`): `atlas_status`, `repo_map`, `find_symbol`, `who_calls`, `symbol_context`, `cypher_readonly` (transação READ + bloqueio de palavras de escrita), tudo escopado por `AIDD_TENANT`, `ref` default = branch padrão do repo, snapshots efêmeras só com `ref` explícito. `mcp-neo4j` bruto foi para o profile `debug`; `.mcp.json` aponta `atlas` → 3005; `install-check.sh` chama `atlas_status` de verdade. Protocolo validado no sandbox (initialize, tools/list, tools/call, healthz, recusa de escrita); `install-check` verde na máquina (atlas_status listou os 6 repos, /healthz ok, 25 002 nós); falta o teste pelo Claude Code (F0.6.1)
-- 2026-09-11: `install.sh` em modo upgrade não pergunta mais o tenant — lê `AIDD_TENANT` do `.env` e só oferece trocar ([Y/n])
-- 2026-09-11: **F0.6.1 validado no Claude Code** — `atlas_status`, `repo_map <project-a>` (camadas hexagonais, 9 entry points), `find_symbol Handler`, `who_calls` no decoder central de requests (7 chamadores same-module), `symbol_context`, escrita recusada. Achado: fulltext casa prefixo mas não sufixo (`Handler` não trazia `XxxHandler`) → `find_symbol` ganhou complemento por substring no nome
-- 2026-09-11: **F0.8 implementado** — `scan` v2: passo 0 chama `atlas_status` → `repo_map` (ref = branch atual se indexada) como verdade estrutural, com fallback explícito ("atlas unavailable" → fluxo antigo); página do vault ganha `## Source` com `<repo>@<ref> <sha>`; seção "From here on" orienta `find_symbol`/`symbol_context`/`who_calls` antes de mexer em código, com a semântica das estratégias de resolução. validado em sessão real (F0.8.1)
-- 2026-09-11: **F0.8.1 validado** — (a) `<project-a>` com atlas: `scan` usou `repo_map` + leitura de 5 arquivos representativos, gravou vault + qdrant, produziu a "receita" de endpoint novo em 3 min; (b) `<project-b>` com `mcp-atlas` parado: a skill avisou "não carregados nesta sessão" e mapeou pela árvore (nota: qdrant/obsidian também não estavam carregados nessa sessão — fallback confundido com MCPs do projeto não aprovados; comportamento da skill foi o correto mesmo assim). Skill ganhou instrução explícita para o caso vault/qdrant indisponíveis. Causa do (b) encontrada: `<project-b>/.claude/settings.local.json` tinha `disabledMcpjsonServers` (um "não" na primeira sessão fica gravado e os MCPs do projeto nunca mais carregam, em silêncio) → etapa 5 do `install.sh` agora detecta e avisa `[blocked]` por repo, com a correção (`enableAllProjectMcpServers: true`). **Fase 0: só falta o macro (F0.4, F0.5, F0.7).** Par piloto escolhido pelo grafo: **`<project-a>` (BFF) → `<project-b>` (serviço)** — o BFF tem um adapter outbound dedicado ao serviço (constantes de rota + `PostJSON`); o serviço expõe ~18 rotas via `mux.HandleFunc`
-- 2026-09-12: **F0.4 implementado** (indexer 0.2.0) — `integrations.py`: rotas expostas (net/http 1.22 `"METHOD /path"`, gorilla `.Methods()`, chi, gin/echo com `Group`, fiber, express, Nest `@Controller/@Get`) → nós `HttpEndpoint` (macro, por serviço) com `EXPOSES {ref}` e `HANDLED_BY {ref}`; chamadas de saída com path literal/template (constantes de rota do pacote, `Sprintf`, concatenação, `NewRequest`, `PostJSON`-like, axios/fetch) → nós `HttpCall` (micro, por ref) com `MAKES_HTTP_CALL`, `target_hint` (pasta `outbound/<svc>`) e `env_hints` (`*_URL`). `path_key` normaliza placeholders para o join. MCP ganhou `http_map(repo)` e **`who_consumes(path)`** (match exato por `path_key` em tempo de consulta — o F0.5 materializa como `CONSUMES`/`CALLED_FROM`). Snapshots de versão antiga são reindexadas no próximo `refresh` (`[reindex: older indexer]`). Validado em fixture (12 rotas em 5 frameworks, 4+3 chamadas de saída, Nest com prefixo, `_test.go` ignorado); **falta rodar no portfólio real** (F0.4.1)
-- 2026-09-12: **F0.4 calibrado num corpus público** (15 repos, 4 linguagens — `indexer/scripts/http_corpus.py` reproduz): chi 26 rotas · gin-examples 31 · gin-realworld 13 · fiber-recipes 135 (grupos `app.Group` com prefixo) · alertmanager 22 · express 33 · nest 124 (`@Controller` + prefixo, e2e ignorados) · fastify 6 · **eShop 23 rotas (minimal APIs com `MapGroup` encadeado) + 6 chamadas `HttpClient`** · fastapi docs 87 · fastapi-template 19 (`APIRouter(prefix=)`) · flask 12 (Blueprint prefix). Correções que o corpus forçou: decisão rota×cliente pelo **2º argumento ser função** (fiber `auth.Post("/login", h)` era lido como chamada de saída), decorators Nest não são chamadas, `cache.get(key)`/`map.delete` não são HTTP (receiver precisa parecer cliente), `"application/json"` não é path, `fetch(\`${base}${path}\`)` sem segmento literal é descartado, **resolução de variável local** (`uri := base + "/x"` duas linhas acima), paths relativos `items/{id}` só em contexto de cliente, `$"{base}catalogBrands"` (C#) aceito. Scanners novos: **C#** (controllers com `[Route]`/`[HttpGet]`, minimal APIs `MapGet`/`MapGroup`, `HttpClient.*Async`, `new HttpRequestMessage`, Refit) e **Python** (FastAPI/Flask/Blueprint, requests/httpx). Limitações conhecidas: prefixos definidos em outro escopo/arquivo (chi `r.Route("/admin", func(r){...})`, `app.include_router(prefix=)`, `Handle("/api/v1", subrouter)`) não são aplicados; rotas por convenção de nome (CleanArchitecture `MapGet(GetTodoItems)`) não são extraíveis; quando a base URL carrega o prefixo (`{base}items/{id}` vs `/api/catalog/items/{id}`) o match precisa ser por **sufixo** — fica para o linker (F0.5)
-- 2026-09-12: guia `docs/indexer-evolution.md` (como o indexador funciona, regras aprendidas, checklist de mudança) e dois handoffs para chats paralelos: `docs/handoffs/H1-reference-apps.md` (apps de referência do padrão do autor em Go/.NET/Node/Python com ground truth → suíte de regressão) e `docs/handoffs/H2-public-corpus.md` (corpus ~40 repos, gabarito por OpenAPI, precisão/recall por linguagem)
-- 2026-09-14: **ADR-002** (tree-sitter como base universal; SCIP como enriquecimento opcional por repo na F1.2, gatilho = métrica de resolução) e **ADR-003 (proposto)**: núcleo compartilhado + módulos por linguagem (`core/` + `languages/<lang>/{queries.scm,symbols.py,http.py}`), refactor mecânico com corpus como regressão, a executar após F0.4.1 e antes de H1/H2 (F0.4.4). **Convenções de arquitetura da organização entram como extensões** (pacote próprio, `convention.yaml` + hooks, ativação por tenant/repo no `atlas.yaml`, `Violation` no grafo) — nada específico de uma organização em `core/`/`languages/`
-- 2026-09-15: primeira instalação com `AIDD_TENANT=auto` — o MCP `atlas` recusava subir (exigia tenant concreto). Corrigido: **modo multi-tenant** no MCP — todas as tools ganham `tenant` opcional; omitido → único tenant do grafo ou erro listando os existentes; `atlas_status` sem tenant lista todos; em modo fixo um `tenant` divergente é erro explícito. Skill `scan` passa `tenant` quando o frontmatter é `auto`. Validado no teste de protocolo (multi e fixo)
-- 2026-09-17: **F0.4.1 parcial em ambiente multi-tenant .NET** — `repo_map`/`http_map` corretos (controllers `[Route]`+`[HttpPut("{x}/reset")]`, handlers resolvidos), `who_consumes` responde; `HttpCall` = 0 no grafo inteiro. Parte é legítima (a integração HTTP entre os dois serviços ainda não está implementada — vai usar Refit e/ou frameworks de comunicação), parte era bug: fixture com os padrões típicos de cliente .NET revelou 4 falhas no scanner C# — string interpolada passada direto (`GetAsync($"api/x/{id}")`: o `$"` vazava para o path), `new Uri($"...", UriKind.Relative)`, `string.Format("api/x/{0}")`, `Routes.X.Replace(...)`; `SendAsync(msg)` duplicava o `HttpRequestMessage`. Cobertura nova: **Flurl** (`url.AppendPathSegment(..).GetJsonAsync()`, `"api/x".PostJsonAsync()`, `.Request("x")`), **RestSharp** (`new RestRequest("api/x", Method.Get)`), Refit `[Options]`/`[Multipart]`. indexer **0.2.1** → o `refresh` reindexa tudo. **Fixtures golden em `indexer/tests/fixtures/` (go-http-mix, ts-express-nest, csharp-httpclients) + `tests/test_fixtures.py` (pytest, P/R 100 %)** — começo da estrutura que o H1 vai preencher com o padrão do autor
-- 2026-09-17: **F0.4.4 feito — ADR-003 aceito.** `aidd_indexer/` reorganizado em `core/` (pipeline sem nenhum `if language ==`), `languages/<lang>/{queries.scm,symbols.py,http.py}` atrás do contrato `LanguageSupport` (registro em `languages/__init__.py`; `Dockerfile` e `selftest` leem o registro) e `conventions/` (contrato `Convention`, `convention.yaml` declarativo, entry point `aidd.conventions`, `conventions:` por tenant no `atlas.yaml`, `AIDD_CONVENTIONS` para testes). Efeito no grafo só quando há convenção: `File.layer`, `Module.layer`, `HttpCall.target_hint` refinado, `Symbol.is_entry_point`, nós `Violation` + `HAS_VIOLATION` (schema.cypher/SCHEMA.md). Regressão: 5 testes verdes e o **corpus público byte a byte idêntico** (símbolos, arestas, pacotes, HTTP) — `INDEXER_VERSION` segue 0.2.1. Exemplo em `setup/conventions/hexagonal.example.yaml`. H1 agora escreve o padrão do autor como convenção; H2 edita `languages/`
-- 2026-09-25: **F0.5 implementado — linker materializado.** `core/linker.py` (funções puras, testáveis sem Neo4j): `HttpCall × HttpEndpoint` por método compatível (`ANY` casa com tudo) e `path_key` — `exact`, senão `suffix` (um path é sufixo alinhado por segmento do outro: base URL com prefixo); nunca liga um serviço a ele mesmo; com mais de um serviço candidato, desempate por `target_hint` (heurística de pasta ou `targets:` da convenção) ou `env_hints` (`BILLING_URL`) por token do nome do serviço, tokens genéricos (`api`, `url`, `client`…) nunca desempatam; **ambíguo = nenhuma aresta** (precisão antes de recall, como no extrator). `GraphWriter.link_tenant` reconstrói `CONSUMES {ref}` (1 por consumidor×endpoint×ref, com `call_count`, `evidence[]`, `confidence`, `hint`) e `CALLED_FROM {ref, call_id}` (1 por call site → símbolo chamador) do tenant inteiro — roda ao fim de `index`/`bootstrap`/`refresh` (só quando algo mudou) e em `aidd link`; `install.sh` em upgrade chama `aidd link`; `install-check` conta `CONSUMES`. MCP: `who_consumes` lê as arestas materializadas e lista em `possible_consumers` as chamadas com mesmo path que **não** foram ligadas (ambiguidade); `http_map` mostra `linked_to` por chamada e `consumer_repos` por rota. Fixture par: `go-http-mix` → `go-billing-api` (exact ×3, suffix `/internal/v1/users/{id}`) + `py-notifications-api` (também expõe `/health` → desempate por `target_hint=billing`); `tests/test_linker.py` (7 testes, 14 no total). Sem bump de versão (nós iguais, só arestas). Avaliado o Understand-Anything (tree-sitter + LLM, um repo por vez, sem noção de rota/serviço): não entra no linker — aresta precisa de `evidence` determinística; fica como referência para enriquecimento semântico opcional na F1 (resumos, sugestão de `convention.yaml`)
-- 2026-09-29: **F0.5 validado no portfólio** (6 repos Go, tenant fixo): `aidd link` → 54 call sites ligados de 105 (46 exact, 8 suffix), 0 ambíguos. Conferência linha a linha: os `exact` são todos o par piloto `<project-a>` (BFF) → `<project-b>`/`<project-c>` (rotas de auth, devices, password-reset, onboardings) — corretos. Os 8 `suffix` eram **falso positivo**: uma chamada curta (`.../documents/{param}/upload`, hint apontando para outro alvo) casava com a cauda de uma rota longa do BFF. Regra apertada: **`suffix` só com corroboração de hint** (`target_hint`/`env_hints` nomeando o provedor); sem isso a chamada fica `unmatched`. Os 51 não ligados: 37 são provedores externos (antifraude, e-mail, WhatsApp — esperado; viram `Service` externo na F1) e 14 são o mesmo par piloto com path `"/v1/onboardings/{param}/{param}"` — segmento literal passado por variável que o extrator não resolve (gap do extrator, não do linker → H1/H2, tabela de regras). Nota de consulta: `CONSUMES`/`EXPOSES` são por `ref`, então `MATCH (a)-[:CONSUMES]->(e)<-[:EXPOSES]-(b)` multiplica linhas por snapshot — usar `DISTINCT a, e, b` para ver os pares
-- 2026-09-29: **F0.5.1 fechado** — no Claude Code do BFF: `http_map` → 5 chamadas de saída em `main`, todas com `linked_to` (`exact`), `outbound_unlinked: 0`; `who_consumes('POST /v1/password-reset/start')` → distingue a rota re-exposta pelo BFF (sem consumidor — o app não está indexado) da rota do serviço de auth (consumidor = adapter outbound do BFF, arquivo:linha, `possible_consumers` vazio); pergunta negativa (`GET /v1/onboardings/{id}/documents`) → respondeu "ninguém", sem inventar, usando o match por prefixo para apontar a rota parecida. Ajuste no MCP: `consumers` agora é 1 linha por repo × símbolo chamador com a lista de `refs` (um call site em 13 branches vinha como 13 consumidores). Anotado para H1: o modelo apontou chamadas do BFF que não aparecem em `main` (2FA, `users/me`, extrato/saldo) — ou path dinâmico ou só em branch; verificar no repo de referência
-- 2026-09-29: **F0.7 em andamento** — `docs/golden-questions.md` com as 5 perguntas (pergunta · ferramenta MCP · Cypher de verificação · esperado · obtido): Q1 quem consome a rota, Q2 o que o repo chama e para onde, Q3 mapa do workspace — as três já respondidas no par piloto; Q4 impacto de um símbolo cruzando repos e Q5 diff de superfície entre refs ganharam ferramentas novas no MCP: **`impact_of(symbol)`** (`CALLS*` de entrada até os handlers → `HANDLED_BY` → `CONSUMES`/`CALLED_FROM`; devolve `internal_callers` com `hops`/`via_ambiguous`, `exposed_through`, `consumers` por repo × símbolo com `refs[]`) e **`ref_diff(repo, ref, base?)`** (rotas, entry points e chamadas de saída adicionadas/removidas vs. a default branch). `tests/test_mcp_protocol.py` (fake store) cobre o encanamento das 10 tools; Q4/Q5 aguardam a rodada no piloto
-- 2026-10-03: **F0.7 fechado — Fase 0 concluída.** Q4 e Q5 rodadas no piloto e registradas em `docs/golden-questions.md`. Q5 (`ref_diff`) respondeu certo até no caso inverso (branch indexada atrás de `main` porque o merge era só local) — ferramenta ganhou `snapshots` (sha/`indexed_at` por ref) e `note`. Q4 mostrou o limite esperado da resolução por nome: chamada via **interface** (`ports.X`) com fakes de teste homônimos → sem aresta `CALLS`; a parte cross-repo (rota, consumidor, evidência) veio do grafo e a cadeia interna foi reconstruída por leitura. Dois encaminhamentos: F0.7.1 (descartar candidatos de arquivos de teste ao resolver chamadas de produção — barato, deve recuperar boa parte) e a métrica de `-ambiguous`/não resolvidos como gatilho do SCIP (F1.2)
-- 2026-10-03: **F0.7.1 feito (indexer 0.2.2 → `refresh` reindexa tudo).** Q4 re-rodada com `impact_of` no repo certo: ferramenta funcionou; ponto cego confirmado em `uc.policy.Validate()` (receiver = campo de struct, homônimos no repo). Três mudanças: `impact_of` separa chamadores de produção e de teste (`test` por linha, contagens); `resolve.py` nunca liga código de produção a símbolo de arquivo de teste; **Go resolve o tipo estático do receiver** (`LanguageSupport.file_facts/call_receiver/resolve_receiver`: receiver do método, parâmetro, `x := T{}`, `x := pkg.New()` pelo tipo de retorno, e cadeia de campos de struct entre arquivos do pacote) → estratégia `receiver-type`. Fixture `go-receiver-types` (4 casos + fake); corpus: `-ambiguous` caiu forte nos repos Go (alertmanager 1002→641, gorilla-mux 1090→793, gin-realworld 88→8), `CALLS` totais caem um pouco porque 3 arestas ambíguas viram 1 certa e chamadas de produção que só tinham candidato de teste ficam sem aresta (correto); símbolos/imports/HTTP byte a byte iguais; 10 arestas `receiver-type` amostradas, 10 corretas. Interfaces (`ports.X`) seguem sem aresta — o que sobrar depois disso é a métrica do SCIP
-- 2026-10-03: **Golden questions no par .NET de referência** (`docs/golden-questions.md`, "Segunda rodada"): Q1–Q3 corretas de primeira; Q4 expôs em C# o mesmo buraco do Go (resolução por nome: 7 chamadores falsos no handler, cadeia handler→interface→implementação invisível). **F0.7.2 (indexer 0.2.3)**: C# com tipo estático do receiver (campos/propriedades/parâmetros/locais/`base.`, membros herdados de bases do repo) + hooks `supertypes` e `implementations` no contrato — interface com um único implementador liga também à implementação (`receiver-type-impl`, o caso DI); regra de precisão: tipo conhecido sem o método → sem aresta, nunca chute por nome. Corpus: clean-arch `-ambiguous` 93→22, eShop 1004→787, Go cai mais um pouco (interfaces deixam de cair no fallback); fixture `csharp-receiver-types`; 26 testes
-- 2026-10-03: **Q4 Go re-rodada após F0.7.2 → F0.7.2b (indexer 0.2.4, `refresh` reindexa tudo).** `impact_of` no método de domínio voltou sem rota/consumidor: a aresta handler → caso de uso não existia em `main`, embora o `--dry-run` da branch a produzisse. Causa: o handler acessa o caso de uso por **campo promovido** (`type Server struct { Config }` — o struct embute outro e usa `s.Complete` em vez de `s.Config.Complete`); a cadeia de campos só olhava campos declarados. Duas mudanças em `languages/go/symbols.py`: `file_facts` registra os embeds e `resolve_receiver` desce por eles (com ou sem ponteiro, até 4 níveis); construtores/helpers com **retorno múltiplo** (`uc, _ := setup(t)`) tipam o local pelo índice. Fixture `go-receiver-types` ganhou o handler com embedding e o helper de teste; 29 testes. Corpus Go: alertmanager `receiver-type` 1379→1905 e `-ambiguous` 620→425, demais repos iguais ou com mais arestas tipadas; tudo que não é `CALLS` byte a byte igual. Segue semântica de linguagem (Go spec, campos promovidos), nada específico de projeto
-- 2026-10-03: **F0.7.2 validada (Q4 Go e .NET inteiras pelo grafo) e F0.5.1 `DEPENDS_ON` (indexer 0.2.5, `refresh` reindexa).** Manifestos agora dizem o que cada repo **publica** (go.mod `module`, `.csproj` `PackageId`/stem, package.json `name`, pyproject `name`) e **requer** (deps diretas; `// indirect` e devDependencies fora) — hook `LanguageSupport.manifest_deps`, `core/deps.py` normaliza nomes por ecossistema, vai para `Snapshot.provides/requires`. O linker ganhou a segunda junção: `requires × provides` por tenant → `Service -[:DEPENDS_ON {ref}]-> Service` com `packages[]`/`versions[]`; mesma política do `CONSUMES` (exato, nunca a si mesmo, dois publicadores → nenhuma aresta). `repo_map` devolve `depends_on`/`depended_by`; `install-check` conta as arestas. 6 testes novos (parsers das 4 linguagens, par de fixtures Go, regras). Cobre o que o scan HTTP não vê: contratos/SDKs internos entre serviços
-- 2026-10-03: **F0.5.1 validada no portfólio** — `refresh` com 0.2.5: 30 snapshots, `requires` em todos; linker: 46 `DEPENDS_ON` (11 pares consumidor→provedor, 0 ambíguos). Topologia bateu com o esperado sem ajuste: dois repos Go de biblioteca compartilhada (um deles publica **submódulos** — cada diretório com `go.mod` vira um `provides`), um repo de domínio consumido por dois serviços, e no par .NET o consumidor HTTP também depende do pacote `.Contracts` do provedor (a mesma relação vista por dois caminhos: `CONSUMES` e `DEPENDS_ON`). Observações para refinar depois: módulos de helpers de teste (`*test`) aparecem como dependência sem distinção de escopo (ideia: `scope: test` quando só arquivos de teste importam o módulo); `replace` local em Go aparece com a versão sintética `v0.0.0-0001...` — útil, mostra quem está preso a cópia local. Log do `link` passou a separar arestas de pacotes
-- 2026-10-03: **F0.3.6 feito** — `RefPolicy.for_repo(repo)` aplica `refs.overrides` (nome exato ou glob, em ordem; só os campos declarados mudam; `active: false` zera `max_per_repo`) e o `plan_refs` usa a política do repo. `refresh` passou a listar snapshots que existem no grafo mas não estão mais na política (branch apagada ou override novo) com o comando de `wipe` — não apaga sozinho. 2 testes (`tests/test_manifest.py`). Uso no piloto: `overrides: {<project>: {always: [main]}}` para tirar o `develop` abandonado e depois `aidd wipe <project> --ref develop`
-- 2026-10-03: **F0.3.6 validada no piloto** — `always` do tenant passou a `[main, master]` (a organização não usa `develop`; as duas `develop` que existiam no `origin` eram resquício), `refresh` listou só as 2 persistentes fora da política, `wipe` nas duas, `refresh` limpo com 28 snapshots. Dois ajustes no caminho: o aviso ignorava o flag `ephemeral` e listava 54 branches de feature à espera do GC (corrigido: só persistentes); `wipe` deixava `CONSUMES`/`CALLED_FROM`/`DEPENDS_ON` da ref apagada no grafo quando o `refresh` seguinte não tinha motivo para religar — agora o `wipe` roda o linker ao fim
-- 2026-10-03: **F0.4.5 feito (indexer 0.2.6, `refresh` reindexa) — e o `http_map` do portfólio mostrou onde o scanner Go perdia.** Levantamento no Claude Code (rotas sem handler e saídas sem `linked_to` em 3 repos, sem ler código): não há registrador próprio — o padrão é `net/http` 1.22 — mas (a) o handler chega **embrulhado** (`mux.Handle(p, sc.setHandlerSecurity(h.me, WithAuth(), ...))`): 2 repos com 6/31 e 15/39 handlers resolvidos contra 23/25 no que registra direto; (b) `url.JoinPath(base, id, "steps")` perdia o literal (`{param}`), por isso 3 chamadas BFF → serviço não ligavam; (c) **requests como objeto** (`c.http.Do(ctx, Request{Method: http.MethodPost, Path: path})`, o cliente do SDK interno) eram invisíveis — um arquivo com ~12 chamadas registrava 0. Três correções genéricas em `core/http_base.py`: handler = argumento mais interno que resolve para função do repo (`mw(h, opts...)`, `http.HandlerFunc(h)`, `chain(a,b)(h)`); `JoinPath` com segmentos literais; composite literal / objeto com campo `Path`/`URL` + `Method` (concatenações longas também, achatando `a + b + c`). Fixture `go-wrapped-http` (4 rotas, 5 saídas), corpus de 15 repos byte a byte igual em rotas/chamadas. E a parte planejada: convenção declara `route_patterns.registrars` e `client_patterns.methods/receivers` (`Convention.scan_patterns()`; teste com SDK fictício: 0 → 1 rota + 2 saídas), MCP ganhou `violations(repo, severity?, rule?, layer?)` e `repo_map.layers`; 11 tools, 40 testes
-- 2026-10-03: **Bug de GC em reindex no mesmo commit (indexer 0.2.7, `refresh` reindexa).** Validando a 0.2.6 no portfólio: o log escreveu 35 rotas no serviço de onboarding e 18 saídas no BFF, mas o `http_map` mostrava 39 e 19 — sobraram 4 `EXPOSES` falsas (`ANY /ocr-reference`…) e 1 `HttpCall` velha. A limpeza de órfãos e de `EXPOSES`/`HANDLED_BY` comparava `commit_sha`; um reindex por **bump de versão** roda no mesmo sha e não apagava nada do que o extrator novo deixou de ver. Agora o critério é o carimbo da execução (`indexed_at`/`last_seen = now` desta rodada): o que não foi escrito agora sai. `HANDLED_BY` ganhou `last_seen` e poda própria (handler que mudou de símbolo não deixa aresta velha). Resultado da 0.2.6 no portfólio, pelo `http_map` novo: BFF 28/31 handlers (3 restantes em um handler de OTP, a investigar), saídas 9→18 com 18 ligadas (14 ao serviço de onboarding, 5 ao de auth) e 1 sem par por path dinâmico que bate em 14 rotas (ambíguo → sem aresta, correto); serviço de onboarding ainda com 17 handlers sem resolver (steps + 3 rotas) — wrapper diferente, aguardando o trecho de registro
-- 2026-10-03: **Handler em outro arquivo do pacote (ainda 0.2.7).** Com os trechos de registro dos dois repos Go em mãos, os 17 + 3 handlers que faltavam tinham a mesma causa: o símbolo do handler é procurado só no arquivo corrente, e nesses repos o `registerRoutes` fica num arquivo e metade dos métodos em outro do mesmo pacote. `PackageContext` ganhou índice de funções/métodos por diretório (arquivos de teste fora); resolução = mesmo arquivo → único homônimo no pacote → dois homônimos = `null`. E a forma `"PUT " + base + "/x"` / `http.MethodPost + " " + base + "/x"` (padrão `net/http` 1.22 montado por concatenação) passa a ser aceita — era o que gerava as 4 rotas falsas `ANY /ocr-reference`. Fixture `go-wrapped-http` com 3 arquivos no pacote; corpus igual
-- 2026-10-03: **F0.4.5 validada no portfólio (0.2.7) + endpoint por `path_key` (0.2.8, `refresh` reindexa).** `http_map` novo: BFF 31/31 handlers, serviço de onboarding 40/40 (rotas de documentos com método e path completos), auth 25/25; linker 91 ligações, todas `exact`; sem link só provedor externo (2) e um path dinâmico que bate em 14 rotas (ambíguo, correto). Dois acertos no caminho: `http_map` devolve **uma linha por call site** (`linked_to` + `also_linked_to`, antes multiplicava); e o id do `HttpEndpoint` passou a usar `path_key` — uma branch que renomeou `{stepCode}` para `{stepSlug}` gerava dois endpoints para a mesma rota e a chamada do BFF ligava nos dois. Os nós com id antigo **não** somem sozinhos: continuam com `EXPOSES` de branches efêmeras que não são reindexadas (esperam o GC de 30 dias) e o linker ligava nos dois (133 → 188 endpoints, 91 → 103 ligações). 0.2.9: ao escrever um serviço, endpoints dele cujo id não é o canônico (`method + path_key`) são apagados — migração idempotente. Validado: 130 endpoints, 90 ligações `exact`, 0 ambíguas, 45 `DEPENDS_ON`; três serviços Go com rotas em 31/31, 40/40 e 25/25 handlers
-- 2026-10-12: **Convenções mais expressivas e C# `this.`/`base.` (indexer 0.2.10, `refresh` reindexa).** Achados ao escrever o padrão .NET do autor como convenção — o YAML não expressava duas coisas, e o contrato genérico ganhou: (1) `using X;` em C# aponta para o Module (`.csproj`), então `forbid_import` nunca disparava num projeto com várias camadas — agora a regra usa a camada dos arquivos que declaram o namespace (`Resolved.namespace_files`, fora do grafo; namespace espalhado em mais de uma camada não gera violação); (2) `is_entry_point(symbol, file, owner)` + `entry_points.members_of` no YAML — o `Handle(...)` de um handler não carrega `ICommandHandler<>` na assinatura, a classe sim (o `IRequestHandler` do exemplo hexagonal nunca disparava; exemplo corrigido). Extensões empacotadas: `indexer/conventions/<nome>/` (pyproject + entry point `aidd.conventions`) são instaladas pelo `Dockerfile`, que falha o build se uma não carrega; `tests/conftest.py` as põe no `sys.path`; `test_fixtures.py` ganhou o modo "fixture de padrão" (`convention` + `layers`/`entry_points`/`violations`/`edges`/`gaps` no `expected.json`). **Bug geral de C#**: `this.X()`/`base.X()` nunca viravam call site (tokens anônimos na gramática) — padrão novo em `queries.scm`; `LanguageSupport.parent_receivers` (`base` em C#) impede que `base.X()` com base fora do repo ou implícita caia no fallback por nome (daria auto-aresta do override; a primeira versão da guarda pegava variáveis Go chamadas `base` — o corpus acusou). Corpus: 13 repos não-C# byte a byte iguais, clean-arch sem mudança de aresta, eShop +4 `receiver-type` corretas e 0 falsas
-- 2026-10-12: **Padrão × arquitetura nas convenções (ainda 0.2.10).** A mesma convenção precisa servir a layouts diferentes do mesmo padrão (um serviço cresce de 1 para 5 projetos sem mudar o que é um command ou um handler). O formato declarativo ganhou: `roles:` — *o que* cada tipo é pela forma da declaração (`extends`: nome na lista de bases, também via bases do próprio repo; `name`: glob no nome; `declares`: trecho do cabeçalho), em qualquer pasta → **`Symbol.role`** no grafo (`find_symbol`/`symbol_context` devolvem); `architectures:` — *onde*: `layers` por layout, detectado pelos módulos (`detect: {together: ["{svc}.Api", "{svc}.Core"]}` — projetos do mesmo serviço, para uma biblioteca `Shared.Bus.Core` não enganar) ou forçado por repo (`options.architecture`); a sem `detect` é o default; arquivo que o layout não posiciona herda a camada dos seus papéis; regra `roles_in` (papel × camada) e `entry_points.roles`. Contrato: `Convention.prepare(ctx)` (visão do repo inteiro antes das anotações), `role_of`, `describe` (o log mostra `id[layout]`). Bug pré-existente achado no caminho: assinatura de classe C# com `[Route("api/[controller]")]` era gravada como `")]` — `strip_attributes` agora pula atributos com colchetes aninhados e strings (corpus: 6 assinaturas do eShop corrigidas, demais repos idênticos)
-- 2026-10-12: **F0.4.2 feito para .NET (indexer 0.2.10, `refresh` reindexa) — o padrão do autor como extensão `dotnet-praticis`.** Referência lida direto do par de demonstração (provedor e consumidor em solutions separadas, SDK de bus como pacote). Baseline: HTTP já 100 % (12 + 2 rotas, 1 saída `exact`), `DEPENDS_ON` pelo pacote `.Contracts` ok; faltava o que só a convenção sabe. **Extensão** (ADR-003, primeira real): `indexer/conventions/dotnet-praticis/` — `pyproject` com entry point `aidd.conventions` → `DotnetPraticis` (carrega o `convention.yaml` empacotado: 9 camadas `contracts/api/consumers/application/core/domain/outbound/infra/bootstrap`, `Handle` de `ICommandHandler`/`IEventHandler` como entry point, 7 regras); `Dockerfile` instala tudo em `indexer/conventions/*` e falha o build se uma não carrega; ativação por id (`conventions: [{id: dotnet-praticis}]`). Nos 3 repos de referência (inclusive o monorepo original): 100 % dos arquivos de serviço com camada, 0 violações, 19 handlers como entry points. Usa as melhorias genéricas da entrada anterior (camada por namespace, `members_of`, `this.`/`base.`). **Fixtures**, uma por layout, domínio genérico (`CreateTodoCommand`…): `csharp-praticis-todos` (`flat`, provedor), `csharp-praticis-reports` (`split`, consumidor) e `csharp-praticis-projects` (`layered`, consumidor — violação proposital: handler morando no `.Application`); a extensão declara 13 papéis e as 3 arquiteturas, detectadas pelos projetos do serviço — nos repos de referência: `flat` nos dois e no monorepo, todos os arquivos dos serviços com camada, 0 violações, fiéis à referência inclusive na herança dos repositórios do SDK; `expected.json` com rotas, saídas, camadas, entry points, 1 violação proposital cada, `edges` (`CALLS` com estratégia) e `gaps` (xfail — falham quando a ligação aparecer, pedindo para virar `edge`). Auditadas às cegas contra o código. 50 testes + 14 xfail
-- Gaps registrados pelas fixtures .NET (insumo de F0.7.3/F1): (1) **despacho do mediator** `ServiceBus.SendAsync(new XCommand)` → `ICommandHandler<XCommand>.Handle` e `PublishAsync(evento)` → `IEventHandler<evento>` (o nome do handler nem sempre bate com o do command — `CreateActivityCommandHandler` trata `RegisterActivityCommand` —, a ligação tem de ser pelo argumento genérico); (2) **cadeia de decorators** registrada com `Decorate<>` (interface com vários implementadores → sem aresta); (3) **métodos herdados da base do SDK** (`CreateAsync`, `Exists`… do `BaseRepository` do pacote) — handler → repositório some do grafo; (4) validators tipam o repositório por `var x = provider.GetRequiredService<T>()`, ainda não coberto pela tipagem do receiver (cai em `same-module-ambiguous`); (5) evento entre serviços (`TodoWasCreatedEvent` publicado pelo provedor, consumido pelo consumidor) é F2.2; (6) a env var `TODOS_API_URL` mora no registro do `AddHttpClient<>`, não no arquivo do cliente → `env_hints` vazio (F2.3). Desvios conscientes da fixture: extension methods clássicos (a referência usa blocos `extension(...)` do C# 14 — não exercitados), cadeia de 3 decorators (referência: 5), sem as fatias de categorias/grupos
-- 2026-10-12: **Segurança e operação — exposição fechada e refresher em container (D15).** Revisão com olho de adoção em organizações achou o que já estava exposto: todas as portas publicadas em `0.0.0.0` e nenhum MCP com autenticação — o `mcp-git` tinha a chave ssh, o ssh-agent e o workspace com escrita (qualquer um na mesma rede lia o código e dava push com a identidade do dev); Qdrant sem api-key e com CORS aberto (qualquer página no navegador lia e escrevia a memória); `cypher_readonly` em modo multi-tenant lê todos os tenants (o `$tenant` é só sugestão); `npx …@latest` a cada start do obsidian; imagens `latest`. E, no macOS, o refresh agendado nunca rodou (`flock`/`date -Is` ausentes — o log só tinha `[skip]`), além de `aidd refresh` sem `--tenant` falhar com mais de um tenant no manifesto. Feito: portas em `127.0.0.1`, **`mcp-gateway`** (nginx) na frente dos MCPs nas mesmas portas recusando `Host`/`Origin` que não sejam localhost (DNS rebinding), Qdrant com api-key, `mcp-git` sem credenciais, PAT como arquivo/secret (nunca env), APOC só `apoc.version`/`apoc.meta.*` e os utilitários puros `apoc.coll/text/map.*`, `ATLAS_RAW_CYPHER=off` retira o `cypher_readonly` de um atlas multi-tenant (default `on`), versões fixas em todas as imagens e pacotes. E o **refresher**: serviço `aidd daemon` no compose substitui systemd timer/Task Scheduler/cron em todos os SOs; workspace montado **só leitura** e um espelho bare por repo (`~/.aidd/mirrors`), containers rodando como o usuário do host; lock compartilhado, `status.json` + healthcheck, `RefreshState` por tenant no grafo → `atlas_status.refresh.stale` (a skill `scan` avisa); idade dos snapshots corrigida (`duration.between(..).minutes` zerava a cada dia). Achado no e2e: rodando como uid do host o pacote de gramáticas recusa o cache do root — o indexer usa uma cópia privada e o build roda o `selftest` também sem root. Validado ponta a ponta num stack isolado (macOS/Docker Desktop): bootstrap, ciclo do refresher em 2 tenants, branch empurrada por "colega" indexada sem tocar o clone do dev, branch local nunca publicada indexada sob demanda, MCPs pelo gateway (Qdrant com chave, git/obsidian sem root, push via MCP falha em 0,1 s), `install-check.sh` verde, migração do `atlas.yaml` real (7 fontes → `fetch: true`). 66 testes. Trilha nova: **Segurança e operação**
-- 2026-10-12: **`scan` fechada sobre a fundação (indexer 0.2.11, `refresh` reindexa).** O `Snapshot` grava o layout que a convenção detectou e as convenções aplicadas; `repo_map` devolve `architecture`, `conventions` e `roles` (contagem + exemplos por role); `find_symbol(role=..., query="*")` lista todos os elementos de um role. A skill indexa sob demanda o repo que o atlas não tem (`refresh --repos --wait`, SO13), indexa a branch de trabalho se pedir, e descreve a arquitetura pelo vocabulário da convenção; vault alinhado (`cards/`, S0.1). Validado na instalação real com `dotnet-praticis` ligada no tenant de referência: o serviço .NET de referência → `dotnet-praticis[flat]`, 7 commands/handlers/validators, 8 repositórios + portas, 4 controllers, 11 roles; `find_symbol(role: command-handler)` lista os 7 com arquivo e linha; `refresh --repos` de repo excluído falha com o motivo (rc=1) e não altera o status do refresher
-- 2026-10-12: **Conhecimento do projeto — desenho (trilha própria, D16).** O índice que a `scan` grava no vault vira a porta de entrada do projeto, e o conhecimento que aparece no processo (code review, Sonar, ferramentas de segurança, incidentes, decisões) vira insight filtrado que as próprias etapas consultam — para o problema não se repetir e o review saber o que olhar. Não vira skill: poucas skills, uma por etapa do processo; o conhecimento é um serviço da stack (`insights_for`/`record_insight`) que todas usam pelo mesmo contrato. Insight novo entra `observed`; só um humano o torna regra (`accepted`), e o destino ideal é virar check no grafo (`enforced`). Política do processo (cobertura, tentativas do harness, ADR, limiares do conhecimento) em `policy.yaml` com camadas como o `atlas.yaml` (D17). Itens K1–K10
-- 2026-10-13: **Correções do primeiro uso em code review (indexer 0.2.12, `refresh` reindexa).** Uma semana de reviews de PRs apoiados pelo atlas, num portfólio Go de outro tenant, confirmou onde ele mais agrega (perguntas entre repositórios e entre branches: quem consome um contrato, se algo já existe em outro repo, se alguém já faz isso numa branch aberta; o achado decisivo foi um bug de contrato visível só no consumidor, em outro repo) e trouxe lacunas. Corrigido: (1) **blocos Go** `const (...)`/`type (...)`/`var (...)` geravam um símbolo por bloco — só o primeiro item; agora cada item é símbolo, e `var` de pacote (sentinelas de erro) entrou como `kind: var`; (2) `Symbol.path` gravado no nó e esquema compacto na descrição do `cypher_readonly` (o agente consultava `s.file`, que não existe); (3) `violations` diz `checked: false` quando nenhuma convenção se aplica — lista vazia era lida como repo limpo; (4) `find_symbol(match: word|exact|regex)` — a busca padrão continua ampla, `word` respeita camelCase/snake_case (`backoff` acha `RetryBackoff`, não `Backoffice`); (5) `ref_diff` com `symbols_added/_removed/_changed` (corpo diferente pelo `content_hash`); (6) `atlas_status.repos[].remote`: se o último refresh alcançou o remoto — quando não (`ok: false`), o grafo segue o `git fetch` do dev e branches de PR atrasam, o que antes era invisível. Lacunas do mesmo feedback ainda sem item: `who_calls` entre repos pelo módulo Go (e "métodos do port importado que o consumidor não usa"), mensageria por tipo de evento declarada na convenção (amplia F2.2), rotas de BFF montadas em helper, estado do PR junto da branch, comparação de DTOs, Dart/Vue
-- 2026-10-13: **K1 e K1.1 — contrato do vault e `policy.yaml`.** `docs/knowledge-contract.md` (v1, em inglês como o `SCHEMA.md`, porque código e skills o implementam): blocos gerados entre marcadores `<!-- aidd:<bloco>:start/end -->` com um dono cada (`aidd:scan`, `aidd:policy`, `aidd:knowledge`) — fora dos marcadores, o texto é das pessoas e nenhum escritor toca; nota de insight (frontmatter, corpo escrito só na criação, evidência com `source` `pr-review|review|harness|sarif|sonar|incident|session|scan`), ciclo de vida com quem faz cada transição, dedup por tópico + similaridade, espelho no Qdrant no formato do `mcp-server-qdrant` (`document` + `metadata`, vetor `fast-bge-small-en-v1.5`) para o `qdrant-find` das skills enxergar os insights. `policy.yaml`: camadas built-in → defaults → tenant → área (do `atlas.yaml`) → overrides por glob; validação com o caminho do erro e sugestão ("did you mean 'min'?"); `knowledge.topics` só adiciona ao vocabulário; opcional (sem arquivo = built-ins); `aidd policy show <repo>` mostra valor e origem de cada chave
-- 2026-10-13: **K2 — serviço `knowledge` (`mcp-knowledge`, gateway :3006).** Três tools: `policy_for` (política efetiva com a origem de cada valor), `insights_for` (o que se aprendeu sobre o repo e os insights do tenant que valem para ele, filtrados pelo que vai ser tocado — arquivos, roles, símbolos; `rules` = aprovados por pessoa, `context` = observações) e `record_insight` (dedup por frase igual e por similaridade; cria a nota `observed` ou soma uma ocorrência, vira `recurring` no limiar da política, reconstrói o bloco `aidd:knowledge` do índice sem tocar no resto da página, espelha no Qdrant). Mesma imagem do indexer num estágio próprio (`knowledge`: FastEmbed 0.9.0 + qdrant-client 1.19.1 + o modelo embutido; o refresher e o atlas seguem sem eles); os vetores são idênticos aos do `mcp-qdrant` (cosseno 1,0 no mesmo texto), então o `qdrant-find` das skills acha os insights. Limiar de dedup medido com o modelo: paráfrases 0,85–0,96, insights diferentes da mesma área até 0,81 → 0,83. Validado em container isolado (uid do host, cap_drop ALL): nota e índice gravados com o dono certo, paráfrase reconhecida (0,93), tópico errado recusado com sugestão
-- 2026-10-13: **K3 — `scan` escreve o índice pelo contrato.** No início carrega `policy_for` e `insights_for` (segue as `rules`, pondera o `context`) e, antes de mexer em código, pede `insights_for` com os arquivos/roles/símbolos que vai tocar. A página do projeto ganha os blocos `aidd:scan` (Overview, Architecture, Conventions, Tests, Integrations, Decisions, Source) e `aidd:policy` (tabela da política efetiva, só leitura); a skill escreve só dentro deles com `obsidian.patch_note` (o bloco inteiro, marcador a marcador), nunca no `aidd:knowledge` nem no texto das pessoas; página antiga sem marcadores é migrada uma vez. A lição de fim de tarefa passa a ser `record_insight` (dedup, contagem, nota) em vez de `qdrant-store`; o resumo de convenções segue no Qdrant (`type: conventions`), que é o que a `refine-business` busca
-- 2026-10-13: **K3 validado ponta a ponta na instalação real.** Três rodadas num repo .NET do tenant de referência, cada uma numa sessão nova: (1) página antiga sem marcadores migrada (frontmatter vira `project-index`, blocos `scan`/`policy`/`knowledge` na ordem, parágrafo da pessoa preservado); (2) a mesma lição ditada em português virava nota nova — o modelo de embeddings é inglês (0,75 contra a nota em inglês, abaixo do limiar) — e daí duas mudanças: `knowledge.language` na política (default `en`; a skill traduz antes de gravar, o vault fica num idioma só — traduzida, a repetição deu 0,92 e somou ocorrência) e, entre 0,65 e 0,83 ou com os mesmos símbolos/arquivos, `record_insight` não grava e devolve `needs_decision` com os candidatos — o agente, que lê os dois textos, responde `same_as` ou `new` (o vetor não separa repetição dita de outro jeito de vizinho: dois insights diferentes com as mesmas classes deram 0,79); (3) página apagada e `scan` do zero: nasce no formato novo e já lista os insights gravados antes, pela tool nova `refresh_index` (o serviço reescreve o próprio bloco quando a `scan` termina a página). Correções do caminho: `install.sh` substitui `.mcp.json` de root em vez de abortar, frontmatter sem âncoras YAML, slugs até 80 caracteres
-- 2026-10-13: **Trilha do conhecimento pausada depois do K3.** K4–K10 entram junto com quem os usa: K4 na revisão da `refine-business`, K5 na `refine-tech` (S5), K6 na `implement` (S6), K8 depois da Fase 1 (o insight vira check quando o grafo liga o que hoje falta), K7/K9/K10 quando houver volume de insights e uso em equipe
-- 2026-10-13: **F0.7.3 — despacho do mediator e interfaces Go (indexer 0.2.13, `refresh` reindexa).** (1) **Mediator como aresta**: a convenção declara o barramento (`dispatch:` — métodos `calls`, bases genéricas `handlers`, `method`) e o resolver liga `bus.SendAsync(new X(..))` ao `Handle` de quem implementa `ICommandHandler<X, ..>`, pelo argumento genérico e nunca pelo nome (estratégia `dispatch`); publish de evento liga a cada handler. O tipo da mensagem vem do `new`, de parâmetro/local (o tipo criado vence o declarado: `IEvent e = new X()` → X) ou do retorno de um método da própria classe; mensagem de pacote externo casa pelo nome só quando os dois lados estão fora do repo; handler em arquivo de teste nunca recebe chamada de produção. Três camadas, como no HTTP: o núcleo tem o mecanismo (`core/dispatch.py`), a linguagem lê a sintaxe (hooks `call_argument_type`/`message_handlers`) e traz as bibliotecas públicas — **MediatR embutido no C#** (`Send` → `IRequestHandler`, `Publish` → `INotificationHandler`, em todo repo, sem configurar) —, e a convenção declara o barramento da organização (`dispatch:` no YAML: `dotnet-praticis` → `SendAsync` → `ICommandHandler`, `PublishAsync` → `IEventHandler`). Adivinhar pelos genéricos sem o contrato ligaria `validator.ValidateAsync(cmd)` a todo `AbstractValidator<cmd>`: o que torna uma chamada despacho é o contrato da biblioteca. Fixtures: os 7 `gaps` de mediator viraram `edges`, mais 3 que a fixture não listava (cadeia handler → handler e o segundo handler do mesmo evento). (2) **Go: chamada em interface do repo** → o único tipo de produção cujo conjunto de métodos cobre a interface (interfaces embutidas do repo contam; embutir `io.Reader` ou ser constraint = método desconhecido, sem aresta; fakes em `_test.go` e mocks em `mocks/` não contam), estratégia `receiver-type-impl` como em C#. Medido em 8 repos reais contra a `main`: nenhuma aresta perdida; .NET +7 e +6 `dispatch` (todas conferidas — inclusive `RegisterTransactionCommand` → `CreateTransactionCommandHandler`, o insight gravado no K3), Go +185 e +41 `receiver-type-impl` (amostra conferida na fonte: implementador único certo, mocks gerados de fora), demais repos Go sem mudança. 138 testes + 11 xfail
-- 2026-10-13: **Gap .NET (4) — serviços resolvidos do container e closures (ainda 0.2.13).** `var repo = provider.GetRequiredService<T>()` (e `GetService`/`Get[Required]KeyedService`, `GetRequiredService<T>().M()` encadeado) tipa o receiver como T — DI da Microsoft, embutido no C#; e uma lambda enxerga os locais do método em volta (`.Must(id => repo.Exists(id))` dos validators FluentValidation). Num repo .NET real: `same-module-ambiguous` 54 → 33, +5 `receiver-type` e +4 `receiver-type-impl` nos validators, e saíram 21 arestas ambíguas — todas erradas (`categoryRepository.Exists` ia para o `Exists` dos repositórios de Account e Group); as chamadas cujo método vem da base do SDK ficaram sem aresta, como manda a regra de precisão — é o gap (3). 139 testes + 11 xfail
-- 2026-10-13: **Gap .NET (3) — métodos que vêm da base de um pacote (ainda 0.2.13).** `repo.CreateAsync(x)` com `repo: ITodoRepository : IBaseRepository<T>` do SDK: o repo não declara `CreateAsync`, e a regra de precisão deixava a chamada sem aresta — handlers e validators sumiam de "quem usa este repositório". Agora vai `CALLS` para o tipo do repo e para o seu implementador único, com o nome do método na aresta (`inherited` / `inherited-impl`, propriedade `method`, devolvida por `who_calls`/`symbol_context`) — a dependência fica visível sem inventar o método; o SCIP pode refinar depois para o método real do pacote. Só quando o tipo (ou uma base dele do repo) estende/embute algo de fora do repo; método declarado no repo com sobrecarga não conta como herdado (achado na medição: `GroupModel.Create` tem duas sobrecargas — segue sem aresta, gap novo). Vale para Go (struct que embute tipo de outro módulo: `tracer.Start()` em `AppTracer` que embute o `trace.Tracer` do OpenTelemetry). Fixtures: os 9 gaps de SDK viraram `edges` (com os métodos conferidos); resta 1 gap, a cadeia de decorators. Medido: .NET +19/+20 `inherited` e +10/+11 `-impl`, Go +67 e +13, nenhuma aresta anterior perdida. 141 testes + 1 xfail
-- 2026-10-14: **F0.7.3 + gaps (3)/(4) validados na instalação real** (repo .NET do tenant de referência, numa sessão nova): `impact_of(AccountRepository)` — antes vazio — chega aos 2 handlers (`inherited-impl`) e, pelo `dispatch`, aos 2 controllers e às rotas `POST/PUT /api/accounts`; `who_calls(ICategoryReadRepository)` traz os 3 chamadores com o método usado (`FindByIdAsync`, `Exists`); `RegisterTransactionAsync` → `CreateTransactionCommandHandler.Handle` está no grafo. Achado de uso: o agente pediu `CreateTransactionCommandHandler.Handle`, o atlas só aceitava id, nome qualificado completo ou nome simples — e, com o "not found", o agente inventou uma causa ("o parser cortou a classe") e depois se corrigiu. Agora as tools que recebem `symbol` aceitam o final do nome qualificado (`Classe.Metodo`, na fronteira de `.`/`:`) quando nada casa exato, e o "not found" diz que não é sinal de problema de parsing e aponta `find_symbol` — revalidado: `who_calls(CreateTransactionCommandHandler.Handle)` responde de primeira com a aresta `dispatch`. Lacuna que a rodada mostrou (o agente completou com grep): **referência por tipo não é aresta** — um campo que recebe o repositório do container sem usá-lo e o registro no DI (`AddScoped<IAccountRepository, AccountRepository>`) não aparecem no `impact_of`, que só segue `CALLS`. Insumo do F1.2: as referências do SCIP viram arestas de uso de tipo
-- 2026-10-14: **Sobrecargas pela contagem de argumentos (indexer 0.2.14, `refresh` reindexa).** Cada função/método guarda a aridade (obrigatórios, máximo — parâmetro com default alarga, `params`/variádico deixa sem teto, o `this` de extension method não conta; só no resolver, não no grafo) e cada chamada a contagem de argumentos (`f(xs...)` = desconhecida). Com receiver tipado, escolhe a sobrecarga (`GroupModel.Create(name, ..)` × `Create(id, name, ..)` → `receiver-type`); mesma aridade → todas, `receiver-type-ambiguous`. No casamento por nome a contagem só corta palpites e a aresta segue `-ambiguous` — achado na medição: em mocks do mockery, `_c.Call.Return(..)` (o `Return` do testify) caía de 3 palpites errados para 1 e sairia como `same-file`, com cara de certeza. Medido: .NET `same-module-ambiguous` 33 → 21 e 34 → 24, Go `same-file-ambiguous` 2013 → 1856, uma única aresta nova não ambígua (a certa); nenhuma aresta tipada perdida. 142 testes + 1 xfail
-- 2026-10-14: **Gap .NET (2) — registros do DI e cadeia de decorators (indexer 0.2.14, `refresh` reindexa). Fixtures sem nenhum gap.** O C# lê os registros (`AddScoped/AddTransient/AddSingleton<I, Impl>()`, `TryAdd*`, `AddKeyed*` e o `Decorate<I, D>()` do Scrutor — bibliotecas públicas, embutidas) e monta, por interface, o que o container entrega: `[base, decorator 1, ..., mais externo]`. Uma chamada em I de fora da cadeia vai para o mais externo; de dentro de um decorator (o `processor.ProcessAsync()` que ele embrulha), para o próximo para dentro — `receiver-type-impl`, como o implementador único. Serve também ao caso comum sem decorator: interface com dois implementadores em que o registro diz qual vale. Interface registrada em mais de um arquivo (ambientes, testes) fica sem escolha. Medido: a cadeia real de 5 decorators do accrual saiu inteira e na ordem do registro (handler → `CheckAccountStep` → `CheckGroupStep` → `CheckCategoryStep` → `CommitTransactionStep` → `UpdateCacheStep`); +3 e +10 `receiver-type-impl`, +2 `inherited-impl` (repositórios de leitura com dois implementadores agora seguem o registro); nada perdido. 143 testes, 0 gaps
-- 2026-10-14: **Q4 .NET re-rodada (terceira rodada, `docs/golden-questions.md`).** Q4a ✅ (1 chamador, rota, consumidor cross-repo `exact` — na segunda rodada eram 6 falsos); Q4b ✅ pelo grafo: a classe `CategoryReadRepository` → handler e validators (1 hop) → controller pelo `dispatch` (2 hops) → `POST /api/transactions`, com `impact_of` num tipo agora contando os chamadores dos membros. Lição: a primeira Q4b respondeu com grafo velho — commits que mudaram a saída do indexer sem subir a versão não reindexam; 0.2.14 + `aidd refresh --repos .. --wait` resolveu
-- 2026-10-14: **Build do indexer no snapshot — reindexar não depende mais de lembrar a versão.** `Snapshot.indexer_build` = `<versão>+<impressão digital>`: hash do código que dá forma ao grafo (`core/`, `languages/`, `conventions/`, `cli.py` e os pacotes de convenção instalados), não dos servidores MCP (mudar uma tool não reindexa). Snapshot de outra build volta com sha vazio para o `refresh`, que o reindexa — reinstalar basta. `atlas_status` mostra `indexer_build` e, por snapshot, `outdated: true` quando outra build o escreveu, com a instrução de dizer isso em vez de concluir que o atlas não vê um tipo de ligação (o erro da primeira Q4b); a `scan` roda o `refresh` do repo antes de confiar em quem chama quem. Na primeira reinstalação, todos os snapshots reindexam uma vez (ainda não tinham build). 147 testes
-- 2026-10-14: **F0.4.3a — instrumento do corpus e `docs/corpus-report.md` v1 (H2a; extrator intocado, indexer 0.2.14).** Os 15 repos do corpus fixados por SHA; `http_corpus.py` ganhou `--baseline` (diff de ids `method path_key evidence`), `--expected` (P/R contra `indexer/tests/corpus_expected/<repo>.json`, com `scope` e `category` por item) e `--sample` (amostra reprodutível para conferir na fonte); `scripts/corpus_metrics.py` + 12 testes. Gabaritos em 14 repos: OpenAPI commitada em 3 (eShop Catalog, alertmanager `/api/v2`, fiber `swagger/`), o resto lido à mão; 235 rotas e as 24 chamadas julgadas na fonte. Resultado: precisão amostrada de rotas Go 61 %, TS/JS 34 %, C# 90 %, Python 63 %; recall Go 6 %, TS/JS 6 %, C# 49 %, Python 31 %. **67 das 103 rotas erradas só perderam o prefixo** (mount em outro arquivo, router por parâmetro, closure) — viram FP e FN ao mesmo tempo; `"/"` nunca vira rota (`path_of` rejeita literal de 1 caractere, 35 FN); restrições `{x:int?}`/`<int:id>` derrubam a rota inteira. Achado de modelo: o id do endpoint é por repo, então a mesma rota em dois apps do repo vira um nó com a evidência e o handler do primeiro (`multi-app-repo` → F1). Ordem do H2b no fim do relatório: correções baratas, depois o grafo de montagem (prefixos), depois campos em templates de chamada.
-- 2026-10-15: **H2b começou pelas correções baratas do extrator HTTP (indexer 0.2.14; a impressão digital do build reindexa).** Rota raiz (`"/"`, `""`) passa a ser gravada quando o path completo é conhecido — receiver é a aplicação (reconhecida por escopo + nome) ou grupo com prefixo próprio; placeholders com restrição/conversor (`{id:int?}`, `<int:id>`, `{slug:[a-z-]+}`) não derrubam mais a rota (e `{id:int?}` deixou de virar `{id{int}`); padrão sem `/` inicial em grupo (Go, `MapGroup`); `api := r.Group("/api")` deixa de ser confundido com cliente; ação sem template em controller sem `[Route]` não vira `GET /`. Fixtures `route-patterns-{go,ts,py,cs}`. Corpus: recall de rotas C# 49 → 73 %, Go 6 → 15 %, Python 31 → 43 %, TS/JS 6 → 9 %; 74 rotas novas julgadas (68 certas, 6 herdam o prefixo perdido dos irmãos), 2 FPs a menos. Detalhe em `docs/corpus-report.md` ("Update: the cheap fixes") e `docs/handoffs/H2-roadmap.md`.
-- 2026-10-15: **Correções baratas do extrator HTTP concluídas (H2b, item 1).** Query literal não invalida mais o template de chamada; `fetch(url)` sem `method` é GET; requisições de `TestClient`/`app.test_client()` não são chamadas de saída; grupos opcionais do Express 5 normalizados; `Del` (Prometheus `route`) é DELETE; e, achado no caminho, genérico aninhado no C# (`GetFromJsonAsync<List<T>>`) fazia a chamada sumir. Fixtures `route-patterns-*` estendidas. Próximo: ampliar o corpus (Fase 3 do `docs/handoffs/H2-roadmap.md`) antes do grafo de montagem.
-- 2026-10-15: **Corpus v2 do extrator HTTP — 39 repos, apps reais (H2b, fase 3; extrator intocado).** 24 repos novos fixados por SHA (gitea, mattermost, kratos, argo-cd, gotify, go-feature-flag, go-kit; immich, NodeBB, Ghost, Hono, Next.js, Fastify, Express; eShopOnWeb, eShopSupport, CleanArchitecture/FastEndpoints, jellyfin, bitwarden; zulip, netbox, dispatch, aiohttp, CTFd), gabarito em 38 (spec commitada em 14) e amostra julgada na fonte em todos — `docs/corpus-report.md` seção v2. Nos apps reais o recall de rotas fica em Go 8,7 %, TS/JS 1,7 %, Python 1,0 % e C# 73 %: o prefixo é aplicado longe da rota (grafo de montagem, em 23 dos 38 repos) ou a rota vem de estrutura que nenhum scanner lê (Django/DRF, helpers do projeto, `Combo`/builders, rotas por arquivo do Next.js). C# segura (bitwarden e eShopSupport 100 %/100 %); chamadas acertam 56–75 % na amostra e erram sobretudo pelo prefixo do cliente da API. Medidos: H2-D9 (371 operações em 4 clientes gerados, 0 extraídas) e H2-D10 (26 de 60 controllers do jellyfin herdam `[Route]`). Achado de escala: grafana (24 mil arquivos) estoura 7,7 GB de memória no Docker — o repo é mantido inteiro em memória durante a extração. Ordem do H2b revista: grafo de montagem, defeitos baratos do v2, `route-chain`, chamadas, C#, scanners novos quando um portfólio pedir
-- 2026-10-15: **Defeitos baratos do corpus v2 corrigidos (H2b, fase 4 item 3).** Os 15 que o v2 expôs, cada um com fixture: na precisão, variável de outra função, jQuery como rota, mount do `ServeMux` como rota, handler espalhado lido como chamada, bundle de build commitado e chave de cache como GET; no recall, constante montada de outra, constante com URL base, receiver na linha de cima, `application/{id}` tido por MIME, método em keyword/variável, `del`, mux padrão, prefixo pela cadeia do grupo e aiohttp. O julgamento do diff (rotas −37 +49, chamadas −54 +186, item a item) achou e corrigiu 3 defeitos das próprias regras. Chamadas C# P 62 → 84 % e R 48 → 64 % no gabarito, recall de chamadas Go e TS/JS +8–9 pontos, rotas Python P 27 → 38 %. As decisões de clientes gerados e de `[Route]` herdado foram aceitas (extrair `via: generated-client`; seguir um nível de herança). Item novo **F1.13** (repos grandes): o grafana não indexa porque a extração guarda todas as árvores até o fim
-- 2026-10-16: **C#: chamada genérica com receiver vira call site, e tipo de pacote não chuta homônimo (fora do H2, achado nele).** O `queries.scm` só casava genérica sem receiver: `repo.FindAsync<T>(id)`, `_libraryManager.GetItemById<T>(..)`, `sutProvider.GetDependency<T>()` nem eram chamadas. Com elas no grafo, a adivinhação por nome do resolver apareceu em massa (`Substitute.For<T>()` ligado a um `For` do repo), e a regra de precisão ganhou um caso: receiver cujo tipo está escrito no código e é de pacote (`Substitute`, um local `Fixture`, um campo `ILogger`) — ou genérica num receiver de tipo desconhecido — só alcança **método de extensão do repo** (marcado nos fatos do arquivo, `this` depois de atributos e em várias linhas), que estenda aquele tipo (interface, parâmetro de tipo ou `object` valem para qualquer um) e caiba nos argumentos (o método do próprio tipo vence: `list.Contains(x)` é do `List`); classe estática (`Assert.X`) não tem extensão; nome com maiúscula que é membro herdado (`ParentId`, `HttpContext` de uma base de pacote) não é tipo estático; `Ns.Tipo.Metodo()` do repo continua. Medido em 4 repos .NET (conjunto de arestas antes × depois, amostras julgadas na fonte): bitwarden −5.684 +12.244, jellyfin −1.459 +367, eShop −111 +27, eShopOnWeb −8 +15; o que sai é chute (`List.Add`, LINQ, `mock.Setup` do Moq, `Assert.Single`, `JsonSerializer.Serialize`, `_logger.LogX`, `Path.GetExtension`), o que entra é `receiver-type` em genéricos e extensões do repo (`claimsPrincipal.GetValue<T>`, `AddX(this IServiceCollection)`). Resta chute quando o tipo de pacote tem método próprio com o mesmo nome e aridade (`string.Split(',')` × uma extensão `Split`). Fixture `csharp-receiver-types` + 5 testes.
-- 2026-10-16: **Linker: rotas ASP.NET casam sem distinção de caixa (F0.5), e clientes NSwag viram chamadas (H2b item 7).** Os clientes gerados pelo NSwag mostraram a caixa que o ASP.NET publica: `/api/TodoItems`, o nome da classe — o extrator gravava `[controller]` em minúsculas só porque o linker comparava exato. Agora o extrator mantém a caixa declarada e o linker compara sem caixa quando a rota é de `aspnet`, `aspnet-minimal` ou `fastendpoints` (o roteamento do ASP.NET Core não distingue); Go, Express, FastAPI e os demais continuam exatos. O nó `HttpEndpoint` já tinha `framework`; o `link_tenant` passou a lê-lo. Os clientes NSwag C# (`.g.cs` com o cabeçalho do NSwag deixa de ser excluído como gerado) e TS viram `HttpCall` `via: generated-client`: num par .NET com cliente gerado, cada operação liga à rota do serviço. Medido no corpus do H2 com 3 apps .NET novos (145 operações, todas extraídas e com rota); detalhe no `H2-roadmap.md` e no `corpus-report.md`. Teste `test_aspnet_routes_match_without_case_others_with_it` e o par `csharp-praticis-reports` → `-todos` na caixa declarada.
-- 2026-10-16: **Handoff H3 registrado** (`docs/handoffs/H3-ai-dev-efficiency.md`, item S9): medir se o atlas e o conhecimento do processo reduzem tokens no desenvolvimento com IA ou se o ganho está em outro lugar. A estimativa, ainda sem medição: economia modesta em tarefas dentro de um repo e ganho grande, sobretudo em completude e menos retrabalho, nas tarefas entre repos. Desenho: reencenar PRs já mergeados com e sem a stack, medindo tokens, tempo, completude e defeitos contra o que o PR mudou
-- 2026-10-16: **Handoff H4 registrado** (`docs/handoffs/H4-public-docs.md`, trilha **Publicação e documentação**): documentação pública para os dois repositórios — o aidd-stack e o indexador, que sai para um repo próprio —, com inglês como fonte e traduções em pt-BR, es e zh-CN. Proposta de fronteira: o `knowledge` e a política ficam no aidd-stack; o esquema, o corpus, as fixtures e, no primeiro corte, o `dotnet-praticis` vão com o indexador, publicado como imagem no GHCR. Traduções em camadas, com proveniência e checagem de defasagem no CI, e um manifesto como contrato com o processo dos assets visuais. A separação espera o merge do H2b
-- 2026-10-16: **TS: imports `.js` de um arquivo `.ts` e aliases de um pacote abaixo da raiz resolvem (fora do H2, achado nele).** Com `moduleResolution: nodenext`, o TS escreve `import { x } from './enum.js'` para `enum.ts`; o resolvedor só tentava o `.js` e as extensões somadas ao nome, e o import ficava sem destino. Os aliases (`src/`, `@/`, `~/`, `#`) eram tentados só da raiz do repo, e o `src/*` do `tsconfig` de um pacote como o `server/` do immich não resolvia. Agora o resolvedor tenta o `.ts`/`.tsx`/`.mts`/`.cts` de um especificador `.js`/`.jsx`/`.mjs`/`.cjs` e os aliases a partir do pacote do arquivo antes da raiz. Medido com o código antes e depois: +9845 arestas `IMPORTS` para arquivo (immich 76 → 3232, nest 54 → 3540, ghost 11647 → 14863, fastify-demo 0 → 26), não resolvidos 3244 → 88, 3489 → 3, 3817 → 601 e 26 → 0; cada aresta nova nomeia o arquivo do especificador, nenhuma se perdeu ou mudou de destino. Teste `test_resolve_ts.py`; o HTTP (prefixos do Nest em enum de outro arquivo) está no `H2-roadmap.md`.
-- 2026-10-17: **F0.4.3b fechado (H2b): corpus de 42 repos e hold-out de 16.** O extrator passou pelos itens da Fase 4 na ordem do ranking do v2 e da prioridade do portfólio (H2-D18); do primeiro v2 ao último, nos mesmos gabaritos e 38 repos, o recall de rotas foi de 55,6 a 93,1 % no C#, de 9,4 a 98,0 % no Go, de 9,1 a 98,0 % no Python fora do Django e de 4,3 a 85,4 % no TS/JS. O **hold-out** — 16 repos no perfil do portfólio, com gabarito escrito antes de rodar e medidos uma vez (H2-D20) — mostrou sobreajuste onde o portfólio mais pesa: recall de rotas C# 48,5 % e Go 19,7 % (Python 83,8 %, TS/JS 74,1 %). As regras valem onde o app roteia como o corpus (Kavita, sftpgo, open-webui, docmost e btcpayserver saem inteiros; o SDK hey-api do Umbraco, 513 de 513) e caem em formas comuns que ele não tinha: atributo de rota próprio, convenções OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo; e dois defeitos de precisão (prefixo aplicado duas vezes num grupo Go passado a função). Tudo isso entrou no **F1.14**, precisão primeiro. Ferramenta: `http_corpus.py --holdout` e o `scope_paths` do gabarito (`corpus_metrics.py`). Relatório: `docs/corpus-report.md`
-- 2026-10-17: **F1.14 incremento 1: os dois defeitos de precisão do hold-out e o .NET que ele mostrou.** O prefixo de grupo passa a ser do par (escopo, nome), como o grafo de montagem: o parâmetro `a` de `registerAPIRoutes(a)` não herda o `a :=` de outra função (vikunja, 176 rotas); método Go não exportado não registra rota; o echo junta prefixo e path como escritos. No .NET, os atributos de rota do projeto viram receitas que o `compose` preenche (Radarr `[V3ApiController]`, `[RestGetById]`; Umbraco `[VersionedApiBackOfficeRoute(x)]`), com Asp.Versioning, OData por convenção, herança em até quatro níveis (`[NonAction]`, sobrecargas) e `[Route]` sem verbo como ANY: Radarr e Smartstore a 100 %/100 %, Umbraco a 100 %/99,8 % com o token do próprio Umbraco lido (sem isso, 0 %: limitação). Os quatro repos viram corpus (46); os 42 anteriores, idênticos. Fronteira com o SCIP registrada (guia §8, ADR-002): o que falta é valor ou convenção, e o que pedir tipo inferido vira `needs-resolver` para o F1.2
-- 2026-10-18: **F1.14 incremento 2: o resto do .NET do hold-out.** O token de rota do projeto recebe o valor com que a convenção que reescreve as rotas é registrada — o `[umbracoBackOffice]` do Umbraco é `DefaultUmbracoPath.TrimStart(TildeForwardSlash)`, `umbraco` —, sem nada do Umbraco no código: classe com `IApplicationModelConvention`, `Conventions.Add(new T(token, valor))`, valor estático ou nada. FastEndpoints atrás das bases do projeto e o `RoutePrefix` global pelo default do parâmetro (Elsa, 245 rotas); metades `partial` como uma classe (btcpay); action sem atributo pelo teste do próprio ASP.NET; `[Area]` herdado; evidência de `MapGet` na linha do nome, não do receptor que a gramática juntou. Umbraco e Elsa a 100 %/100 %; Elsa e btcpay viram corpus (48); C# a R 99,3 % e P 100 % sobre 1944 rotas esperadas. Fica o prefixo vindo de opções ou configuração (`prefix-as-param`).
-- 2026-10-18: **F1.14 incremento 3: o Go do hold-out.** grpc-gateway v2 (o verbo como `http.MethodGet`, a captura com literais) e o grupo Go numa variável de pacote, atribuída com `=` em outro arquivo: `=` não declara, o prefixo vai na aresta do grupo e chega às rotas dos outros arquivos, e passa por `conf.BaseUri(..)` — função que devolve o parâmetro vale o argumento. Os verbos do `Match` vêm de variável. memos (as 92 rotas do gateway; os 93 RPCs Connect ficam com o F2.1) e photoprism (de 0 % a 97,5 % / 97,6 %) viram corpus (50); o gotify ganha os verbos do `Match`; os outros 47, idênticos. Fica o verbo customizado do gRPC impresso como parâmetro (`/api/ai{transcribe}`).
-- 2026-10-18: **F1.14 incremento 4: o Python do hold-out.** Classe do projeto cujas bases chegam ao router do framework constrói um router (`class UserAPIRouter(APIRouter)` do mealie, de outro arquivo), com o prefixo pelo que o `__init__` entrega ao `super().__init__` — literal, ou o argumento da chamada para o parâmetro. mealie de 64,1 % / 59,4 % a 100 % / 100 % e vira corpus (51); o CTFd ganha `GET /` (a aplicação é `CTFdFlask`, subclasse de `Flask`); os outros 49, idênticos.
-- 2026-10-18: **F1.14 incremento 5: o TS/JS do hold-out — o item 6 fecha.** Rotas Koa sem barra montadas por `router.use("/", x.routes())` e `koa-mount`, o `SEARCH` do Express, a regex depois de um parâmetro e o curinga opcional do path-to-regexp 8; nas chamadas, a base do cliente de módulo (`axios.create({ baseURL })`, a classe com campo `baseUrl`), também por import e alias (`@/`, `$lib`), salvo com interceptor que reescreve a `url`, e constantes em template. outline, directus, docmost e open-webui viram corpus (55); o dispatch ganha 3 chamadas; os outros 50, idênticos. Do item 6 sobram limitações e o connect-go (F2.1). Próximo: PR da `feature/h2-corpus`; depois, numa branch nova, os itens 1–5 e 7 e um hold-out novo para fechar o F1.14; então o SCIP (F1.1/F1.2).
-- 2026-10-18: **F1.14 incremento 6, o primeiro do fechamento (branch `feature/f114-close`, depois do merge do PR #4).** Os grupos do FastEndpoints (`Group<T>()`, `SubGroup<TPai>`, item 1): o prefixo do grupo, depois o do pai, antes das rotas declaradas acima da chamada, e o `RoutePrefix` global antes de tudo; `Get("users")`, de um segmento, passa a ser lido. O verbo customizado depois de um nome (item 7): `/api/ai:transcribe` não é mais `/api/ai{transcribe}`. O memos fica com as 93 rotas do gateway (antes 92: `attachments:upload` e `attachments:batchDelete` dividiam a chave), e uma chamada do open-webui sai certa; os outros 53, idênticos. Django fica fora do fechamento (o portfólio é FastAPI e Flask).
-- 2026-10-18: **F1.14 incremento 7: o item 2, o Go dos routers por tipo declarado e das closures com nome.** O método de router chamado num valor de tipo declarado passa a ser seguido: receptor ou parâmetro da função em volta, local com literal composto (`m := &csv.MigratorWeb{}`) ou campo de struct do pacote (`api.v1.Register(r.WithPrefix("/api/v1"))`), com o `WithPrefix` do `prometheus/common/route` como portador de prefixo. Local de tipo inferido (`x := NewT()`) é do resolvedor. A closure de registro guardada num nome, chamada dentro de grupos ou dada como corpo de um, dá as rotas sob o prefixo de cada uso, uma vez por uso. O prefixo que só existe em runtime (`"/" + strings.Trim(opts.RoutePrefix, "/")`) deixa de ser aplicado. alertmanager com as 8 rotas `/api/v1`; vikunja com o prefixo nas 8 rotas dos migradores; gitea −79 +192 (78 linhas de registro em closures, uma rota por uso); os outros 52 e o hold-out, idênticos. Go no gabarito: R 92,9 → 93,1 %; P 99,1 → 98,9 %: o recorte do gabarito do vikunja passou a contar o módulo dos migradores, onde 4 das 8 rotas novas saem com `{param}` no nome do migrador (`segment-from-method`; a validação do PR #5, com o mesmo gabarito dos dois lados, mostrou que a queda vem delas). O `RouterAdmin` do kratos fica como limitação: o prefixo é um campo preenchido em runtime. O código novo já segue as metas do H5 (complexidade ≤ 9, comentários sem nomes de apps).
-- 2026-10-18: **F1.14 incremento 8: o prefixo próprio de um grupo global é do router (dívida do item 7).** Em Go, o prefixo de um grupo que outros arquivos nomeiam ia nas arestas que o arquivo dele publicava. A reatribuição com o mesmo nome (`router = router.WithPrefix("/api/v2")`, `r = r.Group("/v3")` num parâmetro) só dava uma aresta do router para ele mesmo, e as rotas saíam sem o prefixo quando nenhum arquivo montava o router; a aresta de outro arquivo que o monta também não o levava. Agora o grupo publica o prefixo como do router (`go.mount.own`), e o `compose` o põe depois do prefixo de cada cadeia. Só fixture (`route-patterns-go`, `internal/reassigned/`): os 55 repos e o hold-out, idênticos; a baseline segue a `2026-10-18-v2-baseline-24`.
-- 2026-10-18: **F1.14 incremento 9: o item 5, um endpoint por app num monorepo (indexer 0.2.15; a impressão digital do build reindexa).** O id do `HttpEndpoint` era por repo, e a mesma rota em dois apps do repo virava um nó só, com a evidência e o handler do primeiro. Agora a rota declarada em dois módulos com manifesto (`go.mod`, `package.json`, `.csproj`, `pyproject.toml`..) é um endpoint por módulo: o id ganha `/app/<dir>` e o nó, `app`. Rota declarada uma vez mantém o id, também numa biblioteca que o app referencia, e pacote Go não conta como módulo. O grafo apaga os nós de endpoint de indexers anteriores; uma chamada a uma rota assim liga aos dois endpoints, porque o serviço segue sendo o repo; `http_map` e `who_consumes` devolvem o `app`. Corpus: 13 repos só ganham as cópias que o nó único escondia (os 14 serviços do bitwarden com `/alive` e `/now`, as receitas do fiber, as amostras do nest), julgadas na fonte; o kratos expõe um helper de biblioteca que ninguém chama (`library-code`); 42 repos e o hold-out, idênticos. `multi-app-repo` de 16 para 8 em 4 repos; recall de rotas Go 93,1 → 93,3 %, TS/JS 89,0 → 89,2 %. Ficam dois apps dentro de um módulo só (limitação).
-- 2026-10-18: **F1.14 incremento 10: o item 3, os wrappers de cliente do app em Python.** A função cuja chamada de saída monta o path em volta de um parâmetro é wrapper, com o verbo da chamada, o do parâmetro de onde ele vem ou o default desse parâmetro; a chamada que lhe dá um path literal é chamada de saída, e a que lhe repassa um parâmetro torna wrapper a função de fora (`_get` → `_request`, em até quatro elos). O receptor é `self` (a classe e as bases), uma variável local ou de módulo com o construtor de uma classe do repo, ou `self.x` com esse construtor; a função é do módulo ou importada; cliente de biblioteca nunca é wrapper. A leitura do path em volta do parâmetro saiu do C# para `core/http_wrappers.py`, igual, e as duas linguagens a usam (C# idêntico). Sem caso conhecido no corpus, a regra achou 47 chamadas, certas na fonte: open-webui +35 (o proxy do Ollama, o MinerU, o servidor de terminal) e zulip +12 (a API do Slack, o push bouncer, o provedor de vídeo); os outros 53 e o hold-out, idênticos.
-- 2026-10-18: **Handoff H5 registrado** (`docs/handoffs/H5-indexer-refactor.md`): refatorar o indexador antes do SCIP, sem mudar comportamento (corpus e hold-out idênticos a cada passo). A revisão mediu 13 funções com complexidade acima de 40 (o `_controller` do C# a 118, o `_call` do Go a 95), sete módulos acima de 600 linhas, código de linguagem dentro do `core/` (contra o ADR-003), dois sistemas paralelos de "tipo declarado" (o resolver micro e os scanners HTTP) e um `walk` que é 56 % do tempo de extração, quase metade num `_declared_type` quadrático do resolver Go. Alvo: um `FileIndex` por arquivo, um serviço de tipos onde o F1.2 pluga o SCIP, regras como reconhecedores sobre um catálogo de frameworks como dado (absorve o item 7 do F1.14), fatos tipados e o laço do corpus em ≤ 60 % do tempo. Decisões do autor no mesmo dia: complexidade de um dígito (≤ 9) e módulos de até 300 linhas, só relatadas no CI até ele decidir bloquear; catálogo em YAML; uma revisão geral dos comentários, sem referência a docs e sem nome de projeto; o MCP entra, o `cli.py` fica para o P2; e tudo isso antes do SCIP.
-- 2026-10-18: **F1.14 incremento 11: o item 4, o TS/JS inteiro.** Wrappers de cliente do app no TS/JS, com a resolução das cadeias movida para `core/http_wrappers.py` (Python e TS a usam): função do módulo, `const X = (..) => ..`, método de objeto exportado (`requests` do argo-cd) ou de classe; o verbo do nome, do `method` das opções (literal, parâmetro ou campo desestruturado com default) ou das opções que um parâmetro repassa (`fetch(url, options)`, GET só quando quem chama não dá); a base do cliente de dentro antes do path. Chamada a função do arquivo, ou a `this.m()`, vale o path que devolve (os helpers de rota do `Client4` do mattermost); campo de classe com literal é constante. Duas regras que o julgamento pediu: link lido da página (`getAttribute`, `dataset`, `pathname`) no começo do path não dá chamada (uma versão mais estrita, que tratava qualquer campo de local ou parâmetro como runtime, tirava 29 chamadas certas e foi descartada); query string colada ao fim do path (chamada, ternário entre nada e `?..`, ou local com uma delas) sai do path, em toda linguagem. Rotas: lista de sub-routers montada em laço, `@fastify/autoload` por pasta (com `register(fp(plugin))` montando o plugin) e Next.js por arquivo (`app/**/route.ts`, `pages/api/**`, num pacote que exige `next`). Diff: mattermost +504 chamadas, argo-cd 100 com o `/api/v1`, gitea +19, outline, directus, zulip, ghost, open-webui; express-boilerplate, fastify-demo e taxonomy a 100 %/100 %; o catch-all Next.js do hono-examples entra no gabarito (H2-D15); 39 repos e o hold-out idênticos, C#, Go e Python sem mudança. TS/JS: rotas R 89,2 → 91,7 %, P 96,5 → 98,1 %; chamadas R 95,3 → 99,0 %, P 96,6 → 98,4 %. 39 itens da amostra reconferidos na fonte (38 certos agora). Nova baseline: `2026-10-18-v2-baseline-27`
-- 2026-10-18: **F1.14 fechado, e com ele o H2.** Onze incrementos levaram ao extrator o que o H2b e o hold-out deixaram: cada item tem regra com fixture e corpus julgado, ou limitação no guia; do item 7, o catálogo e os limiares do `built_bundle` passaram ao H5; o Django fica fora (o portfólio é FastAPI e Flask). O corpus foi de 42 a 55 repos, com os 13 do hold-out que o F1.14 trabalhou. Nesses 13, o recall de rotas foi de 32,2 a 99,8 % no C#, de 0 a 79,3 % no Go (95,7 % sem os RPCs Connect do memos, que são do F2.1), de 83,8 a 100 % no Python e de 74,1 a 99,2 % no TS/JS; o de chamadas TS/JS, de 76,5 a 100 %. No corpus inteiro (54 gabaritos, P / R pela lista): rotas C# 100 / 99,3 %, Go 98,9 / 93,3 % (97,7 % sem o Connect), Python 99,3 / 98,6 % fora do Django, TS/JS 98,1 / 91,7 %; chamadas C# 100 / 99,0 %, Go 100 / 93,6 %, TS/JS 98,4 / 99,0 %. **O hold-out novo foi para depois do H5** (decisão do autor no fechamento, registrada no F1.14): o H5 não muda comportamento, o que ele mostrar se corrige no código refatorado, e a medição roda também o commit de antes do H5, o que dá ao H5 uma checagem em código que o corpus não cobre. F0.4.3 e F1.14 `[x]`. Relatório: `docs/corpus-report.md` ("Closing F1.14 and H2")
-- 2026-10-19: **F1.14 incremento 12: dois defeitos dos wrappers TS que a validação do PR #5 achou numa instalação ao vivo.** Antes do merge, o PR passou por uma validação em duas fases: offline (corpus e hold-out do `main` × a branch, a cadeia de baselines, os gabaritos e os testes, sem nenhum ganho perdido) e na instalação (dry-run dos 10 snapshots, reinstalação, refresh e fotos do grafo antes e depois). Num cliente do app, as opções chegavam ao `fetch` num local (`const init = { ...defaults, method: 'POST' }`) e o verbo caía no GET padrão; e a query entre parênteses (`endpoint + (vars ? '?' + qs.stringify(vars) : '')`) virava `{param}` no formato do wrapper: 34 de 51 chamadas novas erradas. Agora o local que guarda um objeto literal vale como o objeto, opções que o scanner não lê deixam o verbo desconhecido (`ANY`), e a query colada vale entre parênteses e no formato do wrapper. No app, 51 de 51 certas; no corpus, o mattermost ganha 8 uploads em POST (eram GET) e um `ANY`; os outros 54 e o hold-out, idênticos. Nova baseline: `2026-10-18-v2-baseline-28`
-- Próximo passo (2026-10-19): terminar a validação do PR #5 (a correção na instalação ao vivo, as perguntas douradas e o refresher) e mergear; depois a fase 0a do H4 (reciclar os docs de trabalho); depois o H5, com o corpus e o hold-out de 3 repos idênticos a cada passo; depois o hold-out novo, medido uma vez (rodando também o commit de antes do H5), e o handoff do que ele mostrar; o P2 (indexador em repo próprio); e só então o SCIP (F1.1/F1.2). Candidato a `dispatch`: validators alcançados pelo pipeline do barramento (`SendAsync(cmd)` → `AbstractValidator<cmd>`); re-rodar a Q4 .NET com o despacho. Pendências sem bloqueio: o `raw_path` de uma chamada por wrapper com base terminada em `/` sai com barra dupla (outline `/api//documents.{param}`; o path normalizado está certo, achado na validação do PR #5); PAT com acesso à org do tenant, validação em WSL (SO14), lacunas do feedback de code review (Go `who_calls` entre repos, mensageria por tipo de evento)
+- **Phases:**
+  - **Phase 0** (foundation) is done;
+  - **Phase 1** started on 2026-10-13 with F0.7.3;
+  - **F1.14** (the HTTP extractor measured on the public corpus, H2) closed on 2026-10-19.
+- **The milestones and why each choice was made:** `docs/history.md`, one milestone per line, and
+  `docs/decisions.md`.
+- **Measuring the extractor:**
+  - `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`;
+  - the hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
+  - the numbers are in `docs/corpus-report.md`.
+- **In progress:**
+  - PR #5 (`feature/f114-close`: the F1.14 close) was validated on a live install and merged on 2026-10-19;
+  - H4 phase 0a (the working docs recycled, every doc in English): done on 2026-10-19, in its own PR.
+- **The order up to SCIP (H5-D1):** H4 phase 0a → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
+  with no behavior change) → the new hold-out, measured once, and its handoff (H2-D21) → P2 (the indexer in its own
+  repo) → SCIP (F1.1, F1.2).
+- **Active handoffs:** H3 (AI dev efficiency), H4 (public docs and the indexer in its own repo) and H5. Closed: H1
+  and H2.
+- **Candidates:**
+  - `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
+  - re-run the .NET Q4 with dispatch.
+- **Non-blocking leftovers:**
+  - the `raw_path` of a call through a wrapper whose base ends in `/` comes out with a double slash (the normalized
+    path is right);
+  - a PAT with access to the tenant's org;
+  - validation on WSL (SO14);
+  - gaps from the code review feedback: Go `who_calls` across repos, messaging by event type.
 
----
+## Principles (non-negotiable)
 
-## Princípios (não negociáveis)
+- The knowledge layer (graph + vectors + vault) is **orchestrator-independent**: MCP + skills only. Cline, Roo,
+  Goose, Claude Code or Aider consume the same backend.
+- **Deterministic** extraction (SCIP / tree-sitter). An LLM only summarizes and disambiguates; never the primary
+  parser.
+- Every node/edge carries `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; macro edges carry
+  `confidence` + `evidence`.
+- Secrets never enter the index (extract the env var's *name*, never its value).
+- Every phase ends with the **golden questions** passing (recall measured, not felt).
+- **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
+  complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
+  reports today and starts blocking when the author decides. New code meets the targets from the start.
+- **Comments say only the why the code does not:** a contract, an edge case, the reason for an order. No reference to
+  docs or planning items (ROADMAP, `F1.x`, decisions, ADRs, guide sections), because docs change and the code should
+  not point at them. No project name: an example describes the shape of the code, and only the framework or library
+  that defines the behavior is named.
+- **No real tenant, client or private project name** in docs, code, tests or fixtures. The repository is public.
+  Where an example is needed, a neutral name is used (`orders-api`, `PARTNER_API_URL`).
 
-- Camada de conhecimento (grafo + vetores + vault) é **independente do orquestrador**: só MCP + skills. Cline, Roo, Goose, Claude Code ou Aider consomem o mesmo backend.
-- Extração **determinística** (SCIP / tree-sitter). LLM só para sumarizar e desambiguar; nunca como parser primário.
-- Todo nó/aresta carrega `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; arestas macro carregam `confidence` + `evidence`.
-- Segredos nunca entram no índice (extrair o *nome* da env var, nunca o valor).
-- Cada fase termina com **perguntas douradas** passando (recall medido, não sentido).
-- **Forma do código** (decidido em 2026-10-18; o H5 leva o código atual até ela): complexidade ciclomática de **um
-  dígito** por função (≤ 9, `ruff C901`) e no máximo **300 linhas por módulo**, contadas no arquivo inteiro. O CI
-  relata hoje e passa a bloquear quando o autor decidir. Código novo já nasce dentro das metas.
-- **Comentários só com o porquê que o código não diz:** um contrato, um caso de borda, a razão de uma ordem. Sem
-  referência a docs nem a itens de planejamento (ROADMAP, `F1.x`, decisões, ADRs, seções de guia), porque os docs
-  mudam e o código não deve apontar para eles. Sem nome de projeto: o exemplo descreve a forma do código, e só se
-  nomeia o framework ou a biblioteca que define o comportamento.
-- **Nenhum nome real de tenant, cliente ou projeto privado** em docs, código, testes ou fixtures. O repositório é
-  público. Onde um exemplo for preciso, usa-se um nome neutro (`orders-api`, `PARTNER_API_URL`).
+## Target stack (open source / low cost)
 
-## Stack alvo (open source / baixo custo)
-
-| Camada | Ferramenta | Licença / custo |
+| Layer | Tool | License / cost |
 |---|---|---|
-| Parser universal | tree-sitter | MIT |
-| Indexação precisa | SCIP: scip-go, scip-typescript, scip-dotnet, scip-python | Apache-2.0 |
-| Graph DB | Neo4j Community (alt.: Memgraph Community) | GPLv3 / BSL — gratuitos |
-| Vetores | Qdrant (já no compose) | Apache-2.0 |
+| Universal parser | tree-sitter | MIT |
+| Precise indexing | SCIP: scip-go, scip-typescript, scip-dotnet, scip-python | Apache-2.0 |
+| Graph DB | Neo4j Community (alt.: Memgraph Community) | GPLv3 / BSL — free |
+| Vectors | Qdrant (already in the compose file) | Apache-2.0 |
 | Embeddings | FastEmbed + `jinaai/jina-embeddings-v2-base-code` (alt.: nomic-embed-code via Ollama) | Apache-2.0, local |
-| Docs/ADR | Obsidian + MCP (já no compose) | gratuito (uso comercial liberado desde 2025) |
-| MCP `atlas` | FastMCP (Python) próprio + mcp-neo4j-cypher | Apache-2.0 |
-| LLM local | Ollama (Qwen-Coder / DeepSeek para sumários, classificação) | gratuito |
-| LLM frontier | Claude (planejamento, refinamento, review) | **único custo variável** |
-| Planejamento | Jira via Atlassian MCP | já disponível |
-| Spec | Spec Kit (opcional) | MIT |
-| CI (fase 3) | GitHub Actions / GitLab CI com runner self-hosted | gratuito/baixo |
+| Docs/ADR | Obsidian + MCP (already in the compose file) | free (commercial use allowed since 2025) |
+| `atlas` MCP | our own FastMCP (Python) + mcp-neo4j-cypher | Apache-2.0 |
+| Local LLM | Ollama (Qwen-Coder / DeepSeek for summaries, classification) | free |
+| Frontier LLM | Claude (planning, refinement, review) | **the only variable cost** |
+| Planning | Jira via the Atlassian MCP | already available |
+| Spec | Spec Kit (optional) | MIT |
+| CI (phase 3) | GitHub Actions / GitLab CI with a self-hosted runner | free/low |
 
-## Quando cada coisa fica utilizável (para não se perder)
+## When each thing becomes usable (so as not to get lost)
 
-| Marco | O que você passa a poder fazer | Muda algo nas skills? |
+| Milestone | What you can now do | Does it change the skills? |
 |---|---|---|
-| Compose com Neo4j (feito) | Abrir `localhost:7474`; MCP `atlas` responde `get_neo4j_schema` | **Não.** Grafo vazio; `scan` segue igual |
-| F0.3–F0.5 indexer + linker v0 | `aidd index <repo>` popula o grafo; validar com Cypher / perguntas douradas | Não |
-| F0.6 MCP `atlas` próprio (:3005) | Ferramentas de intenção (`repo_map`, `who_consumes`…) disponíveis no Claude Code | Não, mas habilita o próximo |
-| F0.8 `scan` v2 | `scan` consulta o grafo primeiro, com fallback ao fluxo atual | **Sim** — transparente: mesmo gatilho, mais precisa |
-| F1.10 / F2.7 `flow`, `impact` | Perguntas micro/macro respondidas com evidência | Novas skills |
-| S4/S5 `refine-business`, `refine-tech` | Fluxo de refinamento completo (Jira → contexto → área → spec) | Novas skills; dependem de `impact` |
+| Compose with Neo4j (done) | Open `localhost:7474`; the `atlas` MCP answers `get_neo4j_schema` | **No.** Empty graph; `scan` stays the same |
+| F0.3–F0.5 indexer + linker v0 | `aidd index <repo>` fills the graph; validate with Cypher / golden questions | No |
+| F0.6 our own `atlas` MCP (:3005) | Intent tools (`repo_map`, `who_consumes`…) available in Claude Code | No, but it enables the next one |
+| F0.8 `scan` v2 | `scan` queries the graph first, falling back to the current flow | **Yes** — transparent: same trigger, more precise |
+| F1.10 / F2.7 `flow`, `impact` | Micro/macro questions answered with evidence | New skills |
+| S4/S5 `refine-business`, `refine-tech` | The full refinement flow (Jira → context → area → spec) | New skills; they depend on `impact` |
 
-Regra: o grafo só entra nas skills via MCP `atlas` e **sempre com fallback**. Até o F0.6 ele é infra em preparação — nada a acionar no dia a dia.
+Rule: the graph reaches the skills only through the `atlas` MCP and **always with a fallback**. Up to F0.6 it is
+infra in preparation — nothing to trigger day to day.
 
-### Checklist de validação do compose (validado 2026-09-10/11; `install-check.sh` cobre os itens 2–7 a cada upgrade)
+### Compose validation checklist (validated 2026-09-10/11; `install-check.sh` covers items 2–7 on every upgrade)
 
-Atalho: `~/.aidd/install-check.sh` (copiado pelo `install.sh`) roda os itens 2–7 abaixo e imprime OK/FAIL por check.
+Shortcut: `~/.aidd/install-check.sh` (copied by `install.sh`) runs items 2–7 below and prints OK/FAIL per check.
 
-
-- [x] `.env` tem `NEO4J_USER=neo4j` e `NEO4J_PASSWORD=<senha>` (o `install.sh` gera; se o volume já existia com outra senha: `docker compose down -v` e subir de novo — dev only)
-- [x] `docker compose up -d --build` sem erro; `docker compose ps` mostra `neo4j` *healthy* e `neo4j-init` como *Exited (0)*
-- [x] `docker logs aidd-neo4j-init` sem erro (o cypher-shell é silencioso em sucesso — vazio é bom; erro de sintaxe aparece aqui)
-- [x] **Neo4j Browser** em <http://localhost:7474> (login com o `.env`): `SHOW CONSTRAINTS` lista 14 constraints; `SHOW INDEXES` inclui `symbol_fulltext`; `RETURN apoc.version()` responde
-- [x] `docker logs aidd-mcp-atlas` mostra o Uvicorn escutando em 0.0.0.0:3000; `curl -s http://localhost:3005/healthz` devolve `{"status":"ok","neo4j":true,...}`
-- [x] (debug) `docker compose --profile debug up -d mcp-neo4j` → `curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/mcp/` devolve um status HTTP
-- [x] No Claude Code, com `setup/.mcp.json` aplicado: `/mcp` lista `atlas`; pedir "rode `get_neo4j_schema`" retorna vazio (grafo sem dados) sem erro de autenticação
-- [x] `install.sh` re-executado sincroniza `~/.aidd/neo4j/` e o `docker-compose.yml` novo
-- [x] Docs: `git rm docs/graph-schema.md` (movido para `neo4j/SCHEMA.md`)
+- [x] `.env` has `NEO4J_USER=neo4j` and `NEO4J_PASSWORD=<password>` (`install.sh` generates them; if the volume
+  already existed with another password: `docker compose down -v` and bring it up again — dev only)
+- [x] `docker compose up -d --build` with no error; `docker compose ps` shows `neo4j` *healthy* and `neo4j-init` as
+  *Exited (0)*
+- [x] `docker logs aidd-neo4j-init` with no error (cypher-shell is silent on success — empty is good; a syntax error
+  shows here)
+- [x] **Neo4j Browser** at <http://localhost:7474> (log in with `.env`): `SHOW CONSTRAINTS` lists 14 constraints;
+  `SHOW INDEXES` includes `symbol_fulltext`; `RETURN apoc.version()` answers
+- [x] `docker logs aidd-mcp-atlas` shows Uvicorn listening on 0.0.0.0:3000; `curl -s http://localhost:3005/healthz`
+  returns `{"status":"ok","neo4j":true,...}`
+- [x] (debug) `docker compose --profile debug up -d mcp-neo4j` → `curl -s -o /dev/null -w "%{http_code}"
+  http://localhost:3004/mcp/` returns an HTTP status
+- [x] In Claude Code, with `setup/.mcp.json` applied: `/mcp` lists `atlas`; asking "run `get_neo4j_schema`" returns
+  empty (a graph with no data) with no authentication error
+- [x] Re-running `install.sh` syncs `~/.aidd/neo4j/` and the new `docker-compose.yml`
+- [x] Docs: `git rm docs/graph-schema.md` (moved to `neo4j/SCHEMA.md`)
 
 ---
 
-## Fase 0 — Fundação (PoC ponta a ponta, 2 repos)
+## Phase 0 — Foundation (end-to-end PoC, 2 repos)
 
-Objetivo: provar micro + macro com o mínimo: dois repos (Go + Node) que se falam por gRPC/HTTP, e uma pergunta `who_consumes` respondida a partir do grafo.
+Goal: prove micro + macro with the minimum: two repos (Go + Node) that talk over gRPC/HTTP, and a `who_consumes`
+question answered from the graph.
 
-- [x] F0.1 Escolher graph DB (Neo4j Community vs Memgraph) e adicionar ao `docker-compose.yml` com volume e healthcheck
-- [x] F0.2 Escrever `neo4j/SCHEMA.md`: nós (Repo, Module, File, Symbol, HttpEndpoint, GrpcMethod, Topic, InternalPackage, DbTable), arestas, propriedades obrigatórias
-- [x] F0.3 Criar `indexer/` (Python): CLI `aidd index <repo>` com tree-sitter → nós micro (Repo, Snapshot, Module, File, Symbol, CONTAINS, IMPORTS, CALLS por nome, Package externo) → `MERGE` idempotente + GC de órfãos + IndexRun; `--dry-run --out` para inspeção
-- [x] F0.3.1 Validar no atlas real (2026-09-10: `<project-a>`, 494 símbolos / 636 CALLS / 352 IMPORTS em 5,9 s): `docker compose --profile tools build indexer` → `docker compose run --rm indexer index <repo>` → `aidd status` → no Browser: `MATCH (f:File)-[:CONTAINS]->(s:Symbol) RETURN f.path, s.kind, s.name LIMIT 25` e `MATCH (a)-[c:CALLS]->(b) RETURN a.name, b.name, c.strategy LIMIT 25`
-- [x] F0.3.5 **Processo de indexação** (ver `docs/indexing-process.md`): `atlas.yaml` (fontes, seleção, política de refs), fonte `local`, `aidd plan` / `bootstrap` / `refresh`, `--ref` real via `git worktree`, opção "Atlas bootstrap" no `install.sh`; `install.sh` builda também o profile `tools`
-- [x] F0.3.2 Idempotência e GC confirmados: `refresh` = 0 changed após bootstrap; após push real, 6 changed, `orphans_deleted` > 0
-- [x] F0.3.7a Wrapper de host `~/.aidd/aidd` (fetch com as credenciais do dev, container com `--no-fetch`); instalação indexa **sem fetch** (refs como clonados) — decisão D12
-- [x] F0.3.6 Política de refs por repo: `refs.overrides: {<project>: {always: ["main"]}}` no `atlas.yaml` (nome ou glob; `always`/`patterns`/`active`, `active: false` desliga branches ativas) — feito 2026-10-03; snapshot que ficou fora da política continua no grafo e o `refresh` lista (`[refresh] N snapshot(s) outside the ref policy … aidd wipe <repo> --ref <ref>`) — remoção segue manual, de propósito
-- [x] F0.4 Extrator de candidatos de integração v0 (hoje `indexer/aidd_indexer/core/integrations.py` + `languages/<lang>/http.py`, ver F0.4.4): rotas expostas (Go net/http 1.22, gorilla, chi, gin/echo+Group, fiber; express/fastify; Nest; ASP.NET controllers + minimal APIs; FastAPI/Flask) e chamadas HTTP de saída com path literal/template (Go, TS, C#, Python). Calibrado em corpus público (`scripts/http_corpus.py`). `.proto` + stubs ficam para F1 (gRPC)
-  - [x] F0.4.2 (handoff H1) Fixtures do padrão do autor por linguagem + `expected.json` — **.NET feito 2026-10-12** (indexer 0.2.10): extensão `dotnet-praticis` (`indexer/conventions/dotnet-praticis/`, entry point `aidd.conventions`; papéis + arquiteturas `flat`/`split`/`layered`), fixtures `csharp-praticis-todos` / `-reports` / `-projects` (um layout cada) com layout, papéis, camadas, entry points, violação proposital, `CALLS` e gaps no `expected.json`; as Go (`go-http-mix`, `go-wrapped-http`, `go-receiver-types`…) já seguem o layout hexagonal do autor — falta escrevê-lo como convenção Go quando houver referência
-  - [x] F0.4.3 (handoff H2, dividido em H2a/H2b em 2026-10-13 — plano, decisões e estado em `docs/handoffs/H2-roadmap.md`) *(2026-10-18, com o F1.14, que levou o que o H2b deixou ao extrator)*
-    - [x] F0.4.3a (H2a) *(2026-10-14)* Instrumento + `docs/corpus-report.md` v1 com o corpus atual: SHAs fixados, `http_corpus.py --baseline/--expected/--sample`, gabarito OpenAPI onde houver spec commitada, precisão/recall amostrados (recall sorteado da fonte), erros por categoria. Fecha a Fase 0
-    - [x] F0.4.3b (H2b) *(2026-10-17)* Corpus ampliado (~40 repos, preferência por spec commitada — *feito 2026-10-15: 39 repos, relatório v2*; 42 no fim) + evolução do extrator nas categorias que forem regra geral (prefixo cross-scope/cross-file, Django, rota por caminho de arquivo); gaps encaminhados a F0.5/F1/F2.1. No corpus, do primeiro v2 ao último (mesmos gabaritos, 38 repos): recall de rotas C# 55,6 → 93,1 %, Go 9,4 → 98,0 %, Python fora do Django 9,1 → 98,0 %, TS/JS 4,3 → 85,4 %; chamadas C# 48,3 → 96,6 %, Go 8,2 → 93,6 %, TS/JS 6,1 → 87,4 %. O **hold-out** (16 repos que as regras nunca viram, H2-D20) mostrou sobreajuste: recall de rotas C# 48,5 %, Go 19,7 %, Python 83,8 %, TS/JS 74,1 %; chamadas TS/JS 76,5 % — o que falta virou o **F1.14**. Relatório: `docs/corpus-report.md` ("Closing H2b", "The hold-out set")
-  - [x] F0.4.4 (ADR-003) Refatorar para `core/` + `languages/<lang>/` sem mudar comportamento (corpus + fixture idênticos) **+ costura de convenções** (registro `aidd.conventions`, contrato `Convention`, `convention.yaml`, exemplo mínimo, `conventions:` no `atlas.yaml`); depois disso H1 escreve o padrão do autor como convenção e H2 edita `languages/` — feito 2026-09-17
-  - [x] F0.4.5 Convenções: `route_patterns`/`client_patterns` (`Convention.scan_patterns()` → `ScanPatterns`, aplicados por `BaseScanner.convention_call()` em Go/TS/C#) e `Violation` no MCP (`violations(repo)`, `repo_map.layers`) — feito 2026-10-03 (indexer 0.2.6) e validado no portfólio (0.2.9: 130 endpoints, 90 ligações `exact`, 0 ambíguas)
-  - [x] F0.4.1 Validar no portfólio — fechado 2026-10-03 junto com a F0.4.5: rotas com handler resolvido em 31/31, 40/40 e 25/25 nos três serviços Go com HTTP; `HttpCall`s com `target_hint` = nome do serviço (e do provedor externo); `who_consumes` respondendo do grafo (Q1/Q4 em `docs/golden-questions.md`); falsos positivos de `HttpCall` zerados no BFF (18 saídas reais, 17 ligadas; a restante é path dinâmico ambíguo). O que fica sem par no tenant são provedores externos e rotas públicas
-- [x] F0.5 Linker v0: materializar `CONSUMES` (Service→HttpEndpoint) e `CALLED_FROM` (HttpEndpoint→Symbol) a partir de `HttpCall × HttpEndpoint` por `path_key`+método, com desempate por `target_hint`/`env_hints` quando o mesmo path existe em 2 serviços; `confidence`/`evidence` nas arestas — feito 2026-09-25 (`aidd link`); gRPC fica para F1
-  - [x] F0.5.1 Validar no portfólio real (par piloto com Refit) e `who_consumes` respondendo do grafo — feito 2026-09-29 (Go) e 2026-10-03 (.NET, Q1); pacotes internos (manifests) → `DEPENDS_ON` entre serviços — feito e validado no portfólio 2026-10-03 (indexer 0.2.5): 46 arestas / 11 pares, 0 ambíguos, topologia confere (2 repos de biblioteca Go com submódulos, 1 par .NET via pacote `.Contracts`)
-- [x] F0.6 MCP `atlas` v0 (FastMCP via SDK `mcp`, streamable HTTP *stateless* na porta 3005, hoje `indexer/aidd_indexer/mcp/server.py`, `aidd serve`): `atlas_status`, `repo_map`, `find_symbol` (fulltext `symbol_fulltext`, prefixo automático), `who_calls`, `symbol_context`, `cypher_readonly`. `mcp-neo4j` bruto → profile `debug`. `who_consumes` (macro) entra com o F0.5
-  - [x] F0.6.1 Validar na máquina: `install-check` seção MCP verde (2026-09-11), `/mcp` lista `atlas` no Claude Code, `repo_map`/`who_calls`/`impact_of` respondendo com dados reais do portfólio (F0.8.1 e `docs/golden-questions.md`)
-- [x] F0.7 Rodar nos 2 repos piloto e responder 5 perguntas douradas manualmente escritas em `docs/golden-questions.md` — 5/5 respondidas (2026-10-03); MCP ganhou `impact_of` e `ref_diff`
-  - [x] F0.7.1 `resolve.py`: código de produção não resolve para símbolos de teste + tipo estático do receiver em Go (`receiver-type`) + `impact_of` separa produção/teste — feito 2026-10-03 (indexer 0.2.2)
-  - [x] F0.7.2 C#: tipo estático do receiver + interface → implementador único (`receiver-type-impl`) + regra "tipo conhecido sem o método = sem aresta" — feito 2026-10-03 (indexer 0.2.3)
-  - [x] F0.7.2b Go: campos promovidos via embedding e retorno múltiplo na tipagem do receiver — feito 2026-10-03 (indexer 0.2.4); Q4 re-rodada em Go (3 rotas, consumidor, 0 ambíguos em produção) e .NET (implementação com 1 chamador, interface idêntica) ✅
-  - [x] F0.7.3 *(2026-10-13, indexer 0.2.13)* Go: interface → implementador único de produção por conjunto de métodos (`receiver-type-impl`); mediator em processo (`SendAsync`/`PublishAsync` → `Handle` do handler do tipo da mensagem, `dispatch`) declarado pela convenção — os 7 `gaps` de mediator das fixtures `csharp-praticis-*` viraram `edges`. Os outros gaps .NET fecharam em seguida: serviços do container e closures, métodos de base de pacote (`inherited`), sobrecargas, registros do DI e decorators
-- [x] F0.8 Atualizar skill `scan`: passo 0 = "se `atlas.repo_map` responder, use o grafo; senão, fluxo atual" (fallback preservado); `## Source` na página do vault; navegação por `find_symbol`/`symbol_context`/`who_calls` antes de implementar
-  - [x] F0.8.1 Validado 2026-09-11 em 3 cenários: (a) `<project-a>` com atlas → `repo_map` + vault/qdrant; (b) `<project-b>` com tudo ligado, repo nunca mapeado → `repo_map` (branch feature indexada) + vault/qdrant; (c) `<project-c>` **só com o atlas parado** (qdrant/obsidian conectados) → "atlas fora do ar, li a árvore" + vault/qdrant gravados. Fallback puro confirmado
+- [x] F0.1–F0.2 Neo4j Community in the compose file (D1) and the schema in `neo4j/SCHEMA.md`
+- [x] F0.3 The `indexer/`: `aidd index`, tree-sitter → micro nodes, idempotent `MERGE`, orphan GC and `IndexRun`.
+  Also: F0.3.1 (validated on the real atlas), F0.3.2 (idempotency and GC), F0.3.5 (the indexing process:
+  `atlas.yaml`, `plan`/`bootstrap`/`refresh`, `docs/indexing-process.md`), F0.3.6 (per-repo ref policy) and F0.3.7a
+  (host wrapper, install without fetch, D12)
+- [x] F0.4 The HTTP integrations extractor (`core/integrations.py` + `languages/<lang>/http.py`). Also:
+  - F0.4.1, validated on the portfolio;
+  - F0.4.2, the fixtures of the author's pattern (.NET: `dotnet-praticis`);
+  - F0.4.3, the public corpus, H2a and H2b: `docs/corpus-report.md`, `docs/handoffs/H2-roadmap.md`;
+  - F0.4.4, the ADR-003 refactor;
+  - F0.4.5, conventions and `Violation`.
+- [x] F0.5 The linker: `CONSUMES`/`CALLED_FROM` by `path_key` and method, with ties broken by hints. Also F0.5.1
+  (validated; `DEPENDS_ON` by manifest)
+- [x] F0.6 The `atlas` MCP, with 11 tools (`indexer/aidd_indexer/mcp/server.py`). Also F0.6.1, validated in Claude
+  Code
+- [x] F0.7 The 5 golden questions answered by the graph (`docs/golden-questions.md`). Also:
+  - F0.7.1–F0.7.2b, `CALLS` by receiver type in Go and C#;
+  - F0.7.3, Go interfaces and mediator dispatch.
+- [x] F0.8 The `scan` skill over the atlas, with a fallback. Also F0.8.1, validated in 3 scenarios
 
-**Saída da fase:** grafo local com 2 repos, `who_consumes` funcionando, `scan` lendo do grafo. **Obtido (2026-10-03):** 8 repos / 28 snapshots do portfólio + par .NET de referência; 130 endpoints, 90 `CONSUMES` exatas, 45 `DEPENDS_ON`; 11 tools no MCP; Q1–Q5 respondidas pelo grafo em Go e .NET sem leitura de código; 40 testes, corpus de 15 repos como regressão.
+**Phase exit:** a local graph with 2 repos, `who_consumes` working, `scan` reading from the graph. **Achieved
+(2026-10-03):** 8 repos / 28 snapshots of the portfolio + the reference .NET pair; 130 endpoints, 90 exact
+`CONSUMES`, 45 `DEPENDS_ON`; 11 tools in the MCP; Q1–Q5 answered by the graph in Go and .NET without reading code;
+40 tests, a corpus of 15 repos as regression.
 
-## Processo de atualização contínua (trilha própria — MUITO importante)
+## Continuous update process (its own track — VERY important)
 
-> **2026-10-12 — D15:** a atualização contínua saiu do host. O serviço `refresher` do compose
-> (`aidd daemon`) substitui o agendador (U2, U2.1, D14) e o fetch no host (D12/D13 seguem valendo
-> no princípio: PAT somente-leitura, chave pessoal fora); U6 deixa de ser necessário. Itens abaixo
-> ficam como histórico. Detalhes na trilha **Segurança e operação**.
+> **2026-10-12 — D15:** continuous update left the host. The compose `refresher` service (`aidd daemon`) replaces the
+> scheduler (U2, U2.1, D14) and the fetch on the host (D12/D13 still hold in principle: a read-only PAT, the personal
+> key kept out); U6 is no longer needed. The items below stay as history. Details in the **Security and operations**
+> track.
 >
-> Separado da instalação (D12). Sem ele o atlas envelhece e as skills respondem sobre um mapa
-> desatualizado. **U1–U3 validados em 2026-09-11**: refresh agendado via Task Scheduler (WSL),
-> PAT somente-leitura, 14 snapshots do time reindexados sem intervenção, `install-check` verde.
+> Separate from the install (D12). Without it the atlas ages and the skills answer about an outdated map. **U1–U3
+> validated on 2026-09-11**: refresh scheduled through Task Scheduler (WSL), a read-only PAT, 14 of the team's
+> snapshots re-indexed with no intervention, `install-check` green.
 
-- [x] U1 **Credencial do serviço** (D13): PAT **somente-leitura** em `~/.aidd/secrets/git-token` (600), coletado na etapa 6 do `install.sh`; o wrapper usa via `GIT_ASKPASS` e reescreve remotos ssh→https só no fetch. Sua chave pessoal fica fora do agendador. Validado: `fetch: ok (service)` nos 6 repos. Nota: fine-grained exige aprovação de admin na org — classic (escopo `repo`, expiração curta) serve como ponte; **GitHub App** é o alvo para o servidor (F1)
-- [x] U2 **Agendador no host**: `aidd schedule install|status|remove|check [--fix]` — **systemd user timer preferido** (Linux e WSL com `systemd=true`; roda onde Docker e repos vivem, sem janela, `enable-linger`), Task Scheduler oculto (`conhost --headless`) como fallback no WSL sem systemd, cron por último; intervalo em `AIDD_REFRESH_INTERVAL_MINUTES` (.env, default 15); `flock` + `~/.aidd/logs/refresh.log` rotativo. Validado no WSL (`schtasks.exe` a partir do distro)
-- [x] U3 **Observabilidade**: `aidd status` com idade e `trigger` (manual/scheduled/bootstrap); `install-check.sh` seção 6 falha se o último refresh > 2× intervalo
-- [x] U2.1 Agendador dentro do WSL (D14): `systemd=true` + linger + autostart do distro (`.vbs` no Startup); task do Windows removida automaticamente; `aidd schedule check --fix` valida/repara. Validado em instalação limpa 2026-09-11
-- [x] U3.1 Validação ponta a ponta (2026-09-11): instalação limpa → etapa 6 com PAT → task criada → refresh agendado reindexou 14 snapshots (`trigger=scheduled auth=service rc=0`) → `install-check.sh` verde
-- [x] U3.2 Re-validação após o fix das gramáticas (2026-09-11 14:29, imagem offline): push em `<project-a>@feature/<ticket>` → timer systemd → `1 of 26 changed` → extract/resolve/write em 1 s (`orphans_deleted: 1`) → `rc=0` → `aidd status` com o SHA novo, `age=1m`, `trigger=scheduled`. **Trilha U1–U3 concluída.**
-- [ ] U4 **Gatilho por evento (F3)**: webhook/CI em push de branch protegida → `aidd index <repo> --ref <branch>`; substitui o agendador no servidor central
-- [x] U5 **Fetch in-container**: virou o caminho padrão com o refresher (D15) — espelho por repo, PAT como arquivo via `git-askpass.sh`. Validado com remoto local no e2e; **falta validar contra o GitHub com um PAT real**
-- [x] U6 **Portabilidade Linux / macOS** — resolvido pelo D15: nada de agendador nem bash GNU no host (o `aidd` virou cliente fino compatível com bash 3.2). A lista abaixo fica como histórico
-  - Linux nativo: deve funcionar como está (systemd user timer → cron como fallback). Falta só **validar** em uma máquina (Ubuntu/Fedora com Docker Engine ou Docker Desktop)
-  - macOS — ajustes necessários no `setup/aidd` e `install-check.sh` (bash 3.2 e utilitários BSD):
-    - [ ] agendador: sem systemd/`loginctl` → hoje cai no `crontab` (funciona, mas pede permissão de Full Disk Access ao cron e não sobrevive bem a sleep); implementar **launchd agent** (`~/Library/LaunchAgents/com.aidd.refresh.plist`, `StartInterval`) como opção preferida no macOS
-    - [ ] `flock` não existe no macOS → fallback com `mkdir` lock (ou `shlock`/`lockfile`)
-    - [ ] `mapfile` exige bash ≥ 4 (macOS traz 3.2) → trocar por `while read`, ou exigir `brew install bash` e checar `BASH_VERSINFO` no início
-    - [ ] `stat -c %s` / `stat -c %a` → `stat -f %z` / `stat -f %Lp` no BSD (helper `fsize()`/`fperm()` detectando `uname`)
-    - [ ] `date -d "<ts>" +%s` → `date -j -f ... ` no BSD (helper `to_epoch()`), ou gravar epoch no log além do ISO
-    - [ ] `sed -i` sem sufixo no `check --fix` (wsl.conf) é só WSL — ok; padrão `sed -i.bak && rm` já usado no `install.sh`
-    - [ ] ssh-agent in-container (U5, só se `fetch: true`): no Docker Desktop macOS o socket é `/run/host-services/ssh-auth.sock`, não `$SSH_AUTH_SOCK`
-    - [ ] `install-check.sh` seção 6: `schedule check` deve reconhecer launchd (`launchctl list | grep com.aidd.refresh`)
-  - Indexer, compose, Neo4j, Qdrant e MCPs: idênticos nas 3 plataformas (rodam em containers) — sem ajuste
+- [x] U1 **Service credential** (D13): a **read-only** PAT in `~/.aidd/secrets/git-token` (600), collected in step 6
+  of `install.sh`; the wrapper uses it through `GIT_ASKPASS` and rewrites ssh→https remotes only for the fetch. Your
+  personal key stays out of the scheduler. Validated: `fetch: ok (service)` on the 6 repos. Note: fine-grained needs
+  admin approval in the org — classic (scope `repo`, short expiry) works as a bridge; a **GitHub App** is the target
+  for the server (F1)
+- [x] U2 **Scheduler on the host**: `aidd schedule install|status|remove|check [--fix]` — **systemd user timer
+  preferred** (Linux and WSL with `systemd=true`; runs where Docker and the repos live, no window, `enable-linger`),
+  hidden Task Scheduler (`conhost --headless`) as a fallback on WSL without systemd, cron last; interval in
+  `AIDD_REFRESH_INTERVAL_MINUTES` (.env, default 15); `flock` + a rotating `~/.aidd/logs/refresh.log`. Validated on
+  WSL (`schtasks.exe` from the distro)
+- [x] U3 **Observability**: `aidd status` with age and `trigger` (manual/scheduled/bootstrap); `install-check.sh`
+  section 6 fails if the last refresh > 2× the interval
+- [x] U2.1 Scheduler inside WSL (D14): `systemd=true` + linger + distro autostart (`.vbs` in Startup); the Windows
+  task removed automatically; `aidd schedule check --fix` validates/repairs. Validated on a clean install 2026-09-11
+- [x] U3.1 End-to-end validation (2026-09-11): clean install → step 6 with a PAT → task created → the scheduled
+  refresh re-indexed 14 snapshots (`trigger=scheduled auth=service rc=0`) → `install-check.sh` green
+- [x] U3.2 Re-validation after the grammar fix (2026-09-11 14:29, offline image): a push to
+  `<project-a>@feature/<ticket>` → systemd timer → `1 of 26 changed` → extract/resolve/write in 1 s
+  (`orphans_deleted: 1`) → `rc=0` → `aidd status` with the new SHA, `age=1m`, `trigger=scheduled`. **Track U1–U3
+  done.**
+- [ ] U4 **Event trigger (F3)**: a webhook/CI on a push to a protected branch → `aidd index <repo> --ref <branch>`;
+  replaces the scheduler on the central server
+- [x] U5 **In-container fetch**: became the default path with the refresher (D15) — a mirror per repo, the PAT as a
+  file through `git-askpass.sh`. Validated with a local remote in the e2e; **still to validate against GitHub with a
+  real PAT**
+- [x] U6 **Linux / macOS portability** — solved by D15: no scheduler and no GNU bash on the host (`aidd` became a thin
+  client compatible with bash 3.2). The list below stays as history
+  - Native Linux: should work as is (systemd user timer → cron as a fallback). Only needs **validating** on a machine
+    (Ubuntu/Fedora with Docker Engine or Docker Desktop)
+  - macOS — changes needed in `setup/aidd` and `install-check.sh` (bash 3.2 and BSD utilities):
+    - [ ] scheduler: no systemd/`loginctl` → today it falls back to `crontab` (works, but asks for Full Disk Access
+      for cron and does not survive sleep well); implement a **launchd agent**
+      (`~/Library/LaunchAgents/com.aidd.refresh.plist`, `StartInterval`) as the preferred option on macOS
+    - [ ] `flock` does not exist on macOS → a fallback with a `mkdir` lock (or `shlock`/`lockfile`)
+    - [ ] `mapfile` needs bash ≥ 4 (macOS ships 3.2) → switch to `while read`, or require `brew install bash` and check
+      `BASH_VERSINFO` at the start
+    - [ ] `stat -c %s` / `stat -c %a` → `stat -f %z` / `stat -f %Lp` on BSD (a `fsize()`/`fperm()` helper detecting
+      `uname`)
+    - [ ] `date -d "<ts>" +%s` → `date -j -f ... ` on BSD (a `to_epoch()` helper), or write the epoch to the log
+      besides the ISO date
+    - [ ] `sed -i` without a suffix in `check --fix` (wsl.conf) is WSL only — ok; the `sed -i.bak && rm` pattern is
+      already used in `install.sh`
+    - [ ] in-container ssh-agent (U5, only if `fetch: true`): on Docker Desktop macOS the socket is
+      `/run/host-services/ssh-auth.sock`, not `$SSH_AUTH_SOCK`
+    - [ ] `install-check.sh` section 6: `schedule check` must recognize launchd
+      (`launchctl list | grep com.aidd.refresh`)
+  - Indexer, compose, Neo4j, Qdrant and MCPs: identical on the 3 platforms (they run in containers) — no change
 
-## Segurança e operação (trilha própria)
+## Security and operations (its own track)
 
-> Pré-requisito para adoção em organizações. Revisão de 2026-10-12: o stack nasceu como ferramenta
-> local de um dev e expunha mais do que devia (ver "Onde estamos"). Ordem: fechar o que estava exposto,
-> tirar estado e credenciais do host, depois governança.
+> A prerequisite for adoption by organizations. Review of 2026-10-12: the stack was born as one dev's local tool and
+> exposed more than it should. Order: close what was exposed, take state and credentials off the host, then
+> governance.
 
-Feito (2026-10-12, validado no e2e isolado em macOS/Docker Desktop):
+Done (2026-10-12, validated in the isolated e2e on macOS/Docker Desktop):
 
-- [x] SO1 **Exposição**: toda porta publicada em `AIDD_BIND_ADDRESS` (default `127.0.0.1`); os MCPs não publicam nada — o **`mcp-gateway`** (nginx fixado) os serve nas mesmas portas (3001/3002/3003/3005, `.mcp.json` não muda) e devolve 403 quando o `Host` não é localhost/127.0.0.1/[::1] ou quando um navegador manda `Origin` de outro site (DNS rebinding). O `atlas` também valida `Host`/`Origin` sozinho (SDK MCP). `install-check.sh` confere portas e recusas
-- [x] SO2 **Credenciais**: Qdrant exige `QDRANT_API_KEY` (gerada pelo `install.sh`), CORS desligado; `mcp-git` sem chave ssh/ssh-agent (operações locais; push/pull no terminal do dev); o PAT do refresher entra como secret em arquivo (`/run/secrets/git-token`), nunca em variável de ambiente
-- [x] SO3 **Isolamento de tenant (lógico)**: `cypher_readonly` continua oferecido nos dois modos (default `ATLAS_RAW_CYPHER=on`), mas Cypher livre não fica preso a um tenant — num atlas multi-tenant cujos tenants não podem se ver (vários clientes na mesma máquina), `ATLAS_RAW_CYPHER=off` o retira; Neo4j carrega só `apoc.version`, `apoc.meta.*` e os utilitários puros `apoc.coll/text/map.*` (sem `apoc.load`/`export`/`cypher.*` → sem acesso a arquivo/URL nem Cypher dinâmico); telemetria do Neo4j desligada
-- [x] SO4 **Supply chain (parcial)**: imagens e pacotes com versão fixa (neo4j 5.26.30, qdrant v1.19.1, node 24.21.0, python 3.12.15, nginx 1.28.0, `@cyanheads/git-mcp-server@2.15.3`, `mcp-obsidian@0.8.2`, `mcp-proxy@6.7.16`, `mcp-server-qdrant==0.8.1`, `mcp-neo4j-cypher==0.6.0`); o obsidian não baixa mais do npm a cada start
-- [x] SO5 **Refresher em container (D15)**: `aidd daemon` no compose (restart unless-stopped, jitter ± 10 %, SIGTERM termina o snapshot em curso, limites de CPU/memória, log rotativo); `refresh` cobre todos os tenants; workspace **só leitura** + espelho bare por repo (`core/mirror.py`): o clone do dev nunca recebe `FETCH_HEAD`, refs ou arquivos de root; containers como `AIDD_UID`/`AIDD_GID`; `aidd` do host vira cliente fino (bash 3.2) — `schedule install|status|check --fix` gerenciam o container e removem agendadores antigos; `install.sh` migra `fetch: false` → `true` nos manifestos gerados
-- [x] SO6 **Frescor visível**: `status.json` + healthcheck (`aidd daemon-health`), `RefreshState` por tenant no grafo, `atlas_status.refresh.stale` (> 2 intervalos sem rodar) e a skill `scan` avisa; `install-check` confere a idade por tenant; idade de snapshot corrigida
+- [x] SO1 **Exposure**: every published port on `AIDD_BIND_ADDRESS` (default `127.0.0.1`); the MCPs publish nothing
+  — the **`mcp-gateway`** (pinned nginx) serves them on the same ports (3001/3002/3003/3005, `.mcp.json` does not
+  change) and returns 403 when the `Host` is not localhost/127.0.0.1/[::1] or when a browser sends an `Origin` from
+  another site (DNS rebinding). `atlas` also validates `Host`/`Origin` by itself (MCP SDK). `install-check.sh` checks
+  the ports and the refusals
+- [x] SO2 **Credentials**: Qdrant requires `QDRANT_API_KEY` (generated by `install.sh`), CORS off; `mcp-git` without
+  an ssh key/ssh-agent (local operations; push/pull in the dev's terminal); the refresher's PAT comes in as a file
+  secret (`/run/secrets/git-token`), never as an environment variable
+- [x] SO3 **Tenant isolation (logical)**: `cypher_readonly` stays offered in both modes (default
+  `ATLAS_RAW_CYPHER=on`), but free Cypher is not bound to a tenant — on a multi-tenant atlas whose tenants must not
+  see each other (several clients on the same machine), `ATLAS_RAW_CYPHER=off` removes it; Neo4j loads only
+  `apoc.version`, `apoc.meta.*` and the pure utilities `apoc.coll/text/map.*` (no `apoc.load`/`export`/`cypher.*` →
+  no file/URL access and no dynamic Cypher); Neo4j telemetry off
+- [x] SO4 **Supply chain (partial)**: images and packages at fixed versions (neo4j 5.26.30, qdrant v1.19.1, node
+  24.21.0, python 3.12.15, nginx 1.28.0, `@cyanheads/git-mcp-server@2.15.3`, `mcp-obsidian@0.8.2`,
+  `mcp-proxy@6.7.16`, `mcp-server-qdrant==0.8.1`, `mcp-neo4j-cypher==0.6.0`); obsidian no longer downloads from npm
+  on every start
+- [x] SO5 **Refresher in a container (D15)**: `aidd daemon` in the compose file (restart unless-stopped, ± 10 %
+  jitter, SIGTERM finishes the snapshot in progress, CPU/memory limits, rotating log); `refresh` covers every tenant;
+  a **read-only** workspace + a bare mirror per repo (`core/mirror.py`): the dev's clone never receives `FETCH_HEAD`,
+  refs or root-owned files; containers as `AIDD_UID`/`AIDD_GID`; the host's `aidd` becomes a thin client (bash 3.2)
+  — `schedule install|status|check --fix` manage the container and remove old schedulers; `install.sh` migrates
+  `fetch: false` → `true` in the generated manifests
+- [x] SO6 **Visible freshness**: `status.json` + healthcheck (`aidd daemon-health`), `RefreshState` per tenant in the
+  graph, `atlas_status.refresh.stale` (> 2 intervals without running) and the `scan` skill warns; `install-check`
+  checks the age per tenant; snapshot age fixed
 
-Em aberto:
+Open:
 
-- [ ] SO7 **Isolamento forte entre tenants**: hoje Neo4j, Qdrant e vault são compartilhados (Community não tem RBAC nem vários bancos) e qualquer tool aceita `tenant`. Para quem atende várias organizações na mesma máquina: um stack por tenant (projeto compose com portas próprias) ou, no servidor (F3.4), tenant injetado pelo token
-- [ ] SO8 **Autenticação nos MCPs** (token por dev no gateway; hoje a defesa é localhost + Host/Origin) — liga com F3.4; cuidado: o token não pode ir no `.mcp.json` distribuído para dentro dos repos
-- [ ] SO9 **Prompt injection e memória envenenada**: código de terceiros, Jira e notas entram no contexto, e o que o agente grava no vault/Qdrant volta como "convention" em toda sessão. Proveniência nas lições (sessão, repo, sha), revisão humana antes de virar convenção, skills tratando esse conteúdo como dado — para a memória, o mecanismo é a trilha **Conhecimento do projeto** (evidência por insight, só humano promove a `accepted`, K5)
-- [ ] SO10 **Supply chain completo**: digests (`@sha256`) nas imagens, lock com hashes (Python `--require-hashes`, npm `package-lock`), SBOM + scan (Trivy/Grype) no CI, Renovate para bumps deliberados; dependências do `pyproject.toml` do indexer ainda são faixas
-- [ ] SO11 **Backup/restore**: o grafo e os espelhos se refazem; as lições/insights do Qdrant e o vault **não** (`docker compose down -v` apaga as lições). Snapshot do Qdrant agendado + documentar o que é descartável
-- [ ] SO12 **Escala com N devs**: N laptops × M repos a cada 15 min batem no rate limit secundário do GitHub; backoff em falha de fetch; servidor central (F3) para organizações maiores. Espelhos dobram o disco dos repos — GC de espelhos de repos que saíram do workspace
-- [x] SO13 **Skill indexa sob demanda** (2026-10-12): repo fora do atlas → a `scan` roda `~/.aidd/aidd refresh --tenant <t> --repos <repo> --wait 300` (o mesmo plano do refresher: branch padrão + ativas; espera um refresh em curso; não conta como rodada do refresher nem faz GC; repo ausente/excluído = erro com o motivo) e, para a branch em que vai trabalhar, `aidd index <repo> --ref <branch> --ephemeral`; `allowed-tools` da skill libera só esses dois comandos (nunca `aidd:*`)
-- [ ] SO14 **Validar em WSL e Linux nativo** (o e2e foi em macOS): `AIDD_UID`/permissões do workspace (umask 077 deixa o container sem leitura), autostart do Docker; PAT real contra o GitHub (U5)
-- [ ] SO15 **Fluxo de dados / threat model** para quem adota: o que sai da máquina (o que o LLM lê; embeddings são locais; telemetria desligada), onde ficam segredos, o que cada container pode tocar. `mcp-neo4j` (perfil debug) segue com Cypher de escrita em `127.0.0.1:3004` — só para depuração
+- [ ] SO7 **Strong isolation between tenants**: today Neo4j, Qdrant and the vault are shared (Community has no RBAC
+  and no multiple databases) and every tool accepts `tenant`. For whoever serves several organizations on the same
+  machine: one stack per tenant (a compose project with its own ports) or, on the server (F3.4), the tenant injected
+  by the token
+- [ ] SO8 **Authentication on the MCPs** (a per-dev token at the gateway; today the defense is localhost +
+  Host/Origin) — ties in with F3.4; careful: the token cannot go in the `.mcp.json` distributed into the repos
+- [ ] SO9 **Prompt injection and poisoned memory**: third-party code, Jira and notes enter the context, and what the
+  agent writes to the vault/Qdrant comes back as a "convention" in every session. Provenance on the lessons (session,
+  repo, sha), human review before something becomes a convention, skills treating that content as data — for memory,
+  the mechanism is the **Project knowledge** track (evidence per insight, only a human promotes to `accepted`, K5)
+- [ ] SO10 **Full supply chain**: digests (`@sha256`) on the images, a lock with hashes (Python `--require-hashes`,
+  npm `package-lock`), SBOM + scan (Trivy/Grype) in CI, Renovate for deliberate bumps; the indexer's `pyproject.toml`
+  dependencies are still ranges
+- [ ] SO11 **Backup/restore**: the graph and the mirrors can be rebuilt; the Qdrant lessons/insights and the vault
+  **cannot** (`docker compose down -v` deletes the lessons). A scheduled Qdrant snapshot + documenting what is
+  disposable
+- [ ] SO12 **Scale with N devs**: N laptops × M repos every 15 min hit GitHub's secondary rate limit; backoff on a
+  fetch failure; a central server (F3) for larger organizations. Mirrors double the repos' disk — GC of mirrors of
+  repos that left the workspace
+- [x] SO13 **The skill indexes on demand** (2026-10-12): a repo outside the atlas → `scan` runs
+  `~/.aidd/aidd refresh --tenant <t> --repos <repo> --wait 300` (the same plan as the refresher: default branch +
+  active ones; waits for a refresh in progress; does not count as a refresher round and does no GC; a missing or
+  excluded repo is an error with the reason) and, for the branch it is going to work on,
+  `aidd index <repo> --ref <branch> --ephemeral`; the skill's `allowed-tools` allows only those two commands (never
+  `aidd:*`)
+- [ ] SO14 **Validate on WSL and native Linux** (the e2e was on macOS): `AIDD_UID`/workspace permissions (umask 077
+  leaves the container without read access), Docker autostart; a real PAT against GitHub (U5)
+- [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; embeddings are
+  local; telemetry off), where secrets live, what each container can touch. `mcp-neo4j` (debug profile) still has
+  write Cypher on `127.0.0.1:3004` — for debugging only
 
-## Fase 1 — Micro completo (SCIP multi-linguagem + retrieval híbrido)
+## Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)
 
-- [ ] F1.1 Integrar indexadores SCIP (Go, TS, .NET, Python) no `indexer/`; detecção automática de stack por manifest; config por repo (`.aidd/index.yaml`: excludes, conectores)
-- [ ] F1.2 Conversor SCIP → grafo (definições, referências resolvidas, IMPLEMENTS/EXTENDS, tipos) + resolvedor para a
-  camada HTTP: um gancho no `http_base` (por nome por padrão, SCIP quando a snapshot tem índice) consultado só nos
-  pontos de indecisão que o F1.14 registrou como `needs-resolver` — sem índice, o HTTP segue como hoje (ADR-002,
-  decisão 3)
-- [ ] F1.3 tree-sitter como fallback para linguagens sem SCIP (Vue SFC, SQL, YAML, templates)
-- [ ] F1.4 Indexação incremental: `git diff` → pacotes tocados → reindex parcial; remoção de órfãos por snapshot `(repo, ref)`
-- [ ] F1.5 Embeddings por **símbolo** (assinatura + docstring + corpo curto) no Qdrant, payload `{node_id, repo, ref, kind}`; trocar modelo para o de código
-- [ ] F1.6 Sumários hierárquicos via Ollama (arquivo → módulo → repo) armazenados no grafo e no Qdrant
-- [ ] F1.7 MCP `atlas`: `get_callers`, `get_callees`, `trace_flow(entry_point)`, `search(query)` híbrido (vetor → expansão k-hops → rerank)
-- [ ] F1.8 Suporte a `ref`: indexar `main` (baseline) e `develop`; nós/arestas com `ref`; consultas com `ref` opcional (default: develop se existir)
-- [ ] F1.9 Métricas de git como atributos: `last_touched`, `churn_90d`, `authors` (hotspots e "quem mexe aqui")
-- [ ] F1.10 Nova skill `flow`: dado um entry point (endpoint/handler/job), narra o fluxo micro usando `trace_flow` + trechos
-- [ ] F1.11 Tabela `index_runs` (repo, ref, sha, duração, contagens, erros) + comando `aidd status`
-- [ ] F1.12 Ampliar perguntas douradas para 20; script `aidd eval` que roda todas e reporta recall
-- [ ] F1.13 **Repos grandes (escala da extração)**: o grafana (24 mil arquivos) é morto por memória a 7,7 GB no Docker
-  Desktop (corpus v2, 2026-10-15), porque `extract_tree` guarda a árvore tree-sitter e o texto de **todos** os arquivos
-  até o fim — só a extração HTTP precisa delas; o `Resolver` lê dados por arquivo (`namespaces`, `facts`). Primeiro
-  medir a memória por fase (discover / extract / http / resolve / escrita) no grafana; depois, em ordem de custo:
-  1. soltar a árvore de cada arquivo assim que nada mais a lê — a extração HTTP diretório a diretório (as constantes e
-     o scan já são por diretório);
-  2. lotes por módulo (pacote Go, `.csproj`, workspace do `package.json`), cada lote gravado no grafo, e as arestas
-     entre lotes resolvidas no fim só com a tabela de símbolos — o mesmo recorte que o F1.4 reindexa e que o SCIP
-     indexa por projeto (F1.1);
-  3. recorte por repo no `atlas.yaml` (subpastas como unidades, excludes) para monorepos em que só uma parte interessa.
+- [ ] F1.1 Integrate SCIP indexers (Go, TS, .NET, Python) into `indexer/`; automatic stack detection by manifest;
+  per-repo config (`.aidd/index.yaml`: excludes, connectors)
+- [ ] F1.2 SCIP → graph converter (definitions, resolved references, IMPLEMENTS/EXTENDS, types) + a resolver for the
+  HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
+  points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
+  decision 3)
+- [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
+- [ ] F1.4 Incremental indexing: `git diff` → touched packages → partial re-index; orphan removal per snapshot
+  `(repo, ref)`
+- [ ] F1.5 Embeddings per **symbol** (signature + docstring + short body) in Qdrant, payload
+  `{node_id, repo, ref, kind}`; switch the model to the code one
+- [ ] F1.6 Hierarchical summaries via Ollama (file → module → repo) stored in the graph and in Qdrant
+- [ ] F1.7 `atlas` MCP: `get_callers`, `get_callees`, `trace_flow(entry_point)`, a hybrid `search(query)` (vector →
+  k-hop expansion → rerank)
+- [ ] F1.8 `ref` support: index `main` (baseline) and `develop`; nodes/edges with `ref`; queries with an optional
+  `ref` (default: develop if it exists)
+- [ ] F1.9 Git metrics as attributes: `last_touched`, `churn_90d`, `authors` (hotspots and "who touches this")
+- [ ] F1.10 A new `flow` skill: given an entry point (endpoint/handler/job), narrates the micro flow using
+  `trace_flow` + snippets
+- [ ] F1.11 An `index_runs` table (repo, ref, sha, duration, counts, errors) + an `aidd status` command
+- [ ] F1.12 Widen the golden questions to 20; an `aidd eval` script that runs them all and reports recall
+- [ ] F1.13 **Large repos (extraction scale)**: grafana (24 thousand files) is killed for memory at 7.7 GB on Docker
+  Desktop (corpus v2, 2026-10-15), because `extract_tree` keeps the tree-sitter tree and the text of **every** file
+  until the end — only the HTTP extraction needs them; the `Resolver` reads data per file (`namespaces`, `facts`).
+  First measure memory per phase (discover / extract / http / resolve / write) on grafana; then, in order of cost:
+  1. release each file's tree as soon as nothing else reads it — HTTP extraction directory by directory (the
+     constants and the scan are already per directory);
+  2. batches per module (Go package, `.csproj`, `package.json` workspace), each batch written to the graph, and the
+     edges between batches resolved at the end with the symbol table only — the same cut that F1.4 re-indexes and
+     that SCIP indexes per project (F1.1);
+  3. a per-repo cut in `atlas.yaml` (subfolders as units, excludes) for monorepos where only one part matters.
 
-  Restrição para quem vier antes: o grafo de montagem do HTTP (H2b) cruza arquivos — deve trabalhar com um resumo por
-  arquivo (quem monta o quê, com que prefixo), nunca segurando árvores de outros diretórios. **Pronto quando** o
-  grafana indexa sob um teto fixo de memória (ex.: 2 GB) e, num repo médio, a extração em lotes é idêntica à inteira
-  (o corpus HTTP com `--baseline` dá o diff). Medir junto o custo do HTTP em repos sem rotas que ele leia (netbox: 49 s
-  de 107 s com 0 rotas e 0 chamadas no corpus v2; zulip 17 s de 47 s)
-- [x] F1.14 **Extrator HTTP: o que o H2 deixou** (fechamento do F0.4.3b, 2026-10-17) — *fechado 2026-10-18, em 11
-  incrementos, mais o 12, de 2026-10-19, com dois defeitos que a validação do PR achou; o hold-out novo foi para depois do H5 (decisão no fim deste item); números finais em
-  `docs/corpus-report.md` ("Closing F1.14 and H2")*. As lacunas que o corpus de 42
-  repos ainda mostra e que são evolução do extrator, com os números de `docs/corpus-report.md` ("Closing H2b"), na
-  ordem do portfólio (H2-D18). Cada uma pelo ciclo do guia (`docs/indexer-evolution.md` §5: fixture → corpus
-  `--baseline` → julgamento item a item → nova baseline). **Fronteira com o SCIP** (2026-10-17, guia §8): o que falta
-  nessas lacunas é quase sempre um valor (template, prefixo) ou uma convenção de framework, que o SCIP não carrega;
-  fica no tree-sitter o que é sintaticamente determinado (tipo declarado, lista de bases, import path, config de alias,
-  valor de constante). Lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** (retorno
-  inferido, injeção de dependência, despacho por interface, sobrecarga) não ganha heurística: vira limitação com
-  categoria `needs-resolver` e espera o resolvedor do F1.2:
-  1. .NET: ~~FastEndpoints `RoutePrefix` global e `Group<T>()`~~ *feitos: o `RoutePrefix` no incremento 2; os grupos
-     (`Group<T>()`, `SubGroup<TPai>`) 2026-10-18, no incremento 6, só com fixture (nenhum repo do corpus os usa)*;
-     ~~`[Route]` herdado em mais de um nível (H2-D10 decidiu um)~~ *feito 2026-10-17: até quatro níveis, com as
-     actions das bases e o `[NonAction]` delas — o Radarr pedia*;
-  2. Go: ~~método de router chamado por um campo de tipo declarado (alertmanager
-     `api.deprecationRouter.Register(r.WithPrefix("/api/v1"))`, 7 rotas sem o prefixo); closure de registro chamada
-     dentro de vários grupos (gitea)~~ *feitos 2026-10-18 (incremento 7), com o literal composto do vikunja
-     (`&csvmigrator.MigratorWeb{}`) e o prefixo de runtime que não se aplica*; tipo de router que põe o prefixo nos
-     próprios métodos (kratos `RouterAdmin`, 12) — *limitação: o `/admin` é um campo que só um dos construtores
-     preenche em runtime (`NewRouterAdminWithPrefix` faz `r.prefix = AdminPrefix`), e os handlers recebem o router por
-     `m.IdentityHandler().RegisterAdminRoutes(router)`, entre pacotes; decidir pede fluxo de valor por campo, não o
-     tipo*;
-  3. Python: ~~wrapper de cliente do app (o caminho do C#, sem caso no corpus)~~ *feito 2026-10-18 (incremento 10),
-     com fixture e, no fim, com caso: a regra achou 47 chamadas no open-webui e no zulip, certas na fonte*; Django urlconf + DRF (1420 rotas em 2
-     repos), quando um portfólio pedir — *decidido 2026-10-18: fora do fechamento do F1.14, porque o portfólio é
-     FastAPI e Flask; segue como limitação registrada*;
-  4. ~~TS/JS: wrapper de cliente que põe a base no path (`prefix-in-client-wrapper`: argo-cd `requests`, NodeBB `api`,
-     37 chamadas erradas e 34 faltando; `client-wrapper` do gitea, 16) — o caminho do C#, agora que o TS resolve
-     imports; router guardado em lista e montado em laço (express-boilerplate, 14); rotas por pasta
-     (`@fastify/autoload`, 14) e por arquivo (Next.js, 9)~~ *feito 2026-10-18 (incremento 11), tudo: argo-cd, gitea,
-     express-boilerplate, fastify-demo e taxonomy a 100 % ou quase; chamadas TS/JS a R 99,0 % e P 98,4 %. Ficam como
-     limitação o módulo `api` do NodeBB (nome AMD e prefixo escolhido em runtime pelo próprio path), links lidos da
-     página por outra função ou entregues por prop (gitea) e o despacho estático da subclasse (photoprism)*;
-  5. ~~modelo: o id do `HttpEndpoint` é por repo, então a mesma rota em dois apps do repo vira um nó só, com a evidência
-     do primeiro (`multi-app-repo`, 16 rotas em 7 repos)~~ *feito 2026-10-18 (incremento 9): a mesma rota declarada em
-     dois módulos com manifesto é um endpoint por módulo (`app` no nó e no id; indexer 0.2.15); de 16 para 8 em 4 repos.
-     Ficam, como limitação, dois apps dentro de um módulo só (os tutoriais de um arquivo do fastapi, os dois servidores
-     do argo-cd num `go.mod`): separá-los pede a aplicação em que a montagem de cada rota termina*;
-  6. **do hold-out (2026-10-17, 16 repos fora do ajuste; `corpus-report.md` "The hold-out set"), que pesa mais que os
-     itens acima — são as formas de apps reais que o corpus não tinha.** Precisão primeiro: o prefixo aplicado duas vezes
-     quando um grupo Go com prefixo é passado a uma função (vikunja, 172 rotas `/api/v1/api/v1/..`) e a chamada lida como
-     rota (`c.get(path, nil, out)`) — *feitos 2026-10-17 (incremento 1, abaixo)*. Depois, na ordem do portfólio:
-     - .NET: ~~atributo de rota próprio (`IRouteTemplateProvider`, subclasse de `RouteAttribute`: Umbraco, Radarr — 760
-       rotas); convenções OData sem template (Smartstore, 260)~~ *feitos 2026-10-17*; ~~FastEndpoints atrás de base
-       própria com o `RoutePrefix` global (Elsa, 94; junto do item 1); `[Route]` em outro arquivo de classe `partial`~~
-       *feitos 2026-10-18*; ~~a forma curta de `{id?}`; `{**path:regex(..)}`; `$"{{{nameof(id)}:guid}}"`~~ *feitos*;
-       ~~a evidência com a linha de outro nó num `Program.cs` (Elsa); action sem atributo num controller com `[Route]`
-       (`/umbraco/login`)~~ *feitos 2026-10-18*; o prefixo que vem de opções ou de configuração — o coletor
-       OpenTelemetry do Elsa (`IsNullOrWhiteSpace(o.Path) ? "/elsa/otlp/v1" : o.Path`), o `MapGroup(options.RoutePrefix)`
-       do IconKit do Smartstore — fica como limitação (`prefix-as-param`);
-     - Go: ~~router em variável de pacote atribuída por chamada em outro arquivo (photoprism, 165); grpc-gateway com
-       o verbo em constante (memos, 92)~~ *feitos 2026-10-18 (incremento 3)* — os handlers connect-go ficam com o F2.1
-       (proto como fonte);
-     - Python: ~~subclasses de `APIRouter` (mealie, 28)~~ *feito 2026-10-18 (incremento 4)*;
-     - TS/JS: ~~Koa sem barra inicial e `koa-mount` (outline, 64); `SEARCH`; restrição interpolada; e a base do
-       cliente (`prefix-in-client-wrapper`, item 4) também vinda de outro arquivo, de um alias (`$lib/` do SvelteKit)
-       ou de um campo (`this.baseUrl = environment.apiUrl`) — 158 chamadas em 4 repos~~ *feitos 2026-10-18
-       (incremento 5)*.
-     Ao trabalhar sobre eles, esses repos viram corpus: o fechamento do F1.14 precisa de um hold-out novo.
-     **Incremento 1 (2026-10-17)** — vikunja, Umbraco, Radarr e Smartstore passaram ao corpus (46 repos):
-     - precisão: o prefixo de grupo é do par (escopo, nome), não do nome no arquivo (vikunja: 176 rotas
-       `/api/v1/api/v1/..` e `/dav/dav/..` corrigidas); em Go, método não exportado nunca é registro de framework
-       (4 GETs do cliente Planka voltam a ser chamadas); o echo junta prefixo e path como escritos (`u.GET("s")` é
-       `/users`). Vikunja: P 100 %, R 89,8 % — o resto é o nome do migrador vindo de um método por interface
-       (`segment-from-method`, limitação) e o grupo passado a um método de valor de tipo declarado (item 2);
-     - .NET: os atributos de rota do projeto como receita (classe e action, em cadeia, constantes de outro projeto pelo
-       nome qualificado), Asp.Versioning (versão declarada, ou a padrão), OData por convenção, herança em até quatro
-       níveis com `[NonAction]` e sobrecargas, `[Route]` sem verbo como ANY, templates com regex/`nameof`. Radarr: de P
-       17,9 % / R 2,9 % a 100 % / 100 %; Smartstore: de 98,6 % / 52,8 % a 100 % / 100 %; Umbraco: 0 % / 0 % — o token
-       `[umbracoBackOffice]`, trocado no startup por uma convenção do próprio Umbraco, fica no path
-       (`route-token-convention`, limitação — lido no incremento 2); lido como `/umbraco`, 100 % / 99,8 %. Nenhum dos
-       42 repos de antes mudou na lista;
-     - placar: rota ASP.NET casa sem caixa com o gabarito, como no linker;
-     **Incremento 2 (2026-10-18)** — o resto do .NET do hold-out; Elsa e btcpay passaram ao corpus (48 repos):
-     - token de rota do projeto: o `[x]` que não é do framework recebe o valor com que a convenção que reescreve as
-       rotas de atributo é registrada (`Conventions.Add(new T(token, valor))`), lido como as receitas de atributo;
-       valor de configuração deixa o token como escrito. Umbraco: de 0 % / 0 % a 100 % / 100 %;
-     - FastEndpoints atrás das bases do projeto, `Routes`/`Verbs` em qualquer ordem, e o `RoutePrefix` global —
-       literal, constante ou o default declarado do parâmetro que o método repassa; o valor que o host passa de
-       configuração não é lido. Elsa: de 0 % / 0 % (amostra 12/20) a 100 % / 100 % (18/20);
-     - as metades de uma classe `partial` são uma classe (`[Route]` e `[Area]` da outra metade); action sem atributo de
-       rota pelo teste do ASP.NET (método público de instância, não abstrato, não genérico, não `Dispose`); `[Area]`
-       herdado da base; `[Route(CONST)]` da própria classe; a evidência de `MapGet` na linha do nome. btcpay: amostra
-       de 19/20 a 20/20;
-     - C# no corpus: R 99,3 % (1931/1944) a P 100 %; 43 dos 46 repos de antes idênticos;
-     **Incremento 3 (2026-10-18)** — o Go do hold-out; memos e photoprism passaram ao corpus (50 repos):
-     - grpc-gateway v2: o verbo como constante do net/http (`mux.Handle(http.MethodGet, ..)`) e a captura com literais
-       (`{name=memos/*}` é `/api/memos/{name}`). memos: de R 0 % a P 100 % / R 49,7 % — as 92 rotas do gateway; as 93
-       que faltam são as cópias Connect dos mesmos RPCs (F2.1);
-     - em Go, `=` não declara: o nome que a função só atribui é o do pacote. O grupo numa variável de pacote leva o
-       próprio prefixo na aresta que publica, e as rotas de outros arquivos atrás de cada parâmetro o recebem; a
-       função cujo `return` é o parâmetro (ou termina nele) vale o argumento — o que vem antes é do deploy, como o
-       `RoutePrefix` do Elsa; os verbos do `Match` vêm de variável de pacote, de `pkg.X` ou do literal. photoprism:
-       de 0 % / 0 % (amostra 0/20) a 97,5 % / 97,6 % (19/20); gotify: `ANY /health` e `ANY /mcp` com seus verbos;
-     - ficam: o segmento que o helper `SearchFolders` recebe por parâmetro (`segment-from-param`); `/docs`, só no build
-       de debug, registrado por variável de função (`registrar-in-func-var`); e o verbo customizado do gRPC depois de
-       um literal, impresso como parâmetro (`/api/ai{transcribe}`: casa nos dois lados, mas o path sai errado; quem
-       sabe que não há parâmetro com `:` é a origem — path de OpenAPI e pattern do gateway; dívida, item 7);
-     - Go no corpus: P 99,1 %, R 92,9 % (97,3 % sem os RPCs Connect); 47 dos 48 repos de antes idênticos;
-     **Incremento 4 (2026-10-18)** — o Python do hold-out; mealie passou ao corpus (51 repos):
-     - classe de router do projeto: `UserAPIRouter(prefix="/recipes")` constrói um router quando as bases da classe
-       chegam ao router ou à aplicação do framework (`APIRouter`, `Blueprint`, `Flask`, ..). A classe vem do diretório,
-       do import ou do módulo importado; a base de outro arquivo, pelo nome único no repo. O prefixo é o que o
-       primeiro `__init__` subindo as bases entrega ao `super().__init__`: literal, ou o argumento da chamada para o
-       parâmetro (por nome ou posição, senão o default). mealie: de 64,1 % / 59,4 % (amostra 13/20) a 100 % / 100 %
-       (20/20); o CTFd ganha `GET /`, raiz do blueprint montado em `CTFdFlask(__name__)`, subclasse de `Flask`;
-     - Python no corpus: P 99,1 %, R 24,2 % (o Django do zulip e do netbox ainda sem scanner); 49 dos 50 repos de
-       antes idênticos;
-     **Incremento 5 (2026-10-18)** — o TS/JS do hold-out; outline, directus, docmost e open-webui passaram ao corpus
-     (55 repos; o hold-out fica com 3):
-     - rotas: path sem barra do Koa (`@koa/router`, `koa-router`) como a raiz de um sub-router, que a montagem prefixa;
-       `x.routes()` é o router; `use(mount("/api", api))` do `koa-mount` é montagem; `router.search(..)` é `SEARCH` e
-       nunca wrapper de montagem; a regex depois de um parâmetro (`/:pk(${UUID_REGEX})`) e o curinga opcional
-       `{/*path}`. outline: de 0 % a 100 % / 100 %; directus: R de 87,3 % a 99,0 %;
-     - chamadas: o cliente de módulo com base — `axios.create({ baseURL })` e afins, ou `new C()` de classe cuja base é
-       campo (`this.baseUrl = options.baseUrl || "/api"`) — põe a base nas chamadas no arquivo e por import, salvo
-       quando um interceptor reescreve a `url` (dispatch: a organização entra entre a base e o path); cliente conhecido
-       nunca é router; template de constantes é constante; `${X}` importado; `$lib`; ternário de query. outline,
-       docmost e open-webui de 0 % a 95–100 % de precisão e 100 % de recall; o dispatch ganha 3 chamadas (100 %);
-     - ficam: as chamadas da própria classe cliente em `this` (`this.post("/batch")`), a query numa variável colada ao
-       path (`query-in-variable`) e o helper que recebe path e método (item 4);
-     - TS/JS no corpus: rotas P 96,5 %, R 89,0 %; chamadas P 96,6 %, R 95,3 %; 50 dos 51 repos de antes idênticos;
-  7. dívidas da reciclagem de 2026-10-15: ~~o catálogo de frameworks como dado (verbos, registrars, receptores de
-     cliente), com os scanners pedindo o cliente às convenções (F0.4.5) em vez de ler `CLIENT_RECEIVER`; os limiares
-     fixos do `built_bundle`~~ *passados ao H5 (H5-D1): são refatoração, e o H5 os faz com os reconhecedores sobre o
-     catálogo*.
-     ~~Do incremento 3 (2026-10-18): **o verbo customizado do gRPC depois de um literal vira parâmetro.**~~ *Feito
-     2026-10-18 (incremento 6), pelo conteúdo e não pela origem: a origem se perde quando o `rebased` renormaliza o
-     path ao juntar um prefixo, e no corpus os únicos `:x` colados a uma palavra eram esses verbos. `:x` depois de
-     letra ou dígito é verbo; depois de `/`, `-`, `.` ou `_`, parâmetro. O memos ganha também `attachments:upload`, que
-     dividia a chave com `attachments:batchDelete`; uma chamada à Azure do open-webui sai certa.* O registro original:
-     `normalize_path` (`core/paths.py`, a regra do `:id`) lê o `:transcribe` de `/api/ai:transcribe` como parâmetro
-     do Express e grava `/api/ai{transcribe}` (6 rotas do memos: `ai:transcribe`, `attachments:batchDelete`,
-     `settings:batchGet`, `notification:testEmail`, `linkMetadata:batchGet`, `users:batchGet`; o `{name}:accept`,
-     depois de `}`, já era poupado). Os dois lados normalizam igual, então o par casa, mas o path exibido é falso e
-     o parâmetro casa qualquer sufixo. A sintaxe não decide (Express e httprouter aceitam `/user_:name`); a origem
-     decide: path de OpenAPI e pattern do grpc-gateway nunca têm parâmetro com `:`. Caminho: `normalize_path` com a
-     leitura de `:x` desligável, desligada em `from_openapi` e no `grpc_gateway_pattern`; o gabarito do memos é
-     regerado e as 6 rotas voltam a `:verbo`. Conferir também o lado das chamadas (cliente REST que chama
-     `/x:verbo`).
-     ~~Do incremento 7 (2026-10-18): **um router global reatribuído com o mesmo nome perde o prefixo.**~~ *Feito
-     2026-10-18 (incremento 8), com o caso mais amplo da mesma raiz: a aresta que outro arquivo publica ao montar o
-     router também não levava o prefixo próprio. Agora o prefixo é um fato do router (`go.mount.own`), que o `compose`
-     põe depois do prefixo de cada cadeia; corpus e hold-out idênticos.* O registro original:
-     `router := route.New(); router = router.WithPrefix("/api/v1"); health.Register(router); return router` grava
-     `/healthy`, e não `/api/v1/healthy`, quando nenhum arquivo monta o router devolvido. Com outro nome
-     (`api := router.WithPrefix(..)`), ou com o router servido (`http.ListenAndServe(.., router)`, o alertmanager), sai
-     certo. O prefixo de um router global vai "na aresta" (`global_group_on_edge`), e a reatribuição deixa a aresta
-     sem ele. Nenhum repo do corpus tem a forma. Deve valer também para `r = r.Group(..)`.
+  A constraint for whoever comes first: the HTTP mount graph (H2b) crosses files — it must work with a summary per
+  file (who mounts what, with which prefix), never holding the trees of other directories. **Done when** grafana
+  indexes under a fixed memory ceiling (e.g. 2 GB) and, on a medium repo, batched extraction is identical to the
+  whole one (the HTTP corpus with `--baseline` gives the diff). Measure along with it the cost of HTTP on repos
+  without routes it can read (netbox: 49 s of 107 s with 0 routes and 0 calls in corpus v2; zulip 17 s of 47 s)
+- [x] F1.14 **HTTP extractor: what H2 left.** Closed on 2026-10-18, in 11 increments, and the next day came the 12th,
+  in the validation of PR #5. Each item ended with a rule with a fixture and a judged corpus, or with a limitation
+  recorded in the guide.
+  - **Final numbers and where each gap goes:** `docs/corpus-report.md`, "Closing F1.14 and H2".
+  - **Rules:** `docs/indexer-evolution.md` §3.
+  - **Milestones:** `docs/history.md`.
+  - **Scope changes:**
+    - the new hold-out moved to after H5 (H2-D21);
+    - the framework catalog as data and the `built_bundle` thresholds went to H5;
+    - Django stayed out (the portfolio is FastAPI/Flask);
+    - test app folders with production names wait for F1.1's per-repo config.
+  - **What needs an inferred type** is `needs-resolver`, for F1.2.
 
-  Pastas de app de teste com nome de produção (`integration/` do nest e do fastify, 20 rotas) ficam para a config por
-  repo do F1.1. **Pronto quando** cada item tiver regra com fixture e corpus julgado, ou limitação registrada no guia,
-  e o hold-out novo tiver sido medido uma vez. *Decidido 2026-10-18:* o que o hold-out novo mostrar não reabre o
-  F1.14; vira um handoff à parte, depois do H5 (decidido no mesmo dia), salvo defeito de precisão, que se corrige antes. Ordem do fechamento: item 2, o router reatribuído do item 7, item 5, item 3,
-  item 4, hold-out novo, e os docs do H2 encerrados (F1.14 e F0.4.3 marcados, resumo final nos dois arquivos do H2,
-  seção de fechamento no relatório do corpus).
-  *Decidido 2026-10-18, no fechamento: o hold-out novo sai do F1.14 e vai para depois do H5, como primeiro passo do
-  handoff dele.* O H5 não muda comportamento (corpus idêntico a cada passo), então o número seria o mesmo antes ou
-  depois. O que o hold-out mostrar se corrige já no código refatorado. Na medição roda também o commit de antes do
-  H5, e toda diferença entre os dois é regressão do H5 em código que o corpus não cobre. O custo aceito: cai a
-  cláusula do defeito de precisão corrigido antes do H5, e um defeito que ninguém viu fica na instalação durante o
-  H5. Até lá, a rede de regressão do H5 é o corpus e o hold-out de 3 repos (Kavita, go-boilerplate, sftpgo)
+**Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
-**Saída da fase:** qualquer repo do workspace indexável em 1 comando; `scan` e `flow` respondendo com fatos do grafo.
+## Phase 2 — Complete macro (contract linker + governance)
 
-## Fase 2 — Macro completo (linker de contratos + governança)
+- [ ] F2.1 OpenAPI connector: specs → `HttpEndpoint`; routes extracted from the code reconciled with the spec
+  (divergence = alert)
+- [ ] F2.2 Messaging connector: topics/queues in constants, config and env (Kafka, RabbitMQ, SQS/SNS) →
+  `PUBLISHES`/`SUBSCRIBES`; event schemas when they exist
+- [ ] F2.3 Infra connector: `docker-compose`, k8s/Helm, gateway → resolve `ENV_VAR → URL → repo` to link outbound
+  HTTP calls to the target repo
+- [ ] F2.4 Database connector: migrations/ORM → `DbTable`, `READS/WRITES`; tables shared between repos = an implicit
+  macro edge
+- [ ] F2.5 Confidence on the edges (`exact | heuristic | llm`) + `evidence`; an LLM pass only on the ambiguous ones;
+  the result becomes a review note in Obsidian (`<tenant>/_links-review.md`)
+- [ ] F2.6 `atlas` MCP: transitive cross-repo `impact_analysis(symbol|endpoint|topic)`, `repo_dependencies(repo)`,
+  `workspace_map(tenant)`
+- [ ] F2.7 A new `impact` skill: given a target, lists the affected repos/flows with confidence and evidence
+- [ ] F2.8 Visualization: export of the subgraph to Obsidian (canvas/notes with wikilinks) or static HTML — human
+  reading of the macro level
+- [ ] F2.9 Macro golden questions (≥ 15) + `aidd eval` covering micro and macro
 
-- [ ] F2.1 Conector OpenAPI: specs → `HttpEndpoint`; rotas extraídas do código reconciliadas com a spec (divergência = alerta)
-- [ ] F2.2 Conector mensageria: tópicos/filas em constantes, config e env (Kafka, RabbitMQ, SQS/SNS) → `PUBLISHES`/`SUBSCRIBES`; schemas de evento quando existirem
-- [ ] F2.3 Conector infra: `docker-compose`, k8s/Helm, gateway → resolver `ENV_VAR → URL → repo` para ligar chamadas HTTP de saída ao repo alvo
-- [ ] F2.4 Conector banco: migrations/ORM → `DbTable`, `READS/WRITES`; tabelas compartilhadas entre repos = aresta macro implícita
-- [ ] F2.5 Confiança nas arestas (`exact | heuristic | llm`) + `evidence`; passada LLM só nos ambíguos; resultado vira nota de revisão no Obsidian (`<tenant>/_links-review.md`)
-- [ ] F2.6 MCP `atlas`: `impact_analysis(symbol|endpoint|topic)` transitivo cross-repo, `repo_dependencies(repo)`, `workspace_map(tenant)`
-- [ ] F2.7 Nova skill `impact`: dado um alvo, lista repos/fluxos afetados com confiança e evidência
-- [ ] F2.8 Visualização: export do subgrafo para Obsidian (canvas/notas com wikilinks) ou HTML estático — leitura humana do macro
-- [ ] F2.9 Perguntas douradas macro (≥ 15) + `aidd eval` cobrindo micro e macro
+**Phase exit:** a queryable workspace map; cross-repo impact with evidence.
 
-**Saída da fase:** mapa do workspace consultável; impacto cross-repo com evidência.
+## Phase 3 — Central and continuous (the end goal)
 
-## Fase 3 — Central e contínuo (alvo final)
-
-- [ ] F3.1 Servidor central (Neo4j + Qdrant + MCPs) com backup; compose "server profile"
-- [ ] F3.2 Job de CI por repo: a cada merge em `main`/`develop` → `aidd index` → push para o central (runner self-hosted com cache de SCIP)
-- [ ] F3.3 Linker agendado/por evento no central; relatório de novas arestas e divergências
-- [ ] F3.4 Auth no MCP por tenant (token por dev/time atrás de reverse proxy); filtro de tenant injetado, nunca confiado ao cliente
-- [ ] F3.5 Dashboard de cobertura/frescor: repos indexados, idade do índice, % de arestas macro por confiança
-- [ ] F3.6 Retenção: manter N snapshots por `(repo, ref)`; GC de refs mortas
-- [ ] F3.7 `install.sh` aponta `.mcp.json` para o central quando configurado; local continua como fallback offline
+- [ ] F3.1 A central server (Neo4j + Qdrant + MCPs) with backup; a compose "server profile"
+- [ ] F3.2 A CI job per repo: on every merge to `main`/`develop` → `aidd index` → push to the central server (a
+  self-hosted runner with a SCIP cache)
+- [ ] F3.3 A scheduled/event-driven linker on the central server; a report of new edges and divergences
+- [ ] F3.4 MCP auth per tenant (a token per dev/team behind a reverse proxy); the tenant filter injected, never
+  trusted to the client
+- [ ] F3.5 A coverage/freshness dashboard: indexed repos, index age, % of macro edges by confidence
+- [ ] F3.6 Retention: keep N snapshots per `(repo, ref)`; GC of dead refs
+- [ ] F3.7 `install.sh` points `.mcp.json` at the central server when configured; local stays as the offline fallback
 
 ---
 
-## Trilha paralela — Skills e fluxo de desenvolvimento
+## Parallel track — Skills and the development flow
 
-Encadeamento alvo (cada skill consome o grafo via MCP e escreve no Obsidian/Qdrant):
+The target chain (each skill consumes the graph through MCP and writes to Obsidian/Qdrant):
 
 ```
 scan ──► flow / impact ──► refine-business ──► refine-tech ──► implement ──► review
- (fatos)   (micro/macro)     (card + contexto)   (spec técnica)   (harness)    (sênior)
+ (facts)   (micro/macro)     (card + context)    (tech spec)      (harness)    (senior)
 ```
 
-- [x] S0 `scan` v1 com vault por projeto (`<tenant>/knowledge/<repo>/<repo>.md`) e `refine-business` v1 (Jira → candidatos via Qdrant → "o que fazer" por projeto → loop → `<tenant>/cards/<card>.md`)
-- [x] S0.1 *(2026-10-12: a `scan` documenta `cards/`, que é onde a `refine-business` grava)* Alinhar layout do vault: `scan` documentava `refine-business/` mas `refine-business` grava em `cards/` — escolher um e corrigir os dois SKILL.md
-- [ ] S1 `scan` v2: lê do grafo, fallback ao fluxo atual; salva convenções com `source: graph|llm`
-- [ ] S2 `flow`: entry point → narrativa do fluxo micro (F1.10)
-- [ ] S3 `impact`: alvo → repos/fluxos afetados (F2.7)
-- [ ] S4 `refine-business` v2 — pontos de encaixe do grafo na skill existente (sem mudar o gatilho):
-  - Step 2 (cobertura): além de "tem conventions no Qdrant?", checar "está indexado no atlas?" (`atlas.repo_map`) e sugerir `aidd index`
-  - Step 4 (projetos afetados): hoje é só busca vetorial nos sumários de convenções; passa a ser híbrido — vetor encontra símbolos/endpoints candidatos → `impact_analysis`/`who_consumes` expande para os repos ligados por contrato. Candidatos ganham `confidence` + `evidence`
-  - Step 5 ("o que fazer"): citar o fluxo micro (`trace_flow`) e as arestas macro que justificam a coordenação entre projetos
-  - Step 7: nota do card passa a incluir a **área de atuação delimitada** (repos, módulos, símbolos de entrada) — é a entrada do `refine-tech`
-- [ ] S5 `refine-tech`: a partir da área delimitada, zoom-in com `flow`/`get_callers`; produz spec técnica (arquivos, contratos, testes, riscos, ADRs); validação humana explícita antes de seguir
-- [ ] S6 `implement`: executa a spec no orquestrador escolhido (harness: testes, cobertura, lições → `record_insight`, trilha **Conhecimento do projeto**)
-- [ ] S7 `review`: contexto injetado (spec + diff + cobertura + convenções do grafo + insights `accepted`/`enforced` da área) → parecer sênior; PR
-- [ ] S8 Definir contrato comum entre skills (frontmatter + formato da nota de saída) para que a saída de uma seja entrada da próxima — a parte do conhecimento (índice do projeto + nota de insight) é o K1
-- [ ] S9 (handoff H3) Medir o efeito do atlas e do conhecimento no desenvolvimento com IA — tokens, tempo, completude e defeitos, em tarefas reais dentro de um repo e entre repos, com e sem a stack (`docs/handoffs/H3-ai-dev-efficiency.md`). Depois do H2b, em outro processo
+- [x] S0 `scan` v1 with a vault per project (`<tenant>/knowledge/<repo>/<repo>.md`) and `refine-business` v1 (Jira →
+  candidates through Qdrant → "what to do" per project → loop → `<tenant>/cards/<card>.md`)
+- [x] S0.1 *(2026-10-12: `scan` documents `cards/`, which is where `refine-business` writes)* Align the vault layout:
+  `scan` documented `refine-business/` but `refine-business` writes to `cards/` — pick one and fix both SKILL.md
+- [ ] S1 `scan` v2: reads from the graph, falls back to the current flow; saves conventions with
+  `source: graph|llm`
+- [ ] S2 `flow`: entry point → a narrative of the micro flow (F1.10)
+- [ ] S3 `impact`: target → affected repos/flows (F2.7)
+- [ ] S4 `refine-business` v2 — where the graph fits into the existing skill (without changing the trigger):
+  - Step 2 (coverage): besides "are there conventions in Qdrant?", check "is it indexed in the atlas?"
+    (`atlas.repo_map`) and suggest `aidd index`
+  - Step 4 (affected projects): today it is only a vector search over the convention summaries; it becomes hybrid —
+    the vector finds candidate symbols/endpoints → `impact_analysis`/`who_consumes` expands to the repos linked by
+    contract. Candidates gain `confidence` + `evidence`
+  - Step 5 ("what to do"): cite the micro flow (`trace_flow`) and the macro edges that justify coordinating between
+    projects
+  - Step 7: the card's note starts to include the **delimited area of work** (repos, modules, entry symbols) — it is
+    `refine-tech`'s input
+- [ ] S5 `refine-tech`: from the delimited area, zoom in with `flow`/`get_callers`; produces a technical spec (files,
+  contracts, tests, risks, ADRs); explicit human validation before moving on
+- [ ] S6 `implement`: runs the spec on the chosen orchestrator (harness: tests, coverage, lessons → `record_insight`,
+  the **Project knowledge** track)
+- [ ] S7 `review`: injected context (spec + diff + coverage + the graph's conventions + the area's
+  `accepted`/`enforced` insights) → a senior opinion; PR
+- [ ] S8 Define a common contract between skills (frontmatter + the format of the output note) so that one's output
+  is the next one's input — the knowledge part (the project index + the insight note) is K1
+- [ ] S9 (handoff H3) Measure the effect of the atlas and of knowledge on AI-assisted development — tokens, time,
+  completeness and defects, on real tasks within a repo and across repos, with and without the stack
+  (`docs/handoffs/H3-ai-dev-efficiency.md`). After H2b, in another process
 
-## Conhecimento do projeto (trilha própria)
+## Project knowledge (its own track)
 
-> Cada projeto tem uma **porta de entrada** no vault (o índice que a `scan` cria) e uma **base de
-> conhecimento** que as etapas do processo alimentam e consultam: o que aparece em code review, Sonar,
-> ferramentas de segurança, incidentes e decisões vira insight filtrado, para o problema não se repetir
-> e para o review já saber o que olhar. Não é uma skill (D16): é um mecanismo da stack que `scan`,
-> `refine-business`, `refine-tech` e `implement` usam pelo mesmo contrato. A skill faz a parte que exige
-> julgamento (o que vale registrar, com que evidência); a stack faz a determinística (dedup, contagem,
-> nota, índice, Qdrant, regras de status).
+> Each project has an **entry point** in the vault (the index `scan` creates) and a **knowledge base** that the
+> process stages feed and consult: what shows up in code review, Sonar, security tools, incidents and decisions
+> becomes a filtered insight, so the problem does not repeat and the review already knows what to look at. It is not
+> a skill (D16): it is a stack mechanism that `scan`, `refine-business`, `refine-tech` and `implement` use through the
+> same contract. The skill does the part that needs judgment (what is worth recording, with what evidence); the stack
+> does the deterministic part (dedup, counting, note, index, Qdrant, status rules).
 >
-> O que o processo **exige** (cobertura mínima, tentativas do harness, quando pedir ADR, quando um
-> insight vira `recurring`) fica no `policy.yaml` (D17), ao lado do `atlas.yaml`: o `atlas.yaml` diz como
-> ler o código, o `policy.yaml` diz o que o processo exige. A `scan` descreve o projeto; a política é
-> decisão humana e não é descoberta.
+> What the process **requires** (minimum coverage, harness attempts, when to ask for an ADR, when an insight becomes
+> `recurring`) lives in `policy.yaml` (D17), next to `atlas.yaml`: `atlas.yaml` says how to read the code,
+> `policy.yaml` says what the process requires. `scan` describes the project; policy is a human decision and is not
+> discovered.
 
-Layout no vault:
+Vault layout:
 
 ```
 <tenant>/knowledge/
 ├── <repo>/
-│   ├── <repo>.md            índice: seções fixas da scan + bloco de conhecimento gerado
-│   └── insights/<slug>.md   um insight por nota (frontmatter)
-└── shared/insights/         o que vale para vários repos do tenant
+│   ├── <repo>.md            index: scan's fixed sections + a generated knowledge block
+│   └── insights/<slug>.md   one insight per note (frontmatter)
+└── shared/insights/         what holds for several of the tenant's repos
 ```
 
-Ciclo de um insight:
+An insight's lifecycle:
 
 ```
 observed ──► recurring ──► accepted ──────────► enforced
-(1 vez)      (N vezes)     (humano aprovou:     (virou regra checável:
-                            o agente segue)      violations / lint)
-        └──────────────► archived (descartado, ou sem ocorrência há muito tempo)
+(once)       (N times)     (a human approved:   (became a checkable rule:
+                            the agent follows)   violations / lint)
+        └──────────────► archived (discarded, or no occurrence for a long time)
 ```
 
-- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contrato v1)* **Contrato do vault** (fecha o S8 para o conhecimento): esqueleto do índice — seções fixas da `scan` (inclusive a política efetiva do repo, só leitura: muda-se no `policy.yaml`) + bloco entre `<!-- aidd:knowledge:start -->`/`<!-- aidd:knowledge:end -->`, gerado a partir das notas e nunca editado à mão; formato da nota de insight — frontmatter `topic` (vocabulário controlado: `architecture`, `review`, `quality`, `security`, `incident`, `decision`, `business`; extensível por um registro de tópicos, não texto livre — evita `security`/`segurança`/`sec`), `status`, `severity`, `scope` (`repo`|`shared`), `occurrences`, `first_seen`/`last_seen`, `evidence[]` (PR, arquivo:linha, sha, ferramenta, sessão), `applies_to` (arquivos, roles, símbolos); payload no Qdrant `{project, type: insight, topic, status}`
-- [x] K1.1 *(2026-10-13: `core/policy.py`, `aidd policy show|check`, `install.sh` cria a partir de `indexer/policy.example.yaml`, `install-check` valida)* **`policy.yaml`** em `~/.aidd` (D17), com camadas como o `atlas.yaml`: defaults embutidos → tenant → área → repo (`overrides`), cada nível sobrescrevendo só o que declara. Conteúdo inicial: `coverage` (`min`, `new_code_min`), `harness` (`max_attempts`), `review` (`spec_approval`, `adr_when`), `knowledge` (`recurring_after`, `archive_after_days`) — tudo o que seria número fixo no código. Validado com erro claro (como o `ConfigError` do `atlas.yaml`); `install.sh` cria um exemplo comentado; `aidd policy show <repo>` imprime a política efetiva com a origem de cada valor
-- [x] K2 *(2026-10-13: `aidd_indexer/knowledge/`, serviço `mcp-knowledge` na porta 3006 do gateway)* **Serviço `knowledge`** no compose (mesma imagem do indexer, atrás do `mcp-gateway`; o único que escreve conhecimento no vault e no Qdrant — o atlas continua só leitura). Três tools:
-  - `policy_for(repo)` → a política efetiva, já combinada, com a origem de cada valor (default/tenant/área/repo) — as skills não fazem o merge das camadas
-  - `insights_for(repo, files?, roles?, topic?)` → `accepted`/`enforced` como regra, `observed`/`recurring` como contexto (rotulados: dado, não instrução)
-  - `record_insight(repo, topic, summary, evidence, applies_to, severity)` → dedup (Qdrant por similaridade + mesmo tópico), incrementa ou cria a nota, `recurring` ao atingir `knowledge.recurring_after` ocorrências (política; default 3), reconstrói o bloco do índice, espelha no Qdrant; nenhuma tool promove para `accepted`
-  - `refresh_index(repo)` → reescreve só o bloco `aidd:knowledge` a partir das notas (a `scan` chama ao terminar a página; uma página nova já nasce com o que foi gravado antes)
-  - Testes: dedup, reconstrução do índice preservando as seções da `scan`, idempotência
-- [x] K3 *(2026-10-13: skill reescrita e validada na instalação real — migração, repetição em outro idioma, página do zero)* `scan` gera o esqueleto do índice e mostra o bloco de conhecimento; a lição de fim de tarefa (hoje `qdrant-store` direto) passa a ser `record_insight`
-- [ ] K4 *(com a revisão da `refine-business`)* `refine-business` adota o contrato: consulta incidentes/decisões dos projetos afetados, registra as decisões de negócio do card. `refine-tech` (S5) e `implement` (S6) já nascem com ele: riscos conhecidos da área na spec; `accepted`/`enforced` como checklist antes de codar e antes do PR
-- [ ] K5 *(nasce com a `refine-tech`, S5)* **Promoção com humano dentro do processo**: a `refine-tech` mostra os `observed`/`recurring` que tocam a área delimitada ("apareceu 3×, vira regra?") e grava a aprovação (`accepted`, quem e quando); editar o frontmatter no Obsidian vale igual. Fecha a parte de memória do SO9
-- [ ] K6 *(nasce com a `implement`, S6)* Fontes dentro da `implement`, onde o motivo de um erro aparece: (1) **reprovação no review** (o parecer sênior que devolve para a execução — o motivo é o insight); (2) **escalada do harness** (`harness.max_attempts` esgotado: o que o modelo não conseguiu corrigir sozinho e por quê); (3) **comentários de review do PR** ao tratar o feedback (`gh`). Em todas, registra só o que não é óbvio
-- [ ] K7 *(quando houver scanner no CI dos tenants)* `aidd ingest <arquivo.sarif>` (Semgrep, CodeQL, Trivy, Snyk): agrupa findings por regra × repo, grava `observed` com contagem e evidência — o bruto fica na ferramenta; roda no CI ou pelo refresher. Sonar pela API depois
-- [ ] K8 *(depois da Fase 1)* `enforced`: insight verificável no grafo vira regra da convenção e aparece em `violations`; o que não é verificável fica como checklist
-- [ ] K9 *(com volume de insights; backup junto do SO11)* Envelhecimento e backup: `last_seen` mais antigo que `knowledge.archive_after_days` sem novas ocorrências perde peso e vai para `archived`; notas e coleção de insights não se refazem a partir do código → entram no backup (SO11)
-- [ ] K10 Política dentro do repo (`.aidd/policy.yaml`, lida do espelho na branch padrão): em organizações, a política no `~/.aidd` é de cada dev e dois devs podem trabalhar com thresholds diferentes; no repo ela vale igual para todos e só muda por PR (review humano). Camada acima de `overrides` do repo; depois do K1.1 provado
+- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contract v1)* **The vault contract** (closes S8 for knowledge):
+  the index skeleton — `scan`'s fixed sections (including the repo's effective policy, read-only: it is changed in
+  `policy.yaml`) + a block between `<!-- aidd:knowledge:start -->`/`<!-- aidd:knowledge:end -->`, generated from the
+  notes and never edited by hand; the insight note format — frontmatter `topic` (a controlled vocabulary:
+  `architecture`, `review`, `quality`, `security`, `incident`, `decision`, `business`; extensible through a topic
+  registry, not free text — avoids `security`/`segurança`/`sec`), `status`, `severity`, `scope` (`repo`|`shared`),
+  `occurrences`, `first_seen`/`last_seen`, `evidence[]` (PR, file:line, sha, tool, session), `applies_to` (files,
+  roles, symbols); payload in Qdrant `{project, type: insight, topic, status}`
+- [x] K1.1 *(2026-10-13: `core/policy.py`, `aidd policy show|check`, `install.sh` creates it from
+  `indexer/policy.example.yaml`, `install-check` validates it)* **`policy.yaml`** in `~/.aidd` (D17), with layers like
+  `atlas.yaml`: built-in defaults → tenant → area → repo (`overrides`), each level overriding only what it declares.
+  Initial content: `coverage` (`min`, `new_code_min`), `harness` (`max_attempts`), `review` (`spec_approval`,
+  `adr_when`), `knowledge` (`recurring_after`, `archive_after_days`) — everything that would be a fixed number in the
+  code. Validated with a clear error (like `atlas.yaml`'s `ConfigError`); `install.sh` creates a commented example;
+  `aidd policy show <repo>` prints the effective policy with the origin of each value
+- [x] K2 *(2026-10-13: `aidd_indexer/knowledge/`, the `mcp-knowledge` service on the gateway's port 3006)* **The
+  `knowledge` service** in the compose file (the same image as the indexer, behind `mcp-gateway`; the only one that
+  writes knowledge to the vault and to Qdrant — the atlas stays read-only). Three tools:
+  - `policy_for(repo)` → the effective policy, already combined, with the origin of each value
+    (default/tenant/area/repo) — the skills do not merge the layers
+  - `insights_for(repo, files?, roles?, topic?)` → `accepted`/`enforced` as rules, `observed`/`recurring` as context
+    (labeled: data, not instructions)
+  - `record_insight(repo, topic, summary, evidence, applies_to, severity)` → dedup (Qdrant by similarity + the same
+    topic), increments or creates the note, `recurring` on reaching `knowledge.recurring_after` occurrences (policy;
+    default 3), rebuilds the index block, mirrors to Qdrant; no tool promotes to `accepted`
+  - `refresh_index(repo)` → rewrites only the `aidd:knowledge` block from the notes (`scan` calls it when it finishes
+    the page; a new page is born with what was recorded before)
+  - Tests: dedup, rebuilding the index while preserving `scan`'s sections, idempotency
+- [x] K3 *(2026-10-13: the skill rewritten and validated on the real install — migration, repetition in another
+  language, a page from scratch)* `scan` generates the index skeleton and shows the knowledge block; the end-of-task
+  lesson (today a direct `qdrant-store`) becomes `record_insight`
+- [ ] K4 *(with the `refine-business` review)* `refine-business` adopts the contract: consults the affected projects'
+  incidents/decisions, records the card's business decisions. `refine-tech` (S5) and `implement` (S6) are born with
+  it: the area's known risks in the spec; `accepted`/`enforced` as a checklist before coding and before the PR
+- [ ] K5 *(born with `refine-tech`, S5)* **Promotion with a human inside the process**: `refine-tech` shows the
+  `observed`/`recurring` items that touch the delimited area ("it showed up 3×, does it become a rule?") and records
+  the approval (`accepted`, who and when); editing the frontmatter in Obsidian counts the same. Closes the memory part
+  of SO9
+- [ ] K6 *(born with `implement`, S6)* Sources inside `implement`, where the reason for an error shows up: (1) **a
+  review rejection** (the senior opinion that sends it back to execution — the reason is the insight); (2) **a
+  harness escalation** (`harness.max_attempts` exhausted: what the model could not fix by itself, and why); (3) **PR
+  review comments** while handling the feedback (`gh`). In all of them, record only what is not obvious
+- [ ] K7 *(when the tenants have a scanner in CI)* `aidd ingest <file.sarif>` (Semgrep, CodeQL, Trivy, Snyk): groups
+  findings by rule × repo, writes `observed` with a count and evidence — the raw data stays in the tool; runs in CI or
+  through the refresher. Sonar through its API later
+- [ ] K8 *(after Phase 1)* `enforced`: an insight checkable on the graph becomes a convention rule and shows up in
+  `violations`; what is not checkable stays as a checklist
+- [ ] K9 *(with a volume of insights; backup together with SO11)* Aging and backup: a `last_seen` older than
+  `knowledge.archive_after_days` with no new occurrences loses weight and goes to `archived`; the notes and the
+  insights collection cannot be rebuilt from the code → they go into the backup (SO11)
+- [ ] K10 Policy inside the repo (`.aidd/policy.yaml`, read from the mirror on the default branch): in organizations,
+  the policy in `~/.aidd` is each dev's, and two devs may work with different thresholds; in the repo it holds the
+  same for everyone and only changes through a PR (human review). A layer above the repo's `overrides`; after K1.1 is
+  proven
 
-## Publicação e documentação (trilha própria)
+## Publishing and documentation (its own track)
 
-> O repo é público e o README tem uma linha. Esta trilha dá aos dois repositórios — o aidd-stack e o indexador, que
-> sai para um repo próprio — documentação para quem chega, em inglês, português, espanhol e chinês. Decisões, fronteira
-> entre os repos e ordem: `docs/handoffs/H4-public-docs.md`.
+> The repo is public and the README has one line. This track gives both repositories — aidd-stack and the indexer,
+> which moves to its own repo — documentation for newcomers, in English, Portuguese, Spanish and Chinese. Decisions,
+> the boundary between the repos and the order: `docs/handoffs/H4-public-docs.md`.
 
-- [ ] P0 Reciclar os docs de trabalho (H4 passo 0, pedido em 2026-10-18): a verdade atual separada do histórico; um `AGENTS.md` na raiz como porta de entrada para um colaborador e a IA dele; o log do ROADMAP condensado em `docs/history.md`; as decisões destiladas em `docs/decisions.md`; o relatório do corpus só com o método, a baseline vigente e as lacunas; de ~600 KB para no máximo ~150 KB. Fase 0a logo depois do fechamento do F1.14; fase 0b (o guia do extrator) depois do H5
-- [ ] P1 Decisões do H4 (H4-D1…D12, nome do repo do indexador, revisores por idioma) e esboço da arquitetura dos docs — pode correr em paralelo ao H2b
-- [ ] P2 Indexador em repo próprio: `filter-repo` com histórico auditado, imagem multi-arquitetura no GHCR, `knowledge` e política no aidd-stack, esquema aplicado pelo indexador; regressão = testes, corpus idêntico e instalação limpa do aidd-stack com a imagem publicada. Depois do merge do H2b
-- [ ] P3 Conteúdo em inglês dos dois repos (README + `docs/en/`), validado por quem nunca viu o projeto
-- [ ] P4 Idiomas: glossário, guia de estilo, `i18n_check.py` no CI; traduções por camada em pt-BR, es e zh-CN
-- [ ] P5 Assets visuais (manifesto `docs/assets/README.md`), arquivos de comunidade, configurações do GitHub e primeira release dos dois repos
-- [ ] P6 *(opcional)* Site de docs, quando a navegação pedir
+- [ ] P0 Recycle the working docs (H4 step 0, asked for on 2026-10-18): the current truth separated from history; an
+  `AGENTS.md` at the root as the entry point for a contributor and their AI; the ROADMAP log condensed into
+  `docs/history.md`; the decisions distilled into `docs/decisions.md`; the corpus report with only the method, the
+  current baseline and the gaps; from ~600 KB to at most ~150 KB. Phase 0a done on 2026-10-19, with every doc in
+  English (H4-D1); phase 0b (the extractor guide, rewritten in English) after H5
+- [ ] P1 H4's decisions (H4-D1…D12, the name of the indexer's repo, reviewers per language) and a sketch of the docs
+  architecture — can run in parallel with H2b
+- [ ] P2 The indexer in its own repo: `filter-repo` with an audited history, a multi-architecture image on GHCR,
+  `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
+  and a clean aidd-stack install with the published image. After the H2b merge
+- [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
+- [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
+- [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files, GitHub settings and the first release of
+  both repos
+- [ ] P6 *(optional)* A docs site, when navigation calls for it
 
-## Decisões pendentes
+## Pending decisions
 
-- [x] D1 Graph DB → **Neo4j Community** (ADR-001): Neo4j Community vs Memgraph (critério: MCP oficial, memória, licença para uso interno)
-- [ ] D2 Orquestrador de execução (Fase S6): Claude Code (já usamos skills nesse formato) vs Cline/Roo Code (VS Code, MCP, modelos locais) vs Goose/Aider (CLI)
-- [x] D3 Estratégia de refs → `always` do tenant = `[main, master]` (a organização não usa `develop`; sai do default do tenant, segue no default do código por compatibilidade); feature branches entram pela política `active` (≤14 dias, ≤5 por repo, efêmeras, GC 30 dias) e por `refs.overrides` quando um repo precisa de algo fixo — decidido 2026-10-03 (F0.3.6)
-- [x] D7 Sem defaults de tenant: `AIDD_TENANT` vem do `install.sh` (`.env`), é `${AIDD_TENANT:?}` no compose e obrigatório no indexador (`auto` que não deriva = erro)
-- [x] D6 Nomenclatura → **Atlas**: nome do database Neo4j e do MCP voltado a agentes (`atlas.*` nas skills); `neo4j/` continua sendo a pasta de infra; ferramentas de intenção substituem o Cypher bruto no F0.6
-- [x] D17 **Política do processo em `policy.yaml` (2026-10-12)**, separado do `atlas.yaml`: o `atlas.yaml` diz como ler o código (fontes, refs, convenções), o `policy.yaml` diz o que o processo exige (cobertura, harness, review, conhecimento). Mesmas camadas do `atlas.yaml` (defaults → tenant → área → repo); começa em `~/.aidd`, com camada no repo depois (K10). Nome `policy` e não `profile`: profile já são os profiles do compose e soa como perfil de usuário. As skills leem a política efetiva por `policy_for` (nunca fazem o merge); o índice no vault só a mostra
-- [x] D16 **Conhecimento é mecanismo da stack, não skill (2026-10-12)**: as skills espelham as etapas do processo (`scan` → `refine-business` → `refine-tech` → `implement`) e ficam poucas; capturar e filtrar conhecimento atravessa todas, então é um serviço MCP (`knowledge`) que elas consomem pelo mesmo contrato. Hook do Claude Code não serve para isso (roda shell, não raciocina: não distingue padrão de ruído); quem decide o que registrar é o modelo que executa a etapa, quem grava é o serviço. Fontes sem modelo no meio (SARIF, Sonar) entram por CLI (`aidd ingest`). Serviço separado do atlas para o atlas continuar só leitura
-- [x] D15 **Refresher em container + espelhos (2026-10-12)**: a atualização contínua é um serviço do compose (`aidd daemon`), não um agendador do host — funciona igual em macOS, Linux e WSL e Docker o reinicia; o workspace é montado só leitura e cada repo tem um espelho bare em `~/.aidd/mirrors` (fetch remoto com PAT em arquivo); os containers rodam como o usuário do host. Substitui D14 e o fetch no host do D12, e revê o D9
-- [x] D14 *(substituído pelo D15)* Agendador dentro do WSL (systemd user timer), não no Windows: o ambiente inteiro vive no distro; Task Scheduler só como fallback sem systemd (e oculto)
-- [x] D13 Credencial do refresh automático = PAT somente-leitura dedicado (não a chave pessoal); agendador = Task Scheduler no WSL / systemd em Linux; intervalo 15 min
-- [x] D12 Instalação ≠ atualização: o bootstrap indexa os refs locais como clonados (sem fetch, sem credenciais); manter o atlas atualizado é um processo próprio (trilha "Atualização contínua"), rodando no host com as credenciais do dev
-- [x] D8 Providers: **GitHub primeiro** (F1); o manifesto já aceita N fontes por tenant, então cada tenant pode combinar providers
-- [x] D9 *(revisto pelo D15: a fonte `local` também tem espelho, para o workspace ficar só leitura)* Fonte `local` sem espelhos: `git archive` das remote-tracking refs (read-only); espelhos bare só com providers remotos
-- [x] D10 Defaults da política de refs: `main/master/develop` sempre, ativas ≤14 dias, ≤5 por repo, GC efêmeros 30 dias
-- [x] D11 Áreas: seção opcional `areas:` no `atlas.yaml` (→ `Repo.area`, agrupa o `plan`); nós de domínio e Backstage/Compass adiados para F2
-- [ ] D5 Idioma dos docs: schema e ADR já em inglês (padrão do projeto open source); traduzir `ROADMAP.md` quando estabilizar ou mantê-lo em PT como doc de trabalho interno — proposta no H4 (H4-D1): inglês como fonte dos docs públicos, traduções em pt-BR, es e zh-CN; ROADMAP e handoffs seguem em PT
-- [ ] D4 Modelo local mínimo para tarefas agênticas com tool-calling (avaliar Qwen-Coder ≥ 30B); 7B/14B ficam só para sumários e classificação
+The decided ones (D1, D3, D6–D17, and D5 through H4-D1) are in `docs/decisions.md`.
+
+- [ ] D2 Execution orchestrator (Phase S6): Claude Code (we already use skills in that format) vs Cline/Roo Code
+  (VS Code, MCP, local models) vs Goose/Aider (CLI)
+- [ ] D4 Minimum local model for agentic tasks with tool calling (evaluate Qwen-Coder ≥ 30B); 7B/14B stay for
+  summaries and classification only
