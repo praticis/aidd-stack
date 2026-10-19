@@ -11,8 +11,9 @@
 >   absorbed here;
 > - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install.
 >
-> **State (2026-10-19):** registered by the author, not started. Proposed slot: the first slice lands before H5's
-> steps 4 to 7 resume, so that every following step of H5 and H6 is proved by CI and not by hand (H7-D5).
+> **State (2026-10-19):** slice 1 is built on the `ci/h7-gates` branch, and its first run in CI is its test. The
+> author made decisions D1, D3 and D5 (see "Decisions made"). The slice comes now, before H6's step 1, so that the
+> method's checks live in the repo before the context of the work that built them fades.
 
 ## Context in one paragraph
 
@@ -75,12 +76,13 @@ PR does not merge with an item unjudged.
    tests and fixtures · code hygiene · shape report · docs links and repo paths · the MCP against an ephemeral Neo4j
 
  a PR that touches indexer/** (to be measured; likely 15–25 min)
-   the corpus of the branch vs the baseline of the merge base  ──►  gates + the classified diff, as a PR comment
-   the hold-out of the branch vs its baseline                   ──►  gate
+   the corpus of the branch vs the baseline of main's tip     ──►  gates + the classified diff, in the job's summary
+   the hold-out of the branch vs its baseline                  ──►  gate (a count, never the items)
+   the micro set's dry-runs vs the base's                      ──►  gate (the `graph-change` label for a judged change)
 
- a merge to main
-   the corpus and the hold-out run, and the runs are published as the new baselines, named by the commit (H7-D1);
-   the corpus report's numbers come from them, not typed by hand
+ a push to main
+   the corpus, the hold-out and the micro set run when no baseline for that code is cached, and are cached as the
+   new baselines, keyed by the code's tree (H7-D1); later, the corpus report's numbers come from them
 
  nightly, on main
    corpus + hold-out, three times: the medians of time and memory per repo as a trend, with an alert past the noise
@@ -114,29 +116,67 @@ code from any fork's PR. So it has two parts:
 
 | # | Slice | Done when |
 |---|---|---|
-| 1 | Baselines published on merge to `main`; the corpus, the hold-out and the micro set on a PR; the gates of precision, no win lost, hold-out, refactor and the micro graph; the classified diff as a comment | PR #7's refactor commits get a comment that says `0 repo(s) differ`, and a test PR that drops a route fails |
+| 1 | Baselines cached on every push to `main`; the corpus, the hold-out and the micro set on a PR; the gates of precision, no win lost, hold-out, refactor and the micro graph; the classified diff in the job's summary | a PR's checks say `0 repo(s) differ`, and a test PR that drops a route fails |
+| 1b | The classified diff as a comment on the PR, through the two-workflow pattern | a fork's PR gets the comment |
 | 2 | One cause per commit, `CODEOWNERS` on the expected lists, the verdicts recorded and checked | a PR with an unjudged item cannot merge |
 | 3 | The nightly trend of time and memory, for the whole pipeline phase by phase, the resolver included | a week of medians with their spread |
 | 4 | `live-check.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
 | 5 | After H6: the cold-equals-warm gate, and the PR corpus run only on the files the PR changed | a PR's corpus job takes a fraction of a cold run |
 | 6 | The shape report blocks (H5-D3) | the author turns it on |
 
+## Slice 1 as built
+
+`.github/workflows/indexer.yml` runs on every pull request and every push to `main`:
+
+| Job | What it does |
+|---|---|
+| `changes` | decides whether the indexer changed (`indexer/**` or the workflow). The other jobs are skipped when it did not, and a skipped job passes, so a docs-only PR is not blocked |
+| `tests` | builds the image (with Docker's layer cache) and runs `test.sh` |
+| `corpus` | restores the base's corpus and hold-out runs from the cache, or computes them at the base; runs the branch's; counts the hold-out repos that changed, so that its items never reach an artifact |
+| `micro` | runs `micro.sh` against the base, whose dry-runs come from the cache or are computed |
+| `gates` | reads the PR's labels when it runs; runs `gates.sh` over the two corpus runs; decides the micro graph; writes everything to the job's summary |
+
+- **The base** is the first parent of the PR's merge commit, which is `main`'s tip. Both sides then hold the same
+  other PRs, so a PR never inherits another's diff.
+- **The baselines** are keyed by the tree of `indexer/` (the corpus) or of `aidd_indexer/` (the micro set), not by a
+  commit. A commit that does not touch the code finds the same baseline.
+- **A refactor**, where any difference fails, is read from the PR itself (the author's rule): its branch starts with
+  `refact/` or `refactor/`, or one of its commits starts with `refactor:` or `refact:`, with or without a scope. The
+  `refactor` label says the same. One refactor commit makes the whole PR strict, so a refactor and a change of behavior
+  go in separate PRs.
+- **The labels for decisions:**
+  - `holdout-measurement`: the hold-out may change;
+  - `graph-change`: a difference in the micro graph, judged at its source, passes.
+
+  After adding one, re-run the `gates` job alone. A run started by the label itself would report its skipped checks
+  as passing.
+- **The checks to require on `main`:** `tests` and `gates`. `gates` runs even when a job it needs fails, and then
+  fails, so a broken run never passes as skipped.
+- **Locally, the same gates:** `corpus.sh --label` for both sides, then `gates.sh`, and `micro.sh`.
+
+## Decisions made (2026-10-19, with the author)
+
+| # | Decision | Why |
+|---|---|---|
+| H7-D1 | **The baselines live in the Actions cache**, keyed by the code's tree. A push to `main` fills it, and a miss recomputes the base in the PR's run. GHCR comes later, if contributors need to download baselines | The extraction is deterministic, so a baseline is derived data: what must not be lost is in git (the code and the expected lists). No infrastructure, no write token |
+| H7-D3 | **The gates run on every PR that touches the indexer**, and every push to `main` fills the baselines | A gate that runs only when someone remembers is not a gate |
+| H7-D5 | **Slice 1 now, before H6's step 1** | Better now than later, while the context that built the method is fresh: no gain may be lost |
+
 ## Decisions to make with the author
 
 | # | Decision | Recommendation | Why |
 |---|---|---|---|
-| H7-D1 | Where the baselines live | An OCI artifact on GHCR per baseline, tagged by the commit (`oras push`); release assets as the alternative | Actions artifacts expire; GHCR is already where the indexer's image goes (H4-D10); a data branch would grow the history |
 | H7-D2 | How verdicts are recorded | A file committed with the PR, one verdict and one reason per "to judge" item, checked by CI to cover them all | A checkbox can be ticked without judging; the file is also the record of why a baseline changed |
-| H7-D3 | When the corpus job runs | On every PR that touches `indexer/**`, once its time is measured; a label reruns it | A gate that runs only when someone remembers is not a gate |
 | H7-D4 | The memory tolerance | About 10 %. In H6's step 0, a container's peak varied 2–4 % across three runs | A tolerance below the noise flakes; one far above it catches nothing |
-| H7-D5 | The slot | The first slice before H5's steps 4 to 7 resume | Those steps move the heart of the extractor; with the gates, each push proves `0 differ` |
 
 ## Pitfalls
 
 - **A flaky gate gets switched off.** Only deterministic measures gate: ids, precision and recall, the hold-out's ids.
 - **Changing the ruler and the measured thing together passes any gate.** That is why one commit never touches both
   the extractor and the expected lists, and why the lists have code owners.
-- **The wrong baseline.** The merge base's, always.
+- **The wrong baseline.** The base is `main`'s tip, as the merge commit's first parent: never an older baseline.
+- **A skipped job passes a required check.** Hence the `changes` job instead of a path filter, `always()` on `gates`,
+  and labels read at run time instead of runs started by a label.
 - **Disk on the runner:** clones, the image and Docker's layers. Measure the free space and prune.
 - **A pin that changes** re-fetches its clone; the cache key includes the pins.
 - **The comment on a fork's PR** needs the two-workflow pattern; a token with write access never meets the PR's code.

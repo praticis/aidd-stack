@@ -79,6 +79,14 @@ decided by the author on 2026-10-19.
 | H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
 | H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
 
+## H7: regression gates in CI (H7-D1, D3 and D5, decided with the author on 2026-10-19)
+
+| # | Decision | Why |
+|---|---|---|
+| H7-D1 | The baselines live in the Actions cache, keyed by the code's tree; a miss recomputes them. GHCR comes later, for contributors' downloads. | The extraction is deterministic: a baseline is derived data, and git keeps what must not be lost. |
+| H7-D3 | The gates run on every PR that touches the indexer; every push to `main` fills the baselines. | A gate that runs only when someone remembers is not a gate. |
+| H7-D5 | Slice 1 before H6's step 1. | The method's checks go into the repo while the context that built them is fresh. |
+
 ## Of the working process
 
 | Decision | Why |

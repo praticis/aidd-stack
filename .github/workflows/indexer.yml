@@ -1,0 +1,289 @@
+name: indexer
+
+# The method's checks on every change to the indexer: the tests; the HTTP corpus, the hold-out and the micro graph of
+# the branch against its base; then the gates (indexer/scripts/gates.py). A push to main fills the baselines that pull
+# requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes them: the
+# extraction is deterministic, so a baseline is derived data.
+#
+# A pull request is a refactor, where any difference fails, when its branch starts with `refact/` or `refactor/`, when
+# one of its commits starts with `refactor:` or `refact:` (with or without a scope), or under the `refactor` label.
+# Labels are read when the `gates` job runs, not from the event: after adding `holdout-measurement` or `graph-change`,
+# re-run that job alone. A run started by a label change would report skipped checks as passing.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexer-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  AIDD_CORPUS_HOME: /home/runner/aidd-corpus
+  AIDD_INDEXER_IMAGE: aidd-indexer:local
+
+jobs:
+  # A path filter on the workflow would leave a required check pending forever on a docs-only pull request; a job
+  # skipped for it passes.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      indexer: ${{ steps.diff.outputs.indexer }}
+      base: ${{ steps.diff.outputs.base }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - id: diff
+        run: |
+          # a pull request is checked out as its merge into main: the first parent is main's tip, its base
+          if [ "${{ github.event_name }}" = pull_request ]; then base=$(git rev-parse HEAD^1); else base=$(git rev-parse HEAD); fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != pull_request ] \
+             || git diff --name-only HEAD^1 HEAD | grep -qE '^(indexer/|\.github/workflows/indexer\.yml$)'; then
+            echo "indexer=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "indexer=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  tests:
+    needs: changes
+    if: needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+          cache-to: type=gha,scope=indexer,mode=max
+      - run: indexer/scripts/test.sh
+
+  corpus:
+    needs: changes
+    if: needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      BASE: ${{ needs.changes.outputs.base }}
+      # mattermost peaked at 2.8 GiB on a runner, close to the default 3g; three of these fit in its 16 GB
+      AIDD_CORPUS_MEMORY: 4g
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - id: key
+        run: echo "tree=$(git rev-parse "$BASE:indexer")" >> "$GITHUB_OUTPUT"
+      - id: baseline
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ env.AIDD_CORPUS_HOME }}/runs/base-${{ steps.key.outputs.tree }}
+            ${{ env.AIDD_CORPUS_HOME }}/runs/base-${{ steps.key.outputs.tree }}-holdout
+          key: corpus-base-${{ steps.key.outputs.tree }}
+          lookup-only: ${{ github.event_name != 'pull_request' }}
+      - id: work
+        # main with its baseline cached already has nothing to do
+        run: echo "needed=${{ github.event_name == 'pull_request' || steps.baseline.outputs.cache-hit != 'true' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.work.outputs.needed == 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.work.outputs.needed == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+          cache-to: type=gha,scope=indexer,mode=max
+      - id: clones
+        if: steps.work.outputs.needed == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-corpus-${{ hashFiles('indexer/scripts/http_corpus.py') }}
+          restore-keys: clones-corpus-
+      - name: The base's corpus and hold-out, when not cached
+        if: steps.work.outputs.needed == 'true' && steps.baseline.outputs.cache-hit != 'true'
+        run: |
+          git worktree add -q "$RUNNER_TEMP/base" "$BASE"
+          "$RUNNER_TEMP/base/indexer/scripts/corpus.sh" --label "base-${{ steps.key.outputs.tree }}" --no-expected --show 0
+          "$RUNNER_TEMP/base/indexer/scripts/corpus.sh" --holdout --label "base-${{ steps.key.outputs.tree }}-holdout" \
+            --no-expected --show 0
+      - if: steps.work.outputs.needed == 'true' && steps.baseline.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.AIDD_CORPUS_HOME }}/runs/base-${{ steps.key.outputs.tree }}
+            ${{ env.AIDD_CORPUS_HOME }}/runs/base-${{ steps.key.outputs.tree }}-holdout
+          key: corpus-base-${{ steps.key.outputs.tree }}
+      - name: The branch's corpus and hold-out
+        if: github.event_name == 'pull_request'
+        run: |
+          # a repository that fails is left out of the run, and the gates fail it as not measured
+          indexer/scripts/corpus.sh --label head --no-expected --show 0 || echo "::warning::a corpus repository failed"
+          indexer/scripts/corpus.sh --holdout --label head-holdout --no-expected --show 0 || echo "::warning::a hold-out repository failed"
+          out="$RUNNER_TEMP/out" && mkdir -p "$out"
+          cp -r "$AIDD_CORPUS_HOME/runs/base-${{ steps.key.outputs.tree }}" "$out/base"
+          cp -r "$AIDD_CORPUS_HOME/runs/head" "$out/head"
+          # the hold-out leaves this job as a count: its items never reach an artifact
+          indexer/scripts/gates.sh --holdout-base "runs/base-${{ steps.key.outputs.tree }}-holdout" \
+            --holdout-head runs/head-holdout --holdout-count > "$out/holdout-changed.txt"
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: corpus
+          path: ${{ runner.temp }}/out
+          retention-days: 14
+      - if: always() && steps.work.outputs.needed == 'true' && steps.clones.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-corpus-${{ hashFiles('indexer/scripts/http_corpus.py') }}
+
+  micro:
+    needs: changes
+    if: needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      BASE: ${{ needs.changes.outputs.base }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - id: key
+        run: |
+          # every build gets a new image id; what the image holds comes from these files
+          img="${{ hashFiles('indexer/Dockerfile', 'indexer/pyproject.toml', 'indexer/conventions/**') }}"
+          echo "AIDD_MICRO_IMAGE_KEY=${img:0:16}" >> "$GITHUB_ENV"
+          echo "dir=base-$(git rev-parse "$BASE:indexer/aidd_indexer")-${img:0:16}" >> "$GITHUB_OUTPUT"
+      - id: baseline
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/micro/${{ steps.key.outputs.dir }}
+          key: micro-${{ steps.key.outputs.dir }}
+          lookup-only: ${{ github.event_name != 'pull_request' }}
+      - id: work
+        run: echo "needed=${{ github.event_name == 'pull_request' || steps.baseline.outputs.cache-hit != 'true' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.work.outputs.needed == 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.work.outputs.needed == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+          cache-to: type=gha,scope=indexer,mode=max
+      - id: clones
+        if: steps.work.outputs.needed == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+          restore-keys: clones-micro-
+      - name: The base's dry-runs, when not cached
+        if: steps.work.outputs.needed == 'true' && steps.baseline.outputs.cache-hit != 'true'
+        run: indexer/scripts/micro.sh --base "$BASE" --base-only
+      - if: steps.work.outputs.needed == 'true' && steps.baseline.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/micro/${{ steps.key.outputs.dir }}
+          key: micro-${{ steps.key.outputs.dir }}
+      - name: The branch against the base
+        if: github.event_name == 'pull_request'
+        run: |
+          out="$RUNNER_TEMP/out" && mkdir -p "$out"
+          set +e
+          indexer/scripts/micro.sh --base "$BASE" > "$out/micro.txt" 2>&1
+          echo $? > "$out/micro-rc.txt"
+          cat "$out/micro.txt"
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: micro
+          path: ${{ runner.temp }}/out
+          retention-days: 14
+      - if: always() && steps.work.outputs.needed == 'true' && steps.clones.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+
+  gates:
+    needs: [changes, corpus, micro]
+    # always(): a job skipped because a job it needs failed would pass as a required check
+    if: always() && github.event_name == 'pull_request' && needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: The corpus and micro jobs finished
+        if: needs.corpus.result != 'success' || needs.micro.result != 'success'
+        run: |
+          echo "corpus: ${{ needs.corpus.result }}, micro: ${{ needs.micro.result }}"
+          exit 1
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+      - uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/in
+      - name: Gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          # the branch's name is the PR author's text: it reaches the shell as data, never inside the script
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          labels=$(gh api "repos/${{ github.repository }}/issues/$PR/labels" --jq 'map(.name) | join(",")')
+          refactor=""
+          if [[ "$HEAD_REF" =~ ^refact(or)?/ ]]; then refactor="the branch's name"; fi
+          if gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
+               | grep -qE '^refact(or)?(\([^)]*\))?!?:'; then
+            refactor="${refactor:+$refactor and }a refactor commit"
+          fi
+          [ -z "$refactor" ] || labels="${labels:+$labels,}refactor"
+          echo "labels: ${labels:-none}; a refactor by ${refactor:-nothing}"
+          in="$RUNNER_TEMP/in"
+          mkdir -p "$AIDD_CORPUS_HOME/runs" && cp -r "$in/corpus/base" "$in/corpus/head" "$AIDD_CORPUS_HOME/runs/"
+          set +e
+          indexer/scripts/gates.sh --base runs/base --head runs/head \
+            --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" > report.md
+          corpus_rc=$?
+          # micro.sh: 0 identical, 1 a repository differs, 3 a dry-run failed
+          micro=$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)
+          case "$micro,,$labels," in
+            0,*) micro_rc=0; verdict="pass: the micro graph is identical" ;;
+            1,*,refactor,*) micro_rc=1; verdict="FAIL: the micro graph differs under the \`refactor\` label" ;;
+            1,*,graph-change,*) micro_rc=0; verdict="pass: the micro graph differs, judged under the \`graph-change\` label" ;;
+            1,*) micro_rc=1; verdict="FAIL: the micro graph differs. Judge each difference at its source; when it is right, add the \`graph-change\` label and re-run this job" ;;
+            *) micro_rc=1; verdict="FAIL: a dry-run failed (see the micro job)" ;;
+          esac
+          {
+            cat report.md
+            echo
+            echo "## Micro graph: $verdict"
+            echo
+            echo '```'
+            tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no report"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat report.md
+          [ "$corpus_rc" = 0 ] && [ "$micro_rc" = 0 ]
