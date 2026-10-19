@@ -315,6 +315,10 @@ Open:
     - Django stayed out (the portfolio is FastAPI/Flask);
     - test app folders with production names wait for F1.1's per-repo config.
   - **What needs an inferred type** is `needs-resolver`, for F1.2.
+- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`): the method's mechanical checks
+  as gates on every PR (precision ratchet, no win lost, hold-out untouched, `0 differ` for refactors, one cause per
+  commit), the diff classified for judgment, baselines published on merge, a nightly trend, and a live check on a
+  demo tenant
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
@@ -497,6 +501,9 @@ observed ──► recurring ──► accepted ──────────�
   `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
   and a clean aidd-stack install with the published image. After the H2b merge
 - [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
+- [ ] P3.1 The contributor path (H4.1, `docs/handoffs/H4.1-contributor-path.md`): `CONTRIBUTING.md`, playbooks per
+  contribution type, the method explained, PR and issue templates, the method's checks in CI, and an acceptance test
+  in which a fresh agent re-enacts past increments and follows the method on its own
 - [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
 - [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files, GitHub settings and the first release of
   both repos
