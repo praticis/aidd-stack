@@ -9,7 +9,10 @@
 > social preview) are made in another process; this handoff defines where they go and what the docs ask of them. H2b
 > left `feature/h2-corpus` (PR #4, 2026-10-18), and splitting out the indexer waits for H5 (see "Order"). On
 > 2026-10-18 the author added **step 0**: recycle the working docs before writing the public ones. On 2026-10-19 the
-> author decided H4-D1: every doc in the repo is written in English, the working docs too.
+> author decided H4-D1: every doc in the repo is written in English, the working docs too. The same day the author
+> registered **H4.1** (`docs/handoffs/H4.1-contributor-path.md`): how someone outside, working with an AI, evolves
+> the project with the same method. `CONTRIBUTING.md`, the playbooks, the PR and issue templates, the CI checks of the
+> method and an acceptance test with a fresh agent come from it.
 
 ## Context in one paragraph
 
@@ -48,6 +51,7 @@ The repo's description on GitHub mentions the Praticis SDK. The docs say what th
 4. **A contract with the assets process:** which images the docs use, in what format, with what variants and at what
    path.
 5. Community files (`CONTRIBUTING`, `SECURITY`, `CODE_OF_CONDUCT`, `CHANGELOG`, templates) and GitHub metadata.
+   `CONTRIBUTING`, the PR and issue templates and the contributor path are H4.1's.
 6. **An audit before publishing:** real names, secrets, numbers without a source, broken links.
 
 ## What to get from the author at the start
@@ -196,6 +200,9 @@ README says what of the brand may be reused (the author's decision; the code sta
 
 ## Community files and metadata (in both repos)
 
+H4.1 designs `CONTRIBUTING.md`, the PR and issue templates and `CODEOWNERS` around the method (the evidence each
+contribution carries). The rest is here.
+
 - `CONTRIBUTING.md` (English, with a pt-BR version), `CODE_OF_CONDUCT.md` (Contributor Covenant, which has official
   translations), `SECURITY.md` (channel: GitHub's *private vulnerability reporting*; what counts as a vulnerability
   here — MCP exposure, tenant isolation, poisoned memory, SO9), `CHANGELOG.md`, `.github/ISSUE_TEMPLATE/*.yml`,
@@ -249,6 +256,8 @@ README says what of the brand may be reused (the author's decision; the code sta
    `vault-contract`, `SCHEMA.md` → reference, `corpus-report.md` → explanation, `indexer/README.md` split between the
    README and guides, the skills → `methodology/stages`. **Done when** someone who has never seen the project — a
    person, or a new agent session reading only the docs — installs it and runs the first `scan` without help.
+   The contributor path (`CONTRIBUTING.md`, the playbooks, the explanation of the method, the templates and their
+   acceptance test) is H4.1, which runs alongside and shares this step's English base.
 5. **Language infra:** glossary, style guide, `i18n_check.py`, the CI workflow.
 6. **Translations:** tier 1 in pt-BR (the author reviews), then es and zh-CN; tier 2 in pt-BR.
 7. **Assets** as they are delivered, community files, repo settings and the first release of both.

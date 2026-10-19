@@ -497,6 +497,9 @@ observed ──► recurring ──► accepted ──────────�
   `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
   and a clean aidd-stack install with the published image. After the H2b merge
 - [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
+- [ ] P3.1 The contributor path (H4.1, `docs/handoffs/H4.1-contributor-path.md`): `CONTRIBUTING.md`, playbooks per
+  contribution type, the method explained, PR and issue templates, the method's checks in CI, and an acceptance test
+  in which a fresh agent re-enacts past increments and follows the method on its own
 - [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
 - [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files, GitHub settings and the first release of
   both repos
