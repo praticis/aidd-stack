@@ -278,6 +278,7 @@ Each step must give `0 repo(s) differ` on both sets against the starting baselin
 | 2 | 0 differ / 0 differ | 944 s | `aidd_indexer/tree.py` with a cursor walk; the language registry loads on first use, so the import cycle is gone |
 | 3a | 0 differ / 0 differ | 780 s | Go's declared type and C#'s local type answer from an index of each function's declarations, built in one pass (`NodeCache`), instead of walking the function for every question |
 | 4a | 0 differ / 0 differ | 771 s | the language's own package facts (Go's pass-through functions, Python's router classes, TS's clients with a base and enum members) leave `core/http_expr.py` (937 → 699 lines) for `languages/<lang>/package_facts.py`, read through `LanguageSupport.package_facts` in the same pass |
+| 4b | 0 differ / 0 differ | 777 s | Go's own path expressions (`url.URL`, a read of `u.Path`, grpc-gateway's patterns) leave the core's `path_of` for the Go scanner (`languages/go/paths.py`, through a `_call_path` hook); `core/http_expr.py` 699 → 656 lines |
 
 Two notes on step 2:
 

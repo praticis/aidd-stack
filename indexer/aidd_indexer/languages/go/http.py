@@ -17,6 +17,7 @@ from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, O
                                HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
 from ...core.http_scope import enclosing_function, in_function
 from ...core.http_expr import verb_list
+from .paths import GoPaths
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
 from ...core.model import RepoInfo
@@ -39,7 +40,7 @@ GO_SERVE = {"http.ListenAndServe": 1, "http.Serve": 1, "http.ListenAndServeTLS":
 GO_KIT_HTTP = "github.com/go-kit/kit/transport/http"                                     # httptransport.NewClient(method, url, enc, dec)
 
 
-class GoScanner(BaseScanner):
+class GoScanner(GoPaths, BaseScanner):
     relative_on_groups = True
     mount_rule = "go.mount"
     scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
