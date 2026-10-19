@@ -203,13 +203,7 @@ class CSharpSupport(LanguageSupport):
     def _lookup_type(self, ctx: ResolveContext, file: FileInfo, simple: str) -> tuple[str, dict[str, Any], FileInfo] | None:
         """(qualified name, facts, declaring file) of a type by simple name, preferring the namespaces
         the caller's file can see (its own namespace, its usings)."""
-        hits: list[tuple[str, dict[str, Any], FileInfo]] = []
-        for fid, facts in ctx.facts.items():
-            t = (facts.get("types") or {}).get(simple)
-            f = ctx.files_by_id.get(fid)
-            if t is None or f is None or f.language != self.id:
-                continue
-            hits.append(((t["ns"] + "." if t["ns"] else "") + simple, t, f))
+        hits = self._types_named(ctx).get(simple, [])
         if not hits:
             return None
         if len(hits) == 1:
@@ -218,6 +212,20 @@ class CSharpSupport(LanguageSupport):
         visible = set(mine.get("usings") or []) | ({mine.get("file_ns")} if mine.get("file_ns") else set())
         seen = [h for h in hits if h[1]["ns"] in visible]
         return seen[0] if len(seen) == 1 else None
+
+    def _types_named(self, ctx: ResolveContext) -> dict[str, list[tuple[str, dict[str, Any], FileInfo]]]:
+        """Simple name → (qualified name, facts, declaring file) of every type of the repo, in file order. Built once:
+        every receiver, base and implementer lookup asks, and a scan of all files per ask is quadratic in the repo."""
+        index = ctx.extra.get("cs_types_by_name")
+        if index is None:
+            index = ctx.extra["cs_types_by_name"] = {}
+            for fid, facts in ctx.facts.items():
+                f = ctx.files_by_id.get(fid)
+                if f is None or f.language != self.id:
+                    continue
+                for name, t in (facts.get("types") or {}).items():
+                    index.setdefault(name, []).append(((t["ns"] + "." if t["ns"] else "") + name, t, f))
+        return index
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         cur = self._lookup_type(ctx, file, receiver_type)
@@ -366,11 +374,8 @@ class CSharpSupport(LanguageSupport):
         queue = [qualified_type]
         while queue:
             q = queue.pop(0)
-            simple = q.split(".")[-1]
-            for fid, facts in ctx.facts.items():
-                t = (facts.get("types") or {}).get(simple)
-                f = ctx.files_by_id.get(fid)
-                if t is None or f is None or ((t["ns"] + "." if t["ns"] else "") + simple) != q:
+            for qual, t, f in self._types_named(ctx).get(q.split(".")[-1], []):
+                if qual != q:
                     continue
                 for b in t["bases"]:
                     bt = self._lookup_type(ctx, f, b)
@@ -380,11 +385,8 @@ class CSharpSupport(LanguageSupport):
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         for q in [qualified_type] + self.supertypes(ctx, qualified_type):
-            simple = q.split(".")[-1]
-            for fid, facts in ctx.facts.items():
-                t = (facts.get("types") or {}).get(simple)
-                f = ctx.files_by_id.get(fid)
-                if t is None or f is None or ((t["ns"] + "." if t["ns"] else "") + simple) != q:
+            for qual, t, f in self._types_named(ctx).get(q.split(".")[-1], []):
+                if qual != q:
                     continue
                 if any(self._lookup_type(ctx, f, b) is None for b in t["bases"]):
                     return True
@@ -407,9 +409,8 @@ class CSharpSupport(LanguageSupport):
             if len(impls) != 1:
                 return None
             impl = impls[0]
-        for facts in ctx.facts.values():
-            t = (facts.get("types") or {}).get(impl.split(".")[-1])
-            if t and ((t["ns"] + "." if t["ns"] else "") + impl.split(".")[-1]) == impl:
+        for qual, t, _ in self._types_named(ctx).get(impl.split(".")[-1], []):
+            if t and qual == impl:
                 explicit_for = t.get("explicit", {}).get(method)
                 if explicit_for and explicit_for != iface:
                     return None          # `IOther.Method` explicit implementation: not what this interface's call reaches
