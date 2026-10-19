@@ -266,3 +266,20 @@ the time goes:
 
 The tree walk that builds a list of children for every node, and the scope scans repeated for each question (Go's
 declared type, C#'s local type, `Scopes._assignments`), are what steps 2 and 3 (`tree.py` and `FileIndex`) replace.
+
+### H5 steps
+
+Each step must give `0 repo(s) differ` on both sets against the starting baselines.
+
+| Step | Corpus / hold-out | Summed time | Note |
+|---|---|---|---|
+| 0 | 0 differ / 0 differ | 1,449 s | the starting point |
+| 1 | no change to the code | — | 147 unit tests: `paths`, the mount graph, `Scopes`, `path_of`. Turning off any rule of `normalize_path` breaks a named case |
+| 2 | 0 differ / 0 differ | 944 s | `aidd_indexer/tree.py` with a cursor walk; the language registry loads on first use, so the import cycle is gone |
+
+Two notes on step 2:
+
+- **The real gain.** The walk is 2.5× faster on the same trees: over mattermost's 1,500 Go files, with 8 M nodes, it
+  went from 2.67 s to 1.08 s, finding the same calls.
+- **Timing noise.** Between two runs of the same code, the summed time moved by 28 %. The corpus time alone does not
+  isolate a step, which is why the walk was benchmarked on the same trees.

@@ -21,7 +21,8 @@ from tree_sitter import Language, Node, Parser, Query, QueryCursor, QueryError
 from tree_sitter_language_pack import get_language, get_parser
 
 from .. import languages
-from ..languages.base import LanguageSupport, node_text as _text, walk as _walk
+from ..languages.base import LanguageSupport
+from ..tree import node_text as _text, walk as _walk
 from . import ids
 from .dispatch import call_names
 from .model import CallInfo, FileInfo, ImportInfo, RepoInfo, SymbolInfo
