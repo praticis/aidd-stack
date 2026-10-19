@@ -30,12 +30,24 @@ H2 and F1.14 achieved from any PR, the author's included.
 | **Precision ratchet** | H2-D11 | the list precision of any repo or language is lower on the branch than on the baseline |
 | **No win lost** | PR #5's validation | an expected pair the baseline found is missing on the branch, or an item of the `checked` sample judged right is no longer extracted |
 | **Hold-out untouched** | H2-D20, H2-D21 | the hold-out's ids change in a PR without the `holdout-measurement` label |
-| **A refactor changes nothing** | H5 | a PR with the `refactor` label changes any id of the corpus or the hold-out |
+| **A refactor changes nothing** | H5 | a PR with the `refactor` label changes any id of the corpus or the hold-out, or any record of the micro set's dry-runs |
+| **The micro graph judged** | H6 step 0 | the full dry-runs of the micro set (files, symbols, `CALLS`, `IMPORTS`, violations) differ from the baseline's and the difference has no verdict |
 | **One cause per commit** | H5's pitfalls | one commit touches both the extractor (`indexer/aidd_indexer/`) and `indexer/tests/corpus_expected/` |
 | **Every diff item judged** | the cycle of a change | an item the classifier marks "to judge" has no verdict (H7-D2) |
 | **Cold equals warm** | H6, once the cache is in | a run with the cache gives a different result from one without it |
 | **Memory** | F1.13, H6 | a repo's peak memory grows past a tolerance set from H6's measured spread (H7-D4) |
 | Tests, hygiene, shape | they exist | as today; the shape report starts blocking when the author decides (H5-D3) |
+
+**The micro set** is the 12 repos of H5's protocol item 4:
+
+- C#: eshop, jellyfin, btcpayserver, umbraco;
+- Go: vikunja, gitea, mattermost, grafana;
+- Python: dispatch, netbox;
+- TS: ghost, outline.
+
+Each repo runs a full `aidd index --dry-run`, and the result is compared record by record. The HTTP corpus does not
+run the resolver, so without this set no gate sees `CALLS`. That is how H6's step 0 found a resolver that was
+quadratic in Go and C#, which no corpus run had shown.
 
 Time never gates: shared runners are noisy, and the corpus already varies about 28 % between runs on one machine.
 Time is a nightly trend instead.
@@ -102,9 +114,9 @@ code from any fork's PR. So it has two parts:
 
 | # | Slice | Done when |
 |---|---|---|
-| 1 | Baselines published on merge to `main`; the corpus and the hold-out on a PR; the gates of precision, no win lost, hold-out and refactor; the classified diff as a comment | PR #7's refactor commits get a comment that says `0 repo(s) differ`, and a test PR that drops a route fails |
+| 1 | Baselines published on merge to `main`; the corpus, the hold-out and the micro set on a PR; the gates of precision, no win lost, hold-out, refactor and the micro graph; the classified diff as a comment | PR #7's refactor commits get a comment that says `0 repo(s) differ`, and a test PR that drops a route fails |
 | 2 | One cause per commit, `CODEOWNERS` on the expected lists, the verdicts recorded and checked | a PR with an unjudged item cannot merge |
-| 3 | The nightly trend of time and memory | a week of medians with their spread |
+| 3 | The nightly trend of time and memory, for the whole pipeline phase by phase, the resolver included | a week of medians with their spread |
 | 4 | `live-check.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
 | 5 | After H6: the cold-equals-warm gate, and the PR corpus run only on the files the PR changed | a PR's corpus job takes a fraction of a cold run |
 | 6 | The shape report blocks (H5-D3) | the author turns it on |
@@ -116,7 +128,7 @@ code from any fork's PR. So it has two parts:
 | H7-D1 | Where the baselines live | An OCI artifact on GHCR per baseline, tagged by the commit (`oras push`); release assets as the alternative | Actions artifacts expire; GHCR is already where the indexer's image goes (H4-D10); a data branch would grow the history |
 | H7-D2 | How verdicts are recorded | A file committed with the PR, one verdict and one reason per "to judge" item, checked by CI to cover them all | A checkbox can be ticked without judging; the file is also the record of why a baseline changed |
 | H7-D3 | When the corpus job runs | On every PR that touches `indexer/**`, once its time is measured; a label reruns it | A gate that runs only when someone remembers is not a gate |
-| H7-D4 | The memory tolerance | From the spread H6's step 0 measures across runs | A tolerance below the noise flakes; one far above it catches nothing |
+| H7-D4 | The memory tolerance | About 10 %. In H6's step 0, a container's peak varied 2–4 % across three runs | A tolerance below the noise flakes; one far above it catches nothing |
 | H7-D5 | The slot | The first slice before H5's steps 4 to 7 resume | Those steps move the heart of the extractor; with the gates, each push proves `0 differ` |
 
 ## Pitfalls
