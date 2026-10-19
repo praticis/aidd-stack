@@ -36,30 +36,6 @@ _RELATIVE = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]*(/[A-Za-z0-9_.\-]+)+$")    # `
 _VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
 
-def grpc_gateway_pattern(ops: list[int], pool: list[str], verb: str = "") -> str | None:
-    """The path a grpc-gateway `runtime.NewPattern(1, ops, pool, verb)` matches: `ops` is a stack program of (opcode,
-    operand) pairs — 1 push a segment, 2 push the literal `pool[operand]`, 3 push the rest of the path, 4 join the
-    top `operand` items, 5 capture the top as the variable `pool[operand]`, 0 nothing."""
-    stack: list[str] = []
-    for i in range(0, len(ops) - 1, 2):
-        op, arg = ops[i], ops[i + 1]
-        if op == 1:
-            stack.append("*")
-        elif op == 2 and arg < len(pool):
-            stack.append(pool[arg])
-        elif op == 3:
-            stack.append("**")
-        elif op == 4 and 0 < arg <= len(stack):
-            stack[-arg:] = ["/".join(stack[-arg:])]
-        elif op == 5 and stack and arg < len(pool):     # `{name=memos/*}` matches /memos/<x>: the literal stays
-            parts, var = stack[-1].split("/"), "{" + pool[arg] + "}"
-            stack[-1] = "/".join(var if p in ("*", "**") else p for p in parts) if {"*", "**"} & set(parts) else var
-        elif op != 0:
-            return None
-    return ("/" + "/".join(stack) + (":" + verb if verb else "")) if stack else None
-
-
-# -- the directory's constants ---------------------------------------------------------------
 def owner_class(n: Node, src: bytes) -> str | None:
     """Name of the class (struct, record) `n` is declared in."""
     p = n.parent
@@ -298,10 +274,6 @@ class PathExpressions:
             if name in self.ctx.ambiguous:                        # other files of the directory define it too: this one's
                 val = self.scopes.assigned_before(self.scopes.root, END, name)
                 return self.path_of(val, lenient, _depth + 1) if val is not None else None
-        elif n.type == "selector_expression" and name.endswith(".Path"):
-            found = self._url_field(n, lenient, _depth)
-            if found is not None:
-                return found
         found = self.ctx.route_const(name)
         found = found if found is not None else self.foreign_const(name)
         if found is None and n.type == "identifier":            # a package var built by a call, used in a function
@@ -315,15 +287,6 @@ class PathExpressions:
         `u.Path += e` before here sets; None when nothing sets it."""
         bound, val = self.scopes.binding(obj, text(obj, self.src) + ".Path")
         return self.path_of(val, lenient, _depth + 1) if bound and val is not None else None
-
-    def _url_field(self, n: Node, lenient: bool, _depth: int) -> str | None:
-        """`u.Path` read (`path.Join(u.Path, "/userinfo")`, `u.Path += "x"`): its last assignment before here, else the
-        path of the URL `u` holds (`url.Parse("https://host/v1")`)."""
-        bound, val = self.scopes.binding(n)
-        if bound and val is not None:
-            return self.path_of(val, lenient, _depth + 1)
-        obj = n.child_by_field_name("operand")
-        return self.path_of(obj, lenient, _depth + 1) if obj is not None and obj.type == "identifier" else None
 
     def foreign_const(self, name: str) -> str | None:
         """A constant of another directory the file imports (`BaseScanner`); None here."""
@@ -375,21 +338,9 @@ class PathExpressions:
         if args is None:
             return None
         arg_nodes = [unwrap_arg(c) for c in args.children if c.is_named]
-        if fn is not None and fn.type == "selector_expression":                # Go's url.URL
-            operand = fn.child_by_field_name("operand")
-            if fname == "String" and not arg_nodes:                            # u.String(): where u points
-                return self.path_of(operand, lenient, _depth + 1)
-            if fname in ("Parse", "ParseRequestURI") and text(operand, self.src) == "url" and arg_nodes:
-                return self.path_of(arg_nodes[0], lenient, _depth + 1)
-            if fname == "JoinPath" and text(operand, self.src) != "url":       # u.JoinPath("x"): u's path, then "x"
-                arg_nodes = [operand] + arg_nodes
-            if text(operand, self.src) == "runtime" and fname == "MustPattern" and arg_nodes:
-                return self.path_of(arg_nodes[0], lenient, _depth + 1)     # grpc-gateway
-            if text(operand, self.src) == "runtime" and fname == "NewPattern" and len(arg_nodes) >= 3:
-                ops = [int(text(c, self.src)) for c in walk(arg_nodes[1]) if c.type == "int_literal"]
-                pool = [unquote(text(c, self.src)) for c in walk(arg_nodes[2]) if c.type == "interpreted_string_literal"]
-                verb = unquote(text(arg_nodes[3], self.src)) if len(arg_nodes) > 3 and arg_nodes[3].type in STRING_NODES else ""
-                return grpc_gateway_pattern(ops, pool, verb)
+        decided, found, arg_nodes = self._call_path(fn, fname, arg_nodes, lenient, _depth)
+        if decided:
+            return found
         if fname in ("Sprintf", "Errorf", "Format", "format"):
             if fname == "format" and fn is not None and fn.type == "attribute":      # "/v1/{}".format(x)
                 recv = fn.child_by_field_name("object")
@@ -423,6 +374,12 @@ class PathExpressions:
         if index is not None and index < len(arg_nodes):                # conf.BaseUri(config.ApiUri): the argument
             return self.path_of(arg_nodes[index], lenient, _depth + 1)
         return None
+
+    def _call_path(self, fn: Node | None, fname: str, arg_nodes: list[Node], lenient: bool,
+                   _depth: int) -> tuple[bool, str | None, list[Node]]:
+        """Language hook: (True, its path) for a call whose path the language reads itself, else (False, None, the
+        arguments the reading below sees)."""
+        return False, None, arg_nodes
 
     def _passthrough_index(self, fn: Node) -> int | None:
         """The parameter a Go function of the repo returns (`_passthrough`): `F` of this package, `pkg.F` of an
