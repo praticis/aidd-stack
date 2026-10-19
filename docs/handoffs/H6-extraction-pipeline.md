@@ -5,9 +5,15 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-19):** a design draft. Nothing measured or built yet. It was born from H5's step 3 (`FileIndex`):
-> the author asked for the step to get a handoff of its own, to explore partitioning the extraction, running it in
-> parallel and joining the results, with an incremental cache per file as a requirement.
+> **State (2026-10-19):** step 0 is measured (`corpus-report.md`, "H6 baseline").
+>
+> - **What it found:** the resolver was the largest phase by far, quadratic in Go and C#. An index built once, on its
+>   own branch from `main` (`perf/resolve-index`), brings it to seconds, with full dry-runs identical on 12 repos.
+> - **Next:** step 1, the prototypes.
+>
+> H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
+> partitioning the extraction, running it in parallel and joining the results, with an incremental cache per file as
+> a requirement.
 
 ## Context in one paragraph
 
@@ -93,6 +99,10 @@ package's files (the fanout), and a change elsewhere does not. It is what Sorbet
 `CALLS` can be cached the same four ways: recomputed in the reduce (A), recomputed per file in parallel (B), keyed by
 the symbol table entries it read (C), or keyed by a digest of the symbol table, so that a push that changes no
 declaration only re-resolves the files it changed (D).
+
+Step 0 answered this one. With the index, `resolve_calls` takes 0.4–8.7 s on the profile set, against an extraction
+of 10–73 s. So A is enough: the reduce recomputes `CALLS`, and caching them per file is not worth the risk until a warm
+run measures the reduce as its floor.
 
 **What to measure**, on a throwaway branch, on mattermost, vikunja, umbraco and ghost (the H5 profile set):
 
@@ -203,14 +213,17 @@ H5 builds pieces with H6's shape:
   that a slow moment does not hit one repo only. The report gives the median and the range (min–max).
 - Two options are compared only when their difference is larger than the run-to-run range. The corpus varies about
   28 % between runs of the same code, so a small effect is measured with a microbenchmark on the same trees.
-- Correctness comes before speed: each prototype's output is compared with the baseline (`0 differ`), and a warm run
-  with a cold one.
+- Correctness comes before speed. Each prototype's output is compared three ways:
+  - with the HTTP baseline (`0 differ`);
+  - with `main`'s full dry-run, record by record, on the 12 repos of step 0, because the HTTP corpus does not run the
+    resolver;
+  - a warm run with a cold one.
 
 ## Steps
 
 | # | Step | Done when |
 |---|---|---|
-| 0 | Measure the pipeline as it is, with no code change: the time and the peak memory of each phase (discover, parse, extract, facts, constants, scanners, compose, resolve, write) on grafana, mattermost, vikunja, umbraco and ghost; the share of files with an HTTP shape; the files a typical push changes, from the corpus repos' history | the numbers in `corpus-report.md` ("H6 baseline") |
+| 0 | Measure the pipeline as it is, with no code change: the time and the peak memory of each phase (discover, parse, extract, facts, constants, scanners, compose, resolve, write) on grafana, mattermost, vikunja, umbraco and ghost; the share of files with an HTTP shape; the files a typical push changes, from the corpus repos' history | the numbers in `corpus-report.md` ("H6 baseline"). **Done 2026-10-19** |
 | 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged |
 | 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |

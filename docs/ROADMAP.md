@@ -19,6 +19,9 @@
   - H5 (`feature/h5-refactor`, draft PR #7): the safe steps are done; steps 3, 5 and 6 are being designed first;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
+    - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
+    - It found the resolver quadratic in Go and C#. The fix, an index built once, is on its own branch from `main`
+      (`perf/resolve-index`).
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
@@ -291,7 +294,8 @@ Open:
 - [ ] F1.13 **Large repos (extraction scale)**, absorbed by H6 (`docs/handoffs/H6-extraction-pipeline.md`): grafana (24 thousand files) is killed for memory at 7.7 GB on Docker
   Desktop (corpus v2, 2026-10-15), because `extract_tree` keeps the tree-sitter tree and the text of **every** file
   until the end — only the HTTP extraction needs them; the `Resolver` reads data per file (`namespaces`, `facts`).
-  First measure memory per phase (discover / extract / http / resolve / write) on grafana; then, in order of cost:
+  H6 step 0 measured the memory per phase. Grafana peaks at 4.2 GB in a container, and the kept trees account for
+  3.7 GB of it. Extracting with each tree dropped peaks at 271 MiB. Then, in order of cost:
   1. release each file's tree as soon as nothing else reads it — HTTP extraction directory by directory (the
      constants and the scan are already per directory);
   2. batches per module (Go package, `.csproj`, `package.json` workspace), each batch written to the graph, and the

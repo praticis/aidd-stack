@@ -34,6 +34,10 @@
 >   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
 >   - **Step 10, in part:** the comments without references to docs or project names, with a test that keeps it so.
 >     Reviewing what each comment says is still missing.
+> - **The micro graph, checked afterwards (2026-10-19).** The protocol's corpus does not run the resolver, so step 3a's
+>   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
+>   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
+>   identical. That check is now item 4 of the protocol.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed first: the extraction as a parallel
 >   map, a reduce and a per-file cache. Step 3's `FileIndex` becomes H6's per-file index, and steps 5 and 6 are
 >   designed against it (ADR-005, ADR-006). Then, built toward that design:
@@ -287,7 +291,15 @@ the safest and cheapest to the most structural. The test nets go in before code 
 1. tests green;
 2. the corpus against the starting baseline: "0 repo(s) differ";
 3. the hold-out identical;
-4. the step's time, measured alone, no worse than the previous one, unless justified.
+4. **the micro graph identical:** full dry-runs (`aidd index --dry-run --out`) of `main` and of the step, compared
+   record by record. This covers files, symbols, `CALLS`, `IMPORTS` and violations, over H6 step 0's 12 repos:
+   - C#: eshop, jellyfin, btcpayserver, umbraco;
+   - Go: vikunja, gitea, mattermost, grafana;
+   - Python: dispatch, netbox;
+   - TS: ghost, outline.
+
+   The HTTP corpus does not run the resolver, so items 2 and 3 cannot see a change to `CALLS`;
+5. the step's time, measured alone, no worse than the previous one, unless justified.
 
 A difference in the corpus is a defect of the step, not a gain. If the refactor reveals a real bug, it is recorded,
 fixed in a separate commit, with a fixture case, and goes into the baseline by explicit decision.

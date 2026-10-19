@@ -302,3 +302,93 @@ Profiles after step 3a, against step 0. These use cProfile, and their shares are
 
 Step 3's criterion is met on vikunja: the walk is below 20 %.
 
+## H6 baseline (2026-10-19)
+
+H6's step 0 (`docs/handoffs/H6-extraction-pipeline.md`) measures the whole pipeline phase by phase, the resolver
+included, with no change to the code:
+
+- **What ran:** a script that calls the same functions as `aidd index`, in the same order, on the H5 branch
+  (`e5796a0`).
+- **How it ran:**
+  - one container per run, with a 9 GB cap, alone on an 8-CPU machine;
+  - 3 runs, interleaved across the repos.
+- **Two exceptions:**
+  - the resolver ran in the first round only, since it took 31 and 38 minutes on two repos;
+  - vikunja ran it in all three rounds.
+- **The write to Neo4j is not measured** (a dry-run).
+
+**Time per phase**, in seconds, as the median (range):
+
+| Repo | Files (parsed) | Discover | Parse only | Extract | HTTP pass 1 | HTTP pass 2 | Compose | Resolve | Resolve, with the index |
+|---|---|---|---|---|---|---|---|---|---|
+| vikunja | 2,134 (1,704) | 0.5 | 1.6 | 10.5 (10.0–10.6) | 2.0 | 6.6 | 0.0 | 16.9 (16.6–17.2) | 0.4 |
+| ghost | 7,956 (6,948) | 1.9 | 3.6 | 20.4 (20.2–20.9) | 4.8 | 9.1 | 0.1 | 1.1 | 1.1 |
+| umbraco | 17,453 (17,173) | 4.2 | 6.9 | 37.4 (36.4–39.6) | 4.8 | 19.8 | 0.3 | 2,279 | 4.9 |
+| mattermost | 9,648 (8,532) | 3.2 | 6.6 | 43.7 (43.1–44.0) | 9.1 | 12.7 | 0.1 | 493 | 3.3 |
+| grafana | 20,646 (16,580) | 7.5 | 11.1 | 72.7 (72.3–73.8) | 15.1 | 25.4 | 0.1 | 1,889 | 8.7 |
+
+- **Spread:** every phase measured three times varied less than 5 % between runs.
+- **"Resolve, with the index":** the branch `perf/resolve-index`, from `main` (see below).
+
+**Memory**, in MiB:
+
+| Repo | Peak, extracting with each tree dropped | Peak, every tree kept (today) | Container peak, whole run (3 runs) |
+|---|---|---|---|
+| vikunja | 233 | 647 | 678–706 |
+| ghost | 67 | 1,234 | 1,373–1,427 |
+| umbraco | 220 | 1,736 | 1,945–2,001 |
+| mattermost | 73 | 2,228 | 2,501–2,546 |
+| grafana | 271 | 3,709 | 4,165–4,271 |
+
+**The second read.** A file has an HTTP shape when its scan added an endpoint, a call, a pending item or a fact. The
+facts make this an upper bound on what a second map would re-read.
+
+| Repo | Files scanned | With an HTTP shape | Reading another file's facts | Reads per reading file, median / p90 | Parse, all files / shaped files (s) | Summaries, raw / zlib (MB) |
+|---|---|---|---|---|---|---|
+| vikunja | 968 | 237 (24 %) | 243 (25 %) | 6 / 31 | 1.4 / 0.6 | 20.6 / 4.3 |
+| ghost | 4,451 | 2,679 (60 %) | 2,366 (53 %) | 6 / 29 | 2.8 / 1.0 | 41.3 / 9.7 |
+| umbraco | 14,067 | 7,695 (55 %) | 2,562 (18 %) | 6 / 25 | 4.9 / 2.2 | 80.5 / 21.6 |
+| mattermost | 4,562 | 2,009 (44 %) | 1,766 (39 %) | 7 / 31 | 5.6 / 1.2 | 85.9 / 17.8 |
+| grafana | 10,866 | 2,621 (24 %) | 5,223 (48 %) | 5 / 29 | 9.2 / 1.3 | 145.9 / 34.7 |
+
+Every summary could be pickled.
+
+**What a push changes.** The count covers the last 1,000 changes on the default branch, counting first parents (a
+merged PR or a direct push) and only the files of a parsed language:
+
+| Repo | Parsed files | Median | p90 | p99 | Changes touching ≤ 5 files |
+|---|---|---|---|---|---|
+| ghost | 7,061 | 3 | 16 | 59 | 65 % |
+| umbraco | 17,194 | 2 | 28 | 417 | 66 % |
+| mattermost | 8,670 | 3 | 20 | 118 | 66 % |
+| vikunja | 1,721 | 1 | 5 | 21 | 91 % |
+
+The live install's three mirrors that have history agree: a median of 0 to 2 files, and 69–100 % of changes touching
+≤ 5.
+
+**What it says:**
+
+1. **The resolver was the largest phase, by far.**
+   - The cause: Go and C# looked types and package files up by scanning every file of the repo, once per call with a
+     typed receiver, which is quadratic.
+   - The fix: an index built once (`perf/resolve-index`) brings the phase to 0.4–8.7 s.
+   - The check: full dry-runs of `main` and the branch, compared record by record on 12 repos, are identical. The
+     repos are eshop, jellyfin, btcpayserver, umbraco, vikunja, gitea, mattermost, grafana, dispatch, netbox, ghost and
+     outline.
+   - For H6: recomputing `CALLS` in the reduce is cheap, so caching them per file is not needed.
+2. **The memory is the trees.**
+   - Dropping each tree once its file is extracted takes the peak from 0.65–3.7 GB to 67–271 MiB, with no change in
+     time. That peak follows the largest file.
+   - Goal 1 is within reach with or without parallelism.
+3. **The map's cost is extraction, not parsing.**
+   - Parsing is 15–18 % of extraction, and the rest is Python, so worker processes pay off.
+   - A second map that re-parses the files with an HTTP shape (option B) adds 0.6–2.2 s per repo.
+4. **The second read is broad.** 18–53 % of the scanned files read a fact another file produced, with a median of 5
+   to 7 reads and a p90 of 25 to 31. A key per file made of the reads (option C) records that many entries, and a
+   digest per package (option D) avoids them.
+5. **The summaries are small:** 4–35 MB compressed per snapshot.
+6. **A push touches 1 to 3 files at the median.** With the per-file cache, a refresh costs those files' map plus the
+   reduce.
+7. **The HTTP corpus never runs the resolver**, so it neither saw item 1 nor compares `CALLS`. The full dry-run,
+   compared record by record, is what covers the micro graph. It joins H5's regression protocol and H7's gates.
+
