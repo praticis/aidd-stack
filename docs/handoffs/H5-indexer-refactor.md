@@ -269,7 +269,7 @@ corrigido num commit separado, com caso de fixture, e entra na baseline por deci
      4 (H2-D21);*
   2. a fase 0a do H4 (reciclar os docs de trabalho);
   3. fazer o H5, que absorve a parte de refatoração do item 7 (o catálogo e os limiares do `built_bundle`). A rede
-     de regressão é o corpus (`2026-10-18-v2-baseline-27`) e o hold-out de 3 repos (`2026-10-18-v2-holdout-26`),
+     de regressão é o corpus (`2026-10-18-v2-baseline-28`) e o hold-out de 3 repos (`2026-10-18-v2-holdout-26`),
      idênticos a cada passo;
   4. o hold-out novo, medido uma vez com o código do H5 e com o commit de antes dele, e o handoff do que ele
      mostrar, já no formato de reconhecedores. Toda diferença entre os dois commits é regressão do H5, que se

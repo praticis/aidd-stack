@@ -18,7 +18,7 @@
     - os gabaritos em `indexer/tests/corpus_expected/`.
   - **Corpus:** de 15 repos (v1) a 55, 54 deles com gabarito; o hold-out guarda 3 repos (Kavita, go-boilerplate,
     sftpgo).
-  - **Números finais** (P / R pelo gabarito, baseline `2026-10-18-v2-baseline-27`):
+  - **Números finais** (P / R pelo gabarito, baseline `2026-10-18-v2-baseline-28`):
 
     | | C# | Go | Python | TS/JS |
     |---|---|---|---|---|
@@ -116,7 +116,7 @@
   - o H2b fechou na `feature/h2-corpus` (PR #4);
   - o F1.14 fechou na `feature/f114-close`, a partir da `main` depois desse merge.
 - **Indexer de referência:** 0.2.15 (era 0.2.14 no fechamento do H2b).
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-18-v2-baseline-27/`, com 55 repos, no fechamento do
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-18-v2-baseline-28/`, com 55 repos, no fechamento do
   F1.14. A do hold-out de 3 repos é a `2026-10-18-v2-holdout-26`.
 - **Como rodar:** hoje o corpus roda com `indexer/scripts/corpus.sh` (em paralelo, com `--baseline` e `--holdout`) e
   os testes com `indexer/scripts/test.sh`. Os comandos abaixo são os do H2b.
@@ -740,9 +740,17 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
     - as listas de routers montadas em laço;
     - o `@fastify/autoload` e as rotas do Next.js.
   - **Ferramenta:** o corpus roda em paralelo (`corpus.sh`, 461 s contra ~21 min em série).
-  - **Baseline final:** `2026-10-18-v2-baseline-27`.
+  - **Baseline final:** `2026-10-18-v2-baseline-28`, depois do incremento 12.
   - **O hold-out novo vai para depois do H5 (H2-D21).**
   - **Docs:**
     - ROADMAP: F0.4.3 e F1.14 `[x]`;
     - relatório: "Closing F1.14 and H2";
     - aqui: o resumo final no topo.
+- **2026-10-19** — **F1.14 incremento 12, achado na validação do PR #5 antes do merge.**
+  - **O achado:** numa instalação ao vivo, dois defeitos dos wrappers TS do incremento 11:
+    - as opções do `fetch` num local caíam no GET padrão;
+    - a query entre parênteses virava `{param}` no formato do wrapper.
+  - **Corrigido**, com caso de fixture:
+    - no app, as chamadas certas passaram de 17 para 51 das 51;
+    - no corpus, o mattermost ganha 8 POST e um ANY.
+  - **Baseline:** `2026-10-18-v2-baseline-28`.

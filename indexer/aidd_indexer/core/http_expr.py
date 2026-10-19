@@ -586,7 +586,7 @@ class PathExpressions:
                 continue
             p = self._string_text(c, lenient, _depth + 1) if c.type in STRING_NODES else self.path_of(c, lenient, _depth + 1)
             if p is None:
-                if raw and not (c is operands[-1] and _glued(raw) and self._query_tail(c)):
+                if raw and not (c is operands[-1] and _glued(raw) and self.query_tail(c)):
                     raw += "{param}"
                 else:
                     lead = True
@@ -727,17 +727,18 @@ class PathExpressions:
             generic = any(o is not t for o in path_named)
             v = self._substitution(t, lenient, _depth, generic, whole)
             parts.append(v if v is not None else unknown)
-        if len(parts) > 1 and parts[-1] == unknown and _glued(parts[-2]) and self._query_tail(tokens[-1]):
+        if len(parts) > 1 and parts[-1] == unknown and _glued(parts[-2]) and self.query_tail(tokens[-1]):
             parts[-1] = ""                              # `/search${buildQueryString(params)}`
         return "".join(parts)
 
-    def _query_tail(self, e: Node | None) -> bool:
-        """A call glued to the end of a path, a choice between nothing and a query (`flag ? '' : '?all=true'`), or a
-        local holding one, is its query string (`/search${buildQueryString(params)}`, `"/v1/items" + qs`); a parameter
-        there is part of the path."""
+    def query_tail(self, e: Node | None) -> bool:
+        """A call glued to the end of a path, a choice between nothing and a query (`flag ? '' : '?all=true'`, also in
+        parentheses), or a local holding one, is its query string (`/search${buildQueryString(params)}`,
+        `"/v1/items" + qs`); a parameter there is part of the path."""
+        e = _unparen(e)
         if e is not None and e.type == "identifier":
             bound, val = self.scopes.binding(e)
-            e = val if bound and val is not None else None
+            e = _unparen(val) if bound and val is not None else None
         if e is not None and e.type in ("ternary_expression", "conditional_expression"):
             return all(self._query_text(e.child_by_field_name(f)) for f in ("consequence", "alternative"))
         return e is not None and (e.type in CALL_NODES or e.type in STRING_NODES and self._query_text(e))
@@ -920,6 +921,12 @@ class PathExpressions:
 def _glued(before: str) -> bool:
     """A path that ends in a word or a placeholder, so what follows with no separator is not a new segment."""
     return before[-1:].isalnum() or before.endswith("}")
+
+
+def _unparen(e: Node | None) -> Node | None:
+    while e is not None and e.type == "parenthesized_expression":
+        e = e.named_children[0] if e.named_child_count else None
+    return e
 
 
 def _word(n: Node, src: bytes) -> str | None:

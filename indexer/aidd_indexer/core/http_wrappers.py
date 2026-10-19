@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 Shape = tuple[int, str, str]          # (index of the parameter that is the path, text before it, text after it)
 PARAM = "param"                       # an argument built around a parameter of the caller: (PARAM, *Shape)
 FIELDS = "fields"                     # an object literal argument: (FIELDS, ((key, value), ..))
+UNKNOWN = ("unknown",)                # an argument the scanner cannot read: not the same as no argument
 
 
 def param_shape(sc: "BaseScanner", a: Node, params: list[str]) -> Shape | None:
@@ -44,34 +45,62 @@ def param_shape(sc: "BaseScanner", a: Node, params: list[str]) -> Shape | None:
 
 
 def _tokens(sc: "BaseScanner", a: Node, params: list[str]) -> list[str | int]:
-    """The pieces of an interpolated string or a concatenation: text, or the index of a parameter."""
+    """The pieces of an interpolated string or a concatenation: text, or the index of a parameter. A query string
+    glued to the end (`endpoint + (vars ? '?' + qs(vars) : '')`) is not part of the path."""
     if a.type in STRING_NODES and (a.type == "interpolated_string_expression" or has_interpolation(a)):
-        return [_piece(sc, c, params) for c in a.children if c.type in INTERPOLATION_NODES or c.type in STRING_TEXT_NODES]
-    if a.type not in CONCAT_NODES:
+        pieces = [c for c in a.children if c.type in INTERPOLATION_NODES or c.type in STRING_TEXT_NODES]
+        tokens = [_piece(sc, c, params) for c in pieces]
+        last = _inner(pieces[-1]) if pieces and pieces[-1].type in INTERPOLATION_NODES else None
+    elif a.type in CONCAT_NODES:
+        operands = _operands(a)
+        tokens = [_operand(sc, c, params) for c in operands]
+        last = operands[-1]
+    else:
         return []
-    tokens: list[str | int] = []
-    stack = [a]
+    if len(tokens) > 1 and not isinstance(tokens[-1], int) and _glued(tokens[-2]) and sc.query_tail(last):
+        return tokens[:-1]
+    return tokens
+
+
+def _operands(a: Node) -> list[Node]:
+    """`a + b + c`, left-nested, as one list."""
+    out, stack = [], [a]
     while stack:
         c = stack.pop()
         if c.type == a.type:
             stack.extend(reversed([k for k in c.children if k.is_named]))
-        elif c.type == "identifier" and text(c, sc.src) in params:
-            tokens.append(params.index(text(c, sc.src)))
-        elif c.type in STRING_NODES and not has_interpolation(c):
-            tokens.append(unquote(text(c, sc.src)))
         else:
-            tokens.append(sc.path_of(c) or "{param}")
-    return tokens
+            out.append(c)
+    return out
+
+
+def _operand(sc: "BaseScanner", c: Node, params: list[str]) -> str | int:
+    if c.type == "identifier" and text(c, sc.src) in params:
+        return params.index(text(c, sc.src))
+    if c.type in STRING_NODES and not has_interpolation(c):
+        return unquote(text(c, sc.src))
+    return sc.path_of(c) or "{param}"
+
+
+def _inner(c: Node) -> Node | None:
+    inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]
+    return inner[0] if len(inner) == 1 else None
+
+
+def _glued(t: str | int) -> bool:
+    """A parameter, or text that ends in a word or a placeholder: what follows with no separator is not a new
+    segment."""
+    return isinstance(t, int) or bool(t) and (t[-1].isalnum() or t[-1] == "}")
 
 
 def _piece(sc: "BaseScanner", c: Node, params: list[str]) -> str | int:
     if c.type not in INTERPOLATION_NODES:
         return text(c, sc.src)
-    inner = [k for k in c.children if k.is_named and k.type != "interpolation_brace"]
-    name = text(inner[0], sc.src) if len(inner) == 1 and inner[0].type == "identifier" else None
+    inner = _inner(c)
+    name = text(inner, sc.src) if inner is not None and inner.type == "identifier" else None
     if name in params:
         return params.index(name)
-    return (sc.path_of(inner[0]) if len(inner) == 1 else None) or "{param}"      # `${BASE}`, `${apiRoot()}`
+    return (sc.path_of(inner) if inner is not None else None) or "{param}"      # `${BASE}`, `${apiRoot()}`
 
 
 def wrapped_path(before: str, arg: str | None, after: str) -> tuple[str, str] | None:
@@ -85,8 +114,7 @@ def continues_path(shape: Shape) -> bool:
     """A parameter right after a word or a placeholder of the path (`"/api/v1" + url`, `${base}${path}`) is the rest of
     the path, so the function around it is a wrapper; after a slash, `.`, `-` or `=` it is part of one segment
     (`/users/${id}`, `/users.${action}`)."""
-    before = shape[1]
-    return bool(before) and (before[-1].isalnum() or before[-1] == "}")
+    return bool(shape[1]) and _glued(shape[1])
 
 
 # -- composing: a wrapper fact is (path index, before, after, verb, verb index, parameters, the verb's default); the
@@ -115,13 +143,9 @@ def _resolve(p: "Pending", facts: dict[str, set[tuple]], bases: dict, out: "Http
     shape = _shape(facts, bases, target)
     if shape is None:
         return False
-    idx, before, after, verb, vi, params, default = shape
-    path, how = _arg(values, named, params, idx), _arg(values, named, params, vi)
-    vi_out = _param_of(how) if verb is None else None
-    if verb is None and vi_out is None and isinstance(vi, tuple) and how is None:
-        whole = _param_of(_arg(values, named, params, vi[0]))           # the options handed on: `fetch(url, options)`
-        vi_out = (whole, vi[1]) if whole is not None else None
-    verb = verb or verb_of(how) or (default if vi_out is None else None)
+    idx, before, after, _, _, params, default = shape
+    path = _arg(values, named, params, idx)
+    verb, vi_out = _call_verb(values, named, shape)
     if _param_of(path, whole=False) is not None:
         if outer is not None:
             _, i, b, a = path
@@ -132,6 +156,22 @@ def _resolve(p: "Pending", facts: dict[str, set[tuple]], bases: dict, out: "Http
     if found is not None:
         out.calls.append(replace(p.item, method=verb or "ANY", path=found[1], raw_path=found[0]))
     return True
+
+
+def _call_verb(values: tuple, named: tuple, shape: tuple) -> tuple[str | None, int | tuple | None]:
+    """The verb a call to a wrapper sends, or where its own function takes the verb from. The wrapper's default only
+    when the call gives nothing there: options it cannot read leave the verb unknown."""
+    _, _, _, verb, vi, params, default = shape
+    if verb is not None:
+        return verb, None
+    how = _arg(values, named, params, vi)
+    vi_out = _param_of(how)
+    if vi_out is None and isinstance(vi, tuple) and how is None:
+        given = _arg(values, named, params, vi[0])                      # the options handed on: `fetch(url, options)`
+        whole = _param_of(given)
+        vi_out = (whole, vi[1]) if whole is not None else None
+        how = UNKNOWN if given == UNKNOWN else None
+    return verb_of(how) or (default if vi_out is None and how != UNKNOWN else None), vi_out
 
 
 def _shape(facts: dict[str, set[tuple]], bases: dict, target: tuple) -> tuple | None:

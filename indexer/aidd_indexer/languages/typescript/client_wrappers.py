@@ -13,7 +13,7 @@ from tree_sitter import Node
 from ...core.http_base import HttpResult, Pending, text, unwrap_arg, walk
 from ...core.http_nodes import CLASS_NODES, FUNCTION_SCOPES, member
 from ...core.http_scope import END
-from ...core.http_wrappers import FIELDS, PARAM, compose_wrapped_calls, continues_path, param_shape, verb_of
+from ...core.http_wrappers import FIELDS, PARAM, UNKNOWN, compose_wrapped_calls, continues_path, param_shape, verb_of
 from ...core.paths import has_literal_segment, normalize_path, unquote
 
 WRAPPER = "ts.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
@@ -185,24 +185,27 @@ class TsClientWrappers:
         keys = self._wrapper_keys(outer) if outer is not None else []
         params = self._signature(outer)[0] if keys else []
         values = tuple(self._value(unwrap_arg(a), params) for a in arg_nodes)
-        if any(values):
+        if any(v not in (None, UNKNOWN) for v in values):
             item = self.call_info(n, None, "", text(fn, self.src))
             self.out.pending.append(Pending(item, WRAPPER, (target, values, (), keys[0] if keys else None, tuple(params))))
 
     def _value(self, a: Node, params: list[str]) -> str | tuple | None:
-        """A verb, a literal path, the caller's parameter it is built around, or an object's fields."""
+        """A verb, a literal path, the caller's parameter it is built around, an object's fields (also through a local:
+        `const init = { method: 'PUT' }`), or UNKNOWN."""
         if a.type == "string" and verb_of(unquote(text(a, self.src))):
             return unquote(text(a, self.src)).upper()
+        held = self.resolve_local(a) if a.type == "identifier" and text(a, self.src) not in params else None
+        a = held if held is not None and held.type == "object" else a
         if a.type == "object":
             pairs = tuple((k, v) for k, node in self._option_fields(a) if (v := self._value(node, params)) is not None)
             return (FIELDS, pairs) if pairs else None
         if a.type == "shorthand_property_identifier":
-            return (PARAM, params.index(text(a, self.src)), "", "") if text(a, self.src) in params else None
+            return (PARAM, params.index(text(a, self.src)), "", "") if text(a, self.src) in params else UNKNOWN
         p = self.path_of(a, lenient=True)
         if p is not None and has_literal_segment(normalize_path(p)):
             return p
         shape = param_shape(self, a, params) if params else None
-        return (PARAM, *shape) if shape is not None else None
+        return (PARAM, *shape) if shape is not None else UNKNOWN
 
     def _target(self, fn: Node, at: Node) -> tuple | None:
         if fn.type == "identifier":

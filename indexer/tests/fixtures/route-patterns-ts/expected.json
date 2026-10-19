@@ -656,6 +656,31 @@
    "method": "GET",
    "path": "/api/v4/products",
    "line": 81
+  },
+  {
+   "method": "GET",
+   "path": "/ledger/v1/balance",
+   "line": 39
+  },
+  {
+   "method": "GET",
+   "path": "/ledger/v1/statements",
+   "line": 43
+  },
+  {
+   "method": "POST",
+   "path": "/ledger/v1/payments",
+   "line": 47
+  },
+  {
+   "method": "DELETE",
+   "path": "/ledger/v1/payments/{param}",
+   "line": 51
+  },
+  {
+   "method": "ANY",
+   "path": "/ledger/v1/accounts/name",
+   "line": 55
   }
  ]
 }

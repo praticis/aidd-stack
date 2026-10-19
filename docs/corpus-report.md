@@ -2428,16 +2428,50 @@ gitea's one miss is now `vue-sfc`: `GET /repo/search` is only called from a `.vu
 
 New baseline: `2026-10-18-v2-baseline-27`.
 
+## F1.14, increment 12: two TS wrapper defects the live validation found (2026-10-19)
+
+Before the merge, PR #5 was validated on a live install. That showed two defects of increment 11 in an
+application's own client. The corpus had neither form.
+
+- **Options in a local.**
+  - The form: `_postJSON(endpoint)` builds `const init = { ...this.defaults, method: 'POST', body }` and calls
+    `this._fetch(host + endpoint, init)`.
+  - The rule read only an object literal written in the call, so the verb fell back to `fetch`'s GET.
+  - Now a local that holds an object literal counts as that object.
+  - Options the scanner cannot read, such as a call's result, leave the verb unknown (`ANY`). GET is only for a
+    call that gives no options, or an object without `method`.
+- **A query in parentheses.**
+  - The form: `_get(endpoint, vars)` builds `host + endpoint + (vars ? '?' + qs.stringify(vars) : '')`.
+  - The query-tail rule did not look inside the parentheses, and the wrapper's shape never applied it, so each call
+    came out as `/x{param}`.
+  - Now both do.
+
+On the live application, 34 of the 51 new calls of one ref were wrong. Now all 51 are right, and so are the 58 of
+the other ref.
+
+In the corpus only mattermost changes, in 9 calls. They were wrong in baseline-27, and no sample had drawn them.
+
+- Eight uploads go from GET to POST. Each passes `const request = { method: 'post', body: formData }` to `doFetch`,
+  and the server registers each one as POST:
+  - `uploadBrandImage`, `createCustomEmoji`, `uploadLicense`, `previewLicense`;
+  - `uploadPlugin`, `setSamlIdpCertificateFromMetadata`, `setTeamIcon`, `uploadProfileImage`.
+- `{method: state ? 'put' : 'delete'}` goes from GET to ANY.
+
+The other 54 repositories and the hold-out are identical, and the totals do not move. The fixture case
+(`route-patterns-ts`, `src/clients/wrappers/ledger.js`) fails without the change.
+
+New baseline: `2026-10-18-v2-baseline-28`.
+
 ## Closing F1.14 and H2 (2026-10-18)
 
-F1.14 took what H2b and its hold-out left to the extractor, in eleven increments. Items 1 to 6 each end with a rule
+F1.14 took what H2b and its hold-out left to the extractor, in twelve increments. Items 1 to 6 each end with a rule
 that has a fixture and a judged corpus, or with a limitation recorded in the guide. Of item 7, the gRPC custom verb
 and the reassigned Go router are done. Its framework catalog as data and the `built_bundle` thresholds are
 refactoring, so they go to H5 with the recognizers. Django stays out, because the portfolio is FastAPI and Flask.
 
 The corpus grew from 42 repositories to 55, 54 with an expected list. The 13 hold-out repositories F1.14 worked on
 became corpus, and the hold-out keeps three: Kavita, go-boilerplate and sftpgo. The final baseline is
-`2026-10-18-v2-baseline-27`, with indexer 0.2.15.
+`2026-10-18-v2-baseline-28`, with indexer 0.2.15.
 
 **The new hold-out moves after H5.** F1.14 was to close with a new hold-out, measured once (H2-D20). On 2026-10-18
 the author moved it to after the H5 refactor, as the first step of its own handoff:
@@ -2488,7 +2522,7 @@ Two notes on the three repositories left in the hold-out:
 
 ### Where the corpus ends
 
-Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-27`):
+Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-28`):
 
 | Language | Kind | P sample | P list | R list |
 |---|---|---|---|---|
