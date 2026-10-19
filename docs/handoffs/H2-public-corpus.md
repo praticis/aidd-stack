@@ -9,6 +9,27 @@
 > **Estado e plano (2026-10-13):** o H2 foi dividido em H2a (instrumento + relatório v1 com os 15 repos)
 > e H2b (~40 repos + evolução do extrator). Decisões, checklist e onde estamos: `docs/handoffs/H2-roadmap.md`
 > — ler esse arquivo primeiro.
+>
+> **Encerrado (2026-10-18).** Os entregáveis abaixo foram cumpridos, e o F1.14 levou ao extrator o que o H2b e o
+> hold-out deixaram.
+>
+> - **Corpus:** 55 repos públicos, 54 deles com gabarito (spec commitada conferida no código, ou lista lida no
+>   código), fixados por SHA.
+> - **Hold-out:** 3 repos fora do ajuste. O hold-out novo fica para depois do H5 (H2-D21).
+> - **Instrumento:** `http_corpus.py`, `corpus_metrics.py` e `corpus.sh`.
+> - **Números finais** (P / R pelo gabarito):
+>
+>   | | C# | Go | Python (FastAPI/Flask) | TS/JS |
+>   |---|---|---|---|---|
+>   | Rotas | 100 / 99,3 % | 98,9 / 93,3 % | 99,3 / 98,6 % | 98,1 / 91,7 % |
+>   | Chamadas | 100 / 99,0 % | 100 / 93,6 % | — | 98,4 / 99,0 % |
+>
+> - **Onde está cada coisa:**
+>   - o relatório e o destino de cada lacuna: `docs/corpus-report.md` ("Closing F1.14 and H2");
+>   - o resumo, as decisões e o log: `H2-roadmap.md`;
+>   - as regras: `docs/indexer-evolution.md`.
+>
+> O texto abaixo é o briefing original, mantido como registro.
 
 ## Contexto em um parágrafo
 

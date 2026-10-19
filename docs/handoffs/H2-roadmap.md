@@ -10,6 +10,46 @@
 
 ## Onde estamos
 
+- **Resumo final (2026-10-18): o H2 está encerrado.** F0.4.3a, F0.4.3b e o F1.14, que levou ao extrator o que o
+  H2b e o hold-out deixaram, estão todos `[x]` no ROADMAP.
+  - **Instrumento:**
+    - `http_corpus.py` (`--baseline`, `--expected`, `--sample`, `--holdout`, `--reuse`) e o `corpus_metrics.py`;
+    - o `corpus.sh`, que roda o corpus em paralelo, um container por repo;
+    - os gabaritos em `indexer/tests/corpus_expected/`.
+  - **Corpus:** de 15 repos (v1) a 55, 54 deles com gabarito; o hold-out guarda 3 repos (Kavita, go-boilerplate,
+    sftpgo).
+  - **Números finais** (P / R pelo gabarito, baseline `2026-10-18-v2-baseline-27`):
+
+    | | C# | Go | Python | TS/JS |
+    |---|---|---|---|---|
+    | Rotas | 100 / 99,3 % | 98,9 / 93,3 % (97,7 % sem os RPCs Connect do memos) | 99,3 / 98,6 % fora do Django | 98,1 / 91,7 % |
+    | Chamadas | 100 / 99,0 % | 100 / 93,6 % | — | 98,4 / 99,0 % |
+
+  - **O hold-out de 2026-10-17 mostrou sobreajuste.** Nos 13 repos dele que o F1.14 trabalhou, o recall de rotas
+    foi:
+    - C#: de 32,2 a 99,8 %;
+    - Go: de 0 a 79,3 % (95,7 % sem o Connect);
+    - Python: de 83,8 a 100 %;
+    - TS/JS: de 74,1 a 99,2 %.
+
+    O de chamadas TS/JS foi de 76,5 a 100 %.
+  - **O que sobra tem destino:**
+    - Django: fora, até um portfólio pedir;
+    - prefixos só conhecidos em runtime: limitação;
+    - Connect: F2.1;
+    - pastas de app de teste: F1.1;
+    - tipo não declarado à vista: `needs-resolver`, para o F1.2.
+
+    A tabela está em `docs/corpus-report.md`, "Closing F1.14 and H2".
+  - **O hold-out novo vai para depois do H5 (H2-D21).**
+  - **A seguir:**
+    1. a fase 0a do H4;
+    2. o H5;
+    3. o hold-out novo e o handoff dele;
+    4. o P2;
+    5. o SCIP.
+
+  O histórico abaixo fica como registro.
 - **Estado:** H2a concluído (2026-10-14). H2b: **item 1 da Fase 4 fechado (2026-10-15, em duas rodadas)** — todas as
   correções baratas do relatório + router com nome de cliente, FP do roteamento convencional e genérico aninhado
   no C#, com fixtures `route-patterns-{go,ts,py,cs}`. Recall de rotas pelos gabaritos: C# 49 → 73 %, Go 6 → 15 %,
@@ -69,13 +109,18 @@
   96,9, 98,0, 98,0 fora do Django e 85,4 %). Sobreajuste nas formas que o corpus não tinha (atributo de rota próprio,
   OData, FastEndpoints atrás de base própria, router de pacote atribuído em outro arquivo, gateway gerado novo) e dois
   defeitos de precisão (prefixo duplicado num grupo Go passado a função); tudo no F1.14. **H2 concluído; F0.4.3b `[x]`.**
-- **Incremento atual:** nenhum — o H2 fechou em 2026-10-17 (ver "Próximo passo").
+- **Incremento atual:** nenhum. O H2b fechou em 2026-10-17; o F1.14, em 2026-10-18 (ver o resumo final acima).
 - **Medir agora:** `http_corpus.py --expected --baseline <baseline> --show 20` (P/R por repo, resumo por
   linguagem e por categoria). Toda mudança no extrator roda contra essa baseline e esses gabaritos.
-- **Branch:** `feature/h2-corpus` a partir da `main` (f854509, já com o dispatch mergeado), na pasta
-  principal do repo. O H2 é a frente principal desde 2026-10-14.
-- **Indexer de referência:** 0.2.14.
-- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-17-v2-baseline-16/` — corpus v2, 42 repos, no fechamento
+- **Branch:**
+  - o H2b fechou na `feature/h2-corpus` (PR #4);
+  - o F1.14 fechou na `feature/f114-close`, a partir da `main` depois desse merge.
+- **Indexer de referência:** 0.2.15 (era 0.2.14 no fechamento do H2b).
+- **Baseline vigente:** `~/.cache/aidd-corpus/runs/2026-10-18-v2-baseline-27/`, com 55 repos, no fechamento do
+  F1.14. A do hold-out de 3 repos é a `2026-10-18-v2-holdout-26`.
+- **Como rodar:** hoje o corpus roda com `indexer/scripts/corpus.sh` (em paralelo, com `--baseline` e `--holdout`) e
+  os testes com `indexer/scripts/test.sh`. Os comandos abaixo são os do H2b.
+- **Baselines do H2b:** `~/.cache/aidd-corpus/runs/2026-10-17-v2-baseline-16/`, corpus v2 com 42 repos, no fechamento
   do H2b (a `-15` é a dos clientes gerados TS; a `2026-10-16-v2-baseline-14` é a dos wrappers de rota TS; a `-13`, a do `setGlobalPrefix` do Nest; a `-12`, a do grafo entre arquivos em TS/JS; a `-11`, a do flask-restx; a `-10`, a dos servidores gerados Go; a `-9`, a das chamadas Go e dos clientes gerados Go; a `-8`, a das cadeias de rota do item 4; a `-7`, a da etapa 2 do grafo de montagem; a `-6`, a do NSwag do item 7; a `-5`, a das chamadas C# do item 5; a `-4`, a do item 6; a `-3`, a da etapa 1 do grafo de montagem; a `-2`, a dos defeitos baratos do v2; a `2026-10-15-v2-baseline` é
   o v2 com o extrator da Fase 3; a de 2026-10-14 fica como referência do v1).
   Para editar gabaritos sem extrair de novo: `--reuse <baseline>`; para medir mudança no extrator, nunca.
@@ -91,7 +136,7 @@
 - **Testes:** `docker run --rm -e PYTHONPATH=/src -v "$PWD/indexer":/src:ro -w /src -e PYTHONDONTWRITEBYTECODE=1
   --entrypoint python aidd-indexer-test:local -m pytest -q -p no:cacheprovider tests`, **sem** `--user`: com o
   usuário do host, 47 testes falham com permissão negada ao escrever no cache de gramáticas (`/opt/tslp-cache`).
-- **Próximo passo (H2-D18):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
+- **Próximo passo no fechamento do H2b (2026-10-17, histórico; o F1.14 já o cumpriu):** o .NET está fechado (sobram `route-by-name-convention`, 10, para a convenção do
   projeto; 2 chamadas C#; o roteamento convencional do MVC, que serve páginas). **Go fechado no essencial:** rotas
   P 99,1 % / R 97,8 %, chamadas P 100 % / R 93,6 % (sobram os tipos de router do kratos, `prefix-in-router-type`, 12;
   `prefix-as-param`; `multi-app-repo`; o `MatchPath` do gitea, 3; e 7 chamadas `url-in-field`/`url-from-helper`/
@@ -130,6 +175,7 @@
 | H2-D18 | 2026-10-15 | **Prioridade do portfólio:** .NET primeiro, Go e Python em segundo (o Python é FastAPI/Flask, não Django), TS em terceiro. A ordem da Fase 4 passa a pesar a linguagem, não só o tamanho da categoria no corpus; Django + DRF (item 8) segue adiado | O corpus pesa pelo volume dos repos públicos (Go e Python dominam as contagens), não pelo que os projetos reais usam; uma categoria pequena no .NET vale mais que uma grande só em TS |
 | H2-D19 | 2026-10-16 | **O TS entra no H2**, depois de .NET, Go e Python fechados no essencial: grafo entre arquivos, `setGlobalPrefix` do Nest e clientes gerados TS, em etapas com corpus e commit cada uma | Recomendação de 2026-10-16, seguida no passo seguinte: reaproveita o grafo de montagem e o `compose` que Go e Python já usam; num incremento próprio, o mesmo contexto teria de ser remontado |
 | H2-D20 | 2026-10-17 | **Hold-out do fechamento:** 16 repos que as regras nunca viram, no perfil do portfólio (C#: Umbraco-CMS, Elsa 3, Smartstore, Radarr, Kavita, btcpayserver; Go: photoprism, memos, go-boilerplate, sftpgo, vikunja; Python: mealie, open-webui; TS: directus, outline, docmost — 16), fixados por SHA em `HOLDOUT` (`http_corpus.py --holdout`, gabaritos em `corpus_expected/holdout/`). Gabarito escrito **antes** de rodar o extrator: a spec commitada onde houver, senão uma lista lida no código num escopo fixado antes; precisão por amostra sorteada (20 rotas e 20 chamadas por repo, `--sample 20 --seed 0`) julgada na fonte. Medido **uma vez**, no extrator de `c4ecc34`; nenhuma regra é ajustada por ele no H2 — o que aparecer vai ao F1.14; erro de gabarito achado ao julgar se corrige (H2-D15) | Escolha de 2026-10-17 a partir da lista do autor: fora os repos que já estão no corpus, os frameworks (rotas só em exemplos), os de leitura sabidamente ausente (Django, RPC próprio, Next.js/tRPC, rotas por arquivo, Ruby) e os de escala (odoo); open-webui entra para equilibrar o Python; os 6 da primeira recomendação (Radarr, Kavita, btcpayserver, sftpgo, vikunja, docmost) entram no mesmo dia, a pedido do autor — 5 deles com spec commitada. Medir uma vez e não ajustar é o que mantém o número honesto: um hold-out que orienta regras vira corpus |
+| H2-D21 | 2026-10-18 | **O hold-out novo do fechamento do F1.14 vai para depois do H5**, como primeiro passo de um handoff próprio, e o F1.14 fecha sem ele. Na medição roda também o commit de antes do H5; o protocolo segue o H2-D20 (gabarito antes de rodar, amostra semeada julgada na fonte, medido uma vez, nenhuma regra ajustada por ele) | O H5 não muda comportamento (corpus idêntico a cada passo), então o número seria o mesmo antes ou depois; o que ele mostrar se corrige já no código refatorado; e a diferença entre os dois commits é regressão do H5 em código que o corpus não cobre. Custo aceito pelo autor: um defeito de precisão que ninguém viu fica na instalação durante o H5 |
 
 ## H2a — instrumento e relatório v1 (F0.4.3a)
 
@@ -684,3 +730,19 @@ SHAs fixados — a diferença entre as duas mistura mudança dos repos e do extr
 - **2026-10-18** — O F1.14 seguiu nesta branch (incrementos 1–5, no ROADMAP): as formas que o hold-out mostrou em .NET,
   Go, Python e TS/JS. 13 repos do hold-out viraram corpus (55); o hold-out fica com 3 (go-boilerplate, Kavita, sftpgo).
   PR da `feature/h2-corpus`; o fechamento do F1.14 (itens 1–5 e 7, um hold-out novo) segue numa branch nova.
+- **2026-10-18** — **F1.14 fechado na `feature/f114-close`, e com ele o H2.**
+  - **O que entrou:** os incrementos 6 a 11:
+    - os grupos do FastEndpoints e o verbo customizado do gRPC;
+    - o Go dos routers por tipo declarado e das closures com nome;
+    - o prefixo próprio de um grupo global;
+    - um endpoint por app num monorepo;
+    - os wrappers de cliente em Python e em TS/JS;
+    - as listas de routers montadas em laço;
+    - o `@fastify/autoload` e as rotas do Next.js.
+  - **Ferramenta:** o corpus roda em paralelo (`corpus.sh`, 461 s contra ~21 min em série).
+  - **Baseline final:** `2026-10-18-v2-baseline-27`.
+  - **O hold-out novo vai para depois do H5 (H2-D21).**
+  - **Docs:**
+    - ROADMAP: F0.4.3 e F1.14 `[x]`;
+    - relatório: "Closing F1.14 and H2";
+    - aqui: o resumo final no topo.

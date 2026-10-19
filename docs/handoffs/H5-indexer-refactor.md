@@ -265,12 +265,15 @@ corrigido num commit separado, com caso de fixture, e entra na baseline por deci
   1. fechar o F1.14 inteiro, na ordem registrada nele: o item 2 (Go), o router reatribuído do item 7, o item 5 (o
      modelo: a mesma rota em dois apps), o item 3 (wrapper de cliente Python, só com fixture), o item 4 (TS/JS,
      inteiro) e o hold-out novo, medido uma vez. O que ele mostrar vira um handoff à parte, sem reabrir o F1.14.
-     O código desses itens já nasce nas metas (H5-D3);
+     O código desses itens já nasce nas metas (H5-D3). *Feito 2026-10-18, sem o hold-out novo, que foi para o passo
+     4 (H2-D21);*
   2. a fase 0a do H4 (reciclar os docs de trabalho);
   3. fazer o H5, que absorve a parte de refatoração do item 7 (o catálogo e os limiares do `built_bundle`). A rede
-     de regressão é o corpus e o hold-out novo, idênticos a cada passo;
-  4. o handoff do que o hold-out novo mostrar, já no formato de reconhecedores; um defeito de precisão que ele
-     mostre se corrige antes do H5;
+     de regressão é o corpus (`2026-10-18-v2-baseline-27`) e o hold-out de 3 repos (`2026-10-18-v2-holdout-26`),
+     idênticos a cada passo;
+  4. o hold-out novo, medido uma vez com o código do H5 e com o commit de antes dele, e o handoff do que ele
+     mostrar, já no formato de reconhecedores. Toda diferença entre os dois commits é regressão do H5, que se
+     corrige primeiro;
   5. só então o SCIP (F1.1/F1.2).
 
   O P2 (o indexador em repo próprio) também vem antes do SCIP, depois do H5, para levar o código já limpo. A

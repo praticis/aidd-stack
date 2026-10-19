@@ -2427,3 +2427,98 @@ gitea's one miss is now `vue-sfc`: `GET /repo/search` is only called from a `.vu
 - **outline's RPC name from a parameter** (`/documents.${request}`).
 
 New baseline: `2026-10-18-v2-baseline-27`.
+
+## Closing F1.14 and H2 (2026-10-18)
+
+F1.14 took what H2b and its hold-out left to the extractor, in eleven increments. Items 1 to 6 each end with a rule
+that has a fixture and a judged corpus, or with a limitation recorded in the guide. Of item 7, the gRPC custom verb
+and the reassigned Go router are done. Its framework catalog as data and the `built_bundle` thresholds are
+refactoring, so they go to H5 with the recognizers. Django stays out, because the portfolio is FastAPI and Flask.
+
+The corpus grew from 42 repositories to 55, 54 with an expected list. The 13 hold-out repositories F1.14 worked on
+became corpus, and the hold-out keeps three: Kavita, go-boilerplate and sftpgo. The final baseline is
+`2026-10-18-v2-baseline-27`, with indexer 0.2.15.
+
+**The new hold-out moves after H5.** F1.14 was to close with a new hold-out, measured once (H2-D20). On 2026-10-18
+the author moved it to after the H5 refactor, as the first step of its own handoff:
+
+- H5 changes no behavior, and the corpus stays identical at every step, so the number would be the same before
+  or after;
+- what the hold-out shows would be fixed after H5 anyway, and is then fixed in the refactored code;
+- the measurement also runs the commit before H5, so any difference between the two is an H5 regression in code
+  the corpus does not cover.
+
+The cost is that a precision defect no one has seen yet stays in the extractor during H5. Until the new hold-out,
+H5's regression net is the corpus and the three-repository hold-out.
+
+### The hold-out's repositories, then and now
+
+The 13 repositories as the hold-out measured them on 2026-10-17, against today. Some lists were corrected at the
+source while F1.14 worked on them (H2-D15), so a few expected counts moved: Smartstore 551 → 526, vikunja 172 → 187,
+photoprism 165 → 167, memos 185 → 186, Umbraco 528 → 529, and docmost's calls 41 → 42.
+
+| Language | Kind | Repositories | R list, hold-out | R list, now |
+|---|---|---|---|---|
+| C# | routes | Umbraco, Radarr, btcpayserver, Smartstore, Elsa | 32.2 % (531/1648) | 99.8 % (1621/1624) |
+| Go | routes | photoprism, vikunja, memos | 0 % (0/522) | 79.3 % (428/540); 95.7 % (428/447) without memos' Connect RPCs |
+| Python | routes | mealie, open-webui | 83.8 % (145/173) | 100 % (173/173) |
+| TS/JS | routes | directus, outline, docmost | 74.1 % (289/390) | 99.2 % (387/390) |
+| TS/JS | calls | Umbraco, open-webui, outline, docmost | 76.5 % (513/671), P 77.8 % | 100 % (672/672), P 99.6 % |
+
+Sampled route precision moved the same way:
+
+| Repository | Before | After |
+|---|---|---|
+| Umbraco | 0 % | 100 % |
+| Radarr | 30 % | 100 % |
+| Elsa | 60 % | 90 % |
+| photoprism | 0 % | 95 % |
+| vikunja | 10 % | 94.7 % |
+| mealie | 65 % | 100 % |
+| outline | 65 % | 100 % |
+
+Sampled call precision rose from 5 % to 100 % in outline, from 0 % to 100 % in docmost and from 35 % to 100 % in
+open-webui. photoprism's calls only went from 30 % to 35 %, because `rest.js` dispatches statically on the subclass.
+
+Two notes on the three repositories left in the hold-out:
+
+- Nothing moved on them through F1.14. Kavita's routes are at 100 % / 100 % (522), and go-boilerplate's and
+  sftpgo's together at 100 % / 99.2 % (128/129).
+- Kavita's calls stay at 0/20 on the sample, as measured, because no rule was written for them.
+
+### Where the corpus ends
+
+Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-27`):
+
+| Language | Kind | P sample | P list | R list |
+|---|---|---|---|---|
+| C# | routes | 98.8 % (249/252) | 100 % | 99.3 % (1931/1944) |
+| C# | calls | 97.2 % (141/145) | 100 % | 99.0 % (201/203) |
+| Go | routes | 93.1 % (258/277) | 98.9 % | 93.3 % (1936/2074); 97.7 % (1936/1981) without memos' Connect RPCs |
+| Go | calls | 100 % (23/23) | 100 % | 93.6 % (103/110) |
+| Python | routes | 99.2 % (130/131) | 99.3 % | 28.2 % (560/1988); 98.6 % (560/568) without Django |
+| Python | calls | 100 % (26/26) | 100 % | 66.7 % (2/3) |
+| TS/JS | routes | 87.7 % (193/220) | 98.1 % | 91.7 % (1372/1496) |
+| TS/JS | calls | 86.9 % (251/289) | 98.4 % | 99.0 % (1074/1085) |
+
+### What is left, and where it goes
+
+| Category | Wrong | Missed | Repos | Goes to |
+|---|---|---|---|---|
+| `django-urlconf` | 0 | 1420 | 2 | out of F1.14: a scanner when a portfolio asks |
+| `prefix-as-param` | 13 | 119 | 6 | limitation: a prefix known only at run time (NodeBB's plugin names, options, configuration) |
+| `connect-rpc` | 0 | 93 | 1 | F2.1, with the proto as the source |
+| `prefix-in-client-wrapper` (calls) | 20 | 9 | 2 | limitation: NodeBB's AMD `api` module, whose prefix is picked at run time from the path, and mattermost's `Client4.getBaseRoute()` |
+| `test-app-folder` | 20 | 0 | 2 | F1.1, per-repository excludes |
+| `url-from-helper` (calls) | 13 | 3 | 2 | limitation: photoprism's static dispatch on a subclass; go-kit's paths passed to a helper as a parameter |
+| `segment-from-method` | 0 | 15 | 1 | limitation: vikunja's migrator name, from a method called through an interface |
+| `library-code` | 13 | 0 | 1 | limitation: chi's mountable profiler |
+| `prefix-in-router-type` | 1 | 12 | 1 | limitation: kratos' `RouterAdmin` prefix is a field set at run time |
+| `route-by-name-convention` | 0 | 10 | 1 | the project's convention (F0.4.5 `route_patterns`) |
+| `multi-app-repo` | 0 | 8 | 4 | limitation: two apps inside one module |
+| 24 other categories | 12 | 35 | — | none above 5 items; each is in its gabaritos' notes, for when a portfolio shows it |
+
+The choice of what came next is recorded in the ROADMAP. First comes the H4 recycling of the working docs, then the
+H5 refactor. After it, the new hold-out is measured, then P2, the indexer in its own repository. SCIP (F1.1, F1.2)
+comes last. A gap whose decision needs the type of an expression not declared in sight stays `needs-resolver`, for
+F1.2's resolver.
