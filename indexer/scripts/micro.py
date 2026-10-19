@@ -33,7 +33,7 @@ EXTRA_PINS = {"grafana": ("grafana/grafana", "044dd4f9457cb43fcecc30ec61f376cbff
 PINS = {**H.CORPUS, **EXTRA_PINS}
 # the run's own metadata, not the graph
 SKIP = frozenset({"repo", "counts"})
-WIDTH = 300
+WIDTH = 500
 
 
 def load(d: Path, name: str) -> dict | None:

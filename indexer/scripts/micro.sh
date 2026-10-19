@@ -1,33 +1,37 @@
 #!/usr/bin/env bash
 # The micro graph's regression check (scripts/micro.py): full dry-runs of a fixed set of public repositories with a
 # base commit of the indexer and with this tree, one container per run, then compared record by record. The base's
-# dry-runs are kept per commit and reused. Everything runs in the indexer image; the clones and the runs live in
-# $AIDD_CORPUS_HOME (default ~/.cache/aidd-corpus), outside the repository.
+# dry-runs are kept per version of the code and reused. Everything runs in the indexer image; the clones and the runs
+# live in $AIDD_CORPUS_HOME (default ~/.cache/aidd-corpus), outside the repository.
 #
-#   indexer/scripts/micro.sh [--base REF] [--jobs N] [--memory SIZE] [--show N] [repo ...]
+#   indexer/scripts/micro.sh [--base REF] [--base-only] [--jobs N] [--memory SIZE] [--show N] [repo ...]
 #
 #   --base REF     the commit to compare with (default: main)
+#   --base-only    only the base's dry-runs, kept for later runs (CI fills its cache this way)
 #   --jobs N       containers at once (default: $AIDD_CORPUS_JOBS, else 2 from 9 GiB of Docker memory, else 1)
 #   --memory SIZE  memory cap of each container (default: 5g; grafana's dry-run peaks at 4.4 GiB)
 #   --show N       records listed per side of each list that differs (default: 5)
 #   repo ...       only these repositories (default: the whole set)
 #
-# Writes micro/base-<sha>-<image>/ and micro/<label>/ (a <repo>.json.gz and a <repo>.log each) and
-# micro/<label>.report.txt, which it also prints: "0 repo(s) differ" when the graph did not change. Exits 1 when a
-# repository differs or a dry-run failed.
+# Writes micro/base-<tree>-<image>/ and micro/<label>/ (a <repo>.json.gz and a <repo>.log each) and
+# micro/<label>.report.txt, which it also prints: "0 repo(s) differ" when the graph did not change. <tree> is the base's
+# `aidd_indexer` tree, so commits with the same code share their base runs; <image> is the image's id, or
+# $AIDD_MICRO_IMAGE_KEY where every build gets a new id (CI). Exits 1 when a repository differs, 3 when a dry-run
+# failed.
 set -euo pipefail
 
 indexer="$(cd "$(dirname "$0")/.." && pwd)"
 home="${AIDD_CORPUS_HOME:-$HOME/.cache/aidd-corpus}"
 image="${AIDD_INDEXER_IMAGE:-aidd-indexer:local}"
 jobs="${AIDD_CORPUS_JOBS:-}"
-memory=5g base=main show=5 repos=""
+memory=5g base=main show=5 repos="" base_only=""
 
-usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
+usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --base) base="$2"; shift 2 ;;
+    --base-only) base_only=1; shift ;;
     --jobs) jobs="$2"; shift 2 ;;
     --memory) memory="$2"; shift 2 ;;
     --show) show="$2"; shift 2 ;;
@@ -52,10 +56,11 @@ label="$(date +%F)-$(git -C "$indexer" rev-parse --short HEAD)"
 [ -z "$(git -C "$indexer" status --porcelain -- .)" ] || label="$label-dirty"
 
 # The grammars come with the image, so a base run is only reused by the same image.
-img=$(docker image inspect -f '{{.Id}}' "$image" | sed 's/^sha256://' | cut -c1-12)
+img="${AIDD_MICRO_IMAGE_KEY:-$(docker image inspect -f '{{.Id}}' "$image" | sed 's/^sha256://' | cut -c1-12)}"
+tree=$(git -C "$indexer" rev-parse "$sha:./aidd_indexer")
 micro="$home/micro"
-base_code="$micro/code-$sha"
-base_runs="$micro/base-$sha-$img"
+base_code="$micro/code-$tree"
+base_runs="$micro/base-$tree-$img"
 head_runs="$micro/$label"
 # the tree may have changed since a run with the same label: only the base's runs are reused
 rm -rf "$head_runs"
@@ -104,17 +109,20 @@ echo "micro run $label against $base (${sha:0:10}): $(echo "$order" | wc -w | tr
 # Every base run before any head run: the two dry-runs of the largest repository never share the memory.
 {
   for name in $order; do [ -s "$base_runs/$name.json.gz" ] || echo "base $base_code $base_runs $name"; done
-  for name in $order; do echo "head $indexer $head_runs $name"; done
+  [ -n "$base_only" ] || for name in $order; do echo "head $indexer $head_runs $name"; done
 } | xargs -P "$jobs" -L 1 bash -c 'dry "$0" "$1" "$2" "$3"' | tee "$micro/$label.summary.txt"
 
+failed=$(awk '$3 != "ok" {print $1 "(" $2 ")"}' "$micro/$label.summary.txt")
+[ -z "$failed" ] || echo "failed (see $micro/<run>/<repo>.log):" $failed >&2
+if [ -n "$base_only" ]; then
+  echo "base runs in $base_runs"
+  [ -z "$failed" ] || exit 3
+  exit 0
+fi
 rc=0
 # shellcheck disable=SC2086
-dock --entrypoint python "$image" /src/scripts/micro.py --compare "/corpus/micro/base-$sha-$img" "/corpus/micro/$label" \
+dock --entrypoint python "$image" /src/scripts/micro.py --compare "/corpus/micro/base-$tree-$img" "/corpus/micro/$label" \
   --show "$show" $order >"$micro/$label.report.txt" 2>&1 || rc=1
 cat "$micro/$label.report.txt"
-failed=$(awk '$3 != "ok" {print $1 "(" $2 ")"}' "$micro/$label.summary.txt")
-if [ -n "$failed" ]; then
-  echo "failed (see $micro/<run>/<repo>.log):" $failed >&2
-  rc=1
-fi
+[ -z "$failed" ] || rc=3
 exit "$rc"
