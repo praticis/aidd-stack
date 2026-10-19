@@ -9,12 +9,37 @@
 > - `docs/corpus-report.md`: o método, onde o extrator está e a tabela de baselines (a vigente é a
 >   `2026-10-18-v2-baseline-28`).
 >
-> **Estado (2026-10-19):** iniciado.
+> **Estado (2026-10-19, madrugada):** em curso.
 >
-> - Passo 0 feito:
->   - a linha de base está no `corpus-report.md`, em "H5 baseline";
->   - o relatório de forma é o `indexer/scripts/shape.py`, também um job de CI que só relata.
-> - Os passos seguem em ordem, um commit por passo.
+> - **Feitos na noite de 2026-10-19**, em commits locais da branch `wip/h5-refactor`. Corpus e hold-out deram
+>   `0 repo(s) differ` contra as baselines de partida em cada passo de código; os números estão no `corpus-report.md`,
+>   em "H5 baseline" e "H5 steps".
+>   - **Passo 0:** a linha de base e o `indexer/scripts/shape.py`, com um job de CI que só relata.
+>   - **Passo 1:** 147 testes unitários (`paths`, mounts, `Scopes`, `path_of`).
+>   - **Passo 2:** o `tree.py` (`walk` por cursor, 2,5× mais rápido), o registro sob demanda e o fim do ciclo de import.
+>   - **Passo 3, em parte:** índice de declarações por função para o tipo declarado do Go e o local do C# (`NodeCache`).
+>     No vikunja, o `walk` caiu para 18 %. O `FileIndex` compartilhado não foi feito: guardar todos os nós de um
+>     arquivo pesa na memória (o mattermost tem 8 M nós), e o desenho fica para decidir com o autor.
+>   - **Passo 4, em parte:**
+>     - os fatos de pacote de Go, Python e TS saíram do core (`languages/<lang>/package_facts.py`, gancho
+>       `LanguageSupport.package_facts`);
+>     - o `url.URL` e o grpc-gateway do Go foram para `languages/go/paths.py`;
+>     - nenhuma decisão do core testa mais o nome da linguagem.
+>
+>     Faltam os fatos tipados no `PackageContext` (os campos por linguagem) e o catálogo de receptores do
+>     `http_base`, que é o passo 6.
+>   - **Passo 8:** o `core/matching.py`, o MCP dividido (`tools/list` byte a byte igual) e o Cypher testado contra um
+>     Neo4j real (`scripts/mcp-it.sh`, 14 casos).
+>   - **Passo 9:** a docstring sem números escritos à mão. O tempo somado está em 54 % do passo 0, dentro do ruído.
+>   - **Passo 10, em parte:** os comentários sem referência a docs nem nome de projeto, com um teste que guarda isso.
+>     Falta a revisão do que cada comentário diz.
+> - **A seguir:**
+>   - o resto do 3 e do 4;
+>   - o 5 (`TypeIndex`);
+>   - o 6 (reconhecedores com catálogo YAML, uma linguagem por commit);
+>   - o 7 (`compose` e `Pending` tipados);
+>   - o resto do 10;
+>   - o 11 (docs).
 >
 > As decisões do autor estão em "Decisões tomadas". O handoff nasceu de uma revisão pedida no meio do fechamento do
 > F1.14. Depois de 24 commits de regras desde o v2 do corpus, o código
