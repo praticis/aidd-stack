@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from tree_sitter import Node
 
@@ -23,6 +23,30 @@ Shape = tuple[int, str, str]          # (index of the parameter that is the path
 PARAM = "param"                       # an argument built around a parameter of the caller: (PARAM, *Shape)
 FIELDS = "fields"                     # an object literal argument: (FIELDS, ((key, value), ..))
 UNKNOWN = ("unknown",)                # an argument the scanner cannot read: not the same as no argument
+
+
+class WrapperShape(NamedTuple):
+    """A client wrapper, as a fact: the parameter its outbound path is built around, with the text before and after it,
+    and its verb — fixed, or taken from a parameter or from a field of an option parameter (`(parameter, key)`) — with
+    the verb the wrapper sends when the call gives none."""
+    index: int
+    before: str
+    after: str
+    verb: str | None
+    verb_from: int | tuple | None
+    params: tuple[str, ...]
+    default: str | None
+
+
+class WrappedCall(NamedTuple):
+    """A call that may hand a wrapper its path, waiting for every wrapper of the repo: what it calls, its positional and
+    named arguments (literals, `PARAM`, `FIELDS` or `UNKNOWN`), and the key and parameters of the function around it,
+    which becomes a wrapper when the call hands on one of its parameters."""
+    target: tuple
+    values: tuple
+    named: tuple
+    outer: str | None
+    outer_params: tuple
 
 
 def param_shape(sc: "BaseScanner", a: Node, params: list[str]) -> Shape | None:
@@ -117,8 +141,7 @@ def continues_path(shape: Shape) -> bool:
     return bool(shape[1]) and _glued(shape[1])
 
 
-# -- composing: a wrapper fact is (path index, before, after, verb, verb index, parameters, the verb's default); the
-# verb index is a parameter's, or (parameter, key) for an option object's field (`{ method = "GET" }`).
+# -- composing: a wrapper is a `WrapperShape` fact, a call to one a pending `WrappedCall`.
 def compose_wrapped_calls(out: "HttpResult", rule: str, bases_rule: str) -> list["Pending"]:
     """The pending `rule` calls to the repo's client wrappers, as outbound calls. A call that hands a wrapper a
     parameter of its own function makes that function a wrapper, so a chain of wrappers resolves in a few rounds.
@@ -139,42 +162,42 @@ def compose_wrapped_calls(out: "HttpResult", rule: str, bases_rule: str) -> list
 
 def _resolve(p: "Pending", facts: dict[str, set[tuple]], bases: dict, out: "HttpResult") -> bool:
     """Record the call `p`, or make its function a wrapper; False while its target is not a known wrapper."""
-    target, values, named, outer, outer_params = p.key
-    shape = _shape(facts, bases, target)
+    call: WrappedCall = p.key
+    shape = _shape(facts, bases, call.target)
     if shape is None:
         return False
-    idx, before, after, _, _, params, default = shape
-    path = _arg(values, named, params, idx)
-    verb, vi_out = _call_verb(values, named, shape)
+    path = _arg(call.values, call.named, shape.params, shape.index)
+    verb, vi_out = _call_verb(call.values, call.named, shape)
     if _param_of(path, whole=False) is not None:
-        if outer is not None:
+        if call.outer is not None:
             _, i, b, a = path
-            kept = default if isinstance(vi_out, tuple) else None
-            facts.setdefault(outer, set()).add((i, before + b, a + after, verb, vi_out, outer_params, kept))
+            kept = shape.default if isinstance(vi_out, tuple) else None
+            facts.setdefault(call.outer, set()).add(
+                WrapperShape(i, shape.before + b, a + shape.after, verb, vi_out, call.outer_params, kept))
         return True
-    found = wrapped_path(before, path, after) if isinstance(path, str) else None
+    found = wrapped_path(shape.before, path, shape.after) if isinstance(path, str) else None
     if found is not None:
         out.calls.append(replace(p.item, method=verb or "ANY", path=found[1], raw_path=found[0]))
     return True
 
 
-def _call_verb(values: tuple, named: tuple, shape: tuple) -> tuple[str | None, int | tuple | None]:
+def _call_verb(values: tuple, named: tuple, shape: WrapperShape) -> tuple[str | None, int | tuple | None]:
     """The verb a call to a wrapper sends, or where its own function takes the verb from. The wrapper's default only
     when the call gives nothing there: options it cannot read leave the verb unknown."""
-    _, _, _, verb, vi, params, default = shape
-    if verb is not None:
-        return verb, None
-    how = _arg(values, named, params, vi)
+    if shape.verb is not None:
+        return shape.verb, None
+    vi = shape.verb_from
+    how = _arg(values, named, shape.params, vi)
     vi_out = _param_of(how)
     if vi_out is None and isinstance(vi, tuple) and how is None:
-        given = _arg(values, named, params, vi[0])                      # the options handed on: `fetch(url, options)`
+        given = _arg(values, named, shape.params, vi[0])                # the options handed on: `fetch(url, options)`
         whole = _param_of(given)
         vi_out = (whole, vi[1]) if whole is not None else None
         how = UNKNOWN if given == UNKNOWN else None
-    return verb_of(how) or (default if vi_out is None and how != UNKNOWN else None), vi_out
+    return verb_of(how) or (shape.default if vi_out is None and how != UNKNOWN else None), vi_out
 
 
-def _shape(facts: dict[str, set[tuple]], bases: dict, target: tuple) -> tuple | None:
+def _shape(facts: dict[str, set[WrapperShape]], bases: dict, target: tuple) -> WrapperShape | None:
     """The one shape of the wrapper a call names: a function's, or the method of the class or of its nearest base
     that defines it. Two different shapes under one name give nothing."""
     if target[0] == "func":

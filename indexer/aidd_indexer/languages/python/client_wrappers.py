@@ -12,7 +12,8 @@ from tree_sitter import Node
 from ...core.http_base import HttpResult, Pending, text, walk
 from ...core.http_nodes import has_interpolation
 from ...core.http_scope import END, enclosing_function
-from ...core.http_wrappers import PARAM, compose_wrapped_calls as compose_calls, param_shape, verb_of
+from ...core.http_wrappers import (PARAM, WrappedCall, WrapperShape, compose_wrapped_calls as compose_calls,
+                                   param_shape, verb_of)
 from ...core.paths import HTTP_METHODS, has_literal_segment, normalize_path, unquote
 
 WRAPPER = "py.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
@@ -42,7 +43,8 @@ class PyClientWrappers:
         if shape is not None:
             vi = self._param_index(verb, params) if method is None else None
             default = self._verb_default(enclosing_function(call), params[vi]) if vi is not None else None
-            self.out.publish(WRAPPER, key, (*shape, method.upper() if method else None, vi, tuple(params), default))
+            verb_given = method.upper() if method else None
+            self.out.publish(WRAPPER, key, WrapperShape(*shape, verb_given, vi, tuple(params), default))
 
     def _wrapper_args(self, name: str, arg_nodes: list[Node]) -> tuple[list[Node], Node | None]:
         """The arguments that can be the path, and the one that is the verb of `request(method, url)`."""
@@ -108,7 +110,8 @@ class PyClientWrappers:
                       for k in kws)
         item = self.call_info(n, None, "", text(fn, self.src)) if any(values) or any(v for _, v in named) else None
         if item is not None:
-            self.out.pending.append(Pending(item, WRAPPER, (target, values, named, outer[0], tuple(outer[1]))))
+            call = WrappedCall(target, values, named, outer[0], tuple(outer[1]))
+            self.out.pending.append(Pending(item, WRAPPER, call))
 
     def _value(self, a: Node | None, params: list[str]) -> str | tuple | None:
         """A literal path or verb, or the parameter of the function around the call the argument is built around."""
