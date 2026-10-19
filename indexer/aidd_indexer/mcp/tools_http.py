@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
-from ..core.linker import CASE_INSENSITIVE
+from ..core.matching import CASE_INSENSITIVE, query_key
 
 
 def _collapse_refs(consumers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -86,7 +85,7 @@ def register(mcp, st) -> None:
         Consumers come from outbound calls with a literal/template path in the consumer's code;
         URLs assembled dynamically are invisible."""
         s = st(tenant)
-        key = re.sub(r"\{[^}]*\}", "{param}", path.rstrip("/") or "/")
+        key = query_key(path)
         rows = s.read("""
             MATCH (svc:Service {tenant: $tenant})-[:EXPOSES]->(e:HttpEndpoint)
             WHERE ($repo IS NULL OR svc.name = $repo)

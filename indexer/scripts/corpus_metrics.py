@@ -24,7 +24,7 @@ Gabarito, one per repo:
 
 Matching is by `(method, path_key)` over distinct pairs: placeholder names do not matter, an
 extracted ANY matches every method of the same path (and the other way round), and a route of a framework
-that matches paths without case (ASP.NET, the linker's `CASE_INSENSITIVE`) matches without case. A kind that is absent
+that matches paths without case (ASP.NET, `core/matching.py`'s `CASE_INSENSITIVE`) matches without case. A kind that is absent
 from the gabarito is not measured; present and empty means nothing is expected. `checked` is the
 manual sample of extracted items over the whole repo (H2-D6): precision = ok / checked with a verdict.
 
@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-from aidd_indexer.core.linker import CASE_INSENSITIVE
+from aidd_indexer.core.matching import CASE_INSENSITIVE, methods_compatible
 from aidd_indexer.core.paths import HTTP_METHODS, normalize_path, path_key
 
 KINDS = ("endpoints", "calls")
@@ -79,7 +79,7 @@ def diff_runs(old: dict, new: dict, kind: str) -> Diff:
 
 
 def _matches(a: tuple[str, str], b: tuple[str, str]) -> bool:
-    return a[1] == b[1] and (a[0] == b[0] or "ANY" in (a[0], b[0]))
+    return a[1] == b[1] and methods_compatible(a[0], b[0])
 
 
 @dataclass
