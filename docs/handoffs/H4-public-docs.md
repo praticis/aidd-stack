@@ -220,7 +220,17 @@ ser reutilizado (decisão do autor; o código continua MIT).
    (passos 4 em diante) saem dessa base. Duas fases:
    - **0a, logo depois do fechamento do F1.14** (o autor quis dar ponto final ao H2 antes; reciclar os docs do H2
      com ele ainda mudando seria retrabalho): a porta de entrada, o histórico compactado, as decisões destiladas e o
-     README mínimo. Só mexe em docs;
+     README mínimo. Só mexe em docs.
+     *Feita em 2026-10-19, com estes resultados:*
+     - *as peças novas: o `AGENTS.md` (com um `CLAUDE.md` que o importa), o `docs/history.md`, o
+       `docs/decisions.md` e o README mínimo;*
+     - *o ROADMAP foi de 148 para 39 KB, o relatório do corpus de 178 para 12 KB, as perguntas douradas de
+       26 para 15 KB, e os handoffs fechados viraram resumos;*
+     - *os docs de trabalho foram de ~640 para ~273 KB. O resto do alvo de ~150 KB é o `indexer-evolution.md`
+       (97 KB), reescrito na 0b;*
+     - *o texto antigo segue no git, em `1d73bb0`;*
+     - *o `AGENTS.md` está em português, como os docs de trabalho que ele indexa. A versão em inglês sai com
+       os docs públicos.*
    - **0b, depois do H5:** o `indexer-evolution.md` reescrito para a arquitetura nova (é o passo 11 do H5). Antes
      disso, reescrever a tabela de regras seria trabalho perdido: ela vira o catálogo de reconhecedores.
 1. **Decisões** H4-D1…D12 e o que obter do autor (seção acima).

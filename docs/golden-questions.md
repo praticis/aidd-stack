@@ -142,26 +142,13 @@ Isso é exatamente a métrica que dispara o SCIP (ADR-002, F1.2). Correção bar
 ao resolver chamadas de código de produção, descartar candidatos definidos em arquivos de teste
 (`TEST_FILE`) — remove os fakes da disputa e muitos casos voltam a ser `unique-name` (F0.7.1).
 
-**2ª rodada (2026-10-03, `impact_of`, no repo do `<project-b>`):** ✅ ferramenta usada de ponta a
-ponta. Handler: 0 chamadores internos (folha), 1 rota, consumidor cross-repo com símbolo, linha,
-`exact` e 14 refs colapsados. Getters do value object: `hops: 1` até o handler. Construtor: 156
-chamadores, 2 de produção (`main`/`run`) — a injeção de dependência não vira `CALLS`, e o modelo
-explicou. **Ponto cego confirmado:** `Policy.Validate` chamado como `uc.policy.Validate(...)` em dois
-use cases, grafo só via o teste — receiver é campo de struct, vários `Validate` no repo, resolução
-por nome desistia. **F0.7.1 (indexer 0.2.2):** (a) `impact_of` marca `test` por chamador e separa
-`production_caller_count`/`test_caller_count`; (b) código de produção nunca resolve para símbolo de
-arquivo de teste; (c) Go: tipo estático do receiver (receiver do método, parâmetro, `x := T{}`,
-`x := pkg.New()`, campos de struct seguidos pela cadeia `uc.policy`) → estratégia `receiver-type`.
-Fixture `go-receiver-types` cobre os 4 casos + fake de teste; no corpus público os `-ambiguous`
-caíram (alertmanager 1002→641, gorilla 1090→793, gin-realworld 88→8) com 10/10 arestas amostradas
-corretas, e tudo que não é `CALLS` saiu byte a byte igual. Re-rodar esta pergunta após o `refresh`:
-`Validate` deve listar os dois use cases com `hops: 1` e `exposed_through` deve trazer
-`POST /v1/password-reset/complete` (consumida pelo BFF). Interfaces (`ports.X`) continuam sem aresta
-— aí é SCIP ou convenção.
+**2ª rodada (2026-10-03):** ✅ o `impact_of` foi usado de ponta a ponta no repo do `<project-b>`. O ponto cego foi um receptor que é campo de struct e resolvia só pelo nome. Ele levou ao F0.7.1, que trouxe três coisas:
 
-Observação de processo: um `refresh` passou no meio da sessão e as linhas da `evidence` mudaram
-entre duas respostas; o modelo percebeu e avisou. É o comportamento desejado — a resposta carrega
-`ref`/`sha`, e a skill manda comparar com o `HEAD` local.
+- o tipo estático do receptor em Go (`receiver-type`);
+- produção nunca resolve para teste;
+- o `impact_of` separando os chamadores de produção e de teste.
+
+As interfaces ficaram para o SCIP ou para uma convenção, e o F0.7.3 resolveu a interface com implementador único.
 
 Limite conhecido: `CALLS` é resolvido por nome (same-file → same-module → unique-name); em repos
 com muitos homônimos os caminhos `-ambiguous` inflam o raio. É o gatilho do SCIP (ADR-002, F1.2).
@@ -215,128 +202,24 @@ que a defasagem fique explícita na própria resposta em vez de depender da leit
 
 ---
 
-## Segunda rodada: par .NET de referência (2026-10-03)
+## Rodadas anteriores
 
-Dois repositórios C# preparados para o teste — `<svc-transaction>` (12 rotas em 4 controllers,
-`[Route("api/[controller]")]`, comandos via service bus) e `<svc-accrual>` (2 rotas, 2 consumers
-Kafka e **uma** chamada HTTP de saída: `httpClient.GetAsync($"api/accounts/{id}/details")`, base URL em
-`TRANSACTION_API_URL`). Indexados no mesmo tenant dos repos Go. A comunicação real entre eles é
-majoritariamente por eventos — fora do escopo até a F1 (`Topic`/`PRODUCES`/`CONSUMES_EVENT`).
+O texto completo de cada rodada está em `git show 1d73bb0:docs/golden-questions.md`.
 
-| Q | Resultado | Observação |
-|---|---|---|
-| Q1 `who_consumes` | ✅ consumidor único, símbolo, `arquivo:15`, `exact`, `possible_consumers` vazio | o hint não foi necessário; `env_hints` vazio porque a env var está em `Extensions/`, outra pasta (hint de env é por diretório) |
-| Q2 `http_map` | ✅ 1 chamada, `linked_to` exato, `outbound_unlinked: 0`; rotas de rollup sem consumidor indexado | o modelo apontou que os `Consumers/` são eventos, não HTTP |
-| Q3 mapa | ✅ 3 pares no tenant (BFF→auth 5, BFF→onboarding 1, accrual→transaction 1), todos `exact` | o modelo preferiu `http_map`×8 + Cypher de conferência a uma query só → `workspace_map` como tool (F1) |
-| Q4a `impact_of` handler | ⚠️ cross-repo certo; **7 chamadores internos falsos** | resolução por nome em C#: `this._query.FindByIdAsync()` ligado ao próprio handler (same-file) e os `_xRepository.FindByIdAsync` dos command handlers ligados por homonímia |
-| Q4b `impact_of` query | ❌ `IAccountQuery.FindByIdAsync` com 6 chamadores falsos e sem o handler; `AccountReadRepository.FindByIdAsync` sem nada | o modelo disse "o grafo não prova a cadeia" e reconstruiu por leitura — correto |
-
-**F0.7.2 (indexer 0.2.3), motivado pela Q4:** C# ganhou os mesmos hooks que o Go — `file_facts`
-(campos, propriedades, parâmetros de construtor primário, `base_list`, `usings`, namespace),
-`call_receiver` (`this._x`, `_x`, propriedade, parâmetro, local com tipo explícito ou `new T()`,
-`base.`), `resolve_receiver` (tipo por nome simples, desambiguado pelos `usings`; cadeia de membros;
-membros herdados de bases do repo) e dois hooks novos no contrato: `supertypes` e
-**`implementations`** — interface com **um único implementador** no repo liga também à implementação
-(`receiver-type-impl`), que é a forma usual de DI em .NET. Regra de precisão: tipo do receiver
-conhecido e sem o método nele, nas bases ou no implementador → **não chuta** por nome (antes virava
-3 arestas ambíguas). Resultado no par: `AccountsController.FindByIdAsync → IAccountQuery.FindByIdAsync`
-(`receiver-type`) **e** `→ AccountReadRepository.FindByIdAsync` (`receiver-type-impl`); os 6
-falsos sumiram; os `_accountRepository.FindByIdAsync` herdados de pacote externo ficam sem aresta
-(correto). Corpus: `-ambiguous` clean-arch 93→22, eShop 1004→787; no Go caiu mais um pouco
-(alertmanager 641→620) porque receiver tipado como **interface** deixou de cair no fallback por nome —
-é o caso que falta (implementador único por conjunto de métodos, F1). 8/8 arestas amostradas no
-eShop corretas; símbolos/imports/HTTP byte a byte iguais; fixture `csharp-receiver-types` + 3 testes.
-
-**Q4b re-rodada com 0.2.3:** ✅ `IAccountQuery.FindByIdAsync` → 1 chamador (o handler, `hops: 1`, não
-ambíguo), rota e consumidor cross-repo corretos; os 6 falsos sumiram. ⚠️ `AccountReadRepository.FindByIdAsync`
-ainda trazia 6 falsos: campos `IAccountReadRepository` (outra interface da mesma classe, cujo
-`FindByIdAsync` vem de uma interface-base de pacote externo) caíam no implementador único e batiam
-no símbolo da **implementação explícita** `IAccountQuery.FindByIdAsync`. Corrigido no mesmo dia:
-`implementation_target(interface, método)` recusa o implementador quando o método nele é
-implementação explícita de **outra** interface; `_accounts.FindByIdAsync` fica sem aresta (o método
-real vem de pacote externo). Fixture ampliada; corpus inalterado. Esperado agora: a implementação
-com **um** chamador interno (o handler).
-
-**Q4b Go re-rodada com 0.2.3 (`impact_of` no método de domínio `password.Policy.Validate`):**
-⚠️ `internal_callers` trouxe o caso de uso, mas `exposed_through` e `consumers` vieram vazios — a aresta
-handler → `CompletePasswordReset.Execute` não existia no grafo de `main`. O `--dry-run` da mesma
-árvore na branch produzia a aresta (`receiver-type`), o que isolou o problema no código do handler
-em `main`: o struct do servidor **embute** o de configuração (`type Server struct { Config }`) e o
-handler usa o campo promovido (`s.Complete.Execute(...)` em vez de `s.Config.Complete`). A cadeia de
-campos de `resolve_receiver` só olhava campos declarados no struct. Corrigido em 0.2.4
-(`languages/go/symbols.py`): `file_facts` registra os embeds e a busca de campo desce por eles
-(ponteiro ou não, até 4 níveis); de quebra, helpers com retorno múltiplo (`uc, _ := setup(t)`) tipam
-o local pelo índice. Fixture `go-receiver-types` ganhou o handler com embedding; corpus Go só
-melhorou (alertmanager `-ambiguous` 620→425, `receiver-type` 1379→1905). Esperado após o
-`refresh`: `exposed_through` com `POST /v1/password-reset/complete` (e as rotas de criação de
-usuário, que também validam senha) e o BFF em `consumers`.
-
-**Q4b Go re-rodada com 0.2.4:** ✅ resposta inteira pelo grafo, sem leitura de código. 58 chamadores
-(7 produção, 51 teste); produção sem nenhuma aresta ambígua: caso de uso (1 hop), handler de reset
-(2 hops, entry point) e a cadeia de criação de usuário até 4 hops (`createUser`/`createOnboardingUser
-→ executeCreateUser → CreateUser.Execute → requiredFieldsPresent → Validate`). `exposed_through`: as 3
-rotas (`POST /v1/password-reset/complete`, `POST /v1/users`, `POST /v1/onboarding/users`);
-`consumers`: o BFF em `/v1/password-reset/complete` (`exact`, evidência com arquivo:linha, 14 refs).
-Resíduo: 29 chamadores de **teste** chegam por `-ambiguous` (locais vindos de helpers/tabelas que a
-tipagem Go ainda não cobre) — não afeta produção, amostra para F0.7.3. Observação: "rota sem
-consumidor = pública" foi inferência do modelo; o atlas só afirma "nenhum consumidor nos repos
-indexados" (vira dado com `Service` externo / `workspace_map`).
-
-## Terceira rodada: Q4 .NET depois do F0.7.3 (2026-10-14, indexer 0.2.14)
-
-O que mudou desde a segunda rodada: despacho do mediator como aresta (`dispatch`), interface → implementação
-pelo registro no DI e pela cadeia de decorators, serviços resolvidos do container (`GetRequiredService<T>()`)
-e locais vistos de dentro de lambdas, métodos que vêm da base de um pacote (`inherited`), sobrecargas pela
-contagem de argumentos, e `impact_of` num tipo contando os chamadores dos seus membros. Perguntas feitas no
-`<svc-transaction>`, numa sessão nova, no formato da Q4 ("se eu mudar X, o que é afetado — dentro do repo e
-nos outros?").
-
-| Q | Resultado | Observação |
-|---|---|---|
-| Q4a `AccountReadRepository.FindByIdAsync` | ✅ 1 chamador de produção (`AccountsController.FindByIdAsync`, via `IAccountQuery`), `GET /api/accounts/{accountId}/details`, consumidor `<svc-accrual>` `exact` com símbolo e arquivo:linha | na segunda rodada, 6 chamadores falsos e a cadeia reconstruída lendo código; agora o grafo deu a estrutura e a leitura de código foi para o que o grafo não guarda (contrato da resposta: 404 × 200, tipos dos campos) |
-| Q4b classe `CategoryReadRepository` | ✅ pelo grafo (conferido em Cypher): 1 hop — `CategoriesController.ListAsync` (`GET /api/categories`), `CreateTransactionCommandHandler.Handle`, os 2 validators; 2 hops — `TransactionsController.RegisterTransactionAsync` (`dispatch`, `POST /api/transactions`) | a primeira tentativa respondeu com um grafo antigo (ver abaixo); a segunda, já com 0.2.14, o modelo respondeu lendo código e chegou aos mesmos chamadores, sem as rotas |
-
-**Lição de operação:** a primeira Q4b veio com 1 chamador só — o snapshot era de 0.2.13, indexado antes dos
-commits de sobrecargas e registros do DI, que não subiram a versão; o refresher só reindexa quando a versão ou o
-commit mudam. Com 0.2.14 e `aidd refresh --tenant <t> --repos <a>,<b> --wait 600`, a resposta certa saiu do
-grafo. O modelo concluiu, do grafo velho, que "o atlas não captura DI" e recomendou "sempre completar com grep" —
-uma conclusão errada que só não virou insight porque ele não a gravou. Encaminhamento: o snapshot guardar a
-impressão digital do código do indexer e das convenções, para qualquer mudança reindexar após a reinstalação.
-
-**O que segue fora do grafo, com razão:** (1) eventos entre serviços (`TransactionWasCreatedEvent` publicado pelo
-handler e consumido no `<svc-accrual>` via Kafka) — F2.2; (2) o que o pacote do SDK faz por dentro (o
-`BaseRepository` delega as leituras ao `ICategoryReadRepository` injetado) — só com SCIP/metadados do pacote;
-(3) referência por tipo sem chamada (campo injetado e não usado, registro no DI) — F1.2; (4) validators são
-alcançados pelo pipeline do barramento, sem chamada explícita: aparecem como chamadores sem rota — candidato a
-regra de `dispatch` (`SendAsync(cmd)` → o `AbstractValidator<cmd>`).
-
-## Quarta rodada: Q1, Q2 e Q4 .NET depois do H2 (2026-10-18, build `0.2.14+8553d8007527`)
-
-O que mudou desde a terceira rodada: o extrator HTTP do H2 (`feature/h2-corpus`, PR #4). Para o par .NET, isso
-significa que uma rota ASP.NET guarda a caixa que o código escreve (`[controller]` → `/api/Accounts`, antes
-`/api/accounts`), e que o resolver C# deixou de ligar uma chamada num receptor de pacote a um método do repo
-com o mesmo nome. A rodada conferiu a instalação depois de reinstalar: o fingerprint marcou os 10 snapshots dos 3
-tenants como `outdated`, o refresher reindexou cada um uma vez e um segundo refresh não reindexou nada.
-
-| Q | Resultado | Observação |
-|---|---|---|
-| Q1 `who_consumes` | ✅ o mesmo consumidor, `exact`, agora em `/api/Accounts/{accountId}/details` | perguntada em minúsculas, como o `<svc-accrual>` chama, só achou a rota depois da correção abaixo |
-| Q2 `http_map` | ✅ 2 rotas, 1 chamada com `linked_to` exato, `outbound_unlinked: 0` | igual à segunda rodada, com a caixa do código |
-| Q4a `impact_of` método | ✅ igual à terceira rodada: 1 chamador, a rota e o consumidor | — |
-| Q4b `impact_of` classe | ✅ igual à terceira rodada: 5 chamadores, 2 rotas | — |
-
-**O que a rodada pegou:** o linker compara uma rota ASP.NET sem caixa, mas o `who_consumes` comparava
-`path_key` com caixa. Depois da reindexação, a Q1 perguntada em minúsculas teria voltado vazia. A correção
-(`98b8368`) usa no MCP o mesmo `CASE_INSENSITIVE` do linker. O Cypher novo foi rodado só em leitura no grafo
-antigo antes da reinstalação: ele acha a rota com outra caixa e não muda as rotas Go.
-
-**`CALLS`, `main` × a branch no mesmo checkout (`index --dry-run`):** o `<svc-accrual>` perde 23 arestas, todas
-falsas e ligadas só pelo nome: `tasks.Add(..)` num `List<Task>` → `Rollup.Add`, `DateTime.ToString("yyyyMMdd")` →
-`Rollup.ToString` e `httpClient.GetAsync(..)` → `RollupsController.GetAsync`. O `<svc-transaction>` não muda.
-
-**Lição de operação:** quando o extrator muda o que grava num campo que é chave de junção (`path_key`), todo
-leitor desse campo precisa da mesma regra, e não só o linker. O `test_mcp_protocol` usa um store falso e não
-executa Cypher, então quem prova a query são as perguntas douradas, rodadas contra o grafo.
+- **1ª (2026-09-29 e 2026-10-03), tenant Go piloto:**
+  - Q1–Q3 e Q5 ✅;
+  - Q4 ⚠️, porque a cadeia por interface não estava no grafo. Isso levou ao F0.7.1–F0.7.2b.
+- **2ª (2026-10-03), par .NET de referência:**
+  - Q1–Q3 ✅;
+  - Q4a ⚠️ (7 chamadores internos falsos, pela resolução por nome em C#) e Q4b ❌ (a interface sem o handler). Isso
+    levou ao F0.7.2: o tipo do receptor e o implementador único em C#.
+- **3ª (2026-10-14, indexer 0.2.14):** a Q4 .NET depois do F0.7.3, com dispatch do mediator, DI e bases de pacote.
+  - Q4a: 1 chamador, a rota e o consumidor;
+  - Q4b: 5 chamadores e 2 rotas.
+- **4ª (2026-10-18, build `0.2.14+8553d8007527`):** Q1, Q2 e Q4 .NET depois do H2, com a rota ASP.NET na caixa do
+  código.
+  - O que pegou: o `who_consumes` comparava `path_key` com caixa, e foi corrigido em `98b8368`.
+  - A lição: todo leitor de uma chave de junção precisa da mesma regra do linker.
 
 ## Quinta rodada: a validação do PR #5 numa instalação ao vivo (2026-10-19, build `0.2.15+0377dbb62b98`)
 
