@@ -1,94 +1,92 @@
-# Handoff H5 — Refatorar o indexador antes do SCIP
+# Handoff H5 — Refactor the indexer before SCIP
 
-> Cole este arquivo (ou peça para ler `docs/handoffs/H5-indexer-refactor.md`) no início de um chat novo. Antes de
-> qualquer coisa, o chat deve ler:
-> - `AGENTS.md`, a porta de entrada;
-> - `docs/ROADMAP.md`: "Onde estamos", "Princípios", F1.1, F1.2 e F1.13;
-> - os ADRs 002 e 003;
-> - `docs/indexer-evolution.md`: §2 Mapa do código, §5 Como medir e §8 a fronteira com o SCIP;
-> - `docs/corpus-report.md`: o método, onde o extrator está e a tabela de baselines (a vigente é a
+> Paste this file (or ask for `docs/handoffs/H5-indexer-refactor.md` to be read) at the start of a new chat. Before
+> anything else, the chat should read:
+> - `AGENTS.md`, the entry point;
+> - `docs/ROADMAP.md`: "Where we are", "Principles", F1.1, F1.2 and F1.13;
+> - ADRs 002 and 003;
+> - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
+> - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-28`).
 >
-> **Estado (2026-10-19, madrugada):** em curso.
+> **State (2026-10-19):** in progress, on the `feature/h5-refactor` branch.
 >
-> - **Feitos na noite de 2026-10-19**, em commits locais da branch `wip/h5-refactor`. Corpus e hold-out deram
->   `0 repo(s) differ` contra as baselines de partida em cada passo de código; os números estão no `corpus-report.md`,
->   em "H5 baseline" e "H5 steps".
->   - **Passo 0:** a linha de base e o `indexer/scripts/shape.py`, com um job de CI que só relata.
->   - **Passo 1:** 147 testes unitários (`paths`, mounts, `Scopes`, `path_of`).
->   - **Passo 2:** o `tree.py` (`walk` por cursor, 2,5× mais rápido), o registro sob demanda e o fim do ciclo de import.
->   - **Passo 3, em parte:** índice de declarações por função para o tipo declarado do Go e o local do C# (`NodeCache`).
->     No vikunja, o `walk` caiu para 18 %. O `FileIndex` compartilhado não foi feito: guardar todos os nós de um
->     arquivo pesa na memória (o mattermost tem 8 M nós), e o desenho fica para decidir com o autor.
->   - **Passo 4, em parte:**
->     - os fatos de pacote de Go, Python e TS saíram do core (`languages/<lang>/package_facts.py`, gancho
->       `LanguageSupport.package_facts`);
->     - o `url.URL` e o grpc-gateway do Go foram para `languages/go/paths.py`;
->     - nenhuma decisão do core testa mais o nome da linguagem.
+> - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
+>   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
+>   - **Step 0:** the baseline and `indexer/scripts/shape.py`, with a CI job that only reports.
+>   - **Step 1:** 147 unit tests (`paths`, mounts, `Scopes`, `path_of`).
+>   - **Step 2:** `tree.py` (a cursor `walk`, 2.5× faster), the on-demand registry and the end of the import cycle.
+>   - **Step 3, in part:** a per-function declarations index for Go's declared type and C#'s locals (`NodeCache`).
+>     On vikunja, `walk` dropped to 18 %. The shared `FileIndex` was not done: keeping every node of a file weighs on
+>     memory (mattermost has 8 M nodes), and the design is to be decided with the author.
+>   - **Step 4, in part:**
+>     - Go's, Python's and TS's package facts left the core (`languages/<lang>/package_facts.py`, the
+>       `LanguageSupport.package_facts` hook);
+>     - Go's `url.URL` and grpc-gateway went to `languages/go/paths.py`;
+>     - no core decision tests the language's name any more.
 >
->     Faltam os fatos tipados no `PackageContext` (os campos por linguagem) e o catálogo de receptores do
->     `http_base`, que é o passo 6.
->   - **Passo 7, em parte:** os fatos e as pendências dos wrappers de cliente são `NamedTuple` (`WrapperShape`,
->     `WrappedCall`), lidos por campo. Faltam os outros tipos de fato e de pendência.
->   - **Passo 8:** o `core/matching.py`, o MCP dividido (`tools/list` byte a byte igual) e o Cypher testado contra um
->     Neo4j real (`scripts/mcp-it.sh`, 14 casos).
->   - **Passo 9:** a docstring sem números escritos à mão. O tempo somado está em 54 % do passo 0, dentro do ruído.
->   - **Passo 10, em parte:** os comentários sem referência a docs nem nome de projeto, com um teste que guarda isso.
->     Falta a revisão do que cada comentário diz.
-> - **A seguir:**
->   - o resto do 3 e do 4;
->   - o 5 (`TypeIndex`);
->   - o 6 (reconhecedores com catálogo YAML, uma linguagem por commit);
->   - o 7 (`compose` e `Pending` tipados);
->   - o resto do 10;
->   - o 11 (docs).
+>     Still missing: the typed facts in `PackageContext` (the per-language fields) and `http_base`'s receiver
+>     catalog, which is step 6.
+>   - **Step 7, in part:** the client wrappers' facts and pending calls are `NamedTuple`s (`WrapperShape`,
+>     `WrappedCall`), read by field. The other kinds of fact and of pending call are still missing.
+>   - **Step 8:** `core/matching.py`, the MCP split (`tools/list` byte for byte the same) and the Cypher tested
+>     against a real Neo4j (`scripts/mcp-it.sh`, 14 cases).
+>   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
+>   - **Step 10, in part:** the comments without references to docs or project names, with a test that keeps it so.
+>     Reviewing what each comment says is still missing.
+> - **Next:**
+>   - the rest of 3 and 4;
+>   - 5 (`TypeIndex`);
+>   - 6 (recognizers with a YAML catalog, one language per commit);
+>   - 7 (typed `compose` and `Pending`);
+>   - the rest of 10;
+>   - 11 (docs).
 >
-> As decisões do autor estão em "Decisões tomadas". O handoff nasceu de uma revisão pedida no meio do fechamento do
-> F1.14. Depois de 24 commits de regras desde o v2 do corpus, o código
-> do extrator ficou com funções de complexidade muito alta, arquivos grandes e duas implementações paralelas de "qual
-> é o tipo disto". Isso precisa estar resolvido antes do SCIP (F1.1/F1.2), porque o SCIP entra exatamente nessa
-> costura.
+> The author's decisions are under "Decisions made". The handoff was born from a review asked for in the middle of
+> the F1.14 close. After 24 rule commits since corpus v2, the extractor's code had functions of very high complexity,
+> large files and two parallel implementations of "what is the type of this". That has to be solved before SCIP
+> (F1.1/F1.2), because SCIP plugs in exactly at that seam.
 
-## Contexto em um parágrafo
+## Context in one paragraph
 
-O H2 e o F1.14 levaram o extrator HTTP de quase nada a 99–100 % de precisão e de 89–99 % de recall no corpus de 55
-repos. O método foi uma regra por incremento, cada uma com fixture e corpus julgado. O método funcionou. O que ele
-não fez foi reorganizar o código entre uma regra e outra. Cada regra entrou onde coube: num `if` a mais no método que
-já tratava chamadas, num campo a mais do `PackageContext`, num fato com chave de texto. O resultado mede bem e se lê
-mal. O H5 é uma refatoração **sem mudança de comportamento**: o corpus e o hold-out têm de sair idênticos à
-baseline de partida, passo a passo. Ela prepara três coisas: o SCIP (um único ponto onde o tipo de uma expressão é
-perguntado), a escala (F1.13) e a manutenção (regras como unidades que se testam sozinhas).
+H2 and F1.14 took the HTTP extractor from almost nothing to 99–100 % precision and 89–99 % recall on the 55-repo
+corpus. The method was one rule per increment, each with a fixture and a judged corpus run. The method worked. What
+it did not do was reorganize the code between one rule and the next. Each rule went in where it fit: one more `if`
+in the method that already handled calls, one more field in `PackageContext`, one more fact with a text key. The
+result measures well and reads badly. H5 is a refactor **with no behavior change**: the corpus and the hold-out must
+come out identical to the starting baseline, step by step. It prepares three things: SCIP (a single point where the
+type of an expression is asked), scale (F1.13) and maintenance (rules as units that are tested on their own).
 
-## Diagnóstico (medido em 2026-10-18, sobre `713fec8` + o item 2 do F1.14 em andamento)
+## Diagnosis (measured on 2026-10-18, over `713fec8` + F1.14 item 2 in progress)
 
-**Tamanho e complexidade.** São 11.957 linhas não vazias em 54 arquivos e 736 funções. A complexidade ciclomática
-conta os desvios (`if`, laços, `and`/`or`, `except`); 10 é o limite usual de uma função fácil de testar.
+**Size and complexity.** 11,957 non-empty lines in 54 files and 736 functions. Cyclomatic complexity counts the
+branches (`if`, loops, `and`/`or`, `except`); 10 is the usual limit of a function that is easy to test.
 
-| Complexidade | Funções | | Tamanho | Funções |
+| Complexity | Functions | | Size | Functions |
 |---|---|---|---|---|
-| 1–10 | 545 | | 1–30 linhas | 664 |
+| 1–10 | 545 | | 1–30 lines | 664 |
 | 11–20 | 127 | | 31–60 | 55 |
 | 21–40 | 51 | | 61–120 | 15 |
-| 41–80 | 11 | | mais de 120 | 2 |
-| mais de 80 | 2 | | | |
+| 41–80 | 11 | | more than 120 | 2 |
+| more than 80 | 2 | | | |
 
-As piores são estas:
+The worst ones:
 
-| Função | Complexidade | Linhas |
+| Function | Complexity | Lines |
 |---|---|---|
 | C# `_controller` | 118 | 118 |
 | Go `_call` | 95 | 104 |
 | MCP `build_server` | 74 | 610 |
 | `_path_of_call` | 69 | 59 |
-| `collect_constants` | 66 | 76, aninhamento 7 |
+| `collect_constants` | 66 | 76, nesting 7 |
 | TS `_read_call` | 62 | 69 |
 | `resolve_calls` | 55 | 95 |
 | C# `_fast_endpoint` | 51 | 58 |
 | C# `_route_attribute` | 50 | 58 |
 
-Os arquivos acima de 600 linhas não vazias:
+The files above 600 non-empty lines:
 
-| Arquivo | Linhas |
+| File | Lines |
 |---|---|
 | `languages/csharp/http.py` | 1410 |
 | `languages/typescript/http.py` | 892 |
@@ -98,274 +96,274 @@ Os arquivos acima de 600 linhas não vazias:
 | `cli.py` | 617 |
 | `core/http_base.py` | 609 |
 
-**Responsabilidades misturadas.**
+**Mixed responsibilities.**
 
-1. **O `core/` conhece as linguagens, o que o ADR-003 proíbe.** O ADR-003 diz que o núcleo "nunca consulta o id da
-   linguagem". Mesmo assim:
-   - `core/http_expr.py:92` faz `go, py = fx.file.language == "go", ..` e abriga regras de linguagem: `_ts_client`,
-     `_ts_interceptor`, `_ts_client_class`, `_py_class`, `_go_struct`, `_passthrough`, `_enum_member`, o `url.URL`
-     do Go e o `runtime.NewPattern` do grpc-gateway;
-   - o `PackageContext` (`core/http_base.py`) tem campos de cada linguagem: `client_bases` (TS), `classes` (Python),
-     `struct_fields`, `passthrough` e `verb_lists` (Go).
-2. **Dois sistemas de tipos em paralelo.** O resolver micro (`languages/*/symbols.py`, com `file_facts` e
-   `ResolveContext.facts`) e os scanners HTTP respondem, cada um à sua maneira, a "qual é o tipo deste valor":
-   - Go: `go/symbols.py:_declared_type` e `go/http.py:_value_type`. Os dois leem receptor, parâmetros e
-     `x := &T{}`. O item 2 do F1.14 chegou a duplicar também os campos de struct (`PackageContext.struct_fields`); antes
-     do commit, passou a ler os `file_facts["structs"]` do resolver, repassados por diretório
-     (`PackageContext.file_facts`). É um remendo até o `TypeIndex`;
-   - C#: `csharp/symbols.py:_local_type` e `csharp/http.py:_declared_type`;
-   - por linguagem, ainda: `router_param_type`, o `_router_class` do Python, o `_client_of` do TS, o `classes_named`
-     da `RepoView`, e o `_reaches_fast` e o `_inherited_route` do C#.
+1. **`core/` knows the languages, which ADR-003 forbids.** ADR-003 says the core "never looks at the language id".
+   Even so:
+   - `core/http_expr.py:92` does `go, py = fx.file.language == "go", ..` and holds language rules: `_ts_client`,
+     `_ts_interceptor`, `_ts_client_class`, `_py_class`, `_go_struct`, `_passthrough`, `_enum_member`, Go's
+     `url.URL` and grpc-gateway's `runtime.NewPattern`;
+   - `PackageContext` (`core/http_base.py`) has fields for each language: `client_bases` (TS), `classes` (Python),
+     `struct_fields`, `passthrough` and `verb_lists` (Go).
+2. **Two type systems in parallel.** The micro resolver (`languages/*/symbols.py`, with `file_facts` and
+   `ResolveContext.facts`) and the HTTP scanners each answer, in their own way, "what is the type of this value":
+   - Go: `go/symbols.py:_declared_type` and `go/http.py:_value_type`. Both read the receiver, the parameters and
+     `x := &T{}`. F1.14 item 2 went as far as duplicating the struct fields too (`PackageContext.struct_fields`);
+     before the commit, it switched to reading the resolver's `file_facts["structs"]`, handed on per directory
+     (`PackageContext.file_facts`). It is a patch until `TypeIndex`;
+   - C#: `csharp/symbols.py:_local_type` and `csharp/http.py:_declared_type`;
+   - per language, also: `router_param_type`, Python's `_router_class`, TS's `_client_of`, `RepoView`'s
+     `classes_named`, and C#'s `_reaches_fast` and `_inherited_route`.
 
-   O SCIP vai responder a essa pergunta. Hoje ele teria de entrar em dez lugares.
-3. **O conhecimento de framework está espalhado em código.** Verbos, registradores, portadores de prefixo,
-   construtores de app e receptores de cliente estão em constantes soltas por scanner (`GO_REGISTRARS`, `GO_MOUNTS`,
-   `GO_PREFIXED`, `CS_MAP`, `FE_VERBS`, `TS_ROUTER_VERBS`, `KOA_ROUTERS`, `CLIENT_RECEIVER` ..). O nome do framework
-   gravado na rota é decidido dentro do `_call` do Go por heurística de nome de método. O item 7 do F1.14 já pedia
-   o catálogo como dado.
-4. **Os métodos são "tudo-em-um".** `_call` (Go), `_read_call` (TS), `_invocation` e `_controller` (C#) classificam o
-   callee e decidem entre rota, montagem, router passado adiante, cliente gerado e chamada de saída, num só fluxo de
-   `if`s. Uma regra nova é um `if` a mais nesse fluxo, e a ordem entre elas é implícita.
-5. **Os fatos e as pendências são tipados por texto.** São cerca de 35 chaves de fato (`"cs.fe-group"`,
-   `"ts.mount-wrapper"`, `"go.encoder"` ..) com valores em tuplas posicionais, desempacotadas longe de onde nasceram
+   SCIP is going to answer that question. Today it would have to come in at ten places.
+3. **Framework knowledge is scattered in code.** Verbs, registrars, prefix carriers, app constructors and client
+   receivers are in loose constants per scanner (`GO_REGISTRARS`, `GO_MOUNTS`, `GO_PREFIXED`, `CS_MAP`, `FE_VERBS`,
+   `TS_ROUTER_VERBS`, `KOA_ROUTERS`, `CLIENT_RECEIVER` ..). The framework name written on the route is decided inside
+   Go's `_call` by a heuristic on the method name. F1.14 item 7 already asked for the catalog as data.
+4. **The methods are "all-in-one".** `_call` (Go), `_read_call` (TS), `_invocation` and `_controller` (C#) classify
+   the callee and decide between a route, a mount, a router handed on, a generated client and an outbound call, in a
+   single flow of `if`s. A new rule is one more `if` in that flow, and the order between them is implicit.
+5. **Facts and pending calls are typed by text.** There are about 35 fact keys (`"cs.fe-group"`,
+   `"ts.mount-wrapper"`, `"go.encoder"` ..) with values in positional tuples, unpacked far from where they were born
    (`bases, controller, prefixes, area, own, uses, versions = p.key`).
-6. **A regra de casar paths existe em mais de um lugar.** O linker compara uma rota ASP.NET sem caixa, e o MCP só
-   passou a fazer o mesmo hoje (`98b8368`). O `who_consumes` ainda calcula a chave com uma regex própria
-   (`mcp/server.py:608`), e não com `paths.normalize_path` + `path_key`, então um `:id` perguntado não é
-   normalizado.
-7. **Há um ciclo de import.** `core/http_base` importa `languages/base`, que passa por `languages/__init__`, que
-   importa todas as linguagens, que importam `core/http_base`. Importar `aidd_indexer.core.http_base` primeiro
-   falha. Só funciona porque a ordem de import usual mascara o ciclo.
+6. **The path-matching rule exists in more than one place.** The linker compares an ASP.NET route case-insensitively,
+   and the MCP only started doing the same today (`98b8368`). `who_consumes` still computes the key with a regex of
+   its own (`mcp/server.py:608`), not with `paths.normalize_path` + `path_key`, so an asked `:id` is not normalized.
+7. **There is an import cycle.** `core/http_base` imports `languages/base`, which goes through
+   `languages/__init__`, which imports every language, which import `core/http_base`. Importing
+   `aidd_indexer.core.http_base` first fails. It only works because the usual import order hides the cycle.
 
-**Desempenho.** Perfil da extração inteira do vikunja (2134 arquivos, 51 s sem o profiler):
+**Performance.** A profile of vikunja's whole extraction (2134 files, 51 s without the profiler):
 
-| Função | Chamadas | Tempo acumulado | Parte do total (93 s, com profiler) |
+| Function | Calls | Cumulative time | Share of the total (93 s, with the profiler) |
 |---|---|---|---|
-| `walk` | 55,6 milhões | 52 s | 56 % |
-| `go/symbols.py:_declared_type` (via `call_receiver`) | 63.820 | 32 s | |
+| `walk` | 55.6 million | 52 s | 56 % |
+| `go/symbols.py:_declared_type` (through `call_receiver`) | 63,820 | 32 s | |
 | `collect_constants` | | 14 s | |
-| `run` do scanner TS | | 15 s | |
+| the TS scanner's `run` | | 15 s | |
 
-- O `walk` é um gerador Python que materializa a lista de filhos de cada nó. Quase metade dele vem do
-  `_declared_type`, que percorre a função inteira para cada receptor de chamada: é quadrático por função.
-- Cada arquivo é percorrido inteiro de quatro a seis vezes: as queries do extrator, o `file_facts`, o
-  `collect_constants`, o `run` do scanner e as sub-varreduras (`function_of`, `_param_values` ..).
-- No corpus, o HTTP é 208 s de 1255 s de extração, e o resto é parse, símbolos e resolução. O mattermost leva
-  219 s, o bitwarden 128 s, o photoprism 101 s (só 8 s de HTTP).
-- A rodada inteira do corpus leva cerca de 21 min em série. Esse é o ciclo de regressão de cada passo, então
-  encurtá-lo é parte do objetivo.
+- `walk` is a Python generator that materializes the list of children of each node. Almost half of it comes from
+  `_declared_type`, which walks the whole function for each call receiver: it is quadratic per function.
+- Each file is walked whole four to six times: the extractor's queries, `file_facts`, `collect_constants`, the
+  scanner's `run` and the sub-walks (`function_of`, `_param_values` ..).
+- In the corpus, HTTP is 208 s of 1255 s of extraction, and the rest is parsing, symbols and resolution. mattermost
+  takes 219 s, bitwarden 128 s, photoprism 101 s (only 8 s of HTTP).
+- A whole corpus run takes about 21 min in series. That is each step's regression cycle, so shortening it is part of
+  the goal.
 
-**Escala (F1.13).** `extract_http` recebe todos os extratores do repo com as árvores vivas, porque as duas passadas
-(constantes, depois scanners) precisam delas. O grafana morre por memória a 7,7 GB. A refatoração não resolve o
-F1.13, mas não pode fechar a porta: a segunda passada tem de poder reparsear um arquivo, em vez de exigir a árvore
-guardada.
+**Scale (F1.13).** `extract_http` receives all the repo's extractors with their trees alive, because the two passes
+(constants, then scanners) need them. grafana dies of memory at 7.7 GB. The refactor does not solve F1.13, but it must
+not close the door: the second pass has to be able to re-parse a file, instead of requiring the stored tree.
 
-**Testes.**
-- O HTTP inteiro passa por um teste parametrizado (`tests/test_fixtures.py`, 16 fixtures). Quando falha, ele diz
-  quais rotas faltam, e não qual regra quebrou.
-- Não há teste unitário de `core/paths.py`: `normalize_path` tem 19 regex cuja ordem importa. Também não há de
-  `http_mounts`, `http_scope` nem `http_expr`.
-- O `test_mcp_protocol` usa um store falso e não executa Cypher. Quem prova as queries são as perguntas douradas,
-  rodadas à mão.
+**Tests.**
+- The whole of HTTP goes through one parametrized test (`tests/test_fixtures.py`, 16 fixtures). When it fails, it
+  says which routes are missing, not which rule broke.
+- There is no unit test for `core/paths.py`: `normalize_path` has 19 regexes whose order matters. There is none for
+  `http_mounts`, `http_scope` or `http_expr` either.
+- `test_mcp_protocol` uses a fake store and runs no Cypher. What proves the queries are the golden questions, run by
+  hand.
 
-**O que está bem e deve ficar.**
-- O orquestrador `core/integrations.py` é enxuto.
-- O grafo de montagem (`core/http_mounts.py`) é pequeno e geral.
-- A regra F1.13 vale: um scanner nunca lê a árvore de outro arquivo; o que cruza arquivos vai por fatos e `compose`.
-- Os `except Exception` são fronteiras deliberadas, por arquivo e por repo, e estão comentados.
-- O ciclo regra → fixture → corpus julgado é o melhor ativo do projeto, e o H5 o usa como rede.
+**What is good and should stay.**
+- The `core/integrations.py` orchestrator is lean.
+- The mount graph (`core/http_mounts.py`) is small and general.
+- The F1.13 rule holds: a scanner never reads another file's tree; what crosses files goes through facts and
+  `compose`.
+- The `except Exception` blocks are deliberate boundaries, per file and per repo, and they are commented.
+- The rule → fixture → judged corpus cycle is the project's best asset, and H5 uses it as its net.
 
-## Objetivo
+## Goal
 
-Ao fim do H5:
-- o corpus e o hold-out estão **idênticos** à baseline de partida;
-- a extração do corpus inteiro leva **≤ 60 %** do tempo de hoje (meta a confirmar no passo 0);
-- valem as metas de forma, decididas pelo autor:
-  - **complexidade de um dígito**: nenhuma função acima de 9 (`ruff`, regra `C901`, `max-complexity = 9`), sem
-    exceção. Um despachante é uma consulta ao catálogo, não uma cadeia de `if`s;
-  - **nenhum módulo com mais de 300 linhas**, contadas no arquivo inteiro como o `wc -l` conta: docstrings e
-    comentários incluídos. São cerca de 12 mil linhas de hoje divididas em pacotes por linguagem e por papel;
-  - `core/` sem nenhum nome de linguagem nem de framework, verificado por teste;
-  - um único serviço de tipos que o resolver micro e os scanners HTTP consultam, e onde o F1.2 pluga o SCIP;
-  - regras como unidades: cada uma com nome, pré-condição barata, fixture e teste próprio.
+At the end of H5:
+- the corpus and the hold-out are **identical** to the starting baseline;
+- extracting the whole corpus takes **≤ 60 %** of today's time (a target to confirm in step 0);
+- the shape targets the author decided hold:
+  - **single-digit complexity**: no function above 9 (`ruff`, rule `C901`, `max-complexity = 9`), with no
+    exception. A dispatcher is a lookup in the catalog, not a chain of `if`s;
+  - **no module longer than 300 lines**, counted over the whole file the way `wc -l` counts: docstrings and comments
+    included. That is about 12 thousand lines of today split into packages per language and per role;
+  - `core/` with no language or framework name at all, checked by a test;
+  - a single type service that the micro resolver and the HTTP scanners consult, and where F1.2 plugs SCIP in;
+  - rules as units: each one with a name, a cheap precondition, a fixture and a test of its own.
 
-## Arquitetura-alvo
+## Target architecture
 
-1. **Utilitários de árvore neutros** (`aidd_indexer/tree.py`):
-   - `node_text`, `walk` com `TreeCursor` (sem lista de filhos por nó) e um índice por arquivo (`FileIndex`);
-   - `languages/base` e `core/` importam daqui, e o ciclo some;
-   - o registro de linguagens carrega sob demanda.
-2. **`FileIndex`, uma passada por arquivo.** É construído uma vez, logo depois do parse, e compartilhado pelo
-   extrator de símbolos, pelo coletor de constantes e pelo scanner. Ele tem:
-   - os nós por tipo;
-   - as funções por id, com o pai de cada uma;
-   - as declarações e atribuições por escopo, que hoje são o `Scopes._assignments` e o `_declared_type`;
-   - os identificadores por nome e escopo;
-   - as chamadas.
+1. **Neutral tree utilities** (`aidd_indexer/tree.py`):
+   - `node_text`, `walk` with a `TreeCursor` (no list of children per node) and a per-file index (`FileIndex`);
+   - `languages/base` and `core/` import from here, and the cycle goes away;
+   - the language registry loads on demand.
+2. **`FileIndex`, one pass per file.** It is built once, right after the parse, and shared by the symbol extractor,
+   the constants collector and the scanner. It has:
+   - the nodes by type;
+   - the functions by id, with each one's parent;
+   - the declarations and assignments per scope, which today are `Scopes._assignments` and `_declared_type`;
+   - the identifiers by name and scope;
+   - the calls.
 
-   As varreduras ad hoc (`function_of`, `_idents`, `_param_values`, `walk(scope)`) passam a consultá-lo.
-3. **Serviço de tipos** (`TypeIndex`, a costura do SCIP). As perguntas são:
-   - `declared_type(valor)`: receptor, parâmetro, `var x T`, literal composto, campo de struct ou classe;
-   - `bases(tipo)`, `method(tipo, nome)` e `field(tipo, nome)`;
-   - `return_type(função)`, quando declarado.
+   The ad hoc walks (`function_of`, `_idents`, `_param_values`, `walk(scope)`) start consulting it.
+3. **A type service** (`TypeIndex`, SCIP's seam). The questions are:
+   - `declared_type(value)`: receiver, parameter, `var x T`, composite literal, struct or class field;
+   - `bases(type)`, `method(type, name)` and `field(type, name)`;
+   - `return_type(function)`, when declared.
 
-   A implementação de agora sai dos `file_facts` de cada linguagem, consolidados por repo. O resolver micro
-   (`call_receiver`) e os scanners HTTP usam a mesma instância. O que hoje é `needs-resolver` (ADR-002, adendo) vira
-   uma chamada a esse serviço que devolve "não sei". No F1.2, uma implementação SCIP responde as mesmas perguntas
-   quando houver índice.
-4. **Fatos de pacote por linguagem.** O `PackageContext` do `core/` fica com o que é geral: constantes de path,
-   pedaços de constante, `env_hints` e funções por nome. Cada linguagem registra o próprio coletor
-   (`LanguageSupport.collect_package_facts`) e a própria classe tipada de fatos: os clientes com base do TS, as
-   classes de router do Python, o passthrough e as listas de verbos do Go. O código de `_ts_client`, `_py_class`,
-   `_go_struct`, `url.URL` e grpc-gateway muda para `languages/<lang>/`.
-5. **Regras como reconhecedores.** O `_call`/`_invocation`/`_read_call` de cada linguagem vira um despachante sobre
-   uma lista ordenada de reconhecedores. Cada um declara:
-   - uma pré-condição barata, como o tipo de nó e o nome do callee num conjunto, para o despachante indexar;
-   - `apply(nó) -> bool`.
+   The current implementation comes from each language's `file_facts`, consolidated per repo. The micro resolver
+   (`call_receiver`) and the HTTP scanners use the same instance. What is `needs-resolver` today (ADR-002, addendum)
+   becomes a call to that service that returns "I don't know". In F1.2, a SCIP implementation answers the same
+   questions when there is an index.
+4. **Package facts per language.** The core's `PackageContext` keeps what is general: path constants, constant
+   pieces, `env_hints` and functions by name. Each language registers its own collector
+   (`LanguageSupport.collect_package_facts`) and its own typed facts class: TS's clients with a base, Python's router
+   classes, Go's passthrough and verb lists. The code of `_ts_client`, `_py_class`, `_go_struct`, `url.URL` and
+   grpc-gateway moves to `languages/<lang>/`.
+5. **Rules as recognizers.** Each language's `_call`/`_invocation`/`_read_call` becomes a dispatcher over an ordered
+   list of recognizers. Each one declares:
+   - a cheap precondition, such as the node type and the callee's name in a set, for the dispatcher to index;
+   - `apply(node) -> bool`.
 
-   A ordem fica explícita na lista. Cada reconhecedor corresponde a uma linha da tabela do guia
-   (`indexer-evolution.md` §3), com o seu caso de fixture e o seu teste. O `_controller` do C# se parte do mesmo modo:
-   ler atributos, detectar o controller, publicar a herança, FastEndpoints e as actions. Com 300 linhas por módulo,
-   cada linguagem vira um pacote (`languages/<lang>/http/`), com um módulo por grupo de reconhecedores (rotas por
-   atributo, rotas por chamada, montagens, clientes), mais o `compose` e os fatos.
-6. **Catálogo de frameworks como dado, em YAML** (o item 7 do F1.14; H5-D2):
-   - um arquivo por linguagem (`languages/<lang>/frameworks.yaml`). Por framework, ele traz o nome gravado na rota,
-     os verbos, os registradores, os portadores de prefixo, os construtores de app/router e os receptores de
-     cliente;
-   - um esquema validado na carga, com teste. Um catálogo inválido falha alto no teste e degrada com aviso na
-     indexação, como as convenções;
-   - os reconhecedores leem o catálogo. As convenções (F0.4.5), que já são YAML, estendem o mesmo catálogo;
-   - os limiares do `built_bundle` viram parâmetros nomeados.
-7. **Fatos e pendências tipados.** Cada fato é uma dataclass registrada (por exemplo `FeGroup(name, prefix,
-   parent)`), e o `compose` de cada linguagem é uma lista ordenada de passos que consomem fatos tipados. Acabam as
-   chaves de texto e as tuplas posicionais.
-8. **Uma regra de casar paths.** Um módulo (`core/matching.py`) com `path_key` e a comparação com ou sem caixa por
-   framework. O linker, o MCP e o placar do corpus o usam.
-9. **MCP dividido.**
-   - O `build_server` (610 linhas) se divide em módulos por grupo de ferramentas.
-   - O Cypher vira constantes nomeadas num módulo de queries.
-   - Um teste de integração roda cada query contra um Neo4j de verdade (container efêmero) com um grafo pequeno
-     semeado pela fixture. É a lição do `who_consumes`.
-10. **Laço do corpus mais curto.**
-    - O paralelismo já existe desde 2026-10-18: `indexer/scripts/corpus.sh` roda um container por repo, os maiores
-      primeiro, com teto de memória em cada um, e junta o relatório no fim. Este passo mede o ganho no que cada repo
-      gasta, não no relógio: a soma dos tempos por repo que o script registra (1.382 s na `baseline-26`, com 3 em
-      paralelo).
-    - Os números da docstring são gerados da baseline, em vez de editados à mão a cada incremento.
-11. **Comentários só com o que é estritamente pertinente** (H5-D4). Os docs ainda vão ser reorganizados, então o
-    código não aponta para eles. As regras:
-    - um comentário diz o porquê que o código não diz: um contrato, um caso de borda, a razão de uma ordem. Ele não
-      narra o código nem cataloga os casos que motivaram a regra;
-    - nenhuma referência a docs nem a itens de planejamento: ROADMAP, `F1.x`, `H2-Dx`, ADR, seções do guia,
-      relatório do corpus;
-    - nenhum nome de projeto. Um nome privado (tenant, serviço de cliente) nunca aparece, e onde o comentário
-      precisa de um exemplo, ele usa um nome neutro (`orders-api`, `PARTNER_API_URL`). Também saem os nomes dos apps
-      públicos do corpus, como vikunja e gitea: o exemplo descreve a forma do código (`um grupo passado por campo de
-      struct`), e só fica o nome de framework ou biblioteca quando é ele que define o comportamento (gin,
-      FastEndpoints, grpc-gateway);
-    - as fixtures seguem a mesma regra: o comentário descreve a forma, não o app de origem. Os gabaritos do corpus
-      (`tests/corpus_expected/`) seguem com os nomes, porque falam daqueles repos.
+   The order is explicit in the list. Each recognizer matches one line of the guide's table (`indexer-evolution.md`
+   §3), with its fixture case and its test. C#'s `_controller` is split the same way: reading attributes, detecting
+   the controller, publishing inheritance, FastEndpoints and the actions. With 300 lines per module, each language
+   becomes a package (`languages/<lang>/http/`), with one module per group of recognizers (routes by attribute,
+   routes by call, mounts, clients), plus `compose` and the facts.
+6. **The framework catalog as data, in YAML** (F1.14 item 7; H5-D2):
+   - one file per language (`languages/<lang>/frameworks.yaml`). Per framework, it holds the name written on the
+     route, the verbs, the registrars, the prefix carriers, the app/router constructors and the client receivers;
+   - a schema validated at load time, with a test. An invalid catalog fails loudly in the test and degrades with a
+     warning during indexing, like the conventions;
+   - the recognizers read the catalog. The conventions (F0.4.5), which are already YAML, extend the same catalog;
+   - the `built_bundle` thresholds become named parameters.
+7. **Typed facts and pending calls.** Each fact is a registered dataclass (for example `FeGroup(name, prefix,
+   parent)`), and each language's `compose` is an ordered list of steps that consume typed facts. The text keys and
+   the positional tuples go away.
+8. **One path-matching rule.** A module (`core/matching.py`) with `path_key` and the case-sensitive or insensitive
+   comparison per framework. The linker, the MCP and the corpus scorer use it.
+9. **The MCP split.**
+   - `build_server` (610 lines) is split into modules per group of tools.
+   - The Cypher becomes named constants in a queries module.
+   - An integration test runs each query against a real Neo4j (an ephemeral container) with a small graph seeded by
+     the fixture. It is the `who_consumes` lesson.
+10. **A shorter corpus loop.**
+    - Parallelism already exists since 2026-10-18: `indexer/scripts/corpus.sh` runs one container per repo, the
+      largest first, with a memory cap on each, and joins the report at the end. This step measures the gain in what
+      each repo spends, not on the clock: the sum of the per-repo times the script records (1,382 s on `baseline-26`,
+      with 3 in parallel).
+    - The docstring's numbers are generated from the baseline, instead of edited by hand on every increment.
+11. **Comments with only what is strictly pertinent** (H5-D4). The docs are still going to be reorganized, so the
+    code does not point at them. The rules:
+    - a comment says the why the code does not: a contract, an edge case, the reason for an order. It does not
+      narrate the code or catalog the cases that motivated the rule;
+    - no reference to docs or planning items: ROADMAP, `F1.x`, `H2-Dx`, ADR, guide sections, the corpus report;
+    - no project name. A private name (tenant, a client's service) never appears, and where the comment needs an
+      example, it uses a neutral name (`orders-api`, `PARTNER_API_URL`). The names of the corpus's public apps, such
+      as vikunja and gitea, go too: the example describes the shape of the code (`a group passed through a struct
+      field`), and only a framework or library name stays when it is what defines the behavior (gin, FastEndpoints,
+      grpc-gateway);
+    - the fixtures follow the same rule: the comment describes the shape, not the app it came from. The corpus's
+      expected lists (`tests/corpus_expected/`) keep the names, because they are about those repos.
 
-## Passos
+## Steps
 
-Cada passo é um commit, ou alguns, com o critério de pronto abaixo **e** o protocolo de regressão. A ordem vai do
-mais seguro e mais barato ao mais estrutural. As redes de teste entram antes de mover código.
+Each step is one commit, or a few, with the done criterion below **and** the regression protocol. The order goes from
+the safest and cheapest to the most structural. The test nets go in before code is moved.
 
-| # | Passo | Pronto quando |
+| # | Step | Done when |
 |---|---|---|
-| 0 | Linha de base: congelar `v2-baseline-N` e o hold-out; medir sozinho (sem outra carga) o tempo do corpus e o perfil de 4 repos (mattermost, vikunja, umbraco, ghost); no CI, relatório (sem bloquear) de `ruff C901` com `max-complexity = 9` e de módulos acima de 300 linhas | números registrados no `corpus-report.md` (seção "H5 baseline"), com a contagem de funções e módulos fora das metas |
-| 1 | Rede de testes unitários: tabela de casos para `normalize_path`/`mask_placeholders`/`path_key` (cada regex com um caso, e os pares cuja ordem importa), `http_mounts`, `Scopes`, `path_of` | cobre cada regra de `paths.py`; mutar uma regex quebra um teste nomeado |
-| 2 | `aidd_indexer/tree.py`: `walk` por `TreeCursor`, `node_text`, fim do ciclo de import, registro sob demanda | `import aidd_indexer.core.http_base` sozinho funciona; perfil do `walk` cai |
-| 3 | `FileIndex`: uma passada por arquivo; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consultam o índice | sem varredura de escopo por chamada; perfil do vikunja: `walk` < 20 % |
-| 4 | Fatos de pacote por linguagem: o código de linguagem sai de `core/http_expr.py` e do `PackageContext`; fatos tipados | um teste prova que `core/` não nomeia linguagem nem framework |
-| 5 | `TypeIndex`: um serviço para o resolver micro e o HTTP; `struct_fields`/`_value_type`/`_router_class`/`_client_of`/`classes_named`/`_reaches_fast` passam a consultá-lo | uma única implementação por linguagem de "tipo declarado"; `needs-resolver` é uma resposta do serviço |
-| 6 | Reconhecedores + catálogo YAML, **uma linguagem por commit**, do pior ao menor: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | nenhuma função > 9 nem módulo > 300 linhas nesses pacotes; cada linha da tabela do guia aponta para um reconhecedor |
-| 7 | `compose` tipado por linguagem; `Pending` tipado | nenhuma tupla posicional entre scanner e `compose` |
-| 8 | `core/matching.py`; MCP dividido; Cypher testado contra Neo4j efêmero | `who_consumes` usa `normalize_path`; as 11 ferramentas com teste de integração |
-| 9 | docstring gerada; o laço do corpus pelo `corpus.sh` | a soma dos tempos por repo em ≤ 60 % da do passo 0 |
-| 10 | Revisão geral dos comentários e docstrings (arquitetura, item 11), no código, nos testes e nas fixtures; troca dos nomes de projeto | nenhuma referência a docs nem a nome de projeto no código, verificado por teste; os comentários que ficaram dizem um porquê |
-| 11 | Docs: ADR-003 atualizado (ou ADR novo: reconhecedores, catálogo, serviço de tipos); `indexer-evolution.md` §2, §5 e §7 | o guia descreve o código como ele ficou; o relatório de metas no CI mostra zero funções e zero módulos fora (o bloqueio liga quando o autor decidir, H5-D3) |
+| 0 | Baseline: freeze `v2-baseline-N` and the hold-out; measure alone (with no other load) the corpus time and the profile of 4 repos (mattermost, vikunja, umbraco, ghost); in CI, a report (not blocking) of `ruff C901` with `max-complexity = 9` and of modules above 300 lines | the numbers recorded in `corpus-report.md` (an "H5 baseline" section), with the count of functions and modules off target |
+| 1 | A unit test net: a case table for `normalize_path`/`mask_placeholders`/`path_key` (each regex with a case, and the pairs whose order matters), `http_mounts`, `Scopes`, `path_of` | covers each rule of `paths.py`; mutating a regex breaks a named test |
+| 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
+| 3 | `FileIndex`: one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
+| 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
+| 5 | `TypeIndex`: one service for the micro resolver and HTTP; `struct_fields`/`_value_type`/`_router_class`/`_client_of`/`classes_named`/`_reaches_fast` start consulting it | a single implementation per language of "declared type"; `needs-resolver` is an answer of the service |
+| 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
+| 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
+| 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
+| 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
+| 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
+| 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target (blocking turns on when the author decides, H5-D3) |
 
-**Protocolo de regressão (todo passo):**
-1. testes verdes;
-2. corpus contra a baseline de partida: "0 repo(s) differ";
-3. hold-out idêntico;
-4. o tempo do passo, medido sozinho, não pior que o anterior, salvo justificativa.
+**Regression protocol (every step):**
+1. tests green;
+2. the corpus against the starting baseline: "0 repo(s) differ";
+3. the hold-out identical;
+4. the step's time, measured alone, no worse than the previous one, unless justified.
 
-Uma diferença no corpus é um defeito do passo, não um ganho. Se a refatoração revelar um bug real, ele é registrado,
-corrigido num commit separado, com caso de fixture, e entra na baseline por decisão explícita.
+A difference in the corpus is a defect of the step, not a gain. If the refactor reveals a real bug, it is recorded,
+fixed in a separate commit, with a fixture case, and goes into the baseline by explicit decision.
 
-## Decisões tomadas (2026-10-18, pelo autor)
+## Decisions made (2026-10-18, by the author)
 
-- **H5-D1, a ordem: tudo antes do SCIP.** Revista no mesmo dia: o autor quis dar ponto final ao H2 antes do H5.
-  1. fechar o F1.14 inteiro, na ordem registrada nele: o item 2 (Go), o router reatribuído do item 7, o item 5 (o
-     modelo: a mesma rota em dois apps), o item 3 (wrapper de cliente Python, só com fixture), o item 4 (TS/JS,
-     inteiro) e o hold-out novo, medido uma vez. O que ele mostrar vira um handoff à parte, sem reabrir o F1.14.
-     O código desses itens já nasce nas metas (H5-D3). *Feito 2026-10-18, sem o hold-out novo, que foi para o passo
-     4 (H2-D21);*
-  2. a fase 0a do H4 (reciclar os docs de trabalho);
-  3. fazer o H5, que absorve a parte de refatoração do item 7 (o catálogo e os limiares do `built_bundle`). A rede
-     de regressão é o corpus (`2026-10-18-v2-baseline-28`) e o hold-out de 3 repos (`2026-10-18-v2-holdout-26`),
-     idênticos a cada passo;
-  4. o hold-out novo, medido uma vez com o código do H5 e com o commit de antes dele, e o handoff do que ele
-     mostrar, já no formato de reconhecedores. Toda diferença entre os dois commits é regressão do H5, que se
-     corrige primeiro;
-  5. só então o SCIP (F1.1/F1.2).
+- **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
+  H5.
+  1. close the whole of F1.14, in the order recorded in it: item 2 (Go), item 7's reassigned router, item 5 (the
+     model: the same route in two apps), item 3 (Python client wrapper, fixture only), item 4 (TS/JS, all of it) and
+     the new hold-out, measured once. What it shows becomes a separate handoff, without reopening F1.14. The code of
+     those items meets the targets from the start (H5-D3). *Done on 2026-10-18, without the new hold-out, which went
+     to step 4 (H2-D21);*
+  2. H4 phase 0a (recycling the working docs). *Done on 2026-10-19 (PR #6);*
+  3. do H5, which absorbs the refactoring part of item 7 (the catalog and the `built_bundle` thresholds). The
+     regression net is the corpus (`2026-10-18-v2-baseline-28`) and the 3-repo hold-out (`2026-10-18-v2-holdout-26`),
+     identical at every step;
+  4. the new hold-out, measured once with H5's code and with the commit before it, and the handoff of what it shows,
+     already in the recognizer format. Any difference between the two commits is an H5 regression, which is fixed
+     first;
+  5. only then SCIP (F1.1/F1.2).
 
-  O P2 (o indexador em repo próprio) também vem antes do SCIP, depois do H5, para levar o código já limpo. A
-  posição exata dele fica a confirmar com o autor.
-- **H5-D2, o catálogo é YAML** (arquitetura, item 6), com esquema validado e teste, no mesmo formato em que as
-  convenções já são escritas.
-- **H5-D3, as metas são complexidade ≤ 9 e módulos ≤ 300 linhas.** Durante o H5, o CI só relata, sem bloquear. A
-  intenção é que vire bloqueio; quem liga é o autor, quando o código inteiro cumprir as metas.
-- **H5-D4, uma revisão geral dos comentários** (arquitetura, item 11; passo 10): fica só o estritamente pertinente,
-  sem referência a docs, porque os docs ainda vão ser reorganizados, e sem nome de projeto. Os nomes privados que
-  estavam nos docs (um serviço no log do ROADMAP, uma variável de ambiente no `H2-public-corpus.md`) foram trocados
-  em 2026-10-18. O comentário de `core/model.py` que citava um serviço privado também foi trocado no mesmo dia.
-- **H5-D5, o escopo inclui o MCP** (passo 8). O `cli.py` fica para quando o P2 mexer nele.
+  P2 (the indexer in its own repo) also comes before SCIP, after H5, to take the already clean code. Its exact
+  position is to be confirmed with the author.
+- **H5-D2, the catalog is YAML** (architecture, item 6), with a validated schema and a test, in the same format the
+  conventions are already written in.
+- **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
+  intent is for it to become blocking; the author turns it on, when the whole code meets the targets.
+- **H5-D4, a general review of the comments** (architecture, item 11; step 10): only what is strictly pertinent
+  stays, with no reference to docs, because the docs are still going to be reorganized, and with no project name.
+  The private names that were in the docs (a service in the ROADMAP log, an environment variable in
+  `H2-public-corpus.md`) were replaced on 2026-10-18. The `core/model.py` comment that named a private service was
+  replaced the same day.
+- **H5-D5, the scope includes the MCP** (step 8). `cli.py` waits until P2 touches it.
 
-## Armadilhas
+## Pitfalls
 
-- **`python -m` dentro da imagem roda o código da imagem.** O `WORKDIR` dela é `/app`, onde está o pacote. Com `-m`
-  (`-m cProfile`, `-m aidd_indexer.cli`), o diretório de trabalho entra no `sys.path` antes do `PYTHONPATH`, e o código
-  montado em `/src` não roda. Use `-w /src`, e confira na primeira linha do log a versão ou o caminho do pacote.
-  Isso custou um dry-run na validação do PR #5 e dois perfis no passo 3. O `corpus.sh` e o `test.sh` não têm o
-  problema: o primeiro roda por caminho de script e o segundo já usa `-w /src`.
-- **Identidade de nó do tree-sitter.** `node.child_by_field_name(..)` cria um objeto novo a cada chamada, então
-  `a is b` é sempre falso. Compare por `node.id`, que vale dentro de uma árvore. Isso custou uma depuração no
-  item 2 do F1.14.
-- **A ordem das regex em `normalize_path` é semântica.** Exemplos: o `:x?` opcional antes do corte da query, a
-  restrição do Hono antes do `?`. Mova uma regex só com o teste unitário do passo 1 no lugar.
-- **Estado por arquivo × por repo.** Os scanners são por arquivo, e o `compose` é por repo. Um índice ou cache que
-  sobreviva ao arquivo vaza memória e mistura ids de nó de árvores diferentes.
-- **Medir desempenho com o corpus rodando ao lado** distorce o perfil. Meça sozinho, três vezes, e use a mediana.
-- **Não edite o código do indexer com uma rodada do corpus em andamento**, porque ela importa os módulos.
-- **Refatorar e mudar regra no mesmo commit** apaga a rede: o "0 repos differ" deixa de provar alguma coisa.
-- **O prefixo próprio de um grupo global é um fato do router, não da aresta.** Um grupo que outros arquivos nomeiam
-  (variável de pacote, router devolvido, parâmetro) publica o próprio prefixo (`go.mount.own`), e o `compose` o põe
-  depois do prefixo de cada cadeia que chega ao router. Pendurá-lo nas arestas do arquivo que o define, como era até
-  2026-10-18, perdia o prefixo quando a reatribuição (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`) dava
-  só uma aresta do router para ele mesmo, e quando outro arquivo montava o router. A fixture
-  `route-patterns-go` (`internal/reassigned/`) cobre os dois casos.
+- **`python -m` inside the image runs the image's code.** Its `WORKDIR` is `/app`, where the package is. With `-m`
+  (`-m cProfile`, `-m aidd_indexer.cli`), the working directory enters `sys.path` before `PYTHONPATH`, and the code
+  mounted at `/src` does not run. Use `-w /src`, and check the version or the package path on the log's first line.
+  That cost a dry-run in PR #5's validation and two profiles in step 3. `corpus.sh` and `test.sh` do not have the
+  problem: the first runs by script path and the second already uses `-w /src`.
+- **tree-sitter node identity.** `node.child_by_field_name(..)` creates a new object on every call, so `a is b` is
+  always false. Compare by `node.id`, which holds within one tree. That cost a debugging session in F1.14 item 2.
+- **The order of the regexes in `normalize_path` is semantic.** Examples: the optional `:x?` before cutting the query,
+  Hono's constraint before the `?`. Move a regex only with step 1's unit test in place.
+- **Per-file × per-repo state.** The scanners are per file, and `compose` is per repo. An index or cache that outlives
+  the file leaks memory and mixes node ids from different trees.
+- **Measuring performance with the corpus running alongside** distorts the profile. Measure alone, three times, and
+  use the median.
+- **Don't edit the indexer's code with a corpus run in progress**, because it imports the modules.
+- **Refactoring and changing a rule in the same commit** erases the net: "0 repos differ" stops proving anything.
+- **A global group's own prefix is a fact of the router, not of the edge.** A group that other files name (a package
+  variable, a returned router, a parameter) publishes its own prefix (`go.mount.own`), and `compose` puts it after
+  the prefix of each chain that reaches the router. Hanging it on the edges of the file that defines it, as it was
+  until 2026-10-18, lost the prefix when the reassignment (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`)
+  gave only an edge from the router to itself, and when another file mounted the router. The `route-patterns-go`
+  fixture (`internal/reassigned/`) covers both cases.
 
-## Restrições e convenções
+## Constraints and conventions
 
-As do H2:
-- **Commits:** uma linha convencional, sem corpo e sem `Co-Authored-By`.
-- **Idioma:** código, commits e relatório do corpus em inglês; ROADMAP, guia e handoffs em português.
-- **Privacidade:** nenhum nome de tenant ou de projeto privado nos docs, no código, nos testes ou nas fixtures.
-- **Parser:** LLM nunca é parser.
-- **Temporários:** no scratchpad da sessão.
-- **Repos do corpus:** não rodar Python dentro dos clones; usar `python -I`, ou o Docker com os mounts do guia.
-- **Prioridade do portfólio:** .NET primeiro, depois Go e Python, depois TS. Ela orienta a ordem do passo 6.
+H2's:
+- **Commits:** one conventional line, with no body and no `Co-Authored-By`.
+- **Language:** everything in the repo is in English: code, commits, PRs and docs (H4-D1).
+- **Privacy:** no tenant or private project name in the docs, the code, the tests or the fixtures.
+- **Parser:** an LLM is never the parser.
+- **Temporary files:** in the session's scratchpad.
+- **Corpus repos:** do not run Python inside the clones; use `python -I`, or Docker with the guide's mounts.
+- **Portfolio priority:** .NET first, then Go and Python, then TS. It guides the order of step 6.
 
-## Entregáveis esperados
+## Expected deliverables
 
-- O código nos módulos da arquitetura-alvo, com o corpus e o hold-out idênticos à baseline de partida.
-- Os testes unitários novos (`paths`, `mounts`, `scopes`, `expr`, um por reconhecedor) e o teste de integração do
-  MCP contra Neo4j.
-- No CI, o relatório de `ruff C901` (`max-complexity = 9`) e de módulos acima de 300 linhas, zerado, ainda sem
-  bloquear (H5-D3).
-- No `corpus-report.md`, uma seção "H5" com tempos antes e depois, os perfis e as métricas de forma antes e depois.
-- ADR-003 atualizado, ou um ADR novo, e o `indexer-evolution.md` (§2, §5, §7) descrevendo o código novo.
-- No ROADMAP: o item do H5 marcado, e o SCIP (F1.1/F1.2) com a costura do `TypeIndex` pronta.
+- The code in the target architecture's modules, with the corpus and the hold-out identical to the starting
+  baseline.
+- The new unit tests (`paths`, `mounts`, `scopes`, `expr`, one per recognizer) and the MCP's integration test against
+  Neo4j.
+- In CI, the report of `ruff C901` (`max-complexity = 9`) and of modules above 300 lines, at zero, still not blocking
+  (H5-D3).
+- In `corpus-report.md`, an "H5" section with times before and after, the profiles and the shape metrics before and
+  after.
+- ADR-003 updated, or a new ADR, and `indexer-evolution.md` (§2, §5, §7) describing the new code.
+- In the ROADMAP: the H5 item checked, and SCIP (F1.1/F1.2) with the `TypeIndex` seam ready.

@@ -140,5 +140,5 @@ The full text is in the ROADMAP, under "Principles".
 - **Corpus repos belong to third parties:** never run their code. Read and measure through the indexer's container.
 - **Long commands** (corpus, refresh) run in the background. Don't edit the indexer or the expected lists during a
   corpus run, because the code is mounted in the containers.
-- **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). Two docs are still in Portuguese
-  until they are rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b) and the H5 handoff.
+- **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). One doc is still in Portuguese
+  until it is rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b).
