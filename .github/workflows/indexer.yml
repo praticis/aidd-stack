@@ -75,6 +75,8 @@ jobs:
     timeout-minutes: 150
     env:
       BASE: ${{ needs.changes.outputs.base }}
+      # mattermost peaked at 2.8 GiB on a runner, close to the default 3g; three of these fit in its 16 GB
+      AIDD_CORPUS_MEMORY: 4g
     steps:
       - uses: actions/checkout@v7
         with:
