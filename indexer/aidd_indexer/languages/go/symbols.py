@@ -14,6 +14,7 @@ from tree_sitter import Node
 from ...core import ids
 from ...core.config import is_test_path
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
+from ...tree import NodeCache
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .http import GoScanner
 
@@ -60,42 +61,55 @@ def _declared_type(name: str, scope: Node, src: bytes, before: int) -> str | Non
             if any(node_text(nm, src) == name for nm in names):
                 return _type_text(typ, src)
     best: str | None = None
-    for d in walk(scope):
-        if d.start_byte >= before:
+    for start, value in _DECLARATIONS.get(scope, src).get(name, ()):
+        if start >= before:
             break
-        if d.type == "short_var_declaration":
-            left, right = d.child_by_field_name("left"), d.child_by_field_name("right")
-            if left is None or right is None:
-                continue
-            lefts = [c for c in left.children if c.is_named]
-            rights = [c for c in right.children if c.is_named]
-            for i, l in enumerate(lefts):
-                if node_text(l, src) != name:
-                    continue
-                if i >= len(rights):
-                    if len(rights) == 1 and rights[0].type == "call_expression":
-                        r = rights[0]                                     # multi-value call
-                    else:
-                        continue
-                else:
-                    r = rights[i]
-                if r.type == "unary_expression":                                  # &T{...}
-                    r = next((c for c in r.children if c.is_named), r)
-                if r.type == "composite_literal":
-                    best = _type_text(r.child_by_field_name("type"), src)
-                elif r.type == "call_expression":
-                    fn = r.child_by_field_name("function")
-                    if fn is not None and fn.type in ("identifier", "selector_expression"):
-                        # `uc, repo := setup(t)`: one call, several results → remember which one
-                        best = "call:" + node_text(fn, src) + (f"#{i}" if len(lefts) > 1 and len(rights) == 1 else "")
-                else:
-                    best = None
-        elif d.type == "var_spec":
-            names = [c for c in d.children if c.type == "identifier"]
-            typ = d.child_by_field_name("type")
-            if any(node_text(nm, src) == name for nm in names) and typ is not None:
-                best = _type_text(typ, src)
+        best = value
     return best
+
+
+def _declarations(scope: Node, src: bytes) -> dict[str, list[tuple[int, str | None]]]:
+    """name → (where, the type it gets there) for each `x := ..` and `var x T` under `scope`, function literals
+    included, in document order. A declaration whose value is not a type the code shows gives None: it hides an
+    earlier one."""
+    out: dict[str, list[tuple[int, str | None]]] = {}
+    for d in walk(scope):
+        if d.type == "short_var_declaration":
+            for name, value in _short_var_types(d, src):
+                out.setdefault(name, []).append((d.start_byte, value))
+        elif d.type == "var_spec" and d.child_by_field_name("type") is not None:
+            typ = _type_text(d.child_by_field_name("type"), src)
+            for nm in (c for c in d.children if c.type == "identifier"):
+                out.setdefault(node_text(nm, src), []).append((d.start_byte, typ))
+    return out
+
+
+def _short_var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
+    """(name, type) for each name `x := ..` declares and types: `T{}` / `&T{}`, `call:pkg.New` (with `#i` for one
+    result of a multi-value call), or None for any other value. A call through anything but a name gives nothing."""
+    left, right = d.child_by_field_name("left"), d.child_by_field_name("right")
+    if left is None or right is None:
+        return []
+    lefts = [c for c in left.children if c.is_named]
+    rights = [c for c in right.children if c.is_named]
+    out = []
+    for i, lft in enumerate(lefts):
+        r = rights[i] if i < len(rights) else rights[0] if len(rights) == 1 and rights[0].type == "call_expression" else None
+        if r is not None and r.type == "unary_expression":                     # &T{...}
+            r = next((c for c in r.children if c.is_named), r)
+        if r is None:
+            continue
+        if r.type == "composite_literal":
+            out.append((node_text(lft, src), _type_text(r.child_by_field_name("type"), src)))
+        elif r.type != "call_expression":
+            out.append((node_text(lft, src), None))
+        elif (fn := r.child_by_field_name("function")) is not None and fn.type in ("identifier", "selector_expression"):
+            many = f"#{i}" if len(lefts) > 1 and len(rights) == 1 else ""      # `uc, repo := setup(t)`
+            out.append((node_text(lft, src), "call:" + node_text(fn, src) + many))
+    return out
+
+
+_DECLARATIONS = NodeCache(_declarations)
 
 
 def _receiver(node: Node, src: bytes) -> str | None:
