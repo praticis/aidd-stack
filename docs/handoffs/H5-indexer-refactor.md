@@ -299,6 +299,11 @@ corrigido num commit separado, com caso de fixture, e entra na baseline por deci
 
 ## Armadilhas
 
+- **`python -m` dentro da imagem roda o código da imagem.** O `WORKDIR` dela é `/app`, onde está o pacote. Com `-m`
+  (`-m cProfile`, `-m aidd_indexer.cli`), o diretório de trabalho entra no `sys.path` antes do `PYTHONPATH`, e o código
+  montado em `/src` não roda. Use `-w /src`, e confira na primeira linha do log a versão ou o caminho do pacote.
+  Isso custou um dry-run na validação do PR #5 e dois perfis no passo 3. O `corpus.sh` e o `test.sh` não têm o
+  problema: o primeiro roda por caminho de script e o segundo já usa `-w /src`.
 - **Identidade de nó do tree-sitter.** `node.child_by_field_name(..)` cria um objeto novo a cada chamada, então
   `a is b` é sempre falso. Compare por `node.id`, que vale dentro de uma árvore. Isso custou uma depuração no
   item 2 do F1.14.

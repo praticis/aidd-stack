@@ -276,6 +276,7 @@ Each step must give `0 repo(s) differ` on both sets against the starting baselin
 | 0 | 0 differ / 0 differ | 1,449 s | the starting point |
 | 1 | no change to the code | — | 147 unit tests: `paths`, the mount graph, `Scopes`, `path_of`. Turning off any rule of `normalize_path` breaks a named case |
 | 2 | 0 differ / 0 differ | 944 s | `aidd_indexer/tree.py` with a cursor walk; the language registry loads on first use, so the import cycle is gone |
+| 3a | 0 differ / 0 differ | 780 s | Go's declared type and C#'s local type answer from an index of each function's declarations, built in one pass (`NodeCache`), instead of walking the function for every question |
 
 Two notes on step 2:
 
@@ -283,3 +284,13 @@ Two notes on step 2:
   went from 2.67 s to 1.08 s, finding the same calls.
 - **Timing noise.** Between two runs of the same code, the summed time moved by 28 %. The corpus time alone does not
   isolate a step, which is why the walk was benchmarked on the same trees.
+
+Profiles after step 3a, against step 0. These use cProfile, and their shares are comparable:
+
+| Repository | Total | Own time in `walk` | What changed |
+|---|---|---|---|
+| vikunja | 99 → 61 s (−39 %) | 37 → 18 % | — |
+| mattermost | 426 → 189 s (−56 %) | 41 → 19 % | Go's `_declared_type`: 215 s cumulative before, 12 s for the index now |
+
+Step 3's criterion is met on vikunja: the walk is below 20 %.
+

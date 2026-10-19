@@ -17,6 +17,7 @@ from tree_sitter import Node
 from ...core.config import is_test_path
 from ...core.dispatch import DispatchRule
 from ...core.model import FileInfo
+from ...tree import NodeCache
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .http import CsScanner
 
@@ -626,24 +627,33 @@ def _local_type(name: str, scope: Node, src: bytes, before: int, prefer_new: boo
                 if nm is not None and node_text(nm, src) == name:
                     return _type_text(prm.child_by_field_name("type"), src)
     best = None
-    for d in walk(scope):
-        if d.start_byte >= before:
+    for start, ty, v, nm in _LOCALS.get(scope, src).get(name, ()):
+        if start >= before:
             break
+        tt = _type_text(ty, src)
+        if tt is None or prefer_new:
+            init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
+            made = (_new_type(init, src) or _service_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
+            tt = made or tt
+        best = tt
+    return best
+
+
+def _locals(scope: Node, src: bytes) -> dict[str, list[tuple[int, Node | None, Node, Node]]]:
+    """name → (where, its declared type, the declarator, the name) of each local declared under `scope`, in document
+    order."""
+    out: dict[str, list[tuple[int, Node | None, Node, Node]]] = {}
+    for d in walk(scope):
         if d.type == "variable_declaration" and d.parent is not None and d.parent.type == "local_declaration_statement":
             ty = d.child_by_field_name("type") or next((c for c in d.children if c.is_named), None)
-            for v in d.children:
-                if v.type != "variable_declarator":
-                    continue
+            for v in (c for c in d.children if c.type == "variable_declarator"):
                 nm = v.child_by_field_name("name") or next((c for c in v.children if c.type == "identifier"), None)
-                if nm is None or node_text(nm, src) != name:
-                    continue
-                tt = _type_text(ty, src)
-                if tt is None or prefer_new:
-                    init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-                    made = (_new_type(init, src) or _service_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
-                    tt = made or tt
-                best = tt
-    return best
+                if nm is not None:
+                    out.setdefault(node_text(nm, src), []).append((d.start_byte, ty, v, nm))
+    return out
+
+
+_LOCALS = NodeCache(_locals)
 
 
 def _ancestors(node: Node):
