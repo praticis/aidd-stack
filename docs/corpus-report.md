@@ -2178,7 +2178,9 @@ it.
   right now. The gabarito is the API list, so these routes are outside it.
 
 **Totals.** Go route recall over the list is 93.1% (1931/2074), from 92.9% (1927/2074). Precision over the list is
-98.9% (1926/1947), from 99.1% (1922/1939). The drop comes from vikunja's widened scope, not from the extractor. The
+98.9% (1926/1947), from 99.1% (1922/1939). The drop is vikunja's 4 migrator routes with `{param}` for the name:
+the extractor did not give them before, and the widened scope counts them (the PR #5 validation, scoring both
+sides with the same gabarito, showed it). The
 judged sample is at 93.1% (258/277), from 89.9% (249/277). C#, Python and TS/JS are unchanged.
 
 **Left.** kratos' `RouterAdmin` stays a limitation: its `/admin` is a field that only one of its constructors fills,

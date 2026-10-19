@@ -337,3 +337,50 @@ falsas e ligadas só pelo nome: `tasks.Add(..)` num `List<Task>` → `Rollup.Add
 **Lição de operação:** quando o extrator muda o que grava num campo que é chave de junção (`path_key`), todo
 leitor desse campo precisa da mesma regra, e não só o linker. O `test_mcp_protocol` usa um store falso e não
 executa Cypher, então quem prova a query são as perguntas douradas, rodadas contra o grafo.
+
+## Quinta rodada: a validação do PR #5 numa instalação ao vivo (2026-10-19, build `0.2.15+0377dbb62b98`)
+
+O que mudou desde a quarta rodada: o F1.14 (`feature/f114-close`, PR #5). Ele trouxe:
+
+- um endpoint por app num monorepo, com o `app` no nó e no id (indexer 0.2.15);
+- os wrappers de cliente do app em Python e em TS/JS;
+- as rotas Go por tipo declarado.
+
+A rodada foi parte de uma validação em duas fases antes do merge:
+
+- **offline:** corpus e hold-out do `main` contra a branch, a cadeia de baselines, os gabaritos e os testes;
+- **na instalação:** 3 tenants e 10 snapshots.
+
+As perguntas e uma chamada de cada uma das 11 tools foram gravadas em JSON, pelo HTTP do MCP, antes e depois da
+reinstalação. A comparação deixa de fora só os campos de tempo e de build.
+
+| Q | Resultado | Observação |
+|---|---|---|
+| Q1 `who_consumes`, em minúsculas e na caixa do código | ✅ o mesmo consumidor, `exact` | o endpoint ganha `app: ""` |
+| Q2 `http_map` | ✅ igual | o `linked_to` também traz o `app` |
+| Q3 mapa | ✅ igual nos 3 tenants | um par, `<svc-accrual>` → `<svc-transaction>`, `exact` |
+| Q4a e Q4b `impact_of` | ✅ iguais | — |
+| Q5 `ref_diff` (um repo TS, `develop` contra `master`) | ✅ agora com as 7 chamadas que só a `develop` faz, com o verbo certo | antes, 0: os wrappers do cliente do app escondiam as chamadas |
+
+**O que a rodada pegou.** Na primeira reinstalação, o repo TS ganhou 51 chamadas pelos wrappers do app, e 34 estavam
+erradas por dois defeitos:
+
+- as opções num local caíam no GET padrão;
+- a query entre parênteses virava `{param}`.
+
+A correção é o incremento 12 (`dfbc8d7`), com caso de fixture. Na segunda reinstalação, as 109 chamadas novas (51 e
+58 nas duas refs) batem com o dry-run e estão certas. O corpus não tinha essas formas. Só o código real as mostrou.
+
+**O resto do grafo.**
+
+- Fora do HTTP, ficaram idênticos antes e depois: símbolos, `CALLS`, `IMPORTS`, módulos, violações, `DEPENDS_ON`,
+  `CONSUMES` e `CALLED_FROM`.
+- No monorepo Go de amostra, 3 rotas que 3 serviços com `go.mod` próprio declaram viraram um endpoint por serviço:
+  são 8 endpoints, onde antes eram 3.
+- O nó órfão da rota antiga, em minúsculas, do par .NET foi removido.
+
+**Lição de operação.** `python -m aidd_indexer.cli` numa imagem com `WORKDIR=/app` roda o código da imagem, e não o
+montado por `PYTHONPATH`, porque o diretório de trabalho vem antes no `sys.path`.
+
+- O dry-run de comparação precisa de `-w` apontando para o código montado.
+- A versão impressa na primeira linha confirma qual código rodou.
