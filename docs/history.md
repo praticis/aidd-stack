@@ -115,5 +115,5 @@
   (H6-D1–D4). H5's steps 3, 5 and 6 are designed with it.
 - 2026-10-19: H6 step 0 measures the pipeline phase by phase. What it found:
   - the resolver was quadratic in Go and C#, taking 31–38 min on two repos. The HTTP corpus never runs it;
-  - an index built once (`perf/resolve-index`, from `main`) brings it to seconds;
+  - an index built once (PR #9, merged into `main`) brings it to seconds;
   - full dry-runs of `main`, H5 and the fix are identical on 12 repos, and that check joins H5's protocol.

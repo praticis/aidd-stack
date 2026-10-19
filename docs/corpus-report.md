@@ -328,7 +328,7 @@ included, with no change to the code:
 | grafana | 20,646 (16,580) | 7.5 | 11.1 | 72.7 (72.3–73.8) | 15.1 | 25.4 | 0.1 | 1,889 | 8.7 |
 
 - **Spread:** every phase measured three times varied less than 5 % between runs.
-- **"Resolve, with the index":** the branch `perf/resolve-index`, from `main` (see below).
+- **"Resolve, with the index":** PR #9, merged into `main` (see below).
 
 **Memory**, in MiB:
 
@@ -371,7 +371,7 @@ The live install's three mirrors that have history agree: a median of 0 to 2 fil
 1. **The resolver was the largest phase, by far.**
    - The cause: Go and C# looked types and package files up by scanning every file of the repo, once per call with a
      typed receiver, which is quadratic.
-   - The fix: an index built once (`perf/resolve-index`) brings the phase to 0.4–8.7 s.
+   - The fix: an index built once (PR #9) brings the phase to 0.4–8.7 s.
    - The check: full dry-runs of `main` and the branch, compared record by record on 12 repos, are identical. The
      repos are eshop, jellyfin, btcpayserver, umbraco, vikunja, gitea, mattermost, grafana, dispatch, netbox, ghost and
      outline.

@@ -20,8 +20,7 @@
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
-    - It found the resolver quadratic in Go and C#. The fix, an index built once, is on its own branch from `main`
-      (`perf/resolve-index`).
+    - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).

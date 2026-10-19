@@ -7,8 +7,8 @@
 >
 > **State (2026-10-19):** step 0 is measured (`corpus-report.md`, "H6 baseline").
 >
-> - **What it found:** the resolver was the largest phase by far, quadratic in Go and C#. An index built once, on its
->   own branch from `main` (`perf/resolve-index`), brings it to seconds, with full dry-runs identical on 12 repos.
+> - **What it found:** the resolver was the largest phase by far, quadratic in Go and C#. An index built once, merged into
+>   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.
 > - **Next:** step 1, the prototypes.
 >
 > H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
