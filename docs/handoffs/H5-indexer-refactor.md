@@ -34,13 +34,16 @@
 >   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
 >   - **Step 10, in part:** the comments without references to docs or project names, with a test that keeps it so.
 >     Reviewing what each comment says is still missing.
-> - **Next:**
->   - the rest of 3 and 4;
->   - 5 (`TypeIndex`);
+> - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed first: the extraction as a parallel
+>   map, a reduce and a per-file cache. Step 3's `FileIndex` becomes H6's per-file index, and steps 5 and 6 are
+>   designed against it (ADR-005, ADR-006). Then, built toward that design:
+>   - the rest of 4, and 7 (typed facts and `Pending`, serializable, with no tree node inside);
+>   - 5 (`TypeIndex`, built in the reduce);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
->   - 7 (typed `compose` and `Pending`);
 >   - the rest of 10;
 >   - 11 (docs).
+>
+>   Then H6 is plugged in.
 >
 > The author's decisions are under "Decisions made". The handoff was born from a review asked for in the middle of
 > the F1.14 close. After 24 rule commits since corpus v2, the extractor's code had functions of very high complexity,
@@ -270,7 +273,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 0 | Baseline: freeze `v2-baseline-N` and the hold-out; measure alone (with no other load) the corpus time and the profile of 4 repos (mattermost, vikunja, umbraco, ghost); in CI, a report (not blocking) of `ruff C901` with `max-complexity = 9` and of modules above 300 lines | the numbers recorded in `corpus-report.md` (an "H5 baseline" section), with the count of functions and modules off target |
 | 1 | A unit test net: a case table for `normalize_path`/`mask_placeholders`/`path_key` (each regex with a case, and the pairs whose order matters), `http_mounts`, `Scopes`, `path_of` | covers each rule of `paths.py`; mutating a regex breaks a named test |
 | 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
-| 3 | `FileIndex`: one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
+| 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
 | 5 | `TypeIndex`: one service for the micro resolver and HTTP; `struct_fields`/`_value_type`/`_router_class`/`_client_of`/`classes_named`/`_reaches_fast` start consulting it | a single implementation per language of "declared type"; `needs-resolver` is an answer of the service |
 | 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |

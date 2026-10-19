@@ -107,3 +107,9 @@
 
 - 2026-10-19: H4 phase 0a: the working docs recycled (`AGENTS.md`, `history.md` and `decisions.md`), and every doc in
   English (H4-D1).
+
+## H5 and H6 (`feature/h5-refactor`, draft PR #7)
+
+- 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
+- 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
+  (H6-D1–D4). H5's steps 3, 5 and 6 are designed with it.

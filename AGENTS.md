@@ -111,11 +111,14 @@ The full text is in the ROADMAP, under "Principles".
   - Precision against the lists: 98–100 % in every language.
   - The numbers are in the corpus report.
 - **The order up to SCIP:**
-  1. H4 phase 0a (this recycling of the docs);
-  2. **H5**, the indexer refactor that changes no behavior (`docs/handoffs/H5-indexer-refactor.md`);
-  3. the new hold-out;
-  4. P2 (the indexer in its own repo);
-  5. SCIP (F1.1, F1.2).
+  1. design **H6**, the extraction as a parallel map, a reduce and a per-file cache
+     (`docs/handoffs/H6-extraction-pipeline.md`);
+  2. **H5**, the indexer refactor that changes no behavior, built toward H6's design
+     (`docs/handoffs/H5-indexer-refactor.md`);
+  3. plug H6 in;
+  4. the new hold-out;
+  5. P2 (the indexer in its own repo);
+  6. SCIP (F1.1, F1.2).
 - The current state is in the ROADMAP, under "Where we are".
 
 ## Where to find things
@@ -130,7 +133,7 @@ The full text is in the ROADMAP, under "Principles".
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
-| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H7; closed: H1, H2, reduced to summaries) |
+| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H6, H7; closed: H1, H2, reduced to summaries) |
 
 ## For contributors (people or agents)
 
