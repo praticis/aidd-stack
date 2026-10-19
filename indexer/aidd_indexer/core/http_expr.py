@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from tree_sitter import Node
 
-from ..languages.base import node_text as text, walk
+from ..tree import node_text as text, walk
 from .http_nodes import (APPEND_NODES, CALL_NODES, CLASS_NODES, CONCAT_NODES, NAME_NODES, OBJECT_NODES, STRING_NODES,
                          STRING_TEXT_NODES, INTERPOLATION_NODES, WRAPPED_ARG_NODES, has_interpolation)
 from .http_scope import END, in_function

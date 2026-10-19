@@ -26,7 +26,7 @@ from typing import NamedTuple
 
 from tree_sitter import Node
 
-from ..languages.base import node_text as text, walk  # noqa: F401 — walk is re-exported for the scanners
+from ..tree import node_text as text, walk  # noqa: F401 — walk is re-exported for the scanners
 from . import ids
 from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
 from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg, valid_path  # noqa: F401 — re-exported

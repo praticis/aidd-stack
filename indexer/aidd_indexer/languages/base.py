@@ -27,23 +27,11 @@ from typing import TYPE_CHECKING, Any, Callable
 from tree_sitter import Node
 
 from ..core.dispatch import DispatchRule
+from ..tree import node_text, walk  # noqa: F401  the language modules import them from here
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
     from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
-
-
-def node_text(node: Node, src: bytes) -> str:
-    return src[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
-
-
-def walk(node: Node):
-    """Pre-order traversal."""
-    stack = [node]
-    while stack:
-        n = stack.pop()
-        yield n
-        stack.extend(reversed(n.children))
 
 
 @dataclass

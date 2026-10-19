@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from tree_sitter import Node
 
-from ..languages.base import node_text as text
+from ..tree import node_text as text
 from .http_expr import valid_path
 from .http_nodes import CONCAT_NODES, INTERPOLATION_NODES, STRING_NODES, STRING_TEXT_NODES, has_interpolation
 from .paths import HTTP_METHODS, has_literal_segment, normalize_path, unquote

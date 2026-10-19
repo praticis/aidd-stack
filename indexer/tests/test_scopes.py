@@ -2,7 +2,6 @@
 
 from tree_sitter_language_pack import get_parser
 
-import aidd_indexer.languages  # noqa: F401  the package loads only from the language registry first
 from aidd_indexer.core.http_scope import END, Scopes, enclosing_function
 from aidd_indexer.languages.base import node_text, walk
 
