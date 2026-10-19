@@ -1,4 +1,4 @@
-"""Project knowledge service (docs/knowledge-contract.md): insight notes in the vault, their Qdrant
+"""Project knowledge service: insight notes in the vault, their Qdrant
 mirror, the project index's knowledge block, and the effective process policy.
 
     vault.py    files: names, frontmatter, owned blocks between `aidd:` markers, atomic writes

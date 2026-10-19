@@ -84,7 +84,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
             self.group_prefix[self.group_key(name, n)] = prefix
 
     def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
-        """`UserAPIRouter(prefix="/recipes")` (mealie): a class of the repo whose bases reach the framework's router —
+        """`UserAPIRouter(prefix="/recipes")`: a class of the repo whose bases reach the framework's router —
         (that class, what the first `__init__` up the bases makes of the prefix: `package_facts._init_prefix`). The class
         is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
         it, its own directory's, else the one class of that name in the repo."""
@@ -159,7 +159,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
                               router=recv)
 
     def _maybe_test_client(self, target: Node | None, value: Node | None) -> None:
-        """`TestClient(app)` / `app.test_client()` / Django's `Client()` (`from django.test import Client`, zulip's
+        """`TestClient(app)` / `app.test_client()` / Django's `Client()` (`from django.test import Client`, in
         development views): requests through it exercise this app, they are not outbound."""
         if target is None or value is None or value.type != "call":
             return
@@ -282,7 +282,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
 
     # -- routers other files name: module variables, router parameters, returned routers ----------------------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:
-        """`from dispatch.tag.views import router as tag_router` → tag_router: ("dispatch.tag.views", "router");
+        """`from app.tag.views import router as tag_router` → tag_router: ("app.tag.views", "router");
         `from . import users` → users: (".", "users"); `import a.b as c` → c: ("a.b", None)."""
         out: dict[str, tuple[str, str | None]] = {}
         for n in walk(self.fx.tree.root_node):

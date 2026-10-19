@@ -5,7 +5,7 @@ closure's `r` is not the outer `r`. Scanners record an edge per mount (`app.use(
 `r.Mount("/x", sub)`, `include_router(r, prefix=...)`; a group variable gets one with an empty prefix to its
 parent) and each route registered on a router.
 
-Across files the graph is composed from per-file summaries, never from the trees of other files (F1.13). A router
+Across files the graph is composed from per-file summaries, never from the trees of other files. A router
 another file can name has a global id (`global_of`, per language): a module-level variable (`var:<unit>:<name>`),
 the router a function returns (`ret:<unit>:<function>`), a function's router parameter (`param:<unit>:<function>:<i>`)
 or a struct field (`field:<unit>:<path>`); the unit is the file, or the package directory in Go. At the end of a

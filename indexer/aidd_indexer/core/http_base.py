@@ -1,7 +1,7 @@
 """Shared machinery for the per-language HTTP scanners (`languages/<lang>/http.py`).
 
 A language scanner walks its tree and decides which calls are route registrations and which are outbound
-requests — see `docs/indexer-evolution.md` for the rules table. `BaseScanner` gives it the rest:
+requests. `BaseScanner` gives it the rest:
 
 - expressions → path templates and methods (`path_of`, `method_from_args`: `http_expr.PathExpressions`), over the
   file's name bindings (`http_scope.Scopes`) and the directory's constants (`PackageContext`);
@@ -82,7 +82,7 @@ class HttpResult:
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     calls: list[HttpCallInfo] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
-    # The per-file summaries composed after the scan — data only, never trees (F1.13): what a file publishes for the
+    # The per-file summaries composed after the scan — data only, never trees: what a file publishes for the
     # others (`facts[kind][name]` → one entry per declaration) and the routes waiting on them.
     facts: dict[str, dict[str, list]] = field(default_factory=dict)
     pending: list[Pending] = field(default_factory=list)
@@ -112,7 +112,7 @@ class Region(NamedTuple):
     """A call that scopes the routes registered inside one of its closures (`BaseScanner.region_of`)."""
     outer: str              # the router the call is made on
     prefix: str             # what the closure's routes live under
-    same_router: bool       # a registration on `outer` itself counts (gitea `m.Group("/x", func() { m.Get(..) })`)
+    same_router: bool       # a registration on `outer` itself counts (`m.Group("/x", func() { m.Get(..) })`)
 
 
 # ------------------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ class PackageContext:
 
     def client_base(self, path: str, name: str, _depth: int = 0) -> str | None:
         """The base path the client `name` of the file `path` puts before its requests' paths (`client_bases`):
-        docmost's `axios.create({ baseURL: "/api" })`, outline's `new ApiClient()` with `this.baseUrl =
+        `axios.create({ baseURL: "/api" })`, a `new ApiClient()` with `this.baseUrl =
         options.baseUrl || "/api"`. Only a path: a base URL's host is the linker's (`target_hint`)."""
         v = self.client_bases.get((path, name))
         if v is None or _depth > 3 or (path, name) in self.client_rewritten:
@@ -353,7 +353,7 @@ class BaseScanner(PathExpressions):
 
     def group_key(self, name: str, at: Node) -> RouterKey:
         """A group variable is the one the function around `at` binds: a parameter named like another function's group
-        is another router (vikunja `a := e.Group("/api/v1"); registerAPIRoutes(a)`, whose `a` takes the prefix from the
+        is another router (`a := e.Group("/api/v1"); registerAPIRoutes(a)`, whose `a` takes the prefix from the
         call). A field or an expression (`api.BaseRoutes.Users`, `g.Group("/x").Use(mw)`) is the file's."""
         return (self.scopes.binding_scope(name, at) if IDENTIFIER.match(name) else 0), name
 
@@ -540,7 +540,7 @@ class BaseScanner(PathExpressions):
         return None
 
     def route_chain(self, n: Node, builders: set[str], verbs: dict[str, str]) -> tuple[str, Node, Node] | None:
-        """A verb of a route chain — gitea `m.Combo("/x").Get(h).Put(h)`, express `router.route('/x').get(h).post(h)`:
+        """A verb of a route chain — `m.Combo("/x").Get(h).Put(h)`, express `router.route('/x').get(h).post(h)`:
         every verb is a route on the builder's path. (the verb's method, the builder call, its receiver) when `n` is
         one, whatever verbs come between them; None otherwise."""
         obj, field = member(n.child_by_field_name("function"))

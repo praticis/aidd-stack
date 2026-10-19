@@ -30,7 +30,7 @@ from .config import ConfigError
 
 DEFAULT_POLICY = "/app/policy.yaml"
 
-# the topic vocabulary of insights (docs/knowledge-contract.md); `knowledge.topics` adds to it
+# the topic vocabulary of insights; `knowledge.topics` adds to it
 BUILTIN_TOPICS = ("architecture", "review", "quality", "security", "incident", "decision", "business")
 ADR_TRIGGERS = ("new-integration", "new-module", "new-dependency", "contract-change", "data-migration")
 

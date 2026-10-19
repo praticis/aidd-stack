@@ -1,5 +1,5 @@
 """Go: net/http (>= 1.22 method patterns), gorilla `.Methods()` and its route builder, chi, gin/echo (+Group), fiber
-routes, gitea's `Combo`; net/http / resty / PostJSON-like helpers outbound, with the path of a `url.URL` (`u.Path`),
+routes, `Combo` chains; net/http / resty / PostJSON-like helpers outbound, with the path of a `url.URL` (`u.Path`),
 go-kit's clients (`httptransport.NewClient`, the path in its request encoder) and the generated clients of
 openapi-generator (`prepareRequest`) and go-swagger (`runtime.ClientOperation`). Generated servers: grpc-gateway
 (`mux.Handle("GET", pattern_X, h)`, the path decoded from `runtime.NewPattern`) and go-swagger (`o.handlers["GET"]["/x"]`
@@ -25,14 +25,14 @@ from ...core.paths import HTTP_METHODS, VERB_BY_NAME, expand_alternatives, has_l
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
 # net/http, gorilla, chi, gin, echo, fiber. Exported only: an unexported method is the package's own, never a framework's
-# (vikunja `c.get("/api/projects", nil, out)` is its Planka client)
+# (`c.get("/api/projects", nil, out)` on an API client of the app)
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | {v for v in VERB_BY_NAME if v[0].isupper()} | set(GO_VERB_ALIASES)
 GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter", "WithPrefix"}         # prefix carriers
 # a call that returns its receiver under a prefix: `WithPrefix` is prometheus/common/route's
 GO_PREFIXED = {"Group", "WithPrefix"}
 GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
 GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
-GO_CHAIN_BUILDERS = {"Combo"}                                                             # gitea: m.Combo("/x").Get(h).Put(h)
+GO_CHAIN_BUILDERS = {"Combo"}                                                             # m.Combo("/x").Get(h).Put(h)
 GO_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options")}
 GORILLA_LINKS = {"Methods", "Path", "PathPrefix", "Name", "Queries", "Headers", "HeadersRegexp", "Schemes", "Host",
                  "NewRoute"}                                                              # r.Methods("GET").Path("/x").Handler(h)
@@ -73,7 +73,7 @@ class GoScanner(GoPaths, BaseScanner):
         right = n.child_by_field_name("right") or n.child_by_field_name("value")
         typ = n.child_by_field_name("type") if n.type == "var_spec" else None
         if right is None and typ is not None and ROUTER_TYPE.search(text(typ, self.src)) and not in_function(n):
-            for c in (c for c in n.children if c.type == "identifier"):   # photoprism `var APIv1 *gin.RouterGroup`, that
+            for c in (c for c in n.children if c.type == "identifier"):   # `var APIv1 *gin.RouterGroup`, that
                 self.router_vars.add(text(c, self.src))                    # another file of the package assigns
             return
         if left is None or right is None:
@@ -171,9 +171,9 @@ class GoScanner(GoPaths, BaseScanner):
             joined = None
             if self.echo and raw_first and not raw_first.startswith("/") and lit == "/" + raw_first:
                 pre = self.prefix_for(recv_last, n)         # echo joins `g.prefix + path` as written: u.GET("s") on
-                if pre:                                     # "/user" is /users (vikunja)
+                if pre:                                     # "/user" is /users
                     lit, joined = pre + raw_first, ""
-            # grpc-gateway / httprouter: mux.Handle("GET", pattern, h) — v2 writes `http.MethodGet` (memos)
+            # grpc-gateway / httprouter: mux.Handle("GET", pattern, h) — v2 writes `http.MethodGet`
             verb = self._method_value(first) if name == "Handle" and len(arg_nodes) >= 3 else None
             verb_first = verb is not None
             if verb_first:
@@ -223,7 +223,7 @@ class GoScanner(GoPaths, BaseScanner):
 
     def _match_verbs(self, n: Node) -> tuple[str, ...] | None:
         """The verbs of gin's `Match`: a `[]string{..}` written there, or a variable holding one — of the function, of
-        the package (another file: photoprism's `MethodsPutPost`) or of an imported package (`api.MethodsPutPost`)."""
+        the package (another file: `MethodsPutPost`) or of an imported package (`api.MethodsPutPost`)."""
         if n.type == "composite_literal":
             return verb_list(n, self.src)
         if n.type == "identifier":
@@ -239,7 +239,7 @@ class GoScanner(GoPaths, BaseScanner):
         return None
 
     def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
-        """gitea `m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of
+        """`m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of
         those verbs, even with a path this file cannot read."""
         chained = self.route_chain(n, GO_CHAIN_BUILDERS, GO_CHAIN_VERBS)
         if chained is None:
@@ -475,7 +475,7 @@ class GoScanner(GoPaths, BaseScanner):
         return base.rstrip("/") + p
 
     def region_of(self, call: Node, fn: Node) -> Region | None:
-        """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and gitea's
+        """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and
         `m.Group("/x", func() { m.Get(...) })` — the closure's routes live under the prefix."""
         callee = call.child_by_field_name("function")
         args = call.child_by_field_name("arguments")
@@ -546,7 +546,7 @@ class GoScanner(GoPaths, BaseScanner):
 
     # -- routers other files name: package variables, returned routers, router parameters, struct fields ---------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:
-        """`import apiv1 "gitea.dev/routers/api/v1"` → apiv1; without a name, the path's last element (a `/v2` is
+        """`import apiv1 "example.com/routers/api/v1"` → apiv1; without a name, the path's last element (a `/v2` is
         skipped)."""
         out: dict[str, tuple[str, str | None]] = {}
         for decl in self.fx.tree.root_node.children:
@@ -587,7 +587,7 @@ class GoScanner(GoPaths, BaseScanner):
 
     def _function_name(self, fn: Node) -> str | None:
         """`Routes`, or `todosResource.Routes` for a method: two types of a package may both have a `Routes`. A closure
-        assigned to a variable is called by that name (gitea's `addActionsRoutes := func(m *web.Router, ...)`)."""
+        assigned to a variable is called by that name (`addActionsRoutes := func(m *web.Router, ...)`)."""
         if fn.type == "func_literal":
             decl = fn.parent.parent if fn.parent is not None and fn.parent.type == "expression_list" else fn.parent
             left = decl.child_by_field_name("left") if decl is not None and decl.type in ("short_var_declaration",

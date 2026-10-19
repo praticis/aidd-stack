@@ -117,7 +117,7 @@ def verb_list(n: Node, src: bytes) -> tuple[str, ...] | None:
 
 
 def _query_choice(e: Node, src: bytes) -> bool:
-    """A conditional between nothing and a query string (open-webui `${query ? `?${query}` : ''}`)."""
+    """A conditional between nothing and a query string (`${query ? `?${query}` : ''}`)."""
     branches = [e.child_by_field_name(f) for f in ("consequence", "alternative")]
     if any(b is None or b.type not in STRING_NODES for b in branches):
         return False
@@ -125,8 +125,8 @@ def _query_choice(e: Node, src: bytes) -> bool:
     return texts[0] == "" and texts[1][:1] in ("?", "&")
 
 def template_parts(n: Node, src: bytes) -> list[tuple[str, str | None]] | None:
-    """A JS template built from constants — open-webui's `` `${WEBUI_BASE_URL}/api/v1` `` — as `A + "/x"` is:
-    [("ref", "WEBUI_BASE_URL"), ("lit", "/api/v1")]. A substitution that is not a name is a parameter
+    """A JS template built from constants — `` `${BASE_URL}/api/v1` `` — as `A + "/x"` is:
+    [("ref", "BASE_URL"), ("lit", "/api/v1")]. A substitution that is not a name is a parameter
     (`("ref", "")`); None without a literal part."""
     parts: list[tuple[str, str | None]] = []
     for c in n.named_children:
@@ -324,7 +324,7 @@ class PathExpressions:
         if raw.startswith("/") or is_url_literal(raw) or REL_PATH_LITERAL.match(raw) or (pattern and pattern.group(1) in HTTP_METHODS):
             return raw                                           # "PUT " + base + "/x" is a net/http 1.22 pattern
         if lenient and lead and _ONE_WORD.match(raw):
-            return "/" + raw                                     # base + 'message' (gotify)
+            return "/" + raw                                     # base + 'message'
         return ("/" + raw) if lenient and "/" in raw and not raw.startswith("{") else None
 
     def _path_of_call(self, n: Node, lenient: bool, _depth: int) -> str | None:
@@ -502,8 +502,8 @@ class PathExpressions:
         - a local variable holding a path, read as in a concatenation (`url = `${url}?notify=true``);
         - a constant of the module or class holding a path, at the start of whole segments (`$"{baseUrl}items/{id}"`
           with `baseUrl = "api/catalog/"`, `$"{ApiUrlBase}/{orderId}"`) — but not in a generic wrapper, a template that
-          takes the rest of the path from a variable named like one (`${prefix}/${API_PATH}${path}`, alertmanager;
-          `${GHOST_URL}/ghost/api/admin/${endpoint}`): there the constant is only a base;
+          takes the rest of the path from a variable named like one (`${prefix}/${API_PATH}${path}`,
+          `${SITE_URL}/api/admin/${endpoint}`): there the constant is only a base;
         - a word (a local or a constant: `resource = "cases"`) standing for one whole segment (`/${resource}/${id}`);
         - a call that is a path (`CombineUri(base, "api/orders")`), as whole segments; C# `nameof(X)`: the text `X`."""
         starts, ends = whole
@@ -536,7 +536,7 @@ class PathExpressions:
 
     def _constant(self, n: Node) -> tuple[str, bool] | None:
         """(value, holds a path) of the module or class constant an identifier names — this class's own first, then the
-        directory's, then the import's (open-webui's `${WEBUI_API_BASE_URL}`, from `$lib/constants`); a name the
+        directory's, then the import's (`${API_BASE_URL}`, from `$lib/constants`); a name the
         directory defines twice is this file's."""
         name = text(n, self.src)
         if name.split(".")[0] in ("this", "self"):                 # `this.base`: this class's own

@@ -51,7 +51,7 @@ def _client_node(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
 
 
 def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
-    """A string member of a TS enum, known only as `Enum.Member` (immich `@Controller(RouteKey.Asset)`)."""
+    """A string member of a TS enum, known only as `Enum.Member` (`@Controller(RouteKey.Asset)`)."""
     decl = n.parent.parent if n.parent is not None else None
     enum = decl.child_by_field_name("name") if decl is not None and decl.type == "enum_declaration" else None
     kids = [c for c in n.children if c.is_named]
@@ -70,8 +70,8 @@ CLIENT_FACTORIES = frozenset({"create", "extend"})                   # axios.cre
 
 
 def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
-    """A module's client with a base (`PackageContext.client_bases`): `const api = axios.create({ baseURL: "/api" })`
-    (docmost), `ky.extend({ prefixUrl })`; `export const client = new ApiClient({ baseUrl: .. })`, whose class says
+    """A module's client with a base (`PackageContext.client_bases`): `const api = axios.create({ baseURL: "/api" })`,
+    `ky.extend({ prefixUrl })`; `export const client = new ApiClient({ baseUrl: .. })`, whose class says
     which option gives its base (`_ts_client_class`)."""
     name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
     while val is not None and val.type in ("await_expression", "as_expression", "parenthesized_expression",
@@ -96,7 +96,7 @@ def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
 
 
 def _ts_interceptor(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
-    """`api.interceptors.request.use(config => { config.url = `${org}${config.url}` })` (dispatch): the request's url
+    """`api.interceptors.request.use(config => { config.url = `${org}${config.url}` })`: the request's url
     or base is rewritten at runtime, so the client's base is not all that goes before a path — none is applied."""
     fn, args = n.child_by_field_name("function"), n.child_by_field_name("arguments")
     m = re.fullmatch(r"([A-Za-z_$][\w$]*)\.interceptors\.request\.use", text(fn, src)) if fn is not None else None
@@ -110,7 +110,7 @@ def _ts_interceptor(n: Node, src: bytes, ctx: "PackageContext", path: str) -> No
 
 def _ts_client_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
     """A class whose base is a field: `baseUrl = "/api"`, or the constructor's `this.baseUrl = options.baseUrl ||
-    "/api"` (outline's ApiClient) — the option that gives it (`baseUrl`) and its default."""
+    "/api"` (an `ApiClient`) — the option that gives it (`baseUrl`) and its default."""
     cname, body = n.child_by_field_name("name"), n.child_by_field_name("body")
     if cname is None or body is None:
         return

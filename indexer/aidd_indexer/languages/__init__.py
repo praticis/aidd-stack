@@ -1,4 +1,4 @@
-"""Language registry (ADR-003).
+"""Language registry.
 
 Adding a language: create `languages/<lang>/` with `queries.scm`, `symbols.py` (a `LanguageSupport`
 subclass exported as `LANGUAGES`) and optionally `http.py`, then add the module name to `_MODULES`.
