@@ -90,8 +90,9 @@ The full text is in the ROADMAP, under "Principles".
   - it runs the tests, the corpus, the hold-out and the micro set against `main`;
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
-  - the labels `refactor`, `holdout-measurement` and `graph-change` change what passes. After adding one, re-run the
-    `gates` job;
+  - a refactor (a branch `refact/…` or `refactor/…`, or a commit `refactor:` or `refact:`) must change nothing;
+  - the labels `holdout-measurement` and `graph-change` allow, after judgment, a hold-out measurement and a change to
+    the micro graph. After adding one, re-run the `gates` job;
   - the same gates run locally with `corpus.sh --label` on both sides and `gates.sh`.
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;

@@ -140,8 +140,11 @@ code from any fork's PR. So it has two parts:
   other PRs, so a PR never inherits another's diff.
 - **The baselines** are keyed by the tree of `indexer/` (the corpus) or of `aidd_indexer/` (the micro set), not by a
   commit. A commit that does not touch the code finds the same baseline.
-- **The labels:**
-  - `refactor`: any difference fails;
+- **A refactor**, where any difference fails, is read from the PR itself (the author's rule): its branch starts with
+  `refact/` or `refactor/`, or one of its commits starts with `refactor:` or `refact:`, with or without a scope. The
+  `refactor` label says the same. One refactor commit makes the whole PR strict, so a refactor and a change of behavior
+  go in separate PRs.
+- **The labels for decisions:**
   - `holdout-measurement`: the hold-out may change;
   - `graph-change`: a difference in the micro graph, judged at its source, passes.
 

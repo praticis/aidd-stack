@@ -5,8 +5,10 @@ name: indexer
 # requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes them: the
 # extraction is deterministic, so a baseline is derived data.
 #
-# Labels are read when the `gates` job runs, not from the event: after adding `refactor`, `holdout-measurement` or
-# `graph-change`, re-run that job alone. A run started by a label change would report skipped checks as passing.
+# A pull request is a refactor, where any difference fails, when its branch starts with `refact/` or `refactor/`, when
+# one of its commits starts with `refactor:` or `refact:` (with or without a scope), or under the `refactor` label.
+# Labels are read when the `gates` job runs, not from the event: after adding `holdout-measurement` or `graph-change`,
+# re-run that job alone. A run started by a label change would report skipped checks as passing.
 
 on:
   pull_request:
@@ -245,9 +247,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
+          # the branch's name is the PR author's text: it reaches the shell as data, never inside the script
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           labels=$(gh api "repos/${{ github.repository }}/issues/$PR/labels" --jq 'map(.name) | join(",")')
-          echo "labels: ${labels:-none}"
+          refactor=""
+          if [[ "$HEAD_REF" =~ ^refact(or)?/ ]]; then refactor="the branch's name"; fi
+          if gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
+               | grep -qE '^refact(or)?(\([^)]*\))?!?:'; then
+            refactor="${refactor:+$refactor and }a refactor commit"
+          fi
+          [ -z "$refactor" ] || labels="${labels:+$labels,}refactor"
+          echo "labels: ${labels:-none}; a refactor by ${refactor:-nothing}"
           in="$RUNNER_TEMP/in"
           mkdir -p "$AIDD_CORPUS_HOME/runs" && cp -r "$in/corpus/base" "$in/corpus/head" "$AIDD_CORPUS_HOME/runs/"
           set +e
