@@ -84,6 +84,16 @@ measurement (H6-D3):
 **C, a variant of B:** map 2 records which context entries it read (names and values), and its cache key includes a
 hash of them. That is how incremental compilers memoize. It makes map 2 cacheable at the cost of tracking reads.
 
+**D, B with coarse invalidation:** map 2's key includes a digest of the whole context it can read (its package's
+context and the repo-level view), not of the entries it read. It is correct by construction as long as map 2 receives
+nothing else, and it costs no read tracking. A change to one of the package's constants re-runs map 2 for the
+package's files (the fanout), and a change elsewhere does not. It is what Sorbet does on an edit (see "Prior art").
+
+**The resolve has the same question.** `resolve_calls` reads the repo's symbol table, so it is a reduce. A file's
+`CALLS` can be cached the same four ways: recomputed in the reduce (A), recomputed per file in parallel (B), keyed by
+the symbol table entries it read (C), or keyed by a digest of the symbol table, so that a push that changes no
+declaration only re-resolves the files it changed (D).
+
 **What to measure**, on a throwaway branch, on mattermost, vikunja, umbraco and ghost (the H5 profile set):
 
 - the time to parse alone, per repo: the price of B's second parse;
@@ -92,6 +102,23 @@ hash of them. That is how incremental compilers memoize. It makes map 2 cacheabl
 - the peak memory of each;
 - the size of the summaries (A's are larger);
 - how many lines of scanner code each one changes.
+
+## Prior art
+
+Researched on 2026-10-19: systems that partition code indexing, run it in parallel, or make it incremental.
+
+| System | What it does | What it says about H6 |
+|---|---|---|
+| [GitHub's stack graphs](https://github.blog/open-source/introducing-stack-graphs) (precise code navigation) | Each file is analyzed alone, with tree-sitter, into a partial graph. References are not resolved at index time; at query time, a path search stitches the graphs of a commit's files | Option A at GitHub's scale. The stated reason: re-analyzing a file's dependents on every change is quadratic in the changed files, and per-file isolation makes it linear, with unchanged files reused across commits |
+| [Sorbet](https://blog.jez.io/error-recovery-part-1/) (Stripe's Ruby type checker; [pipeline](https://github.com/sorbet/sorbet/blob/master/docs/namer-resolver-pipeline.md)) | Parallel per-file passes that touch no global state, one sequential step that enters the definitions into the global state, then parallel again with that state immutable and shared | Option B's shape. Sorbet tracks no dependencies: on an edit it checks whether global information changed. If not, it re-checks only the edited file; if so, it redoes everything except the cached parses. That is option D |
+| [Meta's Glean](https://engineering.fb.com/2024/12/19/developer-tools/glean-open-source-code-indexing/) | Indexing jobs in parallel; facts in immutable databases. Incremental cost is O(changes), bounded by the fanout (the files that depend on a changed one), computed per language. Databases stack: a layer adds facts to the ones below or hides them | The fanout is what B, C and D compute. Stacked layers fit refs (a branch as a layer over `main`) and F1.4's second half (writing only the difference) |
+| [Kythe](https://kythe.io/docs/schema/writing-an-indexer.html) (Google) | Per-compilation-unit indexers run in parallel; their entry streams are deduplicated and joined into serving tables | A map per unit, a dedup, a join |
+| [GitHub code search](https://github.blog/engineering/architecture-optimization/the-technology-behind-githubs-new-code-search/) (Blackbird) | Shards by git blob id, so content duplicated across repos and branches is stored once; Kafka between the ingest services | A cache keyed by content; a queue between services, not inside one job |
+| [Bazel's remote cache](https://blog.engflow.com/2024/05/13/the-many-caches-of-bazel/) (used by [Uber's Go monorepo](https://www.uber.com/blog/go-monorepo-bazel/)) | An action's key is a digest of every declared input (content, command, environment, tools); outputs go to a content-addressed store; misses come from undeclared inputs | H6's cache key. The pitfall "anything the map reads that is not in the key" is Bazel's hermeticity |
+| rustc's incremental compilation and [Salsa](https://rust.googlesource.com/rust/+/f095de4bf105e92b035a7cd64c34bcce56b7cb78/src/tools/rust-analyzer/docs/dev/guide.md) (rust-analyzer) | Memoized pure queries, each with the dependencies it read; a query whose inputs did not change is reused without running ("red-green") | Option C. rust-analyzer only announced persistent caches in 2025: recording dependencies is the costly part |
+
+No public material on code indexing was found from Spotify or YouTube. Uber's is the Go monorepo on Bazel with a
+remote cache. Spotify's Backstage is a catalog (F2), not an indexer.
 
 ## Open question 2 — what runs the map
 
@@ -169,6 +196,15 @@ H5 builds pieces with H6's shape:
   that option B or C gives. ADR-006 records the contract and the catalog.
 - **H5's step 3** (`FileIndex`) becomes the per-file index inside the worker. It lives as long as the file, which
   answers the memory concern that stopped it.
+
+## How it is measured
+
+- Each measurement runs alone on the machine, one container per run, at least 3 runs interleaved across the repos so
+  that a slow moment does not hit one repo only. The report gives the median and the range (min–max).
+- Two options are compared only when their difference is larger than the run-to-run range. The corpus varies about
+  28 % between runs of the same code, so a small effect is measured with a microbenchmark on the same trees.
+- Correctness comes before speed: each prototype's output is compared with the baseline (`0 differ`), and a warm run
+  with a cold one.
 
 ## Steps
 
