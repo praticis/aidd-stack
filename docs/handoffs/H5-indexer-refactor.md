@@ -28,6 +28,8 @@
 >
 >     Faltam os fatos tipados no `PackageContext` (os campos por linguagem) e o catálogo de receptores do
 >     `http_base`, que é o passo 6.
+>   - **Passo 7, em parte:** os fatos e as pendências dos wrappers de cliente são `NamedTuple` (`WrapperShape`,
+>     `WrappedCall`), lidos por campo. Faltam os outros tipos de fato e de pendência.
 >   - **Passo 8:** o `core/matching.py`, o MCP dividido (`tools/list` byte a byte igual) e o Cypher testado contra um
 >     Neo4j real (`scripts/mcp-it.sh`, 14 casos).
 >   - **Passo 9:** a docstring sem números escritos à mão. O tempo somado está em 54 % do passo 0, dentro do ruído.

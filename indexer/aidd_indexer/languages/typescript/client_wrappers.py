@@ -13,7 +13,8 @@ from tree_sitter import Node
 from ...core.http_base import HttpResult, Pending, text, unwrap_arg, walk
 from ...core.http_nodes import CLASS_NODES, FUNCTION_SCOPES, member
 from ...core.http_scope import END
-from ...core.http_wrappers import FIELDS, PARAM, UNKNOWN, compose_wrapped_calls, continues_path, param_shape, verb_of
+from ...core.http_wrappers import (FIELDS, PARAM, UNKNOWN, WrappedCall, WrapperShape, compose_wrapped_calls,
+                                   continues_path, param_shape, verb_of)
 from ...core.paths import has_literal_segment, normalize_path, unquote
 
 WRAPPER = "ts.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
@@ -62,7 +63,7 @@ class TsClientWrappers:
                                                options, fallback)
         i, before, after = shape
         before = base.rstrip("/") + "/" + before.lstrip("/") if base and before[:1] in ("", "/") else before
-        data = (i, before, after, verb.upper() if verb else None, vi, tuple(params), default)
+        data = WrapperShape(i, before, after, verb.upper() if verb else None, vi, tuple(params), default)
         for key in keys:
             self.out.publish(WRAPPER, key, data)
         return True
@@ -187,7 +188,8 @@ class TsClientWrappers:
         values = tuple(self._value(unwrap_arg(a), params) for a in arg_nodes)
         if any(v not in (None, UNKNOWN) for v in values):
             item = self.call_info(n, None, "", text(fn, self.src))
-            self.out.pending.append(Pending(item, WRAPPER, (target, values, (), keys[0] if keys else None, tuple(params))))
+            self.out.pending.append(Pending(item, WRAPPER, WrappedCall(target, values, (), keys[0] if keys else None,
+                                                                      tuple(params))))
 
     def _value(self, a: Node, params: list[str]) -> str | tuple | None:
         """A verb, a literal path, the caller's parameter it is built around, an object's fields (also through a local:
