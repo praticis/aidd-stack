@@ -2304,3 +2304,126 @@ Neither gabarito covers these calls. open-webui's list is its TS client, and zul
 and recall over the lists are unchanged.
 
 New baseline: `2026-10-18-v2-baseline-26`.
+
+## F1.14, increment 11: the TS/JS item (2026-10-18)
+
+This increment does item 4, all of it: the app's own client wrappers, the router list mounted in a loop,
+`@fastify/autoload` and Next.js routes by file. The cases are in `route-patterns-ts` (`src/clients/wrappers/`,
+`src/listed/`, `src/autoload/`, and `app/api/ping/route.ts` as a counterexample) and in a new fixture,
+`route-patterns-next`. Each fails without its rule.
+
+**Client wrappers.** These are the Python rules, applied to TS/JS. The chains of wrappers now resolve in one place,
+`core/http_wrappers.py`, for both languages.
+
+- **What a wrapper is.** A function of the module, a `const X = (..) => ..`, a method of an object the module binds
+  or exports (argo-cd's `export default { get(url) { .. } }`), or a method of a class.
+- **Verb.** It comes from:
+  - the call's name;
+  - the `method` option, as written or from a parameter (`request(url, { method = 'GET' })`, gitea);
+  - or, for a `fetch` with no `method` in sight, the `method` of the options a parameter hands on (`fetch(url,
+    options)`, `this.getOptions(options)`, `{ ...options }`).
+
+  GET applies only when the caller gives none. The first run had read mattermost's `doFetch` and ghost's
+  `fetchWithEdgeChallenge` as GET, which is how this rule came about.
+- **Base.** The base of the client the inner call is made on goes before the path (outline's stores:
+  `client.post(endpoint)` on the `/api` client).
+- **The rest of the path.** A parameter right after a word or a placeholder (`${base}${path}`, `"/api/v1" + url`) is
+  the rest of the path, so the call inside is not an outbound call. After `/`, `.`, `-` or `=` it is part of one
+  segment. A first version also stopped at `.`, and lost outline's `` client.post(`/users.${action}`) ``.
+- **A path a function returns.** A call to a function of the file, or to a method of the class through `this`, is the
+  path it returns, with its parameters bound to the call's arguments. Examples: argo-cd's `apiRoot()` returning
+  `toAbsURL('/api/v1')`, and mattermost's `getUsersRoute()` returning `` `${this.getBaseRoute()}/users` ``.
+- **Class fields.** A class field with a literal is a constant (`urlVersion = '/api/v4'`).
+- **Unknown starts.** In a template, a first unknown interpolation is the base, as it already was in a concatenation.
+- **Library receivers.** A receiver imported from an HTTP client library is a client, whatever its name.
+
+**Two path rules the judging asked for.**
+
+- **A link read from the page.** In TS/JS, a path that starts with a link read from the page has no call. That is an
+  attribute, a `dataset` entry, a link's `pathname` or `href`, also through a local
+  (`${el.getAttribute('data-url')}/move`). gitea's runtime links had come out as `/move` and `/info`.
+
+  A stricter version was measured and dropped. It treated any field of a local or a parameter as a runtime value. It
+  removed 27 right calls of open-webui to external servers (`${baseUrl.replace(/\/$/, '')}/files/cwd`) and 2 of
+  ctfd (`CTFd.config.urlRoot + '/api/v1/files'`).
+- **A query string glued to the path.** At the end of a path, right after a word or a placeholder, the following are
+  the query, not the path: a call, a choice between nothing and a query, or a local holding one of them. Examples are
+  `/search${buildQueryString(p)}`, `/stats${param}` with `param = flag ? '' : '?x=1'`, and `let q = ''; if (..) q =
+  '?a=b'`. This holds in every language. C#, Go and Python do not move.
+
+**Routes.**
+
+- **Lists.** A mount that reads the fields of a loop's item, over a module array of object literals, is one mount per
+  element (`defaultRoutes.forEach((route) => router.use(route.path, route.route))`, `for (const r of ..)`).
+- **`@fastify/autoload`.** Every file under the `dir` is a plugin under its folders' path. The router its default
+  export receives is mounted where the `register` leads, with the `prefix` of the `options`. `x.register(plugin)`
+  with a plugin of the repo (`fp(plugin)` included) now mounts the plugin's router on `x`. That is what takes
+  fastify-demo's `GET /` to the application.
+- **Next.js.** This applies in a package whose nearest `package.json` requires `next`:
+  - `app/**/route.ts` exporting the verbs;
+  - `pages/api/**` with a default export, as `ANY`;
+  - `[id]` and `[...rest]` are parameters, and `[[...rest]]` also gives the folder's own path;
+  - `(group)` and `@slot` add nothing, and nothing under a `_private` folder is a route.
+
+**Diff against `2026-10-18-v2-baseline-26`.** 39 repositories are identical, and so is the hold-out's three. C#, Go
+and Python do not move. Read at the source:
+
+| Repository | Change | Reading |
+|---|---|---|
+| mattermost | calls +504 | Client4's `this.doFetch(`${this.getXRoute(..)}/y`, {method})`, the verbs and `/api/v4` right, the query strings left out |
+| argo-cd | calls −100 +100 | the same calls under `/api/v1`, where the server serves them |
+| gitea | calls +19 | the `GET`/`POST` wrappers; 14 of the 15 expected calls |
+| open-webui | calls −2 +18 | notifications and skills under `/api/v1`, and `register` without its query |
+| outline | calls −1 +13 | the stores under `/api`, `POST /api/batch`, and the OAuth calls of the plugins |
+| directus | calls +10 | `fetchAll(..)` and the AI providers' `fetchProvider(url, {method: 'POST'})` |
+| zulip | calls +6 | `save_organization_settings(.., "/json/streams/" + id)` doing `channel.patch({url})` |
+| ghost | calls +6 | the portal's `fetchWithEdgeChallenge`, the export download, Unsplash |
+| photoprism | calls −7 +7 | `this.getPhotoResource() + "/like"` is `/photos/{param}/like`; `rest.js` stays wrong |
+| nodebb, docmost, gotify | calls ±1 | a glued query out; a telemetry call; `axios.put(..)` with the data last |
+| express-boilerplate | routes −11 +14 | the list mounted in a loop, under `/v1` |
+| fastify-demo | routes −10 +14 | autoload |
+| taxonomy | routes +9 | Next.js |
+| hono-examples | routes +1 | the Next.js catch-all `pages/api/[...route].ts` that hands `/api/*` to the Hono app, added to the list (H2-D15) |
+
+**Sampled items.** The rules changed 39 sampled items, and each was re-judged at the source:
+
+- argo-cd: 17, all right now;
+- express-boilerplate: 8, all right now;
+- fastify-demo: 10, all right now;
+- outline: 1, `POST /api/batch`, right now;
+- open-webui: 1, right now;
+- photoprism: 2, one right now. `rest.js`'s `/{param}/links` stays wrong, because the collection comes from static
+  dispatch on the subclass.
+
+**Totals.** C#, Go and Python are unchanged. For TS/JS over the gabaritos:
+
+| | Precision | Recall |
+|---|---|---|
+| Routes | 96.5 → 98.1% | 89.2 → 91.7% (1372/1496) |
+| Calls | 96.6 → 98.4% | 95.3 → 99.0% (1074/1085) |
+
+Precision over the samples is 79.5 → 87.7% for routes and 79.9 → 86.9% for calls.
+
+| Category | Before | After |
+|---|---|---|
+| `prefix-in-client-wrapper` | 38 wrong, 34 missed, 4 repositories | 20 wrong, 9 missed, nodebb and mattermost |
+| `client-wrapper` | 16 missed | 1 missed, a Go call of go-feature-flag |
+| `prefix-by-folder` | 10 wrong, 14 missed | 0 |
+| `route-by-file-path` | 9 missed | 0 |
+| `prefix-other-file` | 9 wrong, 14 missed | 1 wrong, in dispatch |
+| `query-in-variable` (wrong) | 4 | 3, btcpayserver's C# |
+
+gitea's one miss is now `vue-sfc`: `GET /repo/search` is only called from a `.vue` file.
+
+**Left, recorded in the guide.**
+
+- **NodeBB's browser `api` module.** It is reached by an AMD name that RequireJS resolves through its config. It
+  picks its prefix at run time from the path itself (`url.startsWith('/api') ? rel + url : baseUrl + url`). 27 calls
+  stay without `/api/v3`.
+- **mattermost's `${Client4.getBaseRoute()}`.** A method of an instance from another file, 2 calls.
+- **gitea's five extracted calls outside its list.** They are built on a link that another function reads from the
+  page (`parseIssuePageInfo().repoLink`), or that a component gets as a prop.
+- **photoprism's static dispatch.**
+- **outline's RPC name from a parameter** (`/documents.${request}`).
+
+New baseline: `2026-10-18-v2-baseline-27`.

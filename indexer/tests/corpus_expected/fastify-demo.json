@@ -4,157 +4,143 @@
  "endpoints": [
   {
    "method": "GET",
-   "path": "/",
-   "category": "prefix-by-folder"
+   "path": "/"
   },
   {
    "method": "GET",
-   "path": "/api",
-   "category": "prefix-by-folder"
+   "path": "/api"
   },
   {
    "method": "POST",
-   "path": "/api/auth/login",
-   "category": "prefix-by-folder"
+   "path": "/api/auth/login"
   },
   {
    "method": "GET",
-   "path": "/api/tasks",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks"
   },
   {
    "method": "POST",
-   "path": "/api/tasks",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks"
   },
   {
    "method": "GET",
-   "path": "/api/tasks/download/csv",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/download/csv"
   },
   {
    "method": "DELETE",
-   "path": "/api/tasks/{filename}/image",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{filename}/image"
   },
   {
    "method": "GET",
-   "path": "/api/tasks/{filename}/image",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{filename}/image"
   },
   {
    "method": "DELETE",
-   "path": "/api/tasks/{id}",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{id}"
   },
   {
    "method": "GET",
-   "path": "/api/tasks/{id}",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{id}"
   },
   {
    "method": "PATCH",
-   "path": "/api/tasks/{id}",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{id}"
   },
   {
    "method": "POST",
-   "path": "/api/tasks/{id}/assign",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{id}/assign"
   },
   {
    "method": "POST",
-   "path": "/api/tasks/{id}/upload",
-   "category": "prefix-by-folder"
+   "path": "/api/tasks/{id}/upload"
   },
   {
    "method": "PUT",
-   "path": "/api/users/update-password",
-   "category": "prefix-by-folder"
+   "path": "/api/users/update-password"
   }
  ],
- "notes": "Manual, the whole app (src/routes). Routes are loaded by @fastify/autoload from src/routes with the folder path as prefix (routes/api/tasks/index.ts → /api/tasks): none comes out right and the roots ('/') are dropped (prefix-by-folder). The framework's official demo app; no outbound calls.",
+ "notes": "Manual, the whole app (src/routes). Routes are loaded by @fastify/autoload from src/routes with the folder path as prefix (routes/api/tasks/index.ts → /api/tasks): none comes out right and the roots ('/') are dropped (prefix-by-folder). The framework's official demo app; no outbound calls. Since F1.14 item 4 (2026-10-18): @fastify/autoload is read — every file under `dir: path.join(import.meta.dirname, 'routes')` is a plugin under its folders' path, mounted where `register` leads (app.ts's plugin, registered with `fp(serviceApp)` on the application in server.ts) — so the 14 routes match, GET / and GET /api included; the 10 sampled routes re-judged at the source are right.",
  "checked": {
   "endpoints": [
    {
     "evidence": "fastify-demo:src/routes/api/auth/index.ts:9",
     "method": "POST",
-    "path": "/login",
+    "path": "/api/auth/login",
     "raw": "/login",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:116",
     "method": "DELETE",
-    "path": "/{id}",
+    "path": "/api/tasks/{id}",
     "raw": "/:id",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:141",
     "method": "POST",
-    "path": "/{id}/assign",
+    "path": "/api/tasks/{id}/assign",
     "raw": "/:id/assign",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:176",
     "method": "POST",
-    "path": "/{id}/upload",
+    "path": "/api/tasks/{id}/upload",
     "raw": "/:id/upload",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:241",
     "method": "GET",
-    "path": "/{filename}/image",
+    "path": "/api/tasks/{filename}/image",
     "raw": "/:filename/image",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:273",
     "method": "DELETE",
-    "path": "/{filename}/image",
+    "path": "/api/tasks/{filename}/image",
     "raw": "/:filename/image",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:307",
     "method": "GET",
-    "path": "/download/csv",
+    "path": "/api/tasks/download/csv",
     "raw": "/download/csv",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:35",
     "method": "GET",
-    "path": "/{id}",
+    "path": "/api/tasks/{id}",
     "raw": "/:id",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/tasks/index.ts:89",
     "method": "PATCH",
-    "path": "/{id}",
+    "path": "/api/tasks/{id}",
     "raw": "/:id",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "fastify-demo:src/routes/api/users/index.ts:9",
     "method": "PUT",
-    "path": "/update-password",
+    "path": "/api/users/update-password",
     "raw": "/update-password",
-    "ok": false,
-    "category": "prefix-by-folder"
+    "ok": true,
+    "category": null
    }
   ]
  },

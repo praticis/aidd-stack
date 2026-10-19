@@ -4,48 +4,39 @@
  "endpoints": [
   {
    "method": "ANY",
-   "path": "/api/auth/{nextauth}",
-   "category": "route-by-file-path"
+   "path": "/api/auth/{nextauth}"
   },
   {
    "method": "GET",
-   "path": "/api/og",
-   "category": "route-by-file-path"
+   "path": "/api/og"
   },
   {
    "method": "GET",
-   "path": "/api/posts",
-   "category": "route-by-file-path"
+   "path": "/api/posts"
   },
   {
    "method": "POST",
-   "path": "/api/posts",
-   "category": "route-by-file-path"
+   "path": "/api/posts"
   },
   {
    "method": "DELETE",
-   "path": "/api/posts/{postId}",
-   "category": "route-by-file-path"
+   "path": "/api/posts/{postId}"
   },
   {
    "method": "PATCH",
-   "path": "/api/posts/{postId}",
-   "category": "route-by-file-path"
+   "path": "/api/posts/{postId}"
   },
   {
    "method": "GET",
-   "path": "/api/users/stripe",
-   "category": "route-by-file-path"
+   "path": "/api/users/stripe"
   },
   {
    "method": "PATCH",
-   "path": "/api/users/{userId}",
-   "category": "route-by-file-path"
+   "path": "/api/users/{userId}"
   },
   {
    "method": "POST",
-   "path": "/api/webhooks/stripe",
-   "category": "route-by-file-path"
+   "path": "/api/webhooks/stripe"
   }
  ],
  "calls": [
@@ -74,7 +65,7 @@
    "path": "/repos/shadcn/taxonomy"
   }
  ],
- "notes": "Manual, the whole app. Next.js App Router: every route is a file, app/api/posts/[postId]/route.ts exporting async function DELETE/PATCH → DELETE/PATCH /api/posts/{postId}; NextAuth's [...nextauth] catch-all is listed once as ANY. Nothing is extracted — there is no route call to see (route-by-file-path, needs a scanner by file convention). The browser calls are plain fetch('/api/posts', {method}) and all six come out right, so a repo like this links its own UI to its API as soon as the routes exist.",
+ "notes": "Manual, the whole app. Next.js App Router: every route is a file, app/api/posts/[postId]/route.ts exporting async function DELETE/PATCH → DELETE/PATCH /api/posts/{postId}; NextAuth's [...nextauth] catch-all is listed once as ANY. Nothing is extracted — there is no route call to see (route-by-file-path, needs a scanner by file convention). The browser calls are plain fetch('/api/posts', {method}) and all six come out right, so a repo like this links its own UI to its API as soon as the routes exist. Since F1.14 item 4 (2026-10-18): Next.js routes by file are read in a package that depends on `next` (app/**/route.ts exporting the verbs, pages/api/** answering any verb; `_route.ts` is not a route), and the 9 routes match.",
  "checked": {
   "calls": [
    {

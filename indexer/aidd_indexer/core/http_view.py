@@ -27,6 +27,7 @@ class RepoView:
         self._memo: dict[tuple[str, str], str | None] = {}
         self._paths: set[str] | None = None
         self._classes: dict[str, list["PackageContext"]] | None = None
+        self._requires: dict[str, set[str] | None] = {}
 
     def _context(self, language: str) -> ResolveContext:
         if self._ctx is None:
@@ -72,3 +73,36 @@ class RepoView:
                 for cname in ctx.classes:
                     self._classes.setdefault(cname, []).append(ctx)
         return self._classes.get(name, [])
+
+    def manifest_dir(self, file: FileInfo, package: str) -> str | None:
+        """The directory of the manifest nearest `file` (its package: a `package.json`, a `.csproj`..), when that
+        manifest requires `package`; None otherwise."""
+        lang = languages.by_id(file.language)
+        d = str(PurePosixPath(file.path).parent)
+        d = "" if d == "." else d
+        while lang is not None:
+            found = self._required(lang, d)
+            if found is not None:
+                return d if package in found else None
+            if not d:
+                return None
+            d = str(PurePosixPath(d).parent)
+            d = "" if d == "." else d
+        return None
+
+    def _required(self, lang, d: str) -> set[str] | None:
+        """What the manifest in directory `d` requires; None when `d` has none."""
+        if d not in self._requires:
+            self._requires[d] = None
+            for name in lang.manifests:
+                path = Path(self._repo.root) / d / name
+                if path.is_file():
+                    rel = f"{d}/{name}" if d else name
+                    _, deps = lang.manifest_deps(rel, path.read_text(encoding="utf-8", errors="replace"))
+                    self._requires[d] = {dep for dep, _ in deps}
+                    break
+        return self._requires[d]
+
+    def files_under(self, dirs: list[str]) -> list[str]:
+        """The repo's files under any of `dirs` ("" is the whole repo)."""
+        return [f.path for f in self._files if any(not d or f.path.startswith(d + "/") for d in dirs)]

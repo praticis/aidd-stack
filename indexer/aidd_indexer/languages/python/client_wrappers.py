@@ -7,20 +7,17 @@ a class of the repo constructed into a local or into `self.x`; a plain name is a
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 from tree_sitter import Node
 
 from ...core.http_base import HttpResult, Pending, text, walk
 from ...core.http_nodes import has_interpolation
 from ...core.http_scope import END, enclosing_function
-from ...core.http_wrappers import param_shape, wrapped_path
+from ...core.http_wrappers import PARAM, compose_wrapped_calls as compose_calls, param_shape, verb_of
 from ...core.paths import HTTP_METHODS, has_literal_segment, normalize_path, unquote
 
 WRAPPER = "py.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
                                    #   the verb parameter's default)
 BASES = "py.class-bases"           # fact: class → its bases' names
-PARAM = "param"                    # an argument built around a parameter of the function around the call
 URL_KEYWORDS = ("url", "path")
 
 
@@ -68,7 +65,7 @@ class PyClientWrappers:
             ident, value = d.child_by_field_name("name"), d.child_by_field_name("value")
             if d.type in ("default_parameter", "typed_default_parameter") and ident is not None and value is not None \
                     and text(ident, self.src) == name and value.type == "string":
-                return _verb(unquote(text(value, self.src)))
+                return verb_of(unquote(text(value, self.src)))
         return None
 
     def function_key(self, at: Node) -> tuple[str | None, list[str]]:
@@ -189,69 +186,7 @@ class PyClientWrappers:
 
 
 def compose_wrapped_calls(out: HttpResult) -> None:
-    """The calls to the repo's client wrappers. A call that hands a wrapper a parameter of its own function makes that
-    function a wrapper, so a chain of wrappers resolves in a few rounds."""
-    facts: dict[str, set[tuple]] = {k: set(v) for k, v in out.facts.get(WRAPPER, {}).items()}
-    bases = out.facts.get(BASES, {})
-    waiting = [p for p in out.pending if p.rule == WRAPPER]
-    for _ in range(4):
-        rest = [p for p in waiting if not _resolve(p, facts, bases, out)]
-        if len(rest) == len(waiting):
-            return
-        waiting = rest
-
-
-def _resolve(p: Pending, facts: dict[str, set[tuple]], bases: dict, out: HttpResult) -> bool:
-    """Record the call `p`, or make its function a wrapper; False while its target is not a known wrapper."""
-    target, values, named, outer, outer_params = p.key
-    shape = _shape(facts, bases, target)
-    if shape is None:
-        return False
-    idx, before, after, verb, vi, params, default = shape
-    path, how = _arg(values, named, params, idx), _arg(values, named, params, vi)
-    vi_out = _param_of(how) if verb is None else None
-    verb = verb or _verb(how) or (default if vi_out is None else None)
-    if isinstance(path, tuple):
-        if outer is not None:
-            _, i, b, a = path
-            facts.setdefault(outer, set()).add((i, before + b, a + after, verb, vi_out, outer_params, None))
-        return True
-    found = wrapped_path(before, path, after)
-    if found is not None:
-        out.calls.append(replace(p.item, method=verb or "ANY", path=found[1], raw_path=found[0]))
-    return True
-
-
-def _shape(facts: dict[str, set[tuple]], bases: dict, target: tuple) -> tuple | None:
-    """The one shape of the wrapper a call names: a function's, or the method of the class or of its nearest base
-    that defines it. Two different shapes under one name give nothing."""
-    if target[0] == "func":
-        found = facts.get(target[1])
-        return next(iter(found)) if found and len(found) == 1 else None
-    _, cls, method = target
-    level = [cls]
-    for _ in range(5):
-        found = next((facts[k] for c in level if (k := f"{c}.{method}") in facts), None)
-        if found is not None:
-            return next(iter(found)) if len(found) == 1 else None
-        level = [b for c in level for names in bases.get(c, ()) for b in names]
-    return None
-
-
-def _arg(values: tuple, named: tuple, params: tuple, i: int | None) -> str | tuple | None:
-    if i is None:
-        return None
-    if i < len(values):
-        return values[i]
-    return dict(named).get(params[i]) if i < len(params) else None
-
-
-def _verb(how: str | tuple | None) -> str | None:
-    return how.upper() if isinstance(how, str) and how.upper() in HTTP_METHODS else None
-
-
-def _param_of(how: str | tuple | None) -> int | None:
-    return how[1] if isinstance(how, tuple) and how[2] == "" and how[3] == "" else None
+    compose_calls(out, WRAPPER, BASES)
 
 
 def _owner_class(fn: Node | None) -> Node | None:

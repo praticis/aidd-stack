@@ -2217,81 +2217,67 @@
  "calls": [
   {
    "method": "POST",
-   "path": "/-/admin/config",
-   "category": "client-wrapper"
+   "path": "/-/admin/config"
   },
   {
    "method": "POST",
-   "path": "/-/admin/self_check",
-   "category": "client-wrapper"
+   "path": "/-/admin/self_check"
   },
   {
    "method": "POST",
-   "path": "/-/web-theme/apply",
-   "category": "client-wrapper"
+   "path": "/-/web-theme/apply"
   },
   {
    "method": "GET",
-   "path": "/notifications",
-   "category": "client-wrapper"
+   "path": "/notifications"
   },
   {
    "method": "GET",
-   "path": "/notifications/new",
-   "category": "client-wrapper"
+   "path": "/notifications/new"
   },
   {
    "method": "GET",
    "path": "/repo/search",
-   "category": "client-wrapper"
+   "category": "vue-sfc"
   },
   {
    "method": "POST",
-   "path": "/user/settings/security/webauthn/register",
-   "category": "client-wrapper"
+   "path": "/user/settings/security/webauthn/register"
   },
   {
    "method": "POST",
-   "path": "/user/settings/security/webauthn/request_register",
-   "category": "client-wrapper"
+   "path": "/user/settings/security/webauthn/request_register"
   },
   {
    "method": "POST",
-   "path": "/user/settings/update_preferences",
-   "category": "client-wrapper"
+   "path": "/user/settings/update_preferences"
   },
   {
    "method": "GET",
-   "path": "/user/stopwatches",
-   "category": "client-wrapper"
+   "path": "/user/stopwatches"
   },
   {
    "method": "GET",
-   "path": "/user/webauthn/assertion",
-   "category": "client-wrapper"
+   "path": "/user/webauthn/assertion"
   },
   {
    "method": "POST",
-   "path": "/user/webauthn/assertion",
-   "category": "client-wrapper"
+   "path": "/user/webauthn/assertion"
   },
   {
    "method": "GET",
-   "path": "/user/webauthn/passkey/assertion",
-   "category": "client-wrapper"
+   "path": "/user/webauthn/passkey/assertion"
   },
   {
    "method": "POST",
-   "path": "/user/webauthn/passkey/login",
-   "category": "client-wrapper"
+   "path": "/user/webauthn/passkey/login"
   },
   {
    "method": "GET",
-   "path": "/{owner}/{repo}/issues/suggestions",
-   "category": "client-wrapper"
+   "path": "/{owner}/{repo}/issues/suggestions"
   }
  ],
- "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, plus 11 routes only the code has, read in it (swagger, nodeinfo and activitypub behind settings, the GitHub-compatible commits/{sha}, the per-repo markup/markdown, contents-ext, artifact zip/raw, GET admin user orgs); scope routers/api/v1/. Every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver of Routes(), and routers/init.go mounts that router at /api/v1 (r.Mount(\"/api/v1\", apiv1.Routes())); helpers (addActionsRoutes, a closure assigned to a variable, and addProjectRoutes) take the router as a parameter and are called inside several groups. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs): route-chain = m.Combo(\"/x\").Get(h).Put(h) (verbs chained on a path builder, also inside the helpers; 219, all found since H2b item 4, 2026-10-16); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3); prefix-scope-and-file: GET archive/{archive} and pulls/{index}.{diffType}, whose \".{diffType}\" pattern gitea joins to the group without a slash (extracted as /pulls/{index}/.{diffType}). Until H2b item 2 step 2 (2026-10-16) no API route came out with its /api/v1 (prefix-other-file 247, router-as-param 78). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5). Since the v2 cheap fixes (2026-10-15): a spread handler list (append(mid, h)...) makes a route, not a call.",
+ "notes": "Endpoints: the committed swagger (templates/swagger/v1-swagger.generated.json, generated from swagger comments) for /api/v1, plus 11 routes only the code has, read in it (swagger, nodeinfo and activitypub behind settings, the GitHub-compatible commits/{sha}, the per-repo markup/markdown, contents-ext, artifact zip/raw, GET admin user orgs); scope routers/api/v1/. Every API route is registered inside closures m.Group(\"/x\", func() {...}) on the same receiver of Routes(), and routers/init.go mounts that router at /api/v1 (r.Mount(\"/api/v1\", apiv1.Routes())); helpers (addActionsRoutes, a closure assigned to a variable, and addProjectRoutes) take the router as a parameter and are called inside several groups. Categories, from a code-derived list of the closures (one per route, the most specific fix it needs): route-chain = m.Combo(\"/x\").Get(h).Put(h) (verbs chained on a path builder, also inside the helpers; 219, all found since H2b item 4, 2026-10-16); custom-registrar = g.MatchPath(\"GET\", \"/<ref:*>/status\", h) (3); prefix-scope-and-file: GET archive/{archive} and pulls/{index}.{diffType}, whose \".{diffType}\" pattern gitea joins to the group without a slash (extracted as /pulls/{index}/.{diffType}). Until H2b item 2 step 2 (2026-10-16) no API route came out with its /api/v1 (prefix-other-file 247, router-as-param 78). Precision sample over the whole repo: web.go, packages and api routes, all with the closure prefix lost. Calls: three route registrations with a spread handler (routes.Get(\"/metrics\", append(mid, h)...)) come out as outbound calls (route-taken-for-call); the three captcha verifications are right. The frontend calls go through verb-named wrappers GET(url)/POST(url) from web_src/js/modules/fetch.ts (client-wrapper); expected calls = those with a literal path after appSubUrl (the ones built on a link read from the page are runtime URLs, H2-D5). Since the v2 cheap fixes (2026-10-15): a spread handler list (append(mid, h)...) makes a route, not a call. Since F1.14 item 4 (2026-10-18): the verb-named wrappers of web_src/js/modules/fetch.ts (`GET = (url, opts) => request(url, {method: 'GET', ...opts})`, `request(url, {method = 'GET', ..})` doing `fetch(url, {method, ..})`) are read, 14 of the 15 expected calls match. GET /repo/search is only called from DashboardRepoList.vue, whose script the indexer does not read (vue-sfc). Five extracted calls are not in the list: they are built on a link read in another function (`parseIssuePageInfo().repoLink`, content-history) or passed as a component prop (`props.repoLink`), so the path lacks its `/{owner}/{repo}` start; a link read from the page in the same function (`el.getAttribute('data-url')`, `link.pathname`) makes no call.",
  "checked": {
   "endpoints": [
    {

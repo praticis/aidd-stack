@@ -928,7 +928,7 @@
    "category": "const-other-file"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Routes, scope: four of the backend's routers (auths, chats, folders, models), 104 routes. backend/open_webui/main.py includes each with app.include_router(x.router, prefix='/api/v1/x'); each module's router = APIRouter() (auths with route_class=MfaRoute) takes @router.get('/x', ..) decorators, some on '/' (the router's root). Calls, scope: the web app's API modules for the same four areas (src/lib/apis/<area>/index.ts), 98 calls: fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, { method: 'POST', .. }), with WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1` and WEBUI_BASE_URL = '' in src/lib/constants.ts, imported through SvelteKit's $lib alias; the verb is the options' method (GET without one); one call takes a local variable (let url = `..`; url += ..), two build the query in a nested template. POST /chats/{id}/messages/{id}/resolve is a call the code makes to a route no backend router serves (it stays expected: the list records calls as written). Moved to the corpus by F1.14 (2026-10-18): SvelteKit's $lib alias, constants built as templates (`${WEBUI_BASE_URL}/api/v1`), an imported constant in a template, and a ternary that adds the query string (`${query ? `?${query}` : ''}`). The checked calls sample was refreshed: 12 of the 13 calls take their base, right; `/configs/oauth/clients/register${searchParams}` glues a query held in a variable to the path (query-in-variable).",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes, scope: four of the backend's routers (auths, chats, folders, models), 104 routes. backend/open_webui/main.py includes each with app.include_router(x.router, prefix='/api/v1/x'); each module's router = APIRouter() (auths with route_class=MfaRoute) takes @router.get('/x', ..) decorators, some on '/' (the router's root). Calls, scope: the web app's API modules for the same four areas (src/lib/apis/<area>/index.ts), 98 calls: fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, { method: 'POST', .. }), with WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1` and WEBUI_BASE_URL = '' in src/lib/constants.ts, imported through SvelteKit's $lib alias; the verb is the options' method (GET without one); one call takes a local variable (let url = `..`; url += ..), two build the query in a nested template. POST /chats/{id}/messages/{id}/resolve is a call the code makes to a route no backend router serves (it stays expected: the list records calls as written). Moved to the corpus by F1.14 (2026-10-18): SvelteKit's $lib alias, constants built as templates (`${WEBUI_BASE_URL}/api/v1`), an imported constant in a template, and a ternary that adds the query string (`${query ? `?${query}` : ''}`). The checked calls sample was refreshed: 12 of the 13 calls take their base, right; `/configs/oauth/clients/register${searchParams}` glues a query held in a variable to the path (query-in-variable). Since F1.14 item 4 (2026-10-18): a query string glued to the end of a path (`register${searchParams}`, with `searchParams = type ? `?type=${type}` : ''`) is not part of it; the sampled item re-judged right.",
  "checked": {
   "endpoints": [
    {
@@ -1152,10 +1152,10 @@
    {
     "evidence": "open-webui:src/lib/apis/configs/index.ts:536",
     "method": "POST",
-    "path": "/api/v1/configs/oauth/clients/register{param}",
+    "path": "/api/v1/configs/oauth/clients/register",
     "raw": null,
-    "ok": false,
-    "category": "query-in-variable"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "open-webui:src/lib/apis/configs/index.ts:609",

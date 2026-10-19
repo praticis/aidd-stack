@@ -681,7 +681,7 @@
    "path": "/api/v1/oauth/userinfo"
   }
  ],
- "notes": "Hold-out (H2-D20), read before the extractor ran. Routes: every registration in the internal/api functions that internal/server/routes.go calls on APIv1 (/api/v1) or routes_sharing.go on /s, read from each function's body — the committed swagger.json (swag annotations) agrees on 131 and is off on the rest, so the list follows the code. Taken from the code and not the spec: the 14 literal /api/v1/svg/* routes (the spec has /svg/{name}), GET /api/v1/ws (the spec says /ws), /api/v1/import/{path} (gin *path; the spec says /import), GET/DELETE /api/v1/mcp, GET /api/v1/geo/{id}, the six HTTP verbs of router.Match(methods, \"/echo\"), PUT and POST of router.Match(MethodsPutPost, \"/batch/photos/edit\"), OPTIONS /api/v1/{any}, and /folders/originals and /folders/import with their /*path forms from the SearchFolders helper. Left out of the spec's list: /swagger.json (registered only in the debug build), POST /oauth/logout and /oauth/userinfo (OAuthLogoutPost and OAuthUserinfoPost exist but routes.go does not call them). Functions whose call is commented out in routes.go (GetPhotoLinks, GetLabelLinks...) serve nothing and are not expected. Static, web app, WebDAV and .well-known routes are registered in internal/server, outside the scope. Moved to the corpus by F1.14 (2026-10-18), which reads the APIv1 group across files: a package variable assigned with `=` in start.go (Go's `=` declares nothing, so it is the package's), handed to the functions of internal/api, its prefix through config.BaseUri (a function that returns its parameter, or something before it: the code's default), and Match's verbs from the package's MethodsPutPost. Corrected from the code (H2-D15): POST /api/v1/oauth/logout and /oauth/userinfo are routes — OAuthLogout and OAuthUserinfo call OAuthLogoutPost(router) and OAuthUserinfoPost(router) themselves. Left: the four /folders/{originals,import} routes, a segment SearchFolders takes as a parameter that each caller passes as a literal (segment-from-param); GET /docs and /docs/*, registered only in the debug build (api_docs.go, //go:build debug), come out without a prefix: routes.go calls them through registerAPIDocs(APIv1), a function variable that a build-tagged init() sets to api.GetDocs (registrar-in-func-var). The checked sample was refreshed: 19 items took the /api/v1 prefix of the same evidence line, and GET /docs stays wrong.",
+ "notes": "Hold-out (H2-D20), read before the extractor ran. Routes: every registration in the internal/api functions that internal/server/routes.go calls on APIv1 (/api/v1) or routes_sharing.go on /s, read from each function's body — the committed swagger.json (swag annotations) agrees on 131 and is off on the rest, so the list follows the code. Taken from the code and not the spec: the 14 literal /api/v1/svg/* routes (the spec has /svg/{name}), GET /api/v1/ws (the spec says /ws), /api/v1/import/{path} (gin *path; the spec says /import), GET/DELETE /api/v1/mcp, GET /api/v1/geo/{id}, the six HTTP verbs of router.Match(methods, \"/echo\"), PUT and POST of router.Match(MethodsPutPost, \"/batch/photos/edit\"), OPTIONS /api/v1/{any}, and /folders/originals and /folders/import with their /*path forms from the SearchFolders helper. Left out of the spec's list: /swagger.json (registered only in the debug build), POST /oauth/logout and /oauth/userinfo (OAuthLogoutPost and OAuthUserinfoPost exist but routes.go does not call them). Functions whose call is commented out in routes.go (GetPhotoLinks, GetLabelLinks...) serve nothing and are not expected. Static, web app, WebDAV and .well-known routes are registered in internal/server, outside the scope. Moved to the corpus by F1.14 (2026-10-18), which reads the APIv1 group across files: a package variable assigned with `=` in start.go (Go's `=` declares nothing, so it is the package's), handed to the functions of internal/api, its prefix through config.BaseUri (a function that returns its parameter, or something before it: the code's default), and Match's verbs from the package's MethodsPutPost. Corrected from the code (H2-D15): POST /api/v1/oauth/logout and /oauth/userinfo are routes — OAuthLogout and OAuthUserinfo call OAuthLogoutPost(router) and OAuthUserinfoPost(router) themselves. Left: the four /folders/{originals,import} routes, a segment SearchFolders takes as a parameter that each caller passes as a literal (segment-from-param); GET /docs and /docs/*, registered only in the debug build (api_docs.go, //go:build debug), come out without a prefix: routes.go calls them through registerAPIDocs(APIv1), a function variable that a build-tagged init() sets to api.GetDocs (registrar-in-func-var). The checked sample was refreshed: 19 items took the /api/v1 prefix of the same evidence line, and GET /docs stays wrong. Since F1.14 item 4 (2026-10-18): a method of the class called through `this` is read as the path it returns, so file.js's `this.getPhotoResource() + \"/like\"` is /photos/{param}/like (re-judged right); rest.js's `this.getEntityResource() + \"/links\"` gives /{param}/links, still wrong: the collection comes from `this.constructor.getCollectionResource()`, static dispatch on the subclass (url-from-helper).",
  "checked": {
   "endpoints": [
    {
@@ -873,10 +873,10 @@
    {
     "evidence": "photoprism:frontend/src/model/file.js:255",
     "method": "DELETE",
-    "path": "/like",
+    "path": "/photos/{param}/like",
     "raw": null,
-    "ok": false,
-    "category": "url-from-helper"
+    "ok": true,
+    "category": null
    },
    {
     "evidence": "photoprism:frontend/src/model/folder.js:101",
@@ -945,7 +945,7 @@
    {
     "evidence": "photoprism:frontend/src/model/rest.js:153",
     "method": "POST",
-    "path": "/links",
+    "path": "/{param}/links",
     "raw": null,
     "ok": false,
     "category": "url-from-helper"
