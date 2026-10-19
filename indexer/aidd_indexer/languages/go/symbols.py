@@ -303,9 +303,14 @@ class GoSupport(LanguageSupport):
 
     def _files_in(self, ctx: ResolveContext, prefix: str) -> list[FileInfo]:
         """Go files of the package whose dotted directory is `prefix` ("" = repo root)."""
-        d = prefix.replace(".", "/") or "."
-        return [f for f in ctx.files_by_path.values()
-                if f.language == self.id and str(PurePosixPath(f.path).parent) == d]
+        by_dir = ctx.extra.get("go_files_by_dir")
+        if by_dir is None:
+            # built once: every typed receiver of every call asks, and a scan per ask is quadratic in the repo
+            by_dir = ctx.extra["go_files_by_dir"] = {}
+            for f in ctx.files_by_path.values():
+                if f.language == self.id:
+                    by_dir.setdefault(str(PurePosixPath(f.path).parent), []).append(f)
+        return by_dir.get(prefix.replace(".", "/") or ".", [])
 
     def _resolve_type(self, ctx: ResolveContext, file: FileInfo, text: str) -> tuple[str, str] | None:
         """`pw.Policy` as written in `file` → (package prefix, TypeName)."""
@@ -435,18 +440,24 @@ class GoSupport(LanguageSupport):
             needed = self._interface_methods(ctx, (prefix, name))
             impls: set[str] = set()
             if needed:
-                sets: dict[tuple[str, str], set[str]] = {}
-                for f in ctx.files_by_path.values():
-                    if f.language != self.id or is_test_path(f.path):     # fakes and mocks implement it too: not what runs
-                        continue
-                    d = str(PurePosixPath(f.path).parent)
-                    pfx = "" if d == "." else d.replace("/", ".")
-                    for recv, names in (ctx.facts.get(f.id) or {}).get("methods", {}).items():
-                        sets.setdefault((pfx, recv), set()).update(names)
-                impls = {f"{p}.{t}" if p else t for (p, t), have in sets.items() if needed <= have}
+                impls = {f"{p}.{t}" if p else t for (p, t), have in self._method_sets(ctx).items() if needed <= have}
             cache[qualified_type] = (needed or set(), next(iter(impls)) if len(impls) == 1 else None)
         needed, impl = cache[qualified_type]
         return impl if method in needed else None
+
+    def _method_sets(self, ctx: ResolveContext) -> dict[tuple[str, str], set[str]]:
+        """(package prefix, type) → the methods production code declares on it, built once for every interface."""
+        sets = ctx.extra.get("go_method_sets")
+        if sets is None:
+            sets = ctx.extra["go_method_sets"] = {}
+            for f in ctx.files_by_path.values():
+                if f.language != self.id or is_test_path(f.path):     # fakes and mocks implement it too: not what runs
+                    continue
+                d = str(PurePosixPath(f.path).parent)
+                pfx = "" if d == "." else d.replace("/", ".")
+                for recv, names in (ctx.facts.get(f.id) or {}).get("methods", {}).items():
+                    sets.setdefault((pfx, recv), set()).update(names)
+        return sets
 
     def link_symbols(self, symbols: list[SymbolInfo], files_by_id: dict[str, FileInfo]) -> None:
         """Methods → receiver struct as parent (`pkg.Type.Method` → `pkg.Type`)."""
