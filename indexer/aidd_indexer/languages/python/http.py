@@ -8,7 +8,7 @@ import re
 from tree_sitter import Node
 
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
-from ...core.http_expr import PREFIX_KEYWORDS
+from .package_facts import PREFIX_KEYWORDS
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 from .client_wrappers import PyClientWrappers, compose_wrapped_calls
 
@@ -85,7 +85,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
 
     def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
         """`UserAPIRouter(prefix="/recipes")` (mealie): a class of the repo whose bases reach the framework's router —
-        (that class, what the first `__init__` up the bases makes of the prefix: `http_expr._init_prefix`). The class
+        (that class, what the first `__init__` up the bases makes of the prefix: `package_facts._init_prefix`). The class
         is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
         it, its own directory's, else the one class of that name in the repo."""
         head, _, cname = text(fn, self.src).rpartition(".")
