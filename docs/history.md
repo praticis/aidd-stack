@@ -107,3 +107,13 @@
 
 - 2026-10-19: H4 phase 0a: the working docs recycled (`AGENTS.md`, `history.md` and `decisions.md`), and every doc in
   English (H4-D1).
+
+## H5 and H6 (`feature/h5-refactor`, draft PR #7)
+
+- 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
+- 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
+  (H6-D1–D4). H5's steps 3, 5 and 6 are designed with it.
+- 2026-10-19: H6 step 0 measures the pipeline phase by phase. What it found:
+  - the resolver was quadratic in Go and C#, taking 31–38 min on two repos. The HTTP corpus never runs it;
+  - an index built once (PR #9, merged into `main`) brings it to seconds;
+  - full dry-runs of `main`, H5 and the fix are identical on 12 repos, and that check joins H5's protocol.

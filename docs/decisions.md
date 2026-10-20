@@ -79,6 +79,15 @@ decided by the author on 2026-10-19.
 | H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
 | H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
 
+## H6: the extraction pipeline (H6-D1–D4, decided by the author on 2026-10-19)
+
+| # | Decision | Why |
+|---|---|---|
+| H6-D1 | **The order:** design H6 now, refactor H5 toward the design, then plug H6 in, then the new hold-out, P2 and SCIP. | H5's types, facts and recognizers take the shape the pipeline needs, so nothing is built twice. |
+| H6-D2 | The per-file incremental cache is a requirement. | A refresh after a one-file push should not re-parse the snapshot, and a branch shares most of its files with `main`. |
+| H6-D3 | The second read (a rule that needs a tree and another file's fact) is chosen by measurement: resolving in the reduce from summaries, or a second map that re-parses. | Each changes the scanners, the cache and the memory differently; numbers decide. |
+| H6-D4 | A technology joins the compose only if it adds no failure handling to build. | A gain in speed that brings retries, duplicate deliveries or stalled jobs to handle costs more than it gives. |
+
 ## H7: regression gates in CI (H7-D1, D3 and D5, decided with the author on 2026-10-19)
 
 | # | Decision | Why |
