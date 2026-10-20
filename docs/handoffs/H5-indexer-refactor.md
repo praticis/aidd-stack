@@ -9,7 +9,7 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-28`).
 >
-> **State (2026-10-19):** in progress, on the `feature/h5-refactor` branch.
+> **State (2026-10-20):** in progress, on the `feature/h5-refactor` branch.
 >
 > - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
 >   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
@@ -19,14 +19,19 @@
 >   - **Step 3, in part:** a per-function declarations index for Go's declared type and C#'s locals (`NodeCache`).
 >     On vikunja, `walk` dropped to 18 %. The shared `FileIndex` was not done: keeping every node of a file weighs on
 >     memory (mattermost has 8 M nodes), and the design is to be decided with the author.
->   - **Step 4, in part:**
+>   - **Step 4:**
 >     - Go's, Python's and TS's package facts left the core (`languages/<lang>/package_facts.py`, the
 >       `LanguageSupport.package_facts` hook);
 >     - Go's `url.URL` and grpc-gateway went to `languages/go/paths.py`;
->     - no core decision tests the language's name any more.
+>     - no core decision tests the language's name any more;
+>     - **on 2026-10-20, the typed facts.** Each language's facts are a dataclass (`GoFacts`, `PyFacts`, `TsFacts`)
+>       whose fields each declare how two files' values join: one value or none, the last one, or a union
+>       (`core/package_facts.py`). The core's `PackageContext` holds them by key and no field of its own is a
+>       language's. Go's verb lists and its passthrough lookup left `core/http_expr.py`. A lookup across the repo
+>       is a question to the view (`RepoView.defining`), never a loop over the directories. Tests keep the core
+>       free of a language's module or id (`test_core_neutral.py`).
 >
->     Still missing: the typed facts in `PackageContext` (the per-language fields) and `http_base`'s receiver
->     catalog, which is step 6.
+>     What the core still names is frameworks, in `http_base`'s receiver catalog and in examples: step 6's catalog.
 >   - **Step 7, in part:** the client wrappers' facts and pending calls are `NamedTuple`s (`WrapperShape`,
 >     `WrappedCall`), read by field. The other kinds of fact and of pending call are still missing.
 >   - **Step 8:** `core/matching.py`, the MCP split (`tools/list` byte for byte the same) and the Cypher tested
@@ -41,7 +46,7 @@
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
->   - the rest of 4, and 7 (typed facts and `Pending`, serializable, with no tree node inside);
+>   - 7 (typed facts and `Pending`, serializable, with no tree node inside);
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - the rest of 10;
