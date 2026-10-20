@@ -31,7 +31,7 @@ H2 and F1.14 achieved from any PR, the author's included.
 | **Precision ratchet** | H2-D11 | the list precision of any repo or language is lower on the branch than on the baseline |
 | **No win lost** | PR #5's validation | an expected pair the baseline found is missing on the branch, or an item of the `checked` sample judged right is no longer extracted |
 | **Hold-out untouched** | H2-D20, H2-D21 | the hold-out's ids change in a PR without the `holdout-measurement` label |
-| **A refactor changes nothing** | H5 | a PR with the `refactor` label changes any id of the corpus or the hold-out, or any record of the micro set's dry-runs |
+| **A refactor changes nothing** | H5 | a refactor PR (its branch, one of its commits or the `refactor` label) changes any id of the corpus or the hold-out, or any record of the micro set's dry-runs |
 | **The micro graph judged** | H6 step 0 | the full dry-runs of the micro set (files, symbols, `CALLS`, `IMPORTS`, violations) differ from the baseline's and the difference has no verdict |
 | **One cause per commit** | H5's pitfalls | one commit touches both the extractor (`indexer/aidd_indexer/`) and `indexer/tests/corpus_expected/` |
 | **Every diff item judged** | the cycle of a change | an item the classifier marks "to judge" has no verdict (H7-D2) |
