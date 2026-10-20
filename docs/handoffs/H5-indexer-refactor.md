@@ -28,8 +28,9 @@
 >       whose fields each declare how two files' values join: one value or none, the last one, or a union
 >       (`core/package_facts.py`). The core's `PackageContext` holds them by key and no field of its own is a
 >       language's. Go's verb lists and its passthrough lookup left `core/http_expr.py`. A lookup across the repo
->       is a question to the view (`RepoView.defining`), never a loop over the directories. Tests keep the core
->       free of a language's module or id (`test_core_neutral.py`).
+>       is a question to the view (`RepoView.defining`; C#'s qualified constants by `RepoView.constant_values`),
+>       never a loop over the directories, and a test keeps the view the only code that walks them
+>       (`test_repo_view.py`). Tests keep the core free of a language's module or id (`test_core_neutral.py`).
 >
 >     What the core still names is frameworks, in `http_base`'s receiver catalog and in examples: step 6's catalog.
 >   - **Step 7:** every fact a file publishes and every request it leaves pending is a `NamedTuple` of its

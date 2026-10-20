@@ -302,7 +302,8 @@ H5 builds pieces with H6's shape:
   next door, the clock) makes a warm run differ from a cold one. The cold/warm comparison on the corpus is the net.
 - **A read that is not recorded breaks the cache and the early scan at once.** Go's passthrough lookup looped over
   every directory's context (`view.contexts.values()`). Step 1's key and replay missed it, and a fixture caught it only
-  when an early scan saw part of the repo. A lookup across the repo is a question, with its answer (ADR-006).
+  when an early scan saw part of the repo. C#'s qualified constants did the same. A lookup across the repo is a
+  question, with its answer (ADR-006), and a test keeps the view the only code that walks the directories.
 - **A digest over pickle is not canonical.** Pickle shares equal objects by identity, so the same values gave other
   bytes when they came back from other batches. Step 1 digests a canonical form's `repr`.
 - **The ids carry the ref.** A summary keyed by content but holding `tenant/repo@ref/…` ids serves one ref only.
