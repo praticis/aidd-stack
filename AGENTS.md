@@ -35,7 +35,8 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003) |
 | `indexer/conventions/` | architecture conventions as extensions (the reference one is `dotnet-praticis`) |
 | `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
-| `indexer/scripts/` | the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`) and the tests (`test.sh`) |
+| `indexer/scripts/` | the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`) and the tests (`test.sh`) |
+| `.github/workflows/` | `indexer.yml`: the gates on every PR that touches the indexer |
 | `docs/` | the ROADMAP, the decisions, the history, the indexer guide, the corpus report, the golden questions, the ADRs and the handoffs |
 
 ## The architecture in one figure
@@ -90,7 +91,10 @@ The full text is in the ROADMAP, under "Principles".
   - it runs the tests, the corpus, the hold-out and the micro set against `main`;
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
-  - a refactor (a branch `refact/…` or `refactor/…`, or a commit `refactor:` or `refact:`) must change nothing;
+  - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one
+    of its commits starts with `refactor:` or `refact:` (with or without a scope, as in `refactor(go):`), or under the
+    `refactor` label. One such commit makes the whole PR strict, so a refactor and a change of behavior go in separate
+    PRs;
   - the labels `holdout-measurement` and `graph-change` allow, after judgment, a hold-out measurement and a change to
     the micro graph. After adding one, re-run the `gates` job;
   - the same gates run locally with `corpus.sh --label` on both sides and `gates.sh`.
@@ -110,12 +114,17 @@ The full text is in the ROADMAP, under "Principles".
 - **H2/F1.14** (the HTTP extractor measured on a public corpus of 55 repos) closed on 2026-10-19.
   - Precision against the lists: 98–100 % in every language.
   - The numbers are in the corpus report.
+- **The method's checks run in CI** on every PR that touches the indexer, and `main` requires them (H7's first
+  slice).
 - **The order up to SCIP:**
-  1. H4 phase 0a (this recycling of the docs);
-  2. **H5**, the indexer refactor that changes no behavior (`docs/handoffs/H5-indexer-refactor.md`);
-  3. the new hold-out;
-  4. P2 (the indexer in its own repo);
-  5. SCIP (F1.1, F1.2).
+  1. design **H6**, the extraction as a parallel map, a reduce and a per-file cache
+     (`docs/handoffs/H6-extraction-pipeline.md`);
+  2. **H5**, the indexer refactor that changes no behavior, built toward H6's design
+     (`docs/handoffs/H5-indexer-refactor.md`);
+  3. plug H6 in;
+  4. the new hold-out;
+  5. P2 (the indexer in its own repo);
+  6. SCIP (F1.1, F1.2).
 - The current state is in the ROADMAP, under "Where we are".
 
 ## Where to find things
@@ -130,7 +139,7 @@ The full text is in the ROADMAP, under "Principles".
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
-| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H7; closed: H1, H2, reduced to summaries) |
+| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H6, H7; closed: H1, H2, reduced to summaries) |
 
 ## For contributors (people or agents)
 
@@ -140,5 +149,5 @@ The full text is in the ROADMAP, under "Principles".
 - **Corpus repos belong to third parties:** never run their code. Read and measure through the indexer's container.
 - **Long commands** (corpus, refresh) run in the background. Don't edit the indexer or the expected lists during a
   corpus run, because the code is mounted in the containers.
-- **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). Two docs are still in Portuguese
-  until they are rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b) and the H5 handoff.
+- **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). One doc is still in Portuguese
+  until it is rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b).
