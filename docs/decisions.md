@@ -79,7 +79,7 @@ decided by the author on 2026-10-19.
 | H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
 | H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
 
-## H6: the extraction pipeline (H6-D1–D4, decided by the author on 2026-10-19)
+## H6: the extraction pipeline (H6-D1–D4 decided by the author on 2026-10-19, H6-D5–D6 on 2026-10-20)
 
 | # | Decision | Why |
 |---|---|---|
@@ -87,6 +87,8 @@ decided by the author on 2026-10-19.
 | H6-D2 | The per-file incremental cache is a requirement. | A refresh after a one-file push should not re-parse the snapshot, and a branch shares most of its files with `main`. |
 | H6-D3 | The second read (a rule that needs a tree and another file's fact) is chosen by measurement: resolving in the reduce from summaries, or a second map that re-parses. | Each changes the scanners, the cache and the memory differently; numbers decide. |
 | H6-D4 | A technology joins the compose only if it adds no failure handling to build. | A gain in speed that brings retries, duplicate deliveries or stalled jobs to handle costs more than it gives. |
+| H6-D5 | **The second read is a second map (B) that reads the file again and scans it with its directory's context, read-only.** Its cache is keyed per package (D): the directory's context, cut to what scanners read, plus the other directories it looked up and its questions to the repo's structure, each with its answer. Resolving in the reduce (A) is dropped. Keying by the entries read (C) stays a refinement. | Step 1: B with D was identical everywhere and changed no scanner. A would turn reads that decide control flow into conditional items. C re-runs 4 times fewer scans at the p90, but it tracks every read. |
+| H6-D6 | **The map's batches are files, largest first, cut to a size in lines,** not modules. | The reduce joins the contexts, so a package can be split. A cut by count left the run waiting on the batch of the largest files. |
 
 ## H7: regression gates in CI (H7-D1, D3 and D5, decided with the author on 2026-10-19)
 
