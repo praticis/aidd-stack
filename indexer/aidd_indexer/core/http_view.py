@@ -15,6 +15,7 @@ from .model import FileInfo, ModuleInfo, RepoInfo
 
 if TYPE_CHECKING:
     from .http_base import PackageContext
+    from .package_facts import PackageFacts
 
 
 class RepoView:
@@ -26,7 +27,7 @@ class RepoView:
         self._setup: set[str] = set()
         self._memo: dict[tuple[str, str], str | None] = {}
         self._paths: set[str] | None = None
-        self._classes: dict[str, list["PackageContext"]] | None = None
+        self._defining: dict[tuple[str, str], dict[object, list["PackageContext"]]] = {}
         self._requires: dict[str, set[str] | None] = {}
 
     def _context(self, language: str) -> ResolveContext:
@@ -64,15 +65,17 @@ class RepoView:
             self._paths = {f.path for f in self._files}
         return self.contexts.get(str(PurePosixPath(path).parent) if path in self._paths else path or ".")
 
-    def classes_named(self, name: str) -> list["PackageContext"]:
-        """The directories that define a class `name` (`PackageContext.classes`): a base named in another file is
-        looked up by its name when the one class of that name in the repo is it."""
-        if self._classes is None:
-            self._classes = {}
+    def defining(self, kind: type[PackageFacts], field: str, name: str) -> list["PackageContext"]:
+        """The directories whose facts of `kind` hold `name` in `field`, in directory order. A scanner looks across
+        the repo only through here, never by walking `contexts`, so the lookup is one question with one answer."""
+        index = self._defining.get((kind.key, field))
+        if index is None:
+            index = self._defining[(kind.key, field)] = {}
             for ctx in self.contexts.values():
-                for cname in ctx.classes:
-                    self._classes.setdefault(cname, []).append(ctx)
-        return self._classes.get(name, [])
+                facts = ctx.facts.get(kind.key)
+                for key in getattr(facts, field) if facts is not None else ():
+                    index.setdefault(key, []).append(ctx)
+        return index.get(name, [])
 
     def manifest_dir(self, file: FileInfo, package: str) -> str | None:
         """The directory of the manifest nearest `file` (its package: a `package.json`, a `.csproj`..), when that

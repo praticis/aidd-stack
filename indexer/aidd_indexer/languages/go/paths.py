@@ -1,5 +1,6 @@
 """Go's own path expressions, mixed into the Go scanner: `url.URL` (`u.String()`, `url.Parse(..)`, `u.JoinPath(..)`,
-a read of `u.Path`) and grpc-gateway's patterns (`runtime.MustPattern`, `runtime.NewPattern`)."""
+a read of `u.Path`), grpc-gateway's patterns (`runtime.MustPattern`, `runtime.NewPattern`) and a call to a function
+that returns one of its arguments."""
 
 from __future__ import annotations
 
@@ -8,6 +9,7 @@ from tree_sitter import Node
 from ...core.http_nodes import STRING_NODES
 from ...core.paths import unquote
 from ...tree import node_text as text, walk
+from .package_facts import passthrough_index
 
 
 class GoPaths:
@@ -30,6 +32,9 @@ class GoPaths:
         if recv == "runtime" and fname == "NewPattern" and len(arg_nodes) >= 3:
             return True, self._gateway_pattern(arg_nodes), arg_nodes
         return False, None, arg_nodes
+
+    def _returned_argument(self, fn: Node) -> int | None:
+        return passthrough_index(self, fn)
 
     def _gateway_pattern(self, args: list[Node]) -> str | None:
         ops = [int(text(c, self.src)) for c in walk(args[1]) if c.type == "int_literal"]

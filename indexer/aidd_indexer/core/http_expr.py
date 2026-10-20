@@ -33,7 +33,7 @@ _PATH_NAMED = re.compile(r"^(path|url|uri|endpoint|route|href|target|location|\w
 _JOIN_CALL = re.compile(r"^(Join|JoinPath|AppendPaths?|urljoin|Combine(Uri|Url|Path|Paths)?|UrlCombine)$")   # path.Join, urljoin, CombineUri
 SEGMENT = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]{1,63}$")                  # `cases`, `signal_instances`, `v2`
 _RELATIVE = re.compile(r"^[A-Za-z][A-Za-z0-9_.\-]*(/[A-Za-z0-9_.\-]+)+$")    # `security/back-office`
-_VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
+VERB_CONST = re.compile(r"^(?:http\.)?Method([A-Z][a-z]+)$|^HttpMethod\.([A-Z][a-z]+)$")
 
 
 def owner_class(n: Node, src: bytes) -> str | None:
@@ -71,11 +71,6 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
         if name is not None and val is not None and name.type in ("identifier", "property_identifier") and not in_function(n):
             while val.type in ("expression_list", "equals_value_clause") and val.named_child_count == 1:
                 val = val.named_children[0]
-            if n.type == "var_spec" and val.type == "composite_literal":     # a list of verbs: gin's Match(..)
-                verbs = verb_list(val, src)
-                if verbs:
-                    ctx.verb_lists[text(name, src)] = verbs
-                    continue
             owner = owner_class(n, src)
             names = [text(name, src)] + ([f"{owner}.{text(name, src)}"] if owner else [])
             parts = concat_parts(val, src) if val.type in CONCAT_NODES else \
@@ -99,21 +94,6 @@ def collect_constants(fx, ctx: "PackageContext") -> None:
             lit = unquote(text(n, src))
             if ENV_URL_NAME.match(lit):
                 ctx.env_hints.add(lit)
-
-
-def verb_list(n: Node, src: bytes) -> tuple[str, ...] | None:
-    """`[]string{http.MethodPut, "POST"}`: the verbs, when every element is one."""
-    body = n.child_by_field_name("body")
-    elems = [e.named_children[0] if e.type in ("literal_element", "element") and e.named_child_count else e
-             for e in (body.named_children if body is not None else ())]
-    out = []
-    for e in elems:
-        m = _VERB_CONST.match(text(e, src))
-        v = (m.group(1) or m.group(2) or "").upper() if m else unquote(text(e, src)).upper() if e.type in STRING_NODES else ""
-        if v not in HTTP_METHODS:
-            return None
-        out.append(v)
-    return tuple(out) or None
 
 
 def _query_choice(e: Node, src: bytes) -> bool:
@@ -370,7 +350,7 @@ class PathExpressions:
             if len(segs) > 1 and is_url_literal(segs[0]):         # a URL first keeps its host: the rest joins its path
                 return segs[0].rstrip("/") + "/" + "/".join(s.strip("/") for s in segs[1:])
             return ("/" + "/".join(s.strip("/") for s in segs)) if segs else None
-        index = self._passthrough_index(fn) if fn is not None else None
+        index = self._returned_argument(fn) if fn is not None else None
         if index is not None and index < len(arg_nodes):                # conf.BaseUri(config.ApiUri): the argument
             return self.path_of(arg_nodes[index], lenient, _depth + 1)
         return None
@@ -381,24 +361,9 @@ class PathExpressions:
         arguments the reading below sees)."""
         return False, None, arg_nodes
 
-    def _passthrough_index(self, fn: Node) -> int | None:
-        """The parameter a Go function of the repo returns (`_passthrough`): `F` of this package, `pkg.F` of an
-        imported one, a method `x.M` by its name when the repo has one `M` of that kind."""
-        if fn.type == "identifier":
-            return self.ctx.passthrough.get(text(fn, self.src))
-        if fn.type != "selector_expression":
-            return None
-        operand, field = fn.child_by_field_name("operand"), text(fn.child_by_field_name("field"), self.src)
-        view = self.ctx.view
-        imports = getattr(self, "imports", {})
-        if operand is not None and operand.type == "identifier" and text(operand, self.src) in imports:
-            target = self.resolve_import(imports[text(operand, self.src)][0]) if view is not None else None
-            ctx = view.contexts.get(target) if target is not None else None
-            return ctx.passthrough.get(field) if ctx is not None else None
-        if view is None:
-            return None
-        found = {c.passthrough[field] for c in view.contexts.values() if field in c.passthrough}
-        return found.pop() if len(found) == 1 else None
+    def _returned_argument(self, fn: Node) -> int | None:
+        """Language hook: the argument a call to a function of the repo returns as its value, by its position."""
+        return None
 
     def _path_of_append(self, n: Node, lenient: bool, _depth: int) -> str | None:
         """`url += "/" + id`: the earlier value plus the tail. With the base unknown (a URL from a call) the tail is
@@ -628,7 +593,7 @@ class PathExpressions:
         if n.type in STRING_NODES:
             v = unquote(txt).upper()
             return v if v in HTTP_METHODS else None
-        m = _VERB_CONST.match(txt)
+        m = VERB_CONST.match(txt)
         if m:
             v = (m.group(1) or m.group(2) or "").upper()
             return v if v in HTTP_METHODS else None

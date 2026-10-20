@@ -35,6 +35,7 @@ from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODE
                          FUNCTION_SCOPES, has_interpolation, member)
 from .http_scope import END, Scopes, scope_id
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
+from .package_facts import PackageFacts
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
 from .paths import (HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, has_literal_segment, is_url_literal, mask_placeholders,
                     normalize_path, path_key, unquote)
@@ -117,7 +118,8 @@ class Region(NamedTuple):
 
 # ------------------------------------------------------------------------------------------
 class PackageContext:
-    """Per directory (Go package / TS folder / C# namespace dir): route constants and env-var names."""
+    """Per directory: the route constants, env-var names and functions its files share, and each language's own facts
+    of it (`PackageFacts`)."""
 
     def __init__(self, patterns: "ScanPatterns | None" = None) -> None:
         self.route_consts: dict[str, str] = {}     # name -> raw path (or base URL)
@@ -127,21 +129,10 @@ class PackageContext:
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
         self.segments: dict[str, str] = {}          # name -> one path segment (`"cases"`): only whole, inside a template
         self.relatives: dict[str, str] = {}         # name -> segments without a leading slash (`"security/back-office"`):
-                                                    # only C#'s routing attributes read them (`_RouteAttributes`)
+                                                    # read only where a routing attribute puts them in a template
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
-        self.passthrough: dict[str, int | None] = {}   # Go function → the parameter every `return` ends with
-        self.verb_lists: dict[str, tuple[str, ...]] = {}   # Go `var MethodsPutPost = []string{http.MethodPut, ..}`
-        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts` (Go: the struct field types)
-        # Python class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class
-        # of the project (`class UserAPIRouter(APIRouter)`); None when two files of the directory define it differently
-        self.classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = {}
-        # TS/JS (file, name) → a client that puts a base before its paths: ("parts", the base) for
-        # `axios.create({ baseURL })`, ("new", class, {option: parts}) for `new ApiClient(..)`, ("alias", name) for
-        # `export default api`; and a class whose base is a field (`this.baseUrl = options.baseUrl || "/api"`) →
-        # (the option that gives it, the default), None when two of the directory differ
-        self.client_bases: dict[tuple[str, str], tuple] = {}
-        self.client_classes: dict[str, tuple[str | None, list] | None] = {}
-        self.client_rewritten: set[tuple[str, str]] = set()   # (file, client) a request interceptor rewrites the url of
+        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts`
+        self.facts: dict[str, PackageFacts] = {}    # each language's facts of the directory, by `PackageFacts.key`
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
@@ -182,12 +173,12 @@ class PackageContext:
         parts = self.const_parts.get(name)
         if parts is None or name in _seen or len(_seen) > 4:
             return None
-        raw = self._joined(parts, _seen + (name,))
+        raw = self.joined(parts, _seen + (name,))
         if raw is not None:
             self.route_consts[name] = raw
         return raw
 
-    def _joined(self, parts: list[tuple[str, str | None]], _seen: tuple[str, ...] = ()) -> str | None:
+    def joined(self, parts: list[tuple[str, str | None]], _seen: tuple[str, ...] = ()) -> str | None:
         """`A + "/x"` as parts, each constant by `route_const`; one the directory does not hold is a parameter, and a
         parameter at the start is a base (`{param}/api/v1` is `/api/v1`). None unless a path or a URL."""
         raw = ""
@@ -198,26 +189,6 @@ class PackageContext:
         if len(raw) < 2 or not (PATH_LITERAL.match(mask_placeholders(raw)) or REL_PATH_LITERAL.match(raw) or is_url_literal(raw)):
             return None
         return raw
-
-    def client_base(self, path: str, name: str, _depth: int = 0) -> str | None:
-        """The base path the client `name` of the file `path` puts before its requests' paths (`client_bases`):
-        `axios.create({ baseURL: "/api" })`, a `new ApiClient()` with `this.baseUrl =
-        options.baseUrl || "/api"`. Only a path: a base URL's host is the linker's (`target_hint`)."""
-        v = self.client_bases.get((path, name))
-        if v is None or _depth > 3 or (path, name) in self.client_rewritten:
-            return None
-        if v[0] == "alias":
-            return self.client_base(path, v[1], _depth + 1)
-        if v[0] == "new":
-            cls = self.client_classes.get(v[1])
-            if cls is None:
-                return None
-            option, default = cls
-            parts = (v[2].get(option) if option else None) or default
-        else:
-            parts = v[1]
-        raw = self._joined(parts) if parts else None
-        return raw if raw is not None and raw.startswith("/") else None
 
 
 def dir_of(file_path: str) -> str:

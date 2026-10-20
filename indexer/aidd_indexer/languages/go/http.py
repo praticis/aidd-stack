@@ -16,7 +16,7 @@ from tree_sitter import Node
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, ROUTER_TYPE, STRING_NODES,
                                HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
 from ...core.http_scope import enclosing_function, in_function
-from ...core.http_expr import verb_list
+from .package_facts import GoFacts, verb_list
 from .paths import GoPaths
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
@@ -230,12 +230,14 @@ class GoScanner(GoPaths, BaseScanner):
             bound, val = self.scopes.binding(n)
             if bound and val is not None and val.type == "composite_literal":
                 return verb_list(val, self.src)
-            return self.ctx.verb_lists.get(text(n, self.src))
+            return GoFacts.read(self.ctx).verb_lists.get(text(n, self.src))
         operand = n.child_by_field_name("operand") if n.type == "selector_expression" else None
         if operand is not None and text(operand, self.src) in self.imports and self.ctx.view is not None:
             target = self.resolve_import(self.imports[text(operand, self.src)][0])
             ctx = self.ctx.view.contexts.get(target) if target is not None else None
-            return ctx.verb_lists.get(text(n.child_by_field_name("field"), self.src)) if ctx is not None else None
+            if ctx is None:
+                return None
+            return GoFacts.read(ctx).verb_lists.get(text(n.child_by_field_name("field"), self.src))
         return None
 
     def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:

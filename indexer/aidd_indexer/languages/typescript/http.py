@@ -22,6 +22,7 @@ from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, is_url_lite
 from .client_wrappers import TsClientWrappers, compose_wrapped_calls_ts
 from .file_routes import TsFileRoutes, compose_autoloads
 from .mount_forms import TsMountForms
+from .package_facts import TsFacts, client_base
 from .returns import TsReturns
 
 TS_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "all", "route"}
@@ -105,7 +106,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         return MountedRoot(lit) if lit and PATH_LITERAL.match("/" + mask_placeholders(lit)) else None
 
     def add_call(self, node: Node, method: str | None, raw_path: str, via: str) -> bool:
-        """A request on a client with a base (`PackageContext.client_base`) is at the base, joined with a slash as
+        """A request on a client with a base (`client_base`) is at the base, joined with a slash as
         axios joins them: `api.post("/pages/info")` on `axios.create({ baseURL: "/api" })` in another file
         is `/api/pages/info`."""
         base = self._client_base(via) or self._own_base(node, via) if raw_path and not is_url_literal(raw_path) else None
@@ -117,29 +118,29 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         """`this.fetch("/batch", "POST")` inside a client class with a base: the class's request methods put it
         before the path, as its other callers' requests get it."""
         cls = self._class_around(node) if via.startswith("this.") else None
-        found = self.ctx.client_classes.get(cls) if cls else None
-        raw = self.ctx._joined(found[1]) if found and found[1] else None
+        found = TsFacts.read(self.ctx).client_classes.get(cls) if cls else None
+        raw = self.ctx.joined(found[1]) if found and found[1] else None
         return raw if raw is not None and raw.startswith("/") else None
 
     def _client_base(self, via: str) -> str | None:
         """The base of the client a call is made on (`_client_of`), when it has a path for one."""
         found = self._client_of(via)
-        return found[0].client_base(found[1], found[2]) if found is not None else None
+        return client_base(*found) if found is not None else None
 
     def _client_of(self, via: str) -> tuple | None:
         """The client a call is made on, as (its directory's context, its file, its name): a module-level client of
-        this file (`PackageContext.client_bases`), or an import of one. A client is no router: `api.post("/x", data)`
+        this file (`TsFacts.client_bases`), or an import of one. A client is no router: `api.post("/x", data)`
         is a request whatever its last argument looks like."""
         recv = via.rsplit(".", 1)[0] if "." in via else ""
         if not re.fullmatch(r"[A-Za-z_$][\w$]*", recv):
             return None
         path = self.fx.file.path
-        if (path, recv) in self.ctx.client_bases:
+        if (path, recv) in TsFacts.read(self.ctx).client_bases:
             return self.ctx, path, recv
         spec, orig = self.imports.get(recv) or (None, None)
         target = self.resolve_import(spec) if spec is not None and orig is not None else None
         ctx = self.ctx.view.constants(target) if target is not None and self.ctx.view is not None else None
-        return (ctx, target, orig) if ctx is not None and (target, orig) in ctx.client_bases else None
+        return (ctx, target, orig) if ctx is not None and (target, orig) in TsFacts.read(ctx).client_bases else None
 
     def _maybe_router_var(self, n: Node) -> None:
         name = n.child_by_field_name("name") or n.child_by_field_name("left")

@@ -1,23 +1,58 @@
-"""TS/JS facts of a package that the HTTP scanner reads across files: the module's clients with a base
-(`PackageContext.client_bases`), the classes whose field holds it, the interceptors that rewrite a request's url, and
-the string members of an enum."""
+"""TS/JS facts of a package that the HTTP scanner reads across files (`TsFacts`): the module's clients with a base,
+the classes whose field holds it, the interceptors that rewrite a request's url; and the string members of an enum,
+which are constants of the package."""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, ClassVar
 
 from tree_sitter import Node
 
 from ...core.http_expr import SEGMENT, concat_parts, first_string, template_parts
 from ...core.http_nodes import CONCAT_NODES, STRING_NODES, has_interpolation
 from ...core.http_scope import in_function
+from ...core.package_facts import AGREE, LAST, UNION, PackageFacts, joined_by
 from ...core.paths import PATH_LITERAL, REL_PATH_LITERAL, unquote
 from ...tree import node_text as text, walk
 
 if TYPE_CHECKING:
     from ...core.http_base import PackageContext
+
+
+@dataclass
+class TsFacts(PackageFacts):
+    key: ClassVar[str] = "typescript"
+    # (file, name) → a client that puts a base before its paths: ("parts", the base) for `axios.create({ baseURL })`,
+    # ("new", class, {option: parts}) for `new ApiClient(..)`, ("alias", name) for `export default api`
+    client_bases: dict[tuple[str, str], tuple] = joined_by(LAST)
+    # a class whose base is a field (`this.baseUrl = options.baseUrl || "/api"`) → (the option that gives it, the default)
+    client_classes: dict[str, tuple[str | None, list] | None] = joined_by(AGREE)
+    client_rewritten: set[tuple[str, str]] = joined_by(UNION)   # (file, client) a request interceptor rewrites the url of
+
+
+def client_base(ctx: "PackageContext", path: str, name: str, _depth: int = 0) -> str | None:
+    """The base path the client `name` of the file `path` puts before its requests' paths: `axios.create({ baseURL:
+    "/api" })`, a `new ApiClient()` with `this.baseUrl = options.baseUrl || "/api"`. Only a path: a base URL's host is
+    the linker's (`target_hint`)."""
+    facts = TsFacts.read(ctx)
+    v = facts.client_bases.get((path, name))
+    if v is None or _depth > 3 or (path, name) in facts.client_rewritten:
+        return None
+    if v[0] == "alias":
+        return client_base(ctx, path, v[1], _depth + 1)
+    if v[0] == "new":
+        cls = facts.client_classes.get(v[1])
+        if cls is None:
+            return None
+        option, default = cls
+        parts = (v[2].get(option) if option else None) or default
+    else:
+        parts = v[1]
+    raw = ctx.joined(parts) if parts else None
+    return raw if raw is not None and raw.startswith("/") else None
 
 
 def package_facts_reader(src: bytes) -> Callable[[Node, bytes, "PackageContext", str], bool]:
@@ -26,7 +61,7 @@ def package_facts_reader(src: bytes) -> Callable[[Node, bytes, "PackageContext",
 
     def read(n: Node, src: bytes, ctx: "PackageContext", path: str) -> bool:
         t = n.type
-        if t in nodes:                                           # a client with a base (`client_bases`)
+        if t in nodes:                                           # a client with a base
             _client_node(n, src, ctx, path)
         if t == "enum_assignment":                                # enum RouteKey { Asset = 'assets' }
             _enum_member(n, src, ctx)
@@ -43,11 +78,19 @@ def _client_node(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
     elif t == "call_expression":
         _ts_interceptor(n, src, ctx, path)
     elif t == "export_statement":
-        v = n.child_by_field_name("value")
-        if v is not None and v.type == "identifier" and any(c.type == "default" for c in n.children):
-            ctx.client_bases.setdefault((path, "default"), ("alias", text(v, src)))
+        _default_export(n, src, ctx, path)
     else:
         _ts_client_class(n, src, ctx)
+
+
+def _default_export(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
+    """`export default api`: the file's first default export, which an import of the file's default names."""
+    v = n.child_by_field_name("value")
+    if v is None or v.type != "identifier" or not any(c.type == "default" for c in n.children):
+        return
+    facts = TsFacts.of(ctx)
+    if (path, "default") not in facts.client_bases:
+        facts.put("client_bases", (path, "default"), ("alias", text(v, src)))
 
 
 def _enum_member(n: Node, src: bytes, ctx: "PackageContext") -> None:
@@ -70,7 +113,7 @@ CLIENT_FACTORIES = frozenset({"create", "extend"})                   # axios.cre
 
 
 def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
-    """A module's client with a base (`PackageContext.client_bases`): `const api = axios.create({ baseURL: "/api" })`,
+    """A module's client with a base (`TsFacts.client_bases`): `const api = axios.create({ baseURL: "/api" })`,
     `ky.extend({ prefixUrl })`; `export const client = new ApiClient({ baseUrl: .. })`, whose class says
     which option gives its base (`_ts_client_class`)."""
     name, val = n.child_by_field_name("name"), n.child_by_field_name("value")
@@ -86,12 +129,12 @@ def _ts_client(n: Node, src: bytes, ctx: "PackageContext", path: str) -> None:
     if val.type == "new_expression":
         ctor = val.child_by_field_name("constructor")
         if ctor is not None and ctor.type == "identifier":
-            ctx.client_bases[(path, text(name, src))] = ("new", text(ctor, src), given)
+            TsFacts.of(ctx).put("client_bases", (path, text(name, src)), ("new", text(ctor, src), given))
         return
     fn = val.child_by_field_name("function")
     prop = fn.child_by_field_name("property") if fn is not None and fn.type == "member_expression" else None
     if prop is not None and text(prop, src) in CLIENT_FACTORIES and given:
-        ctx.client_bases[(path, text(name, src))] = ("parts", next(iter(given.values())))
+        TsFacts.of(ctx).put("client_bases", (path, text(name, src)), ("parts", next(iter(given.values()))))
 
 
 
@@ -105,7 +148,7 @@ def _ts_interceptor(n: Node, src: bytes, ctx: "PackageContext", path: str) -> No
     for a in walk(args):
         left = a.child_by_field_name("left") if a.type in ("assignment_expression", "augmented_assignment_expression") else None
         if left is not None and re.search(r"\.(url|baseURL)$", text(left, src)):
-            ctx.client_rewritten.add((path, m.group(1)))
+            TsFacts.of(ctx).put("client_rewritten", (path, m.group(1)))
             return
 
 def _ts_client_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
@@ -136,8 +179,7 @@ def _ts_client_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
                 if parts:
                     found = (option, parts)
     if found is not None:
-        nm = text(cname, src)
-        ctx.client_classes[nm] = found if ctx.client_classes.get(nm, found) == found else None
+        TsFacts.of(ctx).put("client_classes", text(cname, src), found)
 
 
 def _object_pairs(obj: Node | None, src: bytes) -> list[tuple[str, Node]]:
@@ -151,7 +193,7 @@ def _object_pairs(obj: Node | None, src: bytes) -> list[tuple[str, Node]]:
 
 
 def _base_parts(v: Node | None, src: bytes) -> list[tuple[str, str | None]] | None:
-    """A base as `PackageContext._joined` reads it: a literal, a constant, `A + "/x"`, `` `${A}/x` ``."""
+    """A base as `PackageContext.joined` reads it: a literal, a constant, `A + "/x"`, `` `${A}/x` ``."""
     if v is None:
         return None
     if v.type in STRING_NODES and not has_interpolation(v):

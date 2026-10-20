@@ -1,19 +1,29 @@
-"""Python facts of a package that the HTTP scanner reads across files: the project's router classes
-(`PackageContext.classes`), with what their `__init__` makes of the prefix."""
+"""Python facts of a package that the HTTP scanner reads across files (`PyFacts`): the project's router classes, with
+what their `__init__` makes of the prefix."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, ClassVar
 
 from tree_sitter import Node
 
 from ...core.http_nodes import STRING_NODES, has_interpolation
 from ...core.http_scope import in_function
+from ...core.package_facts import AGREE, PackageFacts, joined_by
 from ...core.paths import unquote
 from ...tree import node_text as text, walk
 
 if TYPE_CHECKING:
     from ...core.http_base import PackageContext
+
+
+@dataclass
+class PyFacts(PackageFacts):
+    key: ClassVar[str] = "python"
+    # class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class of the
+    # project (`class UserAPIRouter(APIRouter)`)
+    classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = joined_by(AGREE)
 
 
 def read_package_facts(n: Node, src: bytes, ctx: "PackageContext", path: str) -> bool:
@@ -35,8 +45,7 @@ def _py_class(n: Node, src: bytes, ctx: "PackageContext") -> None:
                   if b.type in ("identifier", "attribute"))
     if name is None or not bases or in_function(n):
         return
-    cname, info = text(name, src), (bases, _init_prefix(n, src))
-    ctx.classes[cname] = info if ctx.classes.get(cname, info) == info else None
+    PyFacts.of(ctx).put("classes", text(name, src), (bases, _init_prefix(n, src)))
 
 
 def _init_prefix(cls: Node, src: bytes) -> tuple | None:
