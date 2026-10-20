@@ -392,3 +392,147 @@ The live install's three mirrors that have history agree: a median of 0 to 2 fil
 7. **The HTTP corpus never runs the resolver**, so it neither saw item 1 nor compares `CALLS`. The full dry-run,
    compared record by record, is what covers the micro graph. It joins H5's regression protocol and H7's gates.
 
+
+## H6 step 1 (2026-10-20)
+
+H6's step 1 prototypes the extraction as a map, a reduce and a per-file cache, and measures the options for the
+second read (`docs/handoffs/H6-extraction-pipeline.md`, "Open question 1").
+
+**What ran:** a prototype on a throwaway branch, `h6/step1-proto`, cut from the H5 branch at `374e243` and never
+merged. It replaces `extract_tree` with three stages:
+
+- **map 1, in worker processes** (`ProcessPoolExecutor`, started with `fork`): each file is extracted and its tree
+  dropped. The worker returns a summary: the symbols, calls, imports and facts, plus what the file adds to its
+  directory's HTTP context;
+- **the reduce:** the directories' contexts are joined in file order. Each file's additions are replayed, and the
+  context's rules of "one value, else none" are kept;
+- **map 2, the second read as option B:** each file a scanner reads is extracted again and scanned with its
+  directory's context.
+
+A per-file cache keeps both maps' results:
+
+- map 1 is keyed by the file: its id, path, language, content hash and module;
+- map 2 is keyed by option D per package (below).
+
+No line of a scanner changed.
+
+**How it ran:**
+
+- one container per run, alone on an 8-CPU machine;
+- 3 rounds, interleaved across vikunja, mattermost and grafana;
+- each figure is the median, with the range (min–max).
+
+**Correctness:**
+
+- **The tests:** 350 passed.
+- **The HTTP corpus:** `0 repo(s) differ` against `2026-10-18-v2-baseline-28`, on 55 repos.
+- **The micro set:** the full dry-runs are identical to `main`'s on the 12 repos, record by record.
+- **The bench:** each of its 45 prototype runs (cold and warm, with 1 to 4 workers) is identical to today's run of the
+  same tree.
+- **Real pushes:** a warm run equals a cold one on 6 pushes, and again on a second warm run with no change.
+
+**Time**, in seconds, for a full dry-run (warm uses 2 workers):
+
+| Repo | Today | 1 worker | 2 workers | 4 workers | Warm, nothing changed |
+|---|---|---|---|---|---|
+| vikunja | 21.1 (21.0–22.3) | 26.2 (26.1–26.9) | 17.0 (16.9–17.8) | 14.7 (14.7–15.6) | 3.2 (3.2–4.2) |
+| mattermost | 73.1 (73.1–73.7) | 91.5 (91.1–93.0) | 52.7 (52.4–53.7) | 31.2 (30.8–32.5) | 14.1 (13.6–16.3) |
+| grafana | 132.5 (132.4–135.2) | 154.5 (154.3–159.1) | 95.3 (95.1–97.0) | 60.5 (59.6–63.8) | 33.0 (33.0–34.0) |
+
+**Memory**, the container's peak in MiB (median):
+
+| Repo | Today | 1 worker | 2 workers | 4 workers | Warm |
+|---|---|---|---|---|---|
+| vikunja | 658 | 408 | 505 | 652 | 423 |
+| mattermost | 2,286 | 1,136 | 1,190 | 1,324 | 1,242 |
+| grafana | 4,283 | 2,268 | 2,368 | 2,357 | 2,489 |
+
+**The cache on real pushes.** The cache was filled on the commit before each push, and the runs used 2 workers.
+"Map 2 re-run" is the number of scans whose key missed:
+
+| Push | Parsed files changed | Map 2 re-run | Cold (s) | Warm (s) | Warm again, no change (s) | Warm equals cold |
+|---|---|---|---|---|---|---|
+| vikunja k12 | 7 | 10 | 17.1 | 3.3 | 3.0 | yes |
+| vikunja k28 | 3 | 102 | 17.0 | 4.2 | 2.9 | yes |
+| vikunja k38 | 2 | 5 | 17.0 | 3.4 | 2.9 | yes |
+| mattermost k19 | 5 | 40 | 59.6 | 16.2 | 12.4 | yes |
+| mattermost k25 | 18 | 496 | 53.9 | 23.4 | 12.2 | yes |
+| mattermost k30 | 11 | 72 | 53.7 | 20.6 | 13.8 | yes |
+
+**The second read's policies, on 39 consecutive pushes per repo.** Each push was replayed from the default branch's
+first-parent history, and each commit was indexed cold. For each file, the replay recorded:
+
+- the file's key and the digests of its summary and of its scan;
+- the directories its scan looked up;
+- the questions it asked of the repo's structure: an import's target, a manifest's directory, the files under a
+  directory;
+- the context entries it read.
+
+A policy misses a change when a file's key hits but its scan differs:
+
+| Policy: a scan re-runs when… | vikunja: scans re-run per push, median / p90 / max | mattermost | Keys that missed a change |
+|---|---|---|---|
+| B: always | 970 / 972 / 972 | 4,572 / 4,589 / 4,589 | 0 |
+| D, whole repo: any context or the structure changed | 969 / 972 / 972 | 4,563 / 4,587 / 4,589 | 0 |
+| D per package, raw context: its directory's context, a directory it looked up, or an answer to its questions changed | 3 / 97 / 102 | 114 / 444 / 496 | 0 |
+| D per package, as built: the same, over what a scanner reads of the context | 1 / 97 / 102 | 40 / 438 / 496 | 0 |
+| C: an entry it read, or an answer to its questions, changed | 1 / 10 / 11 | 8 / 108 / 144 | 0 |
+| Only when its own file changed (A's floor) | 1 / 2 / 3 | 2 / 10 / 27 | 0 |
+
+Other figures from the replay:
+
+- **Files per push:** a median of 2 parsed files changed on vikunja (max 7) and 5 on mattermost (p90 22, max 42).
+- **Map 1 keys:** across the 78 pushes, no key hit with a different summary.
+- **Map 2's CPU per push on mattermost** (median / p90): 0.2 / 10.2 s with D per package, 0.1 / 2.9 s with C, and
+  36 / 42 s with B.
+
+**What it says:**
+
+1. **B with D per package works as built.** Its output is identical everywhere, and no scanner changed. On
+   mattermost, a warm run takes 14 s with nothing changed and 16–23 s after a real push, against 73 s today.
+2. **The map scales with workers.**
+   - With 4 workers, grafana goes from 132 s to 60 s, and mattermost from 73 s to 31 s.
+   - With 1 worker, the prototype is 20–25 % slower than today. Map 2 extracts each scanned file again: the scanners
+     need the file's symbols tied to its tree's nodes, so a parse alone is not enough.
+   - H5's per-file index (step 3), rebuilt from a parse, would remove that cost.
+   - Step 0's estimate for B (0.6–2.2 s, the files with an HTTP shape parsed again) was too low. Which files have a
+     shape is known only after the scan, so map 2 reads every file a scanner reads: 53–66 % of the parsed files.
+3. **Memory halves, but grafana stays above F1.13's 2 GB.** Grafana goes from 4.3 to 2.3 GB, and mattermost from
+   2.3 to 1.1 GB.
+   - With no tree kept, the peak at 1 worker belongs to the parent: the summaries, the resolver and the dry-run's
+     output.
+   - Workers add little: 2.27 GB at 1 worker, 2.36 GB at 4.
+   - The write to Neo4j was not measured.
+4. **A warm run's floor is not the scans.** On mattermost, a run with nothing to re-run still takes 14 s:
+   - discovery reads and hashes every file;
+   - reading the cache's 8.5 thousand entries takes 3.9 s;
+   - the resolver and the output take the rest.
+5. **C re-runs 4 times fewer scans than D at the p90** (108 against 438 on mattermost).
+   - The tail of D comes from Go's large packages. A push that adds a function or a struct field to
+     `server/channels/app` (168 scanned files) changes the package's context, and every file of the package can read
+     it.
+   - C costs read tracking in every scan, about 19 % of map 2's time. Its key holds a median of 0 entries per file, a
+     p90 of 10–17 and a maximum of 9,605.
+   - D per package records a median of 2–3 questions and directories per file, and a p90 of 7.
+6. **The cache store.** Entries written as files, through a temporary file and a rename, cost more than the
+   extraction on Docker Desktop's bind mount: filling the cache took 84 s on mattermost (13 thousand entries),
+   against 53 s cold. SQLite, or one file per snapshot, is the next measurement (Open question 4). The summaries,
+   compressed: 4.6, 19.3 and 37.6 MiB for map 1 (vikunja, mattermost, grafana), plus 0.6, 1.8 and 4.2 MiB for map 2.
+7. **The batches.**
+   - Cut by count, the largest files went into one batch, and the run waited on it.
+   - Cut by size in lines, map 1 scales: vikunja's goes from 12.3 s to 6.7 s and 4.5 s.
+   - A vendored bundle the bundle rule does not catch (`scalar.standalone.js` in vikunja) takes 8.3 s of map 2's
+     12.4 s of CPU. It is map 2's floor at any worker count.
+8. **What the cache must get right**, found while building it:
+   - **ids carry the ref** (`tenant/repo@ref/…`). For one summary to serve two refs, the ids must be made relative,
+     and the reduce must stamp the ref;
+   - **a digest needs a canonical encoding.** Pickle shares equal objects by identity, so equal values gave
+     different digests from run to run;
+   - **the repo's structure cannot be one digest,** or any new file re-runs every scan. Each scan records its
+     questions, and on the next run the questions are asked again;
+   - **a context holds what scanners read**, such as a function's name and id, and not its lines (the raw row
+     against the built one). That is the shape H5's steps 4 and 7 give the facts.
+9. **Option A was not built.** Its floor in the replay is the changed files only.
+   - 15 functions of the scanners read a value another file produced, at 33 sites.
+   - Several of these reads decide control flow, not only a value: Go's verb lists and field types, TS clients and
+     their bases, Python's router classes. Under A, each one becomes a conditional item that the reduce settles.

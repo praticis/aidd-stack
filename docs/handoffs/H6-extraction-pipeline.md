@@ -5,11 +5,14 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-19):** step 0 is measured (`corpus-report.md`, "H6 baseline").
+> **State (2026-10-20):** steps 0 and 1 are measured (`corpus-report.md`, "H6 baseline" and "H6 step 1").
 >
-> - **What it found:** the resolver was the largest phase by far, quadratic in Go and C#. An index built once, merged into
+> - **Step 0 found** the resolver the largest phase by far, quadratic in Go and C#. An index built once, merged into
 >   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.
-> - **Next:** step 1, the prototypes.
+> - **Step 1 built B with D per package** on a throwaway branch (`h6/step1-proto`). Its output is identical on the
+>   corpus, the micro set and real pushes, and no scanner changed. A warm run of mattermost takes 14–23 s, against
+>   73 s today. The table of "Open question 1" is filled in.
+> - **Next:** step 2, the decisions with the author and ADR-004, then ADR-005 and ADR-006.
 >
 > H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
 > partitioning the extraction, running it in parallel and joining the results, with an incremental cache per file as
@@ -113,6 +116,21 @@ run measures the reduce as its floor.
 - the size of the summaries (A's are larger);
 - how many lines of scanner code each one changes.
 
+**What step 1 measured** (`corpus-report.md`, "H6 step 1"). B and D were built. C was measured by replaying 39 pushes
+per repo with each scan's reads recorded. A was costed from its floor in the replay and from the scanners' code.
+"D per package" is D with its key cut finer than the whole repo: the scan's directory's context, the other directories
+it looked up, and the answers to the questions it asked of the repo's structure.
+
+| | A. Resolve in the reduce | B. Map 2 re-extracts | C. B, keyed by the entries read | D. B, keyed by digests, per package |
+|---|---|---|---|---|
+| Parses per file | 1 | 2 for the 53–66 % of files a scanner reads. Map 2 re-extracts, because the scanners tie symbols to nodes | as B | as B |
+| Cold, at 1 worker | not built | 20–25 % slower than today. 4 workers: grafana 60 s and mattermost 31 s, against 132 s and 73 s | as B, plus about 19 % on map 2 for the tracking | as B |
+| Warm, one push (mattermost) | the changed files' map, then the reduce | every scan again: 36 s of CPU | scans re-run: 8 at the median, 108 at the p90; 0.1 / 2.9 s of CPU | scans re-run: 40 at the median, 438 at the p90; 0.2 / 10.2 s of CPU. Measured end to end: 16–23 s |
+| Peak memory | not built | grafana 2.3 GB, mattermost 1.1 GB, against 4.3 and 2.3 today | as B | as B |
+| Summaries, compressed | larger: values left open | map 1: 4.6 / 19.3 / 37.6 MiB (vikunja / mattermost / grafana); map 2: 0.6 / 1.8 / 4.2 MiB | plus the reads: a median of 0 per file, a p90 of 10–17, a maximum of 9,605 | plus the directories and questions: a median of 2–3 per file, a p90 of 7 |
+| Scanner code changed | 15 functions read another file's value, at 33 sites. Several decide control flow (Go's verbs and field types, TS clients, Python routers) | none | none, plus the tracking | none |
+| Keys that missed a change, 78 pushes | — | — | 0 | 0 |
+
 ## Prior art
 
 Researched on 2026-10-19: systems that partition code indexing, run it in parallel, or make it incremental.
@@ -156,6 +174,10 @@ To measure:
 - a strategy: split large modules and merge small ones to a target size in bytes, send the largest first (as
   `corpus.sh` does with repos), and only batch the files that missed the cache.
 
+Step 1 batched files, not modules: the largest first, cut to a target size in lines. A cut by count put the largest
+files in one batch, and the run waited on it. One file the bundle rule does not catch (a vendored
+`scalar.standalone.js`) is map 2's floor on vikunja at any worker count.
+
 ## Open question 4 — where the summaries live
 
 - **Between a worker and the parent:** pickle, which the pool already uses.
@@ -165,6 +187,10 @@ To measure:
     by directory.
 - **The format:** pickle against msgpack, with or without zstd. Measure size and speed.
 - **Where:** `~/.aidd/cache/` mounted into the refresher; `~/.cache/aidd-corpus/` for the corpus.
+
+Step 1 used content-addressed files, compressed with zlib. On Docker Desktop's bind mount, writing them costs more than
+the extraction: filling the cache took 84 s on mattermost (13 thousand entries), against 53 s cold. Reading 8.5
+thousand entries took 3.9 s, a share of the warm floor. SQLite, or one file per snapshot, is to be measured next.
 
 ## The incremental cache: what guarantees it
 
@@ -224,7 +250,7 @@ H5 builds pieces with H6's shape:
 | # | Step | Done when |
 |---|---|---|
 | 0 | Measure the pipeline as it is, with no code change: the time and the peak memory of each phase (discover, parse, extract, facts, constants, scanners, compose, resolve, write) on grafana, mattermost, vikunja, umbraco and ghost; the share of files with an HTTP shape; the files a typical push changes, from the corpus repos' history | the numbers in `corpus-report.md` ("H6 baseline"). **Done 2026-10-19** |
-| 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged |
+| 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged. **Done 2026-10-20** (`h6/step1-proto`) |
 | 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |
 | 4 | Plug in the map, the reduce and the cache | the corpus cold, warm, and the baseline are identical; the hold-out identical |
@@ -254,6 +280,12 @@ H5 builds pieces with H6's shape:
   both slow down.
 - **A cache that is wrong is worse than none.** Anything the map reads that is not in the key (an env var, a file
   next door, the clock) makes a warm run differ from a cold one. The cold/warm comparison on the corpus is the net.
+- **A digest over pickle is not canonical.** Pickle shares equal objects by identity, so the same values gave other
+  bytes when they came back from other batches. Step 1 digests a canonical form's `repr`.
+- **The ids carry the ref.** A summary keyed by content but holding `tenant/repo@ref/…` ids serves one ref only.
+- **The structure as one digest re-runs everything** whenever a file is added. A scan's questions to the repo, with
+  their answers, are its dependency on the structure.
+- **The scanner's re-extraction** in map 2, not a parse, is B's cost: the scanners tie symbols to nodes.
 
 ## Constraints and conventions
 

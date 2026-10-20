@@ -24,7 +24,9 @@
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
     - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
-    - Next: step 1, the prototypes.
+    - Step 1, the prototypes, is done ("H6 step 1"). A second map that re-extracts (B), with a cache keyed per
+      package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
+    - Next: step 2, the decisions and ADR-004 to ADR-006.
   - H7 (`docs/handoffs/H7-regression-gates.md`): slice 1 is in `main`; the next slices are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
@@ -299,7 +301,8 @@ Open:
   Desktop (corpus v2, 2026-10-15), because `extract_tree` keeps the tree-sitter tree and the text of **every** file
   until the end — only the HTTP extraction needs them; the `Resolver` reads data per file (`namespaces`, `facts`).
   H6 step 0 measured the memory per phase. Grafana peaks at 4.2 GB in a container, and the kept trees account for
-  3.7 GB of it. Extracting with each tree dropped peaks at 271 MiB. Then, in order of cost:
+  3.7 GB of it. Extracting with each tree dropped peaks at 271 MiB. H6 step 1's prototype, with no tree kept, peaks
+  at 2.3 GB: what the reduce and the output hold. Then, in order of cost:
   1. release each file's tree as soon as nothing else reads it — HTTP extraction directory by directory (the
      constants and the scan are already per directory);
   2. batches per module (Go package, `.csproj`, `package.json` workspace), each batch written to the graph, and the
