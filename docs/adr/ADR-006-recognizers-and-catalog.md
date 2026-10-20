@@ -1,6 +1,6 @@
 # ADR-006 — HTTP rules as recognizers, and the framework catalog as data
 
-**Status:** proposed · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the
+**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the
 H5 handoff's target architecture, items 5–7; ADR-004 (where the recognizers run)
 
 ## Context

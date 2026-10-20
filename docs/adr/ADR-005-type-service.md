@@ -1,6 +1,6 @@
 # ADR-005 — One type service for the resolver and the scanners
 
-**Status:** proposed · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 5, built toward H6) · **Records:** ADR-002's
+**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 5, built toward H6) · **Records:** ADR-002's
 addendum (`needs-resolver`); the H5 handoff's target architecture, item 3; ADR-004 (where it is built)
 
 ## Context

@@ -26,7 +26,8 @@
     - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
     - Step 1, the prototypes, is done ("H6 step 1"). A second map that re-extracts (B), with a cache keyed per
       package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
-    - Step 2: B keyed per package and batches by size are decided (H6-D5, D6); ADR-004 to ADR-006 are proposed.
+    - Step 2: B keyed per package and batches by size are decided (H6-D5, D6). ADR-005 and ADR-006 are accepted;
+      ADR-004 stays proposed while batches by package are measured.
   - H7 (`docs/handoffs/H7-regression-gates.md`): slice 1 is in `main`; the next slices are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff

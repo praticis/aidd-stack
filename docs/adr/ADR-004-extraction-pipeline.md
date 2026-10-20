@@ -1,6 +1,6 @@
 # ADR-004 — The extraction as a map, a reduce and a per-file cache
 
-**Status:** proposed · **Date:** 2026-10-20 · **Phase:** 1 (H6) · **Records:** H6-D1–D6; the measurements in
+**Status:** proposed; a variant is being measured (batches by package, scanned in the same worker) · **Date:** 2026-10-20 · **Phase:** 1 (H6) · **Records:** H6-D1–D6; the measurements in
 `docs/corpus-report.md`, "H6 baseline" and "H6 step 1"
 
 ## Context

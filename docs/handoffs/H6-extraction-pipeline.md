@@ -15,8 +15,10 @@
 > - **Step 2, in progress:**
 >   - the author decided H6-D5 (B, keyed per package) and H6-D6 (batches by size);
 >   - the cache store was measured (SQLite);
->   - ADR-004 (the pipeline), ADR-005 (the type service) and ADR-006 (recognizers and the catalog) are proposed in
->     `docs/adr/`, for the author to accept.
+>   - ADR-005 (the type service) and ADR-006 (recognizers and the catalog) are accepted;
+>   - ADR-004 (the pipeline) stays proposed while a variant is measured: batches by package, scanned in the same
+>     worker, so that a file is read once. Only the 1.5–3.3 % of scans that look up another directory would need a
+>     second read.
 >
 > H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
 > partitioning the extraction, running it in parallel and joining the results, with an incremental cache per file as
