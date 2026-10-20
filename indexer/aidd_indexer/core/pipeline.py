@@ -46,6 +46,7 @@ class Summary:
     bundle: bool = False
     contrib: dict | None = None
     seconds: float = 0.0
+    scan: tuple | None = None          # a scan made beside the extraction: (its result, each read with what it saw)
 
 
 class _Recorder(PackageContext):
@@ -184,10 +185,14 @@ def _run(fn, items: list, workers: int) -> list:
 # -- map 1 --------------------------------------------------------------------------------------------------------
 
 def _summarize(f: FileInfo) -> Summary:
+    return _extract(f)[0]
+
+
+def _extract(f: FileInfo):
     t = time.perf_counter()
     fx, warns = extract_file(_W["repo"], f, _W["dispatch"])
     if fx is None:
-        return Summary(f, False, warns, seconds=time.perf_counter() - t)
+        return Summary(f, False, warns, seconds=time.perf_counter() - t), None
     s = Summary(f, True, warns, fx.symbols, fx.calls, fx.imports, fx.facts, fx.namespaces,
                 bundle=built_bundle(f.path, fx.src))
     if not s.bundle:
@@ -195,7 +200,7 @@ def _summarize(f: FileInfo) -> Summary:
         collect_constants(fx, rec)
         s.contrib = rec.contribution()
     s.seconds = time.perf_counter() - t
-    return s
+    return s, fx
 
 
 def _map1_batch(items: list) -> list:
@@ -272,17 +277,38 @@ class _Lookups(dict):
         self._rec(key)
         return super().__contains__(key)
 
+    def _all(self) -> None:
+        """Going over every directory reads the whole repo's contexts."""
+        if _W.get("reads") is not None:
+            _W["reads"].add(("all",))
+
+    def values(self):
+        self._all()
+        return super().values()
+
+    def items(self):
+        self._all()
+        return super().items()
+
+    def keys(self):
+        self._all()
+        return super().keys()
+
+    def __iter__(self):
+        self._all()
+        return super().__iter__()
+
 
 def _watch(view: RepoView) -> None:
     """Records what a scan reads of the rest of the repo: the contexts it looks up, the classes it names, and each
     question it asks of the repo's structure, with the question's arguments, so the answer can be asked again."""
     view.contexts = _Lookups(view.contexts)
-    dirs = {id(c): d for d, c in view.contexts.items()}
     orig = view.classes_named
 
     def classes_named(name: str):
         found = orig(name)
         if _W.get("reads") is not None:
+            dirs = {id(c): d for d, c in dict.items(view.contexts)}
             _W["reads"].add(("classes", name))
             _W["reads"].update(("ctx", dirs[id(c)]) for c in found)
         return found
@@ -312,21 +338,26 @@ def view_answer(view: RepoView, files: dict[str, FileInfo], read: tuple):
         args[0] = list(args[0])
     got = view.unwatched[method](*args)
     if method == "constants":
-        return next((d for d, c in view.contexts.items() if c is got), None)
+        return next((d for d, c in dict.items(view.contexts) if c is got), None)
     return got
 
 
 def _scan(f: FileInfo):
     t = time.perf_counter()
     fx, _ = extract_file(_W["repo"], f, _W["dispatch"])
+    delta, reads = _scan_fx(fx, _W["by_dir"][dir_of(f.path)])
+    return delta, reads, time.perf_counter() - t
+
+
+def _scan_fx(fx, ctx: PackageContext):
     delta = HttpResult()
     _W["reads"] = set()
     try:
-        scanner_of(f)(_W["repo"], fx, _W["by_dir"][dir_of(f.path)], delta).scan()
+        scanner_of(fx.file)(_W["repo"], fx, ctx, delta).scan()
     except Exception as e:  # noqa: BLE001 — a weird file must not stop the repo
-        delta.warnings.append(f"{f.path}: http candidates skipped ({type(e).__name__}: {e})")
+        delta.warnings.append(f"{fx.file.path}: http candidates skipped ({type(e).__name__}: {e})")
     reads, _W["reads"] = _W["reads"], None
-    return delta, sorted(reads, key=repr), time.perf_counter() - t
+    return delta, sorted(reads, key=repr)
 
 
 def _map2_batch(items: list) -> list:
@@ -336,9 +367,9 @@ def _map2_batch(items: list) -> list:
 class Deps:
     """The digests map 2's keys are made of, computed once per run, before any scan."""
 
-    def __init__(self, by_dir: dict[str, PackageContext], view: RepoView, files: list[FileInfo]) -> None:
+    def __init__(self, by_dir: dict[str, PackageContext], view: RepoView, files: list[FileInfo] | dict) -> None:
         self.by_dir, self.view = by_dir, view
-        self.files = {f.path: f for f in files}
+        self.files = files if isinstance(files, dict) else {f.path: f for f in files}
         self.ctx = {d: ctx_digest(c, projected=True) for d, c in by_dir.items()}
         self.memo: dict = {}
 
@@ -348,6 +379,8 @@ class Deps:
     def value(self, read: tuple):
         if read[0] == "ctx":
             return self.ctx.get(read[1], _MISSING)
+        if read[0] == "all":
+            return digest(sorted(self.ctx.items()))
         if read[0] == "classes":
             return tuple(d for d, c in self.by_dir.items() if read[1] in c.classes)
         if read not in self.memo:
@@ -361,7 +394,14 @@ class Deps:
 def map2(scanned: list[Summary], workers: int, cache: Cache | None, deps: Deps | None) -> list:
     out: list = [None] * len(scanned)
     todo = []
+    early = late = 0
     for i, s in enumerate(scanned):
+        if s.scan is not None:
+            if deps.valid(s.scan[1]):
+                out[i] = (s.scan[0], [r for r, _ in s.scan[1]], 0.0)
+                early += 1
+                continue
+            late += 1
         hit = cache.get("scan", deps.base(s)) if cache else None
         if hit is not None and deps.valid(hit[0]):
             out[i] = (hit[1], [r for r, _ in hit[0]], 0.0)
@@ -372,7 +412,8 @@ def map2(scanned: list[Summary], workers: int, cache: Cache | None, deps: Deps |
         if cache:
             STATS["scan_bytes"] = STATS.get("scan_bytes", 0) + cache.put(
                 "scan", deps.base(scanned[i]), ([(r, deps.value(r)) for r in reads], delta))
-    STATS.update(map2_hits=len(scanned) - len(todo), map2_misses=len(todo),
+    STATS.update(scanned_early=early, early_invalid=late, map2_hits=len(scanned) - len(todo) - early,
+                 map2_misses=len(todo),
                  map2_cpu=round(sum(out[i][2] for i, _ in todo), 3),
                  map2_foreign=sum(1 for s, o in zip(scanned, out)
                                   if any(r[0] == "classes" or r[0] == "ctx" and r[1] != dir_of(s.file.path)
@@ -408,8 +449,15 @@ def run(repo: RepoInfo, res: ExtractionResult, files: list[FileInfo], rel_files:
     workers = int(os.getenv("AIDD_WORKERS", "2"))
     cache = Cache(os.environ["AIDD_CACHE"], repo, patterns, dispatch_calls) if os.getenv("AIDD_CACHE") else None
     _W.update(repo=repo, dispatch=dispatch_calls, patterns=patterns, reads=None)
+    by_package = os.getenv("AIDD_BATCH", "file") == "package" and cache is None
+    parseable = [f for f in files if f.language in languages.parseable()]
     t = time.perf_counter()
-    sums = map1([f for f in files if f.language in languages.parseable()], workers, cache)
+    if by_package:
+        from .pipeline_pkg import map1_packages
+        _W.update(files=parseable, files_by_path={f.path: f for f in parseable}, modules=res.modules)
+        sums = map1_packages(parseable, workers)
+    else:
+        sums = map1(parseable, workers, cache)
     t = _timed("map1", t)
     for s in sums:
         res.warnings.extend(s.warnings)
@@ -424,7 +472,7 @@ def run(repo: RepoInfo, res: ExtractionResult, files: list[FileInfo], rel_files:
     _W.update(by_dir=by_dir, view=view)
     t = _timed("reduce", t)
     _watch(view)
-    deps = Deps(by_dir, view, [s.file for s in kept]) if cache else None
+    deps = Deps(by_dir, view, [s.file for s in kept]) if cache or by_package else None
     t = _timed("digests", t)
     scanned = [s for s in kept if not TEST_FILE.search("/" + s.file.path) and scanner_of(s.file) is not None]
     deltas = map2(scanned, workers, cache, deps)
