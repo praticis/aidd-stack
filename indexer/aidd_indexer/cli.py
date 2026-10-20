@@ -76,6 +76,13 @@ def extract_tree(repo: RepoInfo, patterns=None, dispatch_calls: frozenset[str] =
         raise GrammarError(f"cannot load tree-sitter grammar(s) for {', '.join(missing)} — {details}. "
                            "Run `aidd selftest`; rebuild the indexer image if it fails.")
 
+    if os.getenv("AIDD_PIPELINE", "1") != "0":
+        from .core import pipeline
+        t0 = time.time()
+        res, summaries = pipeline.run(repo, res, files, rel_files, patterns, dispatch_calls)
+        log(f"[extract]  {len(res.symbols)} symbols, {len(res.calls)} call sites, {len(res.imports)} imports, "
+            f"{len(res.endpoints)} endpoints, {len(res.http_calls)} outbound calls ({time.time()-t0:.1f}s)")
+        return res, summaries
     extractors = []
     t0 = time.time()
     for f in files:

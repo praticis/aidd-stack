@@ -87,7 +87,7 @@ def _extract(name: str):
     root = FIXTURES / name
     repo = RepoInfo(tenant="t", name=name, ref="main", commit_sha="x", root=str(root))
     res, extractors = extract_tree(repo)
-    return extract_http(repo, extractors, modules=res.modules)
+    return getattr(res, "http", None) or extract_http(repo, extractors, modules=res.modules)
 
 
 def test_fixture_pair_links_end_to_end():

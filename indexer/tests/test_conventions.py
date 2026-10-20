@@ -91,7 +91,7 @@ def _http(root: Path, convs):
     from aidd_indexer.core.model import RepoInfo
     repo = RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
     res, ex = extract_tree(repo, conventions.scan_patterns(convs))
-    return extract_http(repo, ex, conventions.scan_patterns(convs))
+    return getattr(res, "http", None) or extract_http(repo, ex, conventions.scan_patterns(convs))
 
 
 def test_convention_route_and_client_patterns(tmp_path: Path):
