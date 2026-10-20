@@ -18,16 +18,16 @@
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`.
 - **In progress:**
-  - H5 (`feature/h5-refactor`, draft PR #7): the safe steps are done and pass the gates as a refactor; the rest waits
-    for H6's ADRs;
+  - H5 (`feature/h5-refactor`, draft PR #7): the safe steps are done and pass the gates as a refactor; the rest
+    (steps 4, 7, 5 and 6) is built toward H6's ADRs, now accepted;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
     - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
     - Step 1, the prototypes, is done ("H6 step 1"). A second map that re-extracts (B), with a cache keyed per
       package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
-    - Step 2: B keyed per package and batches by size are decided (H6-D5, D6). ADR-005 and ADR-006 are accepted;
-      ADR-004 stays proposed while batches by package are measured.
+    - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
+      14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
   - H7 (`docs/handoffs/H7-regression-gates.md`): slice 1 is in `main`; the next slices are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff

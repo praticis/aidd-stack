@@ -5,20 +5,23 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-20):** steps 0 and 1 are measured (`corpus-report.md`, "H6 baseline" and "H6 step 1").
+> **State (2026-10-20):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
+> sections). Next is step 3, H5's steps built toward the ADRs.
 >
 > - **Step 0 found** the resolver the largest phase by far, quadratic in Go and C#. An index built once, merged into
 >   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.
 > - **Step 1 built B with D per package** on a throwaway branch (`h6/step1-proto`). Its output is identical on the
 >   corpus, the micro set and real pushes, and no scanner changed. A warm run of mattermost takes 14–23 s, against
 >   73 s today. The table of "Open question 1" is filled in.
-> - **Step 2, in progress:**
->   - the author decided H6-D5 (B, keyed per package) and H6-D6 (batches by size);
+> - **Step 2:**
+>   - the author decided H6-D5 (B, keyed per package) and H6-D6 (batches of whole packages, scanned in the worker
+>     while the trees live, each scan accepted by the reduce only if its reads hold for the whole repo);
+>   - batches by package were identical everywhere, with 14–22 % less CPU and 12–25 % less time at 2 workers than
+>     batches of files. Only 2.5–4.5 % of the scans are read twice;
+>   - they also found a read the scans did not record: Go's passthrough lookup passes over every directory. Step 1's
+>     key did not cover it, and the ADRs make it a question;
 >   - the cache store was measured (SQLite);
->   - ADR-005 (the type service) and ADR-006 (recognizers and the catalog) are accepted;
->   - ADR-004 (the pipeline) stays proposed while a variant is measured: batches by package, scanned in the same
->     worker, so that a file is read once. Only the 1.5–3.3 % of scans that look up another directory would need a
->     second read.
+>   - ADR-004 (the pipeline), ADR-005 (the type service) and ADR-006 (recognizers and the catalog) are accepted.
 >
 > H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
 > partitioning the extraction, running it in parallel and joining the results, with an incremental cache per file as
@@ -184,6 +187,15 @@ Step 1 batched files, not modules: the largest first, cut to a target size in li
 files in one batch, and the run waited on it. One file the bundle rule does not catch (a vendored
 `scalar.standalone.js`) is map 2's floor on vikunja at any worker count.
 
+**Answered in step 2 (H6-D6):** batches of whole packages, the largest first, packed to the same size in lines.
+
+- A worker scans a package's files while their trees live, and the reduce accepts each scan whose reads hold for the
+  whole repo.
+- A package larger than the total over 4 × workers is split into batches of files, and its scans go to map 2.
+- A warm run's few misses take map 2.
+
+The numbers are in the corpus report, "Batches by package".
+
 ## Open question 4 — where the summaries live
 
 - **Between a worker and the parent:** pickle, which the pool already uses.
@@ -257,7 +269,7 @@ H5 builds pieces with H6's shape:
 |---|---|---|
 | 0 | Measure the pipeline as it is, with no code change: the time and the peak memory of each phase (discover, parse, extract, facts, constants, scanners, compose, resolve, write) on grafana, mattermost, vikunja, umbraco and ghost; the share of files with an HTTP shape; the files a typical push changes, from the corpus repos' history | the numbers in `corpus-report.md` ("H6 baseline"). **Done 2026-10-19** |
 | 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged. **Done 2026-10-20** (`h6/step1-proto`) |
-| 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted. **In progress:** H6-D5 and D6 decided, the three ADRs proposed |
+| 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted. **Done 2026-10-20:** H6-D5 and D6 decided, ADR-004 to ADR-006 accepted |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |
 | 4 | Plug in the map, the reduce and the cache | the corpus cold, warm, and the baseline are identical; the hold-out identical |
 | 5 | Validate at scale: grafana under the ceiling; the refresh time on a live install, cold and after a one-file push | the numbers in the corpus report and in the H5/H6 PR |
@@ -271,6 +283,8 @@ H5 builds pieces with H6's shape:
   summaries, or a second map that re-parses.
 - **H6-D4, a technology joins the compose only if it does not add failure handling to build:** what it gains on one
   side must not bring a large set of failures to handle on the other. "Open question 2" holds the analysis.
+- **H6-D5 and H6-D6 (2026-10-20):** the second read and the batches, measured in steps 1 and 2. They are in
+  `docs/decisions.md` and ADR-004.
 
 ## Pitfalls
 
@@ -286,12 +300,18 @@ H5 builds pieces with H6's shape:
   both slow down.
 - **A cache that is wrong is worse than none.** Anything the map reads that is not in the key (an env var, a file
   next door, the clock) makes a warm run differ from a cold one. The cold/warm comparison on the corpus is the net.
+- **A read that is not recorded breaks the cache and the early scan at once.** Go's passthrough lookup looped over
+  every directory's context (`view.contexts.values()`). Step 1's key and replay missed it, and a fixture caught it only
+  when an early scan saw part of the repo. A lookup across the repo is a question, with its answer (ADR-006).
 - **A digest over pickle is not canonical.** Pickle shares equal objects by identity, so the same values gave other
   bytes when they came back from other batches. Step 1 digests a canonical form's `repr`.
 - **The ids carry the ref.** A summary keyed by content but holding `tenant/repo@ref/…` ids serves one ref only.
 - **The structure as one digest re-runs everything** whenever a file is added. A scan's questions to the repo, with
   their answers, are its dependency on the structure.
-- **The scanner's re-extraction** in map 2, not a parse, is B's cost: the scanners tie symbols to nodes.
+- **The scanner's re-extraction** in map 2, not a parse, is B's cost: the scanners tie symbols to nodes. Batches by
+  package leave it to the 2.5–4.5 % of scans the reduce does not accept, but those are large files.
+- **The bench machine's other load.** Grafana at 4 workers ranged over 54–81 s on the same code. Compare
+  configurations interleaved in one run of the bench, never across runs.
 
 ## Constraints and conventions
 

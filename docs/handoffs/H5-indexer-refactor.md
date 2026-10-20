@@ -38,11 +38,11 @@
 >   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
 >   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
 >   identical. That check is now item 4 of the protocol.
-> - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed first: the extraction as a parallel
->   map, a reduce and a per-file cache. Step 3's `FileIndex` becomes H6's per-file index, and steps 5 and 6 are
->   designed against it (ADR-005, ADR-006). Then, built toward that design:
+> - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
+>   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
+>   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - the rest of 4, and 7 (typed facts and `Pending`, serializable, with no tree node inside);
->   - 5 (`TypeIndex`, built in the reduce);
+>   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - the rest of 10;
 >   - 11 (docs).
