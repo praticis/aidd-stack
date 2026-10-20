@@ -1,0 +1,884 @@
+corpus run 2026-10-20-h6-proto: 55 repositories, 3 at once, 4g each
+elsa ok 35s 713601024
+go-feature-flag ok 6s 169279488
+umbraco ok 55s 1196838912
+zulip ok 17s 440877056
+mattermost ok 59s 1081057280
+azure-saas ok 4s 171667456
+kratos ok 13s 312782848
+ghost ok 32s 643969024
+bitwarden ok 28s 709943296
+photoprism ok 19s 463204352
+argo-cd ok 15s 328052736
+gitea ok 22s 334884864
+nodebb ok 13s 152686592
+smartstore ok 30s 618029056
+open-webui ok 15s 323960832
+immich ok 7s 210841600
+directus ok 12s 294871040
+radarr ok 14s 382586880
+fastapi ok 3s 137904128
+nest ok 5s 192389120
+outline ok 10s 243478528
+jellyfin ok 12s 450908160
+netbox ok 12s 480034816
+btcpayserver ok 10s 386351104
+vikunja ok 19s 571019264
+docmost ok 7s 171024384
+notifo ok 6s 239546368
+mealie ok 3s 142946304
+dispatch ok 3s 146444288
+eshop ok 3s 101560320
+fiber-recipes ok 2s 84176896
+memos ok 7s 194031616
+ctfd ok 5s 237412352
+ardalis-clean-arch ok 2s 77914112
+alertmanager ok 3s 117616640
+eshop-on-web ok 2s 74039296
+aiohttp-demos ok 1s 74915840
+eshop-support ok 2s 105525248
+fastify ok 3s 103575552
+clean-arch-dotnet ok 1s 66764800
+fastapi-template ok 1s 63897600
+gotify ok 2s 80740352
+flask ok 2s 65613824
+express ok 1s 69144576
+rapid-blazor ok 1s 70561792
+taxonomy ok 1s 58105856
+express-realworld ok 1s 54358016
+gin-examples ok 1s 51585024
+hono-examples ok 1s 53714944
+chi ok 1s 62910464
+gin-realworld ok 1s 53055488
+express-boilerplate ok 1s 53223424
+fastify-demo ok 1s 53739520
+go-kit-examples ok 1s 56975360
+gorilla-mux ok 1s 55214080
+elsa                 reused /corpus/runs/2026-10-20-h6-proto | routes  275 | calls  239
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 94 expected 94 fp 0 fn 0
+  checked  endpoints: P 90.0% (18/20, 0 pending, 0 stale)
+      wrong elsa:core/src/modules/Elsa.Diagnostics.OpenTelemetry/Extensions/EndpointRouteBuilderExtensions.cs:31 POST /traces [prefix-as-param]
+      wrong elsa:core/src/modules/Elsa.Diagnostics.OpenTelemetry/Extensions/EndpointRouteBuilderExtensions.cs:41 POST /logs [prefix-as-param]
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+go-feature-flag      reused /corpus/runs/2026-10-20-h6-proto | routes   18 | calls    7
+  baseline: identical
+  expected endpoints (openapi + manual): P 100.0% R 94.4% | extracted 17 expected 18 fp 0 fn 1
+      fn GET /debug/pprof [library-registrar]
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 66.7% | extracted 2 expected 3 fp 0 fn 1
+      fn GET /2.0/repositories/{param}/src/{param}/{param} [client-wrapper]
+  checked  calls    : P 100.0% (4/4, 0 pending, 0 stale)
+umbraco              reused /corpus/runs/2026-10-20-h6-proto | routes  540 | calls  522
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 100.0% | extracted 529 expected 529 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (openapi): P 100.0% R 100.0% | extracted 513 expected 513 fp 0 fn 0
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+zulip                reused /corpus/runs/2026-10-20-h6-proto | routes    0 | calls  153
+  baseline: identical
+  expected endpoints (openapi): P   —   R  0.0% | extracted 0 expected 164 fp 0 fn 164
+      fn DELETE /api/v1/attachments/{param} [django-urlconf]
+      fn DELETE /api/v1/bot_storage [django-urlconf]
+      fn DELETE /api/v1/default_streams [django-urlconf]
+      fn DELETE /api/v1/drafts/{param} [django-urlconf]
+      fn DELETE /api/v1/events [django-urlconf]
+      fn DELETE /api/v1/export/realm/{param} [django-urlconf]
+      fn DELETE /api/v1/invites/multiuse/{param} [django-urlconf]
+      fn DELETE /api/v1/invites/{param} [django-urlconf]
+      fn DELETE /api/v1/messages/{param} [django-urlconf]
+      fn DELETE /api/v1/messages/{param}/reactions [django-urlconf]
+      fn DELETE /api/v1/navigation_views/{param} [django-urlconf]
+      fn DELETE /api/v1/realm/domains/{param} [django-urlconf]
+      fn DELETE /api/v1/realm/emoji/{param} [django-urlconf]
+      fn DELETE /api/v1/realm/filters/{param} [django-urlconf]
+      fn DELETE /api/v1/realm/playgrounds/{param} [django-urlconf]
+      fn DELETE /api/v1/realm/profile_fields/{param} [django-urlconf]
+      fn DELETE /api/v1/reminders/{param} [django-urlconf]
+      fn DELETE /api/v1/saved_snippets/{param} [django-urlconf]
+      fn DELETE /api/v1/scheduled_messages/{param} [django-urlconf]
+      fn DELETE /api/v1/streams/{param} [django-urlconf]
+      fn DELETE /api/v1/users/me [django-urlconf]
+      fn DELETE /api/v1/users/me/alert_words [django-urlconf]
+      fn DELETE /api/v1/users/me/android_gcm_reg_id [django-urlconf]
+      fn DELETE /api/v1/users/me/apns_device_token [django-urlconf]
+      fn DELETE /api/v1/users/me/avatar [django-urlconf]
+      fn DELETE /api/v1/users/me/muted_users/{param} [django-urlconf]
+      fn DELETE /api/v1/users/me/profile_data [django-urlconf]
+      fn DELETE /api/v1/users/me/subscriptions [django-urlconf]
+      fn DELETE /api/v1/users/{param} [django-urlconf]
+      fn GET /api/v1/attachments [django-urlconf]
+      fn GET /api/v1/bot_storage [django-urlconf]
+      fn GET /api/v1/bots/{param}/api_key [django-urlconf]
+      fn GET /api/v1/calls/bigbluebutton/create [django-urlconf]
+      fn GET /api/v1/channel_folders [django-urlconf]
+      fn GET /api/v1/dev_list_users [django-urlconf]
+      fn GET /api/v1/drafts [django-urlconf]
+      fn GET /api/v1/events [django-urlconf]
+      fn GET /api/v1/export/realm [django-urlconf]
+      fn GET /api/v1/export/realm/consents [django-urlconf]
+      fn GET /api/v1/get_stream_id [django-urlconf]
+      fn GET /api/v1/invites [django-urlconf]
+      fn GET /api/v1/messages [django-urlconf]
+      fn GET /api/v1/messages/matches_narrow [django-urlconf]
+      fn GET /api/v1/messages/{param} [django-urlconf]
+      fn GET /api/v1/messages/{param}/history [django-urlconf]
+      fn GET /api/v1/messages/{param}/read_receipts [django-urlconf]
+      fn GET /api/v1/navigation_views [django-urlconf]
+      fn GET /api/v1/realm/domains [django-urlconf]
+      fn GET /api/v1/realm/emoji [django-urlconf]
+      fn GET /api/v1/realm/linkifiers [django-urlconf]
+      fn GET /api/v1/realm/presence [django-urlconf]
+      fn GET /api/v1/realm/profile_fields [django-urlconf]
+      fn GET /api/v1/reminders [django-urlconf]
+      fn GET /api/v1/saved_snippets [django-urlconf]
+      fn GET /api/v1/scheduled_messages [django-urlconf]
+      fn GET /api/v1/server_settings [django-urlconf]
+      fn GET /api/v1/streams [django-urlconf]
+      fn GET /api/v1/streams/{param} [django-urlconf]
+      fn GET /api/v1/streams/{param}/email_address [django-urlconf]
+      fn GET /api/v1/streams/{param}/members [django-urlconf]
+      … 104 more
+  expected calls     (manual): P 100.0% R 100.0% | extracted 7 expected 7 fp 0 fn 0
+  checked  calls    : P 100.0% (6/6, 0 pending, 0 stale)
+mattermost           reused /corpus/runs/2026-10-20-h6-proto | routes  658 | calls  527
+  baseline: identical
+  expected endpoints (openapi + manual): P 100.0% R 100.0% | extracted 632 expected 632 fp 0 fn 0
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  checked  calls    : P 81.8% (9/11, 0 pending, 0 stale)
+      wrong mattermost:webapp/channels/src/components/admin_console/workspace-optimization/dashboard_checks/data_privacy.ts:37 GET /data_retention/policies_count [prefix-in-client-wrapper]
+      wrong mattermost:webapp/channels/src/components/admin_console/workspace-optimization/dashboard_checks/updates.ts:44 GET /latest_version [prefix-in-client-wrapper]
+azure-saas           reused /corpus/runs/2026-10-20-h6-proto | routes   35 | calls   26
+  baseline: identical
+  expected endpoints (nswag + manual): P 100.0% R 100.0% | extracted 34 expected 34 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (nswag): P 100.0% R 100.0% | extracted 26 expected 26 fp 0 fn 0
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+kratos               reused /corpus/runs/2026-10-20-h6-proto | routes   77 | calls  135
+  baseline: identical
+  expected endpoints (openapi + manual): P 86.5% R 83.1% | extracted 74 expected 77 fp 10 fn 13
+      fp DELETE /identities/{param}/sessions
+      fp GET /courier/messages
+      fp GET /courier/messages/{param}
+      fp GET /health/config
+      fp GET /identities/{param}/sessions
+      fp GET /sessions/{param}
+      fp PATCH /identities
+      fp PATCH /sessions/{param}/extend
+      fp POST /sessions
+      fp POST /test-login-flows
+      fn DELETE /admin/identities/{param}/sessions [prefix-in-router-type]
+      fn DELETE /admin/sessions/{param} [prefix-in-router-type]
+      fn GET /admin/health/config [prefix-in-router-type]
+      fn GET /admin/identities/{param}/sessions [prefix-in-router-type]
+      fn GET /admin/sessions [prefix-in-router-type]
+      fn GET /admin/sessions/{param} [prefix-in-router-type]
+      fn GET /sessions/whoami [route-in-loop]
+      fn PATCH /admin/identities [prefix-in-router-type]
+      fn PATCH /admin/sessions/{param}/extend [prefix-in-router-type]
+      fn POST /admin/recovery/code [prefix-in-router-type]
+      fn POST /admin/recovery/link [prefix-in-router-type]
+      fn POST /admin/sessions [prefix-in-router-type]
+      fn POST /admin/test-login-flows [prefix-in-router-type]
+  checked  endpoints: P 94.7% (18/19, 0 pending, 0 stale)
+      wrong kratos:session/handler.go:105 POST /sessions [prefix-in-router-type]
+  expected calls     (manual + openapi (generated client)): P 100.0% R 96.1% | extracted 73 expected 76 fp 0 fn 3
+      fn GET /idshub/userinfo [url-in-field]
+      fn GET /user/profile [url-in-field]
+      fn POST /v1.0/oauth2/userAccessToken [url-in-field]
+  checked  calls    : P 100.0% (6/6, 0 pending, 0 stale)
+ghost                reused /corpus/runs/2026-10-20-h6-proto | routes  334 | calls   36
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 269 expected 269 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 80.0% (16/20, 0 pending, 0 stale)
+      wrong ghost:ghost/core/frontend/src/admin-auth/message-handler.js:20 PUT /comments/{param} [field-in-interpolation]
+      wrong ghost:ghost/core/frontend/src/admin-auth/message-handler.js:33 PUT /comments/{param} [field-in-interpolation]
+      wrong ghost:ghost/core/frontend/src/admin-auth/message-handler.js:45 GET /comments/post/{param}/{param} [field-in-interpolation]
+      wrong ghost:ghost/core/frontend/src/admin-auth/message-handler.js:46 GET /comments/{param}/replies/{param} [field-in-interpolation]
+bitwarden            reused /corpus/runs/2026-10-20-h6-proto | routes  698 | calls   30
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 25 expected 25 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 87.5% | extracted 7 expected 8 fp 0 fn 1
+      fn GET /conversations.list [url-object-builder]
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+photoprism           reused /corpus/runs/2026-10-20-h6-proto | routes  179 | calls   66
+  baseline: identical
+  expected endpoints (openapi): P 97.5% R 97.6% | extracted 162 expected 167 fp 4 fn 4
+      fp GET /api/v1/folders/{param}
+      fp GET /api/v1/folders/{param}/{param}
+      fp GET /docs
+      fp GET /docs/{param}
+      fn GET /api/v1/folders/import [segment-from-param]
+      fn GET /api/v1/folders/import/{param} [segment-from-param]
+      fn GET /api/v1/folders/originals [segment-from-param]
+      fn GET /api/v1/folders/originals/{param} [segment-from-param]
+  checked  endpoints: P 95.0% (19/20, 0 pending, 0 stale)
+      wrong photoprism:internal/api/docs.go:40 GET /docs [registrar-in-func-var]
+  checked  calls    : P 35.0% (7/20, 0 pending, 0 stale)
+      wrong photoprism:frontend/src/model/album.js:198 DELETE /like [url-from-helper]
+      wrong photoprism:frontend/src/model/folder.js:101 POST /like [url-from-helper]
+      wrong photoprism:frontend/src/model/folder.js:93 POST /like [url-from-helper]
+      wrong photoprism:frontend/src/model/folder.js:95 DELETE /like [url-from-helper]
+      wrong photoprism:frontend/src/model/label.js:103 DELETE /like [url-from-helper]
+      wrong photoprism:frontend/src/model/label.js:98 POST /like [url-from-helper]
+      wrong photoprism:frontend/src/model/photo.js:1189 POST /approve [url-from-helper]
+      wrong photoprism:frontend/src/model/photo.js:1248 DELETE /like [url-from-helper]
+      wrong photoprism:frontend/src/model/photo.js:1256 PUT /label/{param} [url-from-helper]
+      wrong photoprism:frontend/src/model/rest.js:153 POST /{param}/links [url-from-helper]
+      wrong photoprism:frontend/src/model/subject.js:160 POST /like [url-from-helper]
+      wrong photoprism:frontend/src/model/user.js:195 OPTIONS /profile [url-from-helper]
+      wrong photoprism:frontend/src/model/user.js:368 PUT /password [url-from-helper]
+argo-cd              reused /corpus/runs/2026-10-20-h6-proto | routes  123 | calls  105
+  baseline: identical
+  expected endpoints (openapi + manual): P 98.2% R 96.5% | extracted 112 expected 114 fp 2 fn 4
+      fp ANY /argocd-linux
+      fp ANY /argocd-linux-{param}
+      fn ANY /api/webhook [multi-app-repo]
+      fn ANY /auth/callback [multi-app-repo]
+      fn ANY /download/argocd-linux [prefix-as-param]
+      fn ANY /download/argocd-linux-{param} [prefix-as-param]
+  checked  endpoints: P 84.6% (11/13, 0 pending, 0 stale)
+      wrong argo-cd:server/server.go:1487 ANY /argocd-linux-{param} [prefix-as-param]
+      wrong argo-cd:server/server.go:1491 ANY /argocd-linux [prefix-as-param]
+  expected calls     (manual): P 100.0% R 100.0% | extracted 25 expected 25 fp 0 fn 0
+  checked  calls    : P 100.0% (19/19, 0 pending, 0 stale)
+gitea                reused /corpus/runs/2026-10-20-h6-proto | routes 1546 | calls   23
+  baseline: identical
+  expected endpoints (openapi + manual): P 99.8% R 99.1% | extracted 544 expected 548 fp 1 fn 5
+      fp GET /api/v1/repos/{param}/{param}/pulls/{param}/.{param}
+      fn GET /api/v1/repos/{param}/{param}/archive/{param} [prefix-scope-and-file]
+      fn GET /api/v1/repos/{param}/{param}/commits/{param}/pull [custom-registrar]
+      fn GET /api/v1/repos/{param}/{param}/commits/{param}/status [custom-registrar]
+      fn GET /api/v1/repos/{param}/{param}/commits/{param}/statuses [custom-registrar]
+      fn GET /api/v1/repos/{param}/{param}/pulls/{param}.{param} [prefix-scope-and-file]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 73.7% R 93.3% | extracted 19 expected 15 fp 5 fn 1
+      fp GET /content-history/detail
+      fp GET /issues/{param}/content-history/overview
+      fp GET /tree-view/{param}/{param}
+      fp GET /{param}/{param}/issues/{param}/info
+      fp POST /content-history/soft-delete
+      fn GET /repo/search [vue-sfc]
+  checked  calls    : P 100.0% (3/3, 0 pending, 0 stale)
+nodebb               reused /corpus/runs/2026-10-20-h6-proto | routes  379 | calls  191
+  baseline: identical
+  expected endpoints (openapi): P 93.9% R 73.1% | extracted 342 expected 439 fp 21 fn 118
+      fp DELETE /api/{param}/manage/categories/{param}
+      fp GET /api/uid/{param}{param}
+      fp GET /api/{param}/advanced/cache/dump
+      fp GET /api/{param}/analytics
+      fp GET /api/{param}/config
+      fp GET /api/{param}/groups/{param}/csv
+      fp GET /api/{param}/users/csv
+      fp GET /api/{param}/{param}
+      fp GET /uid/{param}{param}
+      fp GET /{param}/{param}
+      fp POST /api/{param}/category/uploadpicture
+      fp POST /api/{param}/manage/categories
+      fp POST /api/{param}/manage/categories/{param}/name
+      fp POST /api/{param}/upload/file
+      fp POST /api/{param}/uploadDefaultAvatar
+      fp POST /api/{param}/uploadMaskableIcon
+      fp POST /api/{param}/uploadOgImage
+      fp POST /api/{param}/uploadScreenshot
+      fp POST /api/{param}/uploadTouchIcon
+      fp POST /api/{param}/uploadfavicon
+      fp POST /api/{param}/uploadlogo
+      fn DELETE /api/user/{param}/session/{param} [prefix-as-param]
+      fn GET /api/admin [prefix-as-param]
+      fn GET /api/admin/advanced/cache [prefix-as-param]
+      fn GET /api/admin/advanced/cache/dump [prefix-as-param]
+      fn GET /api/admin/advanced/database [prefix-as-param]
+      fn GET /api/admin/advanced/errors [prefix-as-param]
+      fn GET /api/admin/advanced/errors/export [prefix-as-param]
+      fn GET /api/admin/advanced/events [prefix-as-param]
+      fn GET /api/admin/advanced/hooks [prefix-as-param]
+      fn GET /api/admin/advanced/jobs [prefix-as-param]
+      fn GET /api/admin/advanced/logs [prefix-as-param]
+      fn GET /api/admin/analytics [prefix-as-param]
+      fn GET /api/admin/appearance/customise [prefix-as-param]
+      fn GET /api/admin/appearance/skins [prefix-as-param]
+      fn GET /api/admin/appearance/themes [prefix-as-param]
+      fn GET /api/admin/config [prefix-as-param]
+      fn GET /api/admin/dashboard [prefix-as-param]
+      fn GET /api/admin/dashboard/logins [prefix-as-param]
+      fn GET /api/admin/dashboard/searches [prefix-as-param]
+      fn GET /api/admin/dashboard/topics [prefix-as-param]
+      fn GET /api/admin/dashboard/users [prefix-as-param]
+      fn GET /api/admin/development/info [prefix-as-param]
+      fn GET /api/admin/development/logger [prefix-as-param]
+      fn GET /api/admin/extend/plugins [prefix-as-param]
+      fn GET /api/admin/extend/rewards [prefix-as-param]
+      fn GET /api/admin/extend/widgets [prefix-as-param]
+      fn GET /api/admin/federation/analytics [prefix-as-param]
+      fn GET /api/admin/federation/content [prefix-as-param]
+      fn GET /api/admin/federation/errors [prefix-as-param]
+      fn GET /api/admin/federation/general [prefix-as-param]
+      fn GET /api/admin/federation/hashtags [prefix-as-param]
+      fn GET /api/admin/federation/pruning [prefix-as-param]
+      fn GET /api/admin/federation/relays [prefix-as-param]
+      fn GET /api/admin/federation/rules [prefix-as-param]
+      fn GET /api/admin/federation/safety [prefix-as-param]
+      fn GET /api/admin/groups/{param}/csv [prefix-as-param]
+      fn GET /api/admin/manage/admins-mods [prefix-as-param]
+      fn GET /api/admin/manage/api [prefix-as-param]
+      fn GET /api/admin/manage/categories [prefix-as-param]
+      fn GET /api/admin/manage/categories/{param} [prefix-as-param]
+      fn GET /api/admin/manage/categories/{param}/analytics [prefix-as-param]
+      fn GET /api/admin/manage/categories/{param}/federation [prefix-as-param]
+      fn GET /api/admin/manage/digest [prefix-as-param]
+      fn GET /api/admin/manage/groups [prefix-as-param]
+      fn GET /api/admin/manage/groups/{param} [prefix-as-param]
+      fn GET /api/admin/manage/privileges/{param} [prefix-as-param]
+      fn GET /api/admin/manage/tags [prefix-as-param]
+      fn GET /api/admin/manage/uploads [prefix-as-param]
+      fn GET /api/admin/manage/users [prefix-as-param]
+      fn GET /api/admin/manage/users/custom-fields [prefix-as-param]
+      fn GET /api/admin/manage/users/custom-reasons [prefix-as-param]
+      fn GET /api/admin/settings/advanced [prefix-as-param]
+      fn GET /api/admin/settings/chat [prefix-as-param]
+      fn GET /api/admin/settings/cookies [prefix-as-param]
+      fn GET /api/admin/settings/email [prefix-as-param]
+      fn GET /api/admin/settings/general [prefix-as-param]
+      fn GET /api/admin/settings/group [prefix-as-param]
+      fn GET /api/admin/settings/navigation [prefix-as-param]
+      fn GET /api/admin/settings/notifications [prefix-as-param]
+      fn GET /api/admin/settings/pagination [prefix-as-param]
+      … 58 more
+  checked  endpoints: P 70.6% (12/17, 0 pending, 0 stale)
+      wrong nodebb:src/routes/admin.js:107 POST /api/{param}/category/uploadpicture [prefix-as-param]
+      wrong nodebb:src/routes/admin.js:108 POST /api/{param}/uploadfavicon [prefix-as-param]
+      wrong nodebb:src/routes/admin.js:110 POST /api/{param}/uploadMaskableIcon [prefix-as-param]
+      wrong nodebb:src/routes/admin.js:113 POST /api/{param}/uploadOgImage [prefix-as-param]
+      wrong nodebb:src/routes/index.js:72 GET /{param}/{pid} [prefix-as-param]
+  expected calls     (manual): P 10.0% R 10.0% | extracted 10 expected 10 fp 9 fn 9
+      fp DELETE /admin/plugins/{param}
+      fp DELETE /admin/tokens/{param}
+      fp GET /admin/tokens/{param}
+      fp POST /admin/plugins/{param}
+      fp POST /admin/tokens
+      fp POST /admin/tokens/{param}/roll
+      fp PUT /admin/plugins/{param}/active
+      fp PUT /admin/plugins/{param}/upgrade
+      fp PUT /admin/tokens/{param}
+      fn DELETE /api/v3/admin/plugins/{param} [prefix-in-client-wrapper]
+      fn DELETE /api/v3/admin/tokens/{param} [prefix-in-client-wrapper]
+      fn GET /api/v3/admin/tokens/{param} [prefix-in-client-wrapper]
+      fn POST /api/v3/admin/plugins/{param} [prefix-in-client-wrapper]
+      fn POST /api/v3/admin/tokens [prefix-in-client-wrapper]
+      fn POST /api/v3/admin/tokens/{param}/roll [prefix-in-client-wrapper]
+      fn PUT /api/v3/admin/plugins/{param}/active [prefix-in-client-wrapper]
+      fn PUT /api/v3/admin/plugins/{param}/upgrade [prefix-in-client-wrapper]
+      fn PUT /api/v3/admin/tokens/{param} [prefix-in-client-wrapper]
+  checked  calls    : P 10.0% (2/20, 0 pending, 0 stale)
+      wrong nodebb:public/src/admin/manage/categories.js:305 PUT /categories/{param} [prefix-in-client-wrapper]
+      wrong nodebb:public/src/admin/manage/categories.js:71 PUT /categories/{param} [prefix-in-client-wrapper]
+      wrong nodebb:public/src/admin/manage/category.js:119 GET /categories/{param}/count [prefix-in-client-wrapper]
+      wrong nodebb:public/src/admin/manage/uploads.js:38 PUT /files/folder [prefix-in-client-wrapper]
+      wrong nodebb:public/src/admin/manage/users.js:290 PUT /users/{param}/mute [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/account/tags.js:32 PUT /tags/{param}/follow [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/category.js:102 GET /categories/{param}/children [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/chats.js:287 GET /chats/{param}/messages/{param}/ip [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/chats.js:621 PUT /chats/{param} [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/chats/manage.js:135 GET /chats/{param}/users [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/chats/recent.js:56 GET /chats [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/chats/user-list.js:63 GET /chats/{param}/users [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/groups/details.js:81 POST /users/reauth/verify [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/post-queue.js:155 PUT /posts/queue/{param} [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/topic.js:500 PUT /topics/{param}/read [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/topic/change-owner.js:74 POST /posts/owner [prefix-in-client-wrapper]
+      wrong nodebb:public/src/client/unread.js:41 PUT /topics/{param}/read [prefix-in-client-wrapper]
+      wrong nodebb:public/src/modules/flags.js:64 PUT /flags/{param} [prefix-in-client-wrapper]
+smartstore           reused /corpus/runs/2026-10-20-h6-proto | routes  567 | calls    5
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 526 expected 526 fp 0 fn 0
+  checked  endpoints: P 95.0% (19/20, 0 pending, 0 stale)
+      wrong smartstore:src/Smartstore/IconKit/Bootstrapping/IconKitEndpointRouteBuilderExtensions.cs:45 GET /render [prefix-as-param]
+  checked  calls    : P 100.0% (5/5, 0 pending, 0 stale)
+open-webui           reused /corpus/runs/2026-10-20-h6-proto | routes  595 | calls  668
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 104 expected 104 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 99.0% R 100.0% | extracted 99 expected 98 fp 1 fn 0
+      fp ANY /auths/mfa/{param}
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+immich               reused /corpus/runs/2026-10-20-h6-proto | routes  298 | calls  286
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 100.0% | extracted 295 expected 295 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (openapi): P 100.0% R 100.0% | extracted 279 expected 279 fp 0 fn 0
+  checked  calls    : P 100.0% (6/6, 0 pending, 0 stale)
+directus             reused /corpus/runs/2026-10-20-h6-proto | routes  294 | calls  105
+  baseline: identical
+  expected endpoints (manual): P 98.3% R 99.0% | extracted 294 expected 292 fp 5 fn 3
+      fp GET /callback
+      fp GET /metadata
+      fp POST /acs
+      fp POST /callback
+      fp POST /logout
+      fn ANY /graphql [use-as-route]
+      fn ANY /graphql/system [use-as-route]
+      fn POST /auth/login [router-from-factory]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+radarr               reused /corpus/runs/2026-10-20-h6-proto | routes  239 | calls    2
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 100.0% | extracted 239 expected 239 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 50.0% (1/2, 0 pending, 0 stale)
+      wrong radarr:src/NzbDrone.Test.Common/NzbDroneRunner.cs:74 ANY /system/status [test-client-in-source]
+fastapi              reused /corpus/runs/2026-10-20-h6-proto | routes   87 | calls    2
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 50.0% | extracted 4 expected 8 fp 0 fn 4
+      fn GET / [multi-app-repo]
+      fn GET /items [multi-app-repo]
+      fn GET /items/{param} [multi-app-repo]
+      fn PUT /items/{param} [multi-app-repo]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+nest                 reused /corpus/runs/2026-10-20-h6-proto | routes  251 | calls    1
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 4 expected 4 fp 0 fn 0
+  checked  endpoints: P 15.0% (3/20, 0 pending, 0 stale)
+      wrong nest:integration/file-upload/src/upload.module.ts:138 POST /none [test-app-folder]
+      wrong nest:integration/file-upload/src/upload.module.ts:247 POST /hash [test-app-folder]
+      wrong nest:integration/hello-world/src/errors/errors.controller.ts:15 GET /unexpected-error [test-app-folder]
+      wrong nest:integration/hello-world/src/hello/hello.controller.ts:10 GET /hello [test-app-folder]
+      wrong nest:integration/inspector/src/database/database.controller.ts:18 POST /database [test-app-folder]
+      wrong nest:integration/inspector/src/database/database.controller.ts:33 PATCH /database/{id} [test-app-folder]
+      wrong nest:integration/inspector/src/dogs/dogs.controller.ts:33 PATCH /dogs/{id} [test-app-folder]
+      wrong nest:integration/microservices/src/kafka-concurrent/kafka-concurrent.controller.ts:60 POST /mathSumSyncNumberWait [test-app-folder]
+      wrong nest:integration/microservices/src/kafka/kafka.controller.ts:164 POST /business [test-app-folder]
+      wrong nest:integration/nest-application/global-prefix/src/app.controller.ts:20 GET /test [test-app-folder]
+      wrong nest:integration/nest-application/observable-response/src/app.controller.ts:103 GET /slow-intercepted [test-app-folder]
+      wrong nest:integration/nest-application/observable-response/src/app.controller.ts:70 GET /observable [test-app-folder]
+      wrong nest:integration/route-conflict/src/versioned-wildcard/users-wildcard.controller.ts:12 GET /users/profile [test-app-folder]
+      wrong nest:integration/security/src/app.controller.ts:51 GET /error [test-app-folder]
+      wrong nest:integration/send-files/src/app.controller.ts:35 GET /file/not/exist [test-app-folder]
+      wrong nest:integration/versioning/src/neutral-middleware.controller.ts:8 GET /middleware/neutral [test-app-folder]
+      wrong nest:integration/versioning/src/override-partial.controller.ts:7 GET /override-partial [test-app-folder]
+  checked  calls    : P 100.0% (1/1, 0 pending, 0 stale)
+outline              reused /corpus/runs/2026-10-20-h6-proto | routes  226 | calls  113
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 64 expected 64 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 90.5% R 100.0% | extracted 21 expected 19 fp 2 fn 0
+      fp POST /api/documents.{param}
+      fp POST /api/users.{param}
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+jellyfin             reused /corpus/runs/2026-10-20-h6-proto | routes  422 | calls   13
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 12 expected 12 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 9 expected 9 fp 0 fn 0
+  checked  calls    : P 100.0% (13/13, 0 pending, 0 stale)
+netbox               reused /corpus/runs/2026-10-20-h6-proto | routes    0 | calls    0
+  baseline: identical
+  expected endpoints (openapi): P   —   R  0.0% | extracted 0 expected 1256 fp 0 fn 1256
+      fn DELETE /api/circuits/circuit-group-assignments [django-urlconf]
+      fn DELETE /api/circuits/circuit-group-assignments/{param} [django-urlconf]
+      fn DELETE /api/circuits/circuit-groups [django-urlconf]
+      fn DELETE /api/circuits/circuit-groups/{param} [django-urlconf]
+      fn DELETE /api/circuits/circuit-terminations [django-urlconf]
+      fn DELETE /api/circuits/circuit-terminations/{param} [django-urlconf]
+      fn DELETE /api/circuits/circuit-types [django-urlconf]
+      fn DELETE /api/circuits/circuit-types/{param} [django-urlconf]
+      fn DELETE /api/circuits/circuits [django-urlconf]
+      fn DELETE /api/circuits/circuits/{param} [django-urlconf]
+      fn DELETE /api/circuits/provider-accounts [django-urlconf]
+      fn DELETE /api/circuits/provider-accounts/{param} [django-urlconf]
+      fn DELETE /api/circuits/provider-networks [django-urlconf]
+      fn DELETE /api/circuits/provider-networks/{param} [django-urlconf]
+      fn DELETE /api/circuits/providers [django-urlconf]
+      fn DELETE /api/circuits/providers/{param} [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuit-terminations [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuit-terminations/{param} [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuit-types [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuit-types/{param} [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuits [django-urlconf]
+      fn DELETE /api/circuits/virtual-circuits/{param} [django-urlconf]
+      fn DELETE /api/core/data-sources [django-urlconf]
+      fn DELETE /api/core/data-sources/{param} [django-urlconf]
+      fn DELETE /api/dcim/cable-bundles [django-urlconf]
+      fn DELETE /api/dcim/cable-bundles/{param} [django-urlconf]
+      fn DELETE /api/dcim/cables [django-urlconf]
+      fn DELETE /api/dcim/cables/{param} [django-urlconf]
+      fn DELETE /api/dcim/console-port-templates [django-urlconf]
+      fn DELETE /api/dcim/console-port-templates/{param} [django-urlconf]
+      fn DELETE /api/dcim/console-ports [django-urlconf]
+      fn DELETE /api/dcim/console-ports/{param} [django-urlconf]
+      fn DELETE /api/dcim/console-server-port-templates [django-urlconf]
+      fn DELETE /api/dcim/console-server-port-templates/{param} [django-urlconf]
+      fn DELETE /api/dcim/console-server-ports [django-urlconf]
+      fn DELETE /api/dcim/console-server-ports/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-feeds [django-urlconf]
+      fn DELETE /api/dcim/cooling-feeds/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-intake-templates [django-urlconf]
+      fn DELETE /api/dcim/cooling-intake-templates/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-intakes [django-urlconf]
+      fn DELETE /api/dcim/cooling-intakes/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-outflow-templates [django-urlconf]
+      fn DELETE /api/dcim/cooling-outflow-templates/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-outflows [django-urlconf]
+      fn DELETE /api/dcim/cooling-outflows/{param} [django-urlconf]
+      fn DELETE /api/dcim/cooling-sources [django-urlconf]
+      fn DELETE /api/dcim/cooling-sources/{param} [django-urlconf]
+      fn DELETE /api/dcim/device-bay-templates [django-urlconf]
+      fn DELETE /api/dcim/device-bay-templates/{param} [django-urlconf]
+      fn DELETE /api/dcim/device-bays [django-urlconf]
+      fn DELETE /api/dcim/device-bays/{param} [django-urlconf]
+      fn DELETE /api/dcim/device-roles [django-urlconf]
+      fn DELETE /api/dcim/device-roles/{param} [django-urlconf]
+      fn DELETE /api/dcim/device-types [django-urlconf]
+      fn DELETE /api/dcim/device-types/{param} [django-urlconf]
+      fn DELETE /api/dcim/devices [django-urlconf]
+      fn DELETE /api/dcim/devices/{param} [django-urlconf]
+      fn DELETE /api/dcim/front-port-templates [django-urlconf]
+      fn DELETE /api/dcim/front-port-templates/{param} [django-urlconf]
+      … 1196 more
+btcpayserver         reused /corpus/runs/2026-10-20-h6-proto | routes  676 | calls   23
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 98.7% | extracted 233 expected 236 fp 0 fn 3
+      fn GET /api/v1/stores/{param}/offerings [optional-param]
+      fn GET /api/v1/stores/{param}/webhooks [optional-param]
+      fn PUT /api/v1/stores/{param}/users [optional-param]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 85.0% (17/20, 0 pending, 0 stale)
+      wrong btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:114 POST /api/v1/plugins/updates{param} [query-in-variable]
+      wrong btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:72 GET /api/v1/plugins/directory/{param}{param} [query-in-variable]
+      wrong btcpayserver:BTCPayServer/Plugins/PluginManager/PluginBuilderClient.cs:96 GET /api/v1/plugins/{param}{param} [query-in-variable]
+vikunja              reused /corpus/runs/2026-10-20-h6-proto | routes  198 | calls  232
+  baseline: identical
+  expected endpoints (openapi): P 97.7% R 92.0% | extracted 176 expected 187 fp 4 fn 15
+      fp GET /api/v1/migration/{param}/auth
+      fp GET /api/v1/migration/{param}/status
+      fp POST /api/v1/migration/{param}/migrate
+      fp PUT /api/v1/migration/{param}/migrate
+      fn GET /api/v1/migration/microsoft-todo/auth [segment-from-method]
+      fn GET /api/v1/migration/microsoft-todo/status [segment-from-method]
+      fn GET /api/v1/migration/ticktick/status [segment-from-method]
+      fn GET /api/v1/migration/todoist/auth [segment-from-method]
+      fn GET /api/v1/migration/todoist/status [segment-from-method]
+      fn GET /api/v1/migration/trello/auth [segment-from-method]
+      fn GET /api/v1/migration/trello/status [segment-from-method]
+      fn GET /api/v1/migration/vikunja-file/status [segment-from-method]
+      fn GET /api/v1/migration/wekan/status [segment-from-method]
+      fn POST /api/v1/migration/microsoft-todo/migrate [segment-from-method]
+      fn POST /api/v1/migration/todoist/migrate [segment-from-method]
+      fn POST /api/v1/migration/trello/migrate [segment-from-method]
+      fn POST /api/v1/migration/vikunja-file/migrate [segment-from-method]
+      fn PUT /api/v1/migration/ticktick/migrate [segment-from-method]
+      fn PUT /api/v1/migration/wekan/migrate [segment-from-method]
+  checked  endpoints: P 94.7% (18/19, 0 pending, 0 stale)
+      wrong vikunja:examples/plugins/example/main.go:52 GET /user-info [prefix-as-param]
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+docmost              reused /corpus/runs/2026-10-20-h6-proto | routes  149 | calls  248
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 34 expected 34 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 42 expected 42 fp 0 fn 0
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+notifo               reused /corpus/runs/2026-10-20-h6-proto | routes  130 | calls  218
+  baseline: identical
+  expected endpoints (nswag + manual): P 100.0% R 100.0% | extracted 124 expected 124 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (nswag): P 100.0% R 100.0% | extracted 102 expected 102 fp 0 fn 0
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+mealie               reused /corpus/runs/2026-10-20-h6-proto | routes  286 | calls   14
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 69 expected 69 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 92.9% (13/14, 0 pending, 0 stale)
+      wrong mealie:frontend/app/lib/api/user/group-event-notifier.ts:20 POST /{param}/test [field-in-interpolation]
+dispatch             reused /corpus/runs/2026-10-20-h6-proto | routes  291 | calls  291
+  baseline: identical
+  expected endpoints (openapi + manual): P 98.6% R 98.6% | extracted 291 expected 291 fp 4 fn 4
+      fp POST /slack/action
+      fp POST /slack/command
+      fp POST /slack/event
+      fp POST /slack/menu
+      fn POST /api/v1/{param}/events/slack/action [router-from-registry]
+      fn POST /api/v1/{param}/events/slack/command [router-from-registry]
+      fn POST /api/v1/{param}/events/slack/event [router-from-registry]
+      fn POST /api/v1/{param}/events/slack/menu [router-from-registry]
+  checked  endpoints: P 95.0% (19/20, 0 pending, 0 stale)
+      wrong dispatch:src/dispatch/plugins/dispatch_slack/endpoints.py:130 POST /slack/action [prefix-other-file]
+  expected calls     (manual): P 100.0% R 100.0% | extracted 16 expected 16 fp 0 fn 0
+  checked  calls    : P 100.0% (20/20, 0 pending, 0 stale)
+eshop                reused /corpus/runs/2026-10-20-h6-proto | routes   30 | calls   24
+  baseline: identical
+  expected endpoints (openapi (Catalog) + manual (Ordering, Webhooks)): P 100.0% R 100.0% | extracted 27 expected 27 fp 0 fn 0
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 17 expected 17 fp 0 fn 0
+  checked  calls    : P 100.0% (6/6, 0 pending, 0 stale)
+fiber-recipes        reused /corpus/runs/2026-10-20-h6-proto | routes  263 | calls    7
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 100.0% | extracted 4 expected 4 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 4 expected 4 fp 0 fn 0
+  checked  calls    : P 100.0% (5/5, 0 pending, 0 stale)
+memos                reused /corpus/runs/2026-10-20-h6-proto | routes  101 | calls    4
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 50.0% | extracted 93 expected 186 fp 0 fn 93
+      fn POST /memos.api.AIService/Transcribe [connect-rpc]
+      fn POST /memos.api.AttachmentService/BatchDeleteAttachments [connect-rpc]
+      fn POST /memos.api.AttachmentService/CreateAttachment [connect-rpc]
+      fn POST /memos.api.AttachmentService/DeleteAttachment [connect-rpc]
+      fn POST /memos.api.AttachmentService/GetAttachment [connect-rpc]
+      fn POST /memos.api.AttachmentService/ListAttachments [connect-rpc]
+      fn POST /memos.api.AttachmentService/UpdateAttachment [connect-rpc]
+      fn POST /memos.api.AttachmentService/UploadAttachment [connect-rpc]
+      fn POST /memos.api.AuthService/GetCurrentUser [connect-rpc]
+      fn POST /memos.api.AuthService/RefreshToken [connect-rpc]
+      fn POST /memos.api.AuthService/SignIn [connect-rpc]
+      fn POST /memos.api.AuthService/SignOut [connect-rpc]
+      fn POST /memos.api.IdentityProviderService/CreateIdentityProvider [connect-rpc]
+      fn POST /memos.api.IdentityProviderService/DeleteIdentityProvider [connect-rpc]
+      fn POST /memos.api.IdentityProviderService/GetIdentityProvider [connect-rpc]
+      fn POST /memos.api.IdentityProviderService/ListIdentityProviders [connect-rpc]
+      fn POST /memos.api.IdentityProviderService/UpdateIdentityProvider [connect-rpc]
+      fn POST /memos.api.InstanceService/BatchGetInstanceSettings [connect-rpc]
+      fn POST /memos.api.InstanceService/GetInstanceProfile [connect-rpc]
+      fn POST /memos.api.InstanceService/GetInstanceSetting [connect-rpc]
+      fn POST /memos.api.InstanceService/GetInstanceStats [connect-rpc]
+      fn POST /memos.api.InstanceService/TestInstanceEmailSetting [connect-rpc]
+      fn POST /memos.api.InstanceService/UpdateInstanceSetting [connect-rpc]
+      fn POST /memos.api.MemoService/BatchGetLinkMetadata [connect-rpc]
+      fn POST /memos.api.MemoService/CreateMemo [connect-rpc]
+      fn POST /memos.api.MemoService/CreateMemoComment [connect-rpc]
+      fn POST /memos.api.MemoService/CreateMemoShare [connect-rpc]
+      fn POST /memos.api.MemoService/DeleteMemo [connect-rpc]
+      fn POST /memos.api.MemoService/DeleteMemoReaction [connect-rpc]
+      fn POST /memos.api.MemoService/DeleteMemoShare [connect-rpc]
+      fn POST /memos.api.MemoService/GetLinkMetadata [connect-rpc]
+      fn POST /memos.api.MemoService/GetMemo [connect-rpc]
+      fn POST /memos.api.MemoService/GetSharedMemo [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemoAttachments [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemoComments [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemoReactions [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemoRelations [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemoShares [connect-rpc]
+      fn POST /memos.api.MemoService/ListMemos [connect-rpc]
+      fn POST /memos.api.MemoService/SetMemoAttachments [connect-rpc]
+      fn POST /memos.api.MemoService/SetMemoRelations [connect-rpc]
+      fn POST /memos.api.MemoService/UpdateMemo [connect-rpc]
+      fn POST /memos.api.MemoService/UpsertMemoReaction [connect-rpc]
+      fn POST /memos.api.SpaceService/AcceptSpaceInvitation [connect-rpc]
+      fn POST /memos.api.SpaceService/CreateSpace [connect-rpc]
+      fn POST /memos.api.SpaceService/CreateSpaceInvitation [connect-rpc]
+      fn POST /memos.api.SpaceService/DeclineSpaceInvitation [connect-rpc]
+      fn POST /memos.api.SpaceService/DeleteSpace [connect-rpc]
+      fn POST /memos.api.SpaceService/DeleteSpaceInvitation [connect-rpc]
+      fn POST /memos.api.SpaceService/DeleteSpaceMember [connect-rpc]
+      fn POST /memos.api.SpaceService/GetSpace [connect-rpc]
+      fn POST /memos.api.SpaceService/GetSpaceInvitation [connect-rpc]
+      fn POST /memos.api.SpaceService/GetSpaceMember [connect-rpc]
+      fn POST /memos.api.SpaceService/ListSpaceInvitations [connect-rpc]
+      fn POST /memos.api.SpaceService/ListSpaceMembers [connect-rpc]
+      fn POST /memos.api.SpaceService/ListSpaces [connect-rpc]
+      fn POST /memos.api.SpaceService/ListUserSpaceInvitations [connect-rpc]
+      fn POST /memos.api.SpaceService/UpdateSpace [connect-rpc]
+      fn POST /memos.api.SpaceService/UpdateSpaceMember [connect-rpc]
+      fn POST /memos.api.UserService/BatchGetUsers [connect-rpc]
+      … 33 more
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  checked  calls    : P 100.0% (4/4, 0 pending, 0 stale)
+ctfd                 reused /corpus/runs/2026-10-20-h6-proto | routes  242 | calls   84
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 32 expected 32 fp 0 fn 0
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  checked  calls    : P 100.0% (16/16, 0 pending, 0 stale)
+ardalis-clean-arch   reused /corpus/runs/2026-10-20-h6-proto | routes   24 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 19 expected 19 fp 0 fn 0
+alertmanager         reused /corpus/runs/2026-10-20-h6-proto | routes   30 | calls   15
+  baseline: identical
+  expected endpoints (openapi): P 100.0% R 100.0% | extracted 9 expected 9 fp 0 fn 0
+  checked  endpoints: P 100.0% (19/19, 0 pending, 0 stale)
+  expected calls     (manual + openapi (generated client)): P 100.0% R 93.8% | extracted 15 expected 16 fp 0 fn 1
+      fn POST /api/v1/chat.postMessage [client-in-field]
+eshop-on-web         reused /corpus/runs/2026-10-20-h6-proto | routes   33 | calls    7
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 33 expected 33 fp 0 fn 0
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 83.3% | extracted 5 expected 6 fp 0 fn 1
+      fn GET /User [single-segment-relative]
+aiohttp-demos        reused /corpus/runs/2026-10-20-h6-proto | routes   34 | calls    1
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 24 expected 23 fp 0 fn 0
+  expected calls     (manual): P 100.0% R 50.0% | extracted 1 expected 2 fp 0 fn 1
+      fn GET /v1/gifs/{param} [url-object-builder]
+  checked  calls    : P 100.0% (1/1, 0 pending, 0 stale)
+eshop-support        reused /corpus/runs/2026-10-20-h6-proto | routes   19 | calls   19
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 18 expected 18 fp 0 fn 0
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 18 expected 18 fp 0 fn 0
+  checked  calls    : P 100.0% (19/19, 0 pending, 0 stale)
+fastify              reused /corpus/runs/2026-10-20-h6-proto | routes    8 | calls    1
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 83.3% | extracted 5 expected 6 fp 0 fn 1
+      fn POST / [app-not-recognized]
+  checked  endpoints: P 50.0% (3/6, 0 pending, 0 stale)
+      wrong fastify:integration/server.js:16 POST /post/{id} [test-app-folder]
+      wrong fastify:integration/server.js:21 PUT /put/{id} [test-app-folder]
+      wrong fastify:integration/server.js:26 DELETE /delete/{id} [test-app-folder]
+  checked  calls    : P 100.0% (1/1, 0 pending, 0 stale)
+clean-arch-dotnet    reused /corpus/runs/2026-10-20-h6-proto | routes    1 | calls    0
+  baseline: identical
+  expected endpoints (manual): P   —   R  0.0% | extracted 0 expected 10 fp 0 fn 10
+      fn DELETE /api/TodoItems/{param} [route-by-name-convention]
+      fn DELETE /api/TodoLists/{param} [route-by-name-convention]
+      fn GET /api/TodoLists [route-by-name-convention]
+      fn GET /api/WeatherForecasts [route-by-name-convention]
+      fn PATCH /api/TodoItems/UpdateDetail/{param} [route-by-name-convention]
+      fn POST /api/TodoItems [route-by-name-convention]
+      fn POST /api/TodoLists [route-by-name-convention]
+      fn POST /api/Users/logout [route-by-name-convention]
+      fn PUT /api/TodoItems/{param} [route-by-name-convention]
+      fn PUT /api/TodoLists/{param} [route-by-name-convention]
+fastapi-template     reused /corpus/runs/2026-10-20-h6-proto | routes   23 | calls   23
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 23 expected 23 fp 0 fn 0
+  checked  endpoints: P 100.0% (19/19, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 100.0% | extracted 23 expected 23 fp 0 fn 0
+gotify               reused /corpus/runs/2026-10-20-h6-proto | routes   51 | calls   31
+  baseline: identical
+  expected endpoints (openapi + manual): P 100.0% R 96.2% | extracted 50 expected 52 fp 0 fn 2
+      fn GET /gotifyinfo [no-leading-slash]
+      fn GET /version [no-leading-slash]
+  checked  endpoints: P 95.0% (19/20, 0 pending, 0 stale)
+      wrong gotify:plugin/example/echo/echo.go:77 GET /echo [router-as-param]
+  expected calls     (manual): P 100.0% R 100.0% | extracted 30 expected 30 fp 0 fn 0
+  checked  calls    : P 100.0% (18/18, 0 pending, 0 stale)
+flask                reused /corpus/runs/2026-10-20-h6-proto | routes   20 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 18 expected 18 fp 0 fn 0
+  checked  endpoints: P 100.0% (12/12, 0 pending, 0 stale)
+express              reused /corpus/runs/2026-10-20-h6-proto | routes   36 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 80.0% | extracted 4 expected 5 fp 0 fn 1
+      fn GET / [multi-app-repo]
+  checked  endpoints: P 90.0% (18/20, 0 pending, 0 stale)
+      wrong express:examples/resource/index.js:15 GET /{a}..{b}.{format} [prefix-as-param]
+      wrong express:examples/resource/index.js:22 DELETE /{id} [prefix-as-param]
+rapid-blazor         reused /corpus/runs/2026-10-20-h6-proto | routes   18 | calls   17
+  baseline: identical
+  expected endpoints (nswag + manual): P 100.0% R 100.0% | extracted 18 expected 18 fp 0 fn 0
+  checked  endpoints: P 100.0% (18/18, 0 pending, 0 stale)
+  expected calls     (nswag): P 100.0% R 100.0% | extracted 17 expected 17 fp 0 fn 0
+  checked  calls    : P 100.0% (17/17, 0 pending, 0 stale)
+taxonomy             reused /corpus/runs/2026-10-20-h6-proto | routes    9 | calls    6
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 9 expected 9 fp 0 fn 0
+  expected calls     (manual): P 100.0% R 100.0% | extracted 6 expected 6 fp 0 fn 0
+  checked  calls    : P 100.0% (6/6, 0 pending, 0 stale)
+express-realworld    reused /corpus/runs/2026-10-20-h6-proto | routes   20 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 19 expected 19 fp 0 fn 0
+  checked  endpoints: P 100.0% (19/19, 0 pending, 0 stale)
+gin-examples         reused /corpus/runs/2026-10-20-h6-proto | routes   48 | calls    1
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 91.7% | extracted 11 expected 12 fp 0 fn 1
+      fn GET /ping [multi-app-repo]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+hono-examples        reused /corpus/runs/2026-10-20-h6-proto | routes   34 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 96.9% R 96.9% | extracted 32 expected 32 fp 1 fn 1
+      fp GET /api/hello
+      fn GET / [app-not-recognized]
+  checked  endpoints: P 100.0% (20/20, 0 pending, 0 stale)
+chi                  reused /corpus/runs/2026-10-20-h6-proto | routes   53 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 22 expected 22 fp 0 fn 0
+  checked  endpoints: P 48.0% (12/25, 0 pending, 0 stale)
+      wrong chi:middleware/profiler.go:29 ANY /pprof [library-code]
+      wrong chi:middleware/profiler.go:33 ANY /pprof/{rest} [library-code]
+      wrong chi:middleware/profiler.go:34 ANY /pprof/cmdline [library-code]
+      wrong chi:middleware/profiler.go:35 ANY /pprof/profile [library-code]
+      wrong chi:middleware/profiler.go:36 ANY /pprof/symbol [library-code]
+      wrong chi:middleware/profiler.go:37 ANY /pprof/trace [library-code]
+      wrong chi:middleware/profiler.go:38 ANY /vars [library-code]
+      wrong chi:middleware/profiler.go:40 ANY /pprof/goroutine [library-code]
+      wrong chi:middleware/profiler.go:41 ANY /pprof/threadcreate [library-code]
+      wrong chi:middleware/profiler.go:42 ANY /pprof/mutex [library-code]
+      wrong chi:middleware/profiler.go:43 ANY /pprof/heap [library-code]
+      wrong chi:middleware/profiler.go:44 ANY /pprof/block [library-code]
+      wrong chi:middleware/profiler.go:45 ANY /pprof/allocs [library-code]
+gin-realworld        reused /corpus/runs/2026-10-20-h6-proto | routes   20 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 19 expected 19 fp 0 fn 0
+  checked  endpoints: P 100.0% (12/12, 0 pending, 0 stale)
+express-boilerplate  reused /corpus/runs/2026-10-20-h6-proto | routes   14 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 14 expected 14 fp 0 fn 0
+  checked  endpoints: P 100.0% (8/8, 0 pending, 0 stale)
+fastify-demo         reused /corpus/runs/2026-10-20-h6-proto | routes   14 | calls    0
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 14 expected 14 fp 0 fn 0
+  checked  endpoints: P 100.0% (10/10, 0 pending, 0 stale)
+go-kit-examples      reused /corpus/runs/2026-10-20-h6-proto | routes   27 | calls   11
+  baseline: identical
+  expected endpoints (manual): P 100.0% R 100.0% | extracted 27 expected 27 fp 0 fn 0
+  checked  endpoints: P 100.0% (14/14, 0 pending, 0 stale)
+  expected calls     (manual): P 100.0% R 78.6% | extracted 11 expected 14 fp 0 fn 3
+      fn GET /count [url-from-helper]
+      fn POST /concat [url-from-helper]
+      fn POST /sum [url-from-helper]
+gorilla-mux          reused /corpus/runs/2026-10-20-h6-proto | routes    0 | calls    0
+  baseline: identical
+
+baseline /corpus/runs/2026-10-18-v2-baseline-28: 0 repo(s) differ
+
+expected /src/tests/corpus_expected: 54 repo(s) with a gabarito — elsa, go-feature-flag, umbraco, zulip, mattermost, azure-saas, kratos, ghost, bitwarden, photoprism, argo-cd, gitea, nodebb, smartstore, open-webui, immich, directus, radarr, fastapi, nest, outline, jellyfin, netbox, btcpayserver, vikunja, docmost, notifo, mealie, dispatch, eshop, fiber-recipes, memos, ctfd, ardalis-clean-arch, alertmanager, eshop-on-web, aiohttp-demos, eshop-support, fastify, clean-arch-dotnet, fastapi-template, gotify, flask, express, rapid-blazor, taxonomy, express-realworld, gin-examples, hono-examples, chi, gin-realworld, express-boilerplate, fastify-demo, go-kit-examples
+
+language kind              P checked       P gabarito       R gabarito
+C#       endpoints  98.8%  249/252  100.0% 1931/1931 99.3% 1931/1944
+C#       calls      97.2%  141/145  100.0%  201/201  99.0%  201/203 
+Go       endpoints  93.1%  258/277  98.9% 1931/1952 93.3% 1936/2074
+Go       calls      100.0%   23/23   100.0%  103/103  93.6%  103/110 
+Python   endpoints  99.2%  130/131  99.3%  561/565  28.2%  560/1988
+Python   calls      100.0%   26/26   100.0%    2/2    66.7%    2/3   
+TS/JS    endpoints  87.7%  193/220  98.1% 1372/1399 91.7% 1372/1496
+TS/JS    calls      86.9%  251/289  98.4% 1074/1091 99.0% 1074/1085
+
+kind       category                     wrong   fn repos   (wrong: checked items judged wrong · fn: distinct expected pairs missed · repos: where it shows up)
+calls      prefix-in-client-wrapper        20    9     2
+calls      url-from-helper                 13    3     2
+calls      field-in-interpolation           5    0     2
+calls      query-in-variable                3    0     1
+calls      url-in-field                     0    3     1
+calls      url-object-builder               0    2     2
+calls      client-in-field                  0    1     1
+calls      client-wrapper                   0    1     1
+calls      single-segment-relative          0    1     1
+calls      test-client-in-source            1    0     1
+calls      vue-sfc                          0    1     1
+endpoints  django-urlconf                   0 1420     2
+endpoints  prefix-as-param                 13  119     6
+endpoints  connect-rpc                      0   93     1
+endpoints  test-app-folder                 20    0     2
+endpoints  segment-from-method              0   15     1
+endpoints  library-code                    13    0     1
+endpoints  prefix-in-router-type            1   12     1
+endpoints  route-by-name-convention         0   10     1
+endpoints  multi-app-repo                   0    8     4
+endpoints  router-from-registry             0    4     1
+endpoints  segment-from-param               0    4     1
+endpoints  custom-registrar                 0    3     1
+endpoints  optional-param                   0    3     1
+endpoints  app-not-recognized               0    2     2
+endpoints  no-leading-slash                 0    2     1
+endpoints  prefix-scope-and-file            0    2     1
+endpoints  use-as-route                     0    2     1
+endpoints  library-registrar                0    1     1
+endpoints  prefix-other-file                1    0     1
+endpoints  registrar-in-func-var            1    0     1
+endpoints  route-constraint-syntax          0    1     1
+endpoints  route-in-loop                    0    1     1
+endpoints  router-as-param                  1    0     1
+endpoints  router-from-factory              0    1     1
+
+run 2026-10-20-h6-proto: 179s wall, 3 at once under 4g each; report in ~/.cache/aidd-corpus/runs/2026-10-20-h6-proto.logs/report.txt
+largest peaks: umbraco 1141 MiB (55s) mattermost 1031 MiB (59s) elsa 681 MiB (35s)

@@ -1,0 +1,56 @@
+vikunja-today-1 rc=0 wall=21.12 peak=714596352 
+vikunja-proto-w1-1 rc=0 wall=26.13 peak=456478720 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=12.233 map1=12.328 reduce=0.015 digests=0.0 map2_hits=0 map2_misses=968 map2_cpu=11.658 map2_foreign=15 map2=11.726 compose=0.011
+vikunja-proto-w2-1 rc=0 wall=19.21 peak=582332416 [pipeline] workers=2 map1_hits=0 map1_misses=1704 map1_cpu=12.873 map1=7.325 reduce=0.027 digests=0.0 map2_hits=0 map2_misses=968 map2_cpu=12.041 map2_foreign=15 map2=9.619 compose=0.015
+vikunja-proto-w4-1 rc=0 wall=19.14 peak=674201600 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=12.869 map1=7.306 reduce=0.029 digests=0.0 map2_hits=0 map2_misses=968 map2_cpu=12.074 map2_foreign=15 map2=9.59 compose=0.016
+vikunja-fill-1 rc=0 wall=20.64 peak=557031424 [pipeline] workers=2 sum_bytes=4824491 map1_hits=0 map1_misses=1704 map1_cpu=12.385 map1=7.966 reduce=0.028 digests=0.177 scan_bytes=637522 map2_hits=0 map2_misses=968 map2_cpu=11.916 map2_foreign=15 map2=10.206 compose=0.014
+vikunja-warm-1 rc=0 wall=3.30 peak=471117824 [pipeline] workers=2 map1_hits=1704 map1_misses=0 map1_cpu=0 map1=0.662 reduce=0.054 digests=0.132 map2_hits=968 map2_misses=0 map2_cpu=0 map2_foreign=15 map2=0.26 compose=0.013
+mattermost-today-1 rc=0 wall=72.52 peak=2584489984 
+mattermost-proto-w1-1 rc=0 wall=93.19 peak=1356156928 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=52.593 map1=52.977 reduce=0.086 digests=0.0 map2_hits=0 map2_misses=4562 map2_cpu=31.198 map2_foreign=99 map2=31.429 compose=0.059
+mattermost-proto-w2-1 rc=0 wall=53.85 peak=1432113152 [pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=53.677 map1=27.839 reduce=0.279 digests=0.0 map2_hits=0 map2_misses=4562 map2_cpu=31.463 map2_foreign=99 map2=15.921 compose=0.083
+mattermost-proto-w4-1 rc=0 wall=34.35 peak=1434120192 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=54.487 map1=14.203 reduce=0.281 digests=0.0 map2_hits=0 map2_misses=4562 map2_cpu=31.867 map2_foreign=99 map2=10.122 compose=0.092
+mattermost-fill-1 rc=0 wall=64.53 peak=1455816704 [pipeline] workers=2 sum_bytes=20233372 map1_hits=0 map1_misses=8532 map1_cpu=53.332 map1=34.403 reduce=0.269 digests=0.403 scan_bytes=1852841 map2_hits=0 map2_misses=4562 map2_cpu=31.721 map2_foreign=99 map2=19.998 compose=0.073
+mattermost-warm-1 rc=0 wall=15.08 peak=1468325888 [pipeline] workers=2 map1_hits=8532 map1_misses=0 map1_cpu=0 map1=4.043 reduce=0.096 digests=0.377 map2_hits=4562 map2_misses=0 map2_cpu=0 map2_foreign=99 map2=1.26 compose=0.22
+proto-w4-today-2 rc=0 wall=0.39 peak=46526464 
+proto-w4-proto-w1-2 rc=0 wall=0.45 peak=46837760 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-proto-w2-2 rc=0 wall=0.41 peak=46485504 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-proto-w4-2 rc=0 wall=0.42 peak=46620672 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-fill-2 rc=0 wall=0.44 peak=46370816 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-warm-2 rc=0 wall=0.45 peak=46505984 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-today-2 rc=0 wall=0.39 peak=46125056 
+1-proto-w1-2 rc=0 wall=0.45 peak=46174208 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-proto-w2-2 rc=0 wall=0.44 peak=46235648 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-proto-w4-2 rc=0 wall=0.44 peak=46559232 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-fill-2 rc=0 wall=0.47 peak=46481408 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-warm-2 rc=0 wall=0.46 peak=46706688 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-today-2 rc=0 wall=0.52 peak=46157824 
+4-proto-w1-2 rc=0 wall=0.41 peak=46350336 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-proto-w2-2 rc=0 wall=0.42 peak=46514176 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-proto-w4-2 rc=0 wall=0.43 peak=46075904 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-fill-2 rc=0 wall=0.44 peak=46571520 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-warm-2 rc=0 wall=0.46 peak=46592000 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-today-3 rc=0 wall=0.39 peak=45940736 
+proto-w4-proto-w1-3 rc=0 wall=0.42 peak=46657536 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-proto-w2-3 rc=0 wall=0.42 peak=46714880 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-proto-w4-3 rc=0 wall=0.43 peak=46149632 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-fill-3 rc=0 wall=0.45 peak=46419968 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+proto-w4-warm-3 rc=0 wall=0.45 peak=46804992 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-today-3 rc=0 wall=0.40 peak=46432256 
+1-proto-w1-3 rc=0 wall=0.42 peak=46395392 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-proto-w2-3 rc=0 wall=0.42 peak=46080000 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-proto-w4-3 rc=0 wall=0.44 peak=46440448 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-fill-3 rc=0 wall=0.61 peak=46514176 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+1-warm-3 rc=0 wall=0.44 peak=46915584 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-today-3 rc=0 wall=0.39 peak=46399488 
+4-proto-w1-3 rc=0 wall=0.45 peak=46219264 [pipeline] workers=1 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-proto-w2-3 rc=0 wall=0.42 peak=46362624 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-proto-w4-3 rc=0 wall=0.42 peak=46317568 [pipeline] workers=4 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-fill-3 rc=0 wall=0.42 peak=46931968 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+4-warm-3 rc=0 wall=0.61 peak=46559232 [pipeline] workers=2 map1_hits=0 map1_misses=0 map1_cpu=0 map1=0.0 reduce=0.0 digests=0.0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.0 compose=0.0
+done
+grafana-today-1 rc=0 wall=128.53 peak=4636323840 
+grafana-proto-w1-1 rc=0 wall=155.63 peak=2648948736 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=86.607 map1=87.169 reduce=0.165 digests=0.0 map2_hits=0 map2_misses=10866 map2_cpu=47.002 map2_foreign=358 map2=47.364 compose=0.153
+grafana-proto-w2-1 rc=0 wall=95.11 peak=2756243456 [pipeline] workers=2 map1_hits=0 map1_misses=16580 map1_cpu=88.268 map1=45.89 reduce=0.202 digests=0.0 map2_hits=0 map2_misses=10866 map2_cpu=48.967 map2_foreign=358 map2=24.926 compose=0.23
+grafana-proto-w4-1 rc=0 wall=60.28 peak=2757423104 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=89.351 map1=23.183 reduce=0.198 digests=0.0 map2_hits=0 map2_misses=10866 map2_cpu=51.353 map2_foreign=358 map2=13.136 compose=0.225
+grafana-fill-1 rc=0 wall=122.01 peak=2790604800 [pipeline] workers=2 sum_bytes=39418902 map1_hits=0 map1_misses=16580 map1_cpu=87.691 map1=60.254 reduce=0.216 digests=0.9 scan_bytes=4441595 map2_hits=0 map2_misses=10866 map2_cpu=48.589 map2_foreign=358 map2=36.724 compose=0.22
+grafana-warm-1 rc=0 wall=34.74 peak=2877796352 [pipeline] workers=2 map1_hits=16580 map1_misses=0 map1_cpu=0 map1=6.955 reduce=0.195 digests=1.127 map2_hits=10866 map2_misses=0 map2_cpu=0 map2_foreign=358 map2=3.293 compose=0.206
+done

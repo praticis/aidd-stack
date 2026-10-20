@@ -1,0 +1,27 @@
+micro run 2026-10-20-374e243-dirty against main (bace8c3938): 12 repositories, 2 at once, 5g each
+umbraco head ok 56s
+grafana head ok 114s
+mattermost head ok 61s
+gitea head ok 19s
+outline head ok 10s
+ghost head ok 34s
+jellyfin head ok 14s
+vikunja head ok 21s
+netbox head ok 14s
+dispatch head ok 4s
+btcpayserver head ok 10s
+eshop head ok 2s
+grafana: identical (files=20646 symbols=125874 calls=609238 imports=115366)
+umbraco: identical (files=17453 symbols=77256 calls=197883 imports=59946)
+mattermost: identical (files=9648 symbols=53324 calls=283346 imports=47170)
+ghost: identical (files=7956 symbols=26479 calls=252926 imports=29062)
+gitea: identical (files=3697 symbols=24222 calls=83584 imports=24654)
+outline: identical (files=2714 symbols=8228 calls=53474 imports=17014)
+jellyfin: identical (files=2468 symbols=17355 calls=24948 imports=13787)
+vikunja: identical (files=2134 symbols=20411 calls=108339 imports=9320)
+netbox: identical (files=1680 symbols=17691 calls=74636 imports=8462)
+btcpayserver: identical (files=1537 symbols=13784 calls=30427 imports=8957)
+dispatch: identical (files=1332 symbols=5382 calls=11979 imports=4992)
+eshop: identical (files=665 symbols=2643 calls=1951 imports=895)
+
+0 repo(s) differ

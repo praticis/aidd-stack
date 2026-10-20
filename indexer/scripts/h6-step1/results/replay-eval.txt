@@ -1,0 +1,30 @@
+
+## vikunja: 40 commits, 39 pushes; scanned files 972, parsed 1714
+parsed files changed per push: median 2, p90 3, max 7
+map 1 keys that hit with a different summary: 0
+fixed part of a warm run (discover, reduce, digests, compose, resolve): median 1.2s; map 1 of the changed files, CPU: median 0.02s
+
+| Policy | Scans re-run per push, median / p90 / max | Keys that missed a change | Map 2 CPU per push, median / p90 (s) |
+|---|---|---|---|
+| B: every scan | 970 / 972 / 972 | 0 | 12.1 / 12.3 |
+| file only (A's floor) | 1 / 2 / 3 | 0 | 0.0 / 0.0 |
+| D: whole repo | 969 / 972 / 972 | 0 | 12.0 / 12.2 |
+| D: per package, raw | 3 / 97 / 102 | 0 | 0.0 / 0.7 |
+| D: per package | 1 / 97 / 102 | 0 | 0.0 / 0.7 |
+| C: entries read | 1 / 10 / 11 | 0 | 0.0 / 0.2 |
+(cold, tracked, workers=4: median 18.2s)
+
+## mattermost: 40 commits, 39 pushes; scanned files 4589, parsed 8592
+parsed files changed per push: median 5, p90 22, max 42
+map 1 keys that hit with a different summary: 0
+fixed part of a warm run (discover, reduce, digests, compose, resolve): median 7.4s; map 1 of the changed files, CPU: median 0.09s
+
+| Policy | Scans re-run per push, median / p90 / max | Keys that missed a change | Map 2 CPU per push, median / p90 (s) |
+|---|---|---|---|
+| B: every scan | 4572 / 4589 / 4589 | 0 | 36.0 / 41.7 |
+| file only (A's floor) | 2 / 10 / 27 | 0 | 0.0 / 0.3 |
+| D: whole repo | 4563 / 4587 / 4589 | 0 | 35.3 / 41.0 |
+| D: per package, raw | 114 / 444 / 496 | 0 | 0.5 / 11.2 |
+| D: per package | 40 / 438 / 496 | 0 | 0.2 / 10.2 |
+| C: entries read | 8 / 108 / 144 | 0 | 0.1 / 2.9 |
+(cold, tracked, workers=4: median 33.9s)

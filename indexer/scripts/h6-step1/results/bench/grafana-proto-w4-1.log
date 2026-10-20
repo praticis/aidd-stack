@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 23563 files, 20646 recorded, 1050 modules, stack=['go', 'python', 'ts'] (5.3s)
+[pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=89.64 map1=23.113 reduce=0.549 digests=0.0 map2_hits=0 map2_misses=10866 map2_cpu=49.592 map2_foreign=358 map2=12.646 compose=0.22
+[extract]  125874 symbols, 1043971 call sites, 115651 imports, 443 endpoints, 118 outbound calls (36.5s)
+[resolve]  609238 CALLS edges (601395 unresolved call sites), 115366 IMPORTS edges (285 unresolved), 734 external packages
+[dry-run]  wrote /out/grafana-proto-w4-1.json
+wall=59.61
+peak=2470637568

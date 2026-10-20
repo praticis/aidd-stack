@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 16254 files, 9678 recorded, 314 modules, stack=['go', 'ts'] (2.9s)
+[pipeline] workers=2 map1_hits=0 map1_misses=8562 map1_cpu=53.551 map1=27.841 reduce=0.315 digests=0.0 map2_hits=0 map2_misses=4575 map2_cpu=31.849 map2_foreign=99 map2=16.129 compose=0.082
+[extract]  53648 symbols, 737658 call sites, 48572 imports, 658 endpoints, 527 outbound calls (44.4s)
+[resolve]  285777 CALLS edges (488751 unresolved call sites), 47398 IMPORTS edges (1174 unresolved), 483 external packages
+[dry-run]  wrote /out/mattermost-25-cold.json
+wall=53.93
+peak=1440043008

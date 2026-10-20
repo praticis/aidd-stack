@@ -1,0 +1,13 @@
+....................................s..........................s........ [ 19%]
+..................................................ssssssssssssss........ [ 39%]
+........................................................................ [ 59%]
+........................................................................ [ 78%]
+........................................................................ [ 98%]
+......                                                                   [100%]
+=============================== warnings summary ===============================
+tests/test_mcp_protocol.py::test_rebinding_hosts_and_foreign_origins_are_refused
+  /src/tests/test_mcp_protocol.py:152: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+350 passed, 16 skipped, 1 warning in 5.92s

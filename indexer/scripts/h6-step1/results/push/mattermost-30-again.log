@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 16268 files, 9692 recorded, 316 modules, stack=['go', 'ts'] (2.2s)
+[pipeline] workers=2 map1_hits=8576 map1_misses=0 map1_cpu=0 map1=2.895 reduce=0.102 digests=0.417 map2_hits=4582 map2_misses=0 map2_cpu=0 map2_foreign=99 map2=1.284 compose=0.087
+[extract]  53820 symbols, 738863 call sites, 48639 imports, 658 endpoints, 527 outbound calls (4.8s)
+[resolve]  286498 CALLS edges (489235 unresolved call sites), 47465 IMPORTS edges (1174 unresolved), 483 external packages
+[dry-run]  wrote /out/mattermost-30-again.json
+wall=13.79
+peak=1250705408

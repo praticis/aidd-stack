@@ -1,0 +1,10 @@
+corpus 09:07:16
+corpus rc=0 09:10:28
+replay vikunja 09:10:28
+replay vikunja rc=0 09:23:58
+replay mattermost 09:23:58
+replay mattermost rc=0 09:53:25
+bench 09:53:25
+bench rc=0 10:01:25
+bench grafana rc=0 10:11:34
+done

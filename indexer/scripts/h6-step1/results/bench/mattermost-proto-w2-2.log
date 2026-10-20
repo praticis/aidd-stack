@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 16221 files, 9648 recorded, 312 modules, stack=['go', 'ts'] (2.0s)
+[pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=52.736 map1=27.406 reduce=0.328 digests=0.0 map2_hits=0 map2_misses=4562 map2_cpu=31.759 map2_foreign=99 map2=16.076 compose=0.09
+[extract]  53324 symbols, 732280 call sites, 48342 imports, 658 endpoints, 527 outbound calls (43.9s)
+[resolve]  283346 CALLS edges (485511 unresolved call sites), 47170 IMPORTS edges (1172 unresolved), 483 external packages
+[dry-run]  wrote /out/mattermost-proto-w2-2.json
+wall=52.74
+peak=1247141888

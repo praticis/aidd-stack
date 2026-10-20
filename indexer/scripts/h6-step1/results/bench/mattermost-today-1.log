@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 16221 files, 9648 recorded, 312 modules, stack=['go', 'ts'] (3.4s)
+[extract]  53324 symbols, 732280 call sites, 48342 imports (43.7s)
+[http]     658 endpoints exposed (635 with handler), 527 outbound calls (20.6s)
+[resolve]  283346 CALLS edges (485511 unresolved call sites), 47170 IMPORTS edges (1172 unresolved), 483 external packages
+[dry-run]  wrote /out/mattermost-today-1.json
+wall=73.74
+peak=2558132224

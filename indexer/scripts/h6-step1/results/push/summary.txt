@@ -1,0 +1,42 @@
+vikunja push 12: 7 parsed file(s) changed
+vikunja-12-cold rc=0 wall=17.09 peak=560738304 [pipeline] workers=2 map1_hits=0 map1_misses=1708 map1_cpu=12.929 map1=6.695 reduce=0.028 digests=0.0 map2_hits=0 map2_misses=970 map2_cpu=11.878 map2_foreign=15 map2=8.086 compose=0.013
+vikunja-12-fill rc=0 wall=30.78 peak=559316992 [pipeline] workers=2 sum_bytes=4830335 map1_hits=0 map1_misses=1706 map1_cpu=12.629 map1=14.906 reduce=0.021 digests=0.183 scan_bytes=637612 map2_hits=0 map2_misses=969 map2_cpu=11.867 map2_foreign=15 map2=13.47 compose=0.015
+vikunja-12-warm rc=0 wall=3.28 peak=443064320 [pipeline] workers=2 sum_bytes=23302 map1_hits=1701 map1_misses=7 map1_cpu=0.044 map1=0.631 reduce=0.072 digests=0.144 scan_bytes=2966 map2_hits=960 map2_misses=10 map2_cpu=0.056 map2_foreign=15 map2=0.335 compose=0.021
+vikunja-12-again rc=0 wall=2.97 peak=430473216 [pipeline] workers=2 map1_hits=1708 map1_misses=0 map1_cpu=0 map1=0.504 reduce=0.05 digests=0.133 map2_hits=970 map2_misses=0 map2_cpu=0 map2_foreign=15 map2=0.223 compose=0.012
+  warm vs cold: same
+  again vs cold: same
+vikunja push 28: 3 parsed file(s) changed
+vikunja-28-cold rc=0 wall=17.04 peak=562245632 [pipeline] workers=2 map1_hits=0 map1_misses=1709 map1_cpu=12.873 map1=6.682 reduce=0.025 digests=0.0 map2_hits=0 map2_misses=970 map2_cpu=11.79 map2_foreign=15 map2=8.074 compose=0.014
+vikunja-28-fill rc=0 wall=30.18 peak=560398336 [pipeline] workers=2 sum_bytes=4843474 map1_hits=0 map1_misses=1709 map1_cpu=12.55 map1=14.468 reduce=0.021 digests=0.183 scan_bytes=637866 map2_hits=0 map2_misses=970 map2_cpu=11.862 map2_foreign=15 map2=13.307 compose=0.014
+vikunja-28-warm rc=0 wall=4.24 peak=443179008 [pipeline] workers=2 sum_bytes=8420 map1_hits=1706 map1_misses=3 map1_cpu=0.088 map1=0.794 reduce=0.022 digests=0.135 scan_bytes=27978 map2_hits=868 map2_misses=102 map2_cpu=0.749 map2_foreign=15 map2=1.191 compose=0.022
+vikunja-28-again rc=0 wall=2.89 peak=430673920 [pipeline] workers=2 map1_hits=1709 map1_misses=0 map1_cpu=0 map1=0.469 reduce=0.053 digests=0.137 map2_hits=970 map2_misses=0 map2_cpu=0 map2_foreign=15 map2=0.21 compose=0.013
+  warm vs cold: same
+  again vs cold: same
+vikunja push 38: 2 parsed file(s) changed
+vikunja-38-cold rc=0 wall=17.03 peak=563556352 [pipeline] workers=2 map1_hits=0 map1_misses=1713 map1_cpu=12.932 map1=6.72 reduce=0.027 digests=0.0 map2_hits=0 map2_misses=972 map2_cpu=11.807 map2_foreign=15 map2=8.047 compose=0.014
+vikunja-38-fill rc=0 wall=31.13 peak=559624192 [pipeline] workers=2 sum_bytes=4851387 map1_hits=0 map1_misses=1713 map1_cpu=12.615 map1=14.97 reduce=0.022 digests=0.193 scan_bytes=638758 map2_hits=0 map2_misses=972 map2_cpu=11.937 map2_foreign=15 map2=13.698 compose=0.014
+vikunja-38-warm rc=0 wall=3.41 peak=444366848 [pipeline] workers=2 sum_bytes=5884 map1_hits=1711 map1_misses=2 map1_cpu=0.021 map1=0.737 reduce=0.028 digests=0.136 scan_bytes=1950 map2_hits=967 map2_misses=5 map2_cpu=0.043 map2_foreign=15 map2=0.326 compose=0.025
+vikunja-38-again rc=0 wall=2.92 peak=431837184 [pipeline] workers=2 map1_hits=1713 map1_misses=0 map1_cpu=0 map1=0.493 reduce=0.016 digests=0.133 map2_hits=972 map2_misses=0 map2_cpu=0 map2_foreign=15 map2=0.233 compose=0.012
+  warm vs cold: same
+  again vs cold: same
+mattermost push 19: 5 parsed file(s) changed
+mattermost-19-cold rc=0 wall=59.55 peak=1437720576 [pipeline] workers=2 map1_hits=0 map1_misses=8554 map1_cpu=58.615 map1=30.6 reduce=0.409 digests=0.0 map2_hits=0 map2_misses=4572 map2_cpu=35.043 map2_foreign=99 map2=17.801 compose=0.177
+mattermost-19-fill rc=0 wall=140.11 peak=1320878080 [pipeline] workers=2 sum_bytes=20315618 map1_hits=0 map1_misses=8554 map1_cpu=54.072 map1=80.631 reduce=0.414 digests=0.401 scan_bytes=1860279 map2_hits=0 map2_misses=4572 map2_cpu=34.632 map2_foreign=99 map2=48.586 compose=0.082
+mattermost-19-warm rc=0 wall=16.19 peak=1522630656 [pipeline] workers=2 sum_bytes=25327 map1_hits=8549 map1_misses=5 map1_cpu=0.069 map1=3.888 reduce=0.141 digests=0.4 scan_bytes=13674 map2_hits=4532 map2_misses=40 map2_cpu=0.987 map2_foreign=99 map2=2.113 compose=0.34
+mattermost-19-again rc=0 wall=12.42 peak=1245970432 [pipeline] workers=2 map1_hits=8554 map1_misses=0 map1_cpu=0 map1=2.693 reduce=0.097 digests=0.407 map2_hits=4572 map2_misses=0 map2_cpu=0 map2_foreign=99 map2=0.832 compose=0.22
+  warm vs cold: same
+  again vs cold: same
+mattermost push 25: 18 parsed file(s) changed
+mattermost-25-cold rc=0 wall=53.93 peak=1440043008 [pipeline] workers=2 map1_hits=0 map1_misses=8562 map1_cpu=53.551 map1=27.841 reduce=0.315 digests=0.0 map2_hits=0 map2_misses=4575 map2_cpu=31.849 map2_foreign=99 map2=16.129 compose=0.082
+mattermost-25-fill rc=0 wall=148.15 peak=1458307072 [pipeline] workers=2 sum_bytes=20327450 map1_hits=0 map1_misses=8554 map1_cpu=53.005 map1=87.162 reduce=0.404 digests=0.383 scan_bytes=1861163 map2_hits=0 map2_misses=4572 map2_cpu=32.807 map2_foreign=99 map2=50.139 compose=0.078
+mattermost-25-warm rc=0 wall=23.42 peak=1311608832 [pipeline] workers=2 sum_bytes=65655 map1_hits=8544 map1_misses=18 map1_cpu=0.188 map1=4.129 reduce=0.137 digests=0.385 scan_bytes=161526 map2_hits=4079 map2_misses=496 map2_cpu=9.658 map2_foreign=99 map2=10.152 compose=0.089
+mattermost-25-again rc=0 wall=12.22 peak=1253834752 [pipeline] workers=2 map1_hits=8562 map1_misses=0 map1_cpu=0 map1=2.681 reduce=0.094 digests=0.379 map2_hits=4575 map2_misses=0 map2_cpu=0 map2_foreign=99 map2=0.806 compose=0.223
+  warm vs cold: same
+  again vs cold: same
+mattermost push 30: 11 parsed file(s) changed
+mattermost-30-cold rc=0 wall=53.72 peak=1443528704 [pipeline] workers=2 map1_hits=0 map1_misses=8576 map1_cpu=53.416 map1=27.753 reduce=0.338 digests=0.0 map2_hits=0 map2_misses=4582 map2_cpu=31.585 map2_foreign=99 map2=16.003 compose=0.089
+mattermost-30-fill rc=0 wall=142.23 peak=1324617728 [pipeline] workers=2 sum_bytes=20386567 map1_hits=0 map1_misses=8574 map1_cpu=53.449 map1=87.399 reduce=0.906 digests=0.442 scan_bytes=1863782 map2_hits=0 map2_misses=4581 map2_cpu=41.098 map2_foreign=99 map2=42.819 compose=0.097
+mattermost-30-warm rc=0 wall=20.62 peak=1525997568 [pipeline] workers=2 sum_bytes=57285 map1_hits=8565 map1_misses=11 map1_cpu=0.234 map1=5.928 reduce=0.198 digests=0.423 scan_bytes=22164 map2_hits=4510 map2_misses=72 map2_cpu=0.616 map2_foreign=99 map2=2.715 compose=0.152
+mattermost-30-again rc=0 wall=13.79 peak=1250705408 [pipeline] workers=2 map1_hits=8576 map1_misses=0 map1_cpu=0 map1=2.895 reduce=0.102 digests=0.417 map2_hits=4582 map2_misses=0 map2_cpu=0 map2_foreign=99 map2=1.284 compose=0.087
+  warm vs cold: same
+  again vs cold: same

@@ -14,3 +14,22 @@ old one). These scripts measured it; the results are in `docs/corpus-report.md`,
 | `push_bench.sh REPO K...` | the cache on real pushes: cold, filled on the commit before, warm, warm again; warm compared with cold |
 | `same.py A B` | two dry-runs compared record by record |
 | `chain.sh`, `chain2.sh` | the order the runs were made in |
+
+## Results
+
+`results/` keeps the runs' text:
+
+| Path | What it holds |
+|---|---|
+| `bench/` | 3 rounds, with the batches cut by size |
+| `push/` | the 6 pushes |
+| `replay-eval.txt` | the cache policies over the replay |
+| `corpus-1.txt`, `micro-1.txt`, `micro-2.txt` | the corpus and micro reports |
+| `tests-3.txt` | the tests |
+| `bench-round1/` | the first bench, before the batches were cut by size. Only its round 1 is valid: a loop bug ran rounds 2 and 3 on no repo |
+
+The replay's records (107 MB) are not in git, so a clone does not carry them:
+
+- they are attached to the draft release `h6-step1-results`;
+- `replay.py` rebuilds them from the windows that `fetch.sh` takes: vikunja `82b5cb3131ee`, mattermost
+  `2de97aee85bc`, 40 first-parent commits each.
