@@ -12,7 +12,11 @@
 > - **Step 1 built B with D per package** on a throwaway branch (`h6/step1-proto`). Its output is identical on the
 >   corpus, the micro set and real pushes, and no scanner changed. A warm run of mattermost takes 14–23 s, against
 >   73 s today. The table of "Open question 1" is filled in.
-> - **Next:** step 2, the decisions with the author and ADR-004, then ADR-005 and ADR-006.
+> - **Step 2, in progress:**
+>   - the author decided H6-D5 (B, keyed per package) and H6-D6 (batches by size);
+>   - the cache store was measured (SQLite);
+>   - ADR-004 (the pipeline), ADR-005 (the type service) and ADR-006 (recognizers and the catalog) are proposed in
+>     `docs/adr/`, for the author to accept.
 >
 > H6 was born from H5's step 3 (`FileIndex`). The author asked for the step to get a handoff of its own, to explore
 > partitioning the extraction, running it in parallel and joining the results, with an incremental cache per file as
@@ -251,7 +255,7 @@ H5 builds pieces with H6's shape:
 |---|---|---|
 | 0 | Measure the pipeline as it is, with no code change: the time and the peak memory of each phase (discover, parse, extract, facts, constants, scanners, compose, resolve, write) on grafana, mattermost, vikunja, umbraco and ghost; the share of files with an HTTP shape; the files a typical push changes, from the corpus repos' history | the numbers in `corpus-report.md` ("H6 baseline"). **Done 2026-10-19** |
 | 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged. **Done 2026-10-20** (`h6/step1-proto`) |
-| 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted |
+| 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted. **In progress:** H6-D5 and D6 decided, the three ADRs proposed |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |
 | 4 | Plug in the map, the reduce and the cache | the corpus cold, warm, and the baseline are identical; the hold-out identical |
 | 5 | Validate at scale: grafana under the ceiling; the refresh time on a live install, cold and after a one-file push | the numbers in the corpus report and in the H5/H6 PR |

@@ -123,3 +123,5 @@
   - 4 workers bring grafana from 132 s to 60 s; memory halves; warm runs of mattermost take 14–23 s;
   - a replay of 78 pushes compares the policies: no key missed a change, and keying by the entries read (C) re-runs
     4 times fewer scans than D at the p90.
+- 2026-10-20: H6 step 2: the author decides B keyed per package (H6-D5) and batches by size (H6-D6). The cache store is
+  measured, and ADR-004 to ADR-006 are proposed.

@@ -536,3 +536,37 @@ Other figures from the replay:
    - 15 functions of the scanners read a value another file produced, at 33 sites.
    - Several of these reads decide control flow, not only a value: Go's verb lists and field types, TS clients and
      their bases, Python's router classes. Under A, each one becomes a conditional item that the reduce settles.
+
+### The cache store (H6 step 2, 2026-10-20)
+
+The 13 thousand entries of a real mattermost cache (21 MiB) were written and read again by three stores, in seconds,
+as the median of 3 rounds:
+
+- a cold run fills the store;
+- a warm run reads every entry;
+- a push reads every entry and writes 1 % new ones.
+
+| Store | Docker Desktop's bind mount: fill / warm / push | The container's own disk: fill / warm / push |
+|---|---|---|
+| One file per entry (the prototype) | 102 / 16.3 (1.7–32.8) / 2.5 | 0.48 / 0.15 / 0.15 |
+| SQLite, one transaction per run | 1.5 / 0.21 / 0.12 | 0.18 / 0.09 / 0.09 |
+| One file per snapshot, rewritten per run | 0.02 / 0.02 / 0.05 | 0.01 / 0.01 / 0.02 |
+
+ADR-004 proposes SQLite: one entry per file across every ref, and one database per repo. A file per snapshot is
+faster, but it stores a file shared by two refs twice. The script is `indexer/scripts/h6-step1/store_bench.py` on
+`h6/step1-proto`.
+
+### What a directory's context should hold (H6 step 2, 2026-10-20)
+
+The step 1 replay was evaluated again, with each directory's context digest cut to the facts a scanner reads: Go's
+struct fields, out of all of `file_facts`. On mattermost, a push re-runs this many scans:
+
+| Directory context in map 2's key | Median | p90 | Max |
+|---|---|---|---|
+| Every fact of every file | 40 | 438 | 496 |
+| Cut to what scanners read | 10 | 300 | 411 |
+| C: only the entries read | 8 | 108 | 144 |
+
+- No key missed a change.
+- Vikunja does not change: 1 / 97 / 102.
+- What is left in the cut row is mostly the functions by name. ADR-005 records each such lookup as a question.
