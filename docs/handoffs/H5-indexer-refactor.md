@@ -32,8 +32,13 @@
 >       free of a language's module or id (`test_core_neutral.py`).
 >
 >     What the core still names is frameworks, in `http_base`'s receiver catalog and in examples: step 6's catalog.
->   - **Step 7, in part:** the client wrappers' facts and pending calls are `NamedTuple`s (`WrapperShape`,
->     `WrappedCall`), read by field. The other kinds of fact and of pending call are still missing.
+>   - **Step 7:** every fact a file publishes and every request it leaves pending is a `NamedTuple` of its
+>     language, read by field (`languages/<lang>/http_facts.py`; the mount and client-wrapper kinds the core's
+>     machinery shares live in the core). A fact is published and looked up by its type (`HttpResult.publish`,
+>     `facts_of`), and a pending item carries its request (`Pending.wait`, `HttpResult.waiting`). A shared kind adds
+>     its language's scope (`mount_scope`), so each language composes its own. No text key and no positional tuple is
+>     left between a scanner and its `compose`. `compose` as an ordered list of steps comes with step 6's
+>     `http/compose.py`.
 >   - **Step 8:** `core/matching.py`, the MCP split (`tools/list` byte for byte the same) and the Cypher tested
 >     against a real Neo4j (`scripts/mcp-it.sh`, 14 cases).
 >   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
@@ -46,7 +51,6 @@
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
->   - 7 (typed facts and `Pending`, serializable, with no tree node inside);
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - the rest of 10;
