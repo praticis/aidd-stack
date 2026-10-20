@@ -231,6 +231,18 @@ def analyse(repo: RepoInfo, workers: int, prev: dict) -> dict:
             "calls_edges": len(rv.calls), "scanned": len(scanned)}
 
 
+def typed(repo: RepoInfo, workers: int) -> dict:
+    rel = list_files(Path(repo.root))
+    modules, stack = discover_modules(repo, rel)
+    files = build_files(repo, rel, modules)
+    for lang in sorted({f.language for f in files} & languages.parseable()):
+        load_language(lang)
+    P._W.update(repo=repo, dispatch=frozenset(), patterns=None, reads=None, creads=None)
+    sums = P.map1([f for f in files if f.language in languages.parseable()], workers, None)
+    by_dir = P.contexts([s for s in sums if s.ok and not s.bundle], None)
+    return {"typed": {d: P.ctx_digest(c, projected=True, typed=True) for d, c in by_dir.items()}}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("hist")
@@ -238,6 +250,7 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--commits", type=int, default=40)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--typed-only", action="store_true", help="only the contexts' typed digests, beside each record")
     a = ap.parse_args()
     P._map2_batch = map2_batch
     git = ["git", "-c", "safe.directory=*", "-C", a.hist]
@@ -248,6 +261,8 @@ def main() -> int:
     prev: dict = {}
     for k, sha in enumerate(shas):
         dest = out / f"{k:02d}-{sha[:10]}.json.gz"
+        if a.typed_only:
+            dest = dest.with_name(dest.name.replace(".json.gz", ".typed.json"))
         if dest.exists():
             prev = {}
             continue
@@ -256,13 +271,12 @@ def main() -> int:
         subprocess.run(f"{' '.join(git)} archive {sha} | tar -x -C {work}", shell=True, check=True)
         repo = RepoInfo(tenant="replay", name=a.name, ref="h6", commit_sha=sha, root=str(work))
         t = time.perf_counter()
-        r = analyse(repo, a.workers, prev)
+        r = typed(repo, a.workers) if a.typed_only else analyse(repo, a.workers, prev)
         r.update(sha=sha, k=k, wall=round(time.perf_counter() - t, 1))
-        with gzip.open(dest, "wt") as f:
+        with (open(dest, "w") if a.typed_only else gzip.open(dest, "wt")) as f:
             json.dump(r, f)
         subprocess.run(["rm", "-rf", str(work)], check=True)
-        print(f"{a.name} {k:02d} {sha[:10]} files={len(r['files'])} scanned={r['scanned']} "
-              f"endpoints={r['endpoints']} calls={r['http_calls']} {r['times']} wall={r['wall']}s", flush=True)
+        print(f"{a.name} {k:02d} {sha[:10]} wall={r['wall']}s", flush=True)
     return 0
 
 

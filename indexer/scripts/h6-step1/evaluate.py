@@ -13,11 +13,18 @@ import sys
 from pathlib import Path
 
 POLICIES = ("B: every scan", "file only (A's floor)", "D: whole repo", "D: per package, raw", "D: per package",
-            "C: entries read")
+            "D: per package, typed", "C: entries read")
 
 
 def load(d: Path) -> list[dict]:
-    return [json.load(gzip.open(p, "rt")) for p in sorted(d.glob("*.json.gz"))]
+    runs = []
+    for p in sorted(d.glob("*.json.gz")):
+        r = json.load(gzip.open(p, "rt"))
+        t = p.with_name(p.name.replace(".json.gz", ".typed.json"))
+        if t.exists():
+            r.update(json.loads(t.read_text()))
+        runs.append(r)
+    return runs
 
 
 def rerun(policy: str, path: str, a: dict, b: dict) -> bool | None:
@@ -34,7 +41,9 @@ def rerun(policy: str, path: str, a: dict, b: dict) -> bool | None:
         return None
     if any(a["sv"][r] != b["sv"][r] for r in fa["views"]):
         return True
-    dg = "raw" if policy.endswith("raw") else "proj"
+    dg = "raw" if policy.endswith("raw") else "typed" if policy.endswith("typed") else "proj"
+    if dg == "typed" and ("typed" not in a or "typed" not in b):
+        return None
     own = path.rsplit("/", 1)[0] if "/" in path else "."
     if policy.startswith("D: per package"):
         dirs = set(fa["dirs"]) | {own}

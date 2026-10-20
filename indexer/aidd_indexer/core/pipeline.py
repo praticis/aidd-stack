@@ -112,8 +112,10 @@ def project(attr: str, value):
     return value
 
 
-def ctx_digest(ctx: PackageContext, projected: bool) -> str:
-    parts = [canon(getattr(ctx, a)) for a in CTX_FIELDS]
+def ctx_digest(ctx: PackageContext, projected: bool, typed: bool = False) -> str:
+    """`typed`: the files' facts cut to what a scanner reads of them, the struct fields."""
+    parts = [canon({p: f.get("structs", {}) for p, f in ctx.file_facts.items()}) if typed and a == "file_facts"
+             else canon(getattr(ctx, a)) for a in CTX_FIELDS]
     fbn = project("functions_by_name", ctx.functions_by_name) if projected else ctx.functions_by_name
     return digest((parts, canon(fbn)))
 

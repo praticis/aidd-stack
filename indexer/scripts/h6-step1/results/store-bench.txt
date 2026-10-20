@@ -1,0 +1,10 @@
+== bind
+13094 entries, 21.1 MiB; a push writes 131
+files   fill 102.12 (101.56–119.98)  warm  16.34 (1.70–32.82)  push   2.51 (2.14–2.57)
+sqlite  fill   1.48 (1.42–1.61)  warm   0.21 (0.19–0.23)  push   0.12 (0.12–0.13)
+pack    fill   0.02 (0.02–0.04)  warm   0.02 (0.02–0.03)  push   0.05 (0.04–0.06)
+== overlay
+13094 entries, 21.1 MiB; a push writes 131
+files   fill   0.48 (0.48–0.51)  warm   0.15 (0.15–0.16)  push   0.15 (0.15–0.15)
+sqlite  fill   0.18 (0.16–0.18)  warm   0.09 (0.09–0.10)  push   0.09 (0.09–0.10)
+pack    fill   0.01 (0.01–0.01)  warm   0.01 (0.01–0.01)  push   0.02 (0.02–0.03)
