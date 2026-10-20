@@ -271,7 +271,7 @@ H5 builds pieces with H6's shape:
 | 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged. **Done 2026-10-20** (`h6/step1-proto`) |
 | 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted. **Done 2026-10-20:** H6-D5 and D6 decided, ADR-004 to ADR-006 accepted |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |
-| 4 | Plug in the map, the reduce and the cache | the corpus cold, warm, and the baseline are identical; the hold-out identical |
+| 4 | Plug in the map, the reduce and the cache. Before it, in a PR of its own because it changes the graph: Go's two reads of an imported package's directory (`view.contexts.get`, for the functions that return a parameter and the verb lists) become questions to the view. That also reads the repo's root package, which they miss today: `indexer/tests/test_repo_view.py::test_a_function_of_the_root_package_is_read_like_any_other`, a strict xfail until then. `test_only_the_view_walks_the_directories` then stops allowing `.contexts.get` | the root package's test passes without its xfail; the corpus cold, warm, and the baseline are identical; the hold-out identical |
 | 5 | Validate at scale: grafana under the ceiling; the refresh time on a live install, cold and after a one-file push | the numbers in the corpus report and in the H5/H6 PR |
 
 ## Decisions made (2026-10-19, by the author)
