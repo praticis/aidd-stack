@@ -1367,7 +1367,6 @@ class _RouteAttributes:
     def __init__(self, facts: dict[str, list], view, default_versions: list | None = None,
                  chars: dict[str, list] | None = None) -> None:
         self.facts, self.view, self.chars = facts, view, chars or {}
-        self._consts: dict[str, str | None] = {}
         # Asp.Versioning: a controller with no `[ApiVersion]` is the default version — the repo's
         # `DefaultApiVersion` when it sets one, else the library's 1.0
         found = set(default_versions or ())
@@ -1376,35 +1375,8 @@ class _RouteAttributes:
     def const(self, dotted: str) -> str | None:
         if "." not in dotted or self.view is None:
             return None
-        if dotted not in self._consts:
-            q = ".".join(dotted.split(".")[-2:])
-            values = set()
-            for ctx in self.view.contexts.values():
-                if q in ctx.ambiguous:
-                    continue
-                v = ctx.route_const(q) if q in ctx.route_consts or q in ctx.const_parts else \
-                    ctx.segments.get(q) or ctx.relatives.get(q)
-                v = v if v is not None else self._joined(ctx, q)
-                if v is not None:
-                    values.add(v)
-            self._consts[dotted] = values.pop() if len(values) == 1 else None
-        return self._consts[dotted]
-
-    @classmethod
-    def _joined(cls, ctx, name: str, _depth: int = 0) -> str | None:
-        """A constant built from others that is not a path by itself (`DefaultAppPath = "~/" +
-        AppPathSegment`): every part known in its directory, or nothing."""
-        if name in ctx.ambiguous or _depth > 4:
-            return None
-        if name not in ctx.const_parts:
-            return ctx.route_consts.get(name) or ctx.segments.get(name) or ctx.relatives.get(name)
-        out = ""
-        for kind, v in ctx.const_parts[name]:
-            r = v if kind == "lit" else cls._joined(ctx, v, _depth + 1) if kind == "ref" and v else None
-            if r is None:
-                return None
-            out += r
-        return out
+        found = self.view.constant_values(".".join(dotted.split(".")[-2:]))
+        return next(iter(found)) if len(found) == 1 else None
 
     def fill(self, recipe: tuple | None, values: dict[str, str | None]) -> str | None:
         if recipe is None:

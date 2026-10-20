@@ -219,6 +219,30 @@ class PackageContext:
             return None
         return raw
 
+    def constant(self, name: str) -> str | None:
+        """What the directory gives the constant `name`, by the name as written: a path, a segment, segments without a
+        leading slash, or a text built from parts all known here; None for a name with two values."""
+        if name in self.ambiguous:
+            return None
+        v = self.route_const(name) if name in self.route_consts or name in self.const_parts else \
+            self.segments.get(name) or self.relatives.get(name)
+        return v if v is not None else self._known(name)
+
+    def _known(self, name: str, _depth: int = 0) -> str | None:
+        """A constant built from others that is not a path by itself (`DefaultAppPath = "~/" + AppPathSegment`):
+        every part known in the directory, or nothing."""
+        if name in self.ambiguous or _depth > 4:
+            return None
+        if name not in self.const_parts:
+            return self.route_consts.get(name) or self.segments.get(name) or self.relatives.get(name)
+        out = ""
+        for kind, v in self.const_parts[name]:
+            r = v if kind == "lit" else self._known(v, _depth + 1) if kind == "ref" and v else None
+            if r is None:
+                return None
+            out += r
+        return out
+
 
 def dir_of(file_path: str) -> str:
     return str(PurePosixPath(file_path).parent)

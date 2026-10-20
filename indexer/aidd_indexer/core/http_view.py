@@ -29,6 +29,7 @@ class RepoView:
         self._paths: set[str] | None = None
         self._defining: dict[tuple[str, str], dict[object, list["PackageContext"]]] = {}
         self._requires: dict[str, set[str] | None] = {}
+        self._constants: dict[str, frozenset[str]] = {}
 
     def _context(self, language: str) -> ResolveContext:
         if self._ctx is None:
@@ -76,6 +77,13 @@ class RepoView:
                 for key in getattr(facts, field) if facts is not None else ():
                     index.setdefault(key, []).append(ctx)
         return index.get(name, [])
+
+    def constant_values(self, name: str) -> frozenset[str]:
+        """The values the repo's directories give the constant `name` (`PackageContext.constant`), each once."""
+        if name not in self._constants:
+            found = (ctx.constant(name) for ctx in self.contexts.values())
+            self._constants[name] = frozenset(v for v in found if v is not None)
+        return self._constants[name]
 
     def manifest_dir(self, file: FileInfo, package: str) -> str | None:
         """The directory of the manifest nearest `file` (its package: a `package.json`, a `.csproj`..), when that
