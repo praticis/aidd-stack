@@ -132,7 +132,7 @@ The full text is in the ROADMAP, under "Principles".
 | Question | Where |
 |---|---|
 | What is open, and in what order | `docs/ROADMAP.md` |
-| Why a choice was made | `docs/decisions.md` and `docs/adr/` (ADR-002 tree-sitter vs SCIP, ADR-003 per-language modules; proposed: ADR-004 the extraction pipeline, ADR-005 the type service, ADR-006 recognizers and the catalog) |
+| Why a choice was made | `docs/decisions.md` and `docs/adr/` (ADR-002 tree-sitter vs SCIP, ADR-003 per-language modules, ADR-004 the extraction pipeline, ADR-005 the type service, ADR-006 recognizers and the catalog) |
 | What happened, and when | `docs/history.md`; the full old text is in git (`git show 1d73bb0:docs/ROADMAP.md`) |
 | How the indexer decides (rules, the cycle of a change, the code map) | `docs/indexer-evolution.md` |
 | The HTTP extractor's numbers and what is missing | `docs/corpus-report.md` |

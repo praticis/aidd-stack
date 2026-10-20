@@ -552,7 +552,7 @@ as the median of 3 rounds:
 | SQLite, one transaction per run | 1.5 / 0.21 / 0.12 | 0.18 / 0.09 / 0.09 |
 | One file per snapshot, rewritten per run | 0.02 / 0.02 / 0.05 | 0.01 / 0.01 / 0.02 |
 
-ADR-004 proposes SQLite: one entry per file across every ref, and one database per repo. A file per snapshot is
+ADR-004 chose SQLite: one entry per file across every ref, and one database per repo. A file per snapshot is
 faster, but it stores a file shared by two refs twice. The script is `indexer/scripts/h6-step1/store_bench.py` on
 `h6/step1-proto`.
 
@@ -570,3 +570,85 @@ struct fields, out of all of `file_facts`. On mattermost, a push re-runs this ma
 - No key missed a change.
 - Vikunja does not change: 1 / 97 / 102.
 - What is left in the cut row is mostly the functions by name. ADR-005 records each such lookup as a question.
+
+### Batches by package (H6 step 2, 2026-10-20)
+
+Step 1's batches extract every scanned file twice: in map 1, and again in map 2 to scan it. This bench measured
+batches of whole packages instead, which H6-D6 now decides:
+
+- a worker extracts its batch's packages, builds each package's context from them, and scans the package's files
+  while their trees live;
+- each scan records its reads with the answers it got: a directory's context, a pass over every directory, the
+  directories of a class, a question to the repo's structure;
+- the reduce asks each read again of the whole repo. A scan whose answers all hold is final, and the others go to
+  map 2;
+- a package larger than the total over 4 × workers is split into batches of files, and its files' scans go to map 2.
+
+**What ran:**
+
+- the prototype at `31d3990` on `h6/step1-proto`, with batches by package as the default;
+- one container per run, on an 8-CPU machine, 3 rounds, each figure the median;
+- a second bench at 2 workers, the refresher's quota, with batches of files and of packages interleaved.
+
+**Correctness:**
+
+- **The tests:** 350 passed.
+- **The HTTP corpus:** `0 repo(s) differ` against `2026-10-18-v2-baseline-28`, on 55 repos.
+- **The micro set:** the full dry-runs are identical to `main`'s on the 12 repos, record by record.
+- **The bench:** each of its 81 runs (batches of files and of packages, 1 to 4 workers) is identical to today's run of
+  the same tree.
+
+**Time**, in seconds, for a full dry-run, batches of files / of packages:
+
+| Repo | Today | 1 worker | 2 workers | 4 workers |
+|---|---|---|---|---|
+| vikunja | 21.7 | 28.0 / 22.9 | 17.7 / 13.2 | 15.2 / 15.0 |
+| mattermost | 73.9 | 91.6 / 81.4 | 55.4 / 48.6 | 31.3 / 28.6 |
+| grafana | 130.3 | 153.3 / 136.0 | 97.9 / 86.1 | 59.0 / 54–81 |
+
+**Map 2's share** with batches by package, at 1 worker:
+
+| Repo | Scans | Not accepted, read again in map 2 | Their CPU in map 2 |
+|---|---|---|---|
+| vikunja | 968 | 24 (2.5 %) | 0.3 s |
+| mattermost | 4,562 | 142 (3.1 %) | 7.1 s |
+| grafana | 10,866 | 491 (4.5 %) | 6.0 s |
+
+With more workers, the largest packages are split. At 4 workers, map 2 reads 122 scans on vikunja and 368 on
+mattermost, but none of grafana's packages is split.
+
+**What it says:**
+
+1. **Batches by package cost less everywhere it was measured, for the same output.** They take 14–22 % less CPU
+   than batches of files, and 12–25 % less time at 2 workers.
+2. **At 1 worker, they are 4–10 % slower than today,** against 18–29 % for batches of files.
+   - Most of the gap is the scans read again. They are few, but large files: on mattermost, 50 ms each, against 7 ms
+     for an average scan in map 2.
+   - H5's per-file index, rebuilt from a parse, makes them cheaper.
+3. **At 4 workers, the parent's serial work weighs.**
+   - On grafana, discovery takes 5 s, and the resolver with the output 16–23 s: close to 40 % of the run.
+   - On vikunja, one vendored bundle is the floor, 8 s, in map 1 or in map 2.
+4. **Grafana's runs with workers are noisy.**
+   - At 4 workers, batches by package took 54–81 s over 6 rounds. In the slowest, the workers' time per file, summed,
+     went from 109 s to 183 s for the same work: the machine's other load.
+   - A probe of the parent's garbage collector found 1–3 s per run. Freezing the heap after map 1 (`gc.freeze()`)
+     changed nothing.
+5. **A read the scans did not record.** A fixture's output differed with 2 workers.
+   - An early scan had read every directory's context, made of its batch only. The read was not recorded, so the
+     reduce accepted it.
+   - The read is Go's `_passthrough_index`. For a method `x.M` whose operand is not an imported package, it looks for
+     a function `M` that returns a parameter, in every directory (`view.contexts.values()`).
+   - Step 1's key did not cover it either, so that key was not sound by construction. No push of the replay changed
+     such a function, which is why the replay found no missed change.
+   - 1.0–1.1 % of the scans make that pass (10 on vikunja, 52 on mattermost). The prototype now records it as a read
+     of every directory, which re-runs those scans on any change of context.
+   - ADR-004 and ADR-006 make it a question, with its answer.
+6. **What a scan reads.** A median of 2–3 recorded reads per scan, and a p90 of 7. On vikunja and mattermost:
+   - an import's target, in 76–78 % of the scans;
+   - a manifest's directory, in 30–70 %;
+   - another directory's context, in 2.1–2.7 %;
+   - another directory's constants, in 1.7–1.9 %.
+
+The scripts are `packages_chain.sh`, `packages_2w_chain.sh`, `count_reads.py` and `aggregate.py`, in
+`indexer/scripts/h6-step1/` on `h6/step1-proto`. The runs' text is in `results/packages/` and
+`results/packages-2w/`.

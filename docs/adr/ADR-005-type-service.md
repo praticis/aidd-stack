@@ -1,6 +1,6 @@
 # ADR-005 — One type service for the resolver and the scanners
 
-**Status:** proposed · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 5, built toward H6) · **Records:** ADR-002's
+**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 5, built toward H6) · **Records:** ADR-002's
 addendum (`needs-resolver`); the H5 handoff's target architecture, item 3; ADR-004 (where it is built)
 
 ## Context
@@ -24,7 +24,7 @@ SCIP (F1.2) is going to answer this question, and today it would have to come in
 ADR-004 adds two constraints:
 
 - **The type facts travel.** They are made in map 1, from one file. They are joined in the reduce, from every file's
-  summary. They are read in map 2, by a scan whose cache key must cover what it read.
+  summary. They are read by the scans, early in map 1 or in map 2, and a scan's cache key must cover what it read.
 - **A broad read makes the cache coarse.** A scan that reads every file's facts in its directory depends on all of
   them. Step 1 found that this is what drives D's tail on Go's large packages: adding a method anywhere in the package
   re-runs every scan in it.
@@ -37,6 +37,9 @@ ADR-004 adds two constraints:
   assignment, a receiver or a parameter. It is the same code for the resolver's call receivers and for the scanners.
 - **Across files, the `TypeIndex`:** built once per repo in the reduce, from the type facts of every summary. It is
   read-only, and the resolver and map 2's scans use the same instance.
+- **In an early scan:** the worker builds the same index from its batch's facts. The reduce checks each answer
+  against the repo's `TypeIndex`, as it checks every read (ADR-004). A scan with an answer that differs goes to
+  map 2.
 
 ### 2. The type facts
 
@@ -66,8 +69,9 @@ addendum), and the gap stays recorded, with no heuristic.
 
 ### 4. A question is a dependency
 
-When a scan in map 2 asks the `TypeIndex` a question, the question and its answer are recorded with the scan's entry,
-like the questions to the repo's structure (ADR-004). The entry is a hit only while each answer still holds.
+When a scan asks the `TypeIndex` a question, the question and its answer are recorded with the scan's entry, like the
+questions to the repo's structure (ADR-004). The entry is a hit, and an early scan is accepted, only while each answer
+still holds.
 
 The scan then depends on, for example, the type of the field `Server.Router`, and no longer on every struct of its
 directory. Every file's facts leave the directory's context digest.
@@ -96,8 +100,7 @@ cache's namespace. The recognizers (ADR-006) and the resolver do not change.
     adds no read tracking beyond the questions' API.
 - **The resolver's indexes from PR #9 move into the `TypeIndex`,** and stay built once per repo.
 - **Cost:**
-  - every question is recorded in map 2, as the view's are. Step 1 measured a median of 2–3 recorded questions per
-    scan;
+  - every question is recorded, as the view's are. Step 1 measured a median of 2–3 recorded questions per scan;
   - a facts schema per language, versioned with the build.
 
 ## Alternatives considered
@@ -105,5 +108,5 @@ cache's namespace. The recognizers (ADR-006) and the resolver do not change.
 | Alternative | Why not |
 |---|---|
 | **Keep two type systems** | Two answers to one question drift, and SCIP would come in at about ten places |
-| **The `TypeIndex` in each worker, built from the files a scan needs** | The worker would need other files' facts in any case, and the reduce builds them once |
+| **Only a `TypeIndex` in each worker, built from the files a scan needs** | The worker would need other files' facts in any case, and the reduce builds them once. An early scan uses its batch's index, but the reduce checks its answers |
 | **Scans read every fact of their directory, as today** | It is what makes D's key coarse on large packages |

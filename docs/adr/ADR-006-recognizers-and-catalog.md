@@ -1,6 +1,6 @@
 # ADR-006 — HTTP rules as recognizers, and the framework catalog as data
 
-**Status:** proposed · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the
+**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the
 H5 handoff's target architecture, items 5–7; ADR-004 (where the recognizers run)
 
 ## Context
@@ -16,10 +16,12 @@ The knowledge about frameworks sits in loose constants per scanner (`GO_REGISTRA
 `TS_ROUTER_VERBS`, `CLIENT_RECEIVER`, …). The facts and pending items that cross files are keyed by text (about 35
 keys, such as `"cs.fe-group"`), and their values are positional tuples unpacked far from where they were made.
 
-ADR-004 puts the scanners in map 2, which has two consequences:
+ADR-004 runs the scanners in the map's workers: early, in map 1, with the package's context, or in map 2. That has
+two consequences:
 
 - a scan sees one file's tree, a read-only context and the repo's questions;
-- its result is cached under a key that must cover everything the scan reads.
+- its result is cached under a key that must cover everything the scan reads, and an early scan is accepted only if
+  each read gets the same answer from the whole repo.
 
 So the rules need a contract for what they read, not only a shape.
 
@@ -44,12 +46,12 @@ Each recognizer matches one line of the guide's table of rules, and has its fixt
 
 ### 2. What a recognizer may read
 
-This is the contract that keeps ADR-004's cache sound. A recognizer may read:
+This is the contract that keeps ADR-004's cache and early scans sound. A recognizer may read:
 
 - the file's tree and its per-file index;
 - the file's directory context, read-only;
 - the repo view's questions: an import's target, a manifest's directory, the files under a directory, another
-  directory's constants, the directories that define a class;
+  directory's constants, the directories that define a class, the functions of a name that return a parameter;
 - the type service's questions (ADR-005);
 - the catalog.
 
@@ -57,7 +59,9 @@ Nothing else is allowed:
 
 - no environment variable, no clock;
 - no file read from disk;
-- no other file's tree.
+- no other file's tree;
+- no loop over the directories' contexts. A lookup across the repo is a question, so its answer is recorded. Step 2
+  found a Go lookup that looped, which step 1's key did not cover (ADR-004, "What keeps it right").
 
 Each question to the view or to the type service goes through an API that records it with its answer. That record is
 what map 2's cache key is made of.

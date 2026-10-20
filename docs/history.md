@@ -125,3 +125,6 @@
     4 times fewer scans than D at the p90.
 - 2026-10-20: H6 step 2: the author decides B keyed per package (H6-D5) and batches by size (H6-D6). The cache store is
   measured, and ADR-004 to ADR-006 are proposed.
+- 2026-10-20: H6 step 2 closes. Batches of whole packages, scanned in the worker and checked in the reduce, are
+  identical everywhere and take 14–22 % less CPU; the author amends H6-D6 to them. They also find a read the scans did
+  not record, which step 1's key missed. ADR-004 to ADR-006 are accepted.
