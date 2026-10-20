@@ -1,19 +1,26 @@
-# H6 step 1: the measurement scripts
+# H6 steps 1 and 2: the measurement scripts
 
 The prototype in `aidd_indexer/core/pipeline.py` replaces `extract_tree` on this branch (`AIDD_PIPELINE=0` runs the
-old one). These scripts measured it; the results are in `docs/corpus-report.md`, "H6 step 1". Outputs go to
-`$AIDD_H6_OUT` (default `~/.cache/aidd-corpus/h6/step1`).
+old one). `AIDD_BATCH=package` batches whole packages and scans them in map 1 (`pipeline_pkg.py`); the default is
+step 1's batches of files. These scripts measured it; the results are in `docs/corpus-report.md`, "H6 step 1" and
+its step 2 sections. Outputs go to `$AIDD_H6_OUT` (default `~/.cache/aidd-corpus/h6/step1`).
 
 | Script | What it does |
 |---|---|
 | `fetch.sh NAME SLUG SHA` | a shallow window (40 commits) of a public repo's history, for the replay |
 | `replay.py` | each commit of the window indexed cold, with each file's key, summary and scan digests, and what its scan read |
-| `evaluate.py DIR...` | per cache policy: the scans re-run per push and the keys that missed a change |
+| `evaluate.py DIR...` | per cache policy: the scans re-run per push and the keys that missed a change (`--typed-only` for the context cut to what scanners read) |
 | `bench.sh` | one full dry-run in its own container: wall time and the cgroup's peak memory |
 | `run_bench.sh ROUNDS REPO...` | today against the prototype with 1, 2 and 4 workers, cold and warm, each compared with today's |
 | `push_bench.sh REPO K...` | the cache on real pushes: cold, filled on the commit before, warm, warm again; warm compared with cold |
+| `store_bench.py` | a real cache's entries written and read by three stores: a file per entry, SQLite, a file per snapshot |
+| `batch_run.sh CODE LABEL SRC OUT PIPELINE BATCH WORKERS [FREEZE]` | one full dry-run with a given batch and worker count, with the map's counters |
+| `packages_chain.sh MICRO_BASE` | batches by package: the tests, the corpus, the micro set and the bench against batches of files and today |
+| `packages_2w_chain.sh` | batches of files and of packages at 2 workers, interleaved, with the parent's garbage collection probed (`gc_patch.py`) |
+| `count_reads.py` | the kinds of reads each scan records, run in the container against one repo |
+| `aggregate.py BENCH_DIR` | per configuration: the median wall time with its range, the time after the extraction, the map's counters |
 | `same.py A B` | two dry-runs compared record by record |
-| `chain.sh`, `chain2.sh` | the order the runs were made in |
+| `chain.sh`, `chain2.sh` | the order step 1's runs were made in |
 
 ## Results
 
@@ -24,8 +31,12 @@ old one). These scripts measured it; the results are in `docs/corpus-report.md`,
 | `bench/` | 3 rounds, with the batches cut by size |
 | `push/` | the 6 pushes |
 | `replay-eval.txt` | the cache policies over the replay |
+| `replay-eval-typed.txt` | the same, with each directory's context cut to what scanners read |
+| `store-bench.txt` | the three cache stores |
 | `corpus-1.txt`, `micro-1.txt`, `micro-2.txt` | the corpus and micro reports |
 | `tests-3.txt` | the tests |
+| `packages/` | batches by package: the tests, the corpus, the micro set and 3 rounds of the bench |
+| `packages-2w/` | batches of files and of packages at 2 workers, 3 rounds, with the parent's garbage collection |
 | `bench-round1/` | the first bench, before the batches were cut by size. Only its round 1 is valid: a loop bug ran rounds 2 and 3 on no repo |
 
 The replay's records (107 MB) are not in git, so a clone does not carry them:

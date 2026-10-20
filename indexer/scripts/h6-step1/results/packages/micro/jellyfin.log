@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 2598 files, 2468 recorded, 44 modules, stack=['dotnet'] (0.4s)
+[pipeline] workers=2 map1_hits=0 map1_misses=2195 map1_cpu=12.688 split_files=0 tasks=28 map1=6.793 reduce=0.032 digests=0.179 scanned_early=1880 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.01 compose=0.028
+[extract]  17355 symbols, 58192 call sites, 13787 imports, 422 endpoints, 13 outbound calls (7.0s)
+[resolve]  24948 CALLS edges (39180 unresolved call sites), 13787 IMPORTS edges (0 unresolved), 263 external packages
+[dry-run]  wrote /out/jellyfin.json
+wall=8.98
+peak=445386752

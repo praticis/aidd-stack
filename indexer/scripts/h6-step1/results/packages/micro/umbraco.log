@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 18414 files, 17453 recorded, 100 modules, stack=['dotnet', 'ts'] (3.2s)
+[pipeline] workers=2 map1_hits=0 map1_misses=17173 map1_cpu=51.574 split_files=0 tasks=31 map1=27.481 reduce=0.468 digests=0.679 scanned_early=13720 early_invalid=347 map2_hits=0 map2_misses=347 map2_cpu=1.245 map2_foreign=347 map2=1.027 compose=0.331
+[extract]  77256 symbols, 305859 call sites, 59962 imports, 540 endpoints, 522 outbound calls (30.0s)
+[resolve]  197883 CALLS edges (171469 unresolved call sites), 59946 IMPORTS edges (16 unresolved), 431 external packages
+[dry-run]  wrote /out/umbraco.json
+wall=42.56
+peak=1234309120

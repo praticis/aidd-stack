@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 1132 files, 665 recorded, 29 modules, stack=['dotnet', 'ts'] (0.1s)
+[pipeline] workers=2 map1_hits=0 map1_misses=557 map1_cpu=1.505 split_files=0 tasks=27 map1=0.824 reduce=0.005 digests=0.033 scanned_early=503 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.004 compose=0.003
+[extract]  2643 symbols, 6322 call sites, 895 imports, 30 endpoints, 24 outbound calls (0.9s)
+[resolve]  1951 CALLS edges (4905 unresolved call sites), 895 IMPORTS edges (0 unresolved), 180 external packages
+[dry-run]  wrote /out/eshop.json
+wall=1.76
+peak=98852864

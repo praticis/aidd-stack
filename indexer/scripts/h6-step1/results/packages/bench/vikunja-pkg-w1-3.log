@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 2282 files, 2134 recorded, 96 modules, stack=['go', 'ts'] (0.3s)
+[pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=18.445 split_files=0 tasks=13 map1=18.78 reduce=0.084 digests=0.142 scanned_early=944 early_invalid=24 map2_hits=0 map2_misses=24 map2_cpu=0.27 map2_foreign=15 map2=0.294 compose=0.011
+[extract]  20411 symbols, 163232 call sites, 9332 imports, 198 endpoints, 232 outbound calls (19.3s)
+[resolve]  108339 CALLS edges (88322 unresolved call sites), 9320 IMPORTS edges (12 unresolved), 252 external packages
+[dry-run]  wrote /out/vikunja-pkg-w1-3.json
+wall=21.41
+peak=428507136

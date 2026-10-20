@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 2154 files, 1537 recorded, 10 modules, stack=['dotnet'] (0.3s)
+[pipeline] workers=2 map1_hits=0 map1_misses=1386 map1_cpu=9.495 split_files=60 tasks=42 map1=4.972 reduce=0.018 digests=0.154 scanned_early=1314 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.008 compose=0.009
+[extract]  13784 symbols, 54891 call sites, 8957 imports, 676 endpoints, 23 outbound calls (5.2s)
+[resolve]  30427 CALLS edges (33108 unresolved call sites), 8957 IMPORTS edges (0 unresolved), 261 external packages
+[dry-run]  wrote /out/btcpayserver.json
+wall=6.82
+peak=359944192

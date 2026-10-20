@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 1564 files, 1332 recorded, 3 modules, stack=['python', 'ts'] (0.2s)
+[pipeline] workers=2 map1_hits=0 map1_misses=875 map1_cpu=3.339 split_files=0 tasks=27 map1=1.809 reduce=0.011 digests=0.039 scanned_early=630 early_invalid=164 map2_hits=0 map2_misses=164 map2_cpu=1.039 map2_foreign=164 map2=0.602 compose=0.01
+[extract]  5382 symbols, 23979 call sites, 4997 imports, 291 endpoints, 291 outbound calls (2.5s)
+[resolve]  11979 CALLS edges (17012 unresolved call sites), 4992 IMPORTS edges (5 unresolved), 145 external packages
+[dry-run]  wrote /out/dispatch.json
+wall=3.52
+peak=128303104

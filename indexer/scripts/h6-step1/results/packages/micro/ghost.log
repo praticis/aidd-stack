@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 8906 files, 7956 recorded, 62 modules, stack=['ts'] (1.3s)
+[pipeline] workers=2 map1_hits=0 map1_misses=6948 map1_cpu=35.28 split_files=0 tasks=30 map1=18.854 reduce=0.077 digests=0.16 scanned_early=4178 early_invalid=273 map2_hits=0 map2_misses=273 map2_cpu=1.724 map2_foreign=273 map2=1.113 compose=0.105
+[extract]  26479 symbols, 399490 call sites, 29663 imports, 334 endpoints, 36 outbound calls (20.3s)
+[resolve]  252926 CALLS edges (229310 unresolved call sites), 29062 IMPORTS edges (601 unresolved), 446 external packages
+[dry-run]  wrote /out/ghost.json
+wall=25.84
+peak=864686080

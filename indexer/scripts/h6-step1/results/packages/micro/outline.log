@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 2846 files, 2714 recorded, 1 modules, stack=['ts'] (0.4s)
+[pipeline] workers=2 map1_hits=0 map1_misses=2604 map1_cpu=10.985 split_files=0 tasks=28 map1=5.935 reduce=0.025 digests=0.054 scanned_early=2115 early_invalid=139 map2_hits=0 map2_misses=139 map2_cpu=1.04 map2_foreign=139 map2=0.63 compose=0.024
+[extract]  8228 symbols, 94883 call sites, 17014 imports, 226 endpoints, 113 outbound calls (6.7s)
+[resolve]  53474 CALLS edges (57846 unresolved call sites), 17014 IMPORTS edges (0 unresolved), 299 external packages
+[dry-run]  wrote /out/outline.json
+wall=8.49
+peak=261492736

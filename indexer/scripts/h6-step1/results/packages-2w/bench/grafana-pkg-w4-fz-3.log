@@ -1,0 +1,9 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 23563 files, 20646 recorded, 1050 modules, stack=['go', 'python', 'ts'] (5.2s)
+[pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=108.974 split_files=0 tasks=61 map1=28.858 reduce=0.198 digests=0.912 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=5.914 map2_foreign=358 map2=2.703 compose=0.252
+[extract]  125874 symbols, 1043971 call sites, 115651 imports, 443 endpoints, 118 outbound calls (33.0s)
+[resolve]  609238 CALLS edges (601395 unresolved call sites), 115366 IMPORTS edges (285 unresolved), 734 external packages
+[dry-run]  wrote /out/grafana-pkg-w4-fz-3.json
+[gc] seconds=2.52 collections=[4798, 435, 14] frozen=162658
+wall=54.13
+peak=2486784000

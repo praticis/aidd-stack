@@ -1,0 +1,99 @@
+vikunja-today-1 rc=0 wall=21.67 peak=667291648 
+vikunja-file-w1-1 rc=0 wall=28.03 peak=428367872 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=13.03 map1=13.163 reduce=0.016 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=12.561 map2_foreign=15 map2=12.652 compose=0.012
+vikunja-file-w4-1 rc=0 wall=15.25 peak=674910208 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=13.726 map1=4.281 reduce=0.021 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=13.212 map2_foreign=15 map2=8.616 compose=0.017
+vikunja-pkg-w1-1 rc=0 wall=23.27 peak=426102784 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=20.029 split_files=0 tasks=13 map1=20.398 reduce=0.094 digests=0.144 scanned_early=944 early_invalid=24 map2_hits=0 map2_misses=24 map2_cpu=0.272 map2_foreign=15 map2=0.299 compose=0.012
+vikunja-pkg-w2-1 rc=0 wall=12.75 peak=439246848 [pipeline] workers=2 map1_hits=0 map1_misses=1704 map1_cpu=18.665 split_files=176 tasks=47 map1=9.788 reduce=0.02 digests=0.139 scanned_early=848 early_invalid=23 map2_hits=0 map2_misses=120 map2_cpu=1.094 map2_foreign=15 map2=0.591 compose=0.021
+vikunja-pkg-w4-1 rc=0 wall=14.98 peak=508342272 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=13.999 split_files=299 tasks=69 map1=4.093 reduce=0.023 digests=0.192 scanned_early=846 early_invalid=23 map2_hits=0 map2_misses=122 map2_cpu=9.185 map2_foreign=15 map2=8.298 compose=0.024
+  vikunja-file-w1-1 vs today: same
+  vikunja-file-w4-1 vs today: same
+  vikunja-pkg-w1-1 vs today: same
+  vikunja-pkg-w2-1 vs today: same
+  vikunja-pkg-w4-1 vs today: same
+mattermost-today-1 rc=0 wall=73.87 peak=2397319168 
+mattermost-file-w1-1 rc=0 wall=97.01 peak=1190420480 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=51.846 map1=52.187 reduce=0.085 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=36.509 map2_foreign=99 map2=36.81 compose=0.068
+mattermost-file-w4-1 rc=0 wall=34.14 peak=1387761664 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=54.047 map1=13.972 reduce=0.104 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=38.699 map2_foreign=99 map2=9.934 compose=0.162
+mattermost-pkg-w1-1 rc=0 wall=82.21 peak=1191522304 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=65.137 split_files=0 tasks=15 map1=66.109 reduce=0.094 digests=0.636 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.1 map2_foreign=99 map2=7.435 compose=0.061
+mattermost-pkg-w2-1 rc=0 wall=47.00 peak=1273958400 [pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=64.445 split_files=0 tasks=26 map1=33.73 reduce=0.103 digests=0.378 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.395 map2_foreign=99 map2=4.058 compose=0.098
+mattermost-pkg-w4-1 rc=0 wall=28.37 peak=1249181696 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=63.078 split_files=515 tasks=97 map1=16.501 reduce=0.106 digests=0.605 scanned_early=4194 early_invalid=102 map2_hits=0 map2_misses=368 map2_cpu=9.419 map2_foreign=99 map2=2.719 compose=0.094
+  mattermost-file-w1-1 vs today: same
+  mattermost-file-w4-1 vs today: same
+  mattermost-pkg-w1-1 vs today: same
+  mattermost-pkg-w2-1 vs today: same
+  mattermost-pkg-w4-1 vs today: same
+grafana-today-1 rc=0 wall=131.10 peak=4462407680 
+grafana-file-w1-1 rc=0 wall=164.23 peak=2515947520 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=87.821 map1=88.454 reduce=0.177 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=50.757 map2_foreign=358 map2=51.243 compose=0.179
+grafana-file-w4-1 rc=0 wall=68.52 peak=2479075328 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=100.89 map1=26.133 reduce=0.644 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=56.08 map2_foreign=358 map2=14.355 compose=0.284
+grafana-pkg-w1-1 rc=0 wall=149.30 peak=2384134144 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=115.129 split_files=0 tasks=16 map1=118.348 reduce=0.208 digests=0.965 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=6.347 map2_foreign=358 map2=7.566 compose=0.197
+grafana-pkg-w2-1 rc=0 wall=95.30 peak=2482827264 [pipeline] workers=2 map1_hits=0 map1_misses=16580 map1_cpu=115.367 split_files=0 tasks=32 map1=60.895 reduce=0.23 digests=0.967 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=8.229 map2_foreign=358 map2=5.416 compose=0.857
+grafana-pkg-w4-1 rc=0 wall=65.04 peak=2484793344 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=121.595 split_files=0 tasks=61 map1=32.398 reduce=0.223 digests=1.013 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=6.809 map2_foreign=358 map2=3.077 compose=0.288
+  grafana-file-w1-1 vs today: same
+  grafana-file-w4-1 vs today: same
+  grafana-pkg-w1-1 vs today: same
+  grafana-pkg-w2-1 vs today: same
+  grafana-pkg-w4-1 vs today: same
+vikunja-today-2 rc=0 wall=21.74 peak=667353088 
+vikunja-file-w1-2 rc=0 wall=28.01 peak=428015616 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=13.121 map1=13.253 reduce=0.017 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=12.519 map2_foreign=15 map2=12.61 compose=0.013
+vikunja-file-w4-2 rc=0 wall=15.42 peak=677072896 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=13.994 map1=4.387 reduce=0.023 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=13.322 map2_foreign=15 map2=8.67 compose=0.02
+vikunja-pkg-w1-2 rc=0 wall=22.91 peak=429633536 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=19.571 split_files=0 tasks=13 map1=19.95 reduce=0.097 digests=0.145 scanned_early=944 early_invalid=24 map2_hits=0 map2_misses=24 map2_cpu=0.303 map2_foreign=15 map2=0.334 compose=0.017
+vikunja-pkg-w2-2 rc=0 wall=13.72 peak=437878784 [pipeline] workers=2 map1_hits=0 map1_misses=1704 map1_cpu=19.422 split_files=176 tasks=47 map1=10.193 reduce=0.023 digests=0.152 scanned_early=848 early_invalid=23 map2_hits=0 map2_misses=120 map2_cpu=1.152 map2_foreign=15 map2=0.622 compose=0.022
+vikunja-pkg-w4-2 rc=0 wall=15.41 peak=508133376 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=15.567 split_files=299 tasks=69 map1=4.361 reduce=0.027 digests=0.202 scanned_early=846 early_invalid=23 map2_hits=0 map2_misses=122 map2_cpu=9.419 map2_foreign=15 map2=8.462 compose=0.021
+  vikunja-file-w1-2 vs today: same
+  vikunja-file-w4-2 vs today: same
+  vikunja-pkg-w1-2 vs today: same
+  vikunja-pkg-w2-2 vs today: same
+  vikunja-pkg-w4-2 vs today: same
+mattermost-today-2 rc=0 wall=78.55 peak=2403520512 
+mattermost-file-w1-2 rc=0 wall=90.84 peak=1190322176 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=51.773 map1=52.098 reduce=0.086 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=30.791 map2_foreign=99 map2=31.001 compose=0.059
+mattermost-file-w4-2 rc=0 wall=31.27 peak=1390374912 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=52.96 map1=13.689 reduce=0.106 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=33.977 map2_foreign=99 map2=8.695 compose=0.082
+mattermost-pkg-w1-2 rc=0 wall=80.82 peak=1189859328 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=64.147 split_files=0 tasks=15 map1=65.087 reduce=0.088 digests=0.628 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=6.964 map2_foreign=99 map2=7.287 compose=0.061
+mattermost-pkg-w2-2 rc=0 wall=47.34 peak=1275342848 [pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=64.136 split_files=0 tasks=26 map1=33.732 reduce=0.108 digests=0.384 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.359 map2_foreign=99 map2=4.099 compose=0.114
+mattermost-pkg-w4-2 rc=0 wall=28.57 peak=1248772096 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=63.094 split_files=515 tasks=97 map1=16.482 reduce=0.107 digests=0.632 scanned_early=4194 early_invalid=102 map2_hits=0 map2_misses=368 map2_cpu=9.626 map2_foreign=99 map2=2.797 compose=0.092
+  mattermost-file-w1-2 vs today: same
+  mattermost-file-w4-2 vs today: same
+  mattermost-pkg-w1-2 vs today: same
+  mattermost-pkg-w2-2 vs today: same
+  mattermost-pkg-w4-2 vs today: same
+grafana-today-2 rc=0 wall=129.52 peak=4489981952 
+grafana-file-w1-2 rc=0 wall=152.48 peak=2446995456 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=86.269 map1=86.818 reduce=0.178 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=46.936 map2_foreign=358 map2=47.303 compose=0.16
+grafana-file-w4-2 rc=0 wall=58.72 peak=2481246208 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=88.975 map1=22.929 reduce=0.562 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=49.044 map2_foreign=358 map2=12.516 compose=0.23
+grafana-pkg-w1-2 rc=0 wall=132.90 peak=2382934016 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=104.245 split_files=0 tasks=16 map1=106.778 reduce=0.181 digests=0.904 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=5.666 map2_foreign=358 map2=6.768 compose=0.162
+grafana-pkg-w2-2 rc=0 wall=94.87 peak=2482479104 [pipeline] workers=2 map1_hits=0 map1_misses=16580 map1_cpu=105.856 split_files=0 tasks=32 map1=55.796 reduce=0.194 digests=0.901 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=7.335 map2_foreign=358 map2=4.862 compose=1.096
+grafana-pkg-w4-2 rc=0 wall=57.74 peak=2485665792 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=112.648 split_files=0 tasks=61 map1=29.881 reduce=0.216 digests=0.933 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=6.515 map2_foreign=358 map2=2.916 compose=0.277
+  grafana-file-w1-2 vs today: same
+  grafana-file-w4-2 vs today: same
+  grafana-pkg-w1-2 vs today: same
+  grafana-pkg-w2-2 vs today: same
+  grafana-pkg-w4-2 vs today: same
+vikunja-today-3 rc=0 wall=20.35 peak=667152384 
+vikunja-file-w1-3 rc=0 wall=26.12 peak=428158976 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=12.092 map1=12.185 reduce=0.015 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=11.875 map2_foreign=15 map2=11.955 compose=0.015
+vikunja-file-w4-3 rc=0 wall=14.27 peak=675438592 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=12.909 map1=4.064 reduce=0.019 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=968 map2_cpu=12.121 map2_foreign=15 map2=8.063 compose=0.015
+vikunja-pkg-w1-3 rc=0 wall=21.41 peak=428507136 [pipeline] workers=1 map1_hits=0 map1_misses=1704 map1_cpu=18.445 split_files=0 tasks=13 map1=18.78 reduce=0.084 digests=0.142 scanned_early=944 early_invalid=24 map2_hits=0 map2_misses=24 map2_cpu=0.27 map2_foreign=15 map2=0.294 compose=0.011
+vikunja-pkg-w2-3 rc=0 wall=12.55 peak=439574528 [pipeline] workers=2 map1_hits=0 map1_misses=1704 map1_cpu=18.366 split_files=176 tasks=47 map1=9.625 reduce=0.02 digests=0.138 scanned_early=848 early_invalid=23 map2_hits=0 map2_misses=120 map2_cpu=1.086 map2_foreign=15 map2=0.585 compose=0.019
+vikunja-pkg-w4-3 rc=0 wall=14.55 peak=508551168 [pipeline] workers=4 map1_hits=0 map1_misses=1704 map1_cpu=14.145 split_files=299 tasks=69 map1=4.061 reduce=0.023 digests=0.189 scanned_early=846 early_invalid=23 map2_hits=0 map2_misses=122 map2_cpu=8.958 map2_foreign=15 map2=8.074 compose=0.019
+  vikunja-file-w1-3 vs today: same
+  vikunja-file-w4-3 vs today: same
+  vikunja-pkg-w1-3 vs today: same
+  vikunja-pkg-w2-3 vs today: same
+  vikunja-pkg-w4-3 vs today: same
+mattermost-today-3 rc=0 wall=73.30 peak=2397745152 
+mattermost-file-w1-3 rc=0 wall=91.64 peak=1189851136 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=52.194 map1=52.562 reduce=0.083 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=31.086 map2_foreign=99 map2=31.313 compose=0.058
+mattermost-file-w4-3 rc=0 wall=31.11 peak=1394089984 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=52.9 map1=13.693 reduce=0.102 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=33.679 map2_foreign=99 map2=8.658 compose=0.09
+mattermost-pkg-w1-3 rc=0 wall=81.36 peak=1194373120 [pipeline] workers=1 map1_hits=0 map1_misses=8532 map1_cpu=64.619 split_files=0 tasks=15 map1=65.572 reduce=0.089 digests=0.626 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.101 map2_foreign=99 map2=7.431 compose=0.062
+mattermost-pkg-w2-3 rc=0 wall=47.24 peak=1270718464 [pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=64.773 split_files=0 tasks=26 map1=33.947 reduce=0.103 digests=0.387 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.316 map2_foreign=99 map2=4.032 compose=0.097
+mattermost-pkg-w4-3 rc=0 wall=28.61 peak=1254047744 [pipeline] workers=4 map1_hits=0 map1_misses=8532 map1_cpu=63.334 split_files=515 tasks=97 map1=16.57 reduce=0.101 digests=0.606 scanned_early=4194 early_invalid=102 map2_hits=0 map2_misses=368 map2_cpu=9.573 map2_foreign=99 map2=2.802 compose=0.094
+  mattermost-file-w1-3 vs today: same
+  mattermost-file-w4-3 vs today: same
+  mattermost-pkg-w1-3 vs today: same
+  mattermost-pkg-w2-3 vs today: same
+  mattermost-pkg-w4-3 vs today: same
+grafana-today-3 rc=0 wall=130.27 peak=4389892096 
+grafana-file-w1-3 rc=0 wall=153.35 peak=2376728576 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=86.824 map1=87.435 reduce=0.173 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=46.895 map2_foreign=358 map2=47.271 compose=0.149
+grafana-file-w4-3 rc=0 wall=59.05 peak=2482216960 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=88.913 map1=22.926 reduce=0.563 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=10866 map2_cpu=49.167 map2_foreign=358 map2=12.558 compose=0.227
+grafana-pkg-w1-3 rc=0 wall=136.01 peak=2382823424 [pipeline] workers=1 map1_hits=0 map1_misses=16580 map1_cpu=105.164 split_files=0 tasks=16 map1=107.825 reduce=0.179 digests=0.9 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=5.988 map2_foreign=358 map2=7.103 compose=0.172
+grafana-pkg-w2-3 rc=0 wall=102.20 peak=2482548736 [pipeline] workers=2 map1_hits=0 map1_misses=16580 map1_cpu=107.058 split_files=0 tasks=32 map1=56.804 reduce=0.237 digests=0.901 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=11.803 map2_foreign=358 map2=7.468 compose=2.557
+grafana-pkg-w4-3 rc=0 wall=77.60 peak=2477535232 [pipeline] workers=4 map1_hits=0 map1_misses=16580 map1_cpu=151.864 split_files=0 tasks=61 map1=40.339 reduce=0.249 digests=1.049 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=6.651 map2_foreign=358 map2=3.093 compose=0.283
+  grafana-file-w1-3 vs today: same
+  grafana-file-w4-3 vs today: same
+  grafana-pkg-w1-3 vs today: same
+  grafana-pkg-w2-3 vs today: same
+  grafana-pkg-w4-3 vs today: same

@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 6336 files, 3697 recorded, 386 modules, stack=['go', 'python', 'ts'] (0.8s)
+[pipeline] workers=2 map1_hits=0 map1_misses=3396 map1_cpu=19.38 split_files=264 tasks=54 map1=10.254 reduce=0.036 digests=0.358 scanned_early=2189 early_invalid=50 map2_hits=0 map2_misses=50 map2_cpu=0.893 map2_foreign=26 map2=0.543 compose=0.028
+[extract]  24222 symbols, 173753 call sites, 24829 imports, 1546 endpoints, 23 outbound calls (11.2s)
+[resolve]  83584 CALLS edges (93878 unresolved call sites), 24654 IMPORTS edges (175 unresolved), 276 external packages
+[dry-run]  wrote /out/gitea.json
+wall=14.37
+peak=449232896

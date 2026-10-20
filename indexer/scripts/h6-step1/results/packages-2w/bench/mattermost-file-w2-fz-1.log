@@ -1,0 +1,9 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 16221 files, 9648 recorded, 312 modules, stack=['go', 'ts'] (2.2s)
+[pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=52.937 map1=27.487 reduce=0.103 digests=0.0 scanned_early=0 early_invalid=0 map2_hits=0 map2_misses=4562 map2_cpu=31.055 map2_foreign=99 map2=15.74 compose=0.084
+[extract]  53324 symbols, 732280 call sites, 48342 imports, 658 endpoints, 527 outbound calls (43.4s)
+[resolve]  283346 CALLS edges (485511 unresolved call sites), 47170 IMPORTS edges (1172 unresolved), 483 external packages
+[dry-run]  wrote /out/mattermost-file-w2-fz-1.json
+[gc] seconds=0.49 collections=[1339, 121, 6] frozen=91673
+wall=52.08
+peak=1242783744

@@ -1,0 +1,24 @@
+grafana rc=0 wall=96.79 peak=2787004416 [pipeline] workers=2 map1_hits=0 map1_misses=16580 map1_cpu=114.98 split_files=0 tasks=32 map1=60.62 reduce=0.239 digests=1.062 scanned_early=10375 early_invalid=491 map2_hits=0 map2_misses=491 map2_cpu=8.155 map2_foreign=358 map2=5.429 compose=0.854
+  grafana vs main: same
+umbraco rc=0 wall=42.56 peak=1234309120 [pipeline] workers=2 map1_hits=0 map1_misses=17173 map1_cpu=51.574 split_files=0 tasks=31 map1=27.481 reduce=0.468 digests=0.679 scanned_early=13720 early_invalid=347 map2_hits=0 map2_misses=347 map2_cpu=1.245 map2_foreign=347 map2=1.027 compose=0.331
+  umbraco vs main: same
+mattermost rc=0 wall=50.03 peak=1266851840 [pipeline] workers=2 map1_hits=0 map1_misses=8532 map1_cpu=68.101 split_files=0 tasks=26 map1=35.598 reduce=0.107 digests=0.402 scanned_early=4420 early_invalid=142 map2_hits=0 map2_misses=142 map2_cpu=7.789 map2_foreign=99 map2=4.34 compose=0.106
+  mattermost vs main: same
+ghost rc=0 wall=25.84 peak=864686080 [pipeline] workers=2 map1_hits=0 map1_misses=6948 map1_cpu=35.28 split_files=0 tasks=30 map1=18.854 reduce=0.077 digests=0.16 scanned_early=4178 early_invalid=273 map2_hits=0 map2_misses=273 map2_cpu=1.724 map2_foreign=273 map2=1.113 compose=0.105
+  ghost vs main: same
+gitea rc=0 wall=14.37 peak=449232896 [pipeline] workers=2 map1_hits=0 map1_misses=3396 map1_cpu=19.38 split_files=264 tasks=54 map1=10.254 reduce=0.036 digests=0.358 scanned_early=2189 early_invalid=50 map2_hits=0 map2_misses=50 map2_cpu=0.893 map2_foreign=26 map2=0.543 compose=0.028
+  gitea vs main: same
+outline rc=0 wall=8.49 peak=261492736 [pipeline] workers=2 map1_hits=0 map1_misses=2604 map1_cpu=10.985 split_files=0 tasks=28 map1=5.935 reduce=0.025 digests=0.054 scanned_early=2115 early_invalid=139 map2_hits=0 map2_misses=139 map2_cpu=1.04 map2_foreign=139 map2=0.63 compose=0.024
+  outline vs main: same
+jellyfin rc=0 wall=8.98 peak=445386752 [pipeline] workers=2 map1_hits=0 map1_misses=2195 map1_cpu=12.688 split_files=0 tasks=28 map1=6.793 reduce=0.032 digests=0.179 scanned_early=1880 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.01 compose=0.028
+  jellyfin vs main: same
+vikunja rc=0 wall=13.63 peak=436576256 [pipeline] workers=2 map1_hits=0 map1_misses=1704 map1_cpu=19.864 split_files=176 tasks=47 map1=10.419 reduce=0.022 digests=0.147 scanned_early=848 early_invalid=23 map2_hits=0 map2_misses=120 map2_cpu=1.141 map2_foreign=15 map2=0.626 compose=0.021
+  vikunja vs main: same
+netbox rc=0 wall=10.79 peak=416526336 [pipeline] workers=2 map1_hits=0 map1_misses=1343 map1_cpu=11.421 split_files=4 tasks=21 map1=6.061 reduce=0.016 digests=0.064 scanned_early=1057 early_invalid=72 map2_hits=0 map2_misses=76 map2_cpu=3.651 map2_foreign=79 map2=2.719 compose=0.008
+  netbox vs main: same
+btcpayserver rc=0 wall=6.82 peak=359944192 [pipeline] workers=2 map1_hits=0 map1_misses=1386 map1_cpu=9.495 split_files=60 tasks=42 map1=4.972 reduce=0.018 digests=0.154 scanned_early=1314 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.008 compose=0.009
+  btcpayserver vs main: same
+dispatch rc=0 wall=3.52 peak=128303104 [pipeline] workers=2 map1_hits=0 map1_misses=875 map1_cpu=3.339 split_files=0 tasks=27 map1=1.809 reduce=0.011 digests=0.039 scanned_early=630 early_invalid=164 map2_hits=0 map2_misses=164 map2_cpu=1.039 map2_foreign=164 map2=0.602 compose=0.01
+  dispatch vs main: same
+eshop rc=0 wall=1.76 peak=98852864 [pipeline] workers=2 map1_hits=0 map1_misses=557 map1_cpu=1.505 split_files=0 tasks=27 map1=0.824 reduce=0.005 digests=0.033 scanned_early=503 early_invalid=0 map2_hits=0 map2_misses=0 map2_cpu=0 map2_foreign=0 map2=0.004 compose=0.003
+  eshop vs main: same

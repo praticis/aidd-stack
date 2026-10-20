@@ -1,0 +1,8 @@
+[aidd 0.2.15] repo=/repo tenant=micro
+[discover] 2282 files, 2134 recorded, 96 modules, stack=['go', 'ts'] (0.4s)
+[extract]  20411 symbols, 163232 call sites, 9332 imports (10.4s)
+[http]     198 endpoints exposed (13 with handler), 232 outbound calls (7.9s)
+[resolve]  108339 CALLS edges (88322 unresolved call sites), 9320 IMPORTS edges (12 unresolved), 252 external packages
+[dry-run]  wrote /out/vikunja-today-3.json
+wall=20.35
+peak=667152384
