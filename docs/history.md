@@ -117,3 +117,9 @@
   - the resolver was quadratic in Go and C#, taking 31–38 min on two repos. The HTTP corpus never runs it;
   - an index built once (PR #9, merged into `main`) brings it to seconds;
   - full dry-runs of `main`, H5 and the fix are identical on 12 repos, and that check joins H5's protocol.
+- 2026-10-20: H6 step 1 prototypes the map, the reduce and the cache on a throwaway branch (`h6/step1-proto`):
+  - a second map that re-extracts (B), keyed per package (D), gives identical output on the corpus, the micro set and
+    6 real pushes, with no scanner changed;
+  - 4 workers bring grafana from 132 s to 60 s; memory halves; warm runs of mattermost take 14–23 s;
+  - a replay of 78 pushes compares the policies: no key missed a change, and keying by the entries read (C) re-runs
+    4 times fewer scans than D at the p90.
