@@ -38,6 +38,11 @@ class WrapperShape(NamedTuple):
     default: str | None
 
 
+class ClassBases(NamedTuple):
+    """A class, as a fact: the names of its bases, where a method a call names may be defined."""
+    names: tuple[str, ...]
+
+
 class WrappedCall(NamedTuple):
     """A call that may hand a wrapper its path, waiting for every wrapper of the repo: what it calls, its positional and
     named arguments (literals, `PARAM`, `FIELDS` or `UNKNOWN`), and the key and parameters of the function around it,
@@ -142,13 +147,13 @@ def continues_path(shape: Shape) -> bool:
 
 
 # -- composing: a wrapper is a `WrapperShape` fact, a call to one a pending `WrappedCall`.
-def compose_wrapped_calls(out: "HttpResult", rule: str, bases_rule: str) -> list["Pending"]:
-    """The pending `rule` calls to the repo's client wrappers, as outbound calls. A call that hands a wrapper a
-    parameter of its own function makes that function a wrapper, so a chain of wrappers resolves in a few rounds.
-    Returns the calls whose target is a wrapper."""
-    facts: dict[str, set[tuple]] = {k: set(v) for k, v in out.facts.get(rule, {}).items()}
-    bases = out.facts.get(bases_rule, {})
-    waiting = [p for p in out.pending if p.rule == rule]
+def compose_wrapped_calls(out: "HttpResult", scope: str) -> list["Pending"]:
+    """The language's (`scope`) pending calls to the repo's client wrappers, as outbound calls. A call that hands a
+    wrapper a parameter of its own function makes that function a wrapper, so a chain of wrappers resolves in a few
+    rounds. Returns the calls whose target is a wrapper."""
+    facts: dict[str, set[tuple]] = {k: set(v) for k, v in out.facts_of(WrapperShape, scope).items()}
+    bases = out.facts_of(ClassBases, scope)
+    waiting = out.waiting(WrappedCall, scope)
     done: list["Pending"] = []
     for _ in range(4):
         rest = [p for p in waiting if not _resolve(p, facts, bases, out)]
@@ -162,7 +167,7 @@ def compose_wrapped_calls(out: "HttpResult", rule: str, bases_rule: str) -> list
 
 def _resolve(p: "Pending", facts: dict[str, set[tuple]], bases: dict, out: "HttpResult") -> bool:
     """Record the call `p`, or make its function a wrapper; False while its target is not a known wrapper."""
-    call: WrappedCall = p.key
+    call: WrappedCall = p.wait
     shape = _shape(facts, bases, call.target)
     if shape is None:
         return False
@@ -209,7 +214,7 @@ def _shape(facts: dict[str, set[WrapperShape]], bases: dict, target: tuple) -> W
         found = next((facts[k] for c in level if (k := f"{c}.{method}") in facts), None)
         if found is not None:
             return next(iter(found)) if len(found) == 1 else None
-        level = [b for c in level for names in bases.get(c, ()) for b in names]
+        level = [b for c in level for found in bases.get(c, ()) for b in found.names]
     return None
 
 

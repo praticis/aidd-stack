@@ -11,8 +11,9 @@ from dataclasses import replace
 
 from tree_sitter import Node
 
-from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, HttpResult, Pending, Region,
-                               rebased, replace_endpoints, split_callee, text, unwrap_arg, walk)
+from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, HttpResult, MountApp, MountEdge,
+                               MountWait, Pending, Region, rebased, replace_endpoints, split_callee, text, unwrap_arg,
+                               walk)
 from ...core import ids
 from ...core.http_mounts import APP, TOP, MountedRoot
 from ...core.http_nodes import has_interpolation, member
@@ -21,6 +22,8 @@ from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, is_url_lite
                            path_key, unquote)
 from .client_wrappers import TsClientWrappers, compose_wrapped_calls_ts
 from .file_routes import TsFileRoutes, compose_autoloads
+from .http_facts import (MountWrapper, MountWrapperCall, NestPrefix, NestRoute, RouteWrapper, RouteWrapperCall,
+                         StringArray, WrappedRoute)
 from .mount_forms import TsMountForms
 from .package_facts import TsFacts, client_base
 from .returns import TsReturns
@@ -48,7 +51,7 @@ JQUERY_VERBS = {"get": "GET", "post": "POST", "getJSON": "GET"}             # $.
 
 class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseScanner):
     """express / koa / fastify / Hono (`app.get('/x', handler)`) + NestJS decorators."""
-    mount_rule = "ts.mount"
+    mount_scope = "ts"
 
     def run(self) -> None:
         controller_prefix: dict[int, list[str]] = {}
@@ -318,7 +321,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
             for p in paths:
                 ep = self.add_endpoint(n, method, p or "/", "nest", None, prefix=prefix, handler_name=hname, handler_id=hid)
                 if ep is not None:
-                    self.out.pending.append(Pending(ep, "ts.nest", (self.fx.file.module_id,)))
+                    self.out.pending.append(Pending(ep, NestRoute(self.fx.file.module_id)))
 
     def _nest_paths(self, a: Node | None) -> list[str]:
         """The paths a Nest decorator argument gives: `'cats'`, `['a', 'b']`, `{ path: 'cats' }`, or a constant —
@@ -352,7 +355,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         excludes = tuple(p for c in ex.named_children for p in self._nest_paths(c) if p) \
             if ex is not None and ex.type == "array" else ()
         if prefix:
-            self.out.publish("ts.nest-prefix", self.fx.file.module_id, ("/" + prefix.strip("/"), excludes, ref))
+            self.out.publish(self.fx.file.module_id, NestPrefix("/" + prefix.strip("/"), excludes, ref))
 
     def _string_array(self, n: Node) -> None:
         """`export const excludePaths = ['/.well-known/app', ..]`: published for another file's
@@ -363,7 +366,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
             return
         items = tuple(unquote(text(c, self.src)) for c in val.named_children if c.type == "string")
         if items and len(items) == val.named_child_count:
-            self.out.publish("ts.string-array", f"{self.fx.file.path}:{text(name, self.src)}", items)
+            self.out.publish(f"{self.fx.file.path}:{text(name, self.src)}", StringArray(items))
 
     def _call(self, n: Node) -> None:
         """A registration inside a route wrapper is a route as written until `compose` sees the wrapper used."""
@@ -371,7 +374,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         self._read_call(n)
         owner = self.wrapped.get(n.id)
         for ep in self.out.endpoints[before:] if owner is not None else ():
-            self.out.pending.append(Pending(ep, "ts.wrapped", (owner,)))
+            self.out.pending.append(Pending(ep, WrappedRoute(owner)))
 
     def _read_call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
@@ -546,7 +549,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                 j = params.index(text(x, self.src)) if text(x, self.src) in params else i
                 if j != i:
                     f = x.parent.child_by_field_name("function") if x.parent.type == "call_expression" else None
-                    self.out.publish("ts.mount-wrapper", name, (i, j, f is not None and f.id == x.id))
+                    self.out.publish(name, MountWrapper(i, j, f is not None and f.id == x.id))
             return
 
     def _wrapper_name(self, fn: Node, declared: bool) -> str | None:
@@ -594,7 +597,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                 shapes.append((params[text(obj, self.src)], verb, *path))
                 self.wrapped[c.id] = name
         for shape in dict.fromkeys(shapes):
-            self.out.publish("ts.route-wrapper", name, shape)
+            self.out.publish(name, RouteWrapper(*shape))
 
     def _wrapper_params(self, fn: Node) -> dict[str, int]:
         """Positions of `fn`'s parameters by name, and of the names a rest parameter is destructured into
@@ -908,12 +911,12 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
         is_app = lambda key: key in self.app_vars                                       # noqa: E731
         for name, i, j, value, called, parent, prefix in self.maybe_mounts:
             for target, pp in self.mounts.targets(parent, self._global, is_app):
-                self.out.publish("ts.mount.maybe", name, (i, j, value, called, target, pp.rstrip("/") + prefix))
+                self.out.publish(name, MountWrapperCall(i, j, value, called, target, pp.rstrip("/") + prefix))
         for name, args, routers, base in self.route_calls:
             where = {i: (group, self.mounts.targets(key, self._global, is_app)) for i, (key, group) in routers.items()}
-            self.out.publish("ts.route.maybe", name, (args, where, base))
+            self.out.publish(name, RouteWrapperCall(args, where, base))
         for child, parent in self._returned_module_routers():
-            self.out.publish(f"{self.mount_rule}.edge", child, (parent, ""))
+            self.out.publish(child, MountEdge(parent, ""), self.mount_scope)
         self.publish_autoloads(is_app)
         path = self.fx.file.path
         aliases, reexports = self._exports()
@@ -922,31 +925,33 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                   if (target := self.resolve_import(spec)) is not None]
         for unit, local, exported in pairs:
             for kind in ("var", "ret"):
-                self.out.publish(f"{self.mount_rule}.edge", f"{kind}:{unit}:{local}", (f"{kind}:{path}:{exported}", ""))
+                self.out.publish(f"{kind}:{unit}:{local}", MountEdge(f"{kind}:{path}:{exported}", ""), self.mount_scope)
             for i in range(3):
-                self.out.publish(f"{self.mount_rule}.edge", f"param:{unit}:{local}:{i}",
-                                 (f"param:{path}:{exported}:{i}", ""))
+                self.out.publish(f"param:{unit}:{local}:{i}", MountEdge(f"param:{path}:{exported}:{i}", ""),
+                                 self.mount_scope)
             if unit == path and (0, local) in self.app_vars:
-                self.out.publish(f"{self.mount_rule}.app", f"var:{path}:{exported}", True)
+                self.out.publish(f"var:{path}:{exported}", MountApp(), self.mount_scope)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """The mounts a project's own wrappers make: each candidate call (`_wrapper_call`) whose method some file
         defines as a wrapper with the same shape becomes an edge. Then the mount graph (`BaseScanner.compose`)."""
-        routes, used = out.facts.get("ts.route-wrapper", {}), set()
-        for name, calls in out.facts.get("ts.route.maybe", {}).items():
+        routes, used = out.facts_of(RouteWrapper), set()
+        for name, calls in out.facts_of(RouteWrapperCall).items():
             shapes = list(dict.fromkeys(routes.get(name, ())))
-            for args, where, base in calls if shapes else ():
-                for r, (kind, v), pos, tmpl in shapes:
+            for call in calls if shapes else ():
+                args = call.args
+                for shape in shapes:
+                    (kind, v), pos = shape.verb, shape.path_arg
                     method = v if kind == "verb" else args[v][1] if v < len(args) else None
-                    if r not in where or pos >= len(args) or args[pos][0] is None or method is None:
+                    if shape.router_arg not in call.where or pos >= len(args) or args[pos][0] is None or method is None:
                         continue
-                    group, targets = where[r]
-                    raws = [tmpl.replace("{}", args[pos][0])]
+                    group, targets = call.where[shape.router_arg]
+                    raws = [shape.template.replace("{}", args[pos][0])]
                     while (m := OPTIONAL_TAIL.search(raws[-1])) is not None:    # /:code? → also without it
                         raws.append(raws[-1][:m.start()] or "/")
                     for raw, target, prefix in ((raw, t, p) for raw in raws for t, p in targets):
-                        ep = _wrapped(repo, base, method, group.rstrip("/") + raw if group else raw, raw)
+                        ep = _wrapped(repo, call.base, method, group.rstrip("/") + raw if group else raw, raw)
                         root = isinstance(ep.raw_pattern, MountedRoot)
                         if root and not prefix and target == TOP:
                             continue                        # a sub-router's root nothing mounts
@@ -954,26 +959,27 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                         out.endpoints.append(copy)
                         used.add(name)
                         if target not in (TOP, APP):
-                            out.pending.append(Pending(copy, cls.mount_rule, (target,)))
-        replace_endpoints(out, {id(p.item): [] for p in out.pending if p.rule == "ts.wrapped" and p.key[0] in used})
-        wrappers = out.facts.get("ts.mount-wrapper", {})
-        for name, calls in out.facts.get("ts.mount.maybe", {}).items():
-            for wi, wj, wcalled in set(wrappers.get(name, ())):
-                for i, j, value, called, target, prefix in calls:
-                    child = (called if wcalled else value) if (i, j) == (wi, wj) else None
+                            out.pending.append(Pending(copy, MountWait(target), cls.mount_scope))
+        replace_endpoints(out, {id(p.item): [] for p in out.waiting(WrappedRoute) if p.wait.wrapper in used})
+        wrappers = out.facts_of(MountWrapper)
+        for name, calls in out.facts_of(MountWrapperCall).items():
+            for w in set(wrappers.get(name, ())):
+                for c in calls:
+                    same = (c.path_arg, c.router_arg) == (w.path_arg, w.router_arg)
+                    child = (c.called if w.calls_router else c.value) if same else None
                     if child is not None:
-                        out.publish(f"{cls.mount_rule}.edge", child, (target, prefix))
-        compose_autoloads(out, view, cls.mount_rule)
+                        out.publish(child, MountEdge(c.target, c.prefix), cls.mount_scope)
+        compose_autoloads(out, view, cls.mount_scope)
         super().compose(out, repo, view)
-        prefixes, arrays = out.facts.get("ts.nest-prefix", {}), out.facts.get("ts.string-array", {})
+        prefixes, arrays = out.facts_of(NestPrefix), out.facts_of(StringArray)
         plan = {}
-        for p in out.pending:
-            found = set(prefixes.get(p.key[0], ())) if p.rule == "ts.nest" else set()
-            if len({prefix for prefix, _, _ in found}) != 1:
+        for p in out.waiting(NestRoute):
+            found = set(prefixes.get(p.wait.module, ()))
+            if len({f.prefix for f in found}) != 1:
                 continue                                    # no global prefix in the package, or two that disagree
-            excludes = [e for _, ex, ref in found for e in ex + tuple(x for t in arrays.get(ref, ()) for x in t)]
+            excludes = [e for f in found for e in f.excludes + tuple(x for a in arrays.get(f.excludes_ref, ()) for x in a.items)]
             if not _excluded(p.item.path, excludes):
-                plan[id(p.item)] = [rebased(repo, p.item, next(iter(found))[0])]
+                plan[id(p.item)] = [rebased(repo, p.item, next(iter(found)).prefix)]
         replace_endpoints(out, plan)
         compose_wrapped_calls_ts(out)
 

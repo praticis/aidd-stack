@@ -20,6 +20,10 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
+from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
+                         ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
+                         FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
+                         InheritedRoute, NonAction, RouteAttr, RouteConvention)
 from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, mask_placeholders, normalize_path, path_key,
                            unquote)
 
@@ -145,16 +149,16 @@ class CsScanner(BaseScanner):
         uses = self._attr_uses(attrs)
         partial = any(c.type == "modifier" and text(c, self.src) == "partial" for c in cls.children)
         if cname_txt:                              # what a derived controller in another file inherits
-            self.out.publish("cs.class", cname_txt, (tuple(prefixes), partial, uses, simple_bases))
+            self.out.publish(cname_txt, CsClass(tuple(prefixes), partial, uses, simple_bases))
             if cname_txt.endswith("Attribute"):
                 self._route_attribute(cls, cname_txt, bases)
             if MODEL_CONVENTIONS & set(simple_bases) and "AttributeRouteModel" in text(cls, self.src):
-                self.out.publish("cs.route-convention", cname_txt, True)    # it rewrites the attribute routes
+                self.out.publish(cname_txt, RouteConvention())
             if any(FAST_ENDPOINT.match(seg) for b in bases for seg in b.split(".")):
-                self.out.publish("cs.fast-base", cname_txt, simple_bases)   # over FastEndpoints' own: an `AppEndpoint<..>`
+                self.out.publish(cname_txt, FastBase(simple_bases))
             group = self._fe_group(cls, simple_bases)
             if group is not None:
-                self.out.publish("cs.fe-group", cname_txt, group)
+                self.out.publish(cname_txt, group)
         controller = re.sub(r"Controller$", "", cname_txt)
         body = cls.child_by_field_name("body")
         if body is None or self._fast_endpoint(cls, body, bases):
@@ -173,7 +177,7 @@ class CsScanner(BaseScanner):
         prefix = prefixes[0] if prefixes else ""
         area = next((lit for name, lit, _ in attrs if name == "Area" and lit), "")
         if area and cname_txt:                      # `[Area]` is inherited: a derived controller's, if it has none
-            self.out.publish("cs.area", cname_txt, area)
+            self.out.publish(cname_txt, Area(area))
         # no [Route] of its own: what one of its routing attributes gives (`[V3ApiController]`), else its base classes' —
         # a `partial` half looks the class up first, its other halves' (`StoresController.Rates.cs`)
         inherit = not prefixes and (bool(bases) or bool(uses) or partial)
@@ -193,7 +197,7 @@ class CsScanner(BaseScanner):
             if any(name == "NonAction" for name, _, _ in mattrs):
                 own.add((hname or "", arity))   # `[NonAction] override`: the base's action is not one here —
                 if cname_txt:                   # nor in a class below this one
-                    self.out.publish("cs.non-actions", cname_txt, (hname or "", arity))
+                    self.out.publish(cname_txt, NonAction(hname or "", arity))
                 continue
             routes = [(CS_HTTP_ATTR[name], lit, a) for name, lit, a in mattrs if name in CS_HTTP_ATTR]
             extra = [lit for name, lit, _ in mattrs if name == "Route" and lit is not None]
@@ -206,12 +210,12 @@ class CsScanner(BaseScanner):
                 action_uses = self._attr_uses(mattrs)
                 if action_uses and cname_txt:   # maybe a routing attribute of the project (`[RestGetById]`): `compose` knows
                     first = next(a for name, _, a in mattrs if name == action_uses[0][0])
-                    fact = (self.endpoint_info(first, None, "/", "aspnet", hname, hid), action_uses,
-                            extra[0] if extra else "" if plain else None, hname or "", arity)
-                    self.out.publish("cs.attr-actions", cname_txt, fact)
+                    fact = AttrAction(self.endpoint_info(first, None, "/", "aspnet", hname, hid), action_uses,
+                                      extra[0] if extra else "" if plain else None, hname or "", arity)
+                    self.out.publish(cname_txt, fact)
                     if not abstract and not base_only:
-                        self.out.pending.append(Pending(None, "cs.attr-action",
-                                                        (fact, controller, tuple(prefixes), uses, route_bases, area, mversions)))
+                        wait = AttrActionRoute(fact, controller, tuple(prefixes), uses, route_bases, area, mversions)
+                        self.out.pending.append(Pending(None, wait))
                     own.add((hname or "", arity))
                     continue
                 if not plain or mname is None:
@@ -227,8 +231,8 @@ class CsScanner(BaseScanner):
                     continue                        # OData routes an action without a template only by convention
                 absolute = tmpl.startswith(("/", "~/"))
                 if cname_txt:                   # what a derived controller in another file takes, under its own route
-                    self.out.publish("cs.actions", cname_txt,
-                                     (self.endpoint_info(a, method, "/", "aspnet", hname, hid), tmpl, absolute, hname or "", arity))
+                    proto = self.endpoint_info(a, method, "/", "aspnet", hname, hid)
+                    self.out.publish(cname_txt, Action(proto, tmpl, absolute, hname or "", arity))
                 if abstract or base_only:
                     continue                    # not routable by itself: its actions live under each derived controller
                 if not prefixes and not tmpl and not inherit:
@@ -238,21 +242,21 @@ class CsScanner(BaseScanner):
                     path = _tokens(path.replace("~/", "/"), controller, hname or "", area)
                     ep = self.add_endpoint(a, method, path or "/", "aspnet", None, handler_name=hname, handler_id=hid)
                     if ep is not None and not area and AREA_TOKEN.search(path):   # the area of a base class
-                        self.out.pending.append(Pending(ep, "cs.area", route_bases))
+                        self.out.pending.append(Pending(ep, AreaRoute(route_bases)))
                     if ep is not None and API_VERSION.search(path):     # no version declared: the default one
-                        self.out.pending.append(Pending(ep, "cs.default-version",
-                                                        tuple(m.group(1) for m in API_VERSION_NAME.finditer(path))))
+                        names = tuple(m.group(1) for m in API_VERSION_NAME.finditer(path))
+                        self.out.pending.append(Pending(ep, DefaultVersionRoute(names)))
                     if inherit and not absolute and ep is not None:
                         # `[HttpGet("")]`: an empty template written out is the app's root when no class above routes it
                         explicit = lit == ""
                         odata_tmpl = (convention[1] if convention is not None and ODATA_VERBS.get(convention[0]) == method
                                       else "") if not odata and not tmpl else None    # "": OData would not route it
-                        self.out.pending.append(Pending(ep, "cs.inherited-route",
-                                                        (route_bases, controller, hname or "", not tmpl and not explicit, area,
-                                                         uses, mversions, odata_tmpl)))
+                        self.out.pending.append(Pending(ep, InheritedRoute(route_bases, controller, hname or "",
+                                                                           not tmpl and not explicit, area, uses, mversions,
+                                                                           odata_tmpl)))
         if bases and not abstract and not base_only:   # the actions its base classes declare are routes of this controller too
-            self.out.pending.append(Pending(None, "cs.inherited-actions",
-                                            (simple_bases, controller, tuple(prefixes), area, frozenset(own), uses, versions)))
+            self.out.pending.append(Pending(None, InheritedActions(simple_bases, controller, tuple(prefixes), area,
+                                                                   frozenset(own), uses, versions)))
 
     def _plain_action(self, m: Node) -> bool:
         """ASP.NET's test for an action with no routing attribute (`DefaultApplicationModelProvider.IsAction`): a public
@@ -321,7 +325,7 @@ class CsScanner(BaseScanner):
                               and (v := unquote(text(d, self.src)).upper()) in HTTP_METHODS) or None
         if provider and template is None and verbs is None:
             return                                       # nothing this file can read
-        self.out.publish("cs.route-attr", name.removesuffix("Attribute"), (framework, parent, tuple(params), base_args, template, verbs))
+        self.out.publish(name.removesuffix("Attribute"), RouteAttr(framework, parent, tuple(params), base_args, template, verbs))
 
     def _attr_uses(self, attrs: list[tuple[str, str | None, Node]]) -> tuple:
         """The attributes that may be a routing attribute of the project (not the framework's), with their arguments as
@@ -496,7 +500,7 @@ class CsScanner(BaseScanner):
         lits = [unquote(text(v, self.src)) if v.type == "string_literal" else text(v, self.src) for v in vals
                 if v.type in ("string_literal", "integer_literal", "real_literal")]
         if lits and len(lits) == len(vals):
-            self.out.publish("cs.default-api-version", "", _version_text(".".join(lits[:2])))
+            self.out.publish("", DefaultApiVersion(_version_text(".".join(lits[:2]))))
 
     def _char_array(self, n: Node) -> None:
         """`static readonly char[] TildeForwardSlash = { '~', '/' };`: the characters a route's `TrimStart(..)` may name
@@ -513,13 +517,13 @@ class CsScanner(BaseScanner):
             if chars and not any(c.startswith("\\") for c in chars) and not any(
                     c.type in STRING_NODES or c.type in ("identifier", "invocation_expression", "member_access_expression")
                     for c in nodes):
-                self.out.publish("cs.chars", f"{owner}.{text(kids[0], self.src)}", "".join(chars))
+                self.out.publish(f"{owner}.{text(kids[0], self.src)}", CharArray("".join(chars)))
 
     def _route_convention_use(self, n: Node) -> None:
         """`options.Conventions.Add(new UmbracoBackofficeToken(Constants.Web.AttributeRouting.BackOfficeToken,
         backofficePath))`: a model convention registered with what it is given, as recipes (`_recipe`, a local read where
         it is declared above). `compose` takes one argument as a route token and the other as its value when the class
-        rewrites attribute routes (`cs.route-convention`)."""
+        rewrites attribute routes (`RouteConvention`)."""
         fn, args = n.child_by_field_name("function"), n.child_by_field_name("arguments")
         if fn is None or args is None or fn.type != "member_access_expression":
             return
@@ -535,7 +539,7 @@ class CsScanner(BaseScanner):
             return
         env = self._locals(n)
         recipes = tuple(self._recipe(a, env) for a in cargs.children if a.type == "argument")
-        self.out.publish("cs.route-convention-use", re.sub(r"<.*", "", text(typ, self.src)).split(".")[-1], recipes)
+        self.out.publish(re.sub(r"<.*", "", text(typ, self.src)).split(".")[-1], ConventionUse(recipes))
 
     def _locals(self, at: Node) -> dict[str, tuple]:
         """The locals declared above `at` in the method around it — or in the file's top-level statements —, as recipes;
@@ -628,13 +632,13 @@ class CsScanner(BaseScanner):
         if direct:
             self.out.endpoints.extend(eps)
         else:                                   # its routes once a base of the project reaches FastEndpoints'
-            self.out.pending.append(Pending(None, "cs.fast-endpoint", (tuple(b.split(".")[-1] for b in bases), tuple(eps))))
+            self.out.pending.append(Pending(None, FastEndpointRoutes(tuple(b.split(".")[-1] for b in bases), tuple(eps))))
         for ep in eps if override is not None else ():
-            self.out.pending.append(Pending(ep, "cs.fe-prefix-override", override))
+            self.out.pending.append(Pending(ep, FePrefixOverride(override)))
         for ep, (d, _, _) in zip(eps, routes):  # a group takes the routes declared before it: FastEndpoints throws if none is
             names = tuple(g for at, g in groups if at > d.start_byte)
             if names:
-                self.out.pending.append(Pending(ep, "cs.fe-group", names))
+                self.out.pending.append(Pending(ep, FeGroupRoute(names)))
         return True
 
     def _fe_route(self, a: Node) -> str | None:
@@ -646,7 +650,7 @@ class CsScanner(BaseScanner):
         lit = unquote(text(a, self.src)).strip().lstrip("/")
         return "/" + lit if lit and PATH_LITERAL.match("/" + mask_placeholders(lit)) else None
 
-    def _fe_group(self, cls: Node, bases: tuple[str, ...]) -> tuple | None:
+    def _fe_group(self, cls: Node, bases: tuple[str, ...]) -> FeGroup | None:
         """A FastEndpoints endpoint group: a class under `Group`, or `SubGroup<TParent>`, whose constructor calls
         `Configure("admin", ep => ..)`. Its prefix as a recipe (None: one this file cannot read) and its parent's name —
         `Group<T>()` puts the group's prefix, then the parent's, before the endpoint's routes."""
@@ -667,7 +671,7 @@ class CsScanner(BaseScanner):
                 if args is not None and fn.type == "identifier" and text(fn, self.src) == "Configure":
                     vals = [c for c in args.children if c.is_named]
                     if len(vals) == 2:
-                        return (self._recipe(vals[0], {}, cls), parent)
+                        return FeGroup(self._recipe(vals[0], {}, cls), parent)
         return None
 
     def _fe_route_prefix(self, n: Node) -> None:
@@ -680,7 +684,7 @@ class CsScanner(BaseScanner):
             return
         values = self._param_values(right, n)
         for r in values if values else (None,):
-            self.out.publish("cs.fe-prefix", "", r)      # None: a value this file cannot read
+            self.out.publish("", FePrefix(r))           # None: a value this file cannot read
 
     def _param_values(self, expr: Node, at: Node) -> set[tuple] | None:
         """The values `expr` may hold, as recipes: its own, or — a parameter of the method around `at` — what each call
@@ -753,52 +757,48 @@ class CsScanner(BaseScanner):
         two classes with that name (not `partial` halves of one) give nothing. An action with no template is a route
         only under that prefix. Last, a route token of the project takes its value (`_compose_route_tokens`)."""
         cls._compose_wrapped_calls(out)
-        classes = out.facts.get("cs.class", {})
-        attrs = _RouteAttributes(out.facts.get("cs.route-attr", {}), view, out.facts.get("cs.default-api-version", {}).get(""),
-                                 out.facts.get("cs.chars", {}))
-        areas = out.facts.get("cs.area", {})
+        classes = out.facts_of(CsClass)
+        attrs = _RouteAttributes(out.facts_of(RouteAttr), view,
+                                 [v.version for v in out.facts_of(DefaultApiVersion).get("", ())],
+                                 {k: [c.chars for c in v] for k, v in out.facts_of(CharArray).items()})
+        areas = out.facts_of(Area)
         plan = {}
-        for p in out.pending:
-            if p.rule != "cs.inherited-route":
-                continue
-            bases, controller, action, root, area, uses, versions, odata_tmpl = p.key
-            area = area or _area_of(classes, areas, bases)
-            route = attrs.route(uses)
-            route = route if route is not None else _inherited_route(classes, bases, attrs)
-            if route is not None and odata_tmpl is not None and _odata_base(classes, bases):
-                if not odata_tmpl:
+        for p in out.waiting(InheritedRoute):
+            w, root = p.wait, p.wait.root
+            area = w.area or _area_of(classes, areas, w.bases)
+            route = attrs.route(w.uses)
+            route = route if route is not None else _inherited_route(classes, w.bases, attrs)
+            if route is not None and w.odata_template is not None and _odata_base(classes, w.bases):
+                if not w.odata_template:
                     plan[id(p.item)] = []                          # OData routes an untemplated action only by convention
                     continue
-                route = route.rstrip("/") + "/" + odata_tmpl       # the OData convention, the base being an ODataController
+                route = route.rstrip("/") + "/" + w.odata_template  # the OData convention, the base being an ODataController
                 root = False
             if route is not None:
-                plan[id(p.item)] = [rebased(repo, p.item, _tokens(r, controller, action, area))
-                                    for r in _version_paths(route, versions or attrs.default_version)]
+                plan[id(p.item)] = [rebased(repo, p.item, _tokens(r, w.controller, w.action, area))
+                                    for r in _version_paths(route, w.versions or attrs.default_version)]
             elif root:
                 plan[id(p.item)] = []
         replace_endpoints(out, plan)
-        for p in out.pending:
-            if p.rule != "cs.attr-action":
-                continue
-            (proto, action_uses, extra, action, _), controller, prefixes, uses, bases, area, versions = p.key
-            area = area or _area_of(classes, areas, bases)
-            route = prefixes[0] if prefixes else attrs.route(uses)
-            route = route if route is not None else _inherited_route(classes, bases, attrs)
-            _attr_action(out, repo, attrs, proto, action_uses, extra, route, controller, action, area,
-                         versions or attrs.default_version)
+        for p in out.waiting(AttrActionRoute):
+            w, act = p.wait, p.wait.action
+            area = w.area or _area_of(classes, areas, w.bases)
+            route = w.routes[0] if w.routes else attrs.route(w.uses)
+            route = route if route is not None else _inherited_route(classes, w.bases, attrs)
+            _attr_action(out, repo, attrs, act.proto, act.uses, act.extra, route, w.controller, act.name, area,
+                         w.versions or attrs.default_version)
         cls._compose_inherited_actions(out, repo, classes, attrs)
         plan = {}
-        for p in out.pending:                       # a route of its own whose controller declares no version
-            if p.rule == "cs.default-version" and attrs.default_version:
-                path = p.item.path
-                for name in p.key:
-                    path = path.replace("{" + name + "}", attrs.default_version[0])
-                plan[id(p.item)] = [replace(p.item, path=path, id=ids.http_endpoint(repo.tenant, repo.name, p.item.method,
-                                                                                      path_key(path)))]
+        for p in out.waiting(DefaultVersionRoute) if attrs.default_version else ():   # no version declared
+            path = p.item.path
+            for name in p.wait.names:
+                path = path.replace("{" + name + "}", attrs.default_version[0])
+            plan[id(p.item)] = [replace(p.item, path=path, id=ids.http_endpoint(repo.tenant, repo.name, p.item.method,
+                                                                                  path_key(path)))]
         replace_endpoints(out, plan)
         # a route of its own whose `[Area]` is a base class's — by its line, which the passes above keep
-        at = {(p.item.file_id, p.item.line): area for p in out.pending
-              if p.rule == "cs.area" and (area := _area_of(classes, areas, p.key))}
+        at = {(p.item.file_id, p.item.line): area for p in out.waiting(AreaRoute)
+              if (area := _area_of(classes, areas, p.wait.bases))}
         plan = {}
         for ep in out.endpoints:
             area = at.get((ep.file_id, ep.line)) if ep.framework == "aspnet" else None
@@ -812,18 +812,18 @@ class CsScanner(BaseScanner):
     @staticmethod
     def _compose_fast_endpoints(out: HttpResult, repo: RepoInfo, classes: dict[str, list], attrs: "_RouteAttributes") -> None:
         """FastEndpoints across files: an endpoint under a base of the project takes its routes when the walk up its bases
-        reaches one over FastEndpoints' (`cs.fast-base`) — a name several classes share counts when each of them does
-        (`AppEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the prefix of its group (`cs.fe-group`), and
-        before it the global `RoutePrefix`, when the repo sets one value (`cs.fe-prefix`), unless the route overrides it."""
-        fast = out.facts.get("cs.fast-base", {})
-        for p in out.pending:
-            if p.rule == "cs.fast-endpoint" and _reaches_fast(classes, fast, p.key[0]):
-                out.endpoints.extend(p.key[1])
-        prefixes = {attrs.fill(r, {}) if r is not None else None for r in out.facts.get("cs.fe-prefix", {}).get("", [])}
+        reaches one over FastEndpoints' (`FastBase`) — a name several classes share counts when each of them does
+        (`AppEndpoint<TRequest>`, `<TRequest, TResponse>`, ..). Then the prefix of its group (`FeGroup`), and
+        before it the global `RoutePrefix`, when the repo sets one value (`FePrefix`), unless the route overrides it."""
+        fast = out.facts_of(FastBase)
+        for p in out.waiting(FastEndpointRoutes):
+            if _reaches_fast(classes, fast, p.wait.bases):
+                out.endpoints.extend(p.wait.endpoints)
+        prefixes = {attrs.fill(f.prefix, {}) if f.prefix is not None else None for f in out.facts_of(FePrefix).get("", [])}
         prefix = prefixes.pop() if len(prefixes) == 1 else None
-        overrides = {id(p.item): p.key for p in out.pending if p.rule == "cs.fe-prefix-override"}
-        grouped = {id(p.item): p.key for p in out.pending if p.rule == "cs.fe-group"}
-        groups = out.facts.get("cs.fe-group", {})
+        overrides = {id(p.item): p.wait.prefix for p in out.waiting(FePrefixOverride)}
+        grouped = {id(p.item): p.wait.groups for p in out.waiting(FeGroupRoute)}
+        groups = out.facts_of(FeGroup)
         plan = {}
         for ep in out.endpoints:
             if ep.framework != "fastendpoints":
@@ -838,7 +838,7 @@ class CsScanner(BaseScanner):
     @staticmethod
     def _compose_route_tokens(out: HttpResult, repo: RepoInfo, attrs: "_RouteAttributes") -> None:
         """A route token of the project — `[umbracoBackOffice]`, not one of the framework's — is the value the convention
-        that rewrites the attribute routes (`cs.route-convention`) is registered with: of the two arguments of
+        that rewrites the attribute routes (`RouteConvention`) is registered with: of the two arguments of
         `Conventions.Add(new T(token, value))` one is the token's name, the other a value the code fixes
         (`DefaultAppPath.TrimStart(TildeForwardSlash)`, `app`). One read from configuration, or two registrations
         with different values, leave the token as written."""
@@ -846,11 +846,11 @@ class CsScanner(BaseScanner):
         used = {m.group(1) for ep in routes for m in ROUTE_TOKEN.finditer(ep.path)} - FRAMEWORK_TOKENS
         if not used:
             return
-        conventions = out.facts.get("cs.route-convention", {})
+        conventions = out.facts_of(RouteConvention)
         found: dict[str, set] = {}
-        for tname, registrations in out.facts.get("cs.route-convention-use", {}).items():
-            for recipes in registrations if tname in conventions else ():
-                values = [attrs.fill(r, {}) for r in recipes]
+        for tname, registrations in out.facts_of(ConventionUse).items():
+            for use in registrations if tname in conventions else ():
+                values = [attrs.fill(r, {}) for r in use.args]
                 hits = [i for i, v in enumerate(values) if v is not None and v.removeprefix("[").removesuffix("]") in used]
                 if len(values) != 2 or len(hits) != 1:
                     continue
@@ -872,36 +872,34 @@ class CsScanner(BaseScanner):
         are its routes, under its route — or the one it inherits — with `[controller]` its name:
         `MovieController : RestControllerBase<..> : RestController<T>` takes `RestController`'s `[RestGetById]`.
         An action it — or a nearer base — redeclares is that one's; a base two classes share the name of stops the walk."""
-        actions = out.facts.get("cs.actions", {})
-        attr_actions = out.facts.get("cs.attr-actions", {})
-        non_actions = out.facts.get("cs.non-actions", {})
-        for p in out.pending:
-            if p.rule != "cs.inherited-actions":
-                continue
-            bases, controller, prefixes, area, own, uses, versions = p.key
-            area = area or _area_of(classes, out.facts.get("cs.area", {}), bases)
-            versions = versions or attrs.default_version
-            route = prefixes[0] if prefixes else attrs.route(uses)
+        actions, attr_actions, non_actions = out.facts_of(Action), out.facts_of(AttrAction), out.facts_of(NonAction)
+        for p in out.waiting(InheritedActions):
+            w = p.wait
+            bases, controller = w.bases, w.controller
+            area = w.area or _area_of(classes, out.facts_of(Area), bases)
+            versions = w.versions or attrs.default_version
+            route = w.routes[0] if w.routes else attrs.route(w.uses)
             route = route if route is not None else _inherited_route(classes, bases, attrs)
             if route is None:
                 continue
-            seen = set(own)                          # (name, arity): an overload is another action
+            seen = set(w.own)                        # (name, arity): an overload is another action
             for base in _ancestors(classes, bases):
-                seen |= set(non_actions.get(base, ()))   # a base controller's `[NonAction] override ..`
+                seen |= {(n.name, n.arity) for n in non_actions.get(base, ())}   # `[NonAction] override ..`
                 here: set[tuple[str, int]] = set()
-                for proto, tmpl, absolute, action, arity in actions.get(base, ()):
-                    if (action, arity) in seen:
+                for a in actions.get(base, ()):
+                    if (a.name, a.arity) in seen:
                         continue
-                    here.add((action, arity))
-                    full = tmpl if absolute else (route.rstrip("/") + "/" + tmpl).rstrip("/")
+                    here.add((a.name, a.arity))
+                    full = a.template if a.absolute else (route.rstrip("/") + "/" + a.template).rstrip("/")
                     for v in _version_paths(full, versions):
-                        path = normalize_path(_tokens(v.replace("~/", "/"), controller, action, area) or "/")
-                        out.endpoints.append(replace(proto, path=path, raw_pattern=tmpl or "/",
-                                                     id=ids.http_endpoint(repo.tenant, repo.name, proto.method, path_key(path))))
-                for proto, action_uses, extra, action, arity in attr_actions.get(base, ()):
-                    if (action, arity) not in seen and _attr_action(out, repo, attrs, proto, action_uses, extra, route,
-                                                                    controller, action, area, versions):
-                        here.add((action, arity))
+                        path = normalize_path(_tokens(v.replace("~/", "/"), controller, a.name, area) or "/")
+                        out.endpoints.append(replace(a.proto, path=path, raw_pattern=a.template or "/",
+                                                     id=ids.http_endpoint(repo.tenant, repo.name, a.proto.method,
+                                                                          path_key(path))))
+                for a in attr_actions.get(base, ()):
+                    if (a.name, a.arity) not in seen and _attr_action(out, repo, attrs, a.proto, a.uses, a.extra, route,
+                                                                      controller, a.name, area, versions):
+                        here.add((a.name, a.arity))
                 seen |= here
 
     @staticmethod
@@ -909,18 +907,16 @@ class CsScanner(BaseScanner):
         """A call to a client wrapper (`HttpService.HttpGet(uri)`, found by the receiver's declared type) is an
         outbound call: the wrapper's verb, its text around the argument that is the path. A name two wrappers of that
         type define differently (overloads) gives nothing."""
-        wrappers = out.facts.get("cs.client-wrapper", {})
-        for p in out.pending:
-            if p.rule != "cs.client-wrapper":
-                continue
-            rtype, name, args = p.key
-            shapes = set(wrappers.get(f"{rtype}.{name}", ()))
+        wrappers = out.facts_of(ClientWrapper)
+        for p in out.waiting(ClientWrapperCall):
+            via = f"{p.wait.receiver_type}.{p.wait.name}"
+            shapes = set(wrappers.get(via, ()))
             if len(shapes) != 1:
                 continue
-            idx, before, after, method = next(iter(shapes))
-            found = wrapped_path(before, args[idx] if idx < len(args) else None, after)
+            w, args = next(iter(shapes)), p.wait.args
+            found = wrapped_path(w.before, args[w.index] if w.index < len(args) else None, w.after)
             if found is not None:
-                out.calls.append(replace(p.item, method=method, path=found[1], raw_path=found[0], via=f"{rtype}.{name}"[-60:]))
+                out.calls.append(replace(p.item, method=w.verb, path=found[1], raw_path=found[0], via=via[-60:]))
 
     def _refit(self, iface: Node) -> None:
         body = iface.child_by_field_name("body")
@@ -1073,7 +1069,7 @@ class CsScanner(BaseScanner):
             return
         mname = text(m.child_by_field_name("name"), self.src)
         for owner in [text(cls.child_by_field_name("name"), self.src)] + [b.split(".")[-1] for b in self._bases(cls)]:
-            self.out.publish("cs.client-wrapper", f"{owner}.{mname}", (*shape, (method or "ANY").upper()))
+            self.out.publish(f"{owner}.{mname}", ClientWrapper(*shape, (method or "ANY").upper()))
 
     def _wrapped_call(self, n: Node, fn: Node, name: str, arg_nodes: list[Node]) -> None:
         """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument
@@ -1084,7 +1080,7 @@ class CsScanner(BaseScanner):
         args = tuple(self._literal(a) for a in arg_nodes)
         rtype = self._declared_type(recv, n) if any(args) else None
         if rtype:
-            self.out.pending.append(Pending(self.call_info(n, None, "", name), "cs.client-wrapper", (rtype, name, args)))
+            self.out.pending.append(Pending(self.call_info(n, None, "", name), ClientWrapperCall(rtype, name, args)))
 
     def _literal(self, a: Node) -> str | None:
         """Text of a string argument (a template with `{param}`), or of the local it is assigned to."""
@@ -1247,9 +1243,9 @@ def _inherited_route(classes: dict[str, list], bases: tuple[str, ...], attrs: "_
     name on the way is ambiguous or no base has one."""
     for base in _ancestors(classes, bases):
         decls = classes[base]
-        route = next((routes[0] for routes, _, _, _ in decls if routes), None)
+        route = next((d.routes[0] for d in decls if d.routes), None)
         if route is None:
-            route = next((r for _, _, uses, _ in decls if (r := attrs.route(uses)) is not None), None)
+            route = next((r for d in decls if (r := attrs.route(d.uses)) is not None), None)
         if route is not None:
             return route
     return None
@@ -1263,7 +1259,7 @@ def _is_odata(uses: tuple, bases: tuple[str, ...]) -> bool:
 def _odata_base(classes: dict[str, list], bases: tuple[str, ...]) -> bool:
     """`_is_odata` for one of the repo's classes above a controller (a `WebApiController<T>` carrying
     `[ODataRouteComponent("odata/v1")]`, over `AppODataController<T> : ODataController`)."""
-    return any(_is_odata(uses, own_bases) for base in _ancestors(classes, bases) for _, _, uses, own_bases in classes[base])
+    return any(_is_odata(d.uses, d.bases) for base in _ancestors(classes, bases) for d in classes[base])
 
 
 def _ancestors(classes: dict[str, list], bases: tuple[str, ...], limit: int = 4) -> list[str]:
@@ -1273,10 +1269,10 @@ def _ancestors(classes: dict[str, list], bases: tuple[str, ...], limit: int = 4)
     level = bases
     while level and len(out) < limit:
         base = next((b for b in level if b in classes), None)
-        if base is None or base in out or sum(1 for d in classes[base] if not d[1]) > 1:
+        if base is None or base in out or sum(1 for d in classes[base] if not d.partial) > 1:
             break
         out.append(base)
-        level = tuple(b for d in classes[base] for b in d[3])
+        level = tuple(b for d in classes[base] for b in d.bases)
     return out
 
 
@@ -1284,7 +1280,7 @@ def _area_of(classes: dict[str, list], areas: dict[str, list], bases: tuple[str,
     """The `[Area]` of the nearest base class of the repo that has one (`AreaAttribute` is inherited:
     `PaymentAdminController : AdminController`, `[Area("Admin")]`); "" when none has, or that class has two."""
     for base in _ancestors(classes, bases):
-        found = set(areas.get(base, ()))
+        found = {a.name for a in areas.get(base, ())}
         if found:
             return found.pop() if len(found) == 1 else ""
     return ""
@@ -1301,7 +1297,8 @@ def _fe_group_prefix(groups: dict[str, list], names: tuple[str, ...], attrs: "_R
             decls = set(groups.get(g, ()))
             if len(decls) != 1 or depth > 5:
                 return None
-            recipe, g = decls.pop()
+            group = decls.pop()
+            recipe, g = group.prefix, group.parent
             value = attrs.fill(recipe, {}) if recipe is not None else None
             if value is None:
                 return None
@@ -1312,12 +1309,13 @@ def _fe_group_prefix(groups: dict[str, list], names: tuple[str, ...], attrs: "_R
 
 def _reaches_fast(classes: dict[str, list], fast: dict[str, list], bases: tuple[str, ...], _depth: int = 0) -> bool:
     """Some base, found by name in the repo, is over FastEndpoints' — each class of that name with bases, by its own
-    bases (`cs.fast-base`) or further up, up to four levels."""
+    bases (`FastBase`) or further up, up to four levels."""
     if _depth > 3:
         return False
     for b in bases:
-        decls = [d for d in classes.get(b, ()) if d[3]]
-        if decls and all(d[3] in fast.get(b, ()) or _reaches_fast(classes, fast, d[3], _depth + 1) for d in decls):
+        decls = [d for d in classes.get(b, ()) if d.bases]
+        over = {f.bases for f in fast.get(b, ())}
+        if decls and all(d.bases in over or _reaches_fast(classes, fast, d.bases, _depth + 1) for d in decls):
             return True
     return False
 
@@ -1362,7 +1360,7 @@ def _version_paths(path: str, versions: tuple[str, ...]) -> list[str]:
 
 
 class _RouteAttributes:
-    """The project's routing attributes (`cs.route-attr`), filled with a use's arguments. A constant a recipe names is
+    """The project's routing attributes (`RouteAttr`), filled with a use's arguments. A constant a recipe names is
     read by its qualified name in any directory of the repo (`Constants.Web.ManagementApiPath` → `Web.ManagementApiPath`),
     and only when the repo gives it one value; two attributes with one name give nothing."""
 
@@ -1443,18 +1441,17 @@ class _RouteAttributes:
         decls = self.facts.get(name)
         if not decls or len(decls) > 1 or _depth > 5:
             return None
-        framework, parent, params, base_args, template, verbs = decls[0]
-        kw = dict(kwargs)
+        a, kw = decls[0], dict(kwargs)
         values = {pname: kw[pname] if pname in kw else args[i] if i < len(args) else self.fill(default, {})
-                  for i, (pname, default) in enumerate(params)}
-        if parent is not None:
-            return self.resolve(parent, [self.fill(r, values) for r in base_args], (), _depth + 1)
-        if template is not None:
-            return verbs, self.fill(template, values)
-        if framework is not None:                    # `: RouteAttribute` / `: HttpDeleteAttribute`, `base("{id:int}")`
-            verb = ROUTE_ATTR_BASES[framework]
-            return ((verb,) if verb else verbs), (self.fill(base_args[0], values) if base_args else "")
-        return (verbs, None) if verbs else None
+                  for i, (pname, default) in enumerate(a.params)}
+        if a.parent is not None:
+            return self.resolve(a.parent, [self.fill(r, values) for r in a.base_args], (), _depth + 1)
+        if a.template is not None:
+            return a.verbs, self.fill(a.template, values)
+        if a.framework is not None:                  # `: RouteAttribute` / `: HttpDeleteAttribute`, `base("{id:int}")`
+            verb = ROUTE_ATTR_BASES[a.framework]
+            return ((verb,) if verb else a.verbs), (self.fill(a.base_args[0], values) if a.base_args else "")
+        return (a.verbs, None) if a.verbs else None
 
     def _uses(self, uses: tuple):
         for name, pos, kw in uses:

@@ -14,8 +14,10 @@ from dataclasses import replace
 from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, ROUTER_TYPE, STRING_NODES,
-                               HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
+                               HttpResult, MountEdge, Pending, Region, dir_of, rebased, split_callee, text,
+                               unwrap_arg, walk)
 from ...core.http_scope import enclosing_function, in_function
+from .http_facts import EncodedCall, Encoder, SwaggerBase, SwaggerRoute
 from .package_facts import GoFacts, verb_list
 from .paths import GoPaths
 from ...core.http_mounts import APP
@@ -42,7 +44,7 @@ GO_KIT_HTTP = "github.com/go-kit/kit/transport/http"                            
 
 class GoScanner(GoPaths, BaseScanner):
     relative_on_groups = True
-    mount_rule = "go.mount"
+    mount_scope = "go"
     scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
     defer_global_group_prefix = True
 
@@ -345,7 +347,7 @@ class GoScanner(GoPaths, BaseScanner):
     def finish(self) -> None:
         super().finish()
         for g in dict.fromkeys(self.served):
-            self.out.publish(f"{self.mount_rule}.edge", g, (APP, ""))
+            self.out.publish(g, MountEdge(APP, ""), self.mount_scope)
 
     def _kit_client(self, n: Node, callee: str, arg_nodes: list[Node]) -> None:
         """go-kit `httptransport.NewClient("GET", tgt, encodeX, decodeX)`: the method is the first argument, the path
@@ -360,7 +362,7 @@ class GoScanner(GoPaths, BaseScanner):
         unit = self._function_unit(enc) if enc.type in ("identifier", "selector_expression") else None
         item = self.call_info(n, method, "", callee) if unit is not None else None
         if item is not None:
-            self.out.pending.append(Pending(item, "go.encoder", (f"{unit[0]}:{unit[1]}",)))
+            self.out.pending.append(Pending(item, EncodedCall(f"{unit[0]}:{unit[1]}")))
 
     def _swagger_operation(self, n: Node) -> None:
         """go-swagger's generated client: each operation is a `&runtime.ClientOperation{Method: "GET", PathPattern:
@@ -390,17 +392,17 @@ class GoScanner(GoPaths, BaseScanner):
         right = n.child_by_field_name("right")
         handler = re.search(r"\.(\w+)\)\s*$", text(right, self.src)) if right is not None else None
         ep = self.endpoint_info(n, method, unquote(text(pattern, self.src)), "go-swagger", handler.group(1) if handler else None)
-        self.out.pending.append(Pending(ep, "go.swagger", (dir_of(dir_of(self.fx.file.path)),)))
+        self.out.pending.append(Pending(ep, SwaggerRoute(dir_of(dir_of(self.fx.file.path)))))
 
     def _swagger_base(self) -> None:
         """go-swagger's `embedded_spec.go`: the spec as a JSON string, whose `basePath` its package's routes live under."""
         m = re.search(rb'"basePath":\s*"([^"]*)"', self.src)
         if m:
-            self.out.publish("go.swagger-base", dir_of(self.fx.file.path), m.group(1).decode())
+            self.out.publish(dir_of(self.fx.file.path), SwaggerBase(m.group(1).decode()))
 
     def _encoder(self, fn: Node) -> None:
         """A function that sets the path of the `*http.Request` it takes — go-kit's request encoder, `req.URL.Path =
-        "/profiles/" + id` — publishes that path (`go.encoder`) for the clients built with it."""
+        "/profiles/" + id` — publishes that path (`Encoder`) for the clients built with it."""
         params = fn.child_by_field_name("parameters")
         reqs = [text(c, self.src) for d in (params.named_children if params is not None else ())
                 if (t := d.child_by_field_name("type")) is not None and text(t, self.src) == "*http.Request"
@@ -420,21 +422,20 @@ class GoScanner(GoPaths, BaseScanner):
         p = None if right is None else self.path_of(last if op is not None and text(op, self.src) == "+=" else right, lenient=True)
         name = self._function_name(fn)
         if p is not None and name is not None:
-            self.out.publish("go.encoder", f"{dir_of(self.fx.file.path)}:{name}", p)
+            self.out.publish(f"{dir_of(self.fx.file.path)}:{name}", Encoder(p))
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """The mount graph (`BaseScanner.compose`), then the go-kit clients whose path their encoder sets: one encoder
         with one path, of the package the client names."""
         super().compose(out, repo, view)
-        bases = out.facts.get("go.swagger-base", {})
-        for p in out.pending:
-            if p.rule == "go.swagger":
-                found = set(bases.get(p.key[0], ()))
-                out.endpoints.append(rebased(repo, p.item, next(iter(found))) if len(found) == 1 else p.item)
-        encoders = out.facts.get("go.encoder", {})
-        for p in out.pending:
-            paths = set(encoders.get(p.key[0], ())) if p.rule == "go.encoder" else ()
+        bases = out.facts_of(SwaggerBase)
+        for p in out.waiting(SwaggerRoute):
+            found = {b.base_path for b in bases.get(p.wait.spec_dir, ())}
+            out.endpoints.append(rebased(repo, p.item, next(iter(found))) if len(found) == 1 else p.item)
+        encoders = out.facts_of(Encoder)
+        for p in out.waiting(EncodedCall):
+            paths = {e.path for e in encoders.get(p.wait.encoder, ())}
             raw = next(iter(paths)) if len(paths) == 1 else None
             path = normalize_path(raw) if raw else ""
             if raw and has_literal_segment(path):

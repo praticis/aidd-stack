@@ -22,7 +22,7 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
 
 class PyScanner(PyClientWrappers, BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
-    mount_rule = "py.mount"
+    mount_scope = "py"
 
     @classmethod
     def compose(cls, out, repo, view=None) -> None:

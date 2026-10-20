@@ -74,8 +74,28 @@ class Pending(NamedTuple):
     a call to a method another file defines (`item` is then the call without its path). The language's `compose`
     resolves it from the facts every file published, after the whole repo is scanned."""
     item: HttpEndpointInfo | HttpCallInfo | None   # None: a request for routes the rule creates (inherited actions)
-    rule: str               # which `compose` rule resolves it ("cs.inherited-route", "cs.client-wrapper", ..)
-    key: tuple              # what that rule looks up
+    wait: tuple             # what the rule looks up: a NamedTuple whose type is the rule
+    scope: str = ""         # the language, for a kind the core's machinery shares (`publish`)
+
+
+class MountEdge(NamedTuple):
+    """A router another file can name is mounted on `parent` under `prefix`."""
+    parent: str
+    prefix: str
+
+
+class MountApp(NamedTuple):
+    """A router another file can name is an application: its routes are at the root."""
+
+
+class MountOwn(NamedTuple):
+    """The prefix a router another file can name puts before its own routes."""
+    prefix: str
+
+
+class MountWait(NamedTuple):
+    """A route on a router another file can name, waiting for the mounts of every file."""
+    router: str
 
 
 @dataclass
@@ -84,12 +104,21 @@ class HttpResult:
     calls: list[HttpCallInfo] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     # The per-file summaries composed after the scan — data only, never trees: what a file publishes for the
-    # others (`facts[kind][name]` → one entry per declaration) and the routes waiting on them.
-    facts: dict[str, dict[str, list]] = field(default_factory=dict)
+    # others (one entry per declaration, by kind and name: `publish`) and the routes waiting on them.
+    facts: dict[tuple[type, str], dict[str, list]] = field(default_factory=dict)
     pending: list[Pending] = field(default_factory=list)
 
-    def publish(self, kind: str, name: str, fact) -> None:
-        self.facts.setdefault(kind, {}).setdefault(name, []).append(fact)
+    def publish(self, name: str, fact: tuple, scope: str = "") -> None:
+        """A fact for the other files: a NamedTuple, whose type is its kind. A kind the core's machinery shares
+        (mounts, client wrappers) is published under its language's `scope`, which each language composes alone."""
+        self.facts.setdefault((type(fact), scope), {}).setdefault(name, []).append(fact)
+
+    def facts_of(self, kind: type, scope: str = "") -> dict[str, list]:
+        return self.facts.get((kind, scope), {})
+
+    def waiting(self, kind: type, scope: str = "") -> list[Pending]:
+        """The pending items whose request is of `kind`, in the order the files left them."""
+        return [p for p in self.pending if type(p.wait) is kind and p.scope == scope]
 
 
 def rebased(repo: RepoInfo, ep: HttpEndpointInfo, prefix: str) -> HttpEndpointInfo:
@@ -226,7 +255,7 @@ def split_callee(callee: str) -> tuple[str, str, str]:
 # ------------------------------------------------------------------------------------------
 class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
-    mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
+    mount_scope: str | None = None   # routers cross files (`global_of`): the scope of their mount facts and waits
     scope_declarations: frozenset[str] | None = None   # what declares a name in a function (`Scopes`); None: any assignment
     # a group other files can name (a package variable, a returned router, a router parameter) keeps its own prefix out
     # of what is registered on it here and publishes it as the router's: `compose` puts it on every chain through the
@@ -318,7 +347,7 @@ class BaseScanner(PathExpressions):
             f = f.parent
         key = self.group_key(receiver, at)
         own = self.group_prefix.get(key)
-        if own is not None and self.defer_global_group_prefix and self.mount_rule and self._global(key) is not None:
+        if own is not None and self.defer_global_group_prefix and self.mount_scope and self._global(key) is not None:
             return ""                                  # published by `finish`, applied by `compose`
         return own
 
@@ -354,41 +383,43 @@ class BaseScanner(PathExpressions):
 
     def finish(self) -> None:
         """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted. With
-        `mount_rule`, a route on a router other files can name waits for `compose`, and the file publishes its mounts
+        `mount_scope`, a route on a router other files can name waits for `compose`, and the file publishes its mounts
         of such routers."""
-        glob = self._global if self.mount_rule else (lambda _: None)
+        glob = self._global if self.mount_scope else (lambda _: None)
         waiting, edges = self.mounts.settle(self.out.endpoints, lambda ep, prefix: rebased(self.repo, ep, prefix),
-                                            _is_root, glob, self.foreign + self._router_args() if self.mount_rule else [],
+                                            _is_root, glob, self.foreign + self._router_args() if self.mount_scope else [],
                                             lambda key: key in self.app_vars)
-        if self.mount_rule:
-            self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
+        if self.mount_scope:
+            scope = self.mount_scope
+            self.out.pending.extend(Pending(ep, MountWait(g), scope) for ep, g in waiting)
             for child, parent, prefix in edges:
-                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+                self.out.publish(child, MountEdge(parent, prefix), scope)
             if self.defer_global_group_prefix:
                 self._publish_own_prefixes()
             for key in self.app_vars:
                 g = self._global(key)
                 if g is not None:                             # an application other files can name
-                    self.out.publish(f"{self.mount_rule}.app", g, True)
+                    self.out.publish(g, MountApp(), scope)
 
     def _publish_own_prefixes(self) -> None:
         """The prefix of each group of this file that other files can name, as that router's own."""
         for key, prefix in self.group_prefix.items():
             g = self._global(key) if prefix else None
             if g is not None:
-                self.out.publish(f"{self.mount_rule}.own", g, prefix)
+                self.out.publish(g, MountOwn(prefix), self.mount_scope)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """Language hook, once per repo after every file is scanned: resolve the `out.pending` routes of this language
-        from `out.facts`. By default, the routes waiting on a router another file mounts (`mount_rule`)."""
-        if cls.mount_rule is None:
+        from `out.facts`. By default, the routes waiting on a router another file mounts (`mount_scope`)."""
+        if cls.mount_scope is None:
             return
-        waiting = [(p.item, p.key[0]) for p in out.pending if p.rule == cls.mount_rule]
+        scope = cls.mount_scope
+        waiting = [(p.item, p.wait.router) for p in out.waiting(MountWait, scope)]
         if waiting:
-            edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
-            apps = set(out.facts.get(f"{cls.mount_rule}.app", {}))
-            owns = out.facts.get(f"{cls.mount_rule}.own", {})
+            edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts_of(MountEdge, scope).items()}
+            apps = set(out.facts_of(MountApp, scope))
+            owns = {g: [own.prefix for own in found] for g, found in out.facts_of(MountOwn, scope).items()}
             replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root,
                                                   apps, owns))
 
