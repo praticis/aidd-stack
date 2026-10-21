@@ -35,7 +35,7 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003) |
 | `indexer/conventions/` | architecture conventions as extensions (the reference one is `dotnet-praticis`) |
 | `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
-| `indexer/scripts/` | the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`) and the tests (`test.sh`) |
+| `indexer/scripts/` | every check CI runs, each runnable locally (`README.md` lists them): the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`), the shape ratchet (`shape.py`) and the tests (`test.sh`) |
 | `.github/workflows/` | `indexer.yml`: the gates on every PR that touches the indexer |
 | `docs/` | the ROADMAP, the decisions, the history, the indexer guide, the corpus report, the golden questions, the ADRs and the handoffs |
 
@@ -98,7 +98,8 @@ The full text is in the ROADMAP, under "Principles".
     PRs;
   - the labels `holdout-measurement` and `graph-change` allow, after judgment, a hold-out measurement and a change to
     the micro graph. After adding one, re-run the `gates` job;
-  - the same gates run locally with `corpus.sh --label` on both sides and `gates.sh`.
+  - the same gates run locally with `corpus.sh --label` on both sides, `micro.sh`, `gates.sh` and `shape.py --against
+    main`, as `indexer/scripts/README.md` shows.
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;

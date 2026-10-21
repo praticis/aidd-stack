@@ -300,7 +300,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
 | 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until P2 (H5-D5, H5-D6); blocking turns on when the author decides (H5-D3) |
-| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions and the MCP's tool groups | the shape report shows nothing off target but `cli.py` |
+| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target but `cli.py` |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
 first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Locally:
