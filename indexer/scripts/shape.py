@@ -5,6 +5,9 @@ limit, counted over the whole file as `wc -l` counts. It exits 0, unless `--stri
 
     python indexer/scripts/shape.py [--complexity 9] [--lines 300] [--strict] [--against REF] [--json FILE] [path ...]
 
+By default it reads the indexer's code: the package, the scripts and the tests, but not the tests' fixture repos,
+which copy the shape of other projects' code.
+
 `--against` is a ratchet: what is already over a target may stay while it does not grow, and nothing joins it. A
 function is matched by its file and name, or by its name alone when it moved to another file.
 """
@@ -21,8 +24,14 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parent.parent / "aidd_indexer"
-ROOT = PACKAGE.parent.parent                    # a report's paths are relative to it, on both sides of `--against`
+INDEXER = Path(__file__).resolve().parent.parent
+ROOT = INDEXER.parent                           # a report's paths are relative to it, on both sides of `--against`
+CODE = [INDEXER / "aidd_indexer", INDEXER / "scripts", INDEXER / "tests"]
+FIXTURES = ("indexer/tests/fixtures", "indexer/tests/mcp_it")
+
+
+def _fixture(rel: str) -> bool:
+    return any(rel == f or rel.startswith(f + "/") for f in FIXTURES)
 
 
 def complex_functions(paths: list[Path], limit: int, root: Path = ROOT) -> list[dict] | None:
@@ -31,7 +40,8 @@ def complex_functions(paths: list[Path], limit: int, root: Path = ROOT) -> list[
     if ruff is None:
         return None
     cmd = [ruff, "check", "--no-cache", "--isolated", "--select", "C901", "--output-format", "json",
-           "--config", f"lint.mccabe.max-complexity = {limit}", *map(str, paths)]
+           "--config", f"lint.mccabe.max-complexity = {limit}", "--extend-exclude", ",".join(FIXTURES),
+           *map(str, paths)]
     found = json.loads(subprocess.run(cmd, capture_output=True, text=True, cwd=root).stdout or "[]")
     out = []
     for f in found:
@@ -43,7 +53,8 @@ def complex_functions(paths: list[Path], limit: int, root: Path = ROOT) -> list[
 
 def long_modules(paths: list[Path], limit: int, root: Path = ROOT) -> list[dict]:
     files = [f for p in paths for f in (sorted(p.rglob("*.py")) if p.is_dir() else [p])]
-    sizes = [{"file": os.path.relpath(f, root), "lines": len(f.read_bytes().splitlines())} for f in files]
+    sizes = [{"file": rel, "lines": len(f.read_bytes().splitlines())}
+             for f in files if not _fixture(rel := os.path.relpath(f, root))]
     return sorted((s for s in sizes if s["lines"] > limit), key=lambda x: -x["lines"])
 
 
@@ -126,7 +137,7 @@ def show(rep: dict, args) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("paths", nargs="*", type=Path, default=[PACKAGE])
+    ap.add_argument("paths", nargs="*", type=Path, default=CODE)
     ap.add_argument("--complexity", type=int, default=9)
     ap.add_argument("--lines", type=int, default=300)
     ap.add_argument("--strict", action="store_true", help="exit 1 when anything is over a target")

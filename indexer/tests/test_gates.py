@@ -29,8 +29,7 @@ def check(tmp_path, base, head, labels=(), hold_base=None, hold_head=None, gab=L
     G.compare_corpus({"r": base} if base else {}, {"r": head} if head else {}, tmp_path, f)
     changed = G.holdout_changed(hold_base or {}, hold_head or {})
     G.judge_holdout(changed, set(labels), f)
-    if "refactor" in labels and (f.differ or changed):
-        f.failed["A refactor changes nothing"].append("differs")
+    G.judge_refactor(changed, set(labels), f)
     return f, G.render(f, set(labels), 100)
 
 
@@ -87,3 +86,25 @@ def test_the_holdout_changes_only_under_its_label_and_is_never_listed(tmp_path):
     assert failing(f) == {"Hold-out untouched"} and "/items" not in out
     f, out = check(tmp_path, RUN, RUN, labels=["holdout-measurement"], hold_base=hb, hold_head=hh)
     assert not failing(f) and "/items" not in out
+
+
+def test_a_pull_request_is_a_refactor_by_its_branch_or_one_commit():
+    assert G.refactor_by("refactor/h5-types", []) == "the branch's name"
+    assert G.refactor_by("refact/x", []) == "the branch's name"
+    assert G.refactor_by("feature/x", ["docs: a refactor note", "refactor(go): one type service"]) == "a refactor commit"
+    assert G.refactor_by("refactor/x", ["refact!: y"]) == "the branch's name and a refactor commit"
+    assert G.refactor_by("feature/refactor/x", ["fix: refactor: z", "Refactor: w"]) == ""
+
+
+def test_the_refactor_label_joins_the_pull_requests_own():
+    assert G.pr_labels(["graph-change,holdout-measurement"], "feature/x", ["refactor: y"]) == \
+        ({"graph-change", "holdout-measurement", "refactor"}, "a refactor commit")
+    assert G.pr_labels([""], "feature/x", []) == (set(), "")
+
+
+def test_the_micro_graph_under_the_labels():
+    assert G.judge_micro(0, {"refactor"})[0]
+    assert G.judge_micro(1, {"graph-change"})[0]
+    assert not G.judge_micro(1, set())[0]
+    assert not G.judge_micro(1, {"refactor", "graph-change"})[0]       # a refactor changes nothing, judged or not
+    assert not G.judge_micro(3, {"graph-change"})[0]

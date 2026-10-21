@@ -275,40 +275,26 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           labels=$(gh api "repos/${{ github.repository }}/issues/$PR/labels" --jq 'map(.name) | join(",")')
-          refactor=""
-          if [[ "$HEAD_REF" =~ ^refact(or)?/ ]]; then refactor="the branch's name"; fi
-          if gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
-               | grep -qE '^refact(or)?(\([^)]*\))?!?:'; then
-            refactor="${refactor:+$refactor and }a refactor commit"
-          fi
-          [ -z "$refactor" ] || labels="${labels:+$labels,}refactor"
-          echo "labels: ${labels:-none}; a refactor by ${refactor:-nothing}"
           in="$RUNNER_TEMP/in"
           mkdir -p "$AIDD_CORPUS_HOME/runs" && cp -r "$in/corpus/base" "$in/corpus/head" "$AIDD_CORPUS_HOME/runs/"
-          set +e
-          indexer/scripts/gates.sh --base runs/base --head runs/head \
-            --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" > report.md
-          corpus_rc=$?
-          # micro.sh: 0 identical, 1 a repository differs, 3 a dry-run failed
-          micro=$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)
-          case "$micro,,$labels," in
-            0,*) micro_rc=0; verdict="pass: the micro graph is identical" ;;
-            1,*,refactor,*) micro_rc=1; verdict="FAIL: the micro graph differs under the \`refactor\` label" ;;
-            1,*,graph-change,*) micro_rc=0; verdict="pass: the micro graph differs, judged under the \`graph-change\` label" ;;
-            1,*) micro_rc=1; verdict="FAIL: the micro graph differs. Judge each difference at its source; when it is right, add the \`graph-change\` label and re-run this job" ;;
-            *) micro_rc=1; verdict="FAIL: a dry-run failed (see the micro job)" ;;
-          esac
+          # the gates' exit code is the step's; pipefail: commits that could not be listed must fail, not pass as none
+          set +e -o pipefail
+          # gates.py decides whether the pull request is a refactor (its branch, a commit) and judges the micro graph
+          gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
+            | indexer/scripts/gates.sh --base runs/base --head runs/head \
+                --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" \
+                --branch="$HEAD_REF" --commits - --micro-rc "$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)" \
+                > report.md
+          rc=$?
           {
             cat report.md
             echo
-            echo "## Micro graph: $verdict"
-            echo
             echo '```'
-            tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no report"
+            tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no micro report"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           cat report.md
-          [ "$corpus_rc" = 0 ] && [ "$micro_rc" = 0 ]
+          exit "$rc"
       - name: The code's shape
         if: always()
         run: |
