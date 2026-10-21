@@ -37,7 +37,7 @@ H2 and F1.14 achieved from any PR, the author's included.
 | **Every diff item judged** | the cycle of a change | an item the classifier marks "to judge" has no verdict (H7-D2) |
 | **Cold equals warm** | H6, once the cache is in | a run with the cache gives a different result from one without it |
 | **Memory** | F1.13, H6 | a repo's peak memory grows past a tolerance set from H6's measured spread (H7-D4) |
-| Tests, hygiene, shape | they exist | as today; the shape report starts blocking when the author decides (H5-D3) |
+| Tests, hygiene, shape | they exist | as today. The shape has been a ratchet since 2026-10-21 (H5-D9): a function or a module over a target that is new or grew fails; full blocking comes when the author decides (H5-D3) |
 
 **The micro set** is the 12 repos of H5's protocol item 4:
 
@@ -134,7 +134,8 @@ code from any fork's PR. So it has two parts:
 | `tests` | builds the image (with Docker's layer cache) and runs `test.sh` |
 | `corpus` | restores the base's corpus and hold-out runs from the cache, or computes them at the base; runs the branch's; counts the hold-out repos that changed, so that its items never reach an artifact |
 | `micro` | runs `micro.sh` against the base, whose dry-runs come from the cache or are computed |
-| `gates` | reads the PR's labels when it runs; runs `gates.sh` over the two corpus runs; decides the micro graph; writes everything to the job's summary |
+| `shape` | the shape ratchet: `shape.py --against` the base fails on a function above complexity 9 or a module above 300 lines that is new or grew (H5-D9) |
+| `gates` | reads the PR's labels and its commits' subjects when it runs, and hands them to `gates.sh`. `gates.py` decides whether the PR is a refactor and judges the micro graph, so a local run decides the same. It writes everything to the job's summary and fails when the `shape` job did |
 
 - **The base** is the first parent of the PR's merge commit, which is `main`'s tip. Both sides then hold the same
   other PRs, so a PR never inherits another's diff.
@@ -152,7 +153,8 @@ code from any fork's PR. So it has two parts:
   as passing.
 - **The checks to require on `main`:** `tests` and `gates`. `gates` runs even when a job it needs fails, and then
   fails, so a broken run never passes as skipped.
-- **Locally, the same gates:** `corpus.sh --label` for both sides, then `gates.sh`, and `micro.sh`.
+- **Locally, the same gates:** `corpus.sh --label` for both sides, `micro.sh`, then `gates.sh` with the branch and its
+  commits, and `shape.py --against main` (`indexer/scripts/README.md`).
 
 ## Decisions made (2026-10-19, with the author)
 

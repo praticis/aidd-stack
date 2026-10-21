@@ -308,7 +308,7 @@ class CSharpSupport(LanguageSupport):
         """An extension method that can take the receiver: with its type known, one extending that type; with it
         `unknown`, one extending what may be anything — an interface, a type parameter, `object`, a predefined type
         (`this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver)."""
-        if symbol.kind != "method":
+        if symbol.kind != "method" or ctx.files_by_id[symbol.file_id].language != self.id:   # a homonym of another language
             return False
         for name, line, this_type in (ctx.facts.get(symbol.file_id) or {}).get("extensions") or []:
             if name == symbol.name and line == symbol.line_start:

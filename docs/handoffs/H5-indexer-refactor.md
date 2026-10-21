@@ -51,11 +51,27 @@
 >   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
 >   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
 >   identical. That check is now item 4 of the protocol.
+> - **Step 5, Go's refactor (PR #17, 2026-10-21).** Three commits, each under the protocol, with the graph identical:
+>   - **The `TypeIndex` API in the core** (`core/types.py`). `RepoTypes` builds each language's index once per repo,
+>     on its first question, and the HTTP pass and the resolver share the instance (`ExtractionResult.types`).
+>   - **Go's type facts as typed values with no tree node** (`languages/go/type_facts.py`). They were checked equal to
+>     the old dicts on the 21,624 Go files of the corpus and the hold-out. A C# generic call tests every homonym as an
+>     extension method, so it now leaves out the symbols of another language: a Go method of the same name would
+>     have had its typed facts read as C#'s dict.
+>   - **Go's resolver asks `GoTypeIndex`** (`languages/go/type_index.py`), which holds PR #9's indexes: the files by
+>     package and the method sets. The micro graph was compared on the 12 repos and on the corpus's 13 other Go
+>     repos, and all are identical. The protocol first caught a crash: a `#` inside a call's own text
+>     (`doc.Find("#id").Children()`) was read as a result number. `test_a_hash_in_the_text_of_a_call_is_no_result_number`
+>     holds the case.
+>
+>   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
+>   behavior (H5-D11).
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
->     core, then Go, C#, Python and TS, one per commit (H5-D7);
+>     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
+>     is done; its change of behavior is next;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -293,14 +309,14 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
-| 5 | `TypeIndex` (ADR-005), first its API in the core, then one language per commit: Go, C#, Python, TS (H5-D7). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
+| 5 | `TypeIndex` (ADR-005), first its API in the core, then one language at a time: Go, C#, Python, TS (H5-D7), each a refactor and then a change of behavior (H5-D10, "Step 5" below). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
 | 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
 | 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until P2 (H5-D5, H5-D6); blocking turns on when the author decides (H5-D3) |
-| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions and the MCP's tool groups | the shape report shows nothing off target but `cli.py` |
+| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target but `cli.py` |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
 first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Locally:
@@ -316,10 +332,50 @@ first slice). H5's code commits are `refactor:`, so its PRs are read as refactor
    - TS: ghost, outline.
 
    The HTTP corpus does not run the resolver, so items 2 and 3 cannot see a change to `CALLS`;
-5. the step's time, measured alone, no worse than the previous one, unless justified.
+5. the step's time, measured alone, no worse than the previous one, unless justified;
+6. **the shape no worse:** `indexer/scripts/shape.py --against main` finds nothing new or grown over a target (in CI
+   too, H5-D9).
 
 A difference in the corpus is a defect of the step, not a gain. If the refactor reveals a real bug, it is recorded,
 fixed in a separate commit, with a fixture case, and goes into the baseline by explicit decision.
+
+## Step 5: one type answer, without losing what either side answers (H5-D10)
+
+Each language answers "what type does the code declare for this value" twice: the micro resolver types call
+receivers for `CALLS`, and the HTTP scanner follows a router into a method of a typed value. The two answers differ,
+and each side answers cases the other misses. One answer for both changes the graph on at least one side, so step 5
+goes in two PRs per language:
+
+1. **A refactor, with the graph identical.** The `TypeIndex` API and the language's typed type facts; the resolver asks
+   the `TypeIndex`, with PR #9's indexes inside it.
+2. **A change of behavior, right after.** One answer inside a file for both sides, and the scanner reading a field
+   through the `TypeIndex` and taking its whole answer (H5-D11). Every difference below has its case. The corpus and
+   the micro set are judged at the source under `graph-change`, and the PR must gain the xfails and lose no guard.
+
+**Go**, in `indexer/tests/test_go_types.py`. A guard passes today; an xfail is strict, so it fails the suite once it
+passes.
+
+| Case | Resolver | Scanner | Test |
+|---|---|---|---|
+| `h := &T{}` | typed | typed | guard `composite-literal` |
+| `s.F`, a direct field of the package's struct | typed | typed | guard `field` |
+| `h = &T{}`, a plain assignment | — | typed | guard `assignment` |
+| a block's local that shadows a parameter | the parameter's type | the local's | guard (scanner), xfail (resolver) `block-shadows-a-parameter` |
+| a closure inside a closure | one function out only | every function out | guard (scanner), xfail (resolver) `closure-in-a-closure` |
+| a closure's local of the same name, before the use | read as the function's | kept inside | xfail (resolver) `a-closure-keeps-its-locals` |
+| `h := pkg.New()` | the constructor's declared result | — | xfail (scanner) `constructor-result` |
+| `var h T` | typed | — | guard (resolver), xfail (scanner) `var-declaration` |
+| a named result | typed | — | guard (resolver), xfail (scanner) `named-result` |
+| a field promoted from an embedded struct | typed, 4 levels deep | — | xfail (scanner) `promoted-field` |
+| a field of another package's struct | typed | — | xfail (scanner) `field-of-another-package` |
+| a struct declared in two files of the package (build tags) | the first file that declares it | any file whose struct has the field | guard (scanner), xfail (resolver) `a_struct_declared_in_two_files` / `a_field_of_a_struct_declared_in_two_files` |
+| a field's type under the alias of the struct's own file | resolved in that file | resolved with the scanned file's imports | xfail (scanner) `test_a_field_type_under_the_alias_of_the_file_that_declares_it` |
+
+On the scanner's side, each xfail is a route that loses its group's prefix (`GET /users` for `GET /api/users`). On the
+resolver's side, each is a `CALLS` edge to the wrong method, or one found by name instead of by type. The two answers
+also write a type differently: the resolver's is normalized (`*pkg.T` and `[]T` become `pkg.T` and `T`), the scanner's
+is the text as written. A plain assignment of another type to a variable that a `var` declared with an interface type
+is left out on purpose: which method it reaches is not a fact the declaration states.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -344,7 +400,21 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
 - **H5-D2, the catalog is YAML** (architecture, item 6), with a validated schema and a test, in the same format the
   conventions are already written in.
 - **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
-  intent is for it to become blocking; the author turns it on, when the whole code meets the targets.
+  intent is for it to become blocking; the author turns it on, when the whole code meets the targets. Amended by
+  H5-D9.
+- **H5-D10 (2026-10-21), step 5 goes in two PRs per language:** a refactor that leaves the graph identical, then a
+  change of behavior that makes the resolver and the scanner share one answer. The second must gain every xfail of
+  the language's type cases and lose no guard ("Step 5" above). The author asked for great care here: only real gains,
+  and nothing that exists today lost.
+- **H5-D11 (2026-10-21), the scanner reads fields through the `TypeIndex` in the change of behavior, not in the
+  refactor.** A struct declared in two files of its package (build tags) gets two answers today. The resolver reads
+  the first file that declares it; the scanner reads any file whose struct has the field. Through the index, the
+  refactor would either lose the scanner's guard or keep a second answer inside the index, and step 5 exists to
+  remove that second answer. The change of behavior gives one answer that holds both cases.
+- **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
+  above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
+  `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit
+  grew and the MCP split added two functions at complexity 12, and nothing flagged them.
 - **H5-D4, a general review of the comments** (architecture, item 11; step 10): only what is strictly pertinent
   stays, with no reference to docs, because the docs are still going to be reorganized, and with no project name.
   The private names that were in the docs (a service in the ROADMAP log, an environment variable in
@@ -384,6 +454,13 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
   until 2026-10-18, lost the prefix when the reassignment (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`)
   gave only an edge from the router to itself, and when another file mounted the router. The `route-patterns-go`
   fixture (`internal/reassigned/`) covers both cases.
+
+- **Docker Desktop and the run folders (macOS).**
+  - A folder deleted and made again at the same path can no longer be bind-mounted in that session: the container
+    sees no folder, or gets an I/O error. A new path works.
+  - `micro.sh` deletes its run folder (`micro/<date>-<sha>[-dirty]`) on each run. A second run on the same tree state
+    therefore fails every dry-run of the tree, with `FileNotFoundError: /out/<repo>.json`.
+  - Give each corpus run a new label, and run `micro.sh` once per commit. CI, on Linux, does not have the problem.
 
 ## Constraints and conventions
 

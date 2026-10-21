@@ -90,10 +90,10 @@ def extract_tree(repo: RepoInfo, patterns=None, dispatch_calls: frozenset[str] =
         res.calls.extend(fx.calls)
         res.imports.extend(fx.imports)
     log(f"[extract]  {len(res.symbols)} symbols, {len(res.calls)} call sites, {len(res.imports)} imports ({time.time()-t0:.1f}s)")
-    # integration candidates: routes exposed + outbound HTTP calls with literal paths
-    from .core.integrations import extract_http
+    from .core.integrations import RepoTypes, extract_http
     t1 = time.time()
-    hr = extract_http(repo, extractors, patterns, modules)
+    res.types = RepoTypes.of_files(repo.root, files, modules, {fx.file.id: fx.facts for fx in extractors})
+    hr = extract_http(repo, extractors, patterns, modules, res.types)
     res.endpoints, res.http_calls = hr.endpoints, hr.calls
     res.warnings.extend(hr.warnings)
     resolved = sum(1 for e in hr.endpoints if e.handler_id)

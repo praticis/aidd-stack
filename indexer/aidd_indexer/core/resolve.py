@@ -99,8 +99,8 @@ class Resolver:
                 namespaces[ns].append(fx.file.id)
         self.packages: dict[str, PackageNode] = {}
         self.external_bindings: dict[str, set[str]] = defaultdict(set)   # file id -> names bound to external packages
-        self.ctx = ResolveContext(self.root, self.files_by_path, self.modules_by_path, self.module_by_id,
-                                  self.files_by_id, dict(namespaces), facts={fx.file.id: fx.facts for fx in extractors})
+        self.ctx = ResolveContext(self.root, self.files_by_path, self.modules_by_path, self.module_by_id, self.files_by_id,
+                                  dict(namespaces), facts={fx.file.id: fx.facts for fx in extractors}, types=result.types)
         self.test_file = {f.id: is_test_path(f.path) for f in result.files}
         for lang in languages.all():
             lang.resolve_setup(self.ctx)

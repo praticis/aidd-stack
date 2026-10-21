@@ -7,49 +7,23 @@ from __future__ import annotations
 
 import re
 from pathlib import Path, PurePosixPath
-from typing import Any
 
 from tree_sitter import Node
 
 from ...core import ids
-from ...core.config import is_test_path
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
+from ...core.types import Field, RepoTypes, TypeRef, Unknown
 from ...tree import NodeCache
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .package_facts import read_package_facts
+from .type_facts import TYPE_NODES, GoTypes, import_aliases, receiver_type, type_facts, type_text
+from .type_index import DEPTH, GoTypeIndex, module_paths
 from .http import GoScanner
 
 HERE = Path(__file__).parent
 
 
-def _go_module_path(root: Path, module: ModuleInfo) -> str | None:
-    gm = root / module.path / "go.mod" if module.path else root / "go.mod"
-    if not gm.exists():
-        return None
-    for line in gm.read_text(encoding="utf-8", errors="replace").splitlines():
-        if line.startswith("module "):
-            return line.split(None, 1)[1].strip()
-    return None
-
-
 _FUNC_NODES = ("function_declaration", "method_declaration", "func_literal")
-_TYPE_NODES = ("type_identifier", "qualified_type", "pointer_type", "generic_type")
-
-
-def _type_text(node: Node | None, src: bytes) -> str | None:
-    """`*pkg.T`, `[]T`, `pkg.T` → `pkg.T` / `T`; None for func/map/chan/interface literals."""
-    n = node
-    while n is not None and n.type in ("pointer_type", "slice_type", "array_type", "parenthesized_type"):
-        n = next((c for c in n.children if c.is_named), None)
-    if n is None or n.type not in ("type_identifier", "qualified_type", "generic_type"):
-        return None
-    if n.type == "generic_type":
-        n = next((c for c in n.children if c.type in ("type_identifier", "qualified_type")), None)
-        if n is None:
-            return None
-    return node_text(n, src)
-
-
 def _declared_type(name: str, scope: Node, src: bytes, before: int) -> str | None:
     """Type of local variable `name` inside `scope` (a function): receiver, parameter, `var x T`,
     `x := T{}` / `&T{}`, or `x := pkg.New(...)` (reported as `call:pkg.New` for the resolver)."""
@@ -58,9 +32,9 @@ def _declared_type(name: str, scope: Node, src: bytes, before: int) -> str | Non
             if pd.type != "parameter_declaration":
                 continue
             names = [c for c in pd.children if c.type == "identifier"]
-            typ = next((c for c in pd.children if c.type in _TYPE_NODES or c.type.endswith("_type")), None)
+            typ = next((c for c in pd.children if c.type in TYPE_NODES or c.type.endswith("_type")), None)
             if any(node_text(nm, src) == name for nm in names):
-                return _type_text(typ, src)
+                return type_text(typ, src)
     best: str | None = None
     for start, value in _DECLARATIONS.get(scope, src).get(name, ()):
         if start >= before:
@@ -79,7 +53,7 @@ def _declarations(scope: Node, src: bytes) -> dict[str, list[tuple[int, str | No
             for name, value in _short_var_types(d, src):
                 out.setdefault(name, []).append((d.start_byte, value))
         elif d.type == "var_spec" and d.child_by_field_name("type") is not None:
-            typ = _type_text(d.child_by_field_name("type"), src)
+            typ = type_text(d.child_by_field_name("type"), src)
             for nm in (c for c in d.children if c.type == "identifier"):
                 out.setdefault(node_text(nm, src), []).append((d.start_byte, typ))
     return out
@@ -101,7 +75,7 @@ def _short_var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
         if r is None:
             continue
         if r.type == "composite_literal":
-            out.append((node_text(lft, src), _type_text(r.child_by_field_name("type"), src)))
+            out.append((node_text(lft, src), type_text(r.child_by_field_name("type"), src)))
         elif r.type != "call_expression":
             out.append((node_text(lft, src), None))
         elif (fn := r.child_by_field_name("function")) is not None and fn.type in ("identifier", "selector_expression"):
@@ -113,14 +87,13 @@ def _short_var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
 _DECLARATIONS = NodeCache(_declarations)
 
 
-def _receiver(node: Node, src: bytes) -> str | None:
-    recv = node.child_by_field_name("receiver")
-    if recv is None:
-        return None
-    for tid in walk(recv):
-        if tid.type == "type_identifier":
-            return node_text(tid, src)
-    return None
+def _ref(qualified_type: str) -> TypeRef:
+    package, _, name = qualified_type.rpartition(".")
+    return TypeRef(package, name)
+
+
+def _qualified(t: TypeRef) -> str:
+    return f"{t.package}.{t.name}" if t.package else t.name
 
 
 _GO_MODULE_LINE = re.compile(r"^module\s+(\S+)", re.M)
@@ -160,7 +133,7 @@ class GoSupport(LanguageSupport):
 
     def scope_chain(self, dnode: Node, src: bytes, chain: list[str], kind: str, file_namespace: str | None) -> list[str]:
         if kind == "method":
-            recv = _receiver(dnode, src)
+            recv = receiver_type(dnode, src)
             if recv:
                 return [recv]
         return chain
@@ -178,83 +151,11 @@ class GoSupport(LanguageSupport):
         return "public" if name[:1].isupper() else "private"
 
     def import_bindings(self, stmt_text: str, stmt: Node, spec: str, src: bytes) -> list[str]:
-        alias = stmt.child_by_field_name("name")
-        if alias is not None:
-            return [node_text(alias, src)]
-        base = spec.rstrip("/").split("/")[-1]
-        base = re.sub(r"^v\d+$", "", base) or spec.rstrip("/").split("/")[-2]
-        return [re.sub(r"[-.].*$", "", base) or base]
+        return import_aliases(stmt, spec, src)
 
     # ---- static receiver types
-    def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
-        structs: dict[str, dict[str, str]] = {}
-        embeds: dict[str, list[str]] = {}
-        interfaces: dict[str, dict[str, Any]] = {}       # name -> {methods, embeds}; None embeds = a constraint (union)
-        methods: dict[str, list[str]] = {}               # receiver type -> method names declared in this file
-        funcs: dict[str, list[str]] = {}
-        imports: dict[str, str] = {}
-        for n in walk(root):
-            if n.type == "type_spec":
-                name, typ = n.child_by_field_name("name"), n.child_by_field_name("type")
-                if name is not None and typ is not None and typ.type == "struct_type":
-                    fields: dict[str, str] = {}
-                    embedded: list[str] = []
-                    for fd in walk(typ):
-                        if fd.type != "field_declaration":
-                            continue
-                        ftype = next((c for c in fd.children if c.type in _TYPE_NODES or c.type.endswith("_type")), None)
-                        tt = _type_text(ftype, src)
-                        if tt is None:
-                            continue
-                        names = [node_text(c, src) for c in fd.children if c.type == "field_identifier"]
-                        if not names:                                            # embedded: `Config` / `*Config` — fields are promoted
-                            embedded.append(tt)
-                            names = [tt.split(".")[-1]]
-                        for fname in names:
-                            fields[fname] = tt
-                    structs[node_text(name, src)] = fields
-                    if embedded:
-                        embeds[node_text(name, src)] = embedded
-                elif name is not None and typ is not None and typ.type == "interface_type":
-                    own, inner = [], []
-                    for el in typ.children:
-                        if el.type == "method_elem":
-                            nm = next((c for c in el.children if c.type == "field_identifier"), None)
-                            if nm is not None:
-                                own.append(node_text(nm, src))
-                        elif el.type == "type_elem":
-                            parts = [c for c in el.children if c.is_named]
-                            tt = _type_text(parts[0], src) if len(parts) == 1 else None
-                            inner = None if tt is None or inner is None else inner + [tt]
-                    interfaces[node_text(name, src)] = {"methods": own, "embeds": inner}
-            elif n.type == "method_declaration":
-                recv, mname = _receiver(n, src), n.child_by_field_name("name")
-                if recv and mname is not None:
-                    methods.setdefault(recv, []).append(node_text(mname, src))
-            elif n.type == "function_declaration":
-                name, result = n.child_by_field_name("name"), n.child_by_field_name("result")
-                if name is not None and result is not None:
-                    if result.type == "parameter_list":                       # (*T, error) / (a, b T)
-                        rets: list[str] = []
-                        for pd in result.children:
-                            if pd.type != "parameter_declaration":
-                                continue
-                            ty = next((c for c in pd.children if c.type in _TYPE_NODES or c.type.endswith("_type")), None)
-                            n_names = max(1, sum(1 for c in pd.children if c.type == "identifier"))
-                            rets += [_type_text(ty, src) or ""] * n_names
-                        funcs[node_text(name, src)] = rets
-                    else:
-                        tt = _type_text(result, src)
-                        if tt:
-                            funcs[node_text(name, src)] = [tt]
-            elif n.type == "import_spec":
-                path = n.child_by_field_name("path")
-                if path is not None:
-                    spec = node_text(path, src).strip('"`')
-                    for alias in self.import_bindings("", n, spec, src):
-                        imports[alias] = spec
-        return {"structs": structs, "embeds": embeds, "funcs": funcs, "imports": imports,
-                "interfaces": interfaces, "methods": methods}
+    def file_facts(self, root: Node, src: bytes) -> GoTypes:
+        return type_facts(root, src)
 
     def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
         pl = node.child_by_field_name("parameters")
@@ -304,81 +205,29 @@ class GoSupport(LanguageSupport):
                 typ = _declared_type(base, outer, src, call.start_byte)
         return (typ, tuple(chain)) if typ else None
 
-    def _package_prefix(self, ctx: ResolveContext, file: FileInfo, alias: str | None) -> str | None:
-        """Qualified-name prefix (dotted directory) of a type reference: the file's own package when
-        unqualified, else the package the alias imports (only modules of this repo resolve)."""
-        if alias is None:
-            d = str(PurePosixPath(file.path).parent)
-            return "" if d == "." else d.replace("/", ".")
-        spec = (ctx.facts.get(file.id) or {}).get("imports", {}).get(alias)
-        if not spec:
-            return None
-        for mp, m in ctx.extra.get("go_modules", ()):
-            if spec == mp or spec.startswith(mp + "/"):
-                rel = spec[len(mp):].strip("/")
-                pkg_dir = "/".join(p for p in (m.path, rel) if p)
-                return pkg_dir.replace("/", ".")
-        return None
+    def type_index(self, ctx: ResolveContext) -> GoTypeIndex:
+        return GoTypeIndex(ctx)
 
-    def _files_in(self, ctx: ResolveContext, prefix: str) -> list[FileInfo]:
-        """Go files of the package whose dotted directory is `prefix` ("" = repo root)."""
-        by_dir = ctx.extra.get("go_files_by_dir")
-        if by_dir is None:
-            # built once: every typed receiver of every call asks, and a scan per ask is quadratic in the repo
-            by_dir = ctx.extra["go_files_by_dir"] = {}
-            for f in ctx.files_by_path.values():
-                if f.language == self.id:
-                    by_dir.setdefault(str(PurePosixPath(f.path).parent), []).append(f)
-        return by_dir.get(prefix.replace(".", "/") or ".", [])
-
-    def _resolve_type(self, ctx: ResolveContext, file: FileInfo, text: str) -> tuple[str, str] | None:
-        """`pw.Policy` as written in `file` → (package prefix, TypeName)."""
-        if text.startswith("call:"):
-            fn, _, idx = text[5:].partition("#")
-            alias, _, fname = fn.rpartition(".")
-            prefix = self._package_prefix(ctx, file, alias or None)
-            if prefix is None:
-                return None
-            for f in self._files_in(ctx, prefix):
-                rets = (ctx.facts.get(f.id) or {}).get("funcs", {}).get(fname)
-                if rets:
-                    i = int(idx) if idx else 0
-                    return self._resolve_type(ctx, f, rets[i]) if i < len(rets) and rets[i] else None
-            return None
-        alias, _, name = text.rpartition(".")
-        prefix = self._package_prefix(ctx, file, alias or None)
-        return (prefix, name) if prefix is not None else None
-
-    def _field_type(self, ctx: ResolveContext, owner: tuple[str, str], field: str, depth: int) -> tuple[str, str] | None:
-        """Type of `owner.field`, looking through embedded structs (promoted fields) up to 4 levels."""
-        if depth > 4:
-            return None
-        prefix, tname = owner
-        for f in self._files_in(ctx, prefix):
-            facts = ctx.facts.get(f.id) or {}
-            st = facts.get("structs", {}).get(tname)
-            if st is None:
-                continue
-            if field in st:
-                return self._resolve_type(ctx, f, st[field])
-            for emb in facts.get("embeds", {}).get(tname, []):
-                inner = self._resolve_type(ctx, f, emb)
-                hit = self._field_type(ctx, inner, field, depth + 1) if inner else None
-                if hit:
-                    return hit
-            return None
-        return None
+    def _types(self, ctx: ResolveContext) -> GoTypeIndex:
+        """The repo's Go type index: the one the HTTP pass shares, or one over this context."""
+        if ctx.types is None:
+            ctx.types = RepoTypes(ctx)
+        return ctx.types.of(self.id)
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
-        cur = self._resolve_type(ctx, file, receiver_type)
-        for field in path:
-            if cur is None:
+        types = self._types(ctx)
+        if receiver_type.startswith("call:"):                   # `x := pkg.New()`, `#i` for one of several results
+            fn, _, idx = receiver_type[5:].partition("#")
+            # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
+            cur = types.return_type(fn, file.path, int(idx or 0)) if idx.isdecimal() or not idx else None
+        else:
+            cur = types.type_named(receiver_type, file.path)
+        for name in path:
+            if not isinstance(cur, TypeRef):
                 return None
-            cur = self._field_type(ctx, cur, field, depth=0)
-        if cur is None:
-            return None
-        prefix, tname = cur
-        return f"{prefix}.{tname}" if prefix else tname
+            found = types.field(cur, name)
+            cur = found.type if isinstance(found, Field) else found
+        return _qualified(cur) if isinstance(cur, TypeRef) else None
 
     # ---- resolution
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
@@ -389,12 +238,7 @@ class GoSupport(LanguageSupport):
         return names, deps
 
     def resolve_setup(self, ctx: ResolveContext) -> None:
-        # module paths from go.mod, longest first
-        ctx.extra["go_modules"] = sorted(
-            ((mp, m) for m in ctx.modules_by_path.values()
-             if m.kind == "go-module" and (mp := _go_module_path(ctx.root, m))),
-            key=lambda t: -len(t[0]),
-        )
+        ctx.extra["go_modules"] = module_paths(ctx)
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
         for mp, m in ctx.extra.get("go_modules", ()):
@@ -408,75 +252,22 @@ class GoSupport(LanguageSupport):
         name = spec if stdlib else "/".join(spec.split("/")[:3])
         return (pkg("go", name, stdlib), "Package")
 
-    def _interface_methods(self, ctx: ResolveContext, owner: tuple[str, str], depth: int = 0) -> set[str] | None:
-        """Every method an interface of the repo requires, embedded interfaces included; None when it
-        is not an interface of the repo, embeds one from outside (`io.Reader`: its methods are unknown)
-        or is a type constraint."""
-        if depth > 4:
-            return None
-        prefix, name = owner
-        for f in self._files_in(ctx, prefix):
-            iface = (ctx.facts.get(f.id) or {}).get("interfaces", {}).get(name)
-            if iface is None:
-                continue
-            if iface["embeds"] is None:
-                return None
-            out = set(iface["methods"])
-            for emb in iface["embeds"]:
-                inner = self._resolve_type(ctx, f, emb)
-                more = self._interface_methods(ctx, inner, depth + 1) if inner else None
-                if more is None:
-                    return None
-                out |= more
-            return out
-        return None
-
-    def has_external_base(self, ctx: ResolveContext, qualified_type: str, depth: int = 0) -> bool:
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
-        if depth > 4:
-            return False
-        prefix, _, name = qualified_type.rpartition(".")
-        for f in self._files_in(ctx, prefix):
-            facts = ctx.facts.get(f.id) or {}
-            iface = facts.get("interfaces", {}).get(name)
-            embedded = facts.get("embeds", {}).get(name, []) if name in facts.get("structs", {}) else (iface or {}).get("embeds") or []
-            if name not in facts.get("structs", {}) and iface is None:
-                continue
-            for emb in embedded:
-                inner = self._resolve_type(ctx, f, emb)
-                if inner is None or not any(self._files_in(ctx, inner[0])):
-                    return True
-                if self.has_external_base(ctx, f"{inner[0]}.{inner[1]}" if inner[0] else inner[1], depth + 1):
-                    return True
-            return False
-        return False
+        return self._external_base(self._types(ctx), _ref(qualified_type), 0)
+
+    def _external_base(self, types: GoTypeIndex, of: TypeRef, depth: int) -> bool:
+        bases = types.bases(of) if depth <= DEPTH else []
+        return not isinstance(bases, Unknown) and any(
+            isinstance(b, Unknown) or self._external_base(types, b, depth + 1) for b in bases)
 
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
-        cache = ctx.extra.setdefault("go_impl", {})
-        if qualified_type not in cache:
-            prefix, _, name = qualified_type.rpartition(".")
-            needed = self._interface_methods(ctx, (prefix, name))
-            impls: set[str] = set()
-            if needed:
-                impls = {f"{p}.{t}" if p else t for (p, t), have in self._method_sets(ctx).items() if needed <= have}
-            cache[qualified_type] = (needed or set(), next(iter(impls)) if len(impls) == 1 else None)
-        needed, impl = cache[qualified_type]
-        return impl if method in needed else None
-
-    def _method_sets(self, ctx: ResolveContext) -> dict[tuple[str, str], set[str]]:
-        """(package prefix, type) → the methods production code declares on it, built once for every interface."""
-        sets = ctx.extra.get("go_method_sets")
-        if sets is None:
-            sets = ctx.extra["go_method_sets"] = {}
-            for f in ctx.files_by_path.values():
-                if f.language != self.id or is_test_path(f.path):     # fakes and mocks implement it too: not what runs
-                    continue
-                d = str(PurePosixPath(f.path).parent)
-                pfx = "" if d == "." else d.replace("/", ".")
-                for recv, names in (ctx.facts.get(f.id) or {}).get("methods", {}).items():
-                    sets.setdefault((pfx, recv), set()).update(names)
-        return sets
+        types, interface = self._types(ctx), _ref(qualified_type)
+        found = types.implementers(interface)
+        if isinstance(found, Unknown) or len(found) != 1 or isinstance(types.method(interface, method), Unknown):
+            return None
+        return _qualified(found[0])
 
     def link_symbols(self, symbols: list[SymbolInfo], files_by_id: dict[str, FileInfo]) -> None:
         """Methods → receiver struct as parent (`pkg.Type.Method` → `pkg.Type`)."""

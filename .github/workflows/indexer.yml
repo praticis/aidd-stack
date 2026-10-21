@@ -1,7 +1,7 @@
 name: indexer
 
 # The method's checks on every change to the indexer: the tests; the HTTP corpus, the hold-out and the micro graph of
-# the branch against its base; then the gates (indexer/scripts/gates.py). A push to main fills the baselines that pull
+# the branch against its base; the code's shape against its base; then the gates (indexer/scripts/gates.py). A push to main fills the baselines that pull
 # requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes them: the
 # extraction is deterministic, so a baseline is derived data.
 #
@@ -67,6 +67,28 @@ jobs:
           cache-from: type=gha,scope=indexer
           cache-to: type=gha,scope=indexer,mode=max
       - run: indexer/scripts/test.sh
+
+  # A ratchet: a function above complexity 9 or a module above 300 lines may stay while it does not grow, and nothing
+  # new joins them (indexer/scripts/shape.py --against).
+  shape:
+    needs: changes
+    if: needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.17.1
+      - name: Functions above complexity 9 and modules above 300 lines, none new or worse than the base
+        env:
+          BASE: ${{ needs.changes.outputs.base }}
+        # bash, not the default shell: only then does a pipe carry the script's failure past `tee`
+        shell: bash
+        run: python indexer/scripts/shape.py --against "$BASE" | tee -a "$GITHUB_STEP_SUMMARY"
 
   corpus:
     needs: changes
@@ -220,7 +242,7 @@ jobs:
           key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
 
   gates:
-    needs: [changes, corpus, micro]
+    needs: [changes, corpus, micro, shape]
     # always(): a job skipped because a job it needs failed would pass as a required check
     if: always() && github.event_name == 'pull_request' && needs.changes.outputs.indexer == 'true'
     runs-on: ubuntu-latest
@@ -253,37 +275,28 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           labels=$(gh api "repos/${{ github.repository }}/issues/$PR/labels" --jq 'map(.name) | join(",")')
-          refactor=""
-          if [[ "$HEAD_REF" =~ ^refact(or)?/ ]]; then refactor="the branch's name"; fi
-          if gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
-               | grep -qE '^refact(or)?(\([^)]*\))?!?:'; then
-            refactor="${refactor:+$refactor and }a refactor commit"
-          fi
-          [ -z "$refactor" ] || labels="${labels:+$labels,}refactor"
-          echo "labels: ${labels:-none}; a refactor by ${refactor:-nothing}"
           in="$RUNNER_TEMP/in"
           mkdir -p "$AIDD_CORPUS_HOME/runs" && cp -r "$in/corpus/base" "$in/corpus/head" "$AIDD_CORPUS_HOME/runs/"
-          set +e
-          indexer/scripts/gates.sh --base runs/base --head runs/head \
-            --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" > report.md
-          corpus_rc=$?
-          # micro.sh: 0 identical, 1 a repository differs, 3 a dry-run failed
-          micro=$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)
-          case "$micro,,$labels," in
-            0,*) micro_rc=0; verdict="pass: the micro graph is identical" ;;
-            1,*,refactor,*) micro_rc=1; verdict="FAIL: the micro graph differs under the \`refactor\` label" ;;
-            1,*,graph-change,*) micro_rc=0; verdict="pass: the micro graph differs, judged under the \`graph-change\` label" ;;
-            1,*) micro_rc=1; verdict="FAIL: the micro graph differs. Judge each difference at its source; when it is right, add the \`graph-change\` label and re-run this job" ;;
-            *) micro_rc=1; verdict="FAIL: a dry-run failed (see the micro job)" ;;
-          esac
+          # the gates' exit code is the step's; pipefail: commits that could not be listed must fail, not pass as none
+          set +e -o pipefail
+          # gates.py decides whether the pull request is a refactor (its branch, a commit) and judges the micro graph
+          gh api --paginate "repos/${{ github.repository }}/pulls/$PR/commits" --jq '.[].commit.message | split("\n")[0]' \
+            | indexer/scripts/gates.sh --base runs/base --head runs/head \
+                --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" \
+                --branch="$HEAD_REF" --commits - --micro-rc "$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)" \
+                > report.md
+          rc=$?
           {
             cat report.md
             echo
-            echo "## Micro graph: $verdict"
-            echo
             echo '```'
-            tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no report"
+            tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no micro report"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           cat report.md
-          [ "$corpus_rc" = 0 ] && [ "$micro_rc" = 0 ]
+          exit "$rc"
+      - name: The code's shape
+        if: always()
+        run: |
+          echo "shape: ${{ needs.shape.result }} (its job's summary lists what is new or worse)"
+          [ "${{ needs.shape.result }}" = success ]

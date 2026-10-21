@@ -20,6 +20,7 @@ from ...core.http_scope import enclosing_function, in_function
 from .http_facts import EncodedCall, Encoder, SwaggerBase, SwaggerRoute
 from .package_facts import GoFacts, verb_list
 from .paths import GoPaths
+from .type_facts import GoTypes
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
 from ...core.model import RepoInfo
@@ -684,8 +685,7 @@ class GoScanner(GoPaths, BaseScanner):
         if not re.fullmatch(r"\w+", sname):        # a struct of another package, or a generic one: not read
             return None
         field = text(n.child_by_field_name("field"), self.src)
-        return next((fields[field] for facts in self.ctx.file_facts.values()
-                     if field in (fields := facts.get("structs", {}).get(sname, {}))), None)
+        return next((t for facts in self.ctx.file_facts.values() if (t := GoTypes.of(facts).field_type(sname, field))), None)
 
     def _local_type(self, n: Node) -> str | None:
         """The identifier `n`: the nearest assignment before it, else a receiver or parameter, from the innermost

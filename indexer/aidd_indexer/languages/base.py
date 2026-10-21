@@ -43,8 +43,9 @@ class ResolveContext:
     module_by_id: dict[str, "ModuleInfo"]
     files_by_id: dict[str, "FileInfo"]
     namespaces: dict[str, list[str]]           # declared namespace -> declaring file ids (from `file_scope`)
-    facts: dict[str, dict[str, Any]] = field(default_factory=dict)   # file id -> `file_facts()` of its language
+    facts: dict[str, Any] = field(default_factory=dict)   # file id -> `file_facts()` of its language
     extra: dict[str, Any] = field(default_factory=dict)   # per-language scratch filled by `resolve_setup`
+    types: Any = None                          # the repo's type service, shared with the HTTP pass (`RepoTypes`)
 
     def file_at(self, rel: str) -> "FileInfo | None":
         return self.files_by_path.get(rel)
@@ -128,9 +129,9 @@ class LanguageSupport:
         none."""
         return None
 
-    def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
-        """Per-file facts the resolver may need later (Go: struct field types, import aliases,
-        constructor return types). Stored on the extractor and handed to `resolve_receiver` via ctx.facts."""
+    def file_facts(self, root: Node, src: bytes) -> Any:
+        """Per-file type facts the resolver and the scanners read across files, holding no tree node (Go: `GoTypes`).
+        Stored on the extractor and handed to `resolve_receiver` via ctx.facts."""
         return {}
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
@@ -164,6 +165,11 @@ class LanguageSupport:
     # ---- resolution ---------------------------------------------------------------------
     def resolve_setup(self, ctx: ResolveContext) -> None:
         """Compute per-repo lookups once (Go: module paths from go.mod) into `ctx.extra`."""
+        return None
+
+    def type_index(self, ctx: ResolveContext) -> Any:
+        """The language's answers to the type service's questions (a `core.types.TypeIndex`), built from every file's
+        type facts in `ctx`; None for a language that answers none."""
         return None
 
     def resolve_import(self, ctx: ResolveContext, file: "FileInfo", spec: str, pkg: PackageFactory) -> tuple[str, str] | None:

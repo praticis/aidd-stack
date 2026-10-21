@@ -4,14 +4,16 @@
 - the precision ratchet: no repository's and no language's list precision is lower on the branch;
 - no win lost: no expected pair the base found is missed, and no checked item judged right is gone;
 - the hold-out untouched, unless the pull request carries the `holdout-measurement` label;
-- a refactor changes nothing: with the `refactor` label, any difference fails.
+- a refactor changes nothing: with the `refactor` label, a branch named `refactor/…` or a commit `refactor: …`, any
+  difference fails;
+- the micro graph: identical, or judged under the `graph-change` label (`--micro-rc`, `micro.sh`'s exit code).
 
 Every other difference is classified the way a judgment starts: a gain (an expected pair now found) or an item to
 judge at its source, linked to its line. Both runs are scored against the branch's expected lists. The hold-out's
 items are never listed, only whether it changed. Prints Markdown for the job summary; exits 1 when a gate fails.
 
     python scripts/gates.py --base RUNS --head RUNS [--holdout-base RUNS --holdout-head RUNS | --holdout-changed N]
-                            [--label NAME ...]
+                            [--label NAME ...] [--branch NAME] [--commits FILE|-] [--micro-rc N]
     python scripts/gates.py --holdout-base RUNS --holdout-head RUNS --holdout-count     # only how many changed
 
 CI counts the hold-out's changes where it runs it, so that no artifact carries the hold-out's items.
@@ -21,6 +23,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from fractions import Fraction
@@ -31,6 +34,8 @@ import corpus_metrics as M  # noqa: E402
 import http_corpus as H  # noqa: E402
 
 GATES = ("Precision ratchet", "No win lost", "Hold-out untouched", "A refactor changes nothing", "Every repo measured")
+REFACTOR_BRANCH = re.compile(r"refact(or)?/")
+REFACTOR_COMMIT = re.compile(r"refact(or)?(\([^)]*\))?!?:")
 
 
 @dataclass
@@ -177,6 +182,50 @@ def judge_holdout(changed: int, labels: set[str], f: Findings) -> None:
         f.notes.append(f"the hold-out changed in {changed} repo(s), under the `holdout-measurement` label")
 
 
+def judge_refactor(changed: int, labels: set[str], f: Findings) -> None:
+    if "refactor" in labels and (f.differ or changed):
+        f.failed["A refactor changes nothing"].append(
+            f"{len(f.differ)} corpus repo(s) and {changed} hold-out repo(s) differ under the `refactor` label")
+
+
+def refactor_by(branch: str, commits: list[str]) -> str:
+    """Why a pull request is a refactor: its branch's name, a commit's subject, both, or nothing (""). One refactor
+    commit makes the whole pull request strict, so a refactor and a change of behavior go in separate ones."""
+    why = ["the branch's name"] if REFACTOR_BRANCH.match(branch) else []
+    if any(REFACTOR_COMMIT.match(c) for c in commits):
+        why.append("a refactor commit")
+    return " and ".join(why)
+
+
+def pr_labels(given: list[str], branch: str, commits: list[str]) -> tuple[set[str], str]:
+    """The labels the gates read: the pull request's own, plus `refactor` when its branch or a commit makes it one."""
+    labels = {x.strip() for v in given for x in v.split(",") if x.strip()}
+    why = refactor_by(branch, commits)
+    return (labels | {"refactor"} if why else labels), why
+
+
+def judge_micro(rc: int, labels: set[str]) -> tuple[bool, str]:
+    """`micro.sh`'s exit code (0: identical, 1: a repository differs, any other: a dry-run failed) under the labels;
+    a refactor wins over `graph-change`."""
+    if rc == 0:
+        return True, "pass: the micro graph is identical"
+    if rc != 1:
+        return False, "FAIL: a dry-run failed (see the micro job)"
+    if "refactor" in labels:
+        return False, "FAIL: the micro graph differs under the `refactor` label"
+    if "graph-change" in labels:
+        return True, "pass: the micro graph differs, judged under the `graph-change` label"
+    return False, ("FAIL: the micro graph differs. Judge each difference at its source; when it is right, add the "
+                   "`graph-change` label and re-run this job")
+
+
+def _micro(rc: int | None, labels: set[str]) -> tuple[bool, str]:
+    if rc is None:
+        return True, ""
+    ok, verdict = judge_micro(rc, labels)
+    return ok, f"\n## Micro graph: {verdict}\n"
+
+
 def render(f: Findings, labels: set[str], show: int) -> str:
     ok = not any(f.failed.values())
     out = [f"## Corpus gates: {'pass' if ok else 'FAIL'}", "", "| Gate | Result |", "|---|---|"]
@@ -195,7 +244,7 @@ def render(f: Findings, labels: set[str], show: int) -> str:
     return "\n".join(out) + "\n"
 
 
-def main() -> int:
+def _args() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", type=Path, help="the base's corpus run")
     ap.add_argument("--head", type=Path, help="the branch's corpus run")
@@ -205,8 +254,15 @@ def main() -> int:
     ap.add_argument("--holdout-count", action="store_true", help="print how many hold-out repos changed, and exit")
     ap.add_argument("--expected", type=Path, default=H.EXPECTED_DIR)
     ap.add_argument("--label", action="append", default=[], help="a label of the pull request (repeatable)")
+    ap.add_argument("--branch", default="", help="the pull request's branch")
+    ap.add_argument("--commits", type=argparse.FileType("r"), help="its commits' subjects, one per line; - for stdin")
+    ap.add_argument("--micro-rc", type=int, help="micro.sh's exit code, judged under the labels")
     ap.add_argument("--show", type=int, default=100, help="items listed per section")
-    args = ap.parse_args()
+    return ap.parse_args(), ap
+
+
+def main() -> int:
+    args, ap = _args()
     changed = args.holdout_changed
     if changed is None:
         changed = holdout_changed(load_runs(args.holdout_base), load_runs(args.holdout_head))
@@ -215,15 +271,15 @@ def main() -> int:
         return 0
     if args.base is None or args.head is None:
         ap.error("--base and --head")
-    labels = {x.strip() for v in args.label for x in v.split(",") if x.strip()}
+    labels, why = pr_labels(args.label, args.branch, args.commits.read().splitlines() if args.commits else [])
     f = Findings()
     compare_corpus(load_runs(args.base), load_runs(args.head), args.expected, f)
     judge_holdout(changed, labels, f)
-    if "refactor" in labels and (f.differ or changed):
-        f.failed["A refactor changes nothing"].append(
-            f"{len(f.differ)} corpus repo(s) and {changed} hold-out repo(s) differ under the `refactor` label")
-    print(render(f, labels, args.show), end="")
-    return 1 if any(f.failed.values()) else 0
+    judge_refactor(changed, labels, f)
+    micro_ok, micro = _micro(args.micro_rc, labels)
+    print(f"labels: {', '.join(sorted(labels)) or 'none'}; a refactor by {why or 'nothing'}\n")
+    print(render(f, labels, args.show) + micro, end="")
+    return 0 if micro_ok and not any(f.failed.values()) else 1
 
 
 if __name__ == "__main__":

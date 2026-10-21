@@ -253,7 +253,7 @@ class FileExtractor:
         self.symbols: list[SymbolInfo] = []
         self.calls: list[CallInfo] = []
         self.imports: list[ImportInfo] = []
-        self.facts: dict = {}                          # LanguageSupport.file_facts (Go: struct fields, import aliases)
+        self.facts: object = {}                        # LanguageSupport.file_facts (Go: struct fields, import aliases)
         self.namespaces: list[str] = []                # namespaces declared in this file (C#)
         self.file_namespace: str | None = None         # file-scoped namespace — prefixes everything (C# `namespace X;`)
         self.seen_ids: set[str] = set()
