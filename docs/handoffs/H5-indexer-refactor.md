@@ -367,15 +367,24 @@ passes.
 | `s.F`, a direct field of the package's struct | typed | typed | guard `field` |
 | `h = &T{}`, a plain assignment | — | typed | guard `assignment` |
 | a block's local that shadows a parameter | the parameter's type | the local's | guard (scanner), xfail (resolver) `block-shadows-a-parameter` |
+| a block's local that has gone out of scope at the use | the parameter's type | the block's local | guard (resolver), xfail (scanner) `a-block-local-out-of-scope` |
+| `h, err := h.Copy()`, a `:=` that only assigns a parameter again | the parameter's type | — | guard (resolver), xfail (scanner) `a-redeclaration-keeps-a-parameters-type` |
+| the same `:=` after `h := &T{}` in its block | the call's result | — | xfail (both) `a-redeclaration-keeps-its-type` |
+| `h = h.With(..)`, a plain assignment to a parameter | the parameter's type | — | guard (resolver), xfail (scanner) `a-plain-assignment-keeps-the-type` |
 | a closure inside a closure | one function out only | every function out | guard (scanner), xfail (resolver) `closure-in-a-closure` |
 | a closure's local of the same name, before the use | read as the function's | kept inside | xfail (resolver) `a-closure-keeps-its-locals` |
+| `h := T{}` without a pointer, and `h := &T[X]{}` of a generic type | typed | typed | guards `value-literal`, `generic-literal` / `test_a_generic_type_reaches_its_method` |
+| `var h = &T{}`, a `var` with a value | — | typed | guard (scanner), xfail (resolver) `var-with-a-value` |
 | `h := pkg.New()` | the constructor's declared result | — | xfail (scanner) `constructor-result` |
+| `h, err := pkg.New()` | its first declared result | — | guard (resolver), xfail (scanner) `constructor-of-two-results` |
+| `var h = pkg.New()` | — | — | xfail (both) `var-with-a-constructor`: what the two rows above give together |
 | `var h T` | typed | — | guard (resolver), xfail (scanner) `var-declaration` |
 | a named result | typed | — | guard (resolver), xfail (scanner) `named-result` |
 | a field promoted from an embedded struct | typed, 4 levels deep | — | xfail (scanner) `promoted-field` |
 | a field of another package's struct | typed | — | xfail (scanner) `field-of-another-package` |
 | a struct declared in two files of the package (build tags) | the first file that declares it | any file whose struct has the field | guard (scanner), xfail (resolver) `a_struct_declared_in_two_files` / `a_field_of_a_struct_declared_in_two_files` |
 | a field's type under the alias of the struct's own file | resolved in that file | resolved with the scanned file's imports | xfail (scanner) `test_a_field_type_under_the_alias_of_the_file_that_declares_it` |
+| a package in a directory whose name has a dot (`web.handlers/`) | finds none of its files, so none of its structs | typed, by the directory's path | guard (scanner) `test_a_package_in_a_directory_with_a_dot`, xfail (resolver) `test_a_field_of_a_package_in_a_directory_with_a_dot` |
 
 On the scanner's side, each xfail is a route that loses its group's prefix (`GET /users` for `GET /api/users`). On the
 resolver's side, each is a `CALLS` edge to the wrong method, or one found by name instead of by type. The two answers
@@ -383,13 +392,18 @@ also write a type differently: the resolver's is normalized (`*pkg.T` and `[]T` 
 is the text as written. A plain assignment of another type to a variable that a `var` declared with an interface type
 is left out on purpose: which method it reaches is not a fact the declaration states.
 
+Neither side reads a type assertion (`h := x.(*T)`), a type switch, a `range` variable or a package-level variable.
+Those are left out of step 5: each would be a rule of its own, with its own cycle, and here every change has to come
+from a case of the table.
+
 ### Go's change of behavior
 
 One answer, with Go's own rule: **a variable's type is the one its declaration gives it**, from the nearest
 declaration in scope before the use, from the innermost block and function out. A receiver, a parameter and a named
 result declare a type, and so do `var x T`, `x := T{}` or `&T{}`, and `x := pkg.New()` when `New` declares its result.
 A plain assignment never changes a variable's type, so it types nothing: the guard `assignment` passes through its
-`var`.
+`var`. Nor does a `:=` that names a variable its own block already declares, or a parameter at the top of the
+function's body: Go only assigns that variable again.
 
 - **The boundary with SCIP stays where the guide puts it** (`indexer-evolution.md` §8): only a declared type counts.
   A function's result counts when its signature declares it, never by following its `return`s. The scanner does not
@@ -401,9 +415,9 @@ A plain assignment never changes a variable's type, so it types nothing: the gua
   its answer (ADR-005, ADR-006). A field gets the whole answer (H5-D11): every file that declares the struct, the
   imports of the file that declares it, promoted fields and other packages' structs. `PackageContext.file_facts`, which
   only the scanner's field lookup reads, goes away.
-- **The cases first.** Before any code, probes add guards and xfails for the forms the table does not hold yet:
-  `var x = expr`, a `range` variable, a type switch and a type assertion, `h, err := pkg.New()` on the scanner's side,
-  `T{}` without a pointer, a generic `T[X]{}` and a package-level variable.
+- **The cases first.** Before any code, probes tried the forms the table did not hold: `var x = expr`, a `range`
+  variable, a type switch and a type assertion, `h, err := pkg.New()`, `T{}` without a pointer, a generic `T[X]{}` and
+  a package-level variable. The ones a side reads are in the table now, and the ones neither reads are left out.
 - **Judged, not identical.**
   - The corpus goes through the guide's cycle, with the expected lists in commits of their own.
   - The micro set is judged by case (H5-D14), and the hold-out is read only in aggregate (H5-D13).

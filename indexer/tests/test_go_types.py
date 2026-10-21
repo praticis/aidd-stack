@@ -19,6 +19,12 @@ type Handlers struct{}
 
 func New() *Handlers { return &Handlers{} }
 
+func NewE() (*Handlers, error) { return &Handlers{}, nil }
+
+func (h *Handlers) With(prefix string) *Handlers { return h }
+
+func (h *Handlers) Copy() (*Handlers, error) { return h, nil }
+
 func (h *Handlers) Register(g *gin.RouterGroup) {
 	g.GET("/users", h.list)
 }
@@ -66,10 +72,29 @@ ROUTES = [
                  "\th = &handlers.Handlers{}\n\th.Register(v1)\n}\n", id="assignment"),
     pytest.param("func wire(h *other.T, v1 *gin.RouterGroup) {\n\tif true {\n\t\th := &handlers.Handlers{}\n"
                  "\t\th.Register(v1)\n\t}\n}\n", id="block-shadows-a-parameter"),
+    pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\tif true {\n\t\th := &other.T{}\n\t\t_ = h\n"
+                 "\t}\n\th.Register(v1)\n}\n", id="a-block-local-out-of-scope",
+                 marks=_xfail("reads a block's local where the block has ended")),
+    pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\th, err := h.Copy()\n\t_ = err\n"
+                 "\th.Register(v1)\n}\n", id="a-redeclaration-keeps-a-parameters-type",
+                 marks=_xfail("reads a `:=` that only assigns a parameter again as a declaration")),
+    pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\th, err := h.Copy()\n"
+                 "\t_ = err\n\th.Register(v1)\n}\n", id="a-redeclaration-keeps-its-type",
+                 marks=_xfail("reads a `:=` that only assigns a local again as a declaration")),
+    pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\th = h.With(\"/v\")\n\th.Register(v1)\n}\n",
+                 id="a-plain-assignment-keeps-the-type", marks=_xfail("types a variable by a plain assignment")),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\tfunc() {\n"
                  "\t\tfunc() {\n\t\t\th.Register(v1)\n\t\t}()\n\t}()\n}\n", id="closure-in-a-closure"),
+    pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := handlers.Handlers{}\n\th.Register(v1)\n}\n",
+                 id="value-literal"),
+    pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h = &handlers.Handlers{}\n\th.Register(v1)\n}\n",
+                 id="var-with-a-value"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := handlers.New()\n\th.Register(v1)\n}\n",
                  id="constructor-result", marks=_xfail("does not type a local by its constructor's declared result")),
+    pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th, _ := handlers.NewE()\n\th.Register(v1)\n}\n",
+                 id="constructor-of-two-results", marks=_xfail("does not type a local by its constructor's declared result")),
+    pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h = handlers.New()\n\th.Register(v1)\n}\n",
+                 id="var-with-a-constructor", marks=_xfail("does not type a local by its constructor's declared result")),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h handlers.Handlers\n\th.Register(v1)\n}\n",
                  id="var-declaration", marks=_xfail("does not type a `var` declared without a value")),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) (h *handlers.Handlers) {\n\th.Register(v1)\n"
@@ -115,6 +140,23 @@ def test_a_field_type_under_the_alias_of_the_file_that_declares_it(tmp_path):
     assert _routes(tmp_path, wire, {"server.go": server}) == {("GET", "/api/users")}
 
 
+def test_a_generic_type_reaches_its_method(tmp_path):
+    box = ('package handlers\n\nimport "github.com/gin-gonic/gin"\n\ntype Box[T any] struct{}\n\n'
+           'func (b *Box[T]) Register(g *gin.RouterGroup) {\n\tg.GET("/boxes", b.list)\n}\n\n'
+           'func (b *Box[T]) list(c *gin.Context) {}\n')
+    wire = "func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Box[int]{}\n\th.Register(v1)\n}\n"
+    assert _routes(tmp_path, wire, {"handlers/box.go": box}) == {("GET", "/api/boxes"), ("GET", "/users")}
+
+
+def test_a_package_in_a_directory_with_a_dot(tmp_path):
+    main = MAIN.replace('"example.com/x/handlers"', 'handlers "example.com/x/web.handlers"')
+    wire = "func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\th.Register(v1)\n}\n"
+    _write(tmp_path, {"go.mod": GOMOD, "web.handlers/handlers.go": HANDLERS, "app/app.go": APP.replace(
+        '"example.com/x/handlers"', 'handlers "example.com/x/web.handlers"'), "other/other.go": OTHER, "main.go": main % wire})
+    res, _ = _extract(tmp_path)
+    assert {(e.method, e.path) for e in res.endpoints} == {("GET", "/api/users")}
+
+
 def test_a_struct_declared_in_two_files_of_the_package(tmp_path):
     linux = "//go:build linux\n\npackage main\n\ntype Server struct{ other int }\n"
     other = ('//go:build !linux\n\npackage main\n\nimport "example.com/x/handlers"\n\n'
@@ -145,12 +187,30 @@ def _resolver_xfail(why: str):
 CALLS = [
     pytest.param("func f() {\n\tvar x B\n\tx.Run()\n}\n", "B.Run", id="var-declaration"),
     pytest.param("func f() (x *B) {\n\tx.Run()\n\treturn\n}\n", "B.Run", id="named-result"),
+    pytest.param("func f() {\n\tx := B{}\n\tx.Run()\n}\n", "B.Run", id="value-literal"),
+    pytest.param("type G[T any] struct{}\n\nfunc (g *G[T]) Run() {}\n\nfunc f() {\n\tx := &G[int]{}\n\tx.Run()\n}\n",
+                 "G.Run", id="generic-literal"),
+    pytest.param("func newB() (*B, error) { return &B{}, nil }\n\nfunc f() {\n\tx, _ := newB()\n\tx.Run()\n}\n", "B.Run",
+                 id="constructor-of-two-results"),
+    pytest.param("func f() {\n\tvar x = &B{}\n\tx.Run()\n}\n", "B.Run", id="var-with-a-value",
+                 marks=_resolver_xfail("does not type a `var` declared with a value")),
+    pytest.param("func newB() *B { return &B{} }\n\nfunc f() {\n\tvar x = newB()\n\tx.Run()\n}\n", "B.Run",
+                 id="var-with-a-constructor", marks=_resolver_xfail("does not type a `var` declared with a value")),
     pytest.param("func f() {\n\tvar x B\n\tfunc() {\n\t\tx := &A{}\n\t\t_ = x\n\t}()\n\tx.Run()\n}\n", "B.Run",
                  id="a-closure-keeps-its-locals", marks=_resolver_xfail("reads a closure's locals as the function's")),
     pytest.param("func f(x *A) {\n\tif true {\n\t\tx := &B{}\n\t\tx.Run()\n\t}\n}\n", "B.Run",
                  id="block-shadows-a-parameter", marks=_resolver_xfail("prefers a parameter to a local that shadows it")),
+    pytest.param("func f(x *A) {\n\tif true {\n\t\tx := &B{}\n\t\t_ = x\n\t}\n\tx.Run()\n}\n", "A.Run",
+                 id="a-block-local-out-of-scope"),
     pytest.param("func f(x *A) {\n\tfunc() {\n\t\tfunc() {\n\t\t\tx.Run()\n\t\t}()\n\t}()\n}\n", "A.Run",
                  id="closure-in-a-closure", marks=_resolver_xfail("looks one function out, not every one")),
+    pytest.param("func (a *A) copy() (*A, error) { return a, nil }\n\nfunc f(x *A) {\n\tx, err := x.copy()\n\t_ = err\n"
+                 "\tx.Run()\n}\n", "A.Run", id="a-redeclaration-keeps-a-parameters-type"),
+    pytest.param("func (a *A) copy() (*A, error) { return a, nil }\n\nfunc f() {\n\tx := &A{}\n\tx, err := x.copy()\n"
+                 "\t_ = err\n\tx.Run()\n}\n", "A.Run", id="a-redeclaration-keeps-its-type",
+                 marks=_resolver_xfail("reads a `:=` that only assigns a local again as a declaration")),
+    pytest.param("func (a *A) self() *A { return a }\n\nfunc f(x *A) {\n\tx = x.self()\n\tx.Run()\n}\n", "A.Run",
+                 id="a-plain-assignment-keeps-the-type"),
 ]
 
 
@@ -163,13 +223,25 @@ def _calls_of_f(root, files: dict[str, str]) -> set[tuple[str, str]]:
 
 @pytest.mark.parametrize("body,callee", CALLS)
 def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, body, callee):
-    assert _calls_of_f(tmp_path, {"f.go": "package main\n\n" + body}) == {(callee, "receiver-type")}
+    calls = _calls_of_f(tmp_path, {"f.go": "package main\n\n" + body})
+    assert {c for c in calls if c[0].endswith(".Run")} == {(callee, "receiver-type")}
 
 
 def test_a_hash_in_the_text_of_a_call_is_no_result_number(tmp_path):
     f = ('package main\n\nfunc (a *A) Self() *A { return a }\n\nfunc find(sel string) *A { return &A{} }\n\n'
          'func f() {\n\tx := find("#id").Self()\n\tx.Run()\n}\n')
     assert ("A.Run", "receiver-type") not in _calls_of_f(tmp_path, {"f.go": f})
+
+
+@_resolver_xfail("finds no file of a package whose directory has a dot, so it reads none of its structs")
+def test_a_field_of_a_package_in_a_directory_with_a_dot(tmp_path):
+    _write(tmp_path, {"go.mod": GOMOD, "types.go": TYPES,
+                      "api.v1/f.go": "package apiv1\n\ntype A struct{}\n\nfunc (a *A) Run() {}\n\ntype B struct{}\n\n"
+                                     "func (b *B) Run() {}\n\ntype S struct{ x *B }\n\nfunc f(s *S) {\n\ts.x.Run()\n}\n"})
+    res, rv = _extract(tmp_path)
+    names = {s.id: s.qualified_name for s in res.symbols}
+    calls = {(names[c.callee_id], c.strategy) for c in rv.calls if names.get(c.caller_id) == "api.v1.f"}
+    assert calls == {("api.v1.B.Run", "receiver-type")}
 
 
 @_resolver_xfail("reads a struct's fields in the first file that declares it, not in the one that has the field")
