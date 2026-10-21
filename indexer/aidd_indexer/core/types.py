@@ -49,14 +49,16 @@ class TypeIndex:
         """The type that declares `owner`'s method `name`: `owner` itself, or a type it embeds or derives from."""
         return UNANSWERED
 
-    def bases(self, of: TypeRef) -> list[TypeRef] | Unknown:
+    def bases(self, of: TypeRef) -> list[TypeRef | Unknown] | Unknown:
+        """The types `of` derives from or embeds; one the repo does not declare is `Unknown`."""
         return UNANSWERED
 
     def implementers(self, interface: TypeRef) -> list[TypeRef] | Unknown:
         return UNANSWERED
 
-    def return_type(self, function: str, file: str) -> TypeRef | Unknown:
-        """The declared result of the function `function` (`pkg.New`), called from the file at path `file`."""
+    def return_type(self, function: str, file: str, result: int = 0) -> TypeRef | Unknown:
+        """The declared type of result number `result` of the function `function` (`pkg.New`), called from the file at
+        path `file`."""
         return UNANSWERED
 
 

@@ -11,25 +11,16 @@ from pathlib import Path, PurePosixPath
 from tree_sitter import Node
 
 from ...core import ids
-from ...core.config import is_test_path
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
+from ...core.types import Field, RepoTypes, TypeRef, Unknown
 from ...tree import NodeCache
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
 from .package_facts import read_package_facts
 from .type_facts import TYPE_NODES, GoTypes, import_aliases, receiver_type, type_facts, type_text
+from .type_index import DEPTH, GoTypeIndex, module_paths
 from .http import GoScanner
 
 HERE = Path(__file__).parent
-
-
-def _go_module_path(root: Path, module: ModuleInfo) -> str | None:
-    gm = root / module.path / "go.mod" if module.path else root / "go.mod"
-    if not gm.exists():
-        return None
-    for line in gm.read_text(encoding="utf-8", errors="replace").splitlines():
-        if line.startswith("module "):
-            return line.split(None, 1)[1].strip()
-    return None
 
 
 _FUNC_NODES = ("function_declaration", "method_declaration", "func_literal")
@@ -94,6 +85,15 @@ def _short_var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
 
 
 _DECLARATIONS = NodeCache(_declarations)
+
+
+def _ref(qualified_type: str) -> TypeRef:
+    package, _, name = qualified_type.rpartition(".")
+    return TypeRef(package, name)
+
+
+def _qualified(t: TypeRef) -> str:
+    return f"{t.package}.{t.name}" if t.package else t.name
 
 
 _GO_MODULE_LINE = re.compile(r"^module\s+(\S+)", re.M)
@@ -205,80 +205,29 @@ class GoSupport(LanguageSupport):
                 typ = _declared_type(base, outer, src, call.start_byte)
         return (typ, tuple(chain)) if typ else None
 
-    def _package_prefix(self, ctx: ResolveContext, file: FileInfo, alias: str | None) -> str | None:
-        """Qualified-name prefix (dotted directory) of a type reference: the file's own package when
-        unqualified, else the package the alias imports (only modules of this repo resolve)."""
-        if alias is None:
-            d = str(PurePosixPath(file.path).parent)
-            return "" if d == "." else d.replace("/", ".")
-        spec = GoTypes.of(ctx.facts.get(file.id)).imports.get(alias)
-        if not spec:
-            return None
-        for mp, m in ctx.extra.get("go_modules", ()):
-            if spec == mp or spec.startswith(mp + "/"):
-                rel = spec[len(mp):].strip("/")
-                pkg_dir = "/".join(p for p in (m.path, rel) if p)
-                return pkg_dir.replace("/", ".")
-        return None
+    def type_index(self, ctx: ResolveContext) -> GoTypeIndex:
+        return GoTypeIndex(ctx)
 
-    def _files_in(self, ctx: ResolveContext, prefix: str) -> list[FileInfo]:
-        """Go files of the package whose dotted directory is `prefix` ("" = repo root)."""
-        by_dir = ctx.extra.get("go_files_by_dir")
-        if by_dir is None:
-            # built once: every typed receiver of every call asks, and a scan per ask is quadratic in the repo
-            by_dir = ctx.extra["go_files_by_dir"] = {}
-            for f in ctx.files_by_path.values():
-                if f.language == self.id:
-                    by_dir.setdefault(str(PurePosixPath(f.path).parent), []).append(f)
-        return by_dir.get(prefix.replace(".", "/") or ".", [])
-
-    def _resolve_type(self, ctx: ResolveContext, file: FileInfo, text: str) -> tuple[str, str] | None:
-        """`pw.Policy` as written in `file` → (package prefix, TypeName)."""
-        if text.startswith("call:"):
-            fn, _, idx = text[5:].partition("#")
-            alias, _, fname = fn.rpartition(".")
-            prefix = self._package_prefix(ctx, file, alias or None)
-            if prefix is None:
-                return None
-            for f in self._files_in(ctx, prefix):
-                rets = GoTypes.of(ctx.facts.get(f.id)).funcs.get(fname)
-                if rets:
-                    i = int(idx) if idx else 0
-                    return self._resolve_type(ctx, f, rets[i]) if i < len(rets) and rets[i] else None
-            return None
-        alias, _, name = text.rpartition(".")
-        prefix = self._package_prefix(ctx, file, alias or None)
-        return (prefix, name) if prefix is not None else None
-
-    def _field_type(self, ctx: ResolveContext, owner: tuple[str, str], field: str, depth: int) -> tuple[str, str] | None:
-        """Type of `owner.field`, looking through embedded structs (promoted fields) up to 4 levels."""
-        if depth > 4:
-            return None
-        prefix, tname = owner
-        for f in self._files_in(ctx, prefix):
-            st = GoTypes.of(ctx.facts.get(f.id)).structs.get(tname)
-            if st is None:
-                continue
-            if field in st.fields:
-                return self._resolve_type(ctx, f, st.fields[field])
-            for emb in st.embeds:
-                inner = self._resolve_type(ctx, f, emb)
-                hit = self._field_type(ctx, inner, field, depth + 1) if inner else None
-                if hit:
-                    return hit
-            return None
-        return None
+    def _types(self, ctx: ResolveContext) -> GoTypeIndex:
+        """The repo's Go type index: the one the HTTP pass shares, or one over this context."""
+        if ctx.types is None:
+            ctx.types = RepoTypes(ctx)
+        return ctx.types.of(self.id)
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
-        cur = self._resolve_type(ctx, file, receiver_type)
-        for field in path:
-            if cur is None:
+        types = self._types(ctx)
+        if receiver_type.startswith("call:"):                   # `x := pkg.New()`, `#i` for one of several results
+            fn, _, idx = receiver_type[5:].partition("#")
+            # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
+            cur = types.return_type(fn, file.path, int(idx or 0)) if idx.isdecimal() or not idx else None
+        else:
+            cur = types.type_named(receiver_type, file.path)
+        for name in path:
+            if not isinstance(cur, TypeRef):
                 return None
-            cur = self._field_type(ctx, cur, field, depth=0)
-        if cur is None:
-            return None
-        prefix, tname = cur
-        return f"{prefix}.{tname}" if prefix else tname
+            found = types.field(cur, name)
+            cur = found.type if isinstance(found, Field) else found
+        return _qualified(cur) if isinstance(cur, TypeRef) else None
 
     # ---- resolution
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
@@ -289,12 +238,7 @@ class GoSupport(LanguageSupport):
         return names, deps
 
     def resolve_setup(self, ctx: ResolveContext) -> None:
-        # module paths from go.mod, longest first
-        ctx.extra["go_modules"] = sorted(
-            ((mp, m) for m in ctx.modules_by_path.values()
-             if m.kind == "go-module" and (mp := _go_module_path(ctx.root, m))),
-            key=lambda t: -len(t[0]),
-        )
+        ctx.extra["go_modules"] = module_paths(ctx)
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
         for mp, m in ctx.extra.get("go_modules", ()):
@@ -308,75 +252,22 @@ class GoSupport(LanguageSupport):
         name = spec if stdlib else "/".join(spec.split("/")[:3])
         return (pkg("go", name, stdlib), "Package")
 
-    def _interface_methods(self, ctx: ResolveContext, owner: tuple[str, str], depth: int = 0) -> set[str] | None:
-        """Every method an interface of the repo requires, embedded interfaces included; None when it
-        is not an interface of the repo, embeds one from outside (`io.Reader`: its methods are unknown)
-        or is a type constraint."""
-        if depth > 4:
-            return None
-        prefix, name = owner
-        for f in self._files_in(ctx, prefix):
-            iface = GoTypes.of(ctx.facts.get(f.id)).interfaces.get(name)
-            if iface is None:
-                continue
-            if iface.embeds is None:
-                return None
-            out = set(iface.methods)
-            for emb in iface.embeds:
-                inner = self._resolve_type(ctx, f, emb)
-                more = self._interface_methods(ctx, inner, depth + 1) if inner else None
-                if more is None:
-                    return None
-                out |= more
-            return out
-        return None
-
-    def has_external_base(self, ctx: ResolveContext, qualified_type: str, depth: int = 0) -> bool:
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
-        if depth > 4:
-            return False
-        prefix, _, name = qualified_type.rpartition(".")
-        for f in self._files_in(ctx, prefix):
-            facts = GoTypes.of(ctx.facts.get(f.id))
-            st, iface = facts.structs.get(name), facts.interfaces.get(name)
-            if st is None and iface is None:
-                continue
-            embedded = st.embeds if st is not None else iface.embeds or ()
-            for emb in embedded:
-                inner = self._resolve_type(ctx, f, emb)
-                if inner is None or not any(self._files_in(ctx, inner[0])):
-                    return True
-                if self.has_external_base(ctx, f"{inner[0]}.{inner[1]}" if inner[0] else inner[1], depth + 1):
-                    return True
-            return False
-        return False
+        return self._external_base(self._types(ctx), _ref(qualified_type), 0)
+
+    def _external_base(self, types: GoTypeIndex, of: TypeRef, depth: int) -> bool:
+        bases = types.bases(of) if depth <= DEPTH else []
+        return not isinstance(bases, Unknown) and any(
+            isinstance(b, Unknown) or self._external_base(types, b, depth + 1) for b in bases)
 
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
-        cache = ctx.extra.setdefault("go_impl", {})
-        if qualified_type not in cache:
-            prefix, _, name = qualified_type.rpartition(".")
-            needed = self._interface_methods(ctx, (prefix, name))
-            impls: set[str] = set()
-            if needed:
-                impls = {f"{p}.{t}" if p else t for (p, t), have in self._method_sets(ctx).items() if needed <= have}
-            cache[qualified_type] = (needed or set(), next(iter(impls)) if len(impls) == 1 else None)
-        needed, impl = cache[qualified_type]
-        return impl if method in needed else None
-
-    def _method_sets(self, ctx: ResolveContext) -> dict[tuple[str, str], set[str]]:
-        """(package prefix, type) → the methods production code declares on it, built once for every interface."""
-        sets = ctx.extra.get("go_method_sets")
-        if sets is None:
-            sets = ctx.extra["go_method_sets"] = {}
-            for f in ctx.files_by_path.values():
-                if f.language != self.id or is_test_path(f.path):     # fakes and mocks implement it too: not what runs
-                    continue
-                d = str(PurePosixPath(f.path).parent)
-                pfx = "" if d == "." else d.replace("/", ".")
-                for recv, names in GoTypes.of(ctx.facts.get(f.id)).methods.items():
-                    sets.setdefault((pfx, recv), set()).update(names)
-        return sets
+        types, interface = self._types(ctx), _ref(qualified_type)
+        found = types.implementers(interface)
+        if isinstance(found, Unknown) or len(found) != 1 or isinstance(types.method(interface, method), Unknown):
+            return None
+        return _qualified(found[0])
 
     def link_symbols(self, symbols: list[SymbolInfo], files_by_id: dict[str, FileInfo]) -> None:
         """Methods → receiver struct as parent (`pkg.Type.Method` → `pkg.Type`)."""

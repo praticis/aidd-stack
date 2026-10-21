@@ -166,6 +166,12 @@ def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, body, callee):
     assert _calls_of_f(tmp_path, {"f.go": "package main\n\n" + body}) == {(callee, "receiver-type")}
 
 
+def test_a_hash_in_the_text_of_a_call_is_no_result_number(tmp_path):
+    f = ('package main\n\nfunc (a *A) Self() *A { return a }\n\nfunc find(sel string) *A { return &A{} }\n\n'
+         'func f() {\n\tx := find("#id").Self()\n\tx.Run()\n}\n')
+    assert ("A.Run", "receiver-type") not in _calls_of_f(tmp_path, {"f.go": f})
+
+
 @_resolver_xfail("reads a struct's fields in the first file that declares it, not in the one that has the field")
 def test_a_field_of_a_struct_declared_in_two_files(tmp_path):
     linux = "//go:build linux\n\npackage main\n\ntype S struct{ other int }\n"
