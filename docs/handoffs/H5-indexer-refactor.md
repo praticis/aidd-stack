@@ -316,7 +316,9 @@ first slice). H5's code commits are `refactor:`, so its PRs are read as refactor
    - TS: ghost, outline.
 
    The HTTP corpus does not run the resolver, so items 2 and 3 cannot see a change to `CALLS`;
-5. the step's time, measured alone, no worse than the previous one, unless justified.
+5. the step's time, measured alone, no worse than the previous one, unless justified;
+6. **the shape no worse:** `indexer/scripts/shape.py --against main` finds nothing new or grown over a target (in CI
+   too, H5-D9).
 
 A difference in the corpus is a defect of the step, not a gain. If the refactor reveals a real bug, it is recorded,
 fixed in a separate commit, with a fixture case, and goes into the baseline by explicit decision.
@@ -344,7 +346,12 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
 - **H5-D2, the catalog is YAML** (architecture, item 6), with a validated schema and a test, in the same format the
   conventions are already written in.
 - **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
-  intent is for it to become blocking; the author turns it on, when the whole code meets the targets.
+  intent is for it to become blocking; the author turns it on, when the whole code meets the targets. Amended by
+  H5-D9.
+- **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
+  above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
+  `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit
+  grew and the MCP split added two functions at complexity 12, and nothing flagged them.
 - **H5-D4, a general review of the comments** (architecture, item 11; step 10): only what is strictly pertinent
   stays, with no reference to docs, because the docs are still going to be reorganized, and with no project name.
   The private names that were in the docs (a service in the ROADMAP log, an environment variable in

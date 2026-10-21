@@ -36,6 +36,8 @@
 - **Active handoffs:** H3 (AI dev efficiency), H4 (public docs and the indexer in its own repo), H4.1 (the
   contributor path), H5, H6 and H7. Closed: H1 and H2.
 - **Candidates:**
+  - a handoff of its own on code quality gates, which the author asked for on 2026-10-21. Until then the shape ratchet
+    holds (H5-D9);
   - `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
   - re-run the .NET Q4 with dispatch.
 - **Non-blocking leftovers:**
@@ -515,7 +517,8 @@ observed ──► recurring ──► accepted ──────────�
   architecture — can run in parallel with H2b
 - [ ] P2 The indexer in its own repo: `filter-repo` with an audited history, a multi-architecture image on GHCR,
   `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
-  and a clean aidd-stack install with the published image. After the H2b merge
+  and a clean aidd-stack install with the published image; `cli.py` brought to the shape targets, the one exception
+  H5 left (H5-D6). After the H2b merge
 - [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
 - [ ] P3.1 The contributor path (H4.1, `docs/handoffs/H4.1-contributor-path.md`): `CONTRIBUTING.md`, playbooks per
   contribution type, the method explained, PR and issue templates, the method's checks in CI, and an acceptance test

@@ -37,7 +37,7 @@ H2 and F1.14 achieved from any PR, the author's included.
 | **Every diff item judged** | the cycle of a change | an item the classifier marks "to judge" has no verdict (H7-D2) |
 | **Cold equals warm** | H6, once the cache is in | a run with the cache gives a different result from one without it |
 | **Memory** | F1.13, H6 | a repo's peak memory grows past a tolerance set from H6's measured spread (H7-D4) |
-| Tests, hygiene, shape | they exist | as today; the shape report starts blocking when the author decides (H5-D3) |
+| Tests, hygiene, shape | they exist | as today. The shape has been a ratchet since 2026-10-21 (H5-D9): a function or a module over a target that is new or grew fails; full blocking comes when the author decides (H5-D3) |
 
 **The micro set** is the 12 repos of H5's protocol item 4:
 

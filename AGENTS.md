@@ -70,7 +70,8 @@ The full text is in the ROADMAP, under "Principles".
 - **Secrets never enter the index:** only the env var's name.
 - **Every phase closes with the golden questions passing.**
 - **Code shape:**
-  - complexity ≤ 9 per function (`ruff C901`) and modules of at most 300 lines;
+  - complexity ≤ 9 per function (`ruff C901`) and modules of at most 300 lines. What is still over a target may not
+    grow, and nothing new joins it: CI holds that ratchet (`indexer/scripts/shape.py --against main`);
   - comments say only why, with no reference to docs or plan items.
 - **No real tenant, client or private project name** in docs, code, tests or fixtures. The repo is public.
 
@@ -88,7 +89,7 @@ The full text is in the ROADMAP, under "Principles".
   - The HTTP corpus does not run the resolver, so a change to `CALLS` shows only here.
   - A refactor must give `0 repo(s) differ`. Any other difference is judged at the source, like a corpus diff.
 - **The gates, in CI on every PR that touches the indexer** (`.github/workflows/indexer.yml`):
-  - it runs the tests, the corpus, the hold-out and the micro set against `main`;
+  - it runs the tests, the corpus, the hold-out, the micro set and the code's shape against `main`;
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one
