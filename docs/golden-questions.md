@@ -332,3 +332,47 @@ fields, and `symbol_context` also in the order of its imports, the sixth round's
 On the same 4 snapshots as before, a dry-run counts more `CALLS` and `IMPORTS` than the graph holds; counted by the
 graph's merge keys, a call by its line and an import by its spec, they match on every snapshot.
 
+## Eighth round: validating PR #20 on a live install (2026-10-21, build `0.2.15+a3e96d849f09`)
+
+What changed since the seventh round: Go's change of behavior (PR #20). The resolver and the scanner get one answer
+for a local's declared type, with Go's own scoping, and three older gaps of the type service are closed: promoted
+methods, type parameters and a method's declared result (H5-D15). The graph changes on purpose, in Go's `CALLS` only.
+The validation had the seventh round's two phases, on the same 3 tenants and 10 snapshots:
+
+- **before the merge, read-only:** dry-runs of `main` and of the branch on each snapshot, at its sha. The 8 snapshots
+  in other languages are identical in every section. The 2 Go ones, both public repos, differ only in `CALLS`, and
+  each difference was judged at the source;
+- **after the merge and a reinstall from `main`:** the refresher re-indexed the 10 snapshots with no error, and the
+  next refresh re-indexed none.
+
+**The picture of the graph** is the same before and after, except for the two Go snapshots' `CALLS`, the build and
+one more `IndexRun` per snapshot. Counted by the graph's merge key (the caller, the callee and the line), the graph
+before holds `main`'s dry-run and the graph after holds the branch's, on every snapshot, so what changed in the graph
+is exactly what the dry-runs judged:
+
+- **go-food-delivery-microservices** (4,327 → 4,402 calls):
+  - 80 added: 44 `receiver-type` (among them methods embedded structs promote, as `Entity.Id`, and the configurators
+    typed by the result `Build()` declares), 27 `receiver-type-impl` (an interface's single implementation, as
+    `mongoProductRepository.GetAllProducts`) and 9 by name (values of a type parameter, found as untyped ones are);
+  - 26 keep their target and are now typed, from `same-module` or `unique-name`;
+  - 5 removed: three `app.Run()` calls that pointed at the method making them, and two calls on an interface, left
+    out by rule (H5-D15). `app.ResolveFunc` comes from the `contracts.Application` the configurator embeds, and
+    `rabbitmqProducer.PublishMessage` from the `producer.Producer` that `CreateProducer` declares. Each interface has
+    more than one implementation.
+- **go-vertical-slice-template** (528 calls on both sides): `app.Run()` and `app.RunTest()` pointed at the methods
+  making them, and now reach `application.Application`'s, the type `Build()` declares. Four calls on a logger keep
+  their target and become `receiver-type-impl`.
+
+**The 27 calls** give the same answers: 22 are byte for byte the same, and the other 5 differ only in their time and
+build fields. `symbol_context` now gives its imports in one order (PR #19), which closes the sixth round's finding.
+None of the 27 reads Go's `CALLS`, so the change was also read through the MCP: `who_calls` on go-vertical-slice's
+`Application.Run` answers `App.Run`, line 23, `receiver-type`.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
