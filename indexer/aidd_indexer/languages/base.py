@@ -45,6 +45,7 @@ class ResolveContext:
     namespaces: dict[str, list[str]]           # declared namespace -> declaring file ids (from `file_scope`)
     facts: dict[str, dict[str, Any]] = field(default_factory=dict)   # file id -> `file_facts()` of its language
     extra: dict[str, Any] = field(default_factory=dict)   # per-language scratch filled by `resolve_setup`
+    types: Any = None                          # the repo's type service, shared with the HTTP pass (`RepoTypes`)
 
     def file_at(self, rel: str) -> "FileInfo | None":
         return self.files_by_path.get(rel)
@@ -164,6 +165,11 @@ class LanguageSupport:
     # ---- resolution ---------------------------------------------------------------------
     def resolve_setup(self, ctx: ResolveContext) -> None:
         """Compute per-repo lookups once (Go: module paths from go.mod) into `ctx.extra`."""
+        return None
+
+    def type_index(self, ctx: ResolveContext) -> Any:
+        """The language's answers to the type service's questions (a `core.types.TypeIndex`), built from every file's
+        type facts in `ctx`; None for a language that answers none."""
         return None
 
     def resolve_import(self, ctx: ResolveContext, file: "FileInfo", spec: str, pkg: PackageFactory) -> tuple[str, str] | None:

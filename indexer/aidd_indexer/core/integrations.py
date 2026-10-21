@@ -18,12 +18,21 @@ from .. import languages
 from . import ids
 from .http_base import TEST_FILE, HttpResult, PackageContext, ScanPatterns, collect_constants, dir_of
 from .paths import path_key
+from .types import RepoTypes
 from .http_view import RepoView
 from .model import HttpEndpointInfo, ModuleInfo, RepoInfo
 
 
+def _shared(types: RepoTypes | None, repo: RepoInfo, extractors: list, modules: list[ModuleInfo] | None) -> RepoTypes:
+    """The type service the caller shares with its resolver, or one over these files when it shares none."""
+    if types is not None:
+        return types
+    return RepoTypes.of_files(repo.root, [fx.file for fx in extractors], modules or [],
+                              {fx.file.id: fx.facts for fx in extractors})
+
+
 def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | None" = None,
-                 modules: list[ModuleInfo] | None = None) -> HttpResult:
+                 modules: list[ModuleInfo] | None = None, types: RepoTypes | None = None) -> HttpResult:
     """`extractors` are FileExtractor objects (core/extract.py) after `.run()`; `patterns` is what the
     tenant's conventions add to the scanners (route registrars / client methods of an internal SDK); `modules`
     let an import be resolved to a package directory (Go)."""
@@ -39,7 +48,7 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
             for s in fx.symbols:
                 if s.kind in ("function", "method"):
                     ctx.functions_by_name.setdefault(s.name, []).append(s)
-    view = RepoView(repo, [fx.file for fx in extractors], modules, by_dir)
+    view = RepoView(repo, [fx.file for fx in extractors], modules, by_dir, _shared(types, repo, extractors, modules))
     for ctx in by_dir.values():
         ctx.view = view
     for fx in extractors:

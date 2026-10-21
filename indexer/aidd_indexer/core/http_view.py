@@ -16,12 +16,14 @@ from .model import FileInfo, ModuleInfo, RepoInfo
 if TYPE_CHECKING:
     from .http_base import PackageContext
     from .package_facts import PackageFacts
+    from .types import RepoTypes
 
 
 class RepoView:
     def __init__(self, repo: RepoInfo, files: list[FileInfo], modules: list[ModuleInfo] | None,
-                 contexts: dict[str, "PackageContext"]):
+                 contexts: dict[str, "PackageContext"], types: "RepoTypes | None" = None):
         self.contexts = contexts
+        self.types = types                      # the type service the resolver asks too
         self._repo, self._files, self._modules = repo, files, modules or []
         self._ctx: ResolveContext | None = None
         self._setup: set[str] = set()

@@ -160,6 +160,8 @@ class ExtractionResult:
     warnings: list[str] = field(default_factory=list)
     conventions: list[str] = field(default_factory=list)   # applied, as described (`dotnet-praticis[split]`)
     architecture: str | None = None                         # layout a convention detected (`split`)
+    # the type service the HTTP pass and the resolver share (`core.types.RepoTypes`); not part of the graph
+    types: object = field(default=None, repr=False, compare=False)
 
     def counts(self) -> dict[str, int]:
         return {
