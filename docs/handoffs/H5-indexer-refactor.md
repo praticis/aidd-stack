@@ -293,7 +293,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
-| 5 | `TypeIndex` (ADR-005), first its API in the core, then one language per commit: Go, C#, Python, TS (H5-D7). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
+| 5 | `TypeIndex` (ADR-005), first its API in the core, then one language at a time: Go, C#, Python, TS (H5-D7), each a refactor and then a change of behavior (H5-D10, "Step 5" below). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
 | 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
@@ -323,6 +323,45 @@ first slice). H5's code commits are `refactor:`, so its PRs are read as refactor
 A difference in the corpus is a defect of the step, not a gain. If the refactor reveals a real bug, it is recorded,
 fixed in a separate commit, with a fixture case, and goes into the baseline by explicit decision.
 
+## Step 5: one type answer, without losing what either side answers (H5-D10)
+
+Each language answers "what type does the code declare for this value" twice: the micro resolver types call
+receivers for `CALLS`, and the HTTP scanner follows a router into a method of a typed value. The two answers differ,
+and each side answers cases the other misses. One answer for both changes the graph on at least one side, so step 5
+goes in two PRs per language:
+
+1. **A refactor, with the graph identical.** The `TypeIndex` API and the language's typed type facts; the resolver asks
+   the `TypeIndex`, with PR #9's indexes inside it; the scanner reads fields through it but accepts only what it
+   accepts today.
+2. **A change of behavior, right after.** One answer inside a file for both sides, and the scanner taking the whole
+   answer for a field. Every difference below has its case. The corpus and the micro set are judged at the source
+   under `graph-change`, and the PR must gain the xfails and lose no guard.
+
+**Go**, in `indexer/tests/test_go_types.py`. A guard passes today; an xfail is strict, so it fails the suite once it
+passes.
+
+| Case | Resolver | Scanner | Test |
+|---|---|---|---|
+| `h := &T{}` | typed | typed | guard `composite-literal` |
+| `s.F`, a direct field of the package's struct | typed | typed | guard `field` |
+| `h = &T{}`, a plain assignment | — | typed | guard `assignment` |
+| a block's local that shadows a parameter | the parameter's type | the local's | guard (scanner), xfail (resolver) `block-shadows-a-parameter` |
+| a closure inside a closure | one function out only | every function out | guard (scanner), xfail (resolver) `closure-in-a-closure` |
+| a closure's local of the same name, before the use | read as the function's | kept inside | xfail (resolver) `a-closure-keeps-its-locals` |
+| `h := pkg.New()` | the constructor's declared result | — | xfail (scanner) `constructor-result` |
+| `var h T` | typed | — | guard (resolver), xfail (scanner) `var-declaration` |
+| a named result | typed | — | guard (resolver), xfail (scanner) `named-result` |
+| a field promoted from an embedded struct | typed, 4 levels deep | — | xfail (scanner) `promoted-field` |
+| a field of another package's struct | typed | — | xfail (scanner) `field-of-another-package` |
+| a struct declared in two files of the package (build tags) | the first file that declares it | any file whose struct has the field | guard (scanner), xfail (resolver) `a_struct_declared_in_two_files` / `a_field_of_a_struct_declared_in_two_files` |
+| a field's type under the alias of the struct's own file | resolved in that file | resolved with the scanned file's imports | xfail (scanner) `test_a_field_type_under_the_alias_of_the_file_that_declares_it` |
+
+On the scanner's side, each xfail is a route that loses its group's prefix (`GET /users` for `GET /api/users`). On the
+resolver's side, each is a `CALLS` edge to the wrong method, or one found by name instead of by type. The two answers
+also write a type differently: the resolver's is normalized (`*pkg.T` and `[]T` become `pkg.T` and `T`), the scanner's
+is the text as written. A plain assignment of another type to a variable that a `var` declared with an interface type
+is left out on purpose: which method it reaches is not a fact the declaration states.
+
 ## Decisions made (2026-10-18, by the author)
 
 - **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
@@ -348,6 +387,10 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
 - **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
   intent is for it to become blocking; the author turns it on, when the whole code meets the targets. Amended by
   H5-D9.
+- **H5-D10 (2026-10-21), step 5 goes in two PRs per language:** a refactor that leaves the graph identical, then a
+  change of behavior that makes the resolver and the scanner share one answer. The second must gain every xfail of
+  the language's type cases and lose no guard ("Step 5" above). The author asked for great care here: only real gains,
+  and nothing that exists today lost.
 - **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
   above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
   `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit

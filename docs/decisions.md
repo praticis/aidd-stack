@@ -69,7 +69,7 @@ decided by the author on 2026-10-19.
 | H4-D11 | `SCHEMA.md` and `schema.cypher` move to the indexer, which applies the schema. | The schema always matches the version of whoever writes. |
 | H4-D12 | SemVer, a `CHANGELOG.md` in the Keep a Changelog format, and the README pointing at a release. | Today `curl \| bash` gets any commit on `main`. |
 
-## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D9 on 2026-10-21)
+## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D10 on 2026-10-21)
 
 | # | Decision | Why |
 |---|---|---|
@@ -82,6 +82,7 @@ decided by the author on 2026-10-19.
 | H5-D7 | **Step 5 goes one language per commit: Go, C#, Python, TS,** after the `TypeIndex` API in the core. | Go has the clearest pair of type answers (the resolver's and the scanner's) and the measurement behind ADR-005; the portfolio's .NET-first order gives way to it here. |
 | H5-D8 | **PR #7 merges as a checkpoint** with the steps done so far (0–2, 4 and 7–9; 3 and 10 in part); steps 5, 6 and 12, the rest of 10 and 11 follow in new PRs. | The steps left are the largest: a smaller PR is easier to review and to validate live, a regression is easier to place, and the branch stops piling up rebases. |
 | H5-D9 | **A shape ratchet in CI:** a pull request fails when a function above complexity 9 or a module above 300 lines is new, or worse than at its base (`shape.py --against`, required through `gates`). What is over a target and does not grow passes; full blocking stays the author's call (H5-D3). | During H5's first part, seven modules already over the limit grew and the MCP split added two functions at complexity 12, and nothing flagged them. |
+| H5-D10 | **Step 5 goes in two PRs per language:** a refactor that leaves the graph identical (the `TypeIndex`, the typed facts, the resolver asking it), then a change of behavior where the resolver and the scanner share one answer, which must gain every xfail of the language's type cases and lose no guard. | The two answers differ both ways, so one answer changes the graph on at least one side; the author asked for great care, with only real gains and nothing lost. |
 
 ## H6: the extraction pipeline (H6-D1–D4 decided by the author on 2026-10-19, H6-D5–D6 on 2026-10-20)
 
