@@ -8,7 +8,7 @@ import re
 from tree_sitter import Node
 
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
-from ...core.http_expr import PREFIX_KEYWORDS
+from .package_facts import PREFIX_KEYWORDS, PyFacts
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 from .client_wrappers import PyClientWrappers, compose_wrapped_calls
 
@@ -22,7 +22,7 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
 
 class PyScanner(PyClientWrappers, BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
-    mount_rule = "py.mount"
+    mount_scope = "py"
 
     @classmethod
     def compose(cls, out, repo, view=None) -> None:
@@ -84,8 +84,8 @@ class PyScanner(PyClientWrappers, BaseScanner):
             self.group_prefix[self.group_key(name, n)] = prefix
 
     def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
-        """`UserAPIRouter(prefix="/recipes")` (mealie): a class of the repo whose bases reach the framework's router —
-        (that class, what the first `__init__` up the bases makes of the prefix: `http_expr._init_prefix`). The class
+        """`UserAPIRouter(prefix="/recipes")`: a class of the repo whose bases reach the framework's router —
+        (that class, what the first `__init__` up the bases makes of the prefix: `package_facts._init_prefix`). The class
         is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
         it, its own directory's, else the one class of that name in the repo."""
         head, _, cname = text(fn, self.src).rpartition(".")
@@ -101,7 +101,8 @@ class PyScanner(PyClientWrappers, BaseScanner):
         init, seen = None, set()
         while ctx is not None and cname not in seen and len(seen) < 6:
             seen.add(cname)
-            info = ctx.classes.get(cname)
+            classes = PyFacts.read(ctx).classes
+            info = classes.get(cname)
             if info is None:
                 return None
             bases, own = info
@@ -110,9 +111,9 @@ class PyScanner(PyClientWrappers, BaseScanner):
             if fw is not None:
                 return fw, init
             for b in bases:
-                there = ctx if b in ctx.classes else None
+                there = ctx if b in classes else None
                 if there is None and view is not None:
-                    named = [c for c in view.classes_named(b) if c.classes.get(b) is not None]
+                    named = [c for c in view.defining(PyFacts, "classes", b) if PyFacts.read(c).classes.get(b) is not None]
                     there = named[0] if len(named) == 1 else None
                 if there is not None:
                     ctx, cname = there, b
@@ -159,7 +160,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
                               router=recv)
 
     def _maybe_test_client(self, target: Node | None, value: Node | None) -> None:
-        """`TestClient(app)` / `app.test_client()` / Django's `Client()` (`from django.test import Client`, zulip's
+        """`TestClient(app)` / `app.test_client()` / Django's `Client()` (`from django.test import Client`, in
         development views): requests through it exercise this app, they are not outbound."""
         if target is None or value is None or value.type != "call":
             return
@@ -282,7 +283,7 @@ class PyScanner(PyClientWrappers, BaseScanner):
 
     # -- routers other files name: module variables, router parameters, returned routers ----------------------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:
-        """`from dispatch.tag.views import router as tag_router` → tag_router: ("dispatch.tag.views", "router");
+        """`from app.tag.views import router as tag_router` → tag_router: ("app.tag.views", "router");
         `from . import users` → users: (".", "users"); `import a.b as c` → c: ("a.b", None)."""
         out: dict[str, tuple[str, str | None]] = {}
         for n in walk(self.fx.tree.root_node):

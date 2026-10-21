@@ -1,4 +1,4 @@
-"""Convention registry and pipeline hook (ADR-003).
+"""Convention registry and pipeline hook.
 
 atlas.yaml (per tenant):
 

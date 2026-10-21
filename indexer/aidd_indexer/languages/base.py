@@ -1,4 +1,4 @@
-"""The contract every language module implements (ADR-003).
+"""The contract every language module implements.
 
 `core/` never asks "which language is this?" — it asks the registry for the `LanguageSupport`
 of a file and calls these hooks. A new language = a folder under `languages/` with a subclass,
@@ -27,23 +27,11 @@ from typing import TYPE_CHECKING, Any, Callable
 from tree_sitter import Node
 
 from ..core.dispatch import DispatchRule
+from ..tree import node_text, walk  # noqa: F401  the language modules import them from here
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
     from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
-
-
-def node_text(node: Node, src: bytes) -> str:
-    return src[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
-
-
-def walk(node: Node):
-    """Pre-order traversal."""
-    stack = [node]
-    while stack:
-        n = stack.pop()
-        yield n
-        stack.extend(reversed(n.children))
 
 
 @dataclass
@@ -133,6 +121,12 @@ class LanguageSupport:
     def file_scope(self, root: Node, src: bytes) -> tuple[list[str], str | None]:
         """(namespaces declared in the file, file-scoped namespace) — C# only for now."""
         return [], None
+
+    def package_facts(self, src: bytes) -> "Callable[[Node, bytes, Any, str], bool] | None":
+        """A reader of the language's own facts of a package (`PackageContext`), made per file. The constants pass
+        calls it on each node of the file first and skips the node when it answers True. None: the language has
+        none."""
+        return None
 
     def file_facts(self, root: Node, src: bytes) -> dict[str, Any]:
         """Per-file facts the resolver may need later (Go: struct field types, import aliases,

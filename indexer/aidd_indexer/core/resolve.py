@@ -1,4 +1,4 @@
-"""Name-based resolution inside one repo (v0 — SCIP may enrich this later, see ADR-002).
+"""Name-based resolution inside one repo (v0 — SCIP may enrich this later).
 
 Calls: candidate symbols with the callee's name, narrowed same-file → same-module → repo-unique.
 Imports: each file's `LanguageSupport.resolve_import` maps a spec to a File or Module node, or to

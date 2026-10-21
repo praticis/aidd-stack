@@ -18,8 +18,9 @@
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`.
 - **In progress:**
-  - H5 (`feature/h5-refactor`, draft PR #7): the safe steps are done and pass the gates as a refactor; the rest
-    (steps 4, 7, 5 and 6) is built toward H6's ADRs, now accepted;
+  - H5: its first part merges as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
+    as a refactor. Next, in new PRs built toward H6's ADRs: step 5 (the `TypeIndex`, Go first), step 6 (recognizers
+    and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -40,6 +41,8 @@
 - **Non-blocking leftovers:**
   - the `raw_path` of a call through a wrapper whose base ends in `/` comes out with a double slash (the normalized
     path is right);
+  - `symbol_context` sorts a file's imports by type and target only, so the imports of one namespace under different
+    specs come in any order (the sixth golden round);
   - a PAT with access to the tenant's org;
   - validation on WSL (SO14);
   - gaps from the code review feedback: Go `who_calls` across repos, messaging by event type.

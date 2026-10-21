@@ -13,12 +13,11 @@ from tree_sitter import Node
 from ...core.http_base import HttpResult, Pending, text, unwrap_arg, walk
 from ...core.http_nodes import CLASS_NODES, FUNCTION_SCOPES, member
 from ...core.http_scope import END
-from ...core.http_wrappers import FIELDS, PARAM, UNKNOWN, compose_wrapped_calls, continues_path, param_shape, verb_of
+from ...core.http_wrappers import (FIELDS, PARAM, UNKNOWN, ClassBases, WrappedCall, WrapperShape,
+                                   compose_wrapped_calls, continues_path, param_shape, verb_of)
 from ...core.paths import has_literal_segment, normalize_path, unquote
 
-WRAPPER = "ts.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
-                                   #   the verb's default)
-BASES = "ts.class-bases"           # fact: class → its base's name
+SCOPE = "ts"                       # the scope of the wrapper facts the core's machinery composes for TS/JS
 CLASS_FIELDS = ("public_field_definition", "field_definition")
 CLIENT_LIBRARIES = frozenset({"axios", "superagent", "ky", "got", "node-fetch", "ofetch", "undici", "cross-fetch",
                               "isomorphic-fetch", "wretch", "redaxios"})
@@ -35,7 +34,7 @@ class TsClientWrappers:
         base = ext.child_by_field_name("value") if ext is not None \
             else heritage.named_children[0] if heritage is not None and heritage.named_child_count else None
         if name is not None and base is not None and base.type in ("identifier", "member_expression"):
-            self.out.publish(BASES, text(name, self.src), (text(base, self.src).split(".")[-1],))
+            self.out.publish(text(name, self.src), ClassBases((text(base, self.src).split(".")[-1],)), SCOPE)
 
     def library_client(self, recv: str) -> bool:
         """`agent` of `import * as agent from 'superagent'`: a receiver that is an HTTP client library."""
@@ -62,9 +61,9 @@ class TsClientWrappers:
                                                options, fallback)
         i, before, after = shape
         before = base.rstrip("/") + "/" + before.lstrip("/") if base and before[:1] in ("", "/") else before
-        data = (i, before, after, verb.upper() if verb else None, vi, tuple(params), default)
+        data = WrapperShape(i, before, after, verb.upper() if verb else None, vi, tuple(params), default)
         for key in keys:
-            self.out.publish(WRAPPER, key, data)
+            self.out.publish(key, data, SCOPE)
         return True
 
     def _wrapper_verb(self, method: str | None, verb_node: Node | None, rest: list[Node], params: list[str],
@@ -187,7 +186,8 @@ class TsClientWrappers:
         values = tuple(self._value(unwrap_arg(a), params) for a in arg_nodes)
         if any(v not in (None, UNKNOWN) for v in values):
             item = self.call_info(n, None, "", text(fn, self.src))
-            self.out.pending.append(Pending(item, WRAPPER, (target, values, (), keys[0] if keys else None, tuple(params))))
+            call = WrappedCall(target, values, (), keys[0] if keys else None, tuple(params))
+            self.out.pending.append(Pending(item, call, SCOPE))
 
     def _value(self, a: Node, params: list[str]) -> str | tuple | None:
         """A verb, a literal path, the caller's parameter it is built around, an object's fields (also through a local:
@@ -261,7 +261,7 @@ def compose_wrapped_calls_ts(out: HttpResult) -> None:
     """The calls to the repo's wrappers; a call read as an outbound call at the wrapper's own path (`requests.get(..)`
     on a receiver named like a client) gives way to the wrapped one."""
     known = len(out.calls)
-    wrapped = {p.item.id for p in compose_wrapped_calls(out, WRAPPER, BASES)}
+    wrapped = {p.item.id for p in compose_wrapped_calls(out, SCOPE)}
     out.calls[:known] = [c for c in out.calls[:known] if c.id not in wrapped]
 
 

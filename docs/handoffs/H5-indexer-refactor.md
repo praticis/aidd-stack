@@ -9,7 +9,9 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-28`).
 >
-> **State (2026-10-19):** in progress, on the `feature/h5-refactor` branch.
+> **State (2026-10-21):** in progress. The first part merges as PR #7 (`feature/h5-refactor`), a checkpoint the
+> author decided on 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Steps 5, 6 and 12, the rest of 10
+> and 11 follow in new PRs, each a refactor under the gates and validated on a live install before its merge.
 >
 > - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
 >   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
@@ -19,16 +21,27 @@
 >   - **Step 3, in part:** a per-function declarations index for Go's declared type and C#'s locals (`NodeCache`).
 >     On vikunja, `walk` dropped to 18 %. The shared `FileIndex` was not done: keeping every node of a file weighs on
 >     memory (mattermost has 8 M nodes), and the design is to be decided with the author.
->   - **Step 4, in part:**
+>   - **Step 4:**
 >     - Go's, Python's and TS's package facts left the core (`languages/<lang>/package_facts.py`, the
 >       `LanguageSupport.package_facts` hook);
 >     - Go's `url.URL` and grpc-gateway went to `languages/go/paths.py`;
->     - no core decision tests the language's name any more.
+>     - no core decision tests the language's name any more;
+>     - **on 2026-10-20, the typed facts.** Each language's facts are a dataclass (`GoFacts`, `PyFacts`, `TsFacts`)
+>       whose fields each declare how two files' values join: one value or none, the last one, or a union
+>       (`core/package_facts.py`). The core's `PackageContext` holds them by key and no field of its own is a
+>       language's. Go's verb lists and its passthrough lookup left `core/http_expr.py`. A lookup across the repo
+>       is a question to the view (`RepoView.defining`; C#'s qualified constants by `RepoView.constant_values`),
+>       never a loop over the directories, and a test keeps the view the only code that walks them
+>       (`test_repo_view.py`). Tests keep the core free of a language's module or id (`test_core_neutral.py`).
 >
->     Still missing: the typed facts in `PackageContext` (the per-language fields) and `http_base`'s receiver
->     catalog, which is step 6.
->   - **Step 7, in part:** the client wrappers' facts and pending calls are `NamedTuple`s (`WrapperShape`,
->     `WrappedCall`), read by field. The other kinds of fact and of pending call are still missing.
+>     What the core still names is frameworks, in `http_base`'s receiver catalog and in examples: step 6's catalog.
+>   - **Step 7:** every fact a file publishes and every request it leaves pending is a `NamedTuple` of its
+>     language, read by field (`languages/<lang>/http_facts.py`; the mount and client-wrapper kinds the core's
+>     machinery shares live in the core). A fact is published and looked up by its type (`HttpResult.publish`,
+>     `facts_of`), and a pending item carries its request (`Pending.wait`, `HttpResult.waiting`). A shared kind adds
+>     its language's scope (`mount_scope`), so each language composes its own. No text key and no positional tuple is
+>     left between a scanner and its `compose`. `compose` as an ordered list of steps comes with step 6's
+>     `http/compose.py`.
 >   - **Step 8:** `core/matching.py`, the MCP split (`tools/list` byte for byte the same) and the Cypher tested
 >     against a real Neo4j (`scripts/mcp-it.sh`, 14 cases).
 >   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
@@ -41,9 +54,10 @@
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
->   - the rest of 4, and 7 (typed facts and `Pending`, serializable, with no tree node inside);
->   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1);
+>   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
+>     core, then Go, C#, Python and TS, one per commit (H5-D7);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
+>   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
 >   - 11 (docs).
 >
@@ -238,9 +252,9 @@ At the end of H5:
      warning during indexing, like the conventions;
    - the recognizers read the catalog. The conventions (F0.4.5), which are already YAML, extend the same catalog;
    - the `built_bundle` thresholds become named parameters.
-7. **Typed facts and pending calls.** Each fact is a registered dataclass (for example `FeGroup(name, prefix,
-   parent)`), and each language's `compose` is an ordered list of steps that consume typed facts. The text keys and
-   the positional tuples go away.
+7. **Typed facts and pending calls.** Each fact is a `NamedTuple` of its kind (for example `FeGroup(prefix,
+   parent)`, published under the group's name), and each language's `compose` is an ordered list of steps that
+   consume typed facts. The text keys and the positional tuples go away.
 8. **One path-matching rule.** A module (`core/matching.py`) with `path_key` and the case-sensitive or insensitive
    comparison per framework. The linker, the MCP and the corpus scorer use it.
 9. **The MCP split.**
@@ -279,16 +293,17 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
-| 5 | `TypeIndex`: one service for the micro resolver and HTTP; `struct_fields`/`_value_type`/`_router_class`/`_client_of`/`classes_named`/`_reaches_fast` start consulting it | a single implementation per language of "declared type"; `needs-resolver` is an answer of the service |
+| 5 | `TypeIndex` (ADR-005), first its API in the core, then one language per commit: Go, C#, Python, TS (H5-D7). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
 | 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
-| 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target (blocking turns on when the author decides, H5-D3) |
+| 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until P2 (H5-D5, H5-D6); blocking turns on when the author decides (H5-D3) |
+| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions and the MCP's tool groups | the shape report shows nothing off target but `cli.py` |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
-first slice). H5's code commits are `refactor:`, so its PR is read as a refactor, where any difference fails. Locally:
+first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Locally:
 `test.sh`, `corpus.sh`, `micro.sh` and `gates.sh`.
 1. tests green;
 2. the corpus against the starting baseline: "0 repo(s) differ";
@@ -336,6 +351,15 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
   `H2-public-corpus.md`) were replaced on 2026-10-18. The `core/model.py` comment that named a private service was
   replaced the same day.
 - **H5-D5, the scope includes the MCP** (step 8). `cli.py` waits until P2 touches it.
+- **H5-D6 (2026-10-21), step 12 brings the rest of the code to the shape targets:** the core, the languages'
+  `symbols.py`, the conventions and the MCP's tool groups. Step 6 covers only the languages' HTTP packages, and the
+  core's `http_base.py` grew while facts moved through it. `cli.py` stays off target until P2, so step 11's zero
+  excludes it.
+- **H5-D7 (2026-10-21), step 5 goes Go, C#, Python, TS,** one language per commit after the `TypeIndex` API. Go has
+  the clearest pair of type answers, the resolver's and the scanner's, and the measurement behind ADR-005.
+- **H5-D8 (2026-10-21), PR #7 merges as a checkpoint,** with the steps done so far; the rest follows in new PRs. The
+  steps left are the largest, a smaller PR is easier to review and to validate live, a regression is easier to place,
+  and the branch stops piling up rebases.
 
 ## Pitfalls
 
@@ -378,8 +402,8 @@ H2's:
   baseline.
 - The new unit tests (`paths`, `mounts`, `scopes`, `expr`, one per recognizer) and the MCP's integration test against
   Neo4j.
-- In CI, the report of `ruff C901` (`max-complexity = 9`) and of modules above 300 lines, at zero, still not blocking
-  (H5-D3).
+- In CI, the report of `ruff C901` (`max-complexity = 9`) and of modules above 300 lines, at zero but for `cli.py`
+  (H5-D6), still not blocking (H5-D3).
 - In `corpus-report.md`, an "H5" section with times before and after, the profiles and the shape metrics before and
   after.
 - ADR-003 updated, or a new ADR, and `indexer-evolution.md` (§2, §5, §7) describing the new code.

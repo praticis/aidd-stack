@@ -4,6 +4,8 @@ _docker
 # .NET build output inside test fixtures
 indexer/tests/fixtures/**/bin/
 indexer/tests/fixtures/**/obj/
+indexer/tests/mcp_it/**/bin/
+indexer/tests/mcp_it/**/obj/
 # runtime state when compose runs from the checkout (installs keep these in ~/.aidd)
 /mirrors/
 /state/

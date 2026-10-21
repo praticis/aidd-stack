@@ -69,7 +69,7 @@ decided by the author on 2026-10-19.
 | H4-D11 | `SCHEMA.md` and `schema.cypher` move to the indexer, which applies the schema. | The schema always matches the version of whoever writes. |
 | H4-D12 | SemVer, a `CHANGELOG.md` in the Keep a Changelog format, and the README pointing at a release. | Today `curl \| bash` gets any commit on `main`. |
 
-## H5: the indexer refactor before SCIP (H5-D1–D5, decided by the author on 2026-10-18)
+## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D8 on 2026-10-21)
 
 | # | Decision | Why |
 |---|---|---|
@@ -78,6 +78,9 @@ decided by the author on 2026-10-19.
 | H5-D3 | The targets are complexity ≤ 9 and modules ≤ 300 lines. During H5 the CI only reports; the author turns on blocking. | Code that fits in one reading; blocking comes once the whole code meets them. |
 | H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
 | H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
+| H5-D6 | **Step 12 brings the rest of the code to the shape targets:** the core, the languages' `symbols.py`, the conventions and the MCP's tool groups. `cli.py` stays off target until P2 (H5-D5), and step 11's zero excludes it. | Step 6 covers only the languages' HTTP packages, so nothing else had a step, and the core's `http_base.py` grew while facts moved through it. |
+| H5-D7 | **Step 5 goes one language per commit: Go, C#, Python, TS,** after the `TypeIndex` API in the core. | Go has the clearest pair of type answers (the resolver's and the scanner's) and the measurement behind ADR-005; the portfolio's .NET-first order gives way to it here. |
+| H5-D8 | **PR #7 merges as a checkpoint** with the steps done so far (0–2, 4 and 7–9; 3 and 10 in part); steps 5, 6 and 12, the rest of 10 and 11 follow in new PRs. | The steps left are the largest: a smaller PR is easier to review and to validate live, a regression is easier to place, and the branch stops piling up rebases. |
 
 ## H6: the extraction pipeline (H6-D1–D4 decided by the author on 2026-10-19, H6-D5–D6 on 2026-10-20)
 

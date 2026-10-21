@@ -29,12 +29,11 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from .matching import CASE_INSENSITIVE, compared, is_segment_suffix, methods_compatible  # noqa: F401  CASE_INSENSITIVE: imported from here by older callers
+
 GENERIC_TOKENS = frozenset({"api", "svc", "service", "services", "url", "base", "baseurl", "host", "endpoint", "addr",
                             "http", "https", "client", "gateway", "app", "server", "internal", "v1", "v2", "v3"})
 
-
-# Frameworks that match a request path without case (`/api/TodoItems` is `/api/todoitems`): ASP.NET routing.
-CASE_INSENSITIVE = frozenset({"aspnet", "aspnet-minimal", "fastendpoints"})
 
 
 @dataclass(frozen=True)
@@ -91,16 +90,6 @@ def _tokens(s: str) -> set[str]:
     return {t for t in re.split(r"[^a-z0-9]+", s.lower()) if t} - GENERIC_TOKENS
 
 
-def methods_compatible(a: str, b: str) -> bool:
-    return a == b or a == "ANY" or b == "ANY"
-
-
-def is_segment_suffix(short: str, long: str) -> bool:
-    """`/v1/x/{param}` is a suffix of `/api/v1/x/{param}` — path keys start with `/`, so the
-    boundary is a whole segment by construction."""
-    return len(long) > len(short) and long.endswith(short)
-
-
 def hint_matches(hint: str, service: str) -> bool:
     h = hint.lower()
     if not h or h in GENERIC_TOKENS:
@@ -114,7 +103,7 @@ def hinted_services(call: CallRow, services: set[str]) -> set[str]:
 
 def _keys(call: CallRow, e: EndpointRow) -> tuple[str, str]:
     """The two path keys as the endpoint's framework compares them (ASP.NET: without case)."""
-    return (call.path_key.lower(), e.path_key.lower()) if e.framework in CASE_INSENSITIVE else (call.path_key, e.path_key)
+    return compared(call.path_key, e.framework), compared(e.path_key, e.framework)
 
 
 def _candidates(call: CallRow, endpoints: list[EndpointRow]) -> tuple[list[EndpointRow], str]:

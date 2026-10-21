@@ -12,12 +12,11 @@ from tree_sitter import Node
 from ...core.http_base import HttpResult, Pending, text, walk
 from ...core.http_nodes import has_interpolation
 from ...core.http_scope import END, enclosing_function
-from ...core.http_wrappers import PARAM, compose_wrapped_calls as compose_calls, param_shape, verb_of
+from ...core.http_wrappers import (PARAM, ClassBases, WrappedCall, WrapperShape,
+                                   compose_wrapped_calls as compose_calls, param_shape, verb_of)
 from ...core.paths import HTTP_METHODS, has_literal_segment, normalize_path, unquote
 
-WRAPPER = "py.client-wrapper"      # fact: wrapper key → (path index, before, after, verb, verb index, parameters,
-                                   #   the verb parameter's default)
-BASES = "py.class-bases"           # fact: class → its bases' names
+SCOPE = "py"                       # the scope of the wrapper facts the core's machinery composes for Python
 URL_KEYWORDS = ("url", "path")
 
 
@@ -29,7 +28,7 @@ class PyClientWrappers:
         bases = tuple(text(b, self.src).split(".")[-1] for b in (sup.named_children if sup is not None else ())
                       if b.type in ("identifier", "attribute"))
         if name is not None and bases:
-            self.out.publish(BASES, text(name, self.src), bases)
+            self.out.publish(text(name, self.src), ClassBases(bases), SCOPE)
 
     def publish_wrapper(self, call: Node, method: str | None, name: str, arg_nodes: list[Node]) -> None:
         """`call`, an outbound call (`name`) whose path is built around a parameter of the function around it: that
@@ -42,7 +41,8 @@ class PyClientWrappers:
         if shape is not None:
             vi = self._param_index(verb, params) if method is None else None
             default = self._verb_default(enclosing_function(call), params[vi]) if vi is not None else None
-            self.out.publish(WRAPPER, key, (*shape, method.upper() if method else None, vi, tuple(params), default))
+            verb_given = method.upper() if method else None
+            self.out.publish(key, WrapperShape(*shape, verb_given, vi, tuple(params), default), SCOPE)
 
     def _wrapper_args(self, name: str, arg_nodes: list[Node]) -> tuple[list[Node], Node | None]:
         """The arguments that can be the path, and the one that is the verb of `request(method, url)`."""
@@ -108,7 +108,8 @@ class PyClientWrappers:
                       for k in kws)
         item = self.call_info(n, None, "", text(fn, self.src)) if any(values) or any(v for _, v in named) else None
         if item is not None:
-            self.out.pending.append(Pending(item, WRAPPER, (target, values, named, outer[0], tuple(outer[1]))))
+            call = WrappedCall(target, values, named, outer[0], tuple(outer[1]))
+            self.out.pending.append(Pending(item, call, SCOPE))
 
     def _value(self, a: Node | None, params: list[str]) -> str | tuple | None:
         """A literal path or verb, or the parameter of the function around the call the argument is built around."""
@@ -186,7 +187,7 @@ class PyClientWrappers:
 
 
 def compose_wrapped_calls(out: HttpResult) -> None:
-    compose_calls(out, WRAPPER, BASES)
+    compose_calls(out, SCOPE)
 
 
 def _owner_class(fn: Node | None) -> Node | None:

@@ -1,7 +1,7 @@
 """Shared machinery for the per-language HTTP scanners (`languages/<lang>/http.py`).
 
 A language scanner walks its tree and decides which calls are route registrations and which are outbound
-requests — see `docs/indexer-evolution.md` for the rules table. `BaseScanner` gives it the rest:
+requests. `BaseScanner` gives it the rest:
 
 - expressions → path templates and methods (`path_of`, `method_from_args`: `http_expr.PathExpressions`), over the
   file's name bindings (`http_scope.Scopes`) and the directory's constants (`PackageContext`);
@@ -26,7 +26,7 @@ from typing import NamedTuple
 
 from tree_sitter import Node
 
-from ..languages.base import node_text as text, walk  # noqa: F401 — walk is re-exported for the scanners
+from ..tree import node_text as text, walk  # noqa: F401 — walk is re-exported for the scanners
 from . import ids
 from .config import TEST_FILE  # noqa: F401 — re-exported for the scanners / integrations
 from .http_expr import PathExpressions, collect_constants, first_string, unwrap_arg, valid_path  # noqa: F401 — re-exported
@@ -35,6 +35,7 @@ from .http_nodes import (CALL_NODES, HANDLER_NODES, NAME_NODES, NON_HANDLER_NODE
                          FUNCTION_SCOPES, has_interpolation, member)
 from .http_scope import END, Scopes, scope_id
 from .model import HttpCallInfo, HttpEndpointInfo, RepoInfo, SymbolInfo
+from .package_facts import PackageFacts
 from .scan_patterns import ScanPatterns  # noqa: F401 — re-exported for scanners / integrations
 from .paths import (HTTP_METHODS, PATH_LITERAL, REL_PATH_LITERAL, has_literal_segment, is_url_literal, mask_placeholders,
                     normalize_path, path_key, unquote)
@@ -73,8 +74,28 @@ class Pending(NamedTuple):
     a call to a method another file defines (`item` is then the call without its path). The language's `compose`
     resolves it from the facts every file published, after the whole repo is scanned."""
     item: HttpEndpointInfo | HttpCallInfo | None   # None: a request for routes the rule creates (inherited actions)
-    rule: str               # which `compose` rule resolves it ("cs.inherited-route", "cs.client-wrapper", ..)
-    key: tuple              # what that rule looks up
+    wait: tuple             # what the rule looks up: a NamedTuple whose type is the rule
+    scope: str = ""         # the language, for a kind the core's machinery shares (`publish`)
+
+
+class MountEdge(NamedTuple):
+    """A router another file can name is mounted on `parent` under `prefix`."""
+    parent: str
+    prefix: str
+
+
+class MountApp(NamedTuple):
+    """A router another file can name is an application: its routes are at the root."""
+
+
+class MountOwn(NamedTuple):
+    """The prefix a router another file can name puts before its own routes."""
+    prefix: str
+
+
+class MountWait(NamedTuple):
+    """A route on a router another file can name, waiting for the mounts of every file."""
+    router: str
 
 
 @dataclass
@@ -82,13 +103,22 @@ class HttpResult:
     endpoints: list[HttpEndpointInfo] = field(default_factory=list)
     calls: list[HttpCallInfo] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
-    # The per-file summaries composed after the scan — data only, never trees (F1.13): what a file publishes for the
-    # others (`facts[kind][name]` → one entry per declaration) and the routes waiting on them.
-    facts: dict[str, dict[str, list]] = field(default_factory=dict)
+    # The per-file summaries composed after the scan — data only, never trees: what a file publishes for the
+    # others (one entry per declaration, by kind and name: `publish`) and the routes waiting on them.
+    facts: dict[tuple[type, str], dict[str, list]] = field(default_factory=dict)
     pending: list[Pending] = field(default_factory=list)
 
-    def publish(self, kind: str, name: str, fact) -> None:
-        self.facts.setdefault(kind, {}).setdefault(name, []).append(fact)
+    def publish(self, name: str, fact: tuple, scope: str = "") -> None:
+        """A fact for the other files: a NamedTuple, whose type is its kind. A kind the core's machinery shares
+        (mounts, client wrappers) is published under its language's `scope`, which each language composes alone."""
+        self.facts.setdefault((type(fact), scope), {}).setdefault(name, []).append(fact)
+
+    def facts_of(self, kind: type, scope: str = "") -> dict[str, list]:
+        return self.facts.get((kind, scope), {})
+
+    def waiting(self, kind: type, scope: str = "") -> list[Pending]:
+        """The pending items whose request is of `kind`, in the order the files left them."""
+        return [p for p in self.pending if type(p.wait) is kind and p.scope == scope]
 
 
 def rebased(repo: RepoInfo, ep: HttpEndpointInfo, prefix: str) -> HttpEndpointInfo:
@@ -112,12 +142,13 @@ class Region(NamedTuple):
     """A call that scopes the routes registered inside one of its closures (`BaseScanner.region_of`)."""
     outer: str              # the router the call is made on
     prefix: str             # what the closure's routes live under
-    same_router: bool       # a registration on `outer` itself counts (gitea `m.Group("/x", func() { m.Get(..) })`)
+    same_router: bool       # a registration on `outer` itself counts (`m.Group("/x", func() { m.Get(..) })`)
 
 
 # ------------------------------------------------------------------------------------------
 class PackageContext:
-    """Per directory (Go package / TS folder / C# namespace dir): route constants and env-var names."""
+    """Per directory: the route constants, env-var names and functions its files share, and each language's own facts
+    of it (`PackageFacts`)."""
 
     def __init__(self, patterns: "ScanPatterns | None" = None) -> None:
         self.route_consts: dict[str, str] = {}     # name -> raw path (or base URL)
@@ -127,21 +158,10 @@ class PackageContext:
         self.functions_by_name: dict[str, list[SymbolInfo]] = {}   # functions/methods of every file in the dir
         self.segments: dict[str, str] = {}          # name -> one path segment (`"cases"`): only whole, inside a template
         self.relatives: dict[str, str] = {}         # name -> segments without a leading slash (`"security/back-office"`):
-                                                    # only C#'s routing attributes read them (`_RouteAttributes`)
+                                                    # read only where a routing attribute puts them in a template
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
-        self.passthrough: dict[str, int | None] = {}   # Go function → the parameter every `return` ends with
-        self.verb_lists: dict[str, tuple[str, ...]] = {}   # Go `var MethodsPutPost = []string{http.MethodPut, ..}`
-        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts` (Go: the struct field types)
-        # Python class → (its bases' names, what its `__init__` hands `super().__init__` as the prefix): a router class
-        # of the project (`class UserAPIRouter(APIRouter)`); None when two files of the directory define it differently
-        self.classes: dict[str, tuple[tuple[str, ...], tuple | None] | None] = {}
-        # TS/JS (file, name) → a client that puts a base before its paths: ("parts", the base) for
-        # `axios.create({ baseURL })`, ("new", class, {option: parts}) for `new ApiClient(..)`, ("alias", name) for
-        # `export default api`; and a class whose base is a field (`this.baseUrl = options.baseUrl || "/api"`) →
-        # (the option that gives it, the default), None when two of the directory differ
-        self.client_bases: dict[tuple[str, str], tuple] = {}
-        self.client_classes: dict[str, tuple[str | None, list] | None] = {}
-        self.client_rewritten: set[tuple[str, str]] = set()   # (file, client) a request interceptor rewrites the url of
+        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts`
+        self.facts: dict[str, PackageFacts] = {}    # each language's facts of the directory, by `PackageFacts.key`
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs
 
@@ -182,12 +202,12 @@ class PackageContext:
         parts = self.const_parts.get(name)
         if parts is None or name in _seen or len(_seen) > 4:
             return None
-        raw = self._joined(parts, _seen + (name,))
+        raw = self.joined(parts, _seen + (name,))
         if raw is not None:
             self.route_consts[name] = raw
         return raw
 
-    def _joined(self, parts: list[tuple[str, str | None]], _seen: tuple[str, ...] = ()) -> str | None:
+    def joined(self, parts: list[tuple[str, str | None]], _seen: tuple[str, ...] = ()) -> str | None:
         """`A + "/x"` as parts, each constant by `route_const`; one the directory does not hold is a parameter, and a
         parameter at the start is a base (`{param}/api/v1` is `/api/v1`). None unless a path or a URL."""
         raw = ""
@@ -199,25 +219,29 @@ class PackageContext:
             return None
         return raw
 
-    def client_base(self, path: str, name: str, _depth: int = 0) -> str | None:
-        """The base path the client `name` of the file `path` puts before its requests' paths (`client_bases`):
-        docmost's `axios.create({ baseURL: "/api" })`, outline's `new ApiClient()` with `this.baseUrl =
-        options.baseUrl || "/api"`. Only a path: a base URL's host is the linker's (`target_hint`)."""
-        v = self.client_bases.get((path, name))
-        if v is None or _depth > 3 or (path, name) in self.client_rewritten:
+    def constant(self, name: str) -> str | None:
+        """What the directory gives the constant `name`, by the name as written: a path, a segment, segments without a
+        leading slash, or a text built from parts all known here; None for a name with two values."""
+        if name in self.ambiguous:
             return None
-        if v[0] == "alias":
-            return self.client_base(path, v[1], _depth + 1)
-        if v[0] == "new":
-            cls = self.client_classes.get(v[1])
-            if cls is None:
+        v = self.route_const(name) if name in self.route_consts or name in self.const_parts else \
+            self.segments.get(name) or self.relatives.get(name)
+        return v if v is not None else self._known(name)
+
+    def _known(self, name: str, _depth: int = 0) -> str | None:
+        """A constant built from others that is not a path by itself (`DefaultAppPath = "~/" + AppPathSegment`):
+        every part known in the directory, or nothing."""
+        if name in self.ambiguous or _depth > 4:
+            return None
+        if name not in self.const_parts:
+            return self.route_consts.get(name) or self.segments.get(name) or self.relatives.get(name)
+        out = ""
+        for kind, v in self.const_parts[name]:
+            r = v if kind == "lit" else self._known(v, _depth + 1) if kind == "ref" and v else None
+            if r is None:
                 return None
-            option, default = cls
-            parts = (v[2].get(option) if option else None) or default
-        else:
-            parts = v[1]
-        raw = self._joined(parts) if parts else None
-        return raw if raw is not None and raw.startswith("/") else None
+            out += r
+        return out
 
 
 def dir_of(file_path: str) -> str:
@@ -255,7 +279,7 @@ def split_callee(callee: str) -> tuple[str, str, str]:
 # ------------------------------------------------------------------------------------------
 class BaseScanner(PathExpressions):
     relative_on_groups = False      # the framework joins a group prefix and a pattern without a leading slash (gin, MapGroup)
-    mount_rule: str | None = None   # routers cross files (`global_of`): the `Pending` rule and the facts' kind prefix
+    mount_scope: str | None = None   # routers cross files (`global_of`): the scope of their mount facts and waits
     scope_declarations: frozenset[str] | None = None   # what declares a name in a function (`Scopes`); None: any assignment
     # a group other files can name (a package variable, a returned router, a router parameter) keeps its own prefix out
     # of what is registered on it here and publishes it as the router's: `compose` puts it on every chain through the
@@ -347,13 +371,13 @@ class BaseScanner(PathExpressions):
             f = f.parent
         key = self.group_key(receiver, at)
         own = self.group_prefix.get(key)
-        if own is not None and self.defer_global_group_prefix and self.mount_rule and self._global(key) is not None:
+        if own is not None and self.defer_global_group_prefix and self.mount_scope and self._global(key) is not None:
             return ""                                  # published by `finish`, applied by `compose`
         return own
 
     def group_key(self, name: str, at: Node) -> RouterKey:
         """A group variable is the one the function around `at` binds: a parameter named like another function's group
-        is another router (vikunja `a := e.Group("/api/v1"); registerAPIRoutes(a)`, whose `a` takes the prefix from the
+        is another router (`a := e.Group("/api/v1"); registerAPIRoutes(a)`, whose `a` takes the prefix from the
         call). A field or an expression (`api.BaseRoutes.Users`, `g.Group("/x").Use(mw)`) is the file's."""
         return (self.scopes.binding_scope(name, at) if IDENTIFIER.match(name) else 0), name
 
@@ -383,41 +407,43 @@ class BaseScanner(PathExpressions):
 
     def finish(self) -> None:
         """Prefix the routes of every router this file mounts; drop a sub-router's root that stays unmounted. With
-        `mount_rule`, a route on a router other files can name waits for `compose`, and the file publishes its mounts
+        `mount_scope`, a route on a router other files can name waits for `compose`, and the file publishes its mounts
         of such routers."""
-        glob = self._global if self.mount_rule else (lambda _: None)
+        glob = self._global if self.mount_scope else (lambda _: None)
         waiting, edges = self.mounts.settle(self.out.endpoints, lambda ep, prefix: rebased(self.repo, ep, prefix),
-                                            _is_root, glob, self.foreign + self._router_args() if self.mount_rule else [],
+                                            _is_root, glob, self.foreign + self._router_args() if self.mount_scope else [],
                                             lambda key: key in self.app_vars)
-        if self.mount_rule:
-            self.out.pending.extend(Pending(ep, self.mount_rule, (g,)) for ep, g in waiting)
+        if self.mount_scope:
+            scope = self.mount_scope
+            self.out.pending.extend(Pending(ep, MountWait(g), scope) for ep, g in waiting)
             for child, parent, prefix in edges:
-                self.out.publish(f"{self.mount_rule}.edge", child, (parent, prefix))
+                self.out.publish(child, MountEdge(parent, prefix), scope)
             if self.defer_global_group_prefix:
                 self._publish_own_prefixes()
             for key in self.app_vars:
                 g = self._global(key)
                 if g is not None:                             # an application other files can name
-                    self.out.publish(f"{self.mount_rule}.app", g, True)
+                    self.out.publish(g, MountApp(), scope)
 
     def _publish_own_prefixes(self) -> None:
         """The prefix of each group of this file that other files can name, as that router's own."""
         for key, prefix in self.group_prefix.items():
             g = self._global(key) if prefix else None
             if g is not None:
-                self.out.publish(f"{self.mount_rule}.own", g, prefix)
+                self.out.publish(g, MountOwn(prefix), self.mount_scope)
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """Language hook, once per repo after every file is scanned: resolve the `out.pending` routes of this language
-        from `out.facts`. By default, the routes waiting on a router another file mounts (`mount_rule`)."""
-        if cls.mount_rule is None:
+        from `out.facts`. By default, the routes waiting on a router another file mounts (`mount_scope`)."""
+        if cls.mount_scope is None:
             return
-        waiting = [(p.item, p.key[0]) for p in out.pending if p.rule == cls.mount_rule]
+        scope = cls.mount_scope
+        waiting = [(p.item, p.wait.router) for p in out.waiting(MountWait, scope)]
         if waiting:
-            edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts.get(f"{cls.mount_rule}.edge", {}).items()}
-            apps = set(out.facts.get(f"{cls.mount_rule}.app", {}))
-            owns = out.facts.get(f"{cls.mount_rule}.own", {})
+            edges = {child: list(dict.fromkeys(facts)) for child, facts in out.facts_of(MountEdge, scope).items()}
+            apps = set(out.facts_of(MountApp, scope))
+            owns = {g: [own.prefix for own in found] for g, found in out.facts_of(MountOwn, scope).items()}
             replace_endpoints(out, compose_mounts(waiting, edges, lambda ep, prefix: rebased(repo, ep, prefix), _is_root,
                                                   apps, owns))
 
@@ -540,7 +566,7 @@ class BaseScanner(PathExpressions):
         return None
 
     def route_chain(self, n: Node, builders: set[str], verbs: dict[str, str]) -> tuple[str, Node, Node] | None:
-        """A verb of a route chain — gitea `m.Combo("/x").Get(h).Put(h)`, express `router.route('/x').get(h).post(h)`:
+        """A verb of a route chain — `m.Combo("/x").Get(h).Put(h)`, express `router.route('/x').get(h).post(h)`:
         every verb is a route on the builder's path. (the verb's method, the builder call, its receiver) when `n` is
         one, whatever verbs come between them; None otherwise."""
         obj, field = member(n.child_by_field_name("function"))

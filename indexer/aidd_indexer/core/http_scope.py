@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from tree_sitter import Node
 
-from ..languages.base import node_text as text, walk
+from ..tree import node_text as text, walk
 from .http_nodes import APPEND_NODES, ASSIGNMENT_NODES, FUNCTION_SCOPES
 
 

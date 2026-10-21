@@ -15,13 +15,13 @@ import re
 
 from tree_sitter import Node
 
-from ...core.http_base import HttpResult, text, unwrap_arg
+from ...core.http_base import HttpResult, MountEdge, text, unwrap_arg
 from ...core.paths import HTTP_METHODS, unquote
+from .http_facts import Autoload
 
 SOURCE = r"\.[cm]?[jt]sx?$"
 APP_ROUTE = re.compile(r"^(?:src/)?app/(?P<dir>(?:.+/)?)route" + SOURCE)
 PAGES_API = re.compile(r"^(?:src/)?pages/(?P<path>api(?:/.+)?)" + SOURCE)
-AUTOLOAD = "ts.autoload"            # fact: directory → (where its plugins are mounted, prefix, folder prefixes)
 AUTOLOAD_SPECS = ("@fastify/autoload", "fastify-autoload")
 HERE = ("__dirname", "import.meta.dirname")
 
@@ -106,19 +106,19 @@ class TsFileRoutes:
     def publish_autoloads(self, is_app) -> None:
         for d, key, prefix, folders in self.__dict__.get("autoloads", ()):
             for target, pp in self.mounts.targets(key, self._global, is_app):
-                self.out.publish(AUTOLOAD, d, (target, pp.rstrip("/") + prefix.rstrip("/"), folders))
+                self.out.publish(d, Autoload(target, pp.rstrip("/") + prefix.rstrip("/"), folders))
 
 
-def compose_autoloads(out: HttpResult, view, mount_rule: str) -> None:
+def compose_autoloads(out: HttpResult, view, mount_scope: str) -> None:
     """Each file under an autoloaded directory: the router its default export receives, mounted where the
     registration leads, under its folders' path."""
-    loads = out.facts.get(AUTOLOAD, {})
+    loads = out.facts_of(Autoload)
     for f in view.files_under(list(loads)) if loads and view is not None else ():
         for d in (d for d in loads if f.startswith(d + "/" if d else "")):
             folder = posixpath.dirname(f)[len(d):] if d else "/" + posixpath.dirname(f)
-            for target, prefix, folders in set(loads[d]):
-                out.publish(f"{mount_rule}.edge", f"param:{f}:default:0",
-                            (target, prefix + (folder.rstrip("/") if folders and folder != "/" else "")))
+            for load in set(loads[d]):
+                tail = folder.rstrip("/") if load.folders and folder != "/" else ""
+                out.publish(f"param:{f}:default:0", MountEdge(load.target, load.prefix + tail), mount_scope)
 
 
 def _route_paths(rel_dir: str) -> list[str]:

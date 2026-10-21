@@ -5,8 +5,9 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-20):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
-> sections). Next is step 3, H5's steps built toward the ADRs.
+> **State (2026-10-21):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
+> sections). Step 3, H5's steps built toward the ADRs, is under way: steps 4 and 7 merge with PR #7, and 5 and 6 come
+> next, in new PRs.
 >
 > - **Step 0 found** the resolver the largest phase by far, quadratic in Go and C#. An index built once, merged into
 >   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.
@@ -271,7 +272,7 @@ H5 builds pieces with H6's shape:
 | 1 | Prototype the second read on a throwaway branch: A, B and C on one language first (Go: package constants, mounts across files), with a process pool and a cache | the table of "Open question 1" filled in; the branch is not merged. **Done 2026-10-20** (`h6/step1-proto`) |
 | 2 | Decide with the author: the second read, the batches, the cache store. Write ADR-004 (the pipeline), then ADR-005 (types) and ADR-006 (recognizers) to match | the ADRs accepted. **Done 2026-10-20:** H6-D5 and D6 decided, ADR-004 to ADR-006 accepted |
 | 3 | H5's steps 4, 7, 5 and 6, built toward the ADRs | as in H5 |
-| 4 | Plug in the map, the reduce and the cache | the corpus cold, warm, and the baseline are identical; the hold-out identical |
+| 4 | Plug in the map, the reduce and the cache. Before it, in a PR of its own because it changes the graph: Go's two reads of an imported package's directory (`view.contexts.get`, for the functions that return a parameter and the verb lists) become questions to the view. That also reads the repo's root package, which they miss today: `indexer/tests/test_repo_view.py::test_a_function_of_the_root_package_is_read_like_any_other`, a strict xfail until then. `test_only_the_view_walks_the_directories` then stops allowing `.contexts.get` | the root package's test passes without its xfail; the corpus cold, warm, and the baseline are identical; the hold-out identical |
 | 5 | Validate at scale: grafana under the ceiling; the refresh time on a live install, cold and after a one-file push | the numbers in the corpus report and in the H5/H6 PR |
 
 ## Decisions made (2026-10-19, by the author)
@@ -302,7 +303,8 @@ H5 builds pieces with H6's shape:
   next door, the clock) makes a warm run differ from a cold one. The cold/warm comparison on the corpus is the net.
 - **A read that is not recorded breaks the cache and the early scan at once.** Go's passthrough lookup looped over
   every directory's context (`view.contexts.values()`). Step 1's key and replay missed it, and a fixture caught it only
-  when an early scan saw part of the repo. A lookup across the repo is a question, with its answer (ADR-006).
+  when an early scan saw part of the repo. C#'s qualified constants did the same. A lookup across the repo is a
+  question, with its answer (ADR-006), and a test keeps the view the only code that walks the directories.
 - **A digest over pickle is not canonical.** Pickle shares equal objects by identity, so the same values gave other
   bytes when they came back from other batches. Step 1 digests a canonical form's `repr`.
 - **The ids carry the ref.** A summary keyed by content but holding `tenant/repo@ref/…` ids serves one ref only.

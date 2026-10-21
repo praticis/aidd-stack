@@ -1,5 +1,5 @@
 """Go: net/http (>= 1.22 method patterns), gorilla `.Methods()` and its route builder, chi, gin/echo (+Group), fiber
-routes, gitea's `Combo`; net/http / resty / PostJSON-like helpers outbound, with the path of a `url.URL` (`u.Path`),
+routes, `Combo` chains; net/http / resty / PostJSON-like helpers outbound, with the path of a `url.URL` (`u.Path`),
 go-kit's clients (`httptransport.NewClient`, the path in its request encoder) and the generated clients of
 openapi-generator (`prepareRequest`) and go-swagger (`runtime.ClientOperation`). Generated servers: grpc-gateway
 (`mux.Handle("GET", pattern_X, h)`, the path decoded from `runtime.NewPattern`) and go-swagger (`o.handlers["GET"]["/x"]`
@@ -14,9 +14,12 @@ from dataclasses import replace
 from tree_sitter import Node
 
 from ...core.http_base import (BaseScanner, CLIENT_RECEIVER, GENERIC_OUTBOUND, OUTBOUND, ROUTER_TYPE, STRING_NODES,
-                               HttpResult, Pending, Region, dir_of, rebased, split_callee, text, unwrap_arg, walk)
+                               HttpResult, MountEdge, Pending, Region, dir_of, rebased, split_callee, text,
+                               unwrap_arg, walk)
 from ...core.http_scope import enclosing_function, in_function
-from ...core.http_expr import verb_list
+from .http_facts import EncodedCall, Encoder, SwaggerBase, SwaggerRoute
+from .package_facts import GoFacts, verb_list
+from .paths import GoPaths
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
 from ...core.model import RepoInfo
@@ -24,14 +27,14 @@ from ...core.paths import HTTP_METHODS, VERB_BY_NAME, expand_alternatives, has_l
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
 # net/http, gorilla, chi, gin, echo, fiber. Exported only: an unexported method is the package's own, never a framework's
-# (vikunja `c.get("/api/projects", nil, out)` is its Planka client)
+# (`c.get("/api/projects", nil, out)` on an API client of the app)
 GO_REGISTRARS = {"HandleFunc", "Handle", "Any", "Match", "All"} | {v for v in VERB_BY_NAME if v[0].isupper()} | set(GO_VERB_ALIASES)
 GO_MOUNTS = {"Group", "PathPrefix", "Route", "Mount", "Subrouter", "WithPrefix"}         # prefix carriers
 # a call that returns its receiver under a prefix: `WithPrefix` is prometheus/common/route's
 GO_PREFIXED = {"Group", "WithPrefix"}
 GO_APPS = re.compile(r"^(gin\.(Default|New)|echo\.New|fiber\.New|http\.NewServeMux)$")       # always the application
 GO_ROUTERS = re.compile(r"^(chi\.(NewRouter|NewMux)|mux\.NewRouter)$")                     # the application when main builds it
-GO_CHAIN_BUILDERS = {"Combo"}                                                             # gitea: m.Combo("/x").Get(h).Put(h)
+GO_CHAIN_BUILDERS = {"Combo"}                                                             # m.Combo("/x").Get(h).Put(h)
 GO_CHAIN_VERBS = {v: VERB_BY_NAME[v] for v in ("Get", "Post", "Put", "Patch", "Delete", "Head", "Options")}
 GORILLA_LINKS = {"Methods", "Path", "PathPrefix", "Name", "Queries", "Headers", "HeadersRegexp", "Schemes", "Host",
                  "NewRoute"}                                                              # r.Methods("GET").Path("/x").Handler(h)
@@ -39,9 +42,9 @@ GO_SERVE = {"http.ListenAndServe": 1, "http.Serve": 1, "http.ListenAndServeTLS":
 GO_KIT_HTTP = "github.com/go-kit/kit/transport/http"                                     # httptransport.NewClient(method, url, enc, dec)
 
 
-class GoScanner(BaseScanner):
+class GoScanner(GoPaths, BaseScanner):
     relative_on_groups = True
-    mount_rule = "go.mount"
+    mount_scope = "go"
     scope_declarations = frozenset({"short_var_declaration", "var_spec", "const_spec", "range_clause"})   # not `=`
     defer_global_group_prefix = True
 
@@ -72,7 +75,7 @@ class GoScanner(BaseScanner):
         right = n.child_by_field_name("right") or n.child_by_field_name("value")
         typ = n.child_by_field_name("type") if n.type == "var_spec" else None
         if right is None and typ is not None and ROUTER_TYPE.search(text(typ, self.src)) and not in_function(n):
-            for c in (c for c in n.children if c.type == "identifier"):   # photoprism `var APIv1 *gin.RouterGroup`, that
+            for c in (c for c in n.children if c.type == "identifier"):   # `var APIv1 *gin.RouterGroup`, that
                 self.router_vars.add(text(c, self.src))                    # another file of the package assigns
             return
         if left is None or right is None:
@@ -170,9 +173,9 @@ class GoScanner(BaseScanner):
             joined = None
             if self.echo and raw_first and not raw_first.startswith("/") and lit == "/" + raw_first:
                 pre = self.prefix_for(recv_last, n)         # echo joins `g.prefix + path` as written: u.GET("s") on
-                if pre:                                     # "/user" is /users (vikunja)
+                if pre:                                     # "/user" is /users
                     lit, joined = pre + raw_first, ""
-            # grpc-gateway / httprouter: mux.Handle("GET", pattern, h) — v2 writes `http.MethodGet` (memos)
+            # grpc-gateway / httprouter: mux.Handle("GET", pattern, h) — v2 writes `http.MethodGet`
             verb = self._method_value(first) if name == "Handle" and len(arg_nodes) >= 3 else None
             verb_first = verb is not None
             if verb_first:
@@ -222,23 +225,25 @@ class GoScanner(BaseScanner):
 
     def _match_verbs(self, n: Node) -> tuple[str, ...] | None:
         """The verbs of gin's `Match`: a `[]string{..}` written there, or a variable holding one — of the function, of
-        the package (another file: photoprism's `MethodsPutPost`) or of an imported package (`api.MethodsPutPost`)."""
+        the package (another file: `MethodsPutPost`) or of an imported package (`api.MethodsPutPost`)."""
         if n.type == "composite_literal":
             return verb_list(n, self.src)
         if n.type == "identifier":
             bound, val = self.scopes.binding(n)
             if bound and val is not None and val.type == "composite_literal":
                 return verb_list(val, self.src)
-            return self.ctx.verb_lists.get(text(n, self.src))
+            return GoFacts.read(self.ctx).verb_lists.get(text(n, self.src))
         operand = n.child_by_field_name("operand") if n.type == "selector_expression" else None
         if operand is not None and text(operand, self.src) in self.imports and self.ctx.view is not None:
             target = self.resolve_import(self.imports[text(operand, self.src)][0])
             ctx = self.ctx.view.contexts.get(target) if target is not None else None
-            return ctx.verb_lists.get(text(n.child_by_field_name("field"), self.src)) if ctx is not None else None
+            if ctx is None:
+                return None
+            return GoFacts.read(ctx).verb_lists.get(text(n.child_by_field_name("field"), self.src))
         return None
 
     def _chained_route(self, n: Node, arg_nodes: list[Node]) -> bool:
-        """gitea `m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of
+        """`m.Combo("/x", mw).Get(h).Put(h)`: each verb a route on the Combo's path. True when `n` is one of
         those verbs, even with a path this file cannot read."""
         chained = self.route_chain(n, GO_CHAIN_BUILDERS, GO_CHAIN_VERBS)
         if chained is None:
@@ -342,7 +347,7 @@ class GoScanner(BaseScanner):
     def finish(self) -> None:
         super().finish()
         for g in dict.fromkeys(self.served):
-            self.out.publish(f"{self.mount_rule}.edge", g, (APP, ""))
+            self.out.publish(g, MountEdge(APP, ""), self.mount_scope)
 
     def _kit_client(self, n: Node, callee: str, arg_nodes: list[Node]) -> None:
         """go-kit `httptransport.NewClient("GET", tgt, encodeX, decodeX)`: the method is the first argument, the path
@@ -357,7 +362,7 @@ class GoScanner(BaseScanner):
         unit = self._function_unit(enc) if enc.type in ("identifier", "selector_expression") else None
         item = self.call_info(n, method, "", callee) if unit is not None else None
         if item is not None:
-            self.out.pending.append(Pending(item, "go.encoder", (f"{unit[0]}:{unit[1]}",)))
+            self.out.pending.append(Pending(item, EncodedCall(f"{unit[0]}:{unit[1]}")))
 
     def _swagger_operation(self, n: Node) -> None:
         """go-swagger's generated client: each operation is a `&runtime.ClientOperation{Method: "GET", PathPattern:
@@ -387,17 +392,17 @@ class GoScanner(BaseScanner):
         right = n.child_by_field_name("right")
         handler = re.search(r"\.(\w+)\)\s*$", text(right, self.src)) if right is not None else None
         ep = self.endpoint_info(n, method, unquote(text(pattern, self.src)), "go-swagger", handler.group(1) if handler else None)
-        self.out.pending.append(Pending(ep, "go.swagger", (dir_of(dir_of(self.fx.file.path)),)))
+        self.out.pending.append(Pending(ep, SwaggerRoute(dir_of(dir_of(self.fx.file.path)))))
 
     def _swagger_base(self) -> None:
         """go-swagger's `embedded_spec.go`: the spec as a JSON string, whose `basePath` its package's routes live under."""
         m = re.search(rb'"basePath":\s*"([^"]*)"', self.src)
         if m:
-            self.out.publish("go.swagger-base", dir_of(self.fx.file.path), m.group(1).decode())
+            self.out.publish(dir_of(self.fx.file.path), SwaggerBase(m.group(1).decode()))
 
     def _encoder(self, fn: Node) -> None:
         """A function that sets the path of the `*http.Request` it takes — go-kit's request encoder, `req.URL.Path =
-        "/profiles/" + id` — publishes that path (`go.encoder`) for the clients built with it."""
+        "/profiles/" + id` — publishes that path (`Encoder`) for the clients built with it."""
         params = fn.child_by_field_name("parameters")
         reqs = [text(c, self.src) for d in (params.named_children if params is not None else ())
                 if (t := d.child_by_field_name("type")) is not None and text(t, self.src) == "*http.Request"
@@ -417,21 +422,20 @@ class GoScanner(BaseScanner):
         p = None if right is None else self.path_of(last if op is not None and text(op, self.src) == "+=" else right, lenient=True)
         name = self._function_name(fn)
         if p is not None and name is not None:
-            self.out.publish("go.encoder", f"{dir_of(self.fx.file.path)}:{name}", p)
+            self.out.publish(f"{dir_of(self.fx.file.path)}:{name}", Encoder(p))
 
     @classmethod
     def compose(cls, out: HttpResult, repo: RepoInfo, view=None) -> None:
         """The mount graph (`BaseScanner.compose`), then the go-kit clients whose path their encoder sets: one encoder
         with one path, of the package the client names."""
         super().compose(out, repo, view)
-        bases = out.facts.get("go.swagger-base", {})
-        for p in out.pending:
-            if p.rule == "go.swagger":
-                found = set(bases.get(p.key[0], ()))
-                out.endpoints.append(rebased(repo, p.item, next(iter(found))) if len(found) == 1 else p.item)
-        encoders = out.facts.get("go.encoder", {})
-        for p in out.pending:
-            paths = set(encoders.get(p.key[0], ())) if p.rule == "go.encoder" else ()
+        bases = out.facts_of(SwaggerBase)
+        for p in out.waiting(SwaggerRoute):
+            found = {b.base_path for b in bases.get(p.wait.spec_dir, ())}
+            out.endpoints.append(rebased(repo, p.item, next(iter(found))) if len(found) == 1 else p.item)
+        encoders = out.facts_of(Encoder)
+        for p in out.waiting(EncodedCall):
+            paths = {e.path for e in encoders.get(p.wait.encoder, ())}
             raw = next(iter(paths)) if len(paths) == 1 else None
             path = normalize_path(raw) if raw else ""
             if raw and has_literal_segment(path):
@@ -474,7 +478,7 @@ class GoScanner(BaseScanner):
         return base.rstrip("/") + p
 
     def region_of(self, call: Node, fn: Node) -> Region | None:
-        """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and gitea's
+        """chi/fiber `r.Route("/x", func(r chi.Router) {...})`, chi `r.Group(func(r chi.Router) {...})` and
         `m.Group("/x", func() { m.Get(...) })` — the closure's routes live under the prefix."""
         callee = call.child_by_field_name("function")
         args = call.child_by_field_name("arguments")
@@ -545,7 +549,7 @@ class GoScanner(BaseScanner):
 
     # -- routers other files name: package variables, returned routers, router parameters, struct fields ---------
     def read_imports(self) -> dict[str, tuple[str, str | None]]:
-        """`import apiv1 "gitea.dev/routers/api/v1"` → apiv1; without a name, the path's last element (a `/v2` is
+        """`import apiv1 "example.com/routers/api/v1"` → apiv1; without a name, the path's last element (a `/v2` is
         skipped)."""
         out: dict[str, tuple[str, str | None]] = {}
         for decl in self.fx.tree.root_node.children:
@@ -586,7 +590,7 @@ class GoScanner(BaseScanner):
 
     def _function_name(self, fn: Node) -> str | None:
         """`Routes`, or `todosResource.Routes` for a method: two types of a package may both have a `Routes`. A closure
-        assigned to a variable is called by that name (gitea's `addActionsRoutes := func(m *web.Router, ...)`)."""
+        assigned to a variable is called by that name (`addActionsRoutes := func(m *web.Router, ...)`)."""
         if fn.type == "func_literal":
             decl = fn.parent.parent if fn.parent is not None and fn.parent.type == "expression_list" else fn.parent
             left = decl.child_by_field_name("left") if decl is not None and decl.type in ("short_var_declaration",
