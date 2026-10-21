@@ -1,7 +1,8 @@
 """Every atlas tool against a real Neo4j holding a small indexed graph: a Go service `orders` (`GET /v1/orders/{id}`,
 whose handler calls `loadOrder`; on the branch `feature/items` also `GET /v1/orders/{id}/items`), an ASP.NET service
-`accounts` (`/api/Accounts/{id}/details`, as `[controller]` writes it) and a TS client `shop` that calls both, the second
-in lower case. Run by `scripts/mcp-it.sh`, which starts that Neo4j; skipped without it."""
+`accounts` (`/api/Accounts/{id}/details`, as `[controller]` writes it; its controller imports two of its own
+namespaces, one module under two specs) and a TS client `shop` that calls both, the second in lower case. Run by
+`scripts/mcp-it.sh`, which starts that Neo4j; skipped without it."""
 
 import asyncio
 import json
@@ -54,6 +55,12 @@ def test_who_calls_and_symbol_context(srv):
     assert [c["qualified_name"] for c in callers] == ["getOrder"]
     ctx = call(srv, "symbol_context", symbol="getOrder", repo="orders")
     assert "loadOrder" in [c["qualified_name"] for c in ctx["calls"]]
+
+
+def test_symbol_context_lists_a_files_imports_in_one_order(srv):
+    imports = call(srv, "symbol_context", symbol="AccountsController", repo="accounts")["file_imports"]
+    keys = [(i["type"], i["target"], i["spec"]) for i in imports]
+    assert keys == sorted(keys) and [i["spec"] for i in imports if i["type"] == "Module"] == ["Accounts.Dto", "Accounts.Models"]
 
 
 def test_http_map_of_the_service_and_of_its_client(srv):

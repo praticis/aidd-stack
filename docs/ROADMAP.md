@@ -45,8 +45,6 @@
 - **Non-blocking leftovers:**
   - the `raw_path` of a call through a wrapper whose base ends in `/` comes out with a double slash (the normalized
     path is right);
-  - `symbol_context` sorts a file's imports by type and target only, so the imports of one namespace under different
-    specs come in any order (the sixth golden round);
   - a PAT with access to the tenant's org;
   - validation on WSL (SO14);
   - gaps from the code review feedback: Go `who_calls` across repos, messaging by event type.

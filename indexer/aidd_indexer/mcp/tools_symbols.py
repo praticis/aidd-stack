@@ -209,7 +209,7 @@ def register(mcp, st) -> None:
             MATCH (f:File)-[:CONTAINS]->(:Symbol {id: $id})
             MATCH (f)-[i:IMPORTS]->(t)
             RETURN labels(t)[0] AS type, coalesce(t.name, t.path) AS target, i.spec AS spec
-            ORDER BY type, target LIMIT $limit
+            ORDER BY type, target, spec LIMIT $limit
         """, **base)
         return {"symbol": sy, "parent": parent[0] if parent else None, "members": members,
                 "calls": callees, "called_by": callers, "file_imports": imports}
