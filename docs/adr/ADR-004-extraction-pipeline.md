@@ -1,7 +1,8 @@
 # ADR-004 — The extraction as a map, a reduce and a per-file cache
 
-**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H6) · **Records:** H6-D1–D6; the
-measurements in `docs/corpus-report.md`, "H6 baseline", "H6 step 1" and "Batches by package"
+**Status:** accepted on 2026-10-20, amended on 2026-10-21 (§2: the digest encodes a fact's kind) · **Date:**
+2026-10-20 · **Phase:** 1 (H6) · **Records:** H6-D1–D6; the measurements in `docs/corpus-report.md`, "H6 baseline",
+"H6 step 1" and "Batches by package"
 
 ## Context
 
@@ -101,8 +102,9 @@ A scan never loops over the directories' contexts itself: a lookup across the re
 **An early scan is a map 2 entry** made with its package's context. Its reads are its dependencies, and the reduce
 checks them as it checks a hit. One that holds is written to the cache like any other entry.
 
-**Digests are taken over a canonical encoding:** dicts in order, sets sorted, dataclasses by field. They are never
-taken over pickle, which shares equal objects by identity and so gave different bytes for equal values.
+**Digests are taken over a canonical encoding:** dicts in order, sets sorted, dataclasses and `NamedTuple`s by field
+with their kind's name, since two kinds of fact with equal values compare equal. They are never taken over pickle,
+which shares equal objects by identity and so gave different bytes for equal values.
 
 **ids in a summary are relative to the snapshot,** and the reduce stamps the tenant, the repo and the ref. Then one
 entry serves every ref of a repo, as cache item 7 of the handoff asks. The prototype kept the ref in the key; this part

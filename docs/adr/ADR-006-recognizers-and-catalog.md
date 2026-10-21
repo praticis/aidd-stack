@@ -1,7 +1,8 @@
 # ADR-006 — HTTP rules as recognizers, and the framework catalog as data
 
-**Status:** accepted on 2026-10-20 · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the
-H5 handoff's target architecture, items 5–7; ADR-004 (where the recognizers run)
+**Status:** accepted on 2026-10-20, amended on 2026-10-21 (§3: the facts are `NamedTuple`s, as H5 step 7 built
+them) · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the H5 handoff's
+target architecture, items 5–7; ADR-004 (where the recognizers run)
 
 ## Context
 
@@ -69,9 +70,12 @@ what map 2's cache key is made of.
 ### 3. What a recognizer may write
 
 - **Into the scan's result:** endpoints, calls and warnings.
-- **Typed facts and pending items, for compose:** one registered dataclass per kind (for example
-  `FeGroup(name, prefix, parent)`), serializable, with no tree node inside. The text keys and the positional tuples go
-  away.
+- **Typed facts and pending items, for compose:** one `NamedTuple` per kind (for example `FeGroup(prefix, parent)`,
+  published under the group's name), serializable, with no tree node inside. The text keys and the positional tuples
+  go away.
+  - A `NamedTuple` keeps a tuple's equality, which let H5 step 7 change no result.
+  - So two kinds with equal values compare equal. Facts are kept apart by kind, and a digest encodes the kind's name
+    (ADR-004).
 
 Each language's `compose` becomes an ordered list of steps that consume typed facts.
 
