@@ -5,8 +5,9 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-20):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
-> sections). Next is step 3, H5's steps built toward the ADRs.
+> **State (2026-10-21):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
+> sections). Step 3, H5's steps built toward the ADRs, is under way: steps 4 and 7 merge with PR #7, and 5 and 6 come
+> next, in new PRs.
 >
 > - **Step 0 found** the resolver the largest phase by far, quadratic in Go and C#. An index built once, merged into
 >   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.

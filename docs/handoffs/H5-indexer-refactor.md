@@ -9,7 +9,9 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-28`).
 >
-> **State (2026-10-21):** in progress, on the `feature/h5-refactor` branch.
+> **State (2026-10-21):** in progress. The first part merges as PR #7 (`feature/h5-refactor`), a checkpoint the
+> author decided on 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Steps 5, 6 and 12, the rest of 10
+> and 11 follow in new PRs, each a refactor under the gates and validated on a live install before its merge.
 >
 > - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
 >   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
@@ -301,7 +303,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions and the MCP's tool groups | the shape report shows nothing off target but `cli.py` |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
-first slice). H5's code commits are `refactor:`, so its PR is read as a refactor, where any difference fails. Locally:
+first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Locally:
 `test.sh`, `corpus.sh`, `micro.sh` and `gates.sh`.
 1. tests green;
 2. the corpus against the starting baseline: "0 repo(s) differ";
@@ -355,6 +357,9 @@ fixed in a separate commit, with a fixture case, and goes into the baseline by e
   excludes it.
 - **H5-D7 (2026-10-21), step 5 goes Go, C#, Python, TS,** one language per commit after the `TypeIndex` API. Go has
   the clearest pair of type answers, the resolver's and the scanner's, and the measurement behind ADR-005.
+- **H5-D8 (2026-10-21), PR #7 merges as a checkpoint,** with the steps done so far; the rest follows in new PRs. The
+  steps left are the largest, a smaller PR is easier to review and to validate live, a regression is easier to place,
+  and the branch stops piling up rebases.
 
 ## Pitfalls
 
