@@ -1,7 +1,6 @@
-"""Go's two answers to "what type does the code declare for this value": the resolver's, which types call receivers
-for `CALLS`, and the HTTP scanner's, which follows a router into a method of a typed value. Each answers cases the
-other misses. A guard holds what one side answers today; a strict xfail holds what the other should answer too. One
-answer for both sides has to pass every case here: it gains the xfails and loses no guard."""
+"""Go's one answer to "what type does the code declare for this value", which the resolver asks to type call
+receivers for `CALLS` and the HTTP scanner to follow a router into a method of a typed value. The two sides once had
+answers of their own, and each case here is one they gave differently; both sides now pass every one."""
 
 import contextlib
 import io
@@ -58,10 +57,6 @@ func main() {
 """
 
 
-def _xfail(why: str):
-    return pytest.mark.xfail(strict=True, reason=f"the scanner {why}")
-
-
 ROUTES = [
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\th.Register(v1)\n}\n",
                  id="composite-literal"),
@@ -87,20 +82,20 @@ ROUTES = [
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h = &handlers.Handlers{}\n\th.Register(v1)\n}\n",
                  id="var-with-a-value"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := handlers.New()\n\th.Register(v1)\n}\n",
-                 id="constructor-result", marks=_xfail("does not type a local by its constructor's declared result")),
+                 id="constructor-result"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th, _ := handlers.NewE()\n\th.Register(v1)\n}\n",
-                 id="constructor-of-two-results", marks=_xfail("does not type a local by its constructor's declared result")),
+                 id="constructor-of-two-results"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h = handlers.New()\n\th.Register(v1)\n}\n",
-                 id="var-with-a-constructor", marks=_xfail("does not type a local by its constructor's declared result")),
+                 id="var-with-a-constructor"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h handlers.Handlers\n\th.Register(v1)\n}\n",
                  id="var-declaration"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) (h *handlers.Handlers) {\n\th.Register(v1)\n"
                  "\treturn\n}\n", id="named-result"),
     pytest.param("type Deps struct{ API *handlers.Handlers }\n\ntype Server struct{ *Deps }\n\n"
                  "func wire(_ *other.T, v1 *gin.RouterGroup) {\n\ts := &Server{}\n\ts.API.Register(v1)\n}\n",
-                 id="promoted-field", marks=_xfail("does not read a field promoted from an embedded struct")),
+                 id="promoted-field"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\ts := &app.Server{}\n\ts.API.Register(v1)\n}\n",
-                 id="field-of-another-package", marks=_xfail("reads the fields of its own package's structs only")),
+                 id="field-of-another-package"),
 ]
 
 
@@ -130,7 +125,6 @@ def test_a_group_reaches_the_method_of_a_typed_value(tmp_path, wire):
     assert _routes(tmp_path, wire) == {("GET", "/api/users")}
 
 
-@_xfail("resolves a field's type with the imports of the file it scans, not of the file that declares the struct")
 def test_a_field_type_under_the_alias_of_the_file_that_declares_it(tmp_path):
     server = 'package main\n\nimport h2 "example.com/x/handlers"\n\ntype Server struct{ api *h2.Handlers }\n'
     wire = "func wire(_ *other.T, v1 *gin.RouterGroup) {\n\ts := &Server{}\n\ts.api.Register(v1)\n}\n"
@@ -175,10 +169,6 @@ func (b *B) Run() {}
 
 func main() {}
 """
-
-
-def _resolver_xfail(why: str):
-    return pytest.mark.xfail(strict=True, reason=f"the resolver {why}")
 
 
 CALLS = [
@@ -228,7 +218,6 @@ def test_a_hash_in_the_text_of_a_call_is_no_result_number(tmp_path):
     assert ("A.Run", "receiver-type") not in _calls_of_f(tmp_path, {"f.go": f})
 
 
-@_resolver_xfail("finds no file of a package whose directory has a dot, so it reads none of its structs")
 def test_a_field_of_a_package_in_a_directory_with_a_dot(tmp_path):
     _write(tmp_path, {"go.mod": GOMOD, "types.go": TYPES,
                       "api.v1/f.go": "package apiv1\n\ntype A struct{}\n\nfunc (a *A) Run() {}\n\ntype B struct{}\n\n"
@@ -239,7 +228,6 @@ def test_a_field_of_a_package_in_a_directory_with_a_dot(tmp_path):
     assert calls == {("api.v1.B.Run", "receiver-type")}
 
 
-@_resolver_xfail("reads a struct's fields in the first file that declares it, not in the one that has the field")
 def test_a_field_of_a_struct_declared_in_two_files(tmp_path):
     linux = "//go:build linux\n\npackage main\n\ntype S struct{ other int }\n"
     other = "//go:build !linux\n\npackage main\n\ntype S struct{ x *B }\n"

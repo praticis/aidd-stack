@@ -20,11 +20,12 @@ from ...core.http_scope import enclosing_function, in_function
 from .http_facts import EncodedCall, Encoder, SwaggerBase, SwaggerRoute
 from .package_facts import GoFacts, verb_list
 from .paths import GoPaths
-from .locals import declared_type
-from .type_facts import GoTypes
+from .locals import declared_type, receiver_chain
+from .type_index import GoTypeIndex, typed
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
 from ...core.model import RepoInfo
+from ...core.types import TypeRef
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, expand_alternatives, has_literal_segment, normalize_path, unquote
 
 GO_VERB_ALIASES = {"Del": "DELETE"}                                                       # prometheus/common/route
@@ -671,33 +672,22 @@ class GoScanner(GoPaths, BaseScanner):
         target = self.resolve_import(self.imports[text(operand, self.src)][0])
         return (target or ".", text(fn.child_by_field_name("field"), self.src)) if target is not None else None
 
-    def _value_type(self, n: Node) -> str | None:
-        """The type the code declares for a value: `x` by its declaration in scope, as the resolver types a call's
-        receiver; `x.f` a field of `x`'s struct. A local typed by a call's result is not followed here."""
-        if n.type == "selector_expression":
-            return self._field_type(n)
-        typ = declared_type(text(n, self.src), n, self.src) if n.type == "identifier" else None
-        return typ if typ is not None and not typ.startswith("call:") else None
+    def _value_type(self, n: Node) -> TypeRef | None:
+        """The type the code declares for a value: `x` by its declaration in scope, `x.f` through its struct's
+        fields, as the resolver types a call's receiver."""
+        found = receiver_chain(n, self.src)
+        written = declared_type(text(found[0], self.src), found[0], self.src) if found is not None else None
+        types = self._types()
+        return typed(types, self.fx.file.path, written, found[1]) if written and types is not None else None
 
-    def _field_type(self, n: Node) -> str | None:
-        """`x.f`: the type of the field `f` of `x`'s struct, declared in any file of the package."""
-        base = self._value_type(n.child_by_field_name("operand"))
-        sname = base.lstrip("*") if base is not None else ""
-        if not re.fullmatch(r"\w+", sname):        # a struct of another package, or a generic one: not read
-            return None
-        field = text(n.child_by_field_name("field"), self.src)
-        return next((t for facts in self.ctx.file_facts.values() if (t := GoTypes.of(facts).field_type(sname, field))), None)
+    def _method_unit(self, ref: TypeRef, method: str) -> tuple[str, str] | None:
+        """(package directory, `T.M`) of the method `M` of the type `ref`."""
+        directory = self._types().directory(ref.package)
+        return (directory, f"{ref.name}.{method}") if directory is not None else None
 
-    def _method_unit(self, typ: str, method: str) -> tuple[str, str] | None:
-        """(package directory, `T.M`) of the method `M` of the declared type `typ`: `*Router` of this package,
-        `*pkg.API` of an imported one."""
-        pkg, _, tname = typ.lstrip("*").split("[")[0].rpartition(".")
-        if not re.fullmatch(r"\w+", tname):
-            return None
-        if not pkg:
-            return dir_of(self.fx.file.path), f"{tname}.{method}"
-        target = self.resolve_import(self.imports[pkg][0]) if pkg in self.imports else None
-        return (target, f"{tname}.{method}") if target is not None else None
+    def _types(self) -> "GoTypeIndex | None":
+        view = self.ctx.view
+        return view.types.of("go") if view is not None and view.types is not None else None
 
     def _returned_router(self, n: Node) -> str | None:
         """`apiv1.Routes()`, `adminRouter()` from another file of the package: the router that function returns."""

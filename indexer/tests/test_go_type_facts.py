@@ -60,7 +60,6 @@ def test_a_file_s_facts_name_types_as_the_file_writes_them():
     assert facts.methods == {"Server": ("Run", "Stop", "Run2")}
     assert facts.funcs == {"New": ("Server",), "Pair": ("Server", "Server", "error")}
     assert facts.imports == {"http": "net/http", "pw": "example.com/x/password", "store": "example.com/x/store/v2"}
-    assert facts.field_type("Server", "api") == "http.ServeMux" and facts.field_type("Server", "nope") is None
 
 
 def test_the_facts_travel_between_processes():

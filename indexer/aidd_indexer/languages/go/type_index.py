@@ -61,8 +61,8 @@ def typed(types: TypeIndex, file: str, written: str, chain: tuple[str, ...]) -> 
 
 
 class GoTypeIndex(TypeIndex):
-    """A type is its package's dotted directory ("" for the repo root) and its name. A type declared in several files
-    of a package (under build tags) is read in the first that declares it."""
+    """A type is its package's dotted directory ("" for the repo root) and its name. A field is read in every file of
+    the package that declares its struct (under build tags, several); the other questions in the first one."""
 
     def __init__(self, ctx: ResolveContext) -> None:
         self._ctx = ctx
@@ -119,13 +119,19 @@ class GoTypeIndex(TypeIndex):
         return self._implementers[interface]
 
     def files_in(self, package: str) -> list[FileInfo]:
-        """The Go files of the package whose dotted directory is `package`, in the repo's order."""
+        """The Go files of the package whose dotted directory is `package`, in the repo's order. Keyed by each file's
+        own directory, so a directory whose name has a dot (`web.handlers/`) is found too."""
         if self._by_dir is None:
             self._by_dir = {}
             for f in self._ctx.files_by_path.values():
                 if f.language == "go":
-                    self._by_dir.setdefault(str(PurePosixPath(f.path).parent), []).append(f)
-        return self._by_dir.get(package.replace(".", "/") or ".", [])
+                    self._by_dir.setdefault(_dotted(f.path), []).append(f)
+        return self._by_dir.get(package, [])
+
+    def directory(self, package: str) -> str | None:
+        """The repo path of the package's directory, as its files give it; None for a package with no Go file."""
+        files = self.files_in(package)
+        return str(PurePosixPath(files[0].path).parent) if files else None
 
     def _facts(self, f: FileInfo) -> GoTypes:
         return GoTypes.of(self._ctx.facts.get(f.id))
@@ -134,8 +140,7 @@ class GoTypeIndex(TypeIndex):
         """The dotted directory of the package a type reference names: the file's own when unqualified, else the one
         the alias imports, when it is a module of this repo."""
         if alias is None:
-            d = str(PurePosixPath(file.path).parent)
-            return "" if d == "." else d.replace("/", ".")
+            return _dotted(file.path)
         spec = self._facts(file).imports.get(alias)
         if not spec:
             return None
@@ -158,10 +163,12 @@ class GoTypeIndex(TypeIndex):
         """A field of the struct, else the first one an embedded struct promotes with a type of the repo, depth first."""
         if depth > DEPTH:
             return TOO_DEEP
+        declared = False
         for f in self.files_in(owner.package):
             st = self._facts(f).structs.get(owner.name)
             if st is None:
                 continue
+            declared = True
             if name in st.fields:
                 return Field(self._named(f, st.fields[name]), st.fields[name], depth > 0)
             for written in st.embeds:
@@ -169,8 +176,7 @@ class GoTypeIndex(TypeIndex):
                 hit = self._field(inner, name, depth + 1) if isinstance(inner, TypeRef) else inner
                 if isinstance(hit, Field) and isinstance(hit.type, TypeRef):
                     return hit
-            return NO_FIELD
-        return UNDECLARED
+        return NO_FIELD if declared else UNDECLARED
 
     def _required_by(self, interface: TypeRef) -> dict[str, TypeRef] | None:
         if interface not in self._required:
@@ -207,8 +213,12 @@ class GoTypeIndex(TypeIndex):
             for f in self._ctx.files_by_path.values():
                 if f.language != "go" or is_test_path(f.path):
                     continue
-                d = str(PurePosixPath(f.path).parent)
-                package = "" if d == "." else d.replace("/", ".")
                 for recv, names in self._facts(f).methods.items():
-                    self._sets.setdefault(TypeRef(package, recv), set()).update(names)
+                    self._sets.setdefault(TypeRef(_dotted(f.path), recv), set()).update(names)
         return self._sets
+
+
+def _dotted(path: str) -> str:
+    """The dotted directory of the file at `path`: its package's name in a qualified name."""
+    d = str(PurePosixPath(path).parent)
+    return "" if d == "." else d.replace("/", ".")

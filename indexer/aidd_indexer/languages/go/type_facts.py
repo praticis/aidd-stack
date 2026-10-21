@@ -36,11 +36,6 @@ class GoTypes(NamedTuple):
         """A file's facts as Go's: none for a file of another language, or one that did not parse."""
         return facts if isinstance(facts, GoTypes) else NONE
 
-    def field_type(self, struct: str, name: str) -> str | None:
-        """The type this file's struct `struct` writes for its field `name`."""
-        st = self.structs.get(struct)
-        return st.fields.get(name) if st is not None else None
-
 
 NONE = GoTypes({}, {}, {}, {}, {})
 
