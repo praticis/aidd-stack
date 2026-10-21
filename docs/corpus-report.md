@@ -288,6 +288,7 @@ Each step must give `0 repo(s) differ` on both sets against the starting baselin
 | 4c | 0 differ / 0 differ | 777 s | each language's package facts are a dataclass whose fields declare how two files' values join (one value or none, the last one, a union); `PackageContext` holds them by key, with no field of its own that is a language's; a lookup across the repo is a question to the view (`RepoView.defining`). The micro set is identical too |
 | 7 | 0 differ / 0 differ | 761 s | every fact a file publishes and every request it leaves pending is a `NamedTuple` of its kind (`languages/<lang>/http_facts.py`), looked up by its type: no text key and no positional tuple is left between a scanner and its `compose`. The micro set is identical too |
 | 4d | 0 differ / 0 differ | 771 s | C#'s qualified constants are a question to the view (`RepoView.constant_values`), not a loop over every directory, and a test keeps the view the only code that walks the directories. Go's two direct reads of an imported directory miss the repo's root package; a strict xfail holds that gap for its own fix. The micro set is identical too |
+| 5, Go's refactor | 0 differ / 0 differ | 811 s | the `TypeIndex` API in the core, Go's type facts as typed values, and Go's resolver asking `GoTypeIndex` (PR #17). Its three commits summed 952, 906 and 811 s, against 771 s at 4d: within the 28 % noise, and not measured alone. The micro graph was identical on the 12 repos and on the corpus's 13 other Go repos |
 
 Two notes on step 2:
 
