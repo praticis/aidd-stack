@@ -396,6 +396,16 @@ Neither side reads a type assertion (`h := x.(*T)`), a type switch, a `range` va
 Those are left out of step 5: each would be a rule of its own, with its own cycle, and here every change has to come
 from a case of the table.
 
+Past a local's own declaration, the micro set of the one answer showed three gaps of the type service, older than
+step 5. Each lost edges the wrong answers had found by luck, so they close in the same PR (H5-D15), in
+`indexer/tests/test_go_declared_types.py`:
+
+| Case | Today | Test |
+|---|---|---|
+| a method an embedded struct promotes, at any depth and from another package | a typed receiver finds no method, so no edge | xfail `test_a_call_reaches_a_method_its_receivers_type_promotes`, guard `its-own-method-wins` |
+| a type parameter (`func F[T any]() T`, `x T`, a field `v T`) | taken for a type the package declares, so no edge | xfail `test_a_type_parameter_types_nothing_so_the_call_is_found_by_name`, guard `a-methods-result` |
+| `y := x.M()`, the result a method declares: own, an interface's, promoted, through a field, in a chain | untyped, so the call is found by name | xfail `test_a_local_has_the_type_its_methods_result_declares`, `test_an_error_a_method_returns_reaches_no_error_type_of_the_repo` and, for the scanner, `test_a_group_reaches_the_method_of_a_local_a_method_returns` |
+
 ### Go's change of behavior
 
 One answer, with Go's own rule: **a variable's type is the one its declaration gives it**, from the nearest
@@ -495,6 +505,12 @@ item, and the new baseline is recorded.
   case of the language's table changed it. The changes are counted per case, and a seeded sample per case and repo is
   judged at the source. One wrong item in a case blocks the PR. The micro set's Go repos hold about a million `CALLS`,
   too many to judge one by one, and a case is what a wrong item would share.
+- **H5-D15 (2026-10-21), Go's change of behavior also closes three older gaps of the type service.** A method an
+  embedded struct promotes, a type parameter (which declares no type) and the result a method declares, each with its
+  cases first; the type service answers a method's result as a question of its own. The one answer reaches more
+  receivers, and its micro set lost edges where `main`'s wrong answers had found the right method by luck. The
+  interface's dispatch, a form neither side reads (`range`, a type switch, an assertion) and a file the grammar does not
+  parse stay out.
 
 ## Pitfalls
 
