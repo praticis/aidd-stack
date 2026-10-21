@@ -15,7 +15,7 @@ TYPE_NODES = ("type_identifier", "qualified_type", "pointer_type", "generic_type
 
 
 class GoStruct(NamedTuple):
-    fields: dict[str, str]          # name → its type as written; an embedded type under its own name
+    fields: dict[str, str]          # name → its type as written ("" for a type parameter); embedded, under its name
     embeds: tuple[str, ...]         # the embedded types, whose fields and methods are promoted
 
 
@@ -29,20 +29,18 @@ class GoTypes(NamedTuple):
     interfaces: dict[str, GoInterface]
     methods: dict[str, tuple[str, ...]]     # receiver type → the methods this file declares on it
     funcs: dict[str, tuple[str, ...]]       # function → its declared results, "" for one whose type is not a name
+                                            # or is a type parameter
     imports: dict[str, str]                 # alias → import path
+    results: dict[str, tuple[str, ...]]     # `Type.method` → its declared results, as `funcs` writes them (none for
+                                            # a method that declares none); an interface's methods too
 
     @classmethod
     def of(cls, facts: Any) -> GoTypes:
         """A file's facts as Go's: none for a file of another language, or one that did not parse."""
         return facts if isinstance(facts, GoTypes) else NONE
 
-    def field_type(self, struct: str, name: str) -> str | None:
-        """The type this file's struct `struct` writes for its field `name`."""
-        st = self.structs.get(struct)
-        return st.fields.get(name) if st is not None else None
 
-
-NONE = GoTypes({}, {}, {}, {}, {})
+NONE = GoTypes({}, {}, {}, {}, {}, {})
 
 
 def type_text(node: Node | None, src: bytes) -> str | None:
@@ -57,6 +55,19 @@ def type_text(node: Node | None, src: bytes) -> str | None:
         if n is None:
             return None
     return node_text(n, src)
+
+
+def type_parameters(n: Node, src: bytes) -> frozenset[str]:
+    """The type parameters a generic function or type declares (`[T any]`), or a method's receiver names
+    (`(b *Box[T])`). A type parameter declares no type: a value of one has the type its caller gives it."""
+    tp = n.child_by_field_name("type_parameters")
+    if tp is not None:
+        return frozenset(node_text(nm, src) for d in tp.children if d.type == "type_parameter_declaration"
+                         for nm in d.children_by_field_name("name"))
+    recv = n.child_by_field_name("receiver")
+    args = next((c for c in walk(recv) if c.type == "type_arguments"), None) if recv is not None else None
+    return frozenset(node_text(t, src) for e in args.children if e.type == "type_elem" for t in e.children
+                     if t.type == "type_identifier") if args is not None else frozenset()
 
 
 def receiver_type(node: Node, src: bytes) -> str | None:
@@ -87,37 +98,43 @@ def type_facts(root: Node, src: bytes) -> GoTypes:
     methods: dict[str, list[str]] = {}
     funcs: dict[str, tuple[str, ...]] = {}
     imports: dict[str, str] = {}
+    results: dict[str, tuple[str, ...]] = {}
     for n in walk(root):
         if n.type == "type_spec":
-            _type_spec(n, src, structs, embeds, interfaces)
+            _type_spec(n, src, structs, embeds, interfaces, results)
         elif n.type == "method_declaration":
             recv, name = receiver_type(n, src), n.child_by_field_name("name")
             if recv and name is not None:
                 methods.setdefault(recv, []).append(node_text(name, src))
+                results[f"{recv}.{node_text(name, src)}"] = _declared(n, src, type_parameters(n, src))
         elif n.type == "function_declaration":
             funcs.update(_results(n, src))
         elif n.type == "import_spec" and (path := n.child_by_field_name("path")) is not None:
             spec = node_text(path, src).strip('"`')
             imports.update(dict.fromkeys(import_aliases(n, spec, src), spec))
     return GoTypes({name: GoStruct(fields, embeds.get(name, ())) for name, fields in structs.items()}, interfaces,
-                   {recv: tuple(names) for recv, names in methods.items()}, funcs, imports)
+                   {recv: tuple(names) for recv, names in methods.items()}, funcs, imports, results)
 
 
 def _type_spec(n: Node, src: bytes, structs: dict[str, dict[str, str]], embeds: dict[str, tuple[str, ...]],
-               interfaces: dict[str, GoInterface]) -> None:
+               interfaces: dict[str, GoInterface], results: dict[str, tuple[str, ...]]) -> None:
     name, typ = n.child_by_field_name("name"), n.child_by_field_name("type")
     if name is None or typ is None:
         return
     if typ.type == "struct_type":
-        fields, embedded = _struct(typ, src)
+        fields, embedded = _struct(typ, src, type_parameters(n, src))
         structs[node_text(name, src)] = fields
         if embedded:
             embeds[node_text(name, src)] = embedded
     elif typ.type == "interface_type":
         interfaces[node_text(name, src)] = _interface(typ, src)
+        params = type_parameters(n, src)
+        for el in (c for c in typ.children if c.type == "method_elem"):
+            if (nm := el.child_by_field_name("name")) is not None:
+                results[f"{node_text(name, src)}.{node_text(nm, src)}"] = _declared(el, src, params)
 
 
-def _struct(typ: Node, src: bytes) -> tuple[dict[str, str], tuple[str, ...]]:
+def _struct(typ: Node, src: bytes, params: frozenset[str]) -> tuple[dict[str, str], tuple[str, ...]]:
     """A struct type's fields, its nested struct types' included, and the types it embeds."""
     fields: dict[str, str] = {}
     embedded: list[str] = []
@@ -132,7 +149,7 @@ def _struct(typ: Node, src: bytes) -> tuple[dict[str, str], tuple[str, ...]]:
             embedded.append(tt)
             names = [tt.split(".")[-1]]
         for fname in names:
-            fields[fname] = tt
+            fields[fname] = "" if tt in params else tt
     return fields, tuple(embedded)
 
 
@@ -155,14 +172,24 @@ def _results(n: Node, src: bytes) -> dict[str, tuple[str, ...]]:
     """The function `n`'s declared results under its name: `(*T, error)`, `(a, b T)` or `*T`; nothing when it declares
     none, or one whose type is not a name."""
     name, result = n.child_by_field_name("name"), n.child_by_field_name("result")
-    if name is None or result is None:
+    if name is None or result is None or (result.type != "parameter_list" and not type_text(result, src)):
         return {}
+    return {node_text(name, src): _declared(n, src, type_parameters(n, src))}
+
+
+def _declared(n: Node, src: bytes, params: frozenset[str]) -> tuple[str, ...]:
+    """The types the function, method or interface method `n` declares for its results, "" for one whose type is not
+    a name or is one of the type parameters `params`."""
+    result = n.child_by_field_name("result")
+    if result is None:
+        return ()
     if result.type != "parameter_list":
-        tt = type_text(result, src)
-        return {node_text(name, src): (tt,)} if tt else {}
+        tt = type_text(result, src) or ""
+        return ("" if tt in params else tt,)
     rets: list[str] = []
     for pd in result.children:
         if pd.type == "parameter_declaration":
             ty = next((c for c in pd.children if c.type in TYPE_NODES or c.type.endswith("_type")), None)
-            rets += [type_text(ty, src) or ""] * max(1, sum(1 for c in pd.children if c.type == "identifier"))
-    return {node_text(name, src): tuple(rets)}
+            tt = type_text(ty, src) or ""
+            rets += ["" if tt in params else tt] * max(1, sum(1 for c in pd.children if c.type == "identifier"))
+    return tuple(rets)

@@ -60,7 +60,18 @@ def test_a_file_s_facts_name_types_as_the_file_writes_them():
     assert facts.methods == {"Server": ("Run", "Stop", "Run2")}
     assert facts.funcs == {"New": ("Server",), "Pair": ("Server", "Server", "error")}
     assert facts.imports == {"http": "net/http", "pw": "example.com/x/password", "store": "example.com/x/store/v2"}
-    assert facts.field_type("Server", "api") == "http.ServeMux" and facts.field_type("Server", "nope") is None
+    assert facts.results == {"Store.Save": ("error",), "Server.Run": (), "Server.Stop": (), "Server.Run2": ()}
+
+
+def test_a_type_parameter_is_written_as_no_name():
+    facts = _facts(b"package app\n\ntype Box[T any] struct{ v T; n *Node }\n\n"
+                   b"func Load[T any, K comparable](v T) (T, []K, *Node) { return v, nil, nil }\n\n"
+                   b"func First[T any](xs []T) T { return xs[0] }\n\n"
+                   b"func (b *Box[T]) Get() (T, *Node) { return b.v, b.n }\n\n"
+                   b"type Getter[T any] interface{ Get() T }\n")
+    assert facts.structs == {"Box": GoStruct({"v": "", "n": "Node"}, ())}
+    assert facts.funcs == {"Load": ("", "", "Node"), "First": ("",)}
+    assert facts.results == {"Box.Get": ("", "Node"), "Getter.Get": ("",)}
 
 
 def test_the_facts_travel_between_processes():

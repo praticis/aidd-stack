@@ -7,7 +7,7 @@
 > - ADRs 002 and 003;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
->   `2026-10-18-v2-baseline-28`).
+>   `2026-10-18-v2-baseline-29`).
 >
 > **State (2026-10-21):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
 > 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
@@ -68,13 +68,16 @@
 >
 >   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
 >   behavior (H5-D11).
+> - **Step 5, Go's change of behavior (branch `feat/h5-go-type-answer`, 2026-10-21; its PR waits for the live
+>   install).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
+>   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
->     is done. Next, in this order: a `fix(mcp)` for the order of `symbol_context`'s imports, so the next golden
->     round has no noise, then Go's change of behavior ("Step 5" below);
+>     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
+>     PR #19. Next: C#, Python and TS;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -367,15 +370,24 @@ passes.
 | `s.F`, a direct field of the package's struct | typed | typed | guard `field` |
 | `h = &T{}`, a plain assignment | — | typed | guard `assignment` |
 | a block's local that shadows a parameter | the parameter's type | the local's | guard (scanner), xfail (resolver) `block-shadows-a-parameter` |
+| a block's local that has gone out of scope at the use | the parameter's type | the block's local | guard (resolver), xfail (scanner) `a-block-local-out-of-scope` |
+| `h, err := h.Copy()`, a `:=` that only assigns a parameter again | the parameter's type | — | guard (resolver), xfail (scanner) `a-redeclaration-keeps-a-parameters-type` |
+| the same `:=` after `h := &T{}` in its block | the call's result | — | xfail (both) `a-redeclaration-keeps-its-type` |
+| `h = h.With(..)`, a plain assignment to a parameter | the parameter's type | — | guard (resolver), xfail (scanner) `a-plain-assignment-keeps-the-type` |
 | a closure inside a closure | one function out only | every function out | guard (scanner), xfail (resolver) `closure-in-a-closure` |
 | a closure's local of the same name, before the use | read as the function's | kept inside | xfail (resolver) `a-closure-keeps-its-locals` |
+| `h := T{}` without a pointer, and `h := &T[X]{}` of a generic type | typed | typed | guards `value-literal`, `generic-literal` / `test_a_generic_type_reaches_its_method` |
+| `var h = &T{}`, a `var` with a value | — | typed | guard (scanner), xfail (resolver) `var-with-a-value` |
 | `h := pkg.New()` | the constructor's declared result | — | xfail (scanner) `constructor-result` |
+| `h, err := pkg.New()` | its first declared result | — | guard (resolver), xfail (scanner) `constructor-of-two-results` |
+| `var h = pkg.New()` | — | — | xfail (both) `var-with-a-constructor`: what the two rows above give together |
 | `var h T` | typed | — | guard (resolver), xfail (scanner) `var-declaration` |
 | a named result | typed | — | guard (resolver), xfail (scanner) `named-result` |
 | a field promoted from an embedded struct | typed, 4 levels deep | — | xfail (scanner) `promoted-field` |
 | a field of another package's struct | typed | — | xfail (scanner) `field-of-another-package` |
 | a struct declared in two files of the package (build tags) | the first file that declares it | any file whose struct has the field | guard (scanner), xfail (resolver) `a_struct_declared_in_two_files` / `a_field_of_a_struct_declared_in_two_files` |
 | a field's type under the alias of the struct's own file | resolved in that file | resolved with the scanned file's imports | xfail (scanner) `test_a_field_type_under_the_alias_of_the_file_that_declares_it` |
+| a package in a directory whose name has a dot (`web.handlers/`) | finds none of its files, so none of its structs | typed, by the directory's path | guard (scanner) `test_a_package_in_a_directory_with_a_dot`, xfail (resolver) `test_a_field_of_a_package_in_a_directory_with_a_dot` |
 
 On the scanner's side, each xfail is a route that loses its group's prefix (`GET /users` for `GET /api/users`). On the
 resolver's side, each is a `CALLS` edge to the wrong method, or one found by name instead of by type. The two answers
@@ -383,13 +395,28 @@ also write a type differently: the resolver's is normalized (`*pkg.T` and `[]T` 
 is the text as written. A plain assignment of another type to a variable that a `var` declared with an interface type
 is left out on purpose: which method it reaches is not a fact the declaration states.
 
+Neither side reads a type assertion (`h := x.(*T)`), a type switch, a `range` variable or a package-level variable.
+Those are left out of step 5: each would be a rule of its own, with its own cycle, and here every change has to come
+from a case of the table.
+
+Past a local's own declaration, the micro set of the one answer showed three gaps of the type service, older than
+step 5. Each lost edges the wrong answers had found by luck, so they close in the same PR (H5-D15), in
+`indexer/tests/test_go_declared_types.py`:
+
+| Case | Today | Test |
+|---|---|---|
+| a method an embedded struct promotes, at any depth and from another package | a typed receiver finds no method, so no edge | xfail `test_a_call_reaches_a_method_its_receivers_type_promotes`, guard `its-own-method-wins` |
+| a type parameter (`func F[T any]() T`, `x T`, a field `v T`) | taken for a type the package declares, so no edge | xfail `test_a_type_parameter_types_nothing_so_the_call_is_found_by_name`, guard `a-methods-result` |
+| `y := x.M()`, the result a method declares: own, an interface's, promoted, through a field, in a chain | untyped, so the call is found by name | xfail `test_a_local_has_the_type_its_methods_result_declares`, `test_an_error_a_method_returns_reaches_no_error_type_of_the_repo` and, for the scanner, `test_a_group_reaches_the_method_of_a_local_a_method_returns` |
+
 ### Go's change of behavior
 
 One answer, with Go's own rule: **a variable's type is the one its declaration gives it**, from the nearest
 declaration in scope before the use, from the innermost block and function out. A receiver, a parameter and a named
 result declare a type, and so do `var x T`, `x := T{}` or `&T{}`, and `x := pkg.New()` when `New` declares its result.
 A plain assignment never changes a variable's type, so it types nothing: the guard `assignment` passes through its
-`var`.
+`var`. Nor does a `:=` that names a variable its own block already declares, or a parameter at the top of the
+function's body: Go only assigns that variable again.
 
 - **The boundary with SCIP stays where the guide puts it** (`indexer-evolution.md` §8): only a declared type counts.
   A function's result counts when its signature declares it, never by following its `return`s. The scanner does not
@@ -401,9 +428,9 @@ A plain assignment never changes a variable's type, so it types nothing: the gua
   its answer (ADR-005, ADR-006). A field gets the whole answer (H5-D11): every file that declares the struct, the
   imports of the file that declares it, promoted fields and other packages' structs. `PackageContext.file_facts`, which
   only the scanner's field lookup reads, goes away.
-- **The cases first.** Before any code, probes add guards and xfails for the forms the table does not hold yet:
-  `var x = expr`, a `range` variable, a type switch and a type assertion, `h, err := pkg.New()` on the scanner's side,
-  `T{}` without a pointer, a generic `T[X]{}` and a package-level variable.
+- **The cases first.** Before any code, probes tried the forms the table did not hold: `var x = expr`, a `range`
+  variable, a type switch and a type assertion, `h, err := pkg.New()`, `T{}` without a pointer, a generic `T[X]{}` and
+  a package-level variable. The ones a side reads are in the table now, and the ones neither reads are left out.
 - **Judged, not identical.**
   - The corpus goes through the guide's cycle, with the expected lists in commits of their own.
   - The micro set is judged by case (H5-D14), and the hold-out is read only in aggregate (H5-D13).
@@ -411,9 +438,41 @@ A plain assignment never changes a variable's type, so it types nothing: the gua
     `impact_of` reads `CALLS`.
 - **The time,** measured alone, keeps step 3a's gain (protocol item 5).
 
-The commits: the cases; one answer inside a file; fields through the `TypeIndex`; then the expected lists and the
-baseline. It is done when every case passes, with the xfails gained and no guard lost, the judged diffs hold no wrong
-item, and the new baseline is recorded.
+**Done (2026-10-21).** Eight commits, each measured against the one before:
+
+1. the cases (`indexer/tests/test_go_types.py`), with a redeclaration and a plain assignment, which a first run of
+   the one answer showed the table missed;
+2. one answer inside a file (`languages/go/locals.py`);
+3. fields through the `TypeIndex` (the scanner asks `view.types`; `PackageContext.file_facts` is gone);
+4. the cases of the three gaps (`indexer/tests/test_go_declared_types.py`, H5-D15);
+5. a method an embedded struct promotes, the shallowest first (Go's `supertypes`);
+6. a type parameter declares no type;
+7. a method's declared result (`TypeIndex.method_return_type`);
+8. the embedded types found once per type.
+
+Every xfail of both tables is gained and no guard is lost.
+
+- **The corpus:** two items, both from commit 3, both right at the source and both outside their lists' scope, so
+  no expected list changes. vikunja's `POST /mcp` is `POST /api/v2/mcp` (`m, err := mcpmodule.New(..)`, then
+  `m.Register(a)`; the repo's own `RoutePrefix` is `apiv2.GroupPrefix + "/mcp"`). memos gains `ANY /`, its
+  frontend's `mux.Handle("/", s.Handler(fallback))`, as argo-cd's list holds `mux.Handle("/", assetsHandler)`. The
+  hold-out gives `0 repo(s) differ`, read in aggregate. The new baseline is `2026-10-18-v2-baseline-29`.
+- **The micro set:** the 8 repos of other languages are identical. On the 17 Go repos, from `main`: +18,874 and −47
+  typed edges, −4,339 and +353 `inherited`, −11,077 and +482 found by name. Judged by case on seeded samples:
+  - the one answer types a receiver in a closure inside a closure, keeps a closure's or a block's local inside it,
+    and reads `token, err := token.CreateToken(..)` as the package's function;
+  - promoted methods turn 4,332 `inherited` edges into the method itself (gitea's `ctx.Tr` was
+    `services.context.Context`, and is `services.context.Base.Tr`);
+  - type parameters give gitea's `AssertExistsAndLoadBean[T]` locals their calls by name back;
+  - a method's result removes guesses that were wrong (`err.Error()` to an error type of the repo,
+    `response.Status()` to a fake).
+- **What stays lost** is what H5-D15 leaves out. A guess by name on a receiver whose declared type is an interface
+  goes (mattermost's `store.Store`, kratos's `persistence.Persister`: about 750 edges), as `main` already does for
+  the same variables nested less deep. A variable of a form neither side reads (`range`, a type switch, an
+  assertion) loses what `main` read from an out-of-scope declaration of the same name (about 60 sites). In a
+  function the grammar does not parse (grafana's Go 1.26 `new(expr)`), scopes are what error recovery left. A
+  generic's inferred type (`u := AssertExistsAndLoadBean(t, &User{})`) is SCIP's.
+- **The time, alone,** on one image: the corpus summed 763 s on `main` and 768 s on the branch.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -481,6 +540,12 @@ item, and the new baseline is recorded.
   case of the language's table changed it. The changes are counted per case, and a seeded sample per case and repo is
   judged at the source. One wrong item in a case blocks the PR. The micro set's Go repos hold about a million `CALLS`,
   too many to judge one by one, and a case is what a wrong item would share.
+- **H5-D15 (2026-10-21), Go's change of behavior also closes three older gaps of the type service.** A method an
+  embedded struct promotes, a type parameter (which declares no type) and the result a method declares, each with its
+  cases first; the type service answers a method's result as a question of its own. The one answer reaches more
+  receivers, and its micro set lost edges where `main`'s wrong answers had found the right method by luck. The
+  interface's dispatch, a form neither side reads (`range`, a type switch, an assertion), a generic's inferred type
+  and a file the grammar does not parse stay out.
 
 ## Pitfalls
 
@@ -511,6 +576,12 @@ item, and the new baseline is recorded.
   - `micro.sh` deletes its run folder (`micro/<date>-<sha>[-dirty]`) on each run. A second run on the same tree state
     therefore fails every dry-run of the tree, with `FileNotFoundError: /out/<repo>.json`.
   - Give each corpus run a new label, and run `micro.sh` once per commit. CI, on Linux, does not have the problem.
+  - A file a container has just written can be read cut short through another bind mount: copy a run's folder to a
+    new path before another container compares it.
+- **A reinstall copies the working tree and builds a new image.** `setup/install.sh` copies whatever branch is
+  checked out into `~/.aidd`, so check out `main` before one, unless a branch is what the live install should run.
+  The micro set's base runs are keyed by the image's id, so after a reinstall they are made again (`micro.sh
+  --base-only`).
 
 ## Constraints and conventions
 

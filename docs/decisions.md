@@ -69,7 +69,7 @@ decided by the author on 2026-10-19.
 | H4-D11 | `SCHEMA.md` and `schema.cypher` move to the indexer, which applies the schema. | The schema always matches the version of whoever writes. |
 | H4-D12 | SemVer, a `CHANGELOG.md` in the Keep a Changelog format, and the README pointing at a release. | Today `curl \| bash` gets any commit on `main`. |
 
-## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D14 on 2026-10-21)
+## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D15 on 2026-10-21)
 
 | # | Decision | Why |
 |---|---|---|
@@ -87,6 +87,7 @@ decided by the author on 2026-10-19.
 | H5-D12 | **H5's identity has one exception: step 5's changes of behavior.** Every refactor leaves the corpus and the hold-out identical to the starting baseline; a change of behavior (H5-D10) is judged at the source and closes with a new baseline. H2-D21 is amended to match. | The changes of behavior change the graph on purpose; what keeps the net is that each difference is explained by a judged case. |
 | H5-D13 | **The hold-out in a change of behavior is read only in aggregate:** the repos that changed, and precision and recall against the lists written before the run. The author decides `holdout-measurement` from those numbers, and a drop in precision is looked for in the corpus. | Its items are not opened, because a hold-out that gets worked on becomes corpus (H2-D20). |
 | H5-D14 | **The micro graph of a change of behavior is judged by case:** each changed edge says which case of the language's table changed it, the changes are counted per case, and a seeded sample per case and repo is judged at the source. One wrong item in a case blocks the PR. | The micro set's Go repos hold about a million `CALLS`, too many to judge one by one, and a case is what a wrong item would share. |
+| H5-D15 | **Go's change of behavior also closes three older gaps of the type service, each with its cases first:** a method an embedded struct promotes, a type parameter (which declares no type) and the result a method declares, which the type service answers as a question of its own. The interface's dispatch, a form neither side reads (`range`, a type switch, an assertion), a generic's inferred type and a file the grammar does not parse stay out. | The one answer reaches more receivers, and its micro set lost edges where `main`'s wrong answers had found the right method by luck: only gains, nothing lost that the rule can keep. |
 
 ## H6: the extraction pipeline (H6-D1–D4 decided by the author on 2026-10-19, H6-D5–D6 on 2026-10-20)
 

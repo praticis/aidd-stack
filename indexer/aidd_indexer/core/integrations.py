@@ -43,7 +43,6 @@ def extract_http(repo: RepoInfo, extractors: list, patterns: "ScanPatterns | Non
     for fx in extractors:
         ctx = by_dir.setdefault(dir_of(fx.file.path), PackageContext(patterns))
         collect_constants(fx, ctx)
-        ctx.file_facts[fx.file.path] = fx.facts
         if not TEST_FILE.search("/" + fx.file.path):
             for s in fx.symbols:
                 if s.kind in ("function", "method"):

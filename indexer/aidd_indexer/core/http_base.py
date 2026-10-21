@@ -160,7 +160,6 @@ class PackageContext:
         self.relatives: dict[str, str] = {}         # name -> segments without a leading slash (`"security/back-office"`):
                                                     # read only where a routing attribute puts them in a template
         self.ambiguous: set[str] = set()            # a name two constants of the directory give different values
-        self.file_facts: dict[str, dict] = {}       # file → its language's `file_facts`
         self.facts: dict[str, PackageFacts] = {}    # each language's facts of the directory, by `PackageFacts.key`
         self._values: dict[str, object] = {}
         self.view = None                            # the repo around it (`http_view.RepoView`): imports, other dirs

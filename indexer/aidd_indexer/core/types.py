@@ -61,6 +61,11 @@ class TypeIndex:
         path `file`."""
         return UNANSWERED
 
+    def method_return_type(self, owner: TypeRef, method: str, result: int = 0) -> TypeRef | Unknown:
+        """The declared type of result number `result` of `owner`'s method `method`, declared on `owner` or on a type
+        it embeds or derives from."""
+        return UNANSWERED
+
 
 class RepoTypes:
     """Each language's `TypeIndex`, built on its first question from every file's type facts."""

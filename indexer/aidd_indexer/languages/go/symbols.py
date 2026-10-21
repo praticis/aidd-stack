@@ -12,79 +12,15 @@ from tree_sitter import Node
 
 from ...core import ids
 from ...core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
-from ...core.types import Field, RepoTypes, TypeRef, Unknown
-from ...tree import NodeCache
-from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
+from ...core.types import RepoTypes, TypeRef, Unknown
+from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .package_facts import read_package_facts
-from .type_facts import TYPE_NODES, GoTypes, import_aliases, receiver_type, type_facts, type_text
-from .type_index import DEPTH, GoTypeIndex, module_paths
+from .type_facts import GoTypes, import_aliases, receiver_type, type_facts
+from .locals import declared_type, receiver_chain
+from .type_index import DEPTH, GoTypeIndex, module_paths, typed
 from .http import GoScanner
 
 HERE = Path(__file__).parent
-
-
-_FUNC_NODES = ("function_declaration", "method_declaration", "func_literal")
-def _declared_type(name: str, scope: Node, src: bytes, before: int) -> str | None:
-    """Type of local variable `name` inside `scope` (a function): receiver, parameter, `var x T`,
-    `x := T{}` / `&T{}`, or `x := pkg.New(...)` (reported as `call:pkg.New` for the resolver)."""
-    for pl in [c for c in scope.children if c.type == "parameter_list"]:      # receiver + params
-        for pd in pl.children:
-            if pd.type != "parameter_declaration":
-                continue
-            names = [c for c in pd.children if c.type == "identifier"]
-            typ = next((c for c in pd.children if c.type in TYPE_NODES or c.type.endswith("_type")), None)
-            if any(node_text(nm, src) == name for nm in names):
-                return type_text(typ, src)
-    best: str | None = None
-    for start, value in _DECLARATIONS.get(scope, src).get(name, ()):
-        if start >= before:
-            break
-        best = value
-    return best
-
-
-def _declarations(scope: Node, src: bytes) -> dict[str, list[tuple[int, str | None]]]:
-    """name → (where, the type it gets there) for each `x := ..` and `var x T` under `scope`, function literals
-    included, in document order. A declaration whose value is not a type the code shows gives None: it hides an
-    earlier one."""
-    out: dict[str, list[tuple[int, str | None]]] = {}
-    for d in walk(scope):
-        if d.type == "short_var_declaration":
-            for name, value in _short_var_types(d, src):
-                out.setdefault(name, []).append((d.start_byte, value))
-        elif d.type == "var_spec" and d.child_by_field_name("type") is not None:
-            typ = type_text(d.child_by_field_name("type"), src)
-            for nm in (c for c in d.children if c.type == "identifier"):
-                out.setdefault(node_text(nm, src), []).append((d.start_byte, typ))
-    return out
-
-
-def _short_var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
-    """(name, type) for each name `x := ..` declares and types: `T{}` / `&T{}`, `call:pkg.New` (with `#i` for one
-    result of a multi-value call), or None for any other value. A call through anything but a name gives nothing."""
-    left, right = d.child_by_field_name("left"), d.child_by_field_name("right")
-    if left is None or right is None:
-        return []
-    lefts = [c for c in left.children if c.is_named]
-    rights = [c for c in right.children if c.is_named]
-    out = []
-    for i, lft in enumerate(lefts):
-        r = rights[i] if i < len(rights) else rights[0] if len(rights) == 1 and rights[0].type == "call_expression" else None
-        if r is not None and r.type == "unary_expression":                     # &T{...}
-            r = next((c for c in r.children if c.is_named), r)
-        if r is None:
-            continue
-        if r.type == "composite_literal":
-            out.append((node_text(lft, src), type_text(r.child_by_field_name("type"), src)))
-        elif r.type != "call_expression":
-            out.append((node_text(lft, src), None))
-        elif (fn := r.child_by_field_name("function")) is not None and fn.type in ("identifier", "selector_expression"):
-            many = f"#{i}" if len(lefts) > 1 and len(rights) == 1 else ""      # `uc, repo := setup(t)`
-            out.append((node_text(lft, src), "call:" + node_text(fn, src) + many))
-    return out
-
-
-_DECLARATIONS = NodeCache(_declarations)
 
 
 def _ref(qualified_type: str) -> TypeRef:
@@ -176,34 +112,9 @@ class GoSupport(LanguageSupport):
         return sum(1 for a in args.children if a.is_named and a.type != "comment")
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
-        # receiver = `uc.policy` (selector chain) or `p` (identifier); anything else (call results,
-        # index expressions) is not followed.
-        chain: list[str] = []
-        n = receiver
-        while n.type == "selector_expression":
-            fld = n.child_by_field_name("field")
-            if fld is None:
-                return None
-            chain.insert(0, node_text(fld, src))
-            n = n.child_by_field_name("operand")
-            if n is None:
-                return None
-        if n.type != "identifier":
-            return None
-        base = node_text(n, src)
-        scope = call.parent
-        while scope is not None and scope.type not in _FUNC_NODES:
-            scope = scope.parent
-        if scope is None:
-            return None
-        typ = _declared_type(base, scope, src, call.start_byte)
-        if typ is None and scope.type == "func_literal":                      # closure: look at the enclosing function
-            outer = scope.parent
-            while outer is not None and outer.type not in _FUNC_NODES:
-                outer = outer.parent
-            if outer is not None:
-                typ = _declared_type(base, outer, src, call.start_byte)
-        return (typ, tuple(chain)) if typ else None
+        found = receiver_chain(receiver, src)
+        typ = declared_type(node_text(found[0], src), found[0], src) if found is not None else None
+        return (typ, found[1]) if typ else None
 
     def type_index(self, ctx: ResolveContext) -> GoTypeIndex:
         return GoTypeIndex(ctx)
@@ -215,19 +126,8 @@ class GoSupport(LanguageSupport):
         return ctx.types.of(self.id)
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
-        types = self._types(ctx)
-        if receiver_type.startswith("call:"):                   # `x := pkg.New()`, `#i` for one of several results
-            fn, _, idx = receiver_type[5:].partition("#")
-            # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
-            cur = types.return_type(fn, file.path, int(idx or 0)) if idx.isdecimal() or not idx else None
-        else:
-            cur = types.type_named(receiver_type, file.path)
-        for name in path:
-            if not isinstance(cur, TypeRef):
-                return None
-            found = types.field(cur, name)
-            cur = found.type if isinstance(found, Field) else found
-        return _qualified(cur) if isinstance(cur, TypeRef) else None
+        found = typed(self._types(ctx), file.path, receiver_type, path)
+        return _qualified(found) if found is not None else None
 
     # ---- resolution
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
@@ -251,6 +151,10 @@ class GoSupport(LanguageSupport):
         stdlib = "." not in first
         name = spec if stdlib else "/".join(spec.split("/")[:3])
         return (pkg("go", name, stdlib), "Package")
+
+    def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        """The repo's types the struct or interface embeds, the shallowest first: their methods are promoted."""
+        return [_qualified(t) for t in self._types(ctx).embedded(_ref(qualified_type))]
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
