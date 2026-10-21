@@ -98,13 +98,11 @@ RESULTS = [
 
 
 @pytest.mark.parametrize("body,callee", RESULTS)
-@_xfail("does not type a local by the result its method declares")
 def test_a_local_has_the_type_its_methods_result_declares(tmp_path, body, callee):
     calls = _calls_of_f(tmp_path, body)
     assert {c for c in calls if c[0].endswith(".Run")} == {(callee, "receiver-type")}
 
 
-@_xfail("does not type a local by the result its method declares, so it guesses a homonym")
 def test_an_error_a_method_returns_reaches_no_error_type_of_the_repo(tmp_path):
     body = ("type E struct{}\n\nfunc (E) Error() string { return \"\" }\n\nfunc (a *A) check() error { return nil }\n\n"
             "func f(x *A) {\n\terr := x.check()\n\t_ = err.Error()\n}\n")
@@ -152,7 +150,6 @@ func main() {
 """
 
 
-@pytest.mark.xfail(strict=True, reason="the scanner does not type a local by the result its method declares")
 def test_a_group_reaches_the_method_of_a_local_a_method_returns(tmp_path):
     _write(tmp_path, {"go.mod": GOMOD, "handlers/handlers.go": HANDLERS, "app/app.go": APP, "main.go": MAIN})
     res, _ = _extract(tmp_path)

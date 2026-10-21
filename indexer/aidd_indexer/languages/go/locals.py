@@ -16,7 +16,9 @@ SCOPES = frozenset({"block", "if_statement", "for_statement", "expression_switch
                     "select_statement", "expression_case", "type_case", "default_case", "communication_case"}) | FUNCTIONS
 
 Span = tuple[int, int]
-Declaration = tuple[Span, int, "str | None"]        # (its scope, where it ends, the type it gives)
+Via = tuple[int, int, str]          # `y := x.f.M()`: where the local `x` is, and `.f.M` (with `#i`) after it
+Declaration = tuple[Span, int, "str | None", "Via | None"]      # (its scope, where it ends, the type it gives, via)
+Found = tuple[str, "str | None", "Via | None"]
 
 
 def receiver_chain(n: Node, src: bytes) -> tuple[Node, tuple[str, ...]] | None:
@@ -32,8 +34,23 @@ def receiver_chain(n: Node, src: bytes) -> tuple[Node, tuple[str, ...]] | None:
 
 
 def declared_type(name: str, use: Node, src: bytes) -> str | None:
-    """The type the declaration of `name` in scope at `use` gives it, as written (`pkg.T`), or `call:pkg.New` (with `#i`
-    for one of several results) for the result of a call; None when that declaration shows no type."""
+    """The type the declaration of `name` in scope at `use` gives it, as written (`pkg.T`); for the result of a call,
+    `call:pkg.New`, or `call:(T).f.M` when it calls the method `M` of a local whose type is `T` (with `#i` for one of
+    several results); None when that declaration shows no type."""
+    found = _nearest(name, use, src)
+    if found is None:
+        return None
+    top, (_, _, typ, via) = found
+    if typ is None or via is None:
+        return typ
+    base = top.descendant_for_byte_range(via[0], via[1])
+    inner = declared_type(node_text(base, src), base, src) if base is not None and base.type == "identifier" else None
+    return f"call:({inner}){via[2]}" if inner is not None else typ
+
+
+def _nearest(name: str, use: Node, src: bytes) -> tuple[Node, Declaration] | None:
+    """The outermost function around `use`, and the declaration of `name` in scope there: in the innermost scope that
+    declares it, the last one before the use."""
     level: dict[Span, int] = {}
     top = None
     n = use.parent
@@ -45,14 +62,15 @@ def declared_type(name: str, use: Node, src: bytes) -> str | None:
         n = n.parent
     if top is None:
         return None
-    best: tuple[int, int, str | None] | None = None
-    for scope, end, typ in _DECLARATIONS.get(top, src).get(name, ()):
-        depth = level.get(scope)
-        if depth is None or end > use.start_byte:
+    best: Declaration | None = None
+    key = (0, 0)
+    for d in _DECLARATIONS.get(top, src).get(name, ()):
+        depth = level.get(d[0])
+        if depth is None or d[1] > use.start_byte:
             continue
-        if best is None or depth < best[0] or (depth == best[0] and end >= best[1]):
-            best = (depth, end, typ)
-    return best[2] if best is not None else None
+        if best is None or depth < key[0] or (depth == key[0] and d[1] >= key[1]):
+            best, key = d, (depth, d[1])
+    return (top, best) if best is not None else None
 
 
 def _declarations(top: Node, src: bytes) -> dict[str, list[Declaration]]:
@@ -67,7 +85,7 @@ def _declarations(top: Node, src: bytes) -> dict[str, list[Declaration]]:
         elif d.type == "var_spec":
             _add(out, _scope(d), d.end_byte, _var_types(d, src))
     params = type_parameters(top, src)
-    return {name: [(s, e, None if t in params else t) for s, e, t in found] for name, found in out.items()} \
+    return {name: [(s, e, None if t in params else t, v) for s, e, t, v in found] for name, found in out.items()} \
         if params else out
 
 
@@ -80,27 +98,27 @@ def _parameters(fn: Node, src: bytes, out: dict[str, list[Declaration]]) -> None
         found = []
         for pd in (c for c in pl.children if c.type == "parameter_declaration"):
             typ = type_text(next((c for c in pd.children if c.type in TYPE_NODES or c.type.endswith("_type")), None), src)
-            found += [(node_text(nm, src), typ) for nm in pd.children if nm.type == "identifier"]
+            found += [(node_text(nm, src), typ, None) for nm in pd.children if nm.type == "identifier"]
         _add(out, scope, pl.end_byte, found)
 
 
-def _var_types(d: Node, src: bytes) -> list[tuple[str, str | None]]:
+def _var_types(d: Node, src: bytes) -> list[Found]:
     """`var x T` and `var x T = v`: the type written; `var x = v`: as `x := v` would give it."""
     typ = d.child_by_field_name("type")
     if typ is not None:
-        return [(node_text(nm, src), type_text(typ, src)) for nm in d.children if nm.type == "identifier"]
+        return [(node_text(nm, src), type_text(typ, src), None) for nm in d.children if nm.type == "identifier"]
     names = [nm for nm in d.children if nm.type == "identifier"]
     return _pairs(names, d.child_by_field_name("value"), src)
 
 
-def _values(left: Node | None, right: Node | None, src: bytes) -> list[tuple[str, str | None]]:
+def _values(left: Node | None, right: Node | None, src: bytes) -> list[Found]:
     if left is None:
         return []
     return _pairs([c for c in left.children if c.is_named], right, src)
 
 
-def _pairs(lefts: list[Node], right: Node | None, src: bytes) -> list[tuple[str, str | None]]:
-    """(name, type) for each name a declaration gives a value: `T{}` / `&T{}`, `call:pkg.New` (with `#i` for one
+def _pairs(lefts: list[Node], right: Node | None, src: bytes) -> list[Found]:
+    """(name, type, via) for each name a declaration gives a value: `T{}` / `&T{}`, `call:pkg.New` (with `#i` for one
     result of a call with several), or None for any other value. A call through anything but a name gives nothing."""
     rights = [c for c in right.children if c.is_named] if right is not None else []
     out = []
@@ -111,13 +129,23 @@ def _pairs(lefts: list[Node], right: Node | None, src: bytes) -> list[tuple[str,
         if r is None:
             continue
         if r.type == "composite_literal":
-            out.append((node_text(lft, src), type_text(r.child_by_field_name("type"), src)))
+            out.append((node_text(lft, src), type_text(r.child_by_field_name("type"), src), None))
         elif r.type != "call_expression":
-            out.append((node_text(lft, src), None))
+            out.append((node_text(lft, src), None, None))
         elif (fn := r.child_by_field_name("function")) is not None and fn.type in ("identifier", "selector_expression"):
             many = f"#{i}" if len(lefts) > 1 and len(rights) == 1 else ""      # `uc, repo := setup(t)`
-            out.append((node_text(lft, src), "call:" + node_text(fn, src) + many))
+            out.append((node_text(lft, src), "call:" + node_text(fn, src) + many, _via(fn, src, many)))
     return out
+
+
+def _via(fn: Node, src: bytes, many: str) -> Via | None:
+    """`x.f.M`, a method called on a local or on its field: where `x` is, and `.f.M` after it."""
+    operand, method = fn.child_by_field_name("operand"), fn.child_by_field_name("field")
+    found = receiver_chain(operand, src) if operand is not None and method is not None else None
+    if found is None:
+        return None
+    base, chain = found
+    return base.start_byte, base.end_byte, "".join(f".{c}" for c in (*chain, node_text(method, src))) + many
 
 
 def _scope(d: Node) -> Span:
@@ -127,12 +155,12 @@ def _scope(d: Node) -> Span:
     return (n.start_byte, n.end_byte) if n is not None else (0, 0)
 
 
-def _add(out: dict[str, list[Declaration]], scope: Span, end: int, found: list[tuple[str, str | None]]) -> None:
-    for name, typ in found:
+def _add(out: dict[str, list[Declaration]], scope: Span, end: int, found: list[Found]) -> None:
+    for name, typ, via in found:
         known = out.setdefault(name, [])
         # a `:=` that names a variable its own scope already declares only assigns it again: the type stays
-        if all(s != scope for s, _, _ in known):
-            known.append((scope, end, typ))
+        if all(d[0] != scope for d in known):
+            known.append((scope, end, typ, via))
 
 
 _DECLARATIONS = NodeCache(_declarations)

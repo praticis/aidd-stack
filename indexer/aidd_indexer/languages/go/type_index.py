@@ -25,6 +25,7 @@ NO_FIELD = Unknown("its struct, and the structs it embeds, have no such field wi
 TOO_DEEP = Unknown("embedded deeper than the index follows")
 NO_METHODS = Unknown("not an interface of the repo whose methods are all known")
 NOT_REQUIRED = Unknown("the interface does not require it")
+NO_METHOD = Unknown("neither the type nor a type it embeds declares the method")
 
 
 def go_module_path(root: Path, module: ModuleInfo) -> str | None:
@@ -44,20 +45,34 @@ def module_paths(ctx: ResolveContext) -> list[tuple[str, ModuleInfo]]:
 
 
 def typed(types: TypeIndex, file: str, written: str, chain: tuple[str, ...]) -> TypeRef | None:
-    """The type of a value as the file at path `file` writes it (`pkg.T`, or `call:pkg.New` with `#i` for one of
+    """The type of a value as the file at path `file` writes it (`pkg.T`; `call:pkg.New`, a function's result; or
+    `call:(T).f.M`, the result of the method `M` of a local of type `T` or of its field `f`; with `#i` for one of
     several results), then of the fields `chain` names, asked of the type service."""
-    if written.startswith("call:"):
-        fn, _, idx = written[5:].partition("#")
-        # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
-        cur = types.return_type(fn, file, int(idx or 0)) if idx.isdecimal() or not idx else None
-    else:
-        cur = types.type_named(written, file)
+    cur = _written(types, file, written)
     for name in chain:
         if not isinstance(cur, TypeRef):
             return None
         found = types.field(cur, name)
         cur = found.type if isinstance(found, Field) else found
     return cur if isinstance(cur, TypeRef) else None
+
+
+def _written(types: TypeIndex, file: str, written: str) -> TypeRef | Unknown | None:
+    if not written.startswith("call:"):
+        return types.type_named(written, file)
+    call = written[5:]
+    if call.startswith("(") and ")" in call:
+        # the receiver's type may hold the text of a call of its own: what follows the last `)` is names only
+        inner, rest = call[1:call.rindex(")")], call[call.rindex(")") + 1:]
+        path, _, idx = rest.partition("#")
+        names = path.lstrip(".").split(".")
+        owner = typed(types, file, inner, tuple(names[:-1]))
+        if owner is None or not (idx.isdecimal() or not idx):
+            return None
+        return types.method_return_type(owner, names[-1], int(idx or 0))
+    fn, _, idx = call.partition("#")
+    # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
+    return types.return_type(fn, file, int(idx or 0)) if idx.isdecimal() or not idx else None
 
 
 class GoTypeIndex(TypeIndex):
@@ -89,6 +104,16 @@ class GoTypeIndex(TypeIndex):
             if rets:
                 return self._named(decl, rets[result]) if result < len(rets) and rets[result] else NOT_A_NAME
         return UNDECLARED
+
+    def method_return_type(self, owner: TypeRef, method: str, result: int = 0) -> TypeRef | Unknown:
+        """Read where the method is declared: on `owner`, else on the shallowest type it embeds that declares it; an
+        interface's own or embedded ones too. The result is resolved with the imports of the file that declares it."""
+        for t in [owner, *self.embedded(owner)]:
+            for f in self.files_in(t.package):
+                rets = self._facts(f).results.get(f"{t.name}.{method}")
+                if rets is not None:
+                    return self._named(f, rets[result]) if result < len(rets) else NOT_A_NAME
+        return NO_METHOD
 
     def field(self, owner: TypeRef, name: str) -> Field | Unknown:
         return self._field(owner, name, 0)
