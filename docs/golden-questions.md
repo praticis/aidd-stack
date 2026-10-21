@@ -6,8 +6,9 @@
 > repo); the result is described in shape, not in content.
 >
 > A question only counts as answered when the MCP's answer and the Cypher's agree **and** a sample was checked at the
-> source (the `evidence` points to `repo:file:line`). Regression: repeat all five after any change to `graph.py`,
-> `linker.py` or `mcp/server.py`.
+> source (the `evidence` points to `repo:file:line`). Regression: repeat all five after any change to what the graph
+> holds (the extractor's output, such as the `CALLS` Q4 reads, included), to `graph.py`, to `linker.py` or to the MCP
+> (`mcp/`).
 
 ## Why these five
 
@@ -302,3 +303,32 @@ the same answers, leaving out the time and build fields. `cypher_readonly` still
 - On 4 snapshots, a dry-run counts more `CALLS` and `IMPORTS` than the graph holds, as in the fifth round. The graph
   merges an edge by its key (a call by its line, an import by its spec), and counted by those keys the dry-run matches
   the graph on every snapshot.
+
+## Seventh round: validating PR #17 on a live install (2026-10-21, build `0.2.15+20b9ed33bf9a`)
+
+What changed since the sixth round: step 5's Go refactor (PR #17), the type service with Go on it. It is a refactor
+that must change nothing in the graph. The validation had the sixth round's two phases, on the same 3 tenants and 10
+snapshots:
+
+- **before the reinstall, read-only:** dry-runs of `main` and of the branch on each snapshot, at its sha, are identical
+  in every section: files, symbols, `CALLS`, `IMPORTS`, violations, endpoints, HTTP calls and warnings;
+- **after the reinstall from the branch:** the refresher re-indexed the 10 snapshots with no error, and the next
+  refresh re-indexed none.
+
+**The picture of the graph** is identical before and after, in the same counts and sorted lists as the sixth round.
+Only the build and the `IndexRun` nodes changed, one more run per snapshot.
+
+**The 27 calls** give the same answers. 21 are byte for byte the same; the other 6 differ in their time and build
+fields, and `symbol_context` also in the order of its imports, the sixth round's finding, still open.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+On the same 4 snapshots as before, a dry-run counts more `CALLS` and `IMPORTS` than the graph holds; counted by the
+graph's merge keys, a call by its line and an import by its spec, they match on every snapshot.
+

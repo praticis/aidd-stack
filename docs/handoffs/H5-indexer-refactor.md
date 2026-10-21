@@ -9,9 +9,10 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-28`).
 >
-> **State (2026-10-21):** in progress. The first part merges as PR #7 (`feature/h5-refactor`), a checkpoint the
-> author decided on 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Steps 5, 6 and 12, the rest of 10
-> and 11 follow in new PRs, each a refactor under the gates and validated on a live install before its merge.
+> **State (2026-10-21):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
+> 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
+> The rest follows in new PRs, each validated on a live install before its merge. Each is a refactor under the gates,
+> except step 5's changes of behavior, which are judged (H5-D10, H5-D12).
 >
 > - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
 >   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
@@ -51,7 +52,8 @@
 >   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
 >   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
 >   identical. That check is now item 4 of the protocol.
-> - **Step 5, Go's refactor (PR #17, 2026-10-21).** Three commits, each under the protocol, with the graph identical:
+> - **Step 5, Go's refactor (PR #17, merged on 2026-10-21 and validated on a live install, the seventh golden
+>   round).** Three commits, each under the protocol, with the graph identical:
 >   - **The `TypeIndex` API in the core** (`core/types.py`). `RepoTypes` builds each language's index once per repo,
 >     on its first question, and the HTTP pass and the resolver share the instance (`ExtractionResult.types`).
 >   - **Go's type facts as typed values with no tree node** (`languages/go/type_facts.py`). They were checked equal to
@@ -71,7 +73,8 @@
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
->     is done; its change of behavior is next;
+>     is done. Next, in this order: a `fix(mcp)` for the order of `symbol_context`'s imports, so the next golden
+>     round has no noise, then Go's change of behavior ("Step 5" below);
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -91,8 +94,10 @@ corpus. The method was one rule per increment, each with a fixture and a judged 
 it did not do was reorganize the code between one rule and the next. Each rule went in where it fit: one more `if`
 in the method that already handled calls, one more field in `PackageContext`, one more fact with a text key. The
 result measures well and reads badly. H5 is a refactor **with no behavior change**: the corpus and the hold-out must
-come out identical to the starting baseline, step by step. It prepares three things: SCIP (a single point where the
-type of an expression is asked), scale (F1.13) and maintenance (rules as units that are tested on their own).
+come out identical to the starting baseline, step by step. The one exception is step 5's changes of behavior, each
+judged at the source and closed with a new baseline (H5-D10, H5-D12). It prepares three things: SCIP (a single point
+where the type of an expression is asked), scale (F1.13) and maintenance (rules as units that are tested on their
+own).
 
 ## Diagnosis (measured on 2026-10-18, over `713fec8` + F1.14 item 2 in progress)
 
@@ -211,7 +216,7 @@ not close the door: the second pass has to be able to re-parse a file, instead o
 ## Goal
 
 At the end of H5:
-- the corpus and the hold-out are **identical** to the starting baseline;
+- the corpus and the hold-out are **identical** to the starting baseline, but for step 5's judged changes (H5-D12);
 - extracting the whole corpus takes **≤ 60 %** of today's time (a target to confirm in step 0);
 - the shape targets the author decided hold:
   - **single-digit complexity**: no function above 9 (`ruff`, rule `C901`, `max-complexity = 9`), with no
@@ -319,8 +324,9 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target but `cli.py` |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
-first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Locally:
-`test.sh`, `corpus.sh`, `micro.sh` and `gates.sh`.
+first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Step 5's
+changes of behavior are `feat:` or `fix:` PRs instead: the corpus and the micro set are judged (H5-D14), and the
+hold-out is read only in aggregate (H5-D13). Locally: `test.sh`, `corpus.sh`, `micro.sh` and `gates.sh`.
 1. tests green;
 2. the corpus against the starting baseline: "0 repo(s) differ";
 3. the hold-out identical;
@@ -377,6 +383,38 @@ also write a type differently: the resolver's is normalized (`*pkg.T` and `[]T` 
 is the text as written. A plain assignment of another type to a variable that a `var` declared with an interface type
 is left out on purpose: which method it reaches is not a fact the declaration states.
 
+### Go's change of behavior
+
+One answer, with Go's own rule: **a variable's type is the one its declaration gives it**, from the nearest
+declaration in scope before the use, from the innermost block and function out. A receiver, a parameter and a named
+result declare a type, and so do `var x T`, `x := T{}` or `&T{}`, and `x := pkg.New()` when `New` declares its result.
+A plain assignment never changes a variable's type, so it types nothing: the guard `assignment` passes through its
+`var`.
+
+- **The boundary with SCIP stays where the guide puts it** (`indexer-evolution.md` §8): only a declared type counts.
+  A function's result counts when its signature declares it, never by following its `return`s. The scanner does not
+  follow an interface to its single implementer: that is dispatch through an interface, `needs-resolver`, and stays
+  the resolver's `receiver-type-impl`.
+- **One code inside a file.** A Go module answers a local's type for the resolver's `call_receiver` and for the
+  scanner alike, on step 3a's index of each function's declarations.
+- **Across files, the `TypeIndex`.** The scanner asks through `view.types`, so that H6 can record each question with
+  its answer (ADR-005, ADR-006). A field gets the whole answer (H5-D11): every file that declares the struct, the
+  imports of the file that declares it, promoted fields and other packages' structs. `PackageContext.file_facts`, which
+  only the scanner's field lookup reads, goes away.
+- **The cases first.** Before any code, probes add guards and xfails for the forms the table does not hold yet:
+  `var x = expr`, a `range` variable, a type switch and a type assertion, `h, err := pkg.New()` on the scanner's side,
+  `T{}` without a pointer, a generic `T[X]{}` and a package-level variable.
+- **Judged, not identical.**
+  - The corpus goes through the guide's cycle, with the expected lists in commits of their own.
+  - The micro set is judged by case (H5-D14), and the hold-out is read only in aggregate (H5-D13).
+  - Then come a new baseline, new rows in the guide's §3, the live install and a golden round, because Q4's
+    `impact_of` reads `CALLS`.
+- **The time,** measured alone, keeps step 3a's gain (protocol item 5).
+
+The commits: the cases; one answer inside a file; fields through the `TypeIndex`; then the expected lists and the
+baseline. It is done when every case passes, with the xfails gained and no guard lost, the judged diffs hold no wrong
+item, and the new baseline is recorded.
+
 ## Decisions made (2026-10-18, by the author)
 
 - **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
@@ -402,19 +440,6 @@ is left out on purpose: which method it reaches is not a fact the declaration st
 - **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
   intent is for it to become blocking; the author turns it on, when the whole code meets the targets. Amended by
   H5-D9.
-- **H5-D10 (2026-10-21), step 5 goes in two PRs per language:** a refactor that leaves the graph identical, then a
-  change of behavior that makes the resolver and the scanner share one answer. The second must gain every xfail of
-  the language's type cases and lose no guard ("Step 5" above). The author asked for great care here: only real gains,
-  and nothing that exists today lost.
-- **H5-D11 (2026-10-21), the scanner reads fields through the `TypeIndex` in the change of behavior, not in the
-  refactor.** A struct declared in two files of its package (build tags) gets two answers today. The resolver reads
-  the first file that declares it; the scanner reads any file whose struct has the field. Through the index, the
-  refactor would either lose the scanner's guard or keep a second answer inside the index, and step 5 exists to
-  remove that second answer. The change of behavior gives one answer that holds both cases.
-- **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
-  above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
-  `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit
-  grew and the MCP split added two functions at complexity 12, and nothing flagged them.
 - **H5-D4, a general review of the comments** (architecture, item 11; step 10): only what is strictly pertinent
   stays, with no reference to docs, because the docs are still going to be reorganized, and with no project name.
   The private names that were in the docs (a service in the ROADMAP log, an environment variable in
@@ -426,10 +451,36 @@ is left out on purpose: which method it reaches is not a fact the declaration st
   core's `http_base.py` grew while facts moved through it. `cli.py` stays off target until P2, so step 11's zero
   excludes it.
 - **H5-D7 (2026-10-21), step 5 goes Go, C#, Python, TS,** one language per commit after the `TypeIndex` API. Go has
-  the clearest pair of type answers, the resolver's and the scanner's, and the measurement behind ADR-005.
+  the clearest pair of type answers, the resolver's and the scanner's, and the measurement behind ADR-005. Amended by
+  H5-D10: two PRs per language.
 - **H5-D8 (2026-10-21), PR #7 merges as a checkpoint,** with the steps done so far; the rest follows in new PRs. The
   steps left are the largest, a smaller PR is easier to review and to validate live, a regression is easier to place,
   and the branch stops piling up rebases.
+- **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
+  above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
+  `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit
+  grew and the MCP split added two functions at complexity 12, and nothing flagged them.
+- **H5-D10 (2026-10-21), step 5 goes in two PRs per language:** a refactor that leaves the graph identical, then a
+  change of behavior that makes the resolver and the scanner share one answer. The second must gain every xfail of
+  the language's type cases and lose no guard ("Step 5" above). The author asked for great care here: only real gains,
+  and nothing that exists today lost.
+- **H5-D11 (2026-10-21), the scanner reads fields through the `TypeIndex` in the change of behavior, not in the
+  refactor.** A struct declared in two files of its package (build tags) gets two answers today. The resolver reads
+  the first file that declares it; the scanner reads any file whose struct has the field. Through the index, the
+  refactor would either lose the scanner's guard or keep a second answer inside the index, and step 5 exists to
+  remove that second answer. The change of behavior gives one answer that holds both cases.
+- **H5-D12 (2026-10-21), H5's identity has one exception: step 5's changes of behavior.** "The corpus and the hold-out
+  identical to the starting baseline" holds for every refactor. A change of behavior (H5-D10) is judged at the source
+  and closes with a new baseline. H2-D21 is amended to match: on the new hold-out, a difference between H5's code and
+  the commit before H5 is explained by a judged case of step 5, or it is an H5 regression.
+- **H5-D13 (2026-10-21), the hold-out in a change of behavior is read only in aggregate:** the repos that changed, and
+  precision and recall against the lists written before the run. Its items are not opened, because a hold-out that
+  gets worked on becomes corpus (H2-D20). The author decides `holdout-measurement` from those numbers, and a drop in
+  precision is looked for in the corpus.
+- **H5-D14 (2026-10-21), the micro graph of a change of behavior is judged by case.** Each changed edge says which
+  case of the language's table changed it. The changes are counted per case, and a seeded sample per case and repo is
+  judged at the source. One wrong item in a case blocks the PR. The micro set's Go repos hold about a million `CALLS`,
+  too many to judge one by one, and a case is what a wrong item would share.
 
 ## Pitfalls
 
@@ -454,7 +505,6 @@ is left out on purpose: which method it reaches is not a fact the declaration st
   until 2026-10-18, lost the prefix when the reassignment (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`)
   gave only an edge from the router to itself, and when another file mounted the router. The `route-patterns-go`
   fixture (`internal/reassigned/`) covers both cases.
-
 - **Docker Desktop and the run folders (macOS).**
   - A folder deleted and made again at the same path can no longer be bind-mounted in that session: the container
     sees no folder, or gets an I/O error. A new path works.
@@ -476,11 +526,11 @@ H2's:
 ## Expected deliverables
 
 - The code in the target architecture's modules, with the corpus and the hold-out identical to the starting
-  baseline.
+  baseline, but for step 5's judged changes (H5-D12).
 - The new unit tests (`paths`, `mounts`, `scopes`, `expr`, one per recognizer) and the MCP's integration test against
   Neo4j.
-- In CI, the report of `ruff C901` (`max-complexity = 9`) and of modules above 300 lines, at zero but for `cli.py`
-  (H5-D6), still not blocking (H5-D3).
+- In CI, the shape ratchet (H5-D9), and the report of `ruff C901` (`max-complexity = 9`) and of modules above 300
+  lines at zero but for `cli.py` (H5-D6). Full blocking is the author's call (H5-D3).
 - In `corpus-report.md`, an "H5" section with times before and after, the profiles and the shape metrics before and
   after.
 - ADR-003 updated, or a new ADR, and `indexer-evolution.md` (§2, §5, §7) describing the new code.
