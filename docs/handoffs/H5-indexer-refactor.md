@@ -51,11 +51,27 @@
 >   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
 >   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
 >   identical. That check is now item 4 of the protocol.
+> - **Step 5, Go's refactor (PR #17, 2026-10-21).** Three commits, each under the protocol, with the graph identical:
+>   - **The `TypeIndex` API in the core** (`core/types.py`). `RepoTypes` builds each language's index once per repo,
+>     on its first question, and the HTTP pass and the resolver share the instance (`ExtractionResult.types`).
+>   - **Go's type facts as typed values with no tree node** (`languages/go/type_facts.py`). They were checked equal to
+>     the old dicts on the 21,624 Go files of the corpus and the hold-out. A C# generic call tests every homonym as an
+>     extension method, so it now leaves out the symbols of another language: a Go method of the same name would
+>     have had its typed facts read as C#'s dict.
+>   - **Go's resolver asks `GoTypeIndex`** (`languages/go/type_index.py`), which holds PR #9's indexes: the files by
+>     package and the method sets. The micro graph was compared on the 12 repos and on the corpus's 13 other Go
+>     repos, and all are identical. The protocol first caught a crash: a `#` inside a call's own text
+>     (`doc.Find("#id").Children()`) was read as a result number. `test_a_hash_in_the_text_of_a_call_is_no_result_number`
+>     holds the case.
+>
+>   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
+>   behavior (H5-D11).
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
->     core, then Go, C#, Python and TS, one per commit (H5-D7);
+>     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
+>     is done; its change of behavior is next;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -331,11 +347,10 @@ and each side answers cases the other misses. One answer for both changes the gr
 goes in two PRs per language:
 
 1. **A refactor, with the graph identical.** The `TypeIndex` API and the language's typed type facts; the resolver asks
-   the `TypeIndex`, with PR #9's indexes inside it; the scanner reads fields through it but accepts only what it
-   accepts today.
-2. **A change of behavior, right after.** One answer inside a file for both sides, and the scanner taking the whole
-   answer for a field. Every difference below has its case. The corpus and the micro set are judged at the source
-   under `graph-change`, and the PR must gain the xfails and lose no guard.
+   the `TypeIndex`, with PR #9's indexes inside it.
+2. **A change of behavior, right after.** One answer inside a file for both sides, and the scanner reading a field
+   through the `TypeIndex` and taking its whole answer (H5-D11). Every difference below has its case. The corpus and
+   the micro set are judged at the source under `graph-change`, and the PR must gain the xfails and lose no guard.
 
 **Go**, in `indexer/tests/test_go_types.py`. A guard passes today; an xfail is strict, so it fails the suite once it
 passes.
@@ -391,6 +406,11 @@ is left out on purpose: which method it reaches is not a fact the declaration st
   change of behavior that makes the resolver and the scanner share one answer. The second must gain every xfail of
   the language's type cases and lose no guard ("Step 5" above). The author asked for great care here: only real gains,
   and nothing that exists today lost.
+- **H5-D11 (2026-10-21), the scanner reads fields through the `TypeIndex` in the change of behavior, not in the
+  refactor.** A struct declared in two files of its package (build tags) gets two answers today. The resolver reads
+  the first file that declares it; the scanner reads any file whose struct has the field. Through the index, the
+  refactor would either lose the scanner's guard or keep a second answer inside the index, and step 5 exists to
+  remove that second answer. The change of behavior gives one answer that holds both cases.
 - **H5-D9 (2026-10-21), a shape ratchet in CI.** A pull request fails when a function above complexity 9 or a module
   above 300 lines is new, or worse than at its base (`indexer/scripts/shape.py --against`, a job that the required
   `gates` needs). What is over a target and does not grow passes. During the first part, seven modules over the limit
@@ -434,6 +454,13 @@ is left out on purpose: which method it reaches is not a fact the declaration st
   until 2026-10-18, lost the prefix when the reassignment (`router = router.WithPrefix("/x")`, `r = r.Group("/x")`)
   gave only an edge from the router to itself, and when another file mounted the router. The `route-patterns-go`
   fixture (`internal/reassigned/`) covers both cases.
+
+- **Docker Desktop and the run folders (macOS).**
+  - A folder deleted and made again at the same path can no longer be bind-mounted in that session: the container
+    sees no folder, or gets an I/O error. A new path works.
+  - `micro.sh` deletes its run folder (`micro/<date>-<sha>[-dirty]`) on each run. A second run on the same tree state
+    therefore fails every dry-run of the tree, with `FileNotFoundError: /out/<repo>.json`.
+  - Give each corpus run a new label, and run `micro.sh` once per commit. CI, on Linux, does not have the problem.
 
 ## Constraints and conventions
 
