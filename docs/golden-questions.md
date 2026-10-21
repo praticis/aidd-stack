@@ -266,3 +266,39 @@ code mounted through `PYTHONPATH`, because the working directory comes first in 
 
 - The comparison dry-run needs `-w` pointing at the mounted code.
 - The version printed on the first line confirms which code ran.
+
+## Sixth round: validating PR #7 on a live install (2026-10-21, build `0.2.15+5ce9b1e9898a`)
+
+What changed since the fifth round: H5's first part (PR #7). It is a refactor that must change nothing in the graph,
+and it also splits the MCP into one module per tool group, with `who_consumes` normalizing the path it is asked for.
+
+The validation had the same two phases as the fifth round, on 3 tenants and 10 snapshots:
+
+- **before the reinstall, read-only:** dry-runs of `main` and of the branch on each snapshot, at its sha. They are
+  identical in every section, HTTP included;
+- **after the reinstall from the branch:** the refresher re-indexed each snapshot once, with no error, and the next
+  refresh re-indexed none.
+
+**The picture of the graph** is identical before and after. It covers the counts per snapshot and the sorted lists of
+symbols, `CALLS`, `IMPORTS`, modules, endpoints, HTTP calls, `CONSUMES`, `CALLED_FROM`, `DEPENDS_ON` and violations.
+Only the build and the `IndexRun` nodes changed: one more run per snapshot.
+
+**The golden questions and one call of each of the 11 tools** (27 calls, recorded as JSON through the MCP's HTTP) give
+the same answers, leaving out the time and build fields. `cypher_readonly` still refuses a write.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round found.**
+
+- `symbol_context` lists a file's imports in an order that can change between two reads of the same graph. It sorts
+  them by type and target, and the imports of one namespace under different specs tie. The set is the same; sorting by
+  the spec too fixes the order.
+- On 4 snapshots, a dry-run counts more `CALLS` and `IMPORTS` than the graph holds, as in the fifth round. The graph
+  merges an edge by its key (a call by its line, an import by its spec), and counted by those keys the dry-run matches
+  the graph on every snapshot.
