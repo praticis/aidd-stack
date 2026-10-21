@@ -86,6 +86,7 @@ class GoTypeIndex(TypeIndex):
         self._sets: dict[TypeRef, set[str]] | None = None
         self._required: dict[TypeRef, dict[str, TypeRef] | None] = {}
         self._implementers: dict[TypeRef, list[TypeRef] | Unknown] = {}
+        self._embedded: dict[TypeRef, list[TypeRef]] = {}
 
     def type_named(self, written: str, file: str) -> TypeRef | Unknown:
         f = self._ctx.files_by_path.get(file)
@@ -138,14 +139,16 @@ class GoTypeIndex(TypeIndex):
     def embedded(self, of: TypeRef) -> list[TypeRef]:
         """The repo's types `of` embeds, down to `DEPTH`, the shallowest first: Go promotes a method from the shallowest
         depth that has it."""
-        out: list[TypeRef] = []
-        level, seen = [of], {of}
-        for _ in range(DEPTH):
-            found = [b for t in level for b in _known(self.bases(t)) if b not in seen]
-            level = list(dict.fromkeys(found))
-            seen.update(level)
-            out += level
-        return out
+        if of not in self._embedded:
+            out: list[TypeRef] = []
+            level, seen = [of], {of}
+            for _ in range(DEPTH):
+                found = [b for t in level for b in _known(self.bases(t)) if b not in seen]
+                level = list(dict.fromkeys(found))
+                seen.update(level)
+                out += level
+            self._embedded[of] = out
+        return self._embedded[of]
 
     def implementers(self, interface: TypeRef) -> list[TypeRef] | Unknown:
         """The types whose methods, as production code declares them, cover every method the interface requires."""
