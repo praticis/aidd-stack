@@ -49,15 +49,13 @@ def _calls_of_f(root, body: str, extra: dict[str, str] | None = None) -> set[tup
 INNER = "package inner\n\ntype K struct{}\n\nfunc (k *K) Only() {}\n"
 
 PROMOTED = [
-    pytest.param("type C struct{ *A }\n\nfunc f(c *C) {\n\tc.Run()\n}\n", "A.Run", id="from-an-embedded-struct",
-                 marks=_xfail("finds no method a typed receiver's embedded struct promotes")),
+    pytest.param("type C struct{ *A }\n\nfunc f(c *C) {\n\tc.Run()\n}\n", "A.Run", id="from-an-embedded-struct"),
     pytest.param('import "example.com/x/inner"\n\ntype P struct{ *inner.K }\n\ntype G struct{ *P }\n\n'
-                 "func f(g *G) {\n\tg.Only()\n}\n", "inner.K.Only", id="two-levels-down-from-another-package",
-                 marks=_xfail("finds no method a typed receiver's embedded struct promotes")),
+                 "func f(g *G) {\n\tg.Only()\n}\n", "inner.K.Only", id="two-levels-down-from-another-package"),
     pytest.param("type D struct{ *A }\n\nfunc (d *D) Run() {}\n\nfunc f(d *D) {\n\td.Run()\n}\n", "D.Run",
                  id="its-own-method-wins"),
     pytest.param("type X struct{ *A }\n\ntype E struct {\n\t*B\n\tX\n}\n\nfunc f(e *E) {\n\te.Run()\n}\n", "B.Run",
-                 id="the-shallowest-wins", marks=_xfail("finds no method a typed receiver's embedded struct promotes")),
+                 id="the-shallowest-wins"),
 ]
 
 

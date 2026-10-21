@@ -152,6 +152,10 @@ class GoSupport(LanguageSupport):
         name = spec if stdlib else "/".join(spec.split("/")[:3])
         return (pkg("go", name, stdlib), "Package")
 
+    def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        """The repo's types the struct or interface embeds, the shallowest first: their methods are promoted."""
+        return [_qualified(t) for t in self._types(ctx).embedded(_ref(qualified_type))]
+
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """A struct embedding (or an interface embedding) a type of another module: its methods are promoted."""
         return self._external_base(self._types(ctx), _ref(qualified_type), 0)

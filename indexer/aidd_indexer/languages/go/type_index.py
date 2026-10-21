@@ -110,6 +110,18 @@ class GoTypeIndex(TypeIndex):
             return [self._base(f, written) for written in embedded]
         return UNDECLARED
 
+    def embedded(self, of: TypeRef) -> list[TypeRef]:
+        """The repo's types `of` embeds, down to `DEPTH`, the shallowest first: Go promotes a method from the shallowest
+        depth that has it."""
+        out: list[TypeRef] = []
+        level, seen = [of], {of}
+        for _ in range(DEPTH):
+            found = [b for t in level for b in _known(self.bases(t)) if b not in seen]
+            level = list(dict.fromkeys(found))
+            seen.update(level)
+            out += level
+        return out
+
     def implementers(self, interface: TypeRef) -> list[TypeRef] | Unknown:
         """The types whose methods, as production code declares them, cover every method the interface requires."""
         if interface not in self._implementers:
@@ -216,6 +228,10 @@ class GoTypeIndex(TypeIndex):
                 for recv, names in self._facts(f).methods.items():
                     self._sets.setdefault(TypeRef(_dotted(f.path), recv), set()).update(names)
         return self._sets
+
+
+def _known(bases: list[TypeRef | Unknown] | Unknown) -> list[TypeRef]:
+    return [b for b in bases if isinstance(b, TypeRef)] if not isinstance(bases, Unknown) else []
 
 
 def _dotted(path: str) -> str:
