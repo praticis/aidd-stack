@@ -12,7 +12,7 @@
 - **The milestones and why each choice was made:** `docs/history.md`, one milestone per line, and
   `docs/decisions.md`.
 - **Measuring the extractor:**
-  - `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`;
+  - `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-29`;
   - the hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
   - the numbers are in `docs/corpus-report.md`.
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
@@ -20,8 +20,8 @@
 - **In progress:**
   - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
     as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
-    (H5-D10): Go's refactor merged as PR #17. Next come a `fix(mcp)` for the order of `symbol_context`'s imports, Go's
-    change of behavior, then C#, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the rest
+    (H5-D10): Go's refactor merged as PR #17, the `fix(mcp)` for `symbol_context`'s imports as PR #19, and Go's change
+    of behavior is judged, its PR waiting for the live install. Then C#, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the rest
     of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.

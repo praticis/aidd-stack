@@ -172,7 +172,7 @@ F1.2's resolver.
 ## Baselines
 
 Each run is `~/.cache/aidd-corpus/runs/<name>/`, one JSON per repository. A new baseline is saved only after its diff
-against the previous one was judged item by item. The **current** ones are `2026-10-18-v2-baseline-28` (corpus) and
+against the previous one was judged item by item. The **current** ones are `2026-10-18-v2-baseline-29` (corpus) and
 `2026-10-18-v2-holdout-26` (hold-out).
 
 | Baseline | What changed |
@@ -206,13 +206,15 @@ against the previous one was judged item by item. The **current** ones are `2026
 | `-26` | increment 10: Python client wrappers |
 | `-27` | increment 11: TS/JS client wrappers, listed mounts, autoload, Next.js |
 | `-28` | increment 12: two TS wrapper defects the live validation found. **PR #5** |
+| `-29` | H5 step 5, Go's change of behavior: a local typed by a constructor's declared result (vikunja `POST /api/v2/mcp`, memos `ANY /`) |
 | `2026-10-18-v2-holdout-26` | the hold-out's three repositories, unchanged since increment 5 |
 
 ## H5 baseline (2026-10-19)
 
 The H5 refactor (`docs/handoffs/H5-indexer-refactor.md`) changes no behavior. At every step the corpus must give
 `0 repo(s) differ` against `2026-10-18-v2-baseline-28`, and the hold-out the same against `2026-10-18-v2-holdout-26`.
-Step 0 measured the starting point, alone on the machine.
+Step 0 measured the starting point, alone on the machine. Step 5's changes of behavior are judged instead and close
+with a new baseline (H5-D12): after Go's, the steps compare against `2026-10-18-v2-baseline-29`.
 
 **Corpus:**
 
@@ -289,6 +291,7 @@ Each step must give `0 repo(s) differ` on both sets against the starting baselin
 | 7 | 0 differ / 0 differ | 761 s | every fact a file publishes and every request it leaves pending is a `NamedTuple` of its kind (`languages/<lang>/http_facts.py`), looked up by its type: no text key and no positional tuple is left between a scanner and its `compose`. The micro set is identical too |
 | 4d | 0 differ / 0 differ | 771 s | C#'s qualified constants are a question to the view (`RepoView.constant_values`), not a loop over every directory, and a test keeps the view the only code that walks the directories. Go's two direct reads of an imported directory miss the repo's root package; a strict xfail holds that gap for its own fix. The micro set is identical too |
 | 5, Go's refactor | 0 differ / 0 differ | 811 s | the `TypeIndex` API in the core, Go's type facts as typed values, and Go's resolver asking `GoTypeIndex` (PR #17). Its three commits summed 952, 906 and 811 s, against 771 s at 4d: within the 28 % noise, and not measured alone. The micro graph was identical on the 12 repos and on the corpus's 13 other Go repos |
+| 5, Go's change of behavior | 2 differ, judged / 0 differ | 768 s | one answer for the resolver and the scanner, with Go's scoping, and the type service's three older gaps closed: promoted methods, type parameters, a method's declared result (H5-D15). The corpus's two items are right and outside their lists' scope: vikunja's MCP route gets its `/api/v2`, memos gains its frontend's `ANY /`. The micro set, judged by case on the 17 Go repos: +18,874 typed edges, −4,339 `inherited` turned into the promoted method, −11,077 guesses by name. Alone, on one image, the corpus summed 763 s on `main` and 768 s on the branch. New baseline `-29` |
 
 Two notes on step 2:
 

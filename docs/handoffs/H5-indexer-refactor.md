@@ -7,7 +7,7 @@
 > - ADRs 002 and 003;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
->   `2026-10-18-v2-baseline-28`).
+>   `2026-10-18-v2-baseline-29`).
 >
 > **State (2026-10-21):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
 > 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
@@ -68,13 +68,16 @@
 >
 >   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
 >   behavior (H5-D11).
+> - **Step 5, Go's change of behavior (branch `feat/h5-go-type-answer`, 2026-10-21; its PR waits for the live
+>   install).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
+>   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
->     is done. Next, in this order: a `fix(mcp)` for the order of `symbol_context`'s imports, so the next golden
->     round has no noise, then Go's change of behavior ("Step 5" below);
+>     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
+>     PR #19. Next: C#, Python and TS;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -435,9 +438,41 @@ function's body: Go only assigns that variable again.
     `impact_of` reads `CALLS`.
 - **The time,** measured alone, keeps step 3a's gain (protocol item 5).
 
-The commits: the cases; one answer inside a file; fields through the `TypeIndex`; then the expected lists and the
-baseline. It is done when every case passes, with the xfails gained and no guard lost, the judged diffs hold no wrong
-item, and the new baseline is recorded.
+**Done (2026-10-21).** Eight commits, each measured against the one before:
+
+1. the cases (`indexer/tests/test_go_types.py`), with a redeclaration and a plain assignment, which a first run of
+   the one answer showed the table missed;
+2. one answer inside a file (`languages/go/locals.py`);
+3. fields through the `TypeIndex` (the scanner asks `view.types`; `PackageContext.file_facts` is gone);
+4. the cases of the three gaps (`indexer/tests/test_go_declared_types.py`, H5-D15);
+5. a method an embedded struct promotes, the shallowest first (Go's `supertypes`);
+6. a type parameter declares no type;
+7. a method's declared result (`TypeIndex.method_return_type`);
+8. the embedded types found once per type.
+
+Every xfail of both tables is gained and no guard is lost.
+
+- **The corpus:** two items, both from commit 3, both right at the source and both outside their lists' scope, so
+  no expected list changes. vikunja's `POST /mcp` is `POST /api/v2/mcp` (`m, err := mcpmodule.New(..)`, then
+  `m.Register(a)`; the repo's own `RoutePrefix` is `apiv2.GroupPrefix + "/mcp"`). memos gains `ANY /`, its
+  frontend's `mux.Handle("/", s.Handler(fallback))`, as argo-cd's list holds `mux.Handle("/", assetsHandler)`. The
+  hold-out gives `0 repo(s) differ`, read in aggregate. The new baseline is `2026-10-18-v2-baseline-29`.
+- **The micro set:** the 8 repos of other languages are identical. On the 17 Go repos, from `main`: +18,874 and −47
+  typed edges, −4,339 and +353 `inherited`, −11,077 and +482 found by name. Judged by case on seeded samples:
+  - the one answer types a receiver in a closure inside a closure, keeps a closure's or a block's local inside it,
+    and reads `token, err := token.CreateToken(..)` as the package's function;
+  - promoted methods turn 4,332 `inherited` edges into the method itself (gitea's `ctx.Tr` was
+    `services.context.Context`, and is `services.context.Base.Tr`);
+  - type parameters give gitea's `AssertExistsAndLoadBean[T]` locals their calls by name back;
+  - a method's result removes guesses that were wrong (`err.Error()` to an error type of the repo,
+    `response.Status()` to a fake).
+- **What stays lost** is what H5-D15 leaves out. A guess by name on a receiver whose declared type is an interface
+  goes (mattermost's `store.Store`, kratos's `persistence.Persister`: about 750 edges), as `main` already does for
+  the same variables nested less deep. A variable of a form neither side reads (`range`, a type switch, an
+  assertion) loses what `main` read from an out-of-scope declaration of the same name (about 60 sites). In a
+  function the grammar does not parse (grafana's Go 1.26 `new(expr)`), scopes are what error recovery left. A
+  generic's inferred type (`u := AssertExistsAndLoadBean(t, &User{})`) is SCIP's.
+- **The time, alone,** on one image: the corpus summed 763 s on `main` and 768 s on the branch.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -509,8 +544,8 @@ item, and the new baseline is recorded.
   embedded struct promotes, a type parameter (which declares no type) and the result a method declares, each with its
   cases first; the type service answers a method's result as a question of its own. The one answer reaches more
   receivers, and its micro set lost edges where `main`'s wrong answers had found the right method by luck. The
-  interface's dispatch, a form neither side reads (`range`, a type switch, an assertion) and a file the grammar does not
-  parse stay out.
+  interface's dispatch, a form neither side reads (`range`, a type switch, an assertion), a generic's inferred type
+  and a file the grammar does not parse stay out.
 
 ## Pitfalls
 
@@ -541,6 +576,12 @@ item, and the new baseline is recorded.
   - `micro.sh` deletes its run folder (`micro/<date>-<sha>[-dirty]`) on each run. A second run on the same tree state
     therefore fails every dry-run of the tree, with `FileNotFoundError: /out/<repo>.json`.
   - Give each corpus run a new label, and run `micro.sh` once per commit. CI, on Linux, does not have the problem.
+  - A file a container has just written can be read cut short through another bind mount: copy a run's folder to a
+    new path before another container compares it.
+- **A reinstall copies the working tree and builds a new image.** `setup/install.sh` copies whatever branch is
+  checked out into `~/.aidd`, so check out `main` before one, unless a branch is what the live install should run.
+  The micro set's base runs are keyed by the image's id, so after a reinstall they are made again (`micro.sh
+  --base-only`).
 
 ## Constraints and conventions
 

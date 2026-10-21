@@ -80,7 +80,7 @@ The full text is in the ROADMAP, under "Principles".
 - **Install or update:** `./setup/install.sh` (asks in the terminal), then `./setup/install-check.sh`, which must end
   in "All checks passed".
 - **Indexer tests:** `indexer/scripts/test.sh`, in the test container, with the tree's code mounted.
-- **HTTP corpus (the extractor's yardstick):** `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`.
+- **HTTP corpus (the extractor's yardstick):** `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-29`.
   - It must give `0 repo(s) differ`, or a diff judged item by item.
   - The hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`.
   - The clones live in `~/.cache/aidd-corpus`, and the numbers in `docs/corpus-report.md`.
