@@ -68,8 +68,8 @@
 >
 >   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
 >   behavior (H5-D11).
-> - **Step 5, Go's change of behavior (branch `feat/h5-go-type-answer`, 2026-10-21; its PR waits for the live
->   install).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
+> - **Step 5, Go's change of behavior (PR #20, merged on 2026-10-21 and validated on a live install, the eighth
+>   golden round).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
 >   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's

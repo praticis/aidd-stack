@@ -117,7 +117,7 @@
   hold-out and the micro set against `main`, with the baselines cached by the code's tree (H7-D1, D3, D5). `tests` and
   `gates` are required to merge (PR #11).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5's Go refactor, PR #17)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -147,3 +147,10 @@
 - 2026-10-21: before Go's change of behavior, the docs are checked against the design: H5's identity gets one
   exception, the changes of behavior (H5-D12, amending H2-D21); the hold-out is read only in aggregate in them
   (H5-D13); the micro graph is judged by case (H5-D14).
+- 2026-10-21: `symbol_context` lists a file's imports in one order, sorted by their spec too (PR #19), the sixth
+  golden round's finding.
+- 2026-10-21: Go's change of behavior merges as PR #20. The resolver and the scanner get one answer for a local's
+  declared type, with Go's own scoping, and three older gaps of the type service are closed: promoted methods, type
+  parameters and a method's declared result (H5-D15). It was judged by case on the corpus (baseline `-29`) and on
+  the micro set. On a live install the graph changes only in the two Go snapshots' `CALLS`, as their dry-runs said
+  (the eighth golden round).
