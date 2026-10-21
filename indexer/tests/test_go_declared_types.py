@@ -67,11 +67,9 @@ def test_a_call_reaches_a_method_its_receivers_type_promotes(tmp_path, body, cal
 
 GENERIC = [
     pytest.param("func load[T any](v T) T { return v }\n\nfunc f() {\n\tx := load(&A{})\n\tx.Only()\n}\n",
-                 id="a-functions-result", marks=_xfail("takes a generic function's type parameter for a declared type")),
-    pytest.param("func f[T any](x T) {\n\tx.Only()\n}\n", id="a-parameter",
-                 marks=_xfail("takes a generic function's type parameter for a declared type")),
-    pytest.param("type Box[T any] struct{ v T }\n\nfunc f(b *Box[*A]) {\n\tb.v.Only()\n}\n", id="a-field",
-                 marks=_xfail("takes a generic struct's type parameter for a declared type")),
+                 id="a-functions-result"),
+    pytest.param("func f[T any](x T) {\n\tx.Only()\n}\n", id="a-parameter"),
+    pytest.param("type Box[T any] struct{ v T }\n\nfunc f(b *Box[*A]) {\n\tb.v.Only()\n}\n", id="a-field"),
     pytest.param("type Box[T any] struct{ v T }\n\nfunc (b *Box[T]) get() T { return b.v }\n\n"
                  "func f(b *Box[*A]) {\n\tx := b.get()\n\tx.Only()\n}\n", id="a-methods-result"),
 ]

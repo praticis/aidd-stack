@@ -15,7 +15,7 @@ TYPE_NODES = ("type_identifier", "qualified_type", "pointer_type", "generic_type
 
 
 class GoStruct(NamedTuple):
-    fields: dict[str, str]          # name → its type as written; an embedded type under its own name
+    fields: dict[str, str]          # name → its type as written, "" for a type parameter; an embedded type under its name
     embeds: tuple[str, ...]         # the embedded types, whose fields and methods are promoted
 
 
@@ -29,6 +29,7 @@ class GoTypes(NamedTuple):
     interfaces: dict[str, GoInterface]
     methods: dict[str, tuple[str, ...]]     # receiver type → the methods this file declares on it
     funcs: dict[str, tuple[str, ...]]       # function → its declared results, "" for one whose type is not a name
+                                            # or is a type parameter
     imports: dict[str, str]                 # alias → import path
 
     @classmethod
@@ -52,6 +53,19 @@ def type_text(node: Node | None, src: bytes) -> str | None:
         if n is None:
             return None
     return node_text(n, src)
+
+
+def type_parameters(n: Node, src: bytes) -> frozenset[str]:
+    """The type parameters a generic function or type declares (`[T any]`), or a method's receiver names
+    (`(b *Box[T])`). A type parameter declares no type: a value of one has the type its caller gives it."""
+    tp = n.child_by_field_name("type_parameters")
+    if tp is not None:
+        return frozenset(node_text(nm, src) for d in tp.children if d.type == "type_parameter_declaration"
+                         for nm in d.children_by_field_name("name"))
+    recv = n.child_by_field_name("receiver")
+    args = next((c for c in walk(recv) if c.type == "type_arguments"), None) if recv is not None else None
+    return frozenset(node_text(t, src) for e in args.children if e.type == "type_elem" for t in e.children
+                     if t.type == "type_identifier") if args is not None else frozenset()
 
 
 def receiver_type(node: Node, src: bytes) -> str | None:
@@ -104,7 +118,7 @@ def _type_spec(n: Node, src: bytes, structs: dict[str, dict[str, str]], embeds: 
     if name is None or typ is None:
         return
     if typ.type == "struct_type":
-        fields, embedded = _struct(typ, src)
+        fields, embedded = _struct(typ, src, type_parameters(n, src))
         structs[node_text(name, src)] = fields
         if embedded:
             embeds[node_text(name, src)] = embedded
@@ -112,7 +126,7 @@ def _type_spec(n: Node, src: bytes, structs: dict[str, dict[str, str]], embeds: 
         interfaces[node_text(name, src)] = _interface(typ, src)
 
 
-def _struct(typ: Node, src: bytes) -> tuple[dict[str, str], tuple[str, ...]]:
+def _struct(typ: Node, src: bytes, params: frozenset[str]) -> tuple[dict[str, str], tuple[str, ...]]:
     """A struct type's fields, its nested struct types' included, and the types it embeds."""
     fields: dict[str, str] = {}
     embedded: list[str] = []
@@ -127,7 +141,7 @@ def _struct(typ: Node, src: bytes) -> tuple[dict[str, str], tuple[str, ...]]:
             embedded.append(tt)
             names = [tt.split(".")[-1]]
         for fname in names:
-            fields[fname] = tt
+            fields[fname] = "" if tt in params else tt
     return fields, tuple(embedded)
 
 
@@ -152,12 +166,14 @@ def _results(n: Node, src: bytes) -> dict[str, tuple[str, ...]]:
     name, result = n.child_by_field_name("name"), n.child_by_field_name("result")
     if name is None or result is None:
         return {}
+    params = type_parameters(n, src)
     if result.type != "parameter_list":
         tt = type_text(result, src)
-        return {node_text(name, src): (tt,)} if tt else {}
+        return {node_text(name, src): ("" if tt in params else tt,)} if tt else {}
     rets: list[str] = []
     for pd in result.children:
         if pd.type == "parameter_declaration":
             ty = next((c for c in pd.children if c.type in TYPE_NODES or c.type.endswith("_type")), None)
-            rets += [type_text(ty, src) or ""] * max(1, sum(1 for c in pd.children if c.type == "identifier"))
+            tt = type_text(ty, src) or ""
+            rets += ["" if tt in params else tt] * max(1, sum(1 for c in pd.children if c.type == "identifier"))
     return {node_text(name, src): tuple(rets)}

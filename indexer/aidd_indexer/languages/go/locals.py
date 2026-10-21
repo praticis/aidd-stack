@@ -8,7 +8,7 @@ from tree_sitter import Node
 
 from ...tree import NodeCache
 from ..base import node_text, walk
-from .type_facts import TYPE_NODES, type_text
+from .type_facts import TYPE_NODES, type_parameters, type_text
 
 FUNCTIONS = frozenset({"function_declaration", "method_declaration", "func_literal"})
 # the nodes that open a scope: a block, the implicit blocks of if, for, switch and their clauses, and a function
@@ -57,7 +57,7 @@ def declared_type(name: str, use: Node, src: bytes) -> str | None:
 
 def _declarations(top: Node, src: bytes) -> dict[str, list[Declaration]]:
     """name → each declaration of it inside the function `top`, closures included: receivers, parameters and named
-    results, `var`, and `:=`."""
+    results, `var`, and `:=`. One whose type is a type parameter of `top` types nothing."""
     out: dict[str, list[Declaration]] = {}
     for d in walk(top):
         if d.type in FUNCTIONS:
@@ -66,7 +66,9 @@ def _declarations(top: Node, src: bytes) -> dict[str, list[Declaration]]:
             _add(out, _scope(d), d.end_byte, _values(d.child_by_field_name("left"), d.child_by_field_name("right"), src))
         elif d.type == "var_spec":
             _add(out, _scope(d), d.end_byte, _var_types(d, src))
-    return out
+    params = type_parameters(top, src)
+    return {name: [(s, e, None if t in params else t) for s, e, t in found] for name, found in out.items()} \
+        if params else out
 
 
 def _parameters(fn: Node, src: bytes, out: dict[str, list[Declaration]]) -> None:

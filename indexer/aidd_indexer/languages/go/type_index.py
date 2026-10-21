@@ -163,6 +163,8 @@ class GoTypeIndex(TypeIndex):
         return None
 
     def _named(self, file: FileInfo, written: str) -> TypeRef | Unknown:
+        if not written:
+            return NOT_A_NAME
         alias, _, name = written.rpartition(".")
         package = self._package(file, alias or None)
         return TypeRef(package, name) if package is not None else OUTSIDE

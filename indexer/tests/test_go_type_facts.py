@@ -62,6 +62,14 @@ def test_a_file_s_facts_name_types_as_the_file_writes_them():
     assert facts.imports == {"http": "net/http", "pw": "example.com/x/password", "store": "example.com/x/store/v2"}
 
 
+def test_a_type_parameter_is_written_as_no_name():
+    facts = _facts(b"package app\n\ntype Box[T any] struct{ v T; n *Node }\n\n"
+                   b"func Load[T any, K comparable](v T) (T, []K, *Node) { return v, nil, nil }\n\n"
+                   b"func First[T any](xs []T) T { return xs[0] }\n")
+    assert facts.structs == {"Box": GoStruct({"v": "", "n": "Node"}, ())}
+    assert facts.funcs == {"Load": ("", "", "Node"), "First": ("",)}
+
+
 def test_the_facts_travel_between_processes():
     facts = _facts(SRC)
     assert pickle.loads(pickle.dumps(facts)) == facts
