@@ -43,6 +43,23 @@ def module_paths(ctx: ResolveContext) -> list[tuple[str, ModuleInfo]]:
                    if m.kind == "go-module" and (mp := go_module_path(ctx.root, m))), key=lambda t: -len(t[0]))
 
 
+def typed(types: TypeIndex, file: str, written: str, chain: tuple[str, ...]) -> TypeRef | None:
+    """The type of a value as the file at path `file` writes it (`pkg.T`, or `call:pkg.New` with `#i` for one of
+    several results), then of the fields `chain` names, asked of the type service."""
+    if written.startswith("call:"):
+        fn, _, idx = written[5:].partition("#")
+        # a `#` of the call's own text (`doc.Find("#id").Children()`) numbers no result: no function has that name
+        cur = types.return_type(fn, file, int(idx or 0)) if idx.isdecimal() or not idx else None
+    else:
+        cur = types.type_named(written, file)
+    for name in chain:
+        if not isinstance(cur, TypeRef):
+            return None
+        found = types.field(cur, name)
+        cur = found.type if isinstance(found, Field) else found
+    return cur if isinstance(cur, TypeRef) else None
+
+
 class GoTypeIndex(TypeIndex):
     """A type is its package's dotted directory ("" for the repo root) and its name. A type declared in several files
     of a package (under build tags) is read in the first that declares it."""

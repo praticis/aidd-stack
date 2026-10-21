@@ -73,16 +73,13 @@ ROUTES = [
     pytest.param("func wire(h *other.T, v1 *gin.RouterGroup) {\n\tif true {\n\t\th := &handlers.Handlers{}\n"
                  "\t\th.Register(v1)\n\t}\n}\n", id="block-shadows-a-parameter"),
     pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\tif true {\n\t\th := &other.T{}\n\t\t_ = h\n"
-                 "\t}\n\th.Register(v1)\n}\n", id="a-block-local-out-of-scope",
-                 marks=_xfail("reads a block's local where the block has ended")),
+                 "\t}\n\th.Register(v1)\n}\n", id="a-block-local-out-of-scope"),
     pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\th, err := h.Copy()\n\t_ = err\n"
-                 "\th.Register(v1)\n}\n", id="a-redeclaration-keeps-a-parameters-type",
-                 marks=_xfail("reads a `:=` that only assigns a parameter again as a declaration")),
+                 "\th.Register(v1)\n}\n", id="a-redeclaration-keeps-a-parameters-type"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\th, err := h.Copy()\n"
-                 "\t_ = err\n\th.Register(v1)\n}\n", id="a-redeclaration-keeps-its-type",
-                 marks=_xfail("reads a `:=` that only assigns a local again as a declaration")),
+                 "\t_ = err\n\th.Register(v1)\n}\n", id="a-redeclaration-keeps-its-type"),
     pytest.param("func wire(h *handlers.Handlers, v1 *gin.RouterGroup) {\n\th = h.With(\"/v\")\n\th.Register(v1)\n}\n",
-                 id="a-plain-assignment-keeps-the-type", marks=_xfail("types a variable by a plain assignment")),
+                 id="a-plain-assignment-keeps-the-type"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := &handlers.Handlers{}\n\tfunc() {\n"
                  "\t\tfunc() {\n\t\t\th.Register(v1)\n\t\t}()\n\t}()\n}\n", id="closure-in-a-closure"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\th := handlers.Handlers{}\n\th.Register(v1)\n}\n",
@@ -96,9 +93,9 @@ ROUTES = [
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h = handlers.New()\n\th.Register(v1)\n}\n",
                  id="var-with-a-constructor", marks=_xfail("does not type a local by its constructor's declared result")),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) {\n\tvar h handlers.Handlers\n\th.Register(v1)\n}\n",
-                 id="var-declaration", marks=_xfail("does not type a `var` declared without a value")),
+                 id="var-declaration"),
     pytest.param("func wire(_ *other.T, v1 *gin.RouterGroup) (h *handlers.Handlers) {\n\th.Register(v1)\n"
-                 "\treturn\n}\n", id="named-result", marks=_xfail("does not type a named result")),
+                 "\treturn\n}\n", id="named-result"),
     pytest.param("type Deps struct{ API *handlers.Handlers }\n\ntype Server struct{ *Deps }\n\n"
                  "func wire(_ *other.T, v1 *gin.RouterGroup) {\n\ts := &Server{}\n\ts.API.Register(v1)\n}\n",
                  id="promoted-field", marks=_xfail("does not read a field promoted from an embedded struct")),
@@ -192,23 +189,21 @@ CALLS = [
                  "G.Run", id="generic-literal"),
     pytest.param("func newB() (*B, error) { return &B{}, nil }\n\nfunc f() {\n\tx, _ := newB()\n\tx.Run()\n}\n", "B.Run",
                  id="constructor-of-two-results"),
-    pytest.param("func f() {\n\tvar x = &B{}\n\tx.Run()\n}\n", "B.Run", id="var-with-a-value",
-                 marks=_resolver_xfail("does not type a `var` declared with a value")),
+    pytest.param("func f() {\n\tvar x = &B{}\n\tx.Run()\n}\n", "B.Run", id="var-with-a-value"),
     pytest.param("func newB() *B { return &B{} }\n\nfunc f() {\n\tvar x = newB()\n\tx.Run()\n}\n", "B.Run",
-                 id="var-with-a-constructor", marks=_resolver_xfail("does not type a `var` declared with a value")),
+                 id="var-with-a-constructor"),
     pytest.param("func f() {\n\tvar x B\n\tfunc() {\n\t\tx := &A{}\n\t\t_ = x\n\t}()\n\tx.Run()\n}\n", "B.Run",
-                 id="a-closure-keeps-its-locals", marks=_resolver_xfail("reads a closure's locals as the function's")),
+                 id="a-closure-keeps-its-locals"),
     pytest.param("func f(x *A) {\n\tif true {\n\t\tx := &B{}\n\t\tx.Run()\n\t}\n}\n", "B.Run",
-                 id="block-shadows-a-parameter", marks=_resolver_xfail("prefers a parameter to a local that shadows it")),
+                 id="block-shadows-a-parameter"),
     pytest.param("func f(x *A) {\n\tif true {\n\t\tx := &B{}\n\t\t_ = x\n\t}\n\tx.Run()\n}\n", "A.Run",
                  id="a-block-local-out-of-scope"),
     pytest.param("func f(x *A) {\n\tfunc() {\n\t\tfunc() {\n\t\t\tx.Run()\n\t\t}()\n\t}()\n}\n", "A.Run",
-                 id="closure-in-a-closure", marks=_resolver_xfail("looks one function out, not every one")),
+                 id="closure-in-a-closure"),
     pytest.param("func (a *A) copy() (*A, error) { return a, nil }\n\nfunc f(x *A) {\n\tx, err := x.copy()\n\t_ = err\n"
                  "\tx.Run()\n}\n", "A.Run", id="a-redeclaration-keeps-a-parameters-type"),
     pytest.param("func (a *A) copy() (*A, error) { return a, nil }\n\nfunc f() {\n\tx := &A{}\n\tx, err := x.copy()\n"
-                 "\t_ = err\n\tx.Run()\n}\n", "A.Run", id="a-redeclaration-keeps-its-type",
-                 marks=_resolver_xfail("reads a `:=` that only assigns a local again as a declaration")),
+                 "\t_ = err\n\tx.Run()\n}\n", "A.Run", id="a-redeclaration-keeps-its-type"),
     pytest.param("func (a *A) self() *A { return a }\n\nfunc f(x *A) {\n\tx = x.self()\n\tx.Run()\n}\n", "A.Run",
                  id="a-plain-assignment-keeps-the-type"),
 ]

@@ -20,6 +20,7 @@ from ...core.http_scope import enclosing_function, in_function
 from .http_facts import EncodedCall, Encoder, SwaggerBase, SwaggerRoute
 from .package_facts import GoFacts, verb_list
 from .paths import GoPaths
+from .locals import declared_type
 from .type_facts import GoTypes
 from ...core.http_mounts import APP
 from ...core.http_nodes import member
@@ -671,12 +672,12 @@ class GoScanner(GoPaths, BaseScanner):
         return (target or ".", text(fn.child_by_field_name("field"), self.src)) if target is not None else None
 
     def _value_type(self, n: Node) -> str | None:
-        """The type the code declares for a value: `x` a receiver or a parameter of a function around it
-        (`func (api *API) Register(r *route.Router)`) or a local assigned a composite literal (`m := &pkg.T{}`); `x.f`
-        a field of `x`'s struct. Any other local (`x := NewT()`) has no declared type: None."""
+        """The type the code declares for a value: `x` by its declaration in scope, as the resolver types a call's
+        receiver; `x.f` a field of `x`'s struct. A local typed by a call's result is not followed here."""
         if n.type == "selector_expression":
             return self._field_type(n)
-        return self._local_type(n) if n.type == "identifier" else None
+        typ = declared_type(text(n, self.src), n, self.src) if n.type == "identifier" else None
+        return typ if typ is not None and not typ.startswith("call:") else None
 
     def _field_type(self, n: Node) -> str | None:
         """`x.f`: the type of the field `f` of `x`'s struct, declared in any file of the package."""
@@ -686,37 +687,6 @@ class GoScanner(GoPaths, BaseScanner):
             return None
         field = text(n.child_by_field_name("field"), self.src)
         return next((t for facts in self.ctx.file_facts.values() if (t := GoTypes.of(facts).field_type(sname, field))), None)
-
-    def _local_type(self, n: Node) -> str | None:
-        """The identifier `n`: the nearest assignment before it, else a receiver or parameter, from the innermost
-        function out."""
-        name, scope = text(n, self.src), enclosing_function(n)
-        while scope is not None:
-            val = self.scopes.assigned_before(scope, n, name)
-            if val is not None:
-                return self._literal_type(val)
-            decl = self._parameter(scope, name)
-            if decl is not None:
-                typ = decl.child_by_field_name("type")
-                return text(typ, self.src) if typ is not None else None
-            scope = enclosing_function(scope)
-        return None
-
-    def _literal_type(self, val: Node) -> str | None:
-        """The type of a composite literal, also behind `&` or parentheses; None for any other value."""
-        while val.type in ("expression_list", "unary_expression", "parenthesized_expression") and val.named_child_count == 1:
-            val = val.named_children[0]
-        typ = val.child_by_field_name("type") if val.type == "composite_literal" else None
-        return text(typ, self.src) if typ is not None else None
-
-    def _parameter(self, fn: Node, name: str) -> Node | None:
-        """The receiver or parameter declaration of `fn` that declares `name`."""
-        for field_name in ("receiver", "parameters"):
-            params = fn.child_by_field_name(field_name)
-            for decl in params.named_children if params is not None else ():
-                if any(c.type == "identifier" and text(c, self.src) == name for c in decl.children):
-                    return decl
-        return None
 
     def _method_unit(self, typ: str, method: str) -> tuple[str, str] | None:
         """(package directory, `T.M`) of the method `M` of the declared type `typ`: `*Router` of this package,
