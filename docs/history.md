@@ -103,12 +103,21 @@
 - 2026-10-19: increment 12: validating the PR on a live install, before the merge, found two TS wrapper defects, and
   they were fixed. Baseline `2026-10-18-v2-baseline-28`. Fifth round of the golden questions.
 
-## Docs (H4 phase 0a)
+## Docs (H4 phase 0a, PR #6; H4.1, PR #8)
 
 - 2026-10-19: H4 phase 0a: the working docs recycled (`AGENTS.md`, `history.md` and `decisions.md`), and every doc in
   English (H4-D1).
+- 2026-10-19: the H4.1 handoff is registered: the contributor path, its playbooks and an acceptance test by a fresh
+  agent.
 
-## H5 and H6 (`feature/h5-refactor`, draft PR #7)
+## The gates in CI (H7 slice 1: PR #10 and PR #11, merged on 2026-10-19)
+
+- 2026-10-19: `micro.sh` compares full dry-runs of a base and of the tree record by record on 12 repos (PR #10).
+- 2026-10-19: the method's checks become gates on every PR that touches the indexer: the tests, the corpus, the
+  hold-out and the micro set against `main`, with the baselines cached by the code's tree (H7-D1, D3, D5). `tests` and
+  `gates` are required to merge (PR #11).
+
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5's Go refactor, PR #17)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -128,3 +137,13 @@
 - 2026-10-20: H6 step 2 closes. Batches of whole packages, scanned in the worker and checked in the reduce, are
   identical everywhere and take 14–22 % less CPU; the author amends H6-D6 to them. They also find a read the scans did
   not record, which step 1's key missed. ADR-004 to ADR-006 are accepted.
+- 2026-10-21: H5's first part merges as PR #7, a checkpoint (H5-D8), after a live install gave the same graph and the
+  same answers (the sixth golden round).
+- 2026-10-21: a shape ratchet in CI (H5-D9): what is new or grew over a target fails a PR. `gates.py` decides whether a
+  PR is a refactor and judges the micro graph.
+- 2026-10-21: step 5 goes in two PRs per language (H5-D10). Go's refactor merges as PR #17: the `TypeIndex` API in the
+  core, Go's type facts as typed values, and Go's resolver asking `GoTypeIndex`. The corpus, the hold-out and 25 repos'
+  dry-runs are identical, and so is the live install (the seventh golden round).
+- 2026-10-21: before Go's change of behavior, the docs are checked against the design: H5's identity gets one
+  exception, the changes of behavior (H5-D12, amending H2-D21); the hold-out is read only in aggregate in them
+  (H5-D13); the micro graph is judged by case (H5-D14).

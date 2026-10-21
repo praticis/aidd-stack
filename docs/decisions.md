@@ -47,7 +47,7 @@
 | H2-D18 | **Portfolio priority:** .NET first, Go and Python (FastAPI/Flask) second, TS third. Django is deferred. | The corpus weighs by the volume of public repos, not by what the real projects use. |
 | H2-D19 | TS joins H2 after .NET, Go and Python are essentially closed, in stages with a corpus run and a commit each. | Reuses the mount graph and the `compose` that Go and Python already use. |
 | H2-D20 | **Hold-out:** repos the rules never saw, matching the portfolio's profile. The expected list is written before the run, the sample is seeded and judged at the source, and it is measured once, with no tuning. A hold-out repo that gets worked on becomes corpus. | A hold-out that guides rules becomes corpus. The 16 of 2026-10-17 showed overfitting (C# R 48.5 %, Go 19.7 %). |
-| H2-D21 | The new hold-out of the F1.14 close moves to after H5, as the first step of its own handoff, also measured on the commit before H5. | H5 changes no behavior; what the hold-out shows is fixed in the refactored code; a difference between the two commits is an H5 regression. Accepted cost: an unseen precision defect stays in the install during H5. |
+| H2-D21 | The new hold-out of the F1.14 close moves to after H5, as the first step of its own handoff, also measured on the commit before H5. Amended by H5-D12: a difference between the two commits is explained by a judged case of step 5's changes of behavior, or it is an H5 regression. | H5's refactors change no behavior; what the hold-out shows is fixed in the refactored code. Accepted cost: an unseen precision defect stays in the install during H5. |
 
 ## H4: public docs and the indexer in its own repo (H4-D1–D12)
 
@@ -69,7 +69,7 @@ decided by the author on 2026-10-19.
 | H4-D11 | `SCHEMA.md` and `schema.cypher` move to the indexer, which applies the schema. | The schema always matches the version of whoever writes. |
 | H4-D12 | SemVer, a `CHANGELOG.md` in the Keep a Changelog format, and the README pointing at a release. | Today `curl \| bash` gets any commit on `main`. |
 
-## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D11 on 2026-10-21)
+## H5: the indexer refactor before SCIP (H5-D1–D5 decided by the author on 2026-10-18, H5-D6–D14 on 2026-10-21)
 
 | # | Decision | Why |
 |---|---|---|
@@ -79,11 +79,14 @@ decided by the author on 2026-10-19.
 | H5-D4 | A general review of the comments: only what is pertinent stays, with no reference to docs and no project name. | The docs are going to be reorganized, and the code is public. |
 | H5-D5 | The MCP is in scope; `cli.py` waits for P2. | P2 will touch the CLI when it splits the repo. |
 | H5-D6 | **Step 12 brings the rest of the code to the shape targets:** the core, the languages' `symbols.py`, the conventions and the MCP's tool groups. `cli.py` stays off target until P2 (H5-D5), and step 11's zero excludes it. | Step 6 covers only the languages' HTTP packages, so nothing else had a step, and the core's `http_base.py` grew while facts moved through it. |
-| H5-D7 | **Step 5 goes one language per commit: Go, C#, Python, TS,** after the `TypeIndex` API in the core. | Go has the clearest pair of type answers (the resolver's and the scanner's) and the measurement behind ADR-005; the portfolio's .NET-first order gives way to it here. |
+| H5-D7 | **Step 5 goes one language per commit: Go, C#, Python, TS,** after the `TypeIndex` API in the core. Amended by H5-D10: two PRs per language. | Go has the clearest pair of type answers (the resolver's and the scanner's) and the measurement behind ADR-005; the portfolio's .NET-first order gives way to it here. |
 | H5-D8 | **PR #7 merges as a checkpoint** with the steps done so far (0–2, 4 and 7–9; 3 and 10 in part); steps 5, 6 and 12, the rest of 10 and 11 follow in new PRs. | The steps left are the largest: a smaller PR is easier to review and to validate live, a regression is easier to place, and the branch stops piling up rebases. |
 | H5-D9 | **A shape ratchet in CI:** a pull request fails when a function above complexity 9 or a module above 300 lines is new, or worse than at its base (`shape.py --against`, required through `gates`). What is over a target and does not grow passes; full blocking stays the author's call (H5-D3). | During H5's first part, seven modules already over the limit grew and the MCP split added two functions at complexity 12, and nothing flagged them. |
 | H5-D10 | **Step 5 goes in two PRs per language:** a refactor that leaves the graph identical (the `TypeIndex`, the typed facts, the resolver asking it), then a change of behavior where the resolver and the scanner share one answer, which must gain every xfail of the language's type cases and lose no guard. | The two answers differ both ways, so one answer changes the graph on at least one side; the author asked for great care, with only real gains and nothing lost. |
 | H5-D11 | **The scanner reads fields through the `TypeIndex` in the change of behavior, not in the refactor.** | A struct declared in two files of its package (build tags) gets the first file's answer from the resolver and any file's from the scanner: in the refactor, the index would lose the scanner's guard or hold a second answer, which step 5 removes. |
+| H5-D12 | **H5's identity has one exception: step 5's changes of behavior.** Every refactor leaves the corpus and the hold-out identical to the starting baseline; a change of behavior (H5-D10) is judged at the source and closes with a new baseline. H2-D21 is amended to match. | The changes of behavior change the graph on purpose; what keeps the net is that each difference is explained by a judged case. |
+| H5-D13 | **The hold-out in a change of behavior is read only in aggregate:** the repos that changed, and precision and recall against the lists written before the run. The author decides `holdout-measurement` from those numbers, and a drop in precision is looked for in the corpus. | Its items are not opened, because a hold-out that gets worked on becomes corpus (H2-D20). |
+| H5-D14 | **The micro graph of a change of behavior is judged by case:** each changed edge says which case of the language's table changed it, the changes are counted per case, and a seeded sample per case and repo is judged at the source. One wrong item in a case blocks the PR. | The micro set's Go repos hold about a million `CALLS`, too many to judge one by one, and a case is what a wrong item would share. |
 
 ## H6: the extraction pipeline (H6-D1–D4 decided by the author on 2026-10-19, H6-D5–D6 on 2026-10-20)
 

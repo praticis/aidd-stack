@@ -18,9 +18,11 @@
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`.
 - **In progress:**
-  - H5: its first part merges as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
-    as a refactor. Next, in new PRs built toward H6's ADRs: step 5 (the `TypeIndex`, Go first), step 6 (recognizers
-    and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+  - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
+    as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
+    (H5-D10): Go's refactor merged as PR #17. Next come a `fix(mcp)` for the order of `symbol_context`'s imports, Go's
+    change of behavior, then C#, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the rest
+    of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -59,7 +61,8 @@
 - Every phase ends with the **golden questions** passing (recall measured, not felt).
 - **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
   complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
-  reports today and starts blocking when the author decides. New code meets the targets from the start.
+  fails what is new or grew over a target (a ratchet, H5-D9), and full blocking comes when the author decides. New
+  code meets the targets from the start.
 - **Comments say only the why the code does not:** a contract, an edge case, the reason for an order. No reference to
   docs or planning items (ROADMAP, `F1.x`, decisions, ADRs, guide sections), because docs change and the code should
   not point at them. No project name: an example describes the shape of the code, and only the framework or library

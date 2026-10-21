@@ -146,7 +146,8 @@ code from any fork's PR. So it has two parts:
   `refactor` label says the same. One refactor commit makes the whole PR strict, so a refactor and a change of behavior
   go in separate PRs.
 - **The labels for decisions:**
-  - `holdout-measurement`: the hold-out may change;
+  - `holdout-measurement`: the hold-out may change. In one of H5's changes of behavior, the author decides it from
+    the hold-out's aggregates only, without opening its items (H5-D13);
   - `graph-change`: a difference in the micro graph, judged at its source, passes.
 
   After adding one, re-run the `gates` job alone. A run started by the label itself would report its skipped checks
