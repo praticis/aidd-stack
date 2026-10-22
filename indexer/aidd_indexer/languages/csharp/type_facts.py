@@ -79,21 +79,16 @@ def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:
 
 
 def type_text(node: Node | None, src: bytes) -> str | None:
-    """`IAccountQuery`, `List<Foo>?` → simple type name (`IAccountQuery`, `List`); None for var/predefined."""
+    """`IAccountQuery`, `List<Foo>?`, `Microsoft.EntityFrameworkCore.DbSet<T>` → simple type name (`IAccountQuery`,
+    `List`, `DbSet`); None for var/predefined."""
     n = node
     while n is not None and n.type in ("nullable_type", "array_type"):
         n = next((c for c in n.children if c.is_named), None)
-    if n is None or n.type in ("implicit_type", "predefined_type"):
-        return None
-    if n.type == "generic_name":
+    if n is not None and n.type == "qualified_name":
+        n = n.child_by_field_name("name")
+    if n is not None and n.type == "generic_name":
         n = next((c for c in n.children if c.type == "identifier"), None)
-        if n is None:
-            return None
-    if n.type == "qualified_name":
-        return node_text(n, src).split(".")[-1]
-    if n.type == "identifier":
-        return node_text(n, src)
-    return None
+    return node_text(n, src) if n is not None and n.type == "identifier" else None
 
 
 def members(type_node: Node, src: bytes) -> dict[str, str]:

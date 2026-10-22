@@ -85,7 +85,6 @@ public class ItemsClient
 
 
 LOOSE = pytest.mark.xfail(strict=True, reason="inherited: a base outside the repo may declare any method")
-QUALIFIED = pytest.mark.xfail(strict=True, reason="no edge: `A.B<T>` is read as the name `B<T>`")
 
 
 def case(id, params, body, edges, marks=()):
@@ -126,7 +125,7 @@ CASES = [
     case("an-extension-of-a-type-outside-the-repo-on-a-type-with-no-base-outside", "Store store", "store.Size();",
          set()),
     case("an-extension-of-a-package-type-written-with-its-namespace", "DbSet<Store> stores", "stores.Where(s => true);",
-         {("PackageExtensions.Where", "same-module")}, QUALIFIED),
+         {("PackageExtensions.Where", "same-module")}),
 ]
 
 
