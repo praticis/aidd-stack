@@ -376,3 +376,28 @@ None of the 27 reads Go's `CALLS`, so the change was also read through the MCP: 
 | Q4a and Q4b `impact_of` | ✅ the same |
 | Q5 `ref_diff` | ✅ the same |
 
+## Ninth round: validating PR #23 on a live install (2026-10-22, build `0.2.15+5b97077d4996`)
+
+What changed since the eighth round: step 5's C# refactor (PR #23). C#'s type facts became typed values and C#'s
+resolver asks `CsTypeIndex`. It is a refactor that must change nothing in the graph. The validation had the seventh
+round's two phases, on the same 3 tenants and 10 snapshots:
+
+- **before the merge, read-only:** dry-runs of `main` and of the branch on each snapshot, at its sha, are identical
+  in every section, HTTP included. Counted by the writer's merge keys, the live graph holds `main`'s dry-run on every
+  snapshot;
+- **after the merge and a reinstall from `main`:** the refresher re-indexed the 10 snapshots with no error, and the
+  next refresh re-indexed none.
+
+**The picture of the graph** is identical before and after, in the same counts and sorted lists as the eighth round.
+Only the build and the `IndexRun` nodes changed, one more run per snapshot.
+
+**The 27 calls** give the same answers: 22 are byte for byte the same, and the other 5 differ only in their time and
+build fields. `symbol_context` keeps its imports in one order.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |

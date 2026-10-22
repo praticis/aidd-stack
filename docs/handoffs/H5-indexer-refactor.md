@@ -71,8 +71,8 @@
 > - **Step 5, Go's change of behavior (PR #20, merged on 2026-10-21 and validated on a live install, the eighth
 >   golden round).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
 >   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
-> - **Step 5, C#'s refactor (branch `refactor/h5-csharp-type-index`, 2026-10-22).** Two commits, each under the
->   protocol, with the graph identical:
+> - **Step 5, C#'s refactor (PR #23, merged on 2026-10-22 and validated on a live install, the ninth golden round).**
+>   Two commits, each under the protocol, with the graph identical:
 >   - **C#'s type facts as typed values with no tree node** (`languages/csharp/type_facts.py`: `CsTypes`, `CsType`).
 >     They were checked equal to the old dicts, in their order, on the 35,255 C# files of the corpus and the hold-out.
 >   - **C#'s resolver asks `CsTypeIndex`** (`languages/csharp/type_index.py`), which holds the indexes the resolver
