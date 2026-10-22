@@ -1,9 +1,9 @@
 """A call on a receiver whose type the code declares, when no method of the type takes its arguments: C# goes on to
 the extension methods in scope, so the call reaches the repo's extension whose `this` takes the type, a base of it or
-an interface it names, the nearest first. Failing that, the only one that may take the value: one of any value, or, on a
-type with a base outside the repo, one of a type outside it; and on such a type only when no other method of the repo
-has its name, since that base may declare the method. One that takes another type of the repo, an array or a
-predefined type is not its target. A package's type written with its namespace is the type of its last name."""
+an interface it names, the nearest first. Failing that, the only one that takes any value; on a type with a base
+outside the repo, only when no other method of the repo has its name, since that base may declare the method. One that
+takes another type, an array or a predefined type is not its target, and a call on the type's name has no value to
+take. A package's type written with its namespace is the type of its last name."""
 
 import contextlib
 import io
@@ -84,8 +84,12 @@ public class ItemsClient
 """
 
 
-def case(id, params, body, edges):
-    return pytest.param(params, body, edges, id=id)
+STATIC = pytest.mark.xfail(strict=True,
+                           reason="an extension is reached on a type's own name, or as one of any type outside the repo")
+
+
+def case(id, params, body, edges, marks=()):
+    return pytest.param(params, body, edges, id=id, marks=marks)
 
 
 CASES = [
@@ -115,8 +119,9 @@ CASES = [
     case("two-extensions-of-any-value", "Store store", "store.Twice();", set()),
     case("the-only-method-of-its-name-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Tap();",
          {("AnyExtensions.Tap", "unique-name")}),
-    case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();",
-         {("PackageExtensions.Size", "unique-name")}),
+    case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();", {("Db", "inherited")},
+         STATIC),
+    case("a-call-on-the-types-name", "", "Store.Ping();", set(), STATIC),
     case("a-name-another-method-of-the-repo-has-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Name();",
          {("Db", "inherited")}),
     case("an-extension-of-a-type-outside-the-repo-on-a-type-with-no-base-outside", "Store store", "store.Size();",
