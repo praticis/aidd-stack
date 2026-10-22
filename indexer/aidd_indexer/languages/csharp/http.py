@@ -22,6 +22,7 @@ from ...core.model import RepoInfo
 from ...core import ids
 from ...core.types import Unknown
 from .locals import receiver_type
+from .type_index import NOT_A_FILE, written_type
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -1093,21 +1094,22 @@ class CsScanner(BaseScanner):
             else unquote(text(a, self.src))
 
     def _declared_type(self, recv: Node, at: Node) -> str | None:
-        """The simple name of the type the receiver's declaration gives it: the answer the resolver gets, with the
-        members after it read through the type service (a base's field, another part of a partial class, a field's
-        field)."""
+        """The simple name of the type the receiver's declaration gives it: the answer the resolver gets, with a
+        method's result and the members after it read through the type service (a base's field, another part of a
+        partial class, a field's field)."""
         found = receiver_type(at, recv, self.src)
-        if found is None or not found[1]:
+        if found is None or not found[1] and not found[0].startswith("call:"):
             return found[0].rpartition(".")[2] if found is not None else None
         view = self.ctx.view
         types = view.types.of("csharp") if view is not None and view.types is not None else None
-        cur = types.type_named(found[0], self.fx.file.path) if types is not None else None
+        cur = written_type(types, self.fx.file.path, found[0]) if types is not None else NOT_A_FILE
+        name = cur.name if not isinstance(cur, Unknown) else None
         for member in found[1]:
-            field = types.field(cur, member) if cur is not None and not isinstance(cur, Unknown) else None
-            if field is None or isinstance(field, Unknown):
+            field = types.field(cur, member) if not isinstance(cur, Unknown) else cur
+            if isinstance(field, Unknown):
                 return None
-            written, cur = field.written, field.type
-        return written
+            name, cur = field.written, field.type
+        return name
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

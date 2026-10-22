@@ -20,7 +20,7 @@ from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
 from .locals import local_type, new_type, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
-from .type_index import CsTypeIndex, qualified, ref as type_ref
+from .type_index import CsTypeIndex, qualified, ref as type_ref, written_type
 
 HERE = Path(__file__).parent
 
@@ -94,7 +94,8 @@ class CSharpSupport(LanguageSupport):
         made = new_type(expr, src)
         if made or expr.type != "identifier":
             return made
-        return local_type(node_text(expr, src), call, src, prefer_new=True) or None
+        found = local_type(node_text(expr, src), call, src, prefer_new=True)
+        return found if found and not found.startswith("call:") else None
 
     def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
                          handler_bases: frozenset[str]) -> list[str]:
@@ -111,7 +112,7 @@ class CSharpSupport(LanguageSupport):
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         types = self._types(ctx)
-        cur = types.type_named(receiver_type, file.path)
+        cur = written_type(types, file.path, receiver_type)
         for member in path:
             if isinstance(cur, Unknown):
                 return None
@@ -124,8 +125,10 @@ class CSharpSupport(LanguageSupport):
         """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
         (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`). A name before a path
         (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
-        outside the repo) or a name two repo types share says nothing."""
+        outside the repo) or a name two repo types share says nothing, and so does a method's result."""
         types = self._types(ctx)
+        if receiver_type.startswith("call:"):
+            return None
         cur = types.type_named(receiver_type, file.path)
         if isinstance(cur, Unknown) and not path and owner:
             # `ParentId.IsEmpty()`: a capitalized name that is not a type may be a member the caller's type inherits —

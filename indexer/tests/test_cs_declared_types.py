@@ -65,7 +65,6 @@ public partial class ItemsClient%(declaration)s
 NEW = "new HttpService(new HttpClient(), Urls.Base)"
 GET = 'await svc.HttpGet<Item>("items");'
 TYPED = {("HttpService.HttpGet", "receiver-type")}
-RESULT = pytest.mark.xfail(strict=True, reason="no type: a method's result is read only on the caller's own type")
 
 
 def _extract(root, client: dict, part: dict | None = None, files: dict | None = None):
@@ -125,17 +124,17 @@ def test_two_types_of_one_name_that_are_not_partial_stay_apart(tmp_path):
 # -- a local has the type its method's declared result gives it -------------------------------------------------------
 RESULTS = [
     pytest.param({"params": "Factory factory", "body": f"var svc = factory.Create();\n{GET}"}, TYPED,
-                 id="a-method-of-another-type", marks=RESULT),
+                 id="a-method-of-another-type"),
     pytest.param({"params": "Factory factory", "body": f"var svc = await factory.CreateAsync();\n{GET}"}, TYPED,
-                 id="an-awaited-task", marks=RESULT),
+                 id="an-awaited-task"),
     pytest.param({"params": "IFactory factory", "body": f"var svc = factory.Create();\n{GET}"}, TYPED,
-                 id="an-interfaces-method", marks=RESULT),
+                 id="an-interfaces-method"),
     pytest.param({"params": "ChildFactory factory", "body": f"var svc = factory.Create();\n{GET}"}, TYPED,
-                 id="a-method-a-base-declares", marks=RESULT),
+                 id="a-method-a-base-declares"),
     pytest.param({"params": "Factory factory", "body": f"var svc = factory.Self.Create();\n{GET}"}, TYPED,
-                 id="through-a-property", marks=RESULT),
+                 id="through-a-property"),
     pytest.param({"members": "    private readonly Factory _factory = new Factory();",
-                  "body": f"var svc = _factory.Create();\n{GET}"}, TYPED, id="on-a-field", marks=RESULT),
+                  "body": f"var svc = _factory.Create();\n{GET}"}, TYPED, id="on-a-field"),
 ]
 
 
@@ -144,7 +143,6 @@ def test_a_local_has_the_type_its_methods_result_declares(tmp_path, client, edge
     assert _edges(*_extract(tmp_path, client)) == edges
 
 
-@RESULT
 def test_a_wrapper_call_on_a_local_a_method_returns(tmp_path):
     res, _ = _extract(tmp_path, {"params": "Factory factory", "body": f"var svc = factory.Create();\n{GET}"})
     assert _calls(res) == {("GET", "/items")}

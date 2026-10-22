@@ -27,6 +27,9 @@ class CsType(NamedTuple):
                                                             # simple name of its type
     explicit: dict[str, str]                                # method → the interface it implements explicitly
     partial: bool                                           # one part of a type other files may declare more of
+    results: dict[str, tuple[str, str]]                     # method → the simple name of the type it returns, and of
+                                                            # the one `await` gives; "" for none, or for overloads
+                                                            # that declare two
 
 
 class CsTypes(NamedTuple):
@@ -132,7 +135,7 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
     # a file-scoped namespace: its declarations are siblings of it, not children
     partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
     return CsType(n.type.split("_")[0], namespace_of(n, src) or file_ns, bases, _generic_bases(bl, src),
-                  members(n, src), _explicit_impls(n, src), partial)
+                  members(n, src), _explicit_impls(n, src), partial, _results(n, src))
 
 
 def namespace_of(n: Node, src: bytes) -> str | None:
@@ -174,6 +177,26 @@ def _generic_bases(base_list: Node | None, src: bytes) -> tuple[tuple[str, tuple
             continue
         out.append((node_text(name, src), tuple(type_text(a, src) or "" for a in targs.children if a.is_named)))
     return tuple(out)
+
+
+def _results(type_node: Node, src: bytes) -> dict[str, tuple[str, str]]:
+    out: dict[str, tuple[str, str]] = {}
+    body = next((c for c in type_node.children if c.type == "declaration_list"), None)
+    for m in (body.children if body is not None else []):
+        name = m.child_by_field_name("name") if m.type == "method_declaration" else None
+        if name is not None:
+            ret = m.child_by_field_name("returns") or m.child_by_field_name("type")
+            found = (type_text(ret, src) or "", _awaited(ret, src) or "")
+            out[node_text(name, src)] = found if out.get(node_text(name, src), found) == found else ("", "")
+    return out
+
+
+def _awaited(ret: Node | None, src: bytes) -> str | None:
+    """`Task<T>` / `ValueTask<T>` → T: what `await` gives."""
+    if ret is None or ret.type != "generic_name" or type_text(ret, src) not in ("Task", "ValueTask"):
+        return None
+    targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
+    return type_text(next((c for c in targs.children if c.is_named), None), src) if targs is not None else None
 
 
 def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:

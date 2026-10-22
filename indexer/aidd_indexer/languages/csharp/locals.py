@@ -94,7 +94,8 @@ def _declared(typ: Node | None, declarator: Node, name: Node, at: Node, src: byt
     tt = type_text(typ, src)
     if tt is None or prefer_new:
         init = next((c for c in declarator.children if c.is_named and c.id != name.id), None)
-        made = (new_type(init, src) or service_type(init, src) or returned_type(init, at, src)) if init is not None else None
+        made = (new_type(init, src) or service_type(init, src) or returned_type(init, at, src)
+                or called(init, src)) if init is not None else None
         tt = made or tt
     return tt
 
@@ -200,6 +201,21 @@ def returned_type(expr: Node, scope: Node, src: bytes) -> str | None:
         targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
         ret = next((c for c in targs.children if c.is_named), None) if targs is not None else None
     return type_text(ret, src)
+
+
+def called(expr: Node, src: bytes) -> str | None:
+    """`factory.Create()` / `await _factory.CreateAsync()` → `call:(Factory).Create` / `call:(the enclosing
+    type)._factory.CreateAsync#await`: what the method returns, read across files by the type service."""
+    awaited = expr.type == "await_expression"
+    n = next((c for c in expr.children if c.is_named), None) if awaited else expr
+    fn = n.child_by_field_name("function") if n is not None and n.type == "invocation_expression" else None
+    name = fn.child_by_field_name("name") if fn is not None and fn.type == "member_access_expression" else None
+    found = receiver_type(n, fn.child_by_field_name("expression"), src) \
+        if name is not None and name.type == "identifier" and fn.child_by_field_name("expression") is not None else None
+    if found is None:
+        return None
+    path = "".join(f".{m}" for m in (*found[1], node_text(name, src)))
+    return f"call:({found[0]}){path}" + ("#await" if awaited else "")
 
 
 def enclosing(node: Node, types: tuple[str, ...]) -> Node | None:

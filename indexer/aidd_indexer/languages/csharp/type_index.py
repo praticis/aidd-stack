@@ -19,6 +19,8 @@ NOT_A_FILE = Unknown("not a file of the repo")
 OUTSIDE = Unknown("no type of the repo has that name, or the file sees more than one")
 UNDECLARED = Unknown("no file of the repo declares it")
 NO_FIELD = Unknown("neither the type nor a base it names declares that member")
+NO_METHOD = Unknown("neither the type nor its bases declare the method")
+NOT_A_NAME = Unknown("the method declares no result that is a name, or its overloads declare two")
 DEPTH = 4                                   # bases followed for a member a caller's own type inherits
 INTERFACE = re.compile(r"^I[A-Z]")
 
@@ -37,6 +39,21 @@ def qualified(t: TypeRef) -> str:
 def ref(q: str) -> TypeRef:
     package, _, name = q.rpartition(".")
     return TypeRef(package, name)
+
+
+def written_type(types: CsTypeIndex, file: str, written: str) -> TypeRef | Unknown:
+    """A receiver's type as the one answer writes it: a type's name, or `call:(R).a.M#await`, what the method `M`
+    returns, called on the member `a` of `R` (awaited)."""
+    if not written.startswith("call:("):
+        return types.type_named(written, file)
+    close = written.rindex(")")
+    rest = written[close + 1:]
+    names = rest.removesuffix("#await").split(".")[1:]
+    cur = written_type(types, file, written[6:close])
+    for member in names[:-1]:
+        found = types.field(cur, member) if not isinstance(cur, Unknown) else cur
+        cur = found.type if not isinstance(found, Unknown) else found
+    return cur if isinstance(cur, Unknown) else types.method_result(cur, names[-1], rest.endswith("#await"))
 
 
 class CsTypeIndex(TypeIndex):
@@ -87,7 +104,29 @@ class CsTypeIndex(TypeIndex):
                     self._implementers.setdefault(b, []).append(d.qualified)
         return [ref(q) for q in sorted(set(self._implementers.get(interface.name, [])))]
 
+    def method_return_type(self, owner: TypeRef, method: str, result: int = 0) -> TypeRef | Unknown:
+        return self.method_result(owner, method, False) if result == 0 else NOT_A_NAME
+
     # ---- C#'s own
+    def method_result(self, owner: TypeRef, method: str, awaited: bool) -> TypeRef | Unknown:
+        """What `owner`'s method returns (`awaited`: what awaiting it gives), declared on the type, any of its parts,
+        or the shallowest base that declares it, and read in the file that declares it."""
+        seen, queue = {qualified(owner)}, [qualified(owner)]
+        while queue:
+            q = queue.pop(0)
+            found = next(((d, d.type.results[method]) for d in self.parts(q, last=True) if method in d.type.results),
+                         None)
+            if found is not None:
+                written = found[1][1] if awaited else found[1][0]
+                typ = self.lookup(found[0].file, written) if written else None
+                return ref(typ.qualified) if typ is not None else OUTSIDE if written else NOT_A_NAME
+            bases = self.bases(ref(q))
+            for b in bases if not isinstance(bases, Unknown) else ():
+                if not isinstance(b, Unknown) and qualified(b) not in seen:
+                    seen.add(qualified(b))
+                    queue.append(qualified(b))
+        return NO_METHOD
+
     def declarations(self) -> Iterator[Declared]:
         """Every type the repo's C# files declare, in file order."""
         for fid, facts in self._ctx.facts.items():
