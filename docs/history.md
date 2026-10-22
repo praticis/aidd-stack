@@ -159,4 +159,4 @@
   (the eighth golden round).
 - 2026-10-22: step 5's C# refactor (PR #23): C#'s type facts as typed values, and C#'s resolver asking
   `CsTypeIndex`, with the indexes it kept in the context inside it. The corpus, the hold-out and 23 repos' dry-runs
-  are identical.
+  are identical, and so is the live install (the ninth golden round).
