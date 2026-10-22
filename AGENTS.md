@@ -89,7 +89,8 @@ The full text is in the ROADMAP, under "Principles".
   - The HTTP corpus does not run the resolver, so a change to `CALLS` shows only here.
   - A refactor must give `0 repo(s) differ`. Any other difference is judged at the source, like a corpus diff.
 - **The gates, in CI on every PR that touches the indexer** (`.github/workflows/indexer.yml`):
-  - it runs the tests, the corpus, the hold-out, the micro set and the code's shape against `main`;
+  - it runs the tests, the MCP and the graph writer against a throwaway Neo4j, the corpus, the hold-out, the micro
+    set and the code's shape against `main`;
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one

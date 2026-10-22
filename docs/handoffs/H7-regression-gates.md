@@ -118,6 +118,7 @@ code from any fork's PR. So it has two parts:
 |---|---|---|
 | 1 | Baselines cached on every push to `main`; the corpus, the hold-out and the micro set on a PR; the gates of precision, no win lost, hold-out, refactor and the micro graph; the classified diff in the job's summary | a PR's checks say `0 repo(s) differ`, and a test PR that drops a route fails |
 | 1b | The classified diff as a comment on the PR, through the two-workflow pattern | a fork's PR gets the comment |
+| 1c | The MCP and the graph writer against a throwaway Neo4j, in the `tests` job: `mcp-it.sh`, with the graph read back against a dry-run of each snapshot by the writer's merge keys | a writer that drops a record or a field fails a PR |
 | 2 | One cause per commit, `CODEOWNERS` on the expected lists, the verdicts recorded and checked | a PR with an unjudged item cannot merge |
 | 3 | The nightly trend of time and memory, for the whole pipeline phase by phase, the resolver included | a week of medians with their spread |
 | 4 | `live-check.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
@@ -130,8 +131,8 @@ code from any fork's PR. So it has two parts:
 
 | Job | What it does |
 |---|---|
-| `changes` | decides whether the indexer changed (`indexer/**` or the workflow). The other jobs are skipped when it did not, and a skipped job passes, so a docs-only PR is not blocked |
-| `tests` | builds the image (with Docker's layer cache) and runs `test.sh` |
+| `changes` | decides whether the indexer changed (`indexer/**`, the graph's schema in `neo4j/init/`, or the workflow). The other jobs are skipped when it did not, and a skipped job passes, so a docs-only PR is not blocked |
+| `tests` | builds the image (with Docker's layer cache) and runs `test.sh`, then `mcp-it.sh` (slice 1c): every atlas tool against a throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot |
 | `corpus` | restores the base's corpus and hold-out runs from the cache, or computes them at the base; runs the branch's; counts the hold-out repos that changed, so that its items never reach an artifact |
 | `micro` | runs `micro.sh` against the base, whose dry-runs come from the cache or are computed |
 | `shape` | the shape ratchet: `shape.py --against` the base fails on a function above complexity 9 or a module above 300 lines that is new or grew (H5-D9) |
@@ -156,6 +157,23 @@ code from any fork's PR. So it has two parts:
   fails, so a broken run never passes as skipped.
 - **Locally, the same gates:** `corpus.sh --label` for both sides, `micro.sh`, then `gates.sh` with the branch and its
   commits, and `shape.py --against main` (`indexer/scripts/README.md`).
+
+## Slice 1c: the writer read back
+
+The corpus and the micro set compare dry-runs, so no check reached the writer: only a live install did, and only when
+someone looked. The eighth golden round compared the live graph's `CALLS` by hand with the dry-runs of `main` and of
+the branch, counted by the writer's merge key, and that comparison now runs on every PR:
+
+- `mcp-it.sh` already wrote a small graph with the real writer for the MCP's tests. It now also leaves a dry-run of
+  each snapshot, and `tests/test_graph_writer_neo4j.py` reads every section back from the graph: modules, files,
+  symbols, `CALLS`, `IMPORTS`, endpoints, HTTP calls and violations, field by field. A call is counted by its caller,
+  callee and line, an import by its file, target and spec, as the writer merges them;
+- in a tenant of its own, one repo is written with a file, again without it, and once more at that commit, as the
+  refresher does after an upgrade. A record the second write should drop, or one the third should keep, is checked
+  too;
+- before it joined CI, the test was run against three broken writers, and each failed it: one that kept the orphans
+  (caught only by the repo written again without a file, which no MCP test sees), one that wrote no strategy on
+  `CALLS`, and one that merged imports without their spec.
 
 ## Decisions made (2026-10-19, with the author)
 
