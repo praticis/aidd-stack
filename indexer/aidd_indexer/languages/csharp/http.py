@@ -1095,7 +1095,7 @@ class CsScanner(BaseScanner):
     def _declared_type(self, recv: Node, at: Node) -> str | None:
         """Declared type of a local, parameter, field, property or primary-constructor parameter (simple name): the
         function around `at` first — and, from a lambda or local function, the ones around it — then the class."""
-        from .symbols import _CLOSURES, _FUNC_NODES, _enclosing, _members   # the language module imports this one
+        from .symbols import _CLOSURES, _FUNC_NODES, _enclosing, members   # the language module imports this one
         name = text(recv, self.src)
         scope = _enclosing(at, _FUNC_NODES)
         while scope is not None:
@@ -1111,13 +1111,13 @@ class CsScanner(BaseScanner):
         if cls is None:
             return None
         if cls.id not in self._class_members:
-            self._class_members[cls.id] = _members(cls, self.src)
+            self._class_members[cls.id] = members(cls, self.src)
         return self._class_members[cls.id].get(name)
 
     def _scope_types(self, scope: Node) -> dict[str, str | None]:
         """Parameter and local name → declared type (or the type it is created with: `var x = new T()`), read in one
         pass per function."""
-        from .symbols import _new_type, _returned_type, _service_type, _type_text
+        from .symbols import _new_type, _returned_type, _service_type, type_text
         if scope.id in self._types:
             return self._types[scope.id]
         types: dict[str, str | None] = {}
@@ -1130,7 +1130,7 @@ class CsScanner(BaseScanner):
                     if v.type == "variable_declarator" else None
                 if nm is None:
                     continue
-                tt = _type_text(ty, self.src)
+                tt = type_text(ty, self.src)
                 if tt is None:
                     init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
                     tt = (_new_type(init, self.src) or _service_type(init, self.src)
@@ -1140,7 +1140,7 @@ class CsScanner(BaseScanner):
         for prm in (pl.children if pl is not None else ()):
             nm = prm.child_by_field_name("name") if prm.type == "parameter" else None
             if nm is not None:
-                types[text(nm, self.src)] = _type_text(prm.child_by_field_name("type"), self.src)
+                types[text(nm, self.src)] = type_text(prm.child_by_field_name("type"), self.src)
         self._types[scope.id] = types
         return types
 
