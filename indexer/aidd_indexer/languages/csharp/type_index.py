@@ -19,6 +19,8 @@ NOT_A_FILE = Unknown("not a file of the repo")
 OUTSIDE = Unknown("no type of the repo has that name, or the file sees more than one")
 UNDECLARED = Unknown("no file of the repo declares it")
 NO_FIELD = Unknown("neither the type nor a base it names declares that member")
+NO_METHOD = Unknown("neither the type nor its bases declare the method")
+NOT_A_NAME = Unknown("the method declares no result that is a name, or its overloads declare two")
 DEPTH = 4                                   # bases followed for a member a caller's own type inherits
 INTERFACE = re.compile(r"^I[A-Z]")
 
@@ -39,13 +41,28 @@ def ref(q: str) -> TypeRef:
     return TypeRef(package, name)
 
 
+def written_type(types: CsTypeIndex, file: str, written: str) -> TypeRef | Unknown:
+    """A receiver's type as the one answer writes it: a type's name, or `call:(R).a.M#await`, what the method `M`
+    returns, called on the member `a` of `R` (awaited)."""
+    if not written.startswith("call:("):
+        return types.type_named(written, file)
+    close = written.rindex(")")
+    rest = written[close + 1:]
+    names = rest.removesuffix("#await").split(".")[1:]
+    cur = written_type(types, file, written[6:close])
+    for member in names[:-1]:
+        found = types.field(cur, member) if not isinstance(cur, Unknown) else cur
+        cur = found.type if not isinstance(found, Unknown) else found
+    return cur if isinstance(cur, Unknown) else types.method_result(cur, names[-1], rest.endswith("#await"))
+
+
 class CsTypeIndex(TypeIndex):
     """A type is its namespace ("" for none) and its simple name."""
 
     def __init__(self, ctx: ResolveContext) -> None:
         self._ctx = ctx
         self._by_name: dict[str, list[Declared]] | None = None
-        self._by_q: dict[str, Declared] | None = None
+        self._types: dict[str, list[Declared]] = {}
         self._implementers: dict[str, list[str]] | None = None
         self._chains: dict[str, list[str]] | None = None
 
@@ -60,10 +77,10 @@ class CsTypeIndex(TypeIndex):
     def field(self, owner: TypeRef, name: str) -> Field | Unknown:
         """Declared on the type, else on the first base it names that declares it (one level up). Its type is read in
         the file that declares the member."""
-        found = self.last(qualified(owner))
-        member = self._member(found, name) if found is not None else None
+        parts = self.parts(qualified(owner), last=True)
+        member = self._member(parts, name)
         if member is None:
-            return NO_FIELD if found is not None else UNDECLARED
+            return NO_FIELD if parts else UNDECLARED
         written, file, promoted = member
         typ = self.lookup(file, written)
         return Field(ref(typ.qualified) if typ is not None else OUTSIDE, written, promoted)
@@ -87,7 +104,43 @@ class CsTypeIndex(TypeIndex):
                     self._implementers.setdefault(b, []).append(d.qualified)
         return [ref(q) for q in sorted(set(self._implementers.get(interface.name, [])))]
 
+    def method_return_type(self, owner: TypeRef, method: str, result: int = 0) -> TypeRef | Unknown:
+        return self.method_result(owner, method, False) if result == 0 else NOT_A_NAME
+
     # ---- C#'s own
+    def method_result(self, owner: TypeRef, method: str, awaited: bool) -> TypeRef | Unknown:
+        """What `owner`'s method returns (`awaited`: what awaiting it gives), declared on the type, any of its parts,
+        or the shallowest base that declares it, and read in the file that declares it."""
+        seen, queue = {qualified(owner)}, [qualified(owner)]
+        while queue:
+            q = queue.pop(0)
+            found = next(((d, d.type.results[method]) for d in self.parts(q, last=True) if method in d.type.results),
+                         None)
+            if found is not None:
+                written = found[1][1] if awaited else found[1][0]
+                typ = self.lookup(found[0].file, written) if written else None
+                return ref(typ.qualified) if typ is not None else OUTSIDE if written else NOT_A_NAME
+            bases = self.bases(ref(q))
+            for b in bases if not isinstance(bases, Unknown) else ():
+                if not isinstance(b, Unknown) and qualified(b) not in seen:
+                    seen.add(qualified(b))
+                    queue.append(qualified(b))
+        return NO_METHOD
+
+    def ancestry(self, q: str) -> tuple[list[str], set[str]]:
+        """The type and its bases in the repo, nearest first, and the names its chain gives to bases outside the
+        repo."""
+        chain, outside = [q], set()
+        for t in chain:                                     # breadth first: the list grows as it is read
+            for d in (d for d in self.named(t.rpartition(".")[2]) if d.qualified == t):
+                for b in d.type.bases:
+                    found = self.lookup(d.file, b)
+                    if found is None:
+                        outside.add(b)
+                    elif found.qualified not in chain:
+                        chain.append(found.qualified)
+        return chain, outside
+
     def declarations(self) -> Iterator[Declared]:
         """Every type the repo's C# files declare, in file order."""
         for fid, facts in self._ctx.facts.items():
@@ -103,18 +156,26 @@ class CsTypeIndex(TypeIndex):
                 self._by_name.setdefault(d.qualified.rpartition(".")[2], []).append(d)
         return self._by_name.get(simple, [])
 
-    def is_type_name(self, simple: str) -> bool:
-        return bool(self.named(simple))
+    def is_type_name(self, name: str) -> bool:
+        """A simple name a type of the repo has, or the qualified name of one."""
+        return any(d.qualified == name for d in self.named(name.rpartition(".")[2])) if "." in name \
+            else bool(self.named(name))
 
-    def last(self, q: str) -> Declared | None:
-        """The last declaration of a qualified type: the only one, unless the type is partial."""
-        if self._by_q is None:
-            self._by_q = {d.qualified: d for d in self.declarations()}
-        return self._by_q.get(q)
+    def parts(self, q: str, last: bool) -> list[Declared]:
+        """Every part of a partial type. Two declarations of a type that is not partial are two types of one name,
+        and a question reads one of them, as it always has: the last, or the first."""
+        found = [d for d in self.named(q.rpartition(".")[2]) if d.qualified == q]
+        if len(found) > 1 and all(d.type.partial for d in found):
+            return found
+        return found[-1:] if last else found[:1]
 
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
-        """The type a file means by a simple name, preferring the namespaces it can see (its own, its usings)."""
-        hits = self.named(simple)
+        """The type a file means by a simple name, preferring the namespaces it can see (its own, its usings). A
+        partial type counts once, by its first part."""
+        if "." in simple:                                   # the enclosing type, by its qualified name
+            found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
+            return found[0] if len(found) == 1 else None
+        hits = self._types_named(simple)
         if len(hits) <= 1:
             return hits[0] if hits else None
         mine = CsTypes.of(self._ctx.facts.get(file.id))
@@ -125,22 +186,23 @@ class CsTypeIndex(TypeIndex):
     def inherited_member_type(self, owner: str, member: str) -> str | None:
         """Declared type of `member` on the type `owner` (qualified) or on its bases in this repo, a few levels up;
         "" when a base outside the repo may declare it; None when no type of the chain has it."""
-        found = self.last(owner)
+        parts = self.parts(owner, last=True)
         for _ in range(DEPTH):
-            if found is None:
+            if not parts:
                 return None
-            if member in found.type.members:
-                return found.type.members[member]
-            base = next((bt for b in found.type.bases if (bt := self.lookup(found.file, b)) is not None), None)
-            if base is None and any(not INTERFACE.match(b) for b in found.type.bases):
+            own = next((d.type.members[member] for d in parts if member in d.type.members), None)
+            if own is not None:
+                return own
+            base = next((bt for d in parts for b in d.type.bases if (bt := self.lookup(d.file, b)) is not None), None)
+            if base is None and any(not INTERFACE.match(b) for d in parts for b in d.type.bases):
                 return ""                                   # a class base outside the repo
-            found = base
+            parts = self.parts(base.qualified, last=True) if base is not None else []
         return None
 
     def explicit_interface(self, implementation: str, method: str) -> str | None:
-        """The interface the first declaration of `implementation` implements `method` for explicitly, if it does."""
-        found = next((d for d in self.named(implementation.rpartition(".")[2]) if d.qualified == implementation), None)
-        return found.type.explicit.get(method) if found is not None else None
+        """The interface `implementation` implements `method` for explicitly, if it does."""
+        return next((d.type.explicit[method] for d in self.parts(implementation, last=False)
+                     if method in d.type.explicit), None)
 
     def handlers(self, file: FileInfo, message_type: str, handler_bases: frozenset[str]) -> list[str]:
         """The types whose generic base among `handler_bases` takes the message type sent from `file` first."""
@@ -189,12 +251,23 @@ class CsTypeIndex(TypeIndex):
             return sent.qualified == handled.qualified
         return not sent and not handled and handled_name == message_type
 
-    def _member(self, found: Declared, name: str) -> tuple[str, FileInfo, bool] | None:
-        written = found.type.members.get(name)
-        if written is not None:
-            return written, found.file, False
-        for b in found.type.bases:
-            bt = self.lookup(found.file, b)
-            if bt is not None and name in bt.type.members:
-                return bt.type.members[name], bt.file, True
+    def _types_named(self, simple: str) -> list[Declared]:
+        if simple not in self._types:
+            hits = self.named(simple)
+            partial = {d.qualified for d in hits if d.type.partial} - {d.qualified for d in hits if not d.type.partial}
+            firsts = {q: next(d for d in hits if d.qualified == q) for q in partial}
+            self._types[simple] = [d for d in hits if d.qualified not in partial or firsts[d.qualified] is d]
+        return self._types[simple]
+
+    def _member(self, parts: list[Declared], name: str) -> tuple[str, FileInfo, bool] | None:
+        for d in parts:
+            if name in d.type.members:
+                return d.type.members[name], d.file, False
+        for d in parts:
+            for b in d.type.bases:
+                bt = self.lookup(d.file, b)
+                found = next((p for p in self.parts(bt.qualified, last=True) if name in p.type.members), None) \
+                    if bt is not None else None
+                if found is not None:
+                    return found.type.members[name], found.file, True
         return None

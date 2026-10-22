@@ -16,11 +16,11 @@ from tree_sitter import Node
 from ...core.dispatch import DispatchRule
 from ...core.model import FileInfo
 from ...core.types import RepoTypes, Unknown
-from ...tree import NodeCache
-from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text, walk
+from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
-from .type_facts import NAMESPACE_NODES, CsTypes, members, namespaces, type_facts, type_text
-from .type_index import CsTypeIndex, qualified, ref as type_ref
+from .locals import local_type, new_type, receiver_type as declared_receiver
+from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
+from .type_index import CsTypeIndex, qualified, ref as type_ref, written_type
 
 HERE = Path(__file__).parent
 
@@ -59,40 +59,7 @@ class CSharpSupport(LanguageSupport):
         return type_facts(root, src)
 
     def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
-        chain: list[str] = []
-        n = receiver
-        while n.type == "member_access_expression":
-            nm = n.child_by_field_name("name")
-            if nm is None or nm.type != "identifier":
-                return None
-            chain.insert(0, node_text(nm, src))
-            n = n.child_by_field_name("expression")
-            if n is None:
-                return None
-        cls = _enclosing(call, ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration"))
-        cls_name = node_text(cls.child_by_field_name("name"), src) if cls is not None and cls.child_by_field_name("name") else None
-        if n.type in ("this_expression", "this"):
-            return (cls_name, tuple(chain)) if cls_name else None
-        if n.type in ("base_expression", "base"):
-            if cls is None:
-                return None
-            bl = next((c for c in cls.children if c.type == "base_list"), None)
-            base = next((t for t in (type_text(c, src) for c in (bl.children if bl is not None else []) if c.is_named) if t), None)
-            return (base, tuple(chain)) if base else None
-        if n.type == "invocation_expression":                              # provider.GetRequiredService<T>().X()
-            resolved = _service_type(n, src)
-            return (resolved, tuple(chain)) if resolved else None
-        if n.type != "identifier":
-            return None
-        ident = node_text(n, src)
-        local = _scoped_type(ident, call, src)
-        if local:
-            return (local, tuple(chain))
-        if cls is not None and cls_name and ident in members(cls, src):   # a field/property of the enclosing type
-            return (cls_name, (ident, *chain))
-        if ident[:1].isupper():
-            return (ident, tuple(chain))                                   # static access: `Foo.Bar()` → type Foo
-        return (cls_name, (ident, *chain)) if cls_name else None          # inherited member of an in-repo base, maybe
+        return declared_receiver(call, receiver, src)
 
     def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
         pl = node.child_by_field_name("parameters") or next((c for c in node.children if c.type == "parameter_list"), None)
@@ -124,10 +91,11 @@ class CSharpSupport(LanguageSupport):
         expr = next((c for c in (first.children if first is not None else []) if c.is_named), None)
         if expr is None:
             return None
-        made = _new_type(expr, src)
+        made = new_type(expr, src)
         if made or expr.type != "identifier":
             return made
-        return _scoped_type(node_text(expr, src), call, src, prefer_new=True)
+        found = local_type(node_text(expr, src), call, src, prefer_new=True)
+        return found if found and not found.startswith("call:") else None
 
     def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
                          handler_bases: frozenset[str]) -> list[str]:
@@ -144,7 +112,7 @@ class CSharpSupport(LanguageSupport):
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         types = self._types(ctx)
-        cur = types.type_named(receiver_type, file.path)
+        cur = written_type(types, file.path, receiver_type)
         for member in path:
             if isinstance(cur, Unknown):
                 return None
@@ -157,8 +125,10 @@ class CSharpSupport(LanguageSupport):
         """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
         (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`). A name before a path
         (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
-        outside the repo) or a name two repo types share says nothing."""
+        outside the repo) or a name two repo types share says nothing, and so does a method's result."""
         types = self._types(ctx)
+        if receiver_type.startswith("call:"):
+            return None
         cur = types.type_named(receiver_type, file.path)
         if isinstance(cur, Unknown) and not path and owner:
             # `ParentId.IsEmpty()`: a capitalized name that is not a type may be a member the caller's type inherits —
@@ -183,11 +153,29 @@ class CSharpSupport(LanguageSupport):
         (`this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver)."""
         if symbol.kind != "method" or ctx.files_by_id[symbol.file_id].language != self.id:   # a homonym of another language
             return False
-        for name, line, this_type in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
+        for name, line, this_type, _ in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
             if name == symbol.name and line == symbol.line_start:
                 loose = not this_type or this_type == "object" or bool(re.match(r"^I[A-Z]", this_type))
                 return loose or this_type == receiver_type if (receiver_type or unknown) else True
         return False
+
+    def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str) -> list[tuple[list, str]]:
+        """Those whose `this` takes the type or a base of it, an interface it names included, the nearest first. Failing
+        that, the only one that takes any value; on a type with a base outside the repo, only when no other method of
+        the repo has its name, since that base may declare the method."""
+        types = self._types(ctx)
+        chain, outside = types.ancestry(qualified_type)
+        near: dict[int, list] = {}
+        anything = []
+        for s in symbols:
+            takes = _takes(ctx, s)
+            if takes == "object":
+                anything.append(s)
+            elif (far := _distance(types, chain, outside, ctx.files_by_id[s.file_id], takes)) is not None:
+                near.setdefault(far, []).append(s)
+        if near:
+            return [(near[min(near)], "receiver-type")]
+        return [(anything, "unique-name")] if len(anything) == 1 and (not outside or len(symbols) == 1) else []
 
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """.csproj: `<PackageId>` (else `<AssemblyName>`, else the file stem) publishes;
@@ -203,24 +191,10 @@ class CSharpSupport(LanguageSupport):
         return [name], deps
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
-        types = self._types(ctx)
-        out: list[str] = []
-        seen = {qualified_type}
-        queue = [qualified_type]
-        while queue:
-            bases = types.bases(type_ref(queue.pop(0)))
-            for b in bases if not isinstance(bases, Unknown) else ():
-                if not isinstance(b, Unknown) and qualified(b) not in seen:
-                    seen.add(qualified(b)); out.append(qualified(b)); queue.append(qualified(b))
-        return out
+        return self._types(ctx).ancestry(qualified_type)[0][1:]
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
-        types = self._types(ctx)
-        for q in [qualified_type] + self.supertypes(ctx, qualified_type):
-            bases = types.bases(type_ref(q))
-            if not isinstance(bases, Unknown) and any(isinstance(b, Unknown) for b in bases):
-                return True
-        return False
+        return bool(self._types(ctx).ancestry(qualified_type)[1])
 
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
@@ -254,128 +228,21 @@ class CSharpSupport(LanguageSupport):
         return (pkg("nuget", spec, root in FRAMEWORK_ROOTS), "Package")
 
 
-# Microsoft.Extensions.DependencyInjection: `provider.GetRequiredService<T>()` returns a T
-_DI_RESOLVERS = frozenset({"GetRequiredService", "GetService", "GetRequiredKeyedService", "GetKeyedService"})
-_CLOSURES = ("lambda_expression", "anonymous_method_expression", "local_function_statement")
-
-_TYPE_NODES = ("identifier", "qualified_name", "generic_name", "nullable_type", "array_type", "predefined_type")
-_FUNC_NODES = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
-               "anonymous_method_expression", "property_declaration", "accessor_declaration")
+def _takes(ctx: ResolveContext, symbol) -> str | None:
+    """What a value of a repo type must be to pass as the method's `this`; None when it is not an extension method."""
+    return next((passes for name, line, _, passes in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions
+                 if name == symbol.name and line == symbol.line_start), None)
 
 
-def _service_type(expr: Node, src: bytes) -> str | None:
-    """`provider.GetRequiredService<T>()` / `GetService<T>()` (DI) → T."""
-    if expr.type != "invocation_expression":
+def _distance(types: CsTypeIndex, chain: list[str], outside: set[str], file: FileInfo, takes: str | None) -> int | None:
+    """How far up the receiver's type `chain` the type an extension's `this` names is, read in the extension's file:
+    its place in the repo's part of the chain, or past it for a base outside the repo; None when it is not there."""
+    if not takes or takes == "object":
         return None
-    fn = expr.child_by_field_name("function")
-    if fn is not None and fn.type == "member_access_expression":
-        fn = fn.child_by_field_name("name")
-    if fn is None or fn.type != "generic_name":
-        return None
-    name = next((c for c in fn.children if c.type == "identifier"), None)
-    targs = next((c for c in fn.children if c.type == "type_argument_list"), None)
-    if name is None or targs is None or node_text(name, src) not in _DI_RESOLVERS:
-        return None
-    return type_text(next((c for c in targs.children if c.is_named), None), src)
-
-
-def _scoped_type(name: str, at: Node, src: bytes, prefer_new: bool = False) -> str | None:
-    """Type of a parameter/local visible at `at`: its own function first, then — from a lambda, anonymous
-    method or local function — the functions around it (`.Must(x => repo.NotExists(x))` sees the
-    constructor's `var repo`)."""
-    scope = _enclosing(at, _FUNC_NODES)
-    while scope is not None:
-        found = _local_type(name, scope, src, at.start_byte, prefer_new)
-        if found or scope.type not in _CLOSURES:
-            return found
-        scope = _enclosing(scope, _FUNC_NODES)
-    return None
-
-
-def _new_type(expr: Node, src: bytes) -> str | None:
-    """`new T(...)` / `await x` unwrapped → T."""
-    n = expr
-    while n is not None and n.type in ("await_expression", "parenthesized_expression", "cast_expression"):
-        n = next((c for c in n.children if c.is_named and c.type not in _TYPE_NODES), None) if n.type == "cast_expression" \
-            else next((c for c in n.children if c.is_named), None)
-    if n is not None and n.type == "object_creation_expression":
-        return type_text(n.child_by_field_name("type"), src)
-    return None
-
-
-def _returned_type(expr: Node, scope: Node, src: bytes) -> str | None:
-    """`Make(x)` / `this.Make(x)` / `await MakeAsync(x)` → the declared return type of `Make` in the
-    enclosing type (`Task<T>` unwrapped when awaited); None for anything else or overloads."""
-    awaited = expr.type == "await_expression"
-    n = next((c for c in expr.children if c.is_named), None) if awaited else expr
-    if n is None or n.type != "invocation_expression":
-        return None
-    fn = n.child_by_field_name("function")
-    if fn is not None and fn.type == "member_access_expression":
-        obj = fn.child_by_field_name("expression")
-        fn = fn.child_by_field_name("name") if obj is not None and obj.type in ("this_expression", "this") else None
-    if fn is None or fn.type != "identifier":
-        return None
-    owner = _enclosing(scope, ("class_declaration", "record_declaration", "struct_declaration"))
-    body = next((c for c in owner.children if c.type == "declaration_list"), None) if owner is not None else None
-    name = node_text(fn, src)
-    found = [m for m in (body.children if body is not None else [])
-             if m.type == "method_declaration" and m.child_by_field_name("name") is not None
-             and node_text(m.child_by_field_name("name"), src) == name]
-    if len(found) != 1:
-        return None
-    ret = found[0].child_by_field_name("returns") or found[0].child_by_field_name("type")
-    if awaited and ret is not None and ret.type == "generic_name":     # Task<T> / ValueTask<T>
-        targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
-        ret = next((c for c in targs.children if c.is_named), None) if targs is not None else None
-    return type_text(ret, src)
-
-
-def _enclosing(node: Node, types: tuple[str, ...]) -> Node | None:
-    n = node.parent
-    while n is not None and n.type not in types:
-        n = n.parent
-    return n
-
-
-def _local_type(name: str, scope: Node, src: bytes, before: int, prefer_new: bool = False) -> str | None:
-    """Type of a parameter or local inside `scope` (explicit type, or `new T()` / `var x = new T()`).
-    `prefer_new`: the type it was created with wins over the declared one (`IEvent e = new T()` → T)."""
-    pl = scope.child_by_field_name("parameters") or next((c for c in scope.children if c.type == "parameter_list"), None)
-    if pl is not None:
-        for prm in pl.children:
-            if prm.type == "parameter":
-                nm = prm.child_by_field_name("name")
-                if nm is not None and node_text(nm, src) == name:
-                    return type_text(prm.child_by_field_name("type"), src)
-    best = None
-    for start, ty, v, nm in _LOCALS.get(scope, src).get(name, ()):
-        if start >= before:
-            break
-        tt = type_text(ty, src)
-        if tt is None or prefer_new:
-            init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-            made = (_new_type(init, src) or _service_type(init, src) or _returned_type(init, scope, src)) if init is not None else None
-            tt = made or tt
-        best = tt
-    return best
-
-
-def _locals(scope: Node, src: bytes) -> dict[str, list[tuple[int, Node | None, Node, Node]]]:
-    """name → (where, its declared type, the declarator, the name) of each local declared under `scope`, in document
-    order."""
-    out: dict[str, list[tuple[int, Node | None, Node, Node]]] = {}
-    for d in walk(scope):
-        if d.type == "variable_declaration" and d.parent is not None and d.parent.type == "local_declaration_statement":
-            ty = d.child_by_field_name("type") or next((c for c in d.children if c.is_named), None)
-            for v in (c for c in d.children if c.type == "variable_declarator"):
-                nm = v.child_by_field_name("name") or next((c for c in v.children if c.type == "identifier"), None)
-                if nm is not None:
-                    out.setdefault(node_text(nm, src), []).append((d.start_byte, ty, v, nm))
-    return out
-
-
-_LOCALS = NodeCache(_locals)
+    t = types.lookup(file, takes)
+    if t is not None:
+        return chain.index(t.qualified) if t.qualified in chain else None
+    return len(chain) if takes in outside else None
 
 
 def _ancestors(node: Node):

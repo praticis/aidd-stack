@@ -20,6 +20,9 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
+from ...core.types import Unknown
+from .locals import receiver_type
+from .type_index import NOT_A_FILE, written_type
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -61,8 +64,6 @@ class CsScanner(BaseScanner):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        self._types: dict[int, dict[str, str | None]] = {}             # function → its names' declared types
-        self._class_members: dict[int, dict[str, str]] = {}            # class node → its members' types
 
     def run(self) -> None:
         if b"NSwag toolchain" in self.src[:4096]:           # a generated client: each operation, read whole
@@ -1075,7 +1076,7 @@ class CsScanner(BaseScanner):
         """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument
         waits for `compose` to find whether that type's method is a client wrapper (it may live in another file)."""
         recv = fn.child_by_field_name("expression") if fn.type == "member_access_expression" else None
-        if recv is None or recv.type != "identifier" or not arg_nodes:
+        if recv is None or not arg_nodes:
             return
         args = tuple(self._literal(a) for a in arg_nodes)
         rtype = self._declared_type(recv, n) if any(args) else None
@@ -1093,56 +1094,22 @@ class CsScanner(BaseScanner):
             else unquote(text(a, self.src))
 
     def _declared_type(self, recv: Node, at: Node) -> str | None:
-        """Declared type of a local, parameter, field, property or primary-constructor parameter (simple name): the
-        function around `at` first — and, from a lambda or local function, the ones around it — then the class."""
-        from .symbols import _CLOSURES, _FUNC_NODES, _enclosing, members   # the language module imports this one
-        name = text(recv, self.src)
-        scope = _enclosing(at, _FUNC_NODES)
-        while scope is not None:
-            types = self._scope_types(scope)
-            if name in types:
-                return types[name]
-            if scope.type not in _CLOSURES:
-                break
-            scope = _enclosing(scope, _FUNC_NODES)
-        cls = at.parent
-        while cls is not None and cls.type not in CLASS_NODES:
-            cls = cls.parent
-        if cls is None:
-            return None
-        if cls.id not in self._class_members:
-            self._class_members[cls.id] = members(cls, self.src)
-        return self._class_members[cls.id].get(name)
-
-    def _scope_types(self, scope: Node) -> dict[str, str | None]:
-        """Parameter and local name → declared type (or the type it is created with: `var x = new T()`), read in one
-        pass per function."""
-        from .symbols import _new_type, _returned_type, _service_type, type_text
-        if scope.id in self._types:
-            return self._types[scope.id]
-        types: dict[str, str | None] = {}
-        for d in walk(scope):
-            if d.type != "variable_declaration" or d.parent is None or d.parent.type != "local_declaration_statement":
-                continue
-            ty = d.child_by_field_name("type") or next((c for c in d.children if c.is_named), None)
-            for v in d.children:
-                nm = v.child_by_field_name("name") or next((c for c in v.children if c.type == "identifier"), None) \
-                    if v.type == "variable_declarator" else None
-                if nm is None:
-                    continue
-                tt = type_text(ty, self.src)
-                if tt is None:
-                    init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-                    tt = (_new_type(init, self.src) or _service_type(init, self.src)
-                          or _returned_type(init, scope, self.src)) if init is not None else None
-                types[text(nm, self.src)] = tt
-        pl = scope.child_by_field_name("parameters") or next((c for c in scope.children if c.type == "parameter_list"), None)
-        for prm in (pl.children if pl is not None else ()):
-            nm = prm.child_by_field_name("name") if prm.type == "parameter" else None
-            if nm is not None:
-                types[text(nm, self.src)] = type_text(prm.child_by_field_name("type"), self.src)
-        self._types[scope.id] = types
-        return types
+        """The simple name of the type the receiver's declaration gives it: the answer the resolver gets, with a
+        method's result and the members after it read through the type service (a base's field, another part of a
+        partial class, a field's field)."""
+        found = receiver_type(at, recv, self.src)
+        if found is None or not found[1] and not found[0].startswith("call:"):
+            return found[0].rpartition(".")[2] if found is not None else None
+        view = self.ctx.view
+        types = view.types.of("csharp") if view is not None and view.types is not None else None
+        cur = written_type(types, self.fx.file.path, found[0]) if types is not None else NOT_A_FILE
+        name = cur.name if not isinstance(cur, Unknown) else None
+        for member in found[1]:
+            field = types.field(cur, member) if not isinstance(cur, Unknown) else cur
+            if isinstance(field, Unknown):
+                return None
+            name, cur = field.written, field.type
+        return name
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

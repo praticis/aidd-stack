@@ -1,10 +1,7 @@
-"""Name-based resolution inside one repo (v0 — SCIP may enrich this later).
-
-Calls: candidate symbols with the callee's name, narrowed same-file → same-module → repo-unique.
-Imports: each file's `LanguageSupport.resolve_import` maps a spec to a File or Module node, or to
-an external `Package` node. Language-specific knowledge (extensions to try, stdlib detection,
-namespaces, go.mod) lives in `languages/<lang>/symbols.py`.
-"""
+"""`CALLS` and `IMPORTS` inside one repo. A mediator's call goes to the message's handlers; another, to the method of
+its receiver's static type or where that type leads (its implementation, a base outside the repo, a C# extension
+method); with no type, to the callee's homonyms, narrowed same-file → same-module → repo-unique. An import goes where
+the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or an external `Package`."""
 
 from __future__ import annotations
 
@@ -68,10 +65,7 @@ class Resolved:
 def _fitting(syms: list[SymbolInfo], argc: int | None) -> list[SymbolInfo]:
     """The symbols a call with `argc` arguments can reach (overloads by arity); unchanged when the count or the
     arities are unknown, or when none fits."""
-    if argc is None or len(syms) < 2:
-        return syms
-    fit = [s for s in syms if s.arity is None or (s.arity[0] <= argc and (s.arity[1] is None or argc <= s.arity[1]))]
-    return fit or syms
+    return [s for s in syms if _fits(s, argc)] or syms if len(syms) > 1 else syms
 
 
 def _fits(s: SymbolInfo, argc: int | None) -> bool:
@@ -137,19 +131,17 @@ class Resolver:
                 lang = languages.by_id(caller_file.language)
                 qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
                 if qtype:
-                    typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
-                    impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
-                    impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
-                    for found, strategy in ((typed, "receiver-type"), (impl_typed, "receiver-type-impl")):
+                    found = self._on_type(c, cands, qtype, lang)
+                    for hits, strategy in found:
                         # overloads the argument count cannot tell apart: all of them, marked ambiguous
-                        suffix = "-ambiguous" if len(found) > 1 else ""
-                        edges.extend(CallEdge(c.caller_id, s.id, c.line, strategy + suffix) for s in found[:3])
-                    if not typed:
+                        suffix = "-ambiguous" if len(hits) > 1 else ""
+                        edges.extend(CallEdge(c.caller_id, s.id, c.line, strategy + suffix) for s in hits[:3])
+                    if not found[0][0]:
                         # the receiver's type does not declare the method: never guess a homonym. When the type has a
                         # base outside the repo the method comes from there — record the dependency on the type
-                        inherited = self._inherited(c, qtype, lang, impl_found=bool(impl_typed))
+                        inherited = self._inherited(c, qtype, lang, impl_found=bool(found[-1][0]))
                         edges.extend(inherited)
-                        if not impl_typed and not inherited:
+                        if not found[-1][0] and not inherited:
                             unresolved += 1
                     continue
             if c.receiver and caller_file is not None:
@@ -202,6 +194,17 @@ class Resolver:
                 edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
         return edges, unresolved
 
+    def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str]]:
+        """The methods of the receiver's type and of the implementation it reaches; when none takes the arguments and the
+        receiver is a value, not the type's name, the repo's methods the language calls on it (C# extension methods)."""
+        typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
+        impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
+        impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
+        found = [(typed, "receiver-type"), (impl_typed, "receiver-type-impl")]
+        if c.receiver == c.receiver_type or any(_fits(s, c.arg_count) for s in typed + impl_typed):
+            return found
+        return lang.extension_methods(self.ctx, [s for s in cands if _fits(s, c.arg_count)], qtype) or found
+
     def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
         """`repo.CreateAsync(x)` where `repo: ITodoRepository : IBaseRepository<T>` (a package): CALLS to the
         type itself and to its single implementer, carrying the method name (strategies `inherited` /
@@ -247,7 +250,8 @@ class Resolver:
             if c.callee_name not in rule.calls:
                 continue
             for handler in lang.message_handlers(self.ctx, f, c.arg_type, rule.handlers):
-                target = self._method_on(self.by_name.get(rule.method, []), rule.method, handler, lang)
+                hit = self._methods_on(self.by_name.get(rule.method, []), rule.method, handler, lang)
+                target = hit[0] if len(hit) == 1 else None
                 if target is not None and (self.test_file.get(c.file_id, False) or not self.test_file.get(target.file_id, False)):
                     out.setdefault(target.id, CallEdge(c.caller_id, target.id, c.line, "dispatch"))
         return list(out.values())
@@ -260,10 +264,6 @@ class Resolver:
             if hit:
                 return _fitting(hit, argc)
         return []
-
-    def _method_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang) -> SymbolInfo | None:
-        hit = self._methods_on(cands, name, qtype, lang)
-        return hit[0] if len(hit) == 1 else None
 
     # -- imports ---------------------------------------------------------------------
     def _pkg(self, ecosystem: str, name: str, stdlib: bool = False) -> str:
