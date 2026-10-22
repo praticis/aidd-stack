@@ -1,6 +1,7 @@
 name: indexer
 
-# The method's checks on every change to the indexer: the tests; the HTTP corpus, the hold-out and the micro graph of
+# The method's checks on every change to the indexer or to the graph's schema: the tests, with the MCP and the graph
+# writer against a throwaway Neo4j; the HTTP corpus, the hold-out and the micro graph of
 # the branch against its base; the code's shape against its base; then the gates (indexer/scripts/gates.py). A push to main fills the baselines that pull
 # requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes them: the
 # extraction is deterministic, so a baseline is derived data.
@@ -45,7 +46,7 @@ jobs:
           if [ "${{ github.event_name }}" = pull_request ]; then base=$(git rev-parse HEAD^1); else base=$(git rev-parse HEAD); fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
           if [ "${{ github.event_name }}" != pull_request ] \
-             || git diff --name-only HEAD^1 HEAD | grep -qE '^(indexer/|\.github/workflows/indexer\.yml$)'; then
+             || git diff --name-only HEAD^1 HEAD | grep -qE '^(indexer/|neo4j/init/|\.github/workflows/indexer\.yml$)'; then
             echo "indexer=true" >> "$GITHUB_OUTPUT"
           else
             echo "indexer=false" >> "$GITHUB_OUTPUT"
@@ -67,6 +68,8 @@ jobs:
           cache-from: type=gha,scope=indexer
           cache-to: type=gha,scope=indexer,mode=max
       - run: indexer/scripts/test.sh
+      # the MCP's queries and the graph writer against a throwaway Neo4j: every other check stops at a dry-run
+      - run: indexer/scripts/mcp-it.sh
 
   # A ratchet: a function above complexity 9 or a module above 300 lines may stay while it does not grow, and nothing
   # new joins them (indexer/scripts/shape.py --against).
