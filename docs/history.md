@@ -110,12 +110,15 @@
 - 2026-10-19: the H4.1 handoff is registered: the contributor path, its playbooks and an acceptance test by a fresh
   agent.
 
-## The gates in CI (H7 slice 1: PR #10 and PR #11, merged on 2026-10-19)
+## The gates in CI (H7 slice 1: PR #10 and PR #11, merged on 2026-10-19; slice 1c, PR #22)
 
 - 2026-10-19: `micro.sh` compares full dry-runs of a base and of the tree record by record on 12 repos (PR #10).
 - 2026-10-19: the method's checks become gates on every PR that touches the indexer: the tests, the corpus, the
   hold-out and the micro set against `main`, with the baselines cached by the code's tree (H7-D1, D3, D5). `tests` and
   `gates` are required to merge (PR #11).
+- 2026-10-22: H7 slice 1c, from the eighth golden round. The `tests` job runs `mcp-it.sh`: every atlas tool against a
+  throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
+  keys (PR #22).
 
 ## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20)
 

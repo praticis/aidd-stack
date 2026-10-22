@@ -45,7 +45,7 @@ contrato `LanguageSupport`) e **`conventions/`** (regras do *seu* padrão de des
 | `core/package_facts.py` | a base dos fatos de pacote de cada linguagem (`PackageFacts`): cada campo declara como os valores de dois arquivos se juntam (um valor ou nenhum, o último, a união), e o `PackageContext` os guarda pela chave da linguagem |
 | `core/matching.py` | a regra de quando uma chamada e uma rota se encontram, comum ao linker, ao MCP e ao placar do corpus: `path_key`, caixa por framework (`CASE_INSENSITIVE`), métodos, sufixo de segmento, `query_key` |
 | `tree.py` | o que todo o indexador usa e não sabe de linguagem: `node_text`, `walk` por cursor (o primeiro nó é o próprio objeto recebido) e o `NodeCache` (valor por nó, com a chave no código-fonte e no span) |
-| `core/graph.py` | `GraphWriter.write()`: MERGE idempotente, `EXPOSES{ref}`/`HANDLED_BY{ref}`, `Violation`/`HAS_VIOLATION`, GC de órfãos por `commit_sha`, `IndexRun` |
+| `core/graph.py` | `GraphWriter.write()`: MERGE idempotente, `EXPOSES{ref}`/`HANDLED_BY{ref}`, `Violation`/`HAS_VIOLATION`, GC dos órfãos (o que esta escrita não tocou, por `indexed_at`), `IndexRun`. `scripts/mcp-it.sh` lê o grafo de volta contra um dry-run de cada snapshot (`tests/test_graph_writer_neo4j.py`), contado pelas chaves do MERGE |
 | `core/planner.py` / `core/manifest.py` / `core/gitinfo.py` | `atlas.yaml` (tenants, sources, refs, areas, **conventions**) → plano de (repo, ref, sha); `git archive` por ref |
 | `languages/__init__.py` | registro, carregado no primeiro uso: `by_id`, `by_extension`, `parseable()`, `grammars()`; `_MODULES` lista as pastas |
 | `languages/base.py` | contrato `LanguageSupport` (identidade · descoberta · símbolos · resolução · http) e `ResolveContext` |

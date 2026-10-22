@@ -16,7 +16,8 @@
   - the hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
   - the numbers are in `docs/corpus-report.md`.
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
-  hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`.
+  hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`. Since slice 1c
+  (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
 - **In progress:**
   - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
     as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
