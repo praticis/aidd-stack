@@ -84,11 +84,8 @@ public class ItemsClient
 """
 
 
-LOOSE = pytest.mark.xfail(strict=True, reason="inherited: a base outside the repo may declare any method")
-
-
-def case(id, params, body, edges, marks=()):
-    return pytest.param(params, body, edges, id=id, marks=marks)
+def case(id, params, body, edges):
+    return pytest.param(params, body, edges, id=id)
 
 
 CASES = [
@@ -117,9 +114,9 @@ CASES = [
     case("an-extension-of-a-homonym-type", "Store store", "store.Shine();", set()),
     case("two-extensions-of-any-value", "Store store", "store.Twice();", set()),
     case("the-only-method-of-its-name-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Tap();",
-         {("AnyExtensions.Tap", "unique-name")}, LOOSE),
+         {("AnyExtensions.Tap", "unique-name")}),
     case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();",
-         {("PackageExtensions.Size", "unique-name")}, LOOSE),
+         {("PackageExtensions.Size", "unique-name")}),
     case("a-name-another-method-of-the-repo-has-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Name();",
          {("Db", "inherited")}),
     case("an-extension-of-a-type-outside-the-repo-on-a-type-with-no-base-outside", "Store store", "store.Size();",
