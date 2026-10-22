@@ -65,7 +65,7 @@ public partial class ItemsClient%(declaration)s
 NEW = "new HttpService(new HttpClient(), Urls.Base)"
 GET = 'await svc.HttpGet<Item>("items");'
 TYPED = {("HttpService.HttpGet", "receiver-type")}
-PARTS = pytest.mark.xfail(strict=True, reason="no type: a partial type's parts are two types of one name")
+PARTS = pytest.mark.xfail(strict=True, reason="no type: only the members of the part the call is in")
 RESULT = pytest.mark.xfail(strict=True, reason="no type: a method's result is read only on the caller's own type")
 
 
@@ -98,9 +98,9 @@ def _calls(res) -> set[tuple[str, str]]:
 # -- a partial type is one type ---------------------------------------------------------------------------------------
 PARTIAL = [
     pytest.param({"body": GET}, {"members": f"    private readonly HttpService svc = {NEW};"},
-                 id="a-field-another-part-declares", marks=PARTS),
+                 id="a-field-another-part-declares"),
     pytest.param({"body": GET.replace("svc.", "_base.")}, {"declaration": " : BaseClient"},
-                 id="a-base-another-part-names", marks=PARTS),
+                 id="a-base-another-part-names"),
 ]
 
 
@@ -109,6 +109,7 @@ def test_a_call_reaches_a_member_another_part_declares(tmp_path, client, part):
     assert _edges(*_extract(tmp_path, client, part)) == TYPED
 
 
+@PARTS
 @pytest.mark.parametrize("client,part", PARTIAL)
 def test_a_wrapper_call_reaches_a_member_another_part_declares(tmp_path, client, part):
     res, _ = _extract(tmp_path, client, part)

@@ -26,6 +26,7 @@ class CsType(NamedTuple):
     members: dict[str, str]                                 # field, property or primary-constructor parameter → the
                                                             # simple name of its type
     explicit: dict[str, str]                                # method → the interface it implements explicitly
+    partial: bool                                           # one part of a type other files may declare more of
 
 
 class CsTypes(NamedTuple):
@@ -129,8 +130,9 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
     bases = tuple(t for t in (type_text(c, src) for c in (bl.children if bl is not None else [])
                               if c.is_named and c.type != "argument_list") if t)
     # a file-scoped namespace: its declarations are siblings of it, not children
+    partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
     return CsType(n.type.split("_")[0], _namespace(n, src) or file_ns, bases, _generic_bases(bl, src),
-                  members(n, src), _explicit_impls(n, src))
+                  members(n, src), _explicit_impls(n, src), partial)
 
 
 def _namespace(n: Node, src: bytes) -> str | None:
