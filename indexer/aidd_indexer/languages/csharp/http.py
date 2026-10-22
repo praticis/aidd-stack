@@ -20,8 +20,8 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
-from .locals import local_type
-from .type_facts import members
+from ...core.types import Unknown
+from .locals import receiver_type
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -63,7 +63,6 @@ class CsScanner(BaseScanner):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        self._class_members: dict[int, dict[str, str]] = {}            # class node → its members' types
 
     def run(self) -> None:
         if b"NSwag toolchain" in self.src[:4096]:           # a generated client: each operation, read whole
@@ -1076,7 +1075,7 @@ class CsScanner(BaseScanner):
         """`_httpService.HttpGet<T>("catalog-items")`: a call on a receiver of a known type with a string argument
         waits for `compose` to find whether that type's method is a client wrapper (it may live in another file)."""
         recv = fn.child_by_field_name("expression") if fn.type == "member_access_expression" else None
-        if recv is None or recv.type != "identifier" or not arg_nodes:
+        if recv is None or not arg_nodes:
             return
         args = tuple(self._literal(a) for a in arg_nodes)
         rtype = self._declared_type(recv, n) if any(args) else None
@@ -1094,20 +1093,21 @@ class CsScanner(BaseScanner):
             else unquote(text(a, self.src))
 
     def _declared_type(self, recv: Node, at: Node) -> str | None:
-        """Declared type of a local, parameter, field, property or primary-constructor parameter (simple name): the
-        nearest declaration in scope, then the class."""
-        name = text(recv, self.src)
-        local = local_type(name, at, self.src)
-        if local is not None:
-            return local or None
-        cls = at.parent
-        while cls is not None and cls.type not in CLASS_NODES:
-            cls = cls.parent
-        if cls is None:
-            return None
-        if cls.id not in self._class_members:
-            self._class_members[cls.id] = members(cls, self.src)
-        return self._class_members[cls.id].get(name)
+        """The simple name of the type the receiver's declaration gives it: the answer the resolver gets, with the
+        members after it read through the type service (a base's field, another part of a partial class, a field's
+        field)."""
+        found = receiver_type(at, recv, self.src)
+        if found is None or not found[1]:
+            return found[0].rpartition(".")[2] if found is not None else None
+        view = self.ctx.view
+        types = view.types.of("csharp") if view is not None and view.types is not None else None
+        cur = types.type_named(found[0], self.fx.file.path) if types is not None else None
+        for member in found[1]:
+            field = types.field(cur, member) if cur is not None and not isinstance(cur, Unknown) else None
+            if field is None or isinstance(field, Unknown):
+                return None
+            written, cur = field.written, field.type
+        return written
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

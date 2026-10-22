@@ -65,7 +65,6 @@ public partial class ItemsClient%(declaration)s
 NEW = "new HttpService(new HttpClient(), Urls.Base)"
 GET = 'await svc.HttpGet<Item>("items");'
 TYPED = {("HttpService.HttpGet", "receiver-type")}
-PARTS = pytest.mark.xfail(strict=True, reason="no type: only the members of the part the call is in")
 RESULT = pytest.mark.xfail(strict=True, reason="no type: a method's result is read only on the caller's own type")
 
 
@@ -109,7 +108,6 @@ def test_a_call_reaches_a_member_another_part_declares(tmp_path, client, part):
     assert _edges(*_extract(tmp_path, client, part)) == TYPED
 
 
-@PARTS
 @pytest.mark.parametrize("client,part", PARTIAL)
 def test_a_wrapper_call_reaches_a_member_another_part_declares(tmp_path, client, part):
     res, _ = _extract(tmp_path, client, part)

@@ -1,7 +1,6 @@
 """C#'s one answer to "what type does the code declare for this value", which the resolver asks to type call
 receivers for `CALLS` and the HTTP scanner to find the client wrapper a call goes through. The two sides once had
-answers of their own, and each case here is one they gave differently. A guard passes on both sides; an xfail is
-strict, so it fails the suite once it passes."""
+answers of their own, and each case here is one they gave differently; both sides now pass every one."""
 
 import contextlib
 import io
@@ -57,10 +56,10 @@ THROUGH_THE_WRAPPER = {("GET", "/items")}
 THROUGH_THE_INTERFACE = {("IHttpService.HttpGet", "receiver-type"), ("HttpService.HttpGet", "receiver-type-impl")}
 
 
-def case(id, resolver=None, scanner=None, edges=TYPED, calls=THROUGH_THE_WRAPPER, **fields):
-    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. A name whose
-    declaration states no type is typed by nothing, so neither side reaches a method or a wrapper through it."""
-    return id, fields, (edges, calls), resolver, scanner
+def case(id, edges=TYPED, calls=THROUGH_THE_WRAPPER, **fields):
+    """A name whose declaration states no type is typed by nothing, so neither side reaches a method or a wrapper
+    through it."""
+    return pytest.param(fields, (edges, calls), id=id)
 
 
 CASES = [
@@ -85,13 +84,11 @@ CASES = [
     case("a-lambda-parameter-shadows-a-field", members=OTHER_FIELD,
          body=f"Func<HttpService, Task> f = async (HttpService svc) => {GET[:-1]};\nawait f(null);"),
     case("a-block-local-before-the-use-in-its-block", members=OTHER_FIELD, body=f"{{\nvar svc = {NEW};\n{GET}\n}}"),
-    case("a-field-a-base-class-declares", scanner="no type: only the class's own members",
-         declaration=" : BaseClient", body=GET.replace("svc.", "_base.")),
-    case("this-field", scanner="no type: a receiver that is not a name", members=FIELD,
+    case("a-field-a-base-class-declares", declaration=" : BaseClient", body=GET.replace("svc.", "_base.")),
+    case("this-field", members=FIELD,
          body=GET.replace("svc.", "this.svc.")),
-    case("a-field-of-a-field", scanner="no type: a receiver that is not a name",
-         members="    private readonly Holder h = new Holder();", body=GET.replace("svc.", "h.Svc.")),
-    case("a-service-built-inline", scanner="no type: a receiver that is not a name", params="IServiceProvider sp",
+    case("a-field-of-a-field", members="    private readonly Holder h = new Holder();", body=GET.replace("svc.", "h.Svc.")),
+    case("a-service-built-inline", params="IServiceProvider sp",
          body=GET.replace("svc.", "sp.GetRequiredService<HttpService>().")),
     case("a-block-local-after-the-use", members=FIELD,
          body=f"{GET}\n{{ var svc = new Other(); }}"),
@@ -106,11 +103,6 @@ CASES = [
          body=f"var svc = {NEW};\nFunc<Other, Task> f = async (svc) => {GET[:-1]};\nawait f(null);", edges=set(),
          calls=set()),
 ]
-
-
-def _params(side: int):
-    return [pytest.param(fields, expected, id=id, marks=pytest.mark.xfail(strict=True, reason=wrong) if wrong else ())
-            for id, fields, expected, *wrong_on in CASES for wrong in [wrong_on[side]]]
 
 
 def _extract(root, fields: dict):
@@ -128,7 +120,7 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", _params(0))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name.removeprefix("Api.Services.") for s in res.symbols}
@@ -137,7 +129,7 @@ def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, fields, expect
     assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,expected", _params(1))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_call_goes_through_the_wrapper_of_the_declared_type(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
     assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
