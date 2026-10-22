@@ -9,7 +9,7 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-29`).
 >
-> **State (2026-10-21):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
+> **State (2026-10-22):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
 > 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
 > The rest follows in new PRs, each validated on a live install before its merge. Each is a refactor under the gates,
 > except step 5's changes of behavior, which are judged (H5-D10, H5-D12).
@@ -85,13 +85,20 @@
 >   Alone, on one image, the corpus summed 746 s on `main` and 774 s on the branch, within the noise: the repos whose
 >   code did not change moved more than the C# ones. `csharp/symbols.py` went from 674 to 396 lines. The scanner takes
 >   `members` and `type_text` from the facts module; its read of a local's type goes to the change of behavior.
+> - **Step 5, C#'s change of behavior (branch `feat/h5-csharp-type-answer`, 2026-10-22).** One answer for the resolver
+>   and the scanner, with C#'s own scoping, and four older gaps of the type service closed (H5-D16): a `partial` type
+>   is one type, a method's declared result, the repo's extension methods on a typed receiver, and a type written with
+>   its namespace and type arguments. Judged by case; the corpus and the hold-out are unchanged, so the baseline stays
+>   `-29`. "C#'s change of behavior" below has the results. Two more gaps of what a name means in C# go in a PR of
+>   their own, right after (H5-D17).
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
 >     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
->     PR #19. C#'s refactor is done. Next: C#'s change of behavior, then Python and TS;
+>     PR #19. C#'s refactor and its change of behavior are done. Next: the `fix(csharp)` of H5-D17, then Python and
+>     TS;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
@@ -488,6 +495,121 @@ Every xfail of both tables is gained and no guard is lost.
   generic's inferred type (`u := AssertExistsAndLoadBean(t, &User{})`) is SCIP's.
 - **The time, alone,** on one image: the corpus summed 763 s on `main` and 768 s on the branch.
 
+**C#**, in `indexer/tests/test_cs_types.py`. Where a side was wrong before the change, its column says what it gave.
+
+| Case | Resolver | Scanner | Test |
+|---|---|---|---|
+| a parameter, `var x = new T(..)`, `T x = Make()`, a field, a property, a primary constructor's parameter | typed | typed | guards `a-parameter`, `a-local-created-with-new`, `a-local-of-a-written-type`, `a-field`, `a-property`, `a-primary-constructor-parameter` |
+| a field whose type is an interface | the interface and its single implementer | typed | guard `an-interface-typed-field` |
+| `var x = sp.GetRequiredService<T>()`, the result of an own method, awaited or not | typed | typed | guards `a-service-the-container-builds`, `the-result-of-an-own-method`, `an-awaited-own-result` |
+| a closure seeing its function's local, `using var`, a local function's parameter, a lambda's typed parameter over a field, a block's local before the use | typed | typed | guards |
+| a field a base class declares | typed | no type | `a-field-a-base-class-declares` |
+| `this.x`, `h.Svc` (a field of a field), `sp.GetRequiredService<T>().M()` | typed | no type: a receiver that is not a name | `this-field`, `a-field-of-a-field`, `a-service-built-inline` |
+| a block's local declared after the use | typed | the block's local | `a-block-local-after-the-use` |
+| the enclosing class has the simple name of a type a `using` shows | no type: two visible types | typed | `the-enclosing-class-shares-a-visible-name` |
+| a sibling block's local, or a lambda's, out of scope at the use | the out-of-scope local's type | the same | `a-sibling-block-local-out-of-scope`, `a-lambda-local-out-of-scope` |
+| `var x = Unknown()`, a declaration that states no type, over a field of its name | the field's type | no type | `an-untyped-local-hides-a-field` |
+| `x =>`, an implicit lambda parameter, over a field | the field's type | the field's type | `an-implicit-lambda-parameter-hides-a-field` |
+| `(x) =>`, a typeless lambda parameter, over a local | the local's type | no type | `a-typeless-lambda-parameter-hides-a-local` |
+
+On the resolver's side, each wrong answer is a `CALLS` edge to the wrong method, or none. On the scanner's, it is a
+call that misses its client wrapper.
+
+Past a local's own declaration, four older gaps of the type service lost edges that `main`'s wrong answers had found
+by luck, so they close in the same PR (H5-D16), with their cases first, in `indexer/tests/test_cs_declared_types.py`
+and `indexer/tests/test_cs_extension_methods.py`:
+
+| Case | Before | Test |
+|---|---|---|
+| a member or a base that another part of a `partial` type declares | two types of one name, so no type | `test_a_call_reaches_a_member_another_part_declares` and its scanner twin; guard `test_two_types_of_one_name_that_are_not_partial_stay_apart` |
+| `var x = y.M()`, the result another type's method declares: awaited, an interface's, a base's, through a property, on a field | read only on the caller's own type | `test_a_local_has_the_type_its_methods_result_declares`, `test_a_wrapper_call_on_a_local_a_method_returns`; guard `test_overloads_of_two_results_type_nothing` |
+| a typed receiver none of whose methods, nor its implementation's, takes the arguments: the repo's extension method whose `this` takes the type, a base or an interface it names, the nearest first; failing that, the only one that takes any value, and on a type with a base outside the repo only when no other method of the repo has its name | no edge, `inherited`, or a method that does not take the arguments | 10 cases; 10 guards: the type's own method, another type, an array, a predefined type, a homonym type, two of any value, a name another method has, a type outside the repo (twice), a call on the type's name |
+| a type written with its namespace and type arguments (`this Microsoft.EntityFrameworkCore.DbSet<T>`) | the name `DbSet<T>`, which matches nothing | `an-extension-of-a-package-type-written-with-its-namespace` |
+
+### C#'s change of behavior
+
+One answer, with C#'s own rule: **a name is what its nearest declaration in scope makes it.** That is a block's local
+declared before the use, from the innermost block out (a `switch`'s sections are one scope); a parameter of the
+function; from a lambda, an anonymous method or a local function, the function around it; then a member of the
+enclosing type, found by its qualified name, or one it inherits. A declaration that states no type (`var x =
+Unknown()`, `x =>`, `(x) =>`) types nothing and still hides what is outside it.
+
+- **The boundary with SCIP stays where the guide puts it.** Only a declared type counts: a method's result when its
+  signature declares it, and what awaiting its `Task<T>` gives, never its `return`s. Between an instance method and
+  an extension, the argument count is the only test. C# takes an instance method that applies, and which one applies
+  when both take that many arguments is a question of their types.
+- **One code inside a file.** `languages/csharp/locals.py` answers a name's type for the resolver's `call_receiver`
+  and for the scanner's client wrappers alike.
+- **Across files, the `CsTypeIndex`.** The scanner asks through `view.types` and takes the whole answer (H5-D11): a
+  member that another part of a `partial` type declares, a base's field, `this.x`, a field of a field. A method's
+  result is a question of its own (`method_result`), and so is a type's chain of bases with the names it gives to
+  bases outside the repo (`ancestry`), which `supertypes` and `has_external_base` read too.
+- **The resolver's typed branch** (`Resolver._on_type`). When no method of the receiver's type or of its
+  implementation takes the arguments, it asks the language what it calls on the type instead
+  (`LanguageSupport.extension_methods`), and C# answers with the repo's extension methods. A call on a type's name
+  (`Type.M()`) has no value to extend.
+
+**Done (2026-10-22).** Fourteen commits, each code commit measured against the one before:
+
+1. the cases (`indexer/tests/test_cs_types.py`);
+2. the cases of two gaps (`indexer/tests/test_cs_declared_types.py`);
+3. a `partial` type is one type;
+4. the cases of a declaration that states no type;
+5. one answer inside a file (`languages/csharp/locals.py`);
+6. the scanner reads members through the `CsTypeIndex`;
+7. a method's declared result;
+8. the cases of the extension methods (`indexer/tests/test_cs_extension_methods.py`);
+9. a typed receiver reaches the repo's extension method;
+10. the cases of an extension of any value on a type with a base outside the repo, and of a type written with its
+    namespace;
+11. that type is named by its last name;
+12. an extension that may take the value, on a type with a base outside the repo;
+13. the cases of a call on a type's name and of an extension of a type outside the repo;
+14. neither reaches an extension. The judgment of commit 12 found NPoco's `Database.ExecuteScalarAsync(..)` and a
+    `DbContext`'s `AddRange(..)` sent to an extension of another type outside the repo, and the static
+    `JsonSerializer.SerializeToNode(..)` sent to an extension of any value.
+
+Every xfail of the three tables is gained, and no guard is lost.
+
+- **The corpus and the hold-out:** `0 repo(s) differ` at every commit, against `-29` and `-26`. No expected list
+  changes, and the baseline stays `-29`.
+- **The micro set:** the 8 repos of other languages are identical, and so are 3 of the 15 C# repos
+  (ardalis-clean-arch, azure-saas, clean-arch-dotnet). On the other 12, from `main`: +11,742 and −163 typed edges,
+  +2,536 and −74 typed among overloads, +677 and −656 `inherited`, and +452 and −5,848 found by name. Judged by case on
+  seeded samples:
+  - a `partial` type's other parts give it their members and bases: smartstore's `_db.SaveChangesAsync()` reaches
+    `HookingDbContext`, the base that one of `SmartDbContext`'s parts names, and notifo's `SendAsync` reaches
+    `TelekomSmsIntegration`'s, declared in its `.Sms.cs` part;
+  - the enclosing class, found by its qualified name, types radarr's `InstallUpdateService` and elsa's `Feature`, which
+    a homonym in a visible namespace hid;
+  - extension methods:
+    - 4,789 sites with no edge reach the repo's extension (umbraco's `request.HasTemplate()`, btcpay's
+      `this.CreateValidationError(ModelState)` through `ControllerBase`);
+    - 802 `inherited` edges become the extension (smartstore's `_db.LoadCollectionAsync(..)`, jellyfin's
+      `item.TrySetProviderId(..)`);
+    - 293 typed edges to a method that does not take the arguments become the extension that does (jellyfin's
+      `item.HasImage(ImageType.Primary)`, against `BaseItem.HasImage(type, index)`);
+  - a type written with its namespace: btcpay's `ctx.Offerings.Where(..)` reaches the repo's
+    `Extensions.Where(this DbSet<TEntity>)`, and jellyfin's `base.SetInitialItemValues(..)` reaches `ItemResolver<T>`'s;
+  - the guesses by name that go were wrong. smartstore's `_db.MeasureDimensions.FindByIdAsync(..)` went to
+    `RoleManagerExtensions`, umbraco's `created.GetValue<string>(..)` to `DictionaryExtensions`, and btcpay's LINQ
+    `invoices.Where(..)` to the `DbSet` one.
+- **What stays lost:** 188 edges to extension methods that `main` had. Most were guesses that the receiver's type
+  now proves wrong, as above. The rest is what H5-D16 leaves out:
+  - an instance method and an extension that take as many arguments, which only the arguments' types tell apart
+    (about 20 sites: smartstore's `_mediaService.GetUrl(file, thumbPictureSize, host)`, elsa's `Get(blockId)`);
+  - a form neither side reads, where the call goes back to a guess by name, or to none (about 20 sites). These are a
+    lambda parameter without a type (btcpay's `coin => coin.Value.GetValue(..)`, umbraco's `(source, target,
+    context) => target.EnableChangeTracking()`) and a `foreach` variable, typed or not;
+  - a member of a package's type, whose own type is not known (`_httpRequest.HttpContext.GetItemAsync(..)`, 3 sites);
+  - an extension of a type outside the repo on a type with a base outside it (notifo's
+    `user.Settings.GetOrDefault(..)`, 4 sites): that base may declare the method, as `DbContext.AddRange` and NPoco's
+    `ExecuteScalarAsync` do;
+  - the block namespace of H5-D17 (btcpay's `result.StoreData.GetStoreBlob()`).
+- **The time, alone,** on one image: the corpus summed 812 s on `main` and 776 s on the branch, within the noise (the
+  C# repos 279 and 274 s; the others, whose code did not change, 533 and 502 s). Full dry-runs of umbraco, elsa,
+  bitwarden and smartstore, which run the resolver, take the same time on both.
+
 ## Decisions made (2026-10-18, by the author)
 
 - **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
@@ -560,6 +682,22 @@ Every xfail of both tables is gained and no guard is lost.
   receivers, and its micro set lost edges where `main`'s wrong answers had found the right method by luck. The
   interface's dispatch, a form neither side reads (`range`, a type switch, an assertion), a generic's inferred type
   and a file the grammar does not parse stay out.
+- **H5-D16 (2026-10-22), C#'s change of behavior also closes four older gaps of the type service.** A `partial` type
+  is one type; a method's declared result counts on any type; a typed receiver reaches the repo's extension methods;
+  and a type written with its namespace and type arguments is named by its last name. Each comes with its cases first.
+  The one answer types more receivers, and its micro set lost the edges `main`'s guesses had found on them. Some
+  things stay out:
+  - a `foreach`, `out var` or pattern variable;
+  - the arguments' types between overloads of one arity;
+  - a member of a package's type;
+  - an extension of a type outside the repo on a type with a base outside it.
+- **H5-D17 (2026-10-22), what a name means in C# goes in a `fix(csharp)` PR of its own, right after C#'s change of
+  behavior.** The lookup counts a file's namespace only when it is file-scoped (`namespace X;`). In `namespace X { }`,
+  a type of `X` loses to a homonym that a `using` shows: btcpay's `result.StoreData` reads as
+  `BTCPayServer.Client.Models.StoreData`. C# looks in the enclosing namespaces before the `using`s. The same judgment
+  found a second case: a capitalized name that is a member the caller's type inherits from a base of the repo is read
+  as a static access to a homonym type. In elsa's features, `Module.UseWorkflowManagement(..)` is `FeatureBase.Module`,
+  an `IModule`. `main` has no edge there either.
 
 ## Pitfalls
 
