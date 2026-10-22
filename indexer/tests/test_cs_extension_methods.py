@@ -84,12 +84,8 @@ public class ItemsClient
 """
 
 
-STATIC = pytest.mark.xfail(strict=True,
-                           reason="an extension is reached on a type's own name, or as one of any type outside the repo")
-
-
-def case(id, params, body, edges, marks=()):
-    return pytest.param(params, body, edges, id=id, marks=marks)
+def case(id, params, body, edges):
+    return pytest.param(params, body, edges, id=id)
 
 
 CASES = [
@@ -119,9 +115,8 @@ CASES = [
     case("two-extensions-of-any-value", "Store store", "store.Twice();", set()),
     case("the-only-method-of-its-name-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Tap();",
          {("AnyExtensions.Tap", "unique-name")}),
-    case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();", {("Db", "inherited")},
-         STATIC),
-    case("a-call-on-the-types-name", "", "Store.Ping();", set(), STATIC),
+    case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();", {("Db", "inherited")}),
+    case("a-call-on-the-types-name", "", "Store.Ping();", set()),
     case("a-name-another-method-of-the-repo-has-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Name();",
          {("Db", "inherited")}),
     case("an-extension-of-a-type-outside-the-repo-on-a-type-with-no-base-outside", "Store store", "store.Size();",

@@ -161,22 +161,21 @@ class CSharpSupport(LanguageSupport):
 
     def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str) -> list[tuple[list, str]]:
         """Those whose `this` takes the type or a base of it, an interface it names included, the nearest first. Failing
-        that, the only one that may take the value: one of any value, or, on a type with a base outside the repo, one of
-        a type outside it; and on such a type only when no other method of the repo has its name, since that base may
-        declare the method."""
+        that, the only one that takes any value; on a type with a base outside the repo, only when no other method of
+        the repo has its name, since that base may declare the method."""
         types = self._types(ctx)
         chain, outside = types.ancestry(qualified_type)
         near: dict[int, list] = {}
-        maybe = []
+        anything = []
         for s in symbols:
             takes = _takes(ctx, s)
-            if (far := _distance(types, chain, outside, ctx.files_by_id[s.file_id], takes)) is not None:
+            if takes == "object":
+                anything.append(s)
+            elif (far := _distance(types, chain, outside, ctx.files_by_id[s.file_id], takes)) is not None:
                 near.setdefault(far, []).append(s)
-            elif takes == "object" or (outside and takes and not types.is_type_name(takes)):
-                maybe.append(s)
         if near:
             return [(near[min(near)], "receiver-type")]
-        return [(maybe, "unique-name")] if len(maybe) == 1 and (not outside or len(symbols) == 1) else []
+        return [(anything, "unique-name")] if len(anything) == 1 and (not outside or len(symbols) == 1) else []
 
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """.csproj: `<PackageId>` (else `<AssemblyName>`, else the file stem) publishes;

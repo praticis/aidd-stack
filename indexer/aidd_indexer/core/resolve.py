@@ -195,13 +195,13 @@ class Resolver:
         return edges, unresolved
 
     def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str]]:
-        """The methods of the receiver's type and of the implementation it reaches; when none of them takes the
-        arguments, the repo's methods the language calls on the type instead (C# extension methods), if any."""
+        """The methods of the receiver's type and of the implementation it reaches; when none takes the arguments and the
+        receiver is a value, not the type's name, the repo's methods the language calls on it (C# extension methods)."""
         typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
         impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
         impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
         found = [(typed, "receiver-type"), (impl_typed, "receiver-type-impl")]
-        if any(_fits(s, c.arg_count) for s in typed + impl_typed):
+        if c.receiver == c.receiver_type or any(_fits(s, c.arg_count) for s in typed + impl_typed):
             return found
         return lang.extension_methods(self.ctx, [s for s in cands if _fits(s, c.arg_count)], qtype) or found
 
