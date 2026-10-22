@@ -1,7 +1,9 @@
 """A call on a receiver whose type the code declares, when no method of the type takes its arguments: C# goes on to
 the extension methods in scope, so the call reaches the repo's extension whose `this` takes the type, a base of it or
-an interface it names, the nearest first; or the only one that takes any value, when no base outside the repo may
-declare the method. One that takes another type, an array or a predefined type is not its target."""
+an interface it names, the nearest first. Failing that, the only one that may take the value: one of any value, or, on a
+type with a base outside the repo, one of a type outside it; and on such a type only when no other method of the repo
+has its name, since that base may declare the method. One that takes another type of the repo, an array or a
+predefined type is not its target. A package's type written with its namespace is the type of its last name."""
 
 import contextlib
 import io
@@ -50,6 +52,13 @@ public static class AnyExtensions
 public static class MoreExtensions
 {
     public static T Twice<T>(this T value) => value;
+    public static T Name<T>(this T value) => value;
+}
+
+public static class PackageExtensions
+{
+    public static IQueryable<T> Where<T>(this Microsoft.EntityFrameworkCore.DbSet<T> set, Func<T, bool> p) => null;
+    public static int Size(this IDisposable d) => 0;
 }
 """
 HOMONYM = """namespace Api.Legacy;
@@ -75,8 +84,12 @@ public class ItemsClient
 """
 
 
-def case(id, params, body, edges):
-    return pytest.param(params, body, edges, id=id)
+LOOSE = pytest.mark.xfail(strict=True, reason="inherited: a base outside the repo may declare any method")
+QUALIFIED = pytest.mark.xfail(strict=True, reason="no edge: `A.B<T>` is read as the name `B<T>`")
+
+
+def case(id, params, body, edges, marks=()):
+    return pytest.param(params, body, edges, id=id, marks=marks)
 
 
 CASES = [
@@ -104,8 +117,16 @@ CASES = [
     case("an-extension-of-a-predefined-type", "Store store", "store.Blank();", set()),
     case("an-extension-of-a-homonym-type", "Store store", "store.Shine();", set()),
     case("two-extensions-of-any-value", "Store store", "store.Twice();", set()),
-    case("an-extension-of-any-value-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Tap();",
+    case("the-only-method-of-its-name-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Tap();",
+         {("AnyExtensions.Tap", "unique-name")}, LOOSE),
+    case("an-extension-of-a-type-outside-the-repo-its-base-may-be", "Db db", "db.Size();",
+         {("PackageExtensions.Size", "unique-name")}, LOOSE),
+    case("a-name-another-method-of-the-repo-has-on-a-type-with-a-base-outside-the-repo", "Db db", "db.Name();",
          {("Db", "inherited")}),
+    case("an-extension-of-a-type-outside-the-repo-on-a-type-with-no-base-outside", "Store store", "store.Size();",
+         set()),
+    case("an-extension-of-a-package-type-written-with-its-namespace", "DbSet<Store> stores", "stores.Where(s => true);",
+         {("PackageExtensions.Where", "same-module")}, QUALIFIED),
 ]
 
 
