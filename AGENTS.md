@@ -31,8 +31,8 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | `setup/` | `install.sh` (installs and updates `~/.aidd`), `install-check.sh` (install health), the `aidd` wrapper, the skills (`scan`, `refine-business`) and an example convention |
 | `docker-compose.yml`, `gateway/`, `neo4j/`, `qdrant/`, `obsidian/`, `git/` | the infra: Neo4j with its schema (`neo4j/SCHEMA.md`), Qdrant, the MCPs and the nginx gateway, all on localhost only |
 | `indexer/` | the `aidd-indexer` package: the `aidd` CLI, the refresher (`aidd daemon`), the `atlas` MCP and the `knowledge` service |
-| `indexer/aidd_indexer/core/` | what all languages share: discovery, extraction, `CALLS` resolution, the HTTP extractor (`http_*`, `integrations.py`), the linker and the graph writer |
-| `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003) |
+| `indexer/aidd_indexer/core/` | what all languages share: discovery, extraction, `CALLS` resolution, the type service (`types.py`, ADR-005), the HTTP extractor (`http_*`, `integrations.py`), the linker and the graph writer |
+| `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003); in Go and C#, also the type facts and the language's `TypeIndex` |
 | `indexer/conventions/` | architecture conventions as extensions (the reference one is `dotnet-praticis`) |
 | `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
 | `indexer/scripts/` | every check CI runs, each runnable locally (`README.md` lists them): the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`), the shape ratchet (`shape.py`) and the tests (`test.sh`) |

@@ -85,12 +85,12 @@
 >   Alone, on one image, the corpus summed 746 s on `main` and 774 s on the branch, within the noise: the repos whose
 >   code did not change moved more than the C# ones. `csharp/symbols.py` went from 674 to 396 lines. The scanner takes
 >   `members` and `type_text` from the facts module; its read of a local's type goes to the change of behavior.
-> - **Step 5, C#'s change of behavior (branch `feat/h5-csharp-type-answer`, 2026-10-22).** One answer for the resolver
->   and the scanner, with C#'s own scoping, and four older gaps of the type service closed (H5-D16): a `partial` type
->   is one type, a method's declared result, the repo's extension methods on a typed receiver, and a type written with
->   its namespace and type arguments. Judged by case; the corpus and the hold-out are unchanged, so the baseline stays
->   `-29`. "C#'s change of behavior" below has the results. Two more gaps of what a name means in C# go in a PR of
->   their own, right after (H5-D17).
+> - **Step 5, C#'s change of behavior (PR #25, merged on 2026-10-22 and validated on a live install, the tenth golden
+>   round).** One answer for the resolver and the scanner, with C#'s own scoping, and four older gaps of the type
+>   service closed (H5-D16): a `partial` type is one type, a method's declared result, the repo's extension methods on
+>   a typed receiver, and a type written with its namespace and type arguments. Judged by case; the corpus and the
+>   hold-out are unchanged, so the baseline stays `-29`. "C#'s change of behavior" below has the results. Two more gaps
+>   of what a name means in C# go in a PR of their own, right after (H5-D17).
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:

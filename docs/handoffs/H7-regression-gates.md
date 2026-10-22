@@ -11,9 +11,9 @@
 >   absorbed here;
 > - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install.
 >
-> **State (2026-10-19):** slice 1 is built on the `ci/h7-gates` branch, and its first run in CI is its test. The
-> author made decisions D1, D3 and D5 (see "Decisions made"). The slice comes now, before H6's step 1, so that the
-> method's checks live in the repo before the context of the work that built them fades.
+> **State (2026-10-22):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
+> `main` requires `tests` and `gates`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3 and D5 (see
+> "Decisions made"); D2 and D4 are still to make.
 
 ## Context in one paragraph
 

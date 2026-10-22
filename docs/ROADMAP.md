@@ -22,10 +22,10 @@
   - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
     as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
     (H5-D10): Go's refactor merged as PR #17, the `fix(mcp)` for `symbol_context`'s imports as PR #19, and Go's change
-    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23,
-    validated on a live install (the ninth golden round). C#'s change of behavior is judged, its PR waiting for the
-    live install; a `fix(csharp)` for what a name means in C# follows it (H5-D17). Then Python and TS. After step 5:
-    step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23 and
+    its change of behavior as PR #25, each validated on a live install (the ninth and tenth golden rounds). Next, a
+    `fix(csharp)` for what a name means in C# (H5-D17), then Python and TS. After step 5: step 6 (recognizers and the
+    catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -34,7 +34,7 @@
       package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
     - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
       14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
-  - H7 (`docs/handoffs/H7-regression-gates.md`): slice 1 is in `main`; the next slices are open.
+  - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
@@ -337,10 +337,10 @@ Open:
     - Django stayed out (the portfolio is FastAPI/Flask);
     - test app folders with production names wait for F1.1's per-repo config.
   - **What needs an inferred type** is `needs-resolver`, for F1.2.
-- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slice 1 in `main`, PR #11): the method's mechanical checks
-  as gates on every PR (precision ratchet, no win lost, hold-out untouched, `0 differ` for refactors, one cause per
-  commit), the diff classified for judgment, baselines published on merge, a nightly trend, and a live check on a
-  demo tenant
+- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slices 1 and 1c in `main`, PR #11
+  and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
+  untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
+  on merge, a nightly trend, and a live check on a demo tenant
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

@@ -3,9 +3,11 @@
 Loads a repository's **micro graph** into atlas (Neo4j): `Repo`, `Snapshot`, `Module`,
 `File`, `Symbol`, `CONTAINS`, `IMPORTS`, `CALLS`. Schema: [`../neo4j/SCHEMA.md`](../neo4j/SCHEMA.md).
 
-v0 uses tree-sitter for every language (Go, TypeScript/TSX/JS, Python, C#) and resolves
-calls **by name inside the repo** (`same-file` → `same-module` → `unique-name`). Precise,
-cross-file resolution via SCIP is planned; the edge property `resolved=false`
+v0 uses tree-sitter for every language (Go, TypeScript/TSX/JS, Python, C#). A call resolves
+through a mediator's dispatch or the receiver's declared type where the language answers it (Go
+and C# so far, through the type service in `core/types.py`), and otherwise **by name inside the
+repo** (`same-file` → `same-module` → `unique-name`); `neo4j/SCHEMA.md` lists every strategy.
+Precise, cross-file resolution via SCIP is planned; the edge property `resolved=false`
 marks today's edges so they can be upgraded in place.
 
 ## Run (recommended: the `aidd` client)
@@ -112,16 +114,25 @@ the fastest way to inspect what a language query extracts.
 ```
 aidd_indexer/
   cli.py                    aidd plan / bootstrap / refresh / index / link / status / policy / wipe / selftest / serve
+  daemon.py                 aidd daemon: the refresher's loop, lock, status file and health
+  tree.py                   node text, a cursor walk and a per-node cache; no language
   core/                     language-agnostic pipeline — never names a language
     config.py manifest.py   env + atlas.yaml (tenants, sources, refs, areas, conventions)
     policy.py               policy.yaml: process policy in layers (built-in → defaults → tenant → area → repo)
     planner.py gitinfo.py   sources → (repo, ref, sha) items; git plumbing
+    mirror.py               bare mirrors of the read-only workspace, which every git read goes to
+    build.py                which indexer wrote a snapshot: the version plus a fingerprint of the code
     discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
     extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
-    resolve.py              name-based CALLS, IMPORTS via LanguageSupport.resolve_import, external Packages
-    integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner)
-    http_base.py            BaseScanner: expression → path template, handler-vs-data, method detection
-    paths.py                normalize_path / path_key (shared with graph.py and the MCP)
+    resolve.py dispatch.py  CALLS (mediator dispatch, the receiver's type, then by name), IMPORTS, external Packages
+    types.py                the type service (ADR-005): TypeRef, Unknown with its reason, the TypeIndex questions
+    integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner → compose)
+    http_base.py            BaseScanner: where a route lives, handler-vs-data, method detection
+    http_expr.py            expression → path template and method; a directory's constants
+    http_scope.py http_mounts.py http_view.py http_wrappers.py http_nodes.py
+                            a file's scopes, the mount graph, the repo view, client wrappers, node kinds
+    package_facts.py scan_patterns.py  package facts' base; what a convention adds to the scanners
+    paths.py matching.py    normalize_path / path_key; when a call and a route meet (linker, MCP, corpus)
     deps.py                 manifests → provides / requires per repo (LanguageSupport.manifest_deps)
     linker.py               HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM; requires × provides → DEPENDS_ON (pure; graph.py reads and writes)
     graph.py ids.py model.py Neo4j writer (idempotent MERGE, GC), id convention, dataclasses
@@ -131,11 +142,20 @@ aidd_indexer/
       queries.scm           tree-sitter patterns: @def.<kind> + @name, @call + @callee (+ @receiver), @import
       symbols.py            the LanguageSupport subclass (qualified names, visibility, imports, resolution)
       http.py               the BaseScanner subclass (routes exposed, outbound calls)
+      http_facts.py         what a file publishes for compose, and the requests it leaves pending (Go, C#, TS)
+      package_facts.py      the language's package facts (Go, Python, TS)
+      …                     what a scanner splits out (client wrappers, TS's file routes): the guide's §2
+    go/ csharp/
+      type_facts.py         a file's type facts as values with no tree node
+      type_index.py         the language's TypeIndex, built once per repo
+      locals.py             the type a name's declaration in scope gives it, for the resolver and the scanner
   conventions/              pluggable rules of *your* development pattern (layers, allowed deps, targets)
     base.py                 Convention contract + ConventionContext
     declarative.py          convention.yaml → Convention (no Python needed)
     __init__.py             registry: path | entry point `aidd.conventions` | `module:Class`; apply()
-  mcp/server.py             MCP `atlas` (read-only tools over the graph)
+  mcp/                      MCP `atlas` (read-only tools over the graph)
+    server.py store.py      assembles the tools; the Neo4j accessor per tenant
+    tools_*.py              one module per tool group (status, symbols, HTTP, impact, violations and Cypher)
   knowledge/                MCP `knowledge` (docs/knowledge-contract.md) — image stage `knowledge`
     vault.py                safe names, frontmatter, owned `aidd:` blocks, atomic writes
     insights.py             insight notes, lifecycle data, the index's knowledge block
@@ -149,7 +169,8 @@ aidd_indexer/
    `@callee` (+ optional `@receiver`), `@import`; blank lines separate patterns).
 2. `symbols.py`: subclass `LanguageSupport`, override only what differs (`module_prefix`,
    `qualified_name`, `visibility`, `import_bindings`, `resolve_import`; optionally `file_facts` +
-   `call_receiver` + `resolve_receiver` so method calls resolve by the receiver's static type) and export
+   `call_receiver` + `resolve_receiver` and a `type_index`, the language's `TypeIndex` (ADR-005), so
+   method calls resolve by the receiver's static type, as Go and C# do) and export
    `LANGUAGES = [<instance>]` with `id`, `grammar`, `extensions`, `query_file`, `stack`, `manifests`.
 3. Optional `http.py`: subclass `BaseScanner`, set `http_scanner=` on the instance.
 4. Add the folder name to `_MODULES` in `languages/__init__.py`. The Dockerfile prefetches the
