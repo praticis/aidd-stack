@@ -71,13 +71,27 @@
 > - **Step 5, Go's change of behavior (PR #20, merged on 2026-10-21 and validated on a live install, the eighth
 >   golden round).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
 >   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
+> - **Step 5, C#'s refactor (branch `refactor/h5-csharp-type-index`, 2026-10-22).** Two commits, each under the
+>   protocol, with the graph identical:
+>   - **C#'s type facts as typed values with no tree node** (`languages/csharp/type_facts.py`: `CsTypes`, `CsType`).
+>     They were checked equal to the old dicts, in their order, on the 35,255 C# files of the corpus and the hold-out.
+>   - **C#'s resolver asks `CsTypeIndex`** (`languages/csharp/type_index.py`), which holds the indexes the resolver
+>     kept in the context: the types by simple and by qualified name, the implementers and the DI chains. A type is
+>     found from a file as before: the only one of its name, or the only one among the namespaces the file sees. A
+>     type found that way has a single declaration, so the API by `TypeRef` answers what the old tuples did, partial
+>     types included.
+>
+>   The micro graph was compared on the 12 repos and on the corpus's 11 other C# repos, and all are identical.
+>   Alone, on one image, the corpus summed 746 s on `main` and 774 s on the branch, within the noise: the repos whose
+>   code did not change moved more than the C# ones. `csharp/symbols.py` went from 674 to 396 lines. The scanner takes
+>   `members` and `type_text` from the facts module; its read of a local's type goes to the change of behavior.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
 >     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
->     PR #19. Next: C#, Python and TS;
+>     PR #19. C#'s refactor is done. Next: C#'s change of behavior, then Python and TS;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
 >   - the rest of 10;
