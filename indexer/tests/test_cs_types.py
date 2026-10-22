@@ -53,12 +53,14 @@ MAKE = f"    HttpService Make() => {NEW};"
 HOMONYM = {"Other/ItemsClient.cs": "namespace Api.Other;\n\npublic class ItemsClient { public object svc; }\n"}
 
 TYPED = {("HttpService.HttpGet", "receiver-type")}
+THROUGH_THE_WRAPPER = {("GET", "/items")}
 THROUGH_THE_INTERFACE = {("IHttpService.HttpGet", "receiver-type"), ("HttpService.HttpGet", "receiver-type-impl")}
 
 
-def case(id, resolver=None, scanner=None, edges=TYPED, **fields):
-    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side."""
-    return id, fields, edges, resolver, scanner
+def case(id, resolver=None, scanner=None, edges=TYPED, calls=THROUGH_THE_WRAPPER, **fields):
+    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. A name whose
+    declaration states no type is typed by nothing, so neither side reaches a method or a wrapper through it."""
+    return id, fields, (edges, calls), resolver, scanner
 
 
 CASES = [
@@ -99,12 +101,20 @@ CASES = [
          members=FIELD, body=f"{{ var svc = new Other(); }}\n{GET}"),
     case("a-lambda-local-out-of-scope", resolver="the lambda's local", scanner="the lambda's local",
          members=FIELD, body=f"Action a = () => {{ var svc = new Other(); }};\n{GET}"),
+    case("an-untyped-local-hides-a-field", resolver="the field's type", members=FIELD,
+         body=f"var svc = Unknown();\n{GET}", edges=set(), calls=set()),
+    case("an-implicit-lambda-parameter-hides-a-field", resolver="the field's type", scanner="the field's type",
+         members=FIELD, body=f"Func<Other, Task> f = async svc => {GET[:-1]};\nawait f(null);", edges=set(),
+         calls=set()),
+    case("a-typeless-lambda-parameter-hides-a-local", resolver="the local's type",
+         body=f"var svc = {NEW};\nFunc<Other, Task> f = async (svc) => {GET[:-1]};\nawait f(null);", edges=set(),
+         calls=set()),
 ]
 
 
 def _params(side: int):
-    return [pytest.param(fields, edges, id=id, marks=pytest.mark.xfail(strict=True, reason=wrong) if wrong else ())
-            for id, fields, edges, *wrong_on in CASES for wrong in [wrong_on[side]]]
+    return [pytest.param(fields, expected, id=id, marks=pytest.mark.xfail(strict=True, reason=wrong) if wrong else ())
+            for id, fields, expected, *wrong_on in CASES for wrong in [wrong_on[side]]]
 
 
 def _extract(root, fields: dict):
@@ -122,16 +132,16 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,edges", _params(0))
-def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, fields, edges):
+@pytest.mark.parametrize("fields,expected", _params(0))
+def test_a_call_reaches_the_method_of_the_declared_type(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name.removeprefix("Api.Services.") for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").startswith("Api.Items.ItemsClient") and names.get(c.callee_id, "").endswith("HttpGet")}
-    assert found == edges
+    assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,edges", _params(1))
-def test_a_call_goes_through_the_wrapper_of_the_declared_type(tmp_path, fields, edges):
+@pytest.mark.parametrize("fields,expected", _params(1))
+def test_a_call_goes_through_the_wrapper_of_the_declared_type(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == {("GET", "/items")}
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
