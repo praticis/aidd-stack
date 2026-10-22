@@ -20,6 +20,8 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
+from .locals import local_type
+from .type_facts import members
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -61,7 +63,6 @@ class CsScanner(BaseScanner):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        self._types: dict[int, dict[str, str | None]] = {}             # function → its names' declared types
         self._class_members: dict[int, dict[str, str]] = {}            # class node → its members' types
 
     def run(self) -> None:
@@ -1094,17 +1095,11 @@ class CsScanner(BaseScanner):
 
     def _declared_type(self, recv: Node, at: Node) -> str | None:
         """Declared type of a local, parameter, field, property or primary-constructor parameter (simple name): the
-        function around `at` first — and, from a lambda or local function, the ones around it — then the class."""
-        from .symbols import _CLOSURES, _FUNC_NODES, _enclosing, members   # the language module imports this one
+        nearest declaration in scope, then the class."""
         name = text(recv, self.src)
-        scope = _enclosing(at, _FUNC_NODES)
-        while scope is not None:
-            types = self._scope_types(scope)
-            if name in types:
-                return types[name]
-            if scope.type not in _CLOSURES:
-                break
-            scope = _enclosing(scope, _FUNC_NODES)
+        local = local_type(name, at, self.src)
+        if local is not None:
+            return local or None
         cls = at.parent
         while cls is not None and cls.type not in CLASS_NODES:
             cls = cls.parent
@@ -1113,36 +1108,6 @@ class CsScanner(BaseScanner):
         if cls.id not in self._class_members:
             self._class_members[cls.id] = members(cls, self.src)
         return self._class_members[cls.id].get(name)
-
-    def _scope_types(self, scope: Node) -> dict[str, str | None]:
-        """Parameter and local name → declared type (or the type it is created with: `var x = new T()`), read in one
-        pass per function."""
-        from .symbols import _new_type, _returned_type, _service_type, type_text
-        if scope.id in self._types:
-            return self._types[scope.id]
-        types: dict[str, str | None] = {}
-        for d in walk(scope):
-            if d.type != "variable_declaration" or d.parent is None or d.parent.type != "local_declaration_statement":
-                continue
-            ty = d.child_by_field_name("type") or next((c for c in d.children if c.is_named), None)
-            for v in d.children:
-                nm = v.child_by_field_name("name") or next((c for c in v.children if c.type == "identifier"), None) \
-                    if v.type == "variable_declarator" else None
-                if nm is None:
-                    continue
-                tt = type_text(ty, self.src)
-                if tt is None:
-                    init = next((c for c in v.children if c.is_named and c.id != nm.id), None)
-                    tt = (_new_type(init, self.src) or _service_type(init, self.src)
-                          or _returned_type(init, scope, self.src)) if init is not None else None
-                types[text(nm, self.src)] = tt
-        pl = scope.child_by_field_name("parameters") or next((c for c in scope.children if c.type == "parameter_list"), None)
-        for prm in (pl.children if pl is not None else ()):
-            nm = prm.child_by_field_name("name") if prm.type == "parameter" else None
-            if nm is not None:
-                types[text(nm, self.src)] = type_text(prm.child_by_field_name("type"), self.src)
-        self._types[scope.id] = types
-        return types
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

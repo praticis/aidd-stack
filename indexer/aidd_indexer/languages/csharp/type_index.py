@@ -103,8 +103,10 @@ class CsTypeIndex(TypeIndex):
                 self._by_name.setdefault(d.qualified.rpartition(".")[2], []).append(d)
         return self._by_name.get(simple, [])
 
-    def is_type_name(self, simple: str) -> bool:
-        return bool(self.named(simple))
+    def is_type_name(self, name: str) -> bool:
+        """A simple name a type of the repo has, or the qualified name of one."""
+        return any(d.qualified == name for d in self.named(name.rpartition(".")[2])) if "." in name \
+            else bool(self.named(name))
 
     def parts(self, q: str, last: bool) -> list[Declared]:
         """Every part of a partial type. Two declarations of a type that is not partial are two types of one name,
@@ -117,6 +119,9 @@ class CsTypeIndex(TypeIndex):
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
         """The type a file means by a simple name, preferring the namespaces it can see (its own, its usings). A
         partial type counts once, by its first part."""
+        if "." in simple:                                   # the enclosing type, by its qualified name
+            found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
+            return found[0] if len(found) == 1 else None
         hits = self._types_named(simple)
         if len(hits) <= 1:
             return hits[0] if hits else None

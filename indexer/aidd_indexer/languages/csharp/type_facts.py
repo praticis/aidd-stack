@@ -131,11 +131,12 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
                               if c.is_named and c.type != "argument_list") if t)
     # a file-scoped namespace: its declarations are siblings of it, not children
     partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
-    return CsType(n.type.split("_")[0], _namespace(n, src) or file_ns, bases, _generic_bases(bl, src),
+    return CsType(n.type.split("_")[0], namespace_of(n, src) or file_ns, bases, _generic_bases(bl, src),
                   members(n, src), _explicit_impls(n, src), partial)
 
 
-def _namespace(n: Node, src: bytes) -> str | None:
+def namespace_of(n: Node, src: bytes) -> str | None:
+    """The block namespace a declaration is in; None in a file-scoped one, or in none."""
     a = n.parent
     while a is not None and a.type not in NAMESPACE_NODES:
         a = a.parent
