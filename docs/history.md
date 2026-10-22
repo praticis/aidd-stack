@@ -160,3 +160,9 @@
 - 2026-10-22: step 5's C# refactor (PR #23): C#'s type facts as typed values, and C#'s resolver asking
   `CsTypeIndex`, with the indexes it kept in the context inside it. The corpus, the hold-out and 23 repos' dry-runs
   are identical, and so is the live install (the ninth golden round).
+- 2026-10-22: C#'s change of behavior merges as PR #25. The resolver and the scanner get one answer for a name's
+  declared type, with C#'s own scoping, and four older gaps of the type service are closed: a `partial` type is one
+  type, a method's declared result, the repo's extension methods on a typed receiver, and a type written with its
+  namespace and type arguments (H5-D16). It was judged by case on the corpus (baseline `-29`) and on the micro set;
+  two more gaps of what a name means in C# go in a `fix(csharp)` (H5-D17). On a live install the graph is identical,
+  as the dry-runs said (the tenth golden round).

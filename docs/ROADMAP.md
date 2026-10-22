@@ -22,10 +22,10 @@
   - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
     as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
     (H5-D10): Go's refactor merged as PR #17, the `fix(mcp)` for `symbol_context`'s imports as PR #19, and Go's change
-    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23,
-    validated on a live install (the ninth golden round). C#'s change of behavior is judged, its PR waiting for the
-    live install; a `fix(csharp)` for what a name means in C# follows it (H5-D17). Then Python and TS. After step 5:
-    step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23 and
+    its change of behavior as PR #25, each validated on a live install (the ninth and tenth golden rounds). Next, a
+    `fix(csharp)` for what a name means in C# (H5-D17), then Python and TS. After step 5: step 6 (recognizers and the
+    catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).

@@ -401,3 +401,31 @@ build fields. `symbol_context` keeps its imports in one order.
 | Q3 map | ✅ the same on the 3 tenants |
 | Q4a and Q4b `impact_of` | ✅ the same |
 | Q5 `ref_diff` | ✅ the same |
+
+## Tenth round: validating PR #25 on a live install (2026-10-22, build `0.2.15+e3a6590925af`)
+
+What changed since the ninth round: C#'s change of behavior (PR #25). The resolver and the scanner get one answer for
+a name's declared type, with C#'s own scoping, and four older gaps of the type service are closed: a `partial` type is
+one type, a method's declared result, the repo's extension methods on a typed receiver, and a type written with its
+namespace and type arguments (H5-D16). The graph may change on purpose, in C#'s `CALLS` only. The validation had the
+seventh round's two phases, on the same 3 tenants and 10 snapshots:
+
+- **before the merge, read-only:** dry-runs of `main` and of the branch on each snapshot, at its sha, are identical
+  in every section, the C# snapshots included: their code has none of the calls the change reaches. Counted by the
+  writer's merge keys, the live graph holds `main`'s dry-run on every snapshot;
+- **after the merge and a reinstall from `main`:** the refresher re-indexed the 10 snapshots with no error, and the
+  next refresh re-indexed none.
+
+**The picture of the graph** is identical before and after, in the same counts and sorted lists as the ninth round.
+Only the build and the `IndexRun` nodes changed, one more run per snapshot.
+
+**The 27 calls** give the same answers: 22 are byte for byte the same, and the other 5 differ only in their time and
+build fields. `who_calls`, `symbol_context` and `impact_of` on the C# repo answer as before, as the dry-runs said.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
