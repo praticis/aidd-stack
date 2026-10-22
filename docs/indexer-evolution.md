@@ -433,9 +433,10 @@ inspecionar o que o extrator viu num repo específico.
 
 - **Linguagem nova**: `languages/<lang>/` com `queries.scm` (`def.*`/`call`/`import`), `symbols.py`
   (subclasse de `LanguageSupport` sobrescrevendo só o que difere — nomes qualificados, visibilidade,
-  bindings de import, `resolve_import`; opcionalmente `file_facts`/`call_receiver`/`resolve_receiver` para
-  resolver chamadas pelo tipo estático do receiver); exportar `LANGUAGES = [instância]` com `id`, `grammar`,
-  `extensions`, `query_file`, `stack`, `manifests`) e, se houver HTTP, `http.py` (subclasse de
+  bindings de import, `resolve_import`; opcionalmente `file_facts`/`call_receiver`/`resolve_receiver` e o
+  `type_index` da linguagem, o `TypeIndex` do ADR-005 que o resolvedor e o scanner consultam, para resolver
+  chamadas pelo tipo estático do receiver, como Go e C# fazem); exportar `LANGUAGES = [instância]` com `id`,
+  `grammar`, `extensions`, `query_file`, `stack`, `manifests`) e, se houver HTTP, `http.py` (subclasse de
   `BaseScanner`, `http_scanner=` na instância). Registrar a pasta em `languages/__init__.py:_MODULES`.
   O `Dockerfile` e o `selftest` leem o registro — nada mais a editar. Fixture em `tests/fixtures/`.
 - **Framework novo numa linguagem existente**: primeiro **veja a árvore** (`get_parser(lang).parse(src)` e
@@ -482,10 +483,10 @@ inspecionar o que o extrator viu num repo específico.
   *valores* (as strings de template e prefixo) nem conhece *convenções de framework* — e exige o build (`dotnet
   restore` com os feeds do tenant, `npm install`). A camada HTTP precisa funcionar sem ele (ADR-002, decisão 3),
   então:
-  - fica no tree-sitter o que é **sintaticamente determinado**: tipo declarado de um parâmetro, campo ou variável;
-    lista de bases de uma classe do repo; import path (em Go, o diretório exato); config de alias (`tsconfig`
-    `paths`, `svelte.config.js`); valor de constante; regra da linguagem (em Go, método não exportado nunca é de
-    framework);
+  - fica no tree-sitter o que é **sintaticamente determinado**: tipo declarado de um parâmetro, campo ou variável, e o
+    resultado que a assinatura de um método declara; lista de bases de uma classe do repo; import path (em Go, o
+    diretório exato); config de alias (`tsconfig` `paths`, `svelte.config.js`); valor de constante; regra da
+    linguagem (em Go, método não exportado nunca é de framework);
   - lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** — retorno inferido de uma
     chamada, serviço injetado, despacho por interface, sobrecarga, genérico — não ganha heurística: o gabarito marca
     a falta com `category: needs-resolver`, o guia registra a limitação, e ela espera o resolvedor do F1.2 (um

@@ -34,7 +34,7 @@
       package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
     - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
       14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
-  - H7 (`docs/handoffs/H7-regression-gates.md`): slice 1 is in `main`; the next slices are open.
+  - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
@@ -337,10 +337,10 @@ Open:
     - Django stayed out (the portfolio is FastAPI/Flask);
     - test app folders with production names wait for F1.1's per-repo config.
   - **What needs an inferred type** is `needs-resolver`, for F1.2.
-- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slice 1 in `main`, PR #11): the method's mechanical checks
-  as gates on every PR (precision ratchet, no win lost, hold-out untouched, `0 differ` for refactors, one cause per
-  commit), the diff classified for judgment, baselines published on merge, a nightly trend, and a live check on a
-  demo tenant
+- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slices 1 and 1c in `main`, PR #11
+  and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
+  untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
+  on merge, a nightly trend, and a live check on a demo tenant
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

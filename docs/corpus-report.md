@@ -271,7 +271,8 @@ declared type, C#'s local type, `Scopes._assignments`), are what steps 2 and 3 (
 
 ### H5 steps
 
-Each step must give `0 repo(s) differ` on both sets against the starting baselines.
+Each refactor step must give `0 repo(s) differ` on both sets against the starting baselines. Step 5's changes of
+behavior are the exception: judged at the source, they close with a new baseline when the corpus changes (H5-D12).
 
 | Step | Corpus / hold-out | Summed time | Note |
 |---|---|---|---|
