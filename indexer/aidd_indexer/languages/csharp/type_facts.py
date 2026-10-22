@@ -37,7 +37,9 @@ class CsTypes(NamedTuple):
     usings: tuple[str, ...]
     file_ns: str | None                                     # a file-scoped namespace
     registrations: tuple[tuple[str, tuple[str, str]], ...]  # (`AddScoped`, `Decorate`.., (interface, implementation))
-    extensions: tuple[tuple[str, int, str | None], ...]     # (name, line, the simple name of the type it extends)
+    extensions: tuple[tuple[str, int, str | None, str], ...]  # (name, line, the simple name of the type it extends,
+                                                              # and what a value of a repo type must be to pass as its
+                                                              # `this`: that name, "object" for any, "" for none)
 
     @classmethod
     def of(cls, facts: Any) -> CsTypes:
@@ -214,10 +216,10 @@ def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:
     return out
 
 
-def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None], ...]:
-    """(name, line, the type it extends) of every extension method: the first parameter carries `this` — after
-    attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this Guid? g)`). The type is its simple
-    name, None for a predefined type or one of the method's type parameters."""
+def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None, str], ...]:
+    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method: the
+    first parameter carries `this` — after attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this
+    Guid? g)`). The type is its simple name, None for a predefined type or one of the method's type parameters."""
     out = []
     for n in walk(root):
         if n.type != "method_declaration" or n.child_by_field_name("name") is None:
@@ -228,5 +230,17 @@ def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | No
             tps = n.child_by_field_name("type_parameters")
             own = {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
             t = type_text(first.child_by_field_name("type"), src)
-            out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t))
+            out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
+                        _passes(first.child_by_field_name("type"), src, own)))
     return tuple(out)
+
+
+def _passes(t: Node | None, src: bytes, own: set[str]) -> str:
+    """What a value of a type of the repo must be to pass as a `this` of type `t`: the simple name of the type `t`
+    names; "object" when any value passes (`object`, one of the method's type parameters); "" when none does (an array,
+    another predefined type)."""
+    n = next((c for c in t.children if c.is_named), None) if t is not None and t.type == "nullable_type" else t
+    if n is not None and n.type == "predefined_type":
+        return "object" if node_text(n, src) == "object" else ""
+    name = type_text(n, src) if n is not None and n.type != "array_type" else None
+    return "object" if name in own else name or ""

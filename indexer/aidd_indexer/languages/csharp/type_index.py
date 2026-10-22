@@ -127,6 +127,20 @@ class CsTypeIndex(TypeIndex):
                     queue.append(qualified(b))
         return NO_METHOD
 
+    def ancestry(self, q: str) -> tuple[list[str], set[str]]:
+        """The type and its bases in the repo, nearest first, and the names its chain gives to bases outside the
+        repo."""
+        chain, outside = [q], set()
+        for t in chain:                                     # breadth first: the list grows as it is read
+            for d in (d for d in self.named(t.rpartition(".")[2]) if d.qualified == t):
+                for b in d.type.bases:
+                    found = self.lookup(d.file, b)
+                    if found is None:
+                        outside.add(b)
+                    elif found.qualified not in chain:
+                        chain.append(found.qualified)
+        return chain, outside
+
     def declarations(self) -> Iterator[Declared]:
         """Every type the repo's C# files declare, in file order."""
         for fid, facts in self._ctx.facts.items():

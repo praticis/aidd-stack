@@ -153,11 +153,28 @@ class CSharpSupport(LanguageSupport):
         (`this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver)."""
         if symbol.kind != "method" or ctx.files_by_id[symbol.file_id].language != self.id:   # a homonym of another language
             return False
-        for name, line, this_type in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
+        for name, line, this_type, _ in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
             if name == symbol.name and line == symbol.line_start:
                 loose = not this_type or this_type == "object" or bool(re.match(r"^I[A-Z]", this_type))
                 return loose or this_type == receiver_type if (receiver_type or unknown) else True
         return False
+
+    def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str) -> list[tuple[list, str]]:
+        """Those whose `this` takes the type or a base of it, an interface it names included, the nearest first; failing
+        that, the only one that takes any value, when no base outside the repo may declare the method."""
+        types = self._types(ctx)
+        chain, outside = types.ancestry(qualified_type)
+        near: dict[int, list] = {}
+        anything = []
+        for s in symbols:
+            takes = _takes(ctx, s)
+            if takes == "object":
+                anything.append(s)
+            elif (far := _distance(types, chain, outside, ctx.files_by_id[s.file_id], takes)) is not None:
+                near.setdefault(far, []).append(s)
+        if near:
+            return [(near[min(near)], "receiver-type")]
+        return [(anything, "unique-name")] if len(anything) == 1 and not outside else []
 
     def manifest_deps(self, rel_path: str, text: str) -> tuple[list[str], list[tuple[str, str]]]:
         """.csproj: `<PackageId>` (else `<AssemblyName>`, else the file stem) publishes;
@@ -173,24 +190,10 @@ class CSharpSupport(LanguageSupport):
         return [name], deps
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
-        types = self._types(ctx)
-        out: list[str] = []
-        seen = {qualified_type}
-        queue = [qualified_type]
-        while queue:
-            bases = types.bases(type_ref(queue.pop(0)))
-            for b in bases if not isinstance(bases, Unknown) else ():
-                if not isinstance(b, Unknown) and qualified(b) not in seen:
-                    seen.add(qualified(b)); out.append(qualified(b)); queue.append(qualified(b))
-        return out
+        return self._types(ctx).ancestry(qualified_type)[0][1:]
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
-        types = self._types(ctx)
-        for q in [qualified_type] + self.supertypes(ctx, qualified_type):
-            bases = types.bases(type_ref(q))
-            if not isinstance(bases, Unknown) and any(isinstance(b, Unknown) for b in bases):
-                return True
-        return False
+        return bool(self._types(ctx).ancestry(qualified_type)[1])
 
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
@@ -222,6 +225,23 @@ class CSharpSupport(LanguageSupport):
             return (ctx.files_by_id[files[0]].module_id, "Module")
         root = spec.split(".")[0]
         return (pkg("nuget", spec, root in FRAMEWORK_ROOTS), "Package")
+
+
+def _takes(ctx: ResolveContext, symbol) -> str | None:
+    """What a value of a repo type must be to pass as the method's `this`; None when it is not an extension method."""
+    return next((passes for name, line, _, passes in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions
+                 if name == symbol.name and line == symbol.line_start), None)
+
+
+def _distance(types: CsTypeIndex, chain: list[str], outside: set[str], file: FileInfo, takes: str | None) -> int | None:
+    """How far up the receiver's type `chain` the type an extension's `this` names is, read in the extension's file:
+    its place in the repo's part of the chain, or past it for a base outside the repo; None when it is not there."""
+    if not takes or takes == "object":
+        return None
+    t = types.lookup(file, takes)
+    if t is not None:
+        return chain.index(t.qualified) if t.qualified in chain else None
+    return len(chain) if takes in outside else None
 
 
 def _ancestors(node: Node):

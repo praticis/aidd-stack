@@ -75,32 +75,29 @@ public class ItemsClient
 """
 
 
-EXTENSIONS = pytest.mark.xfail(strict=True, reason="no edge: a typed receiver reaches only what its type declares")
-
-
-def case(id, params, body, edges, marks=()):
-    return pytest.param(params, body, edges, id=id, marks=marks)
+def case(id, params, body, edges):
+    return pytest.param(params, body, edges, id=id)
 
 
 CASES = [
     case("an-extension-of-the-type", "Store store", "store.Ping();",
-         {("StoreExtensions.Ping", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Ping", "receiver-type")}),
     case("an-extension-of-a-base", "ChildStore store", "store.Ping();",
-         {("StoreExtensions.Ping", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Ping", "receiver-type")}),
     case("an-extension-of-an-interface-it-implements", "Store store", "store.Warm();",
-         {("StoreExtensions.Warm", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Warm", "receiver-type")}),
     case("an-extension-of-the-interface", "IStore store", "store.Warm();",
-         {("StoreExtensions.Warm", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Warm", "receiver-type")}),
     case("the-extension-of-the-nearest-type", "Store store", "store.Near();",
-         {("StoreExtensions.Near", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Near", "receiver-type")}),
     case("an-extension-when-no-overload-takes-the-arguments", "Store store", "store.Count(1, 2);",
-         {("StoreExtensions.Count", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Count", "receiver-type")}),
     case("an-extension-of-a-base-outside-the-repo", "Db db", "db.Seed();",
-         {("StoreExtensions.Seed", "receiver-type")}, EXTENSIONS),
+         {("StoreExtensions.Seed", "receiver-type")}),
     case("the-only-extension-of-any-value", "Store store", "store.Tap();",
-         {("AnyExtensions.Tap", "unique-name")}, EXTENSIONS),
+         {("AnyExtensions.Tap", "unique-name")}),
     case("the-only-extension-of-object", "Store store", "store.Dump();",
-         {("AnyExtensions.Dump", "unique-name")}, EXTENSIONS),
+         {("AnyExtensions.Dump", "unique-name")}),
     case("the-types-own-method-wins", "ChildStore store", "store.Load();", {("Store.Load", "receiver-type")}),
     case("an-extension-of-another-type", "Store store", "store.Clean();", set()),
     case("an-extension-of-an-array", "Store store", "store.Total();", set()),

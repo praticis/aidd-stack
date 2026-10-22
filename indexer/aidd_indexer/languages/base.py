@@ -196,6 +196,12 @@ class LanguageSupport:
         `receiver_type` when it is known, on anything when the receiver's type is `unknown`."""
         return False
 
+    def extension_methods(self, ctx: ResolveContext, symbols: list["SymbolInfo"],
+                          qualified_type: str) -> list[tuple[list["SymbolInfo"], str]]:
+        """Among `symbols`, the methods of the repo a call on a value of the repo's `qualified_type` reaches when no
+        method of the type takes its arguments (C# extension methods), with the strategy that found them."""
+        return []
+
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         """Qualified names of the in-repo base types of a type (nearest first), so a method inherited
         from a base class declared in this repo still resolves by receiver type."""
