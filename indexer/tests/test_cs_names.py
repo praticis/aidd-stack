@@ -1,7 +1,8 @@
 """What a name means in C#, asked by the resolver for a call's receiver and by the HTTP scanner for the client wrapper
 a call goes through. A type's simple name is looked up as C# looks it up: in the namespace the code is in, then in each
 one around it out to the global namespace, each followed by the `using`s its declaration holds; the file's own `using`s
-come last. Of the global namespace, only the file's own project counts: other projects keep their programs there.
+come last, with every `global using` of its project. Of the global namespace, only the file's own project counts: other
+projects keep their programs there.
 
 A capitalized name the caller's type has as a member, declared on it, on another of its parts or on a base of the repo,
 is that member, not a type of its name, and so is a type nested in one of them; a member whose type is a type parameter
@@ -100,6 +101,7 @@ public partial class ItemsClient { public HttpService Http { get; } = new HttpSe
 NESTED = "namespace Api.Items;\n\npublic class Box { public class Ledger { public void Post() { } } }\n"
 TOOLS = {"Tools/Tools.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>',
          "Tools/Ledger.cs": "public class Ledger { public void Post() { } }\n"}
+GLOBAL_USING = "global using Api.Services;\n"
 GET = 'await svc.HttpGet<string>("items");'
 HTTP_GET = 'await Http.HttpGet<string>("items");'
 TYPED = {("Api.Services.HttpService.HttpGet", "receiver-type")}
@@ -110,9 +112,19 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    """`every`: the edges found by name count too."""
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
+    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
+    found by name count too."""
+    return id, fields, edges, set(calls), resolver, scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where that side is wrong today."""
+    out = []
+    for id, fields, edges, calls, *wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -133,6 +145,11 @@ CASES = [
     case("a-type-of-the-global-namespace-of-another-project", {("Api.Legacy.Ledger.Post", "receiver-type")},
          usings="using Api.Legacy;", namespace="namespace Shop.Items;", params="Ledger l", body="l.Post();",
          files=TOOLS),
+    case("a-type-a-global-using-of-the-project-shows", TYPED, WRAPPED,
+         resolver="none: a global using is seen only in the file that writes it",
+         usings="", params="HttpService svc", body=GET, files={"Usings.cs": GLOBAL_USING}),
+    case("a-global-using-of-another-project-is-not-seen", set(), WRAPPED, usings="", params="HttpService svc",
+         body=GET, files={"Tools/Tools.csproj": TOOLS["Tools/Tools.csproj"], "Tools/Usings.cs": GLOBAL_USING}),
     case("a-type-nested-in-another-is-no-name-of-its-namespace", {("Api.Ledger.Post", "receiver-type")},
          params="Ledger l", body="l.Post();", files={"Items/Box.cs": NESTED}),
     case("a-type-nested-in-the-callers", {("Api.Items.ItemsClient.Ledger.Post", "receiver-type")},
@@ -186,17 +203,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected[0]
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
