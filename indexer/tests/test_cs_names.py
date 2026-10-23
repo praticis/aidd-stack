@@ -13,9 +13,10 @@ receiver is a method of the caller's own type, never a client's, unless it is gi
 request the type, or a base of it, sends.
 
 A member, a parameter or a local whose type is a type parameter has the type its one constraint names; with none, or
-more than one, it declares none, and its call goes by name. A member whose type is a type parameter of the type that
-declares it has, before that, the type argument given for it: by the type a local or a parameter writes
-(`Holder<HttpService> h`), or by the base lists down from the caller's type (`: Generic<HttpService>`)."""
+more than one, it declares none, and its call goes by name. An extension whose `this` is one takes a value of the type
+its constraint names. A member whose type is a type parameter of the type that declares it has, before that, the type
+argument given for it: by the type a local or a parameter writes (`Holder<HttpService> h`), or by the base lists down
+from the caller's type (`: Generic<HttpService>`)."""
 
 import contextlib
 import io
@@ -54,6 +55,8 @@ public abstract class BaseController
 }
 
 public static class HttpExtensions { public static Task Warm(this IHttpService s) => Task.CompletedTask; }
+
+public static class Bounded { public static Task Touch<T>(this T s) where T : IHttpService => Task.CompletedTask; }
 
 public class Http
 {
@@ -121,9 +124,19 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    """`every`: the edges found by name count too."""
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
+    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
+    found by name count too."""
+    return id, fields, edges, set(calls), resolver, scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where that side is wrong today."""
+    out = []
+    for id, fields, edges, calls, *wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -189,6 +202,10 @@ CASES = [
          {("Api.Services.HttpService.Ping", "same-module")},
          declaration="<TService> where TService : IHttpService, IDisposable", params="TService svc",
          body="svc.Ping();", every=True),
+    case("an-extension-on-a-type-parameter-takes-what-its-constraint-names",
+         {("Api.Services.Bounded.Touch", "receiver-type")},
+         resolver="by name: an extension's type parameter is taken for any value", params="HttpService svc",
+         body="await svc.Touch();"),
     case("a-member-of-a-caller-nested-in-another-type", TYPED, WRAPPED,
          inner="public class Outer\n{", close="}",
          members="    private readonly HttpService svc = new HttpService(new HttpClient(), Urls.Base);", body=GET),
@@ -221,17 +238,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected[0]
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
