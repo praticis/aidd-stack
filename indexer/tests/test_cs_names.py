@@ -4,10 +4,12 @@ one around it out to the global namespace, each followed by the `using`s its dec
 come last. Of the global namespace, only the file's own project counts: other projects keep their programs there.
 
 A capitalized name the caller's type has as a member, declared on it, on another of its parts or on a base of the repo,
-is that member, not a type of its name. With a base outside the repo, which may declare the member, the name is still
-read as the type's. A type nested in another is no name of its namespace: only the file that declares it sees it by its
-simple name, and before any namespace. A call with no receiver is a method of the caller's own type, never a
-client's."""
+is that member, not a type of its name, and so is a type nested in one of them; a member whose type is a type parameter
+declares none, and its call goes by name. With a base outside the repo, which may declare the member, the name is still
+read as the type's, and a member after it is a value, which an extension may take. A type nested in another is no name
+of its namespace: only the file that declares it, or the types deriving from the one it is in, see it by its simple
+name, and a type nested in another is named with it on both sides. A call with no receiver is a method of the caller's
+own type, never a client's."""
 
 import contextlib
 import io
@@ -26,6 +28,19 @@ public class HttpService : IHttpService
     private readonly string _apiUrl;
     public HttpService(HttpClient httpClient, string apiBase) { _httpClient = httpClient; _apiUrl = apiBase; }
     public Task<T?> HttpGet<T>(string uri) => _httpClient.GetFromJsonAsync<T>($"{_apiUrl}{uri}");
+    public void Ping() { }
+}
+
+public static class Engine
+{
+    public static HttpService Current { get; } = new HttpService(new HttpClient(), Urls.Base);
+}
+
+public abstract class Generic<TService> { protected TService Http { get; } }
+
+public abstract class BaseController
+{
+    protected static class Error { public static Task BadRequest() => Task.CompletedTask; }
 }
 
 public static class HttpExtensions { public static Task Warm(this IHttpService s) => Task.CompletedTask; }
@@ -54,6 +69,7 @@ LEGACY = """namespace Api.Legacy
     public class HttpService { public Task<T?> HttpGet<T>(string uri) => Task.FromResult(default(T)); }
     public class Ledger { public void Post() { } }
     public class Clock { public void Tick() { } }
+    public class Error { public static Task BadRequest() => Task.CompletedTask; }
 }
 """
 CLIENT = """%(usings)s
@@ -88,8 +104,19 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
+    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
+    found by name count too."""
+    return id, fields, edges, set(calls), resolver, scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where that side is wrong today."""
+    out = []
+    for id, fields, edges, calls, *wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -127,6 +154,20 @@ CASES = [
     case("a-member-whose-type-is-outside-the-repo", set(), declaration=" : LoggedFeature", body=HTTP_GET),
     case("a-name-a-base-outside-the-repo-may-declare", {("Api.Services.Http.Reset", "receiver-type")},
          declaration=" : ControllerBase", body="await Http.Reset();"),
+    case("an-extension-of-a-member-after-a-types-name", {("Api.Services.HttpExtensions.Warm", "receiver-type")},
+         resolver="none: a member after a type's name is taken for the type's name, which reaches no extension",
+         body="await Engine.Current.Warm();"),
+    case("a-member-whose-type-is-a-type-parameter-goes-by-name", {("Api.Services.HttpService.Ping", "same-module")},
+         resolver="none: the type parameter is taken for a type outside the repo, which only an extension can take",
+         declaration=" : Generic<HttpService>", body="Http.Ping();", every=True),
+    case("a-member-of-a-caller-nested-in-another-type", TYPED, WRAPPED,
+         resolver="none: the caller's type is named without the type it is nested in", scanner="none, the same",
+         inner="public class Outer\n{", close="}",
+         members="    private readonly HttpService svc = new HttpService(new HttpClient(), Urls.Base);", body=GET),
+    case("a-type-nested-in-a-base-of-the-callers", {("Api.Services.BaseController.Error.BadRequest", "receiver-type")},
+         resolver="the using's `Error`: a type nested in a base is not seen from the type deriving from it",
+         usings="using Api.Services;\nusing Api.Legacy;", declaration=" : BaseController",
+         body="await Error.BadRequest();"),
     case("a-call-with-no-receiver-is-the-types-own-method", {("Api.Services.Disk.Read", "receiver-type")},
          params="Disk d", body='await d.Read("images/flags");'),
 ]
@@ -150,17 +191,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
-             and c.strategy.startswith(("receiver-type", "inherited"))}
-    assert found == expected[0]
+             and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
