@@ -13,7 +13,6 @@ from ...core.config import is_test_path
 from ...core.model import FileInfo
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from ..base import ResolveContext
-from .locals import read_name
 from .type_facts import CsType, CsTypes, scopes
 
 NOT_A_FILE = Unknown("not a file of the repo")
@@ -39,39 +38,6 @@ def qualified(t: TypeRef) -> str:
 def ref(q: str) -> TypeRef:
     package, _, name = q.rpartition(".")
     return TypeRef(package, name)
-
-
-def named(types: CsTypeIndex, file: str, written: str) -> tuple[TypeRef | Unknown, str]:
-    """A capitalized name: the member the type it is read inside has, with the type it writes, else the type named."""
-    owner, name = read_name(written)
-    member = types.member(owner, name) if owner else None
-    return (member.type, member.written) if member is not None else (types.type_named(name, file), name)
-
-
-def start_of(types: CsTypeIndex | None, file: str, written: str) -> tuple[TypeRef | Unknown, str | None]:
-    """The type a receiver's written start gives, and the simple name the code writes for it: a capitalized name's
-    member or its own name, or the name of the type found."""
-    if written.startswith("name:"):
-        return named(types, file, written) if types is not None else (NOT_A_FILE, read_name(written)[1])
-    cur = written_type(types, file, written) if types is not None else NOT_A_FILE
-    return cur, cur.name if not isinstance(cur, Unknown) else None
-
-
-def written_type(types: CsTypeIndex, file: str, written: str) -> TypeRef | Unknown:
-    """A receiver's type as the one answer writes it: a type's name, a capitalized name (`named`), or
-    `call:(R).a.M#await`, what the method `M` returns, called on the member `a` of `R` (awaited)."""
-    if written.startswith("name:"):
-        return named(types, file, written)[0]
-    if not written.startswith("call:("):
-        return types.type_named(written, file)
-    close = written.rindex(")")
-    rest = written[close + 1:]
-    names = rest.removesuffix("#await").split(".")[1:]
-    cur = written_type(types, file, written[6:close])
-    for member in names[:-1]:
-        found = types.field(cur, member) if not isinstance(cur, Unknown) else cur
-        cur = found.type if not isinstance(found, Unknown) else found
-    return cur if isinstance(cur, Unknown) else types.method_result(cur, names[-1], rest.endswith("#await"))
 
 
 class CsTypeIndex(TypeIndex):
@@ -209,15 +175,19 @@ class CsTypeIndex(TypeIndex):
         return None
 
     def member(self, owner: str, name: str) -> Field | None:
-        """The member `name` that the type `owner` (qualified) declares in any of its parts, or that a class of the repo
-        it derives from declares, the nearest first; its type is read in the file that declares it. None when none
-        does."""
+        """The member `name` the type `owner` (qualified) declares in any part, or a class of the repo it derives from,
+        the nearest first; its type is read in the file that declares it."""
         for t in self.ancestry(owner)[0]:
             for d in self.parts(t, last=True):
                 if name in d.type.members and (t == owner or d.type.kind != "interface"):
                     typ = self.lookup(d.file, d.type.members[name])
                     return Field(ref(typ.qualified) if typ is not None else OUTSIDE, d.type.members[name], t != owner)
         return None
+
+    def nested(self, owner: str, name: str) -> str | None:
+        """The type `name` nested in the type `owner` (qualified) or in one it derives from, the nearest first."""
+        found = {d.qualified for d in self.named(name)}
+        return next((f"{t}.{name}" for t in self.ancestry(owner)[0] if f"{t}.{name}" in found), None)
 
     def class_base_outside(self, owner: str) -> bool:
         """The type `owner` (qualified) derives from a class outside the repo, which may declare any member."""

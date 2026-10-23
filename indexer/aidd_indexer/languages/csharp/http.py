@@ -22,7 +22,7 @@ from ...core.model import RepoInfo
 from ...core import ids
 from ...core.types import Unknown
 from .locals import receiver_type
-from .type_index import start_of
+from .written import start_of
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,

@@ -20,7 +20,8 @@ from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
 from .locals import local_type, new_type, read_name, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
-from .type_index import CsTypeIndex, named, qualified, ref as type_ref, written_type
+from .type_index import CsTypeIndex, qualified, ref as type_ref
+from .written import named, written_type
 
 HERE = Path(__file__).parent
 
