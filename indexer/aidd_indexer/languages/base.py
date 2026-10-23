@@ -199,7 +199,8 @@ class LanguageSupport:
                           written: str = "") -> list[tuple[list["SymbolInfo"], str]]:
         """Among `symbols`, the methods of the repo a call on a value of the repo's `qualified_type` reaches when no
         method of the type takes its arguments (C# extension methods), with the strategy that found them. `written`:
-        the receiver's type as `call_receiver` wrote it, which tells a value from a type's name."""
+        the receiver's type as `call_receiver` wrote it, when no member follows it: it tells a value from a type's
+        name."""
         return []
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:

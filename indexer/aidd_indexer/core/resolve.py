@@ -202,7 +202,7 @@ class Resolver:
         if any(_fits(s, c.arg_count) for s in typed + impl_typed):
             return found
         return lang.extension_methods(self.ctx, [s for s in cands if _fits(s, c.arg_count)], qtype,
-                                      c.receiver_type) or found
+                                      "" if c.receiver_path else c.receiver_type) or found
 
     def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
         """`repo.CreateAsync(x)` where `repo: ITodoRepository : IBaseRepository<T>` (a package): CALLS to the

@@ -155,7 +155,6 @@ CASES = [
     case("a-name-a-base-outside-the-repo-may-declare", {("Api.Services.Http.Reset", "receiver-type")},
          declaration=" : ControllerBase", body="await Http.Reset();"),
     case("an-extension-of-a-member-after-a-types-name", {("Api.Services.HttpExtensions.Warm", "receiver-type")},
-         resolver="none: a member after a type's name is taken for the type's name, which reaches no extension",
          body="await Engine.Current.Warm();"),
     case("a-member-whose-type-is-a-type-parameter-goes-by-name", {("Api.Services.HttpService.Ping", "same-module")},
          resolver="none: the type parameter is taken for a type outside the repo, which only an extension can take",
