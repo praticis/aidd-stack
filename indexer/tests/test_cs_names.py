@@ -11,7 +11,7 @@ A type nested in another is no name of its namespace: only the file that declare
 it is in, see it by its simple name, and a type nested in another is named with it on both sides. A call with no
 receiver is a method of the caller's own type, never a client's, unless it is given the request's verb: then it is a
 request the type, or a base of it, sends. A value of an array type is the array, a type outside the repo, never a value
-of its element's type.
+of its element's type. A method of an extension block (`extension(IHttpService s) { .. }`) extends its receiver.
 
 A member, a parameter or a local whose type is a type parameter has the type its one constraint names; with none, or
 more than one, it declares none, and its call goes by name. An extension whose `this` is one takes a value of the type
@@ -67,6 +67,14 @@ public static class Bounded { public static Task Touch<T>(this T s) where T : IH
 public static class Batch { public static Task WarmAll(this HttpService[] all) => Task.CompletedTask; }
 
 public class Shelf { public Shelf First() => this; }
+
+public static class Blocks
+{
+    extension(IHttpService s)
+    {
+        public Task Chill() => Task.CompletedTask;
+    }
+}
 
 public class Http
 {
@@ -134,9 +142,19 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    """`every`: the edges found by name count too."""
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
+    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
+    found by name count too."""
+    return id, fields, edges, set(calls), resolver, scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where that side is wrong today."""
+    out = []
+    for id, fields, edges, calls, *wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -211,6 +229,9 @@ CASES = [
          {("Api.Services.Bounded.Touch", "receiver-type")},
          params="HttpService svc",
          body="await svc.Touch();"),
+    case("a-method-of-an-extension-block-extends-its-receiver", {("Api.Services.Blocks.Chill", "receiver-type")},
+         resolver="by name: a method of an extension block is no extension method", params="HttpService svc",
+         body="await svc.Chill();"),
     case("an-array-is-no-value-of-its-element-type", set(), params="Shelf[] shelves", body="shelves.First();"),
     case("an-extension-of-an-array-takes-the-array", {("Api.Services.Batch.WarmAll", "same-module")},
          params="HttpService[] all", body="await all.WarmAll();", every=True),
@@ -246,17 +267,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected[0]
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
