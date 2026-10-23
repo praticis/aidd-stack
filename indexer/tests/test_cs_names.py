@@ -88,18 +88,8 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), scanner=None, **fields):
-    """`scanner`: what the scanner gives today when it is wrong, an xfail on its side."""
-    return id, fields, edges, set(calls), scanner
-
-
-def _params(side: int):
-    """One side's expectation per case, an xfail where the scanner is wrong today."""
-    out = []
-    for id, fields, edges, calls, wrong in CASES:
-        marks = pytest.mark.xfail(strict=True, reason=wrong) if wrong and side == 1 else ()
-        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
-    return out
+def case(id, edges, calls=frozenset(), **fields):
+    return pytest.param(fields, (edges, set(calls)), id=id)
 
 
 CASES = [
@@ -138,7 +128,6 @@ CASES = [
     case("a-name-a-base-outside-the-repo-may-declare", {("Api.Services.Http.Reset", "receiver-type")},
          declaration=" : ControllerBase", body="await Http.Reset();"),
     case("a-call-with-no-receiver-is-the-types-own-method", {("Api.Services.Disk.Read", "receiver-type")},
-         scanner="`GET /images/flags`: the type's own `GetAsync` is taken for a client's, and `Read` for its wrapper",
          params="Disk d", body='await d.Read("images/flags");'),
 ]
 
@@ -161,17 +150,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", _params(0))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and c.strategy.startswith(("receiver-type", "inherited"))}
-    assert found == expected
+    assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,expected", _params(1))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
