@@ -190,7 +190,8 @@ class CsTypeIndex(TypeIndex):
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
         """The type a file means by a simple name: the only one of that name; one nested in a type the file declares;
         or the first C# finds from the file (its namespace, the ones around it, then the `using`s), when no other is
-        found at that step. A partial type counts once, by its first part."""
+        found at that step. Of the global namespace, only the file's project counts: other projects keep their
+        programs there. A partial type counts once, by its first part."""
         if "." in simple:                                   # the enclosing type, by its qualified name
             found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
             return found[0] if len(found) == 1 else None
@@ -201,7 +202,8 @@ class CsTypeIndex(TypeIndex):
         if inner:
             return inner[0] if len(inner) == 1 else None
         for scope in scopes(CsTypes.of(self._ctx.facts.get(file.id))):
-            seen = [h for h in hits if h.type.ns in scope and not h.type.outer]
+            seen = [h for h in hits if h.type.ns in scope and not h.type.outer
+                    and (h.type.ns is not None or h.file.module_id == file.module_id)]
             if seen:
                 return seen[0] if len(seen) == 1 else None
         return None
