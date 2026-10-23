@@ -20,9 +20,9 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
-from ...core.types import Unknown
 from .locals import receiver_type
-from .written import start_of
+from .type_syntax import bare
+from .written import member_name
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -1100,16 +1100,10 @@ class CsScanner(BaseScanner):
         partial class, a field's field)."""
         found = receiver_type(at, recv, self.src)
         if found is None or not found[1] and not found[0].startswith(("call:", "name:")):
-            return found[0].rpartition(".")[2] if found is not None else None
+            return bare(found[0]).rpartition(".")[2] if found is not None else None
         view = self.ctx.view
         types = view.types.of("csharp") if view is not None and view.types is not None else None
-        cur, name = start_of(types, self.fx.file.path, found[0])
-        for member in found[1]:
-            field = types.field(cur, member) if not isinstance(cur, Unknown) else cur
-            if isinstance(field, Unknown):
-                return None
-            name, cur = field.written, field.type
-        return name
+        return member_name(types, self.fx.file.path, found[0], found[1])
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

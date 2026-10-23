@@ -1,5 +1,5 @@
-"""How C# writes a type, read off the tree: the simple name a written type names, and the type parameters a declaration
-introduces, each with the one type its constraints say a value of it is."""
+"""How C# writes a type, read off the tree: the simple name a written type names and the type arguments it passes, and
+the type parameters a declaration introduces, each with the one type its constraints say a value of it is."""
 
 from __future__ import annotations
 
@@ -15,14 +15,38 @@ NOT_TYPES = frozenset({"notnull", "unmanaged", "default"})   # constraints the g
 def type_text(node: Node | None, src: bytes) -> str | None:
     """`IAccountQuery`, `List<Foo>?`, `Microsoft.EntityFrameworkCore.DbSet<T>` → simple type name (`IAccountQuery`,
     `List`, `DbSet`); None for var/predefined."""
-    n = node
-    while n is not None and n.type in ("nullable_type", "array_type"):
-        n = next((c for c in n.children if c.is_named), None)
-    if n is not None and n.type == "qualified_name":
-        n = n.child_by_field_name("name")
+    n = _named(node)
     if n is not None and n.type == "generic_name":
         n = next((c for c in n.children if c.type == "identifier"), None)
     return node_text(n, src) if n is not None and n.type == "identifier" else None
+
+
+def written_text(node: Node | None, src: bytes) -> str | None:
+    """`type_text`, with the simple names of the type arguments a generic type passes: `Holder<HttpService>`, and
+    `Map<, List>` for `Map<string, List<Item>>`, a predefined type being no name."""
+    n, name = _named(node), type_text(node, src)
+    targs = next((c for c in n.children if c.type == "type_argument_list"), None) \
+        if name and n is not None and n.type == "generic_name" else None
+    return f"{name}<{', '.join(type_text(a, src) or '' for a in targs.children if a.is_named)}>" if targs else name
+
+
+def bare(written: str) -> str:
+    """A written type without the type arguments `written_text` gives it."""
+    return written.partition("<")[0]
+
+
+def type_arguments(written: str) -> tuple[str, ...]:
+    """The type arguments `written_text` gives a type: `Holder<HttpService>` → ("HttpService",)."""
+    inner = written.partition("<")[2]
+    return tuple(inner[:-1].split(", ")) if inner else ()
+
+
+def _named(node: Node | None) -> Node | None:
+    """The name a written type ends in, past `?`, `[]` and a namespace."""
+    n = node
+    while n is not None and n.type in ("nullable_type", "array_type"):
+        n = next((c for c in n.children if c.is_named), None)
+    return n.child_by_field_name("name") if n is not None and n.type == "qualified_name" else n
 
 
 def type_parameters(n: Node, src: bytes) -> tuple[tuple[str, str], ...]:

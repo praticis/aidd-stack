@@ -11,7 +11,7 @@ from tree_sitter import Node
 from ...tree import NodeCache
 from ..base import node_text
 from .type_facts import TYPE_DECLARATIONS, members, namespace_of, namespaces, outer_of
-from .type_syntax import bound_in_scope, type_text
+from .type_syntax import bound_in_scope, type_text, written_text
 
 FUNCTIONS = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
              "anonymous_method_expression", "property_declaration", "accessor_declaration")
@@ -105,7 +105,7 @@ def _block_local(block: Node, name: str, before: int, src: bytes, prefer_new: bo
 
 
 def _declared(typ: Node | None, declarator: Node, name: Node, at: Node, src: bytes, prefer_new: bool) -> str | None:
-    tt = type_text(typ, src)
+    tt = written_text(typ, src)
     if tt is None or prefer_new:
         init = next((c for c in declarator.children if c.is_named and c.id != name.id), None)
         made = (new_type(init, src) or service_type(init, src) or returned_type(init, at, src)
@@ -121,7 +121,7 @@ def _parameter(fn: Node, name: str, src: bytes) -> str | None:
     for prm in (pl.children if pl is not None else ()):
         nm = prm.child_by_field_name("name") if prm.type == "parameter" else None
         if nm is not None and node_text(nm, src) == name:
-            return type_text(prm.child_by_field_name("type"), src) or UNTYPED
+            return written_text(prm.child_by_field_name("type"), src) or UNTYPED
     return None
 
 
@@ -186,7 +186,7 @@ def new_type(expr: Node, src: bytes) -> str | None:
         n = next((c for c in n.children if c.is_named and c.type not in TYPE_NODES), None) if n.type == "cast_expression" \
             else next((c for c in n.children if c.is_named), None)
     if n is not None and n.type == "object_creation_expression":
-        return type_text(n.child_by_field_name("type"), src)
+        return written_text(n.child_by_field_name("type"), src)
     return None
 
 

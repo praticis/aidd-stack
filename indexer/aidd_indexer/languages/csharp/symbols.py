@@ -21,7 +21,9 @@ from .http import CsScanner
 from .locals import local_type, new_type, read_name, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
 from .type_index import CsTypeIndex, qualified, ref as type_ref
-from .written import named, written_type
+from .type_syntax import bare
+from .wiring import di_chain, handlers
+from .written import arguments, follow, named, written_type
 
 HERE = Path(__file__).parent
 
@@ -94,13 +96,13 @@ class CSharpSupport(LanguageSupport):
             return None
         made = new_type(expr, src)
         if made or expr.type != "identifier":
-            return made
+            return bare(made) if made else made
         found = local_type(node_text(expr, src), call, src, prefer_new=True)
-        return found if found and not found.startswith("call:") else None
+        return bare(found) if found and not found.startswith("call:") else None
 
     def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
                          handler_bases: frozenset[str]) -> list[str]:
-        return self._types(ctx).handlers(file, message_type, handler_bases)
+        return handlers(self._types(ctx), file, message_type, handler_bases)
 
     def type_index(self, ctx: ResolveContext) -> CsTypeIndex:
         return CsTypeIndex(ctx)
@@ -113,12 +115,8 @@ class CSharpSupport(LanguageSupport):
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         types = self._types(ctx)
-        cur = written_type(types, file.path, receiver_type)
-        for member in path:
-            if isinstance(cur, Unknown):
-                return None
-            found = types.field(cur, member)
-            cur = found.type if not isinstance(found, Unknown) else found
+        start = written_type(types, file.path, receiver_type)
+        cur = follow(types, start, path, arguments(types, file.path, receiver_type))
         return qualified(cur) if not isinstance(cur, Unknown) else None
 
     def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
@@ -136,8 +134,9 @@ class CSharpSupport(LanguageSupport):
             # `HttpContext.X()` in a controller: a base outside the repo may declare the name, and then nothing is known
             hidden = owner is not None and types.member(owner, name) is None and types.class_base_outside(owner)
             return written if not path and not hidden and not types.is_type_name(written) else None
+        args = arguments(types, file.path, receiver_type)
         for member in path:
-            found = types.field(cur, member)
+            found, args = types.field(cur, member, args), ()
             if isinstance(found, Unknown):
                 return None
             if isinstance(found.type, Unknown):
@@ -202,7 +201,7 @@ class CSharpSupport(LanguageSupport):
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
         types = self._types(ctx)
-        chain = types.di_chain(qualified_type)
+        chain = di_chain(types, qualified_type)
         if chain:
             if from_type in chain:                       # a decorator calling the instance it wraps: the next one inward
                 i = chain.index(from_type)

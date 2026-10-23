@@ -112,7 +112,6 @@ TOOLS = {"Tools/Tools.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>',
 GLOBAL_USING = "global using Api.Services;\n"
 GET = 'await svc.HttpGet<string>("items");'
 BOUND = "<TService> where TService : HttpService"
-NO_ARGUMENT = "by name: the type argument a base list passes is not read"
 HTTP_GET = 'await Http.HttpGet<string>("items");'
 TYPED = {("Api.Services.HttpService.HttpGet", "receiver-type")}
 WRAPPED = {("GET", "/items")}
@@ -122,19 +121,9 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
-    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
-    found by name count too."""
-    return id, fields, edges, set(calls), resolver, scanner
-
-
-def _params(side: int):
-    """One side's expectation per case, an xfail where that side is wrong today."""
-    out = []
-    for id, fields, edges, calls, *wrong in CASES:
-        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
-        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
-    return out
+def case(id, edges, calls=frozenset(), **fields):
+    """`every`: the edges found by name count too."""
+    return pytest.param(fields, (edges, set(calls)), id=id)
 
 
 CASES = [
@@ -180,22 +169,15 @@ CASES = [
          body="await Engine.Current.Warm();"),
     case("a-member-whose-type-is-a-type-parameter-goes-by-name", {("Api.Services.HttpService.Ping", "same-module")},
          declaration="<TService> : Generic<TService>", body="Http.Ping();", every=True),
-    case("a-member-typed-by-a-type-parameter-a-base-list-passes", TYPED, WRAPPED,
-         resolver=NO_ARGUMENT, scanner="none: the member declares no type", declaration=" : Generic<HttpService>",
+    case("a-member-typed-by-a-type-parameter-a-base-list-passes", TYPED, WRAPPED, declaration=" : Generic<HttpService>",
          body=HTTP_GET),
-    case("a-type-argument-passed-on-through-two-base-lists", TYPED, WRAPPED,
-         resolver=NO_ARGUMENT, scanner="none: the member declares no type", declaration=" : Middle<HttpService>",
+    case("a-type-argument-passed-on-through-two-base-lists", TYPED, WRAPPED, declaration=" : Middle<HttpService>",
          body=HTTP_GET),
     case("a-type-parameter-the-caller-constrains-passed-to-its-base", TYPED, WRAPPED,
-         resolver=NO_ARGUMENT, scanner="none: the member declares no type",
          declaration="<TService> : Generic<TService> where TService : HttpService", body=HTTP_GET),
-    case("a-member-typed-by-a-type-parameter-of-a-parameters-type", TYPED, WRAPPED,
-         resolver="none: the type arguments the parameter's type writes are not read",
-         scanner="none: the member declares no type", params="Holder<HttpService> h",
+    case("a-member-typed-by-a-type-parameter-of-a-parameters-type", TYPED, WRAPPED, params="Holder<HttpService> h",
          body='await h.Value.HttpGet<string>("items");'),
     case("a-member-typed-by-a-type-parameter-of-a-locals-type", TYPED, WRAPPED,
-         resolver="none: the type arguments the local's type writes are not read",
-         scanner="none: the member declares no type",
          body='var h = new Holder<HttpService>();\nawait h.Value.HttpGet<string>("items");'),
     case("a-member-whose-type-is-a-constrained-type-parameter", TYPED, WRAPPED, declaration=BOUND, body=HTTP_GET,
          members="    protected TService Http { get; }"),
@@ -239,17 +221,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", _params(0))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected
+    assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,expected", _params(1))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]

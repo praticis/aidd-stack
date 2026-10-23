@@ -1,15 +1,14 @@
 """C#'s answers to the type service. A type of the repo is found by its simple name from a file: the only one of that
 name, or the one C# finds first from the file (its namespace, the ones around it, then its `using`s and its project's
-`global using`s). Then its members, its bases, the types that implement an interface, and what the DI container builds
-for one. Built once per repo, on its first question, from every C# file's type facts: every receiver, base and
-implementer asks, and a scan of all files per question is quadratic in the repo."""
+`global using`s). Then its members, typed with what its type parameters are given, its bases and the types that
+implement an interface. Built once per repo, on its first question, from every C# file's type facts: every receiver,
+base and implementer asks, and a scan of all files per question is quadratic in the repo."""
 
 from __future__ import annotations
 
 import re
 from typing import Iterator, NamedTuple
 
-from ...core.config import is_test_path
 from ...core.model import FileInfo
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from ..base import ResolveContext
@@ -22,6 +21,7 @@ NO_FIELD = Unknown("neither the type nor a base it names declares that member")
 NO_METHOD = Unknown("neither the type nor its bases declare the method")
 NOT_A_NAME = Unknown("the method declares no result that is a name, or its overloads declare two")
 INTERFACE = re.compile(r"^I[A-Z]")
+Arg = tuple[TypeRef | Unknown, str]                         # what a type parameter is: a type, as the code writes it
 
 
 class Declared(NamedTuple):
@@ -40,12 +40,6 @@ def ref(q: str) -> TypeRef:
     return TypeRef(package, name)
 
 
-def typed(t: CsType, written: str) -> str:
-    """A type `t`'s member writes `written` for its type: one of `t`'s type parameters is the one type its constraints
-    name, "" for none."""
-    return dict(t.params).get(written, written)
-
-
 class CsTypeIndex(TypeIndex):
     """A type is its namespace ("" for none) and its simple name."""
 
@@ -54,27 +48,26 @@ class CsTypeIndex(TypeIndex):
         self._by_name: dict[str, list[Declared]] | None = None
         self._types: dict[str, list[Declared]] = {}
         self._implementers: dict[str, list[str]] | None = None
-        self._chains: dict[str, list[str]] | None = None
         self._project_usings: dict[str, frozenset[str]] | None = None
+        self._bindings: dict[str, dict[str, dict[str, Arg]]] = {}
+        self.chains: dict[str, list[str]] | None = None     # what the DI container builds (`wiring`), on first ask
 
     # ---- the type service's questions
     def type_named(self, written: str, file: str) -> TypeRef | Unknown:
-        f = self._ctx.files_by_path.get(file)
+        f = self.file(file)
         if f is None:
             return NOT_A_FILE
         found = self.lookup(f, written)
         return ref(found.qualified) if found is not None else OUTSIDE
 
-    def field(self, owner: TypeRef, name: str) -> Field | Unknown:
+    def field(self, owner: TypeRef, name: str, args: tuple[Arg, ...] = ()) -> Field | Unknown:
         """Declared on the type, else on the first base it names that declares it (one level up). Its type is read in
-        the file that declares the member."""
+        the file that declares the member; a type parameter's is what `bindings` give it, `args` given to `owner`."""
         parts = self.parts(qualified(owner), last=True)
         member = self._member(parts, name)
         if member is None:
             return NO_FIELD if parts else UNDECLARED
-        written, file, promoted = member
-        typ = self.lookup(file, written)
-        return Field(ref(typ.qualified) if typ is not None else OUTSIDE, written, promoted)
+        return self._typed(member[0], name, self.bindings(qualified(owner), args), member[1])
 
     def bases(self, of: TypeRef) -> list[TypeRef | Unknown] | Unknown:
         """The bases every declaration of the type names (a partial type has several); one the file that names it
@@ -132,13 +125,21 @@ class CsTypeIndex(TypeIndex):
                         chain.append(found.qualified)
         return chain, outside
 
-    def declarations(self) -> Iterator[Declared]:
-        """Every type the repo's C# files declare, in file order."""
+    def file(self, path: str) -> FileInfo | None:
+        return self._ctx.files_by_path.get(path)
+
+    def files(self) -> Iterator[tuple[FileInfo, CsTypes]]:
+        """Every C# file of the repo with its type facts, in file order."""
         for fid, facts in self._ctx.facts.items():
             f = self._ctx.files_by_id.get(fid)
             if f is not None and f.language == "csharp":
-                for name, t in CsTypes.of(facts).types.items():
-                    yield Declared(".".join(p for p in (t.ns, t.outer, name) if p), t, f)
+                yield f, CsTypes.of(facts)
+
+    def declarations(self) -> Iterator[Declared]:
+        """Every type the repo's C# files declare, in file order."""
+        for f, facts in self.files():
+            for name, t in facts.types.items():
+                yield Declared(".".join(p for p in (t.ns, t.outer, name) if p), t, f)
 
     def named(self, simple: str) -> list[Declared]:
         if self._by_name is None:
@@ -185,23 +186,43 @@ class CsTypeIndex(TypeIndex):
         """What the `global using`s of the file's project import: every file of the project sees it."""
         if self._project_usings is None:
             found: dict[str, set[str]] = {}
-            for fid, facts in self._ctx.facts.items():
-                f = self._ctx.files_by_id.get(fid)
-                if f is not None and CsTypes.of(facts).global_usings:
-                    found.setdefault(f.module_id, set()).update(CsTypes.of(facts).global_usings)
+            for f, facts in self.files():
+                found.setdefault(f.module_id, set()).update(facts.global_usings)
             self._project_usings = {m: frozenset(u) for m, u in found.items()}
         return self._project_usings.get(file.module_id, frozenset())
 
     def member(self, owner: str, name: str) -> Field | None:
         """The member `name` the type `owner` (qualified) declares in any part, or a class of the repo it derives from,
-        the nearest first; its type is read in the file that declares it."""
+        the nearest first; its type is read in the file that declares it, a type parameter's as `bindings` give it."""
         for t in self.ancestry(owner)[0]:
             for d in self.parts(t, last=True):
                 if name in d.type.members and (t == owner or d.type.kind != "interface"):
-                    written = typed(d.type, d.type.members[name])
-                    typ = self.lookup(d.file, written)
-                    return Field(ref(typ.qualified) if typ is not None else OUTSIDE, written, t != owner)
+                    return self._typed(d, name, self.bindings(owner), t != owner)
         return None
+
+    def bindings(self, owner: str, args: tuple[Arg, ...] = ()) -> dict[str, dict[str, Arg]]:
+        """What each type parameter of the type `owner` (qualified), and of each base of the repo it derives from, is:
+        the type arguments `args` given to `owner`, else what its one constraint names; a base's, what the base list of
+        the type deriving from it passes, read in the file that writes it."""
+        if not args and owner in self._bindings:
+            return self._bindings[owner]
+        out: dict[str, dict[str, Arg]] = {}
+        queue = [(owner, args)]
+        for q, given in queue:                              # breadth first: the list grows as it is read
+            parts = self.parts(q, last=True) if q not in out else []
+            if parts:
+                out[q] = env = {p: given[i] if i < len(given) else self.read(parts[0].file, bound)
+                                for i, (p, bound) in enumerate(parts[0].type.params)}
+                queue += [(b.qualified, self._passed(d, name, env)) for d in parts for name in d.type.bases
+                          if (b := self.lookup(d.file, name)) is not None]
+        if not args:
+            self._bindings[owner] = out
+        return out
+
+    def read(self, file: FileInfo | None, written: str) -> Arg:
+        """A type written in `file`, with the type of the repo it names there."""
+        found = self.lookup(file, written) if file is not None and written else None
+        return (ref(found.qualified) if found is not None else OUTSIDE), written
 
     def nested(self, owner: str, name: str) -> str | None:
         """The type `name` nested in the type `owner` (qualified) or in one it derives from, the nearest first."""
@@ -217,53 +238,6 @@ class CsTypeIndex(TypeIndex):
         return next((d.type.explicit[method] for d in self.parts(implementation, last=False)
                      if method in d.type.explicit), None)
 
-    def handlers(self, file: FileInfo, message_type: str, handler_bases: frozenset[str]) -> list[str]:
-        """The types whose generic base among `handler_bases` takes the message type sent from `file` first."""
-        sent = self.lookup(file, message_type)
-        out: list[str] = []
-        for d in self.declarations():
-            for base, targs in d.type.generic_bases if d.type.kind != "interface" else ():
-                if base in handler_bases and targs and self._same(sent, d.file, targs[0], message_type):
-                    out.append(d.qualified)
-        return sorted(set(out))
-
-    def di_chain(self, interface: str) -> list[str] | None:
-        """What the container builds for an interface (qualified), innermost first: `[UpdateCacheStep,
-        CommitActivityStep, CheckTodoStep]` for `AddScoped<I, UpdateCacheStep>(); Decorate<I, CommitActivityStep>();
-        Decorate<I, CheckTodoStep>()`. An interface registered in more than one file (environments, tests) has none:
-        which one runs cannot be told."""
-        if self._chains is None:
-            found: dict[str, list[list[str]]] = {}
-            for fid, facts in self._ctx.facts.items():
-                f = self._ctx.files_by_id.get(fid)
-                if f is not None and f.language == "csharp" and not is_test_path(f.path):
-                    for qi, chain in self._registered(f, CsTypes.of(facts)).items():
-                        found.setdefault(qi, []).append(chain)
-            self._chains = {qi: chains[0] for qi, chains in found.items() if len(chains) == 1 and "" not in chains[0]}
-        return self._chains.get(interface)
-
-    def _registered(self, f: FileInfo, facts: CsTypes) -> dict[str, list[str]]:
-        here: dict[str, list[str]] = {}
-        for method, (iface, impl) in facts.registrations:
-            qi, qt = self.lookup(f, iface), self.lookup(f, impl)
-            if qi is None or qt is None:
-                continue
-            if method == "Decorate":
-                if qi.qualified in here:
-                    here[qi.qualified].append(qt.qualified)
-            elif qi.qualified in here and len(here[qi.qualified]) == 1:
-                here[qi.qualified] = [""]                   # registered twice for one interface: no single base
-            else:
-                here[qi.qualified] = [qt.qualified]
-        return here
-
-    def _same(self, sent: Declared | None, file: FileInfo, handled_name: str, message_type: str) -> bool:
-        """Both in the repo: the same qualified type; both outside (a package's message): the same name."""
-        handled = self.lookup(file, handled_name)
-        if sent and handled:
-            return sent.qualified == handled.qualified
-        return not sent and not handled and handled_name == message_type
-
     def _types_named(self, simple: str) -> list[Declared]:
         if simple not in self._types:
             hits = self.named(simple)
@@ -272,15 +246,26 @@ class CsTypeIndex(TypeIndex):
             self._types[simple] = [d for d in hits if d.qualified not in partial or firsts[d.qualified] is d]
         return self._types[simple]
 
-    def _member(self, parts: list[Declared], name: str) -> tuple[str, FileInfo, bool] | None:
+    def _member(self, parts: list[Declared], name: str) -> tuple[Declared, bool] | None:
+        """The declaration of the member `name`: on the type, else on the first base it names (promoted)."""
         for d in parts:
             if name in d.type.members:
-                return typed(d.type, d.type.members[name]), d.file, False
+                return d, False
         for d in parts:
             for b in d.type.bases:
                 bt = self.lookup(d.file, b)
                 found = next((p for p in self.parts(bt.qualified, last=True) if name in p.type.members), None) \
                     if bt is not None else None
                 if found is not None:
-                    return typed(found.type, found.type.members[name]), found.file, True
+                    return found, True
         return None
+
+    def _typed(self, d: Declared, name: str, bindings: dict[str, dict[str, Arg]], promoted: bool) -> Field:
+        """`d`'s member `name`, with its type: a type parameter's, what `bindings` give it."""
+        written = d.type.members[name]
+        typ, written = bindings.get(d.qualified, {}).get(written) or self.read(d.file, written)
+        return Field(typ, written, promoted)
+
+    def _passed(self, d: Declared, base: str, env: dict[str, Arg]) -> tuple[Arg, ...]:
+        """The type arguments `d`'s base list passes its base `base`: one of `d`'s type parameters, what it is."""
+        return tuple(env.get(a) or self.read(d.file, a) for a in dict(d.type.generic_bases).get(base, ()))
