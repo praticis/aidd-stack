@@ -9,7 +9,8 @@ declares none, and its call goes by name. With a base outside the repo, which ma
 read as the type's, and a member after it is a value, which an extension may take. A type nested in another is no name
 of its namespace: only the file that declares it, or the types deriving from the one it is in, see it by its simple
 name, and a type nested in another is named with it on both sides. A call with no receiver is a method of the caller's
-own type, never a client's."""
+own type, never a client's, unless it is given the request's verb: then it is a request the type, or a base of it,
+sends."""
 
 import contextlib
 import io
@@ -62,6 +63,11 @@ public class Disk
     public Task<string> Read(string subpath) => GetAsync(subpath, p => p);
     private Task<string> GetAsync(string path, Func<string, string> read) => Task.FromResult(read(path));
 }
+
+public abstract class Relay
+{
+    protected Task SendAsync<TRequest>(HttpMethod method, string path, TRequest body) => Task.CompletedTask;
+}
 """
 LEDGER = "namespace Api;\n\npublic class Ledger { public void Post() { } }\n"
 LEGACY = """namespace Api.Legacy
@@ -104,9 +110,19 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    """`every`: the edges found by name count too."""
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), scanner=None, **fields):
+    """`scanner`: what the scanner gives today when it is wrong, an xfail on its side. `every`: the edges found by name
+    count too."""
+    return id, fields, edges, set(calls), scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where the scanner is wrong today."""
+    out = []
+    for id, fields, edges, calls, wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong) if wrong and side == 1 else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -156,6 +172,10 @@ CASES = [
          body="await Error.BadRequest();"),
     case("a-call-with-no-receiver-is-the-types-own-method", {("Api.Services.Disk.Read", "receiver-type")},
          params="Disk d", body='await d.Read("images/flags");'),
+    case("a-call-with-no-receiver-given-the-verb-is-a-request", {("Api.Services.Relay.SendAsync", "same-module")},
+         {("POST", "/push/register")},
+         scanner="none: a call with no receiver is never taken for a request, though it is given the request's verb",
+         declaration=" : Relay", body='await SendAsync(HttpMethod.Post, "push/register", new object());', every=True),
 ]
 
 
@@ -177,17 +197,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected[0]
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
