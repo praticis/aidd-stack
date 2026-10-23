@@ -1,10 +1,13 @@
 """What a name means in C#, asked by the resolver for a call's receiver and by the HTTP scanner for the client wrapper
 a call goes through. A type's simple name is looked up as C# looks it up: in the namespace the code is in, then in each
 one around it out to the global namespace, each followed by the `using`s its declaration holds; the file's own `using`s
-come last. Of the global namespace, only the file's own project counts: other projects keep their programs there. A capitalized name the caller's type has as a member, declared on it, on another of its parts or on a base
-of the repo, is that member, not a type of its name. With a base outside the repo, which may declare the member, the
-name is still read as the type's. A type nested in another is no name of its namespace: only the file that declares it
-sees it by its simple name, and before any namespace."""
+come last. Of the global namespace, only the file's own project counts: other projects keep their programs there.
+
+A capitalized name the caller's type has as a member, declared on it, on another of its parts or on a base of the repo,
+is that member, not a type of its name. With a base outside the repo, which may declare the member, the name is still
+read as the type's. A type nested in another is no name of its namespace: only the file that declares it sees it by its
+simple name, and before any namespace. A call with no receiver is a method of the caller's own type, never a
+client's."""
 
 import contextlib
 import io
@@ -38,7 +41,14 @@ public abstract class Feature { public HttpService Http { get; } = new HttpServi
 public abstract class DeepFeature : Feature { }
 
 public abstract class LoggedFeature { public ILogger Http { get; } }
+
+public class Disk
+{
+    public Task<string> Read(string subpath) => GetAsync(subpath, p => p);
+    private Task<string> GetAsync(string path, Func<string, string> read) => Task.FromResult(read(path));
+}
 """
+LEDGER = "namespace Api;\n\npublic class Ledger { public void Post() { } }\n"
 LEGACY = """namespace Api.Legacy
 {
     public class HttpService { public Task<T?> HttpGet<T>(string uri) => Task.FromResult(default(T)); }
@@ -78,8 +88,18 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), **fields):
-    return pytest.param(fields, (edges, set(calls)), id=id)
+def case(id, edges, calls=frozenset(), scanner=None, **fields):
+    """`scanner`: what the scanner gives today when it is wrong, an xfail on its side."""
+    return id, fields, edges, set(calls), scanner
+
+
+def _params(side: int):
+    """One side's expectation per case, an xfail where the scanner is wrong today."""
+    out = []
+    for id, fields, edges, calls, wrong in CASES:
+        marks = pytest.mark.xfail(strict=True, reason=wrong) if wrong and side == 1 else ()
+        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
+    return out
 
 
 CASES = [
@@ -117,6 +137,9 @@ CASES = [
     case("a-member-whose-type-is-outside-the-repo", set(), declaration=" : LoggedFeature", body=HTTP_GET),
     case("a-name-a-base-outside-the-repo-may-declare", {("Api.Services.Http.Reset", "receiver-type")},
          declaration=" : ControllerBase", body="await Http.Reset();"),
+    case("a-call-with-no-receiver-is-the-types-own-method", {("Api.Services.Disk.Read", "receiver-type")},
+         scanner="`GET /images/flags`: the type's own `GetAsync` is taken for a client's, and `Read` for its wrapper",
+         params="Disk d", body='await d.Read("images/flags");'),
 ]
 
 
@@ -124,11 +147,11 @@ def _extract(root, fields: dict):
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
     body = "\n".join(" " * 8 + line for line in fields.get("body", "").splitlines())
-    client = CLIENT % ({"usings": "using Api.Services;", "namespace": "namespace Api.Items;", "inner": "", "partial": "",
-                        "declaration": "", "members": "", "params": "", "close": ""}
+    client = CLIENT % ({"usings": "using Api.Services;", "namespace": "namespace Api.Items;", "inner": "",
+                        "partial": "", "declaration": "", "members": "", "params": "", "close": ""}
                        | {k: v for k, v in fields.items() if k != "files"} | {"body": body})
     files = {"Api.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>', "Services/HttpService.cs": SERVICES,
-             "Legacy/Legacy.cs": LEGACY, "Ledger.cs": "namespace Api;\n\npublic class Ledger { public void Post() { } }\n",
+             "Legacy/Legacy.cs": LEGACY, "Ledger.cs": LEDGER,
              "Clock.cs": "public class Clock { public void Tick() { } }\n", "Items/ItemsClient.cs": client,
              **fields.get("files", {})}
     for rel, text in files.items():
@@ -138,16 +161,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(0))
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
-    found = {(names[c.callee_id], c.strategy) for c in rv.calls if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
+    found = {(names[c.callee_id], c.strategy) for c in rv.calls
+             if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and c.strategy.startswith(("receiver-type", "inherited"))}
-    assert found == expected[0]
+    assert found == expected
 
 
-@pytest.mark.parametrize("fields,expected", CASES)
+@pytest.mark.parametrize("fields,expected", _params(1))
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
