@@ -124,19 +124,9 @@ def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
-    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side. `every`: the edges
-    found by name count too."""
-    return id, fields, edges, set(calls), resolver, scanner
-
-
-def _params(side: int):
-    """One side's expectation per case, an xfail where that side is wrong today."""
-    out = []
-    for id, fields, edges, calls, *wrong in CASES:
-        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
-        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
-    return out
+def case(id, edges, calls=frozenset(), **fields):
+    """`every`: the edges found by name count too."""
+    return pytest.param(fields, (edges, set(calls)), id=id)
 
 
 CASES = [
@@ -204,7 +194,7 @@ CASES = [
          body="svc.Ping();", every=True),
     case("an-extension-on-a-type-parameter-takes-what-its-constraint-names",
          {("Api.Services.Bounded.Touch", "receiver-type")},
-         resolver="by name: an extension's type parameter is taken for any value", params="HttpService svc",
+         params="HttpService svc",
          body="await svc.Touch();"),
     case("a-member-of-a-caller-nested-in-another-type", TYPED, WRAPPED,
          inner="public class Outer\n{", close="}",
@@ -238,17 +228,17 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,expected", _params(0))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls
              if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and (fields.get("every") or c.strategy.startswith(("receiver-type", "inherited")))}
-    assert found == expected
+    assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,expected", _params(1))
+@pytest.mark.parametrize("fields,expected", CASES)
 def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]

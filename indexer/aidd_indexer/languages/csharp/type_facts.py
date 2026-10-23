@@ -248,19 +248,19 @@ def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | No
         pl = n.child_by_field_name("parameters")
         first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
         if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
-            own = {p for p, _ in type_parameters(n, src)}
+            own = dict(type_parameters(n, src))
             t = type_text(first.child_by_field_name("type"), src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
                         _passes(first.child_by_field_name("type"), src, own)))
     return tuple(out)
 
 
-def _passes(t: Node | None, src: bytes, own: set[str]) -> str:
+def _passes(t: Node | None, src: bytes, own: dict[str, str]) -> str:
     """What a value of a type of the repo must be to pass as a `this` of type `t`: the simple name of the type `t`
-    names; "object" when any value passes (`object`, one of the method's type parameters); "" when none does (an array,
-    another predefined type)."""
+    names, or that one of the method's type parameters' constraint names; "object" when any value passes (`object`, a
+    type parameter with no such constraint); "" when none does (an array, another predefined type)."""
     n = next((c for c in t.children if c.is_named), None) if t is not None and t.type == "nullable_type" else t
     if n is not None and n.type == "predefined_type":
         return "object" if node_text(n, src) == "object" else ""
     name = type_text(n, src) if n is not None and n.type != "array_type" else None
-    return "object" if name in own else name or ""
+    return (own[name] or "object") if name in own else name or ""
