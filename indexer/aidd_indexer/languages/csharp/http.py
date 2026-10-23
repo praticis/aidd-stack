@@ -991,8 +991,8 @@ class CsScanner(BaseScanner):
                 at = fn.child_by_field_name("name") if fn.type == "member_access_expression" else None
                 self.add_endpoint(at or n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], router=recv_last)
                 return
-        # with no receiver, the call is the type's own method: never a client's
-        if name in OUTBOUND and name.endswith("Async") and fn.type not in ("identifier", "generic_name"):
+        # with no receiver, the call is the type's own method or a base's: a request only when given the request's verb
+        if name in OUTBOUND and name.endswith("Async") and ("." in callee or self.method_from_args(arg_nodes)):
             if name == "SendAsync" and arg_nodes and arg_nodes[0].type == "identifier":
                 val = self.resolve_local(arg_nodes[0])
                 if val is not None and val.type == "object_creation_expression" and "HttpRequestMessage" in text(val, self.src):
