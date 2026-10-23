@@ -13,6 +13,7 @@ from ...core.config import is_test_path
 from ...core.model import FileInfo
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from ..base import ResolveContext
+from .locals import read_name
 from .type_facts import CsType, CsTypes, scopes
 
 NOT_A_FILE = Unknown("not a file of the repo")
@@ -38,15 +39,6 @@ def qualified(t: TypeRef) -> str:
 def ref(q: str) -> TypeRef:
     package, _, name = q.rpartition(".")
     return TypeRef(package, name)
-
-
-def read_name(written: str) -> tuple[str | None, str]:
-    """`name:(O).X` → ("O", "X"), a capitalized name read inside the type `O`; `name:X` → (None, "X"); any other form
-    → (None, itself)."""
-    if not written.startswith("name:("):
-        return None, written.removeprefix("name:")
-    owner, _, name = written[6:].rpartition(").")
-    return owner, name
 
 
 def named(types: CsTypeIndex, file: str, written: str) -> tuple[TypeRef | Unknown, str]:
@@ -173,7 +165,7 @@ class CsTypeIndex(TypeIndex):
             f = self._ctx.files_by_id.get(fid)
             if f is not None and f.language == "csharp":
                 for name, t in CsTypes.of(facts).types.items():
-                    yield Declared((t.ns + "." if t.ns else "") + name, t, f)
+                    yield Declared(".".join(p for p in (t.ns, t.outer, name) if p), t, f)
 
     def named(self, simple: str) -> list[Declared]:
         if self._by_name is None:
@@ -196,17 +188,20 @@ class CsTypeIndex(TypeIndex):
         return found[-1:] if last else found[:1]
 
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
-        """The type a file means by a simple name: the only one of that name, or the first C# finds from the file (its
-        namespace, the ones around it, then the `using`s), when no other is found at that step. A partial type counts
-        once, by its first part."""
+        """The type a file means by a simple name: the only one of that name; one nested in a type the file declares;
+        or the first C# finds from the file (its namespace, the ones around it, then the `using`s), when no other is
+        found at that step. A partial type counts once, by its first part."""
         if "." in simple:                                   # the enclosing type, by its qualified name
             found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
             return found[0] if len(found) == 1 else None
         hits = self._types_named(simple)
         if len(hits) <= 1:
             return hits[0] if hits else None
+        inner = [h for h in hits if h.type.outer and h.file.id == file.id]
+        if inner:
+            return inner[0] if len(inner) == 1 else None
         for scope in scopes(CsTypes.of(self._ctx.facts.get(file.id))):
-            seen = [h for h in hits if h.type.ns in scope]
+            seen = [h for h in hits if h.type.ns in scope and not h.type.outer]
             if seen:
                 return seen[0] if len(seen) == 1 else None
         return None

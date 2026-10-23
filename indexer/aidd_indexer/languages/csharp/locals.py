@@ -65,6 +65,15 @@ def _start(call: Node, n: Node, src: bytes, chain: tuple[str, ...]) -> tuple[str
     return (owner, (ident, *chain)) if owner else None                 # inherited member of an in-repo base, maybe
 
 
+def read_name(written: str) -> tuple[str | None, str]:
+    """`name:(O).X` → ("O", "X"), a capitalized name read inside the type `O`; `name:X` → (None, "X"); any other form
+    → (None, itself)."""
+    if not written.startswith("name:("):
+        return None, written.removeprefix("name:")
+    owner, _, name = written[6:].rpartition(").")
+    return owner, name
+
+
 def local_type(name: str, use: Node, src: bytes, prefer_new: bool = False) -> str | None:
     """The type the nearest declaration of `name` in scope at `use` states, or the one its value is created with
     (`prefer_new`: that one wins over a declared interface); UNTYPED for a declaration that states none; None when no

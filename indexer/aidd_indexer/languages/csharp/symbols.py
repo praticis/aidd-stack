@@ -18,9 +18,9 @@ from ...core.model import FileInfo
 from ...core.types import RepoTypes, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
-from .locals import local_type, new_type, receiver_type as declared_receiver
+from .locals import local_type, new_type, read_name, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
-from .type_index import CsTypeIndex, named, qualified, read_name, ref as type_ref, written_type
+from .type_index import CsTypeIndex, named, qualified, ref as type_ref, written_type
 
 HERE = Path(__file__).parent
 

@@ -30,6 +30,7 @@ class CsType(NamedTuple):
     results: dict[str, tuple[str, str]]                     # method → the simple name of the type it returns, and of
                                                             # the one `await` gives; "" for none, or for overloads
                                                             # that declare two
+    outer: str = ""                                         # the types it is nested in, outermost first (`A.B`)
 
 
 class CsTypes(NamedTuple):
@@ -147,7 +148,18 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
     # a file-scoped namespace: its declarations are siblings of it, not children
     partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
     return CsType(n.type.split("_")[0], namespace_of(n, src) or file_ns, bases, _generic_bases(bl, src),
-                  members(n, src), _explicit_impls(n, src), partial, _results(n, src))
+                  members(n, src), _explicit_impls(n, src), partial, _results(n, src), _outer(n, src))
+
+
+def _outer(n: Node, src: bytes) -> str:
+    """The types a declaration is nested in, outermost first: `Constants.Conventions` for its `Content`."""
+    names: list[str] = []
+    a = n.parent
+    while a is not None and a.type not in NAMESPACE_NODES:
+        if a.type in TYPE_DECLARATIONS and a.child_by_field_name("name") is not None:
+            names.insert(0, node_text(a.child_by_field_name("name"), src))
+        a = a.parent
+    return ".".join(names)
 
 
 def namespace_of(n: Node, src: bytes) -> str | None:
