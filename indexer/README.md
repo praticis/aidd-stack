@@ -149,6 +149,10 @@ aidd_indexer/
       type_facts.py         a file's type facts as values with no tree node
       type_index.py         the language's TypeIndex, built once per repo
       locals.py             the type a name's declaration in scope gives it, for the resolver and the scanner
+    csharp/
+      type_syntax.py        how C# writes a type: its simple name, its type arguments, a declaration's type parameters
+      written.py            the receiver's written start read through the TypeIndex, then the members after it
+      wiring.py             what the DI container builds for an interface; who handles a mediator's message
   conventions/              pluggable rules of *your* development pattern (layers, allowed deps, targets)
     base.py                 Convention contract + ConventionContext
     declarative.py          convention.yaml → Convention (no Python needed)
