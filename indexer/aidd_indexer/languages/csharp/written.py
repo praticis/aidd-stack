@@ -31,10 +31,9 @@ def start_of(types: CsTypeIndex | None, file: str, written: str) -> tuple[TypeRe
 
 
 def arguments(types: CsTypeIndex, file: str, written: str) -> tuple[Arg, ...]:
-    """The type arguments a receiver's written type passes (`Holder<HttpService>`), read in the caller's file."""
-    if written.startswith(("name:", "call:")):
-        return ()
-    return tuple(types.read(types.file(file), a) for a in type_arguments(written))
+    """The type arguments a receiver's written type passes (`Holder<HttpService>`, read in the caller's file), or the
+    result of the method it calls."""
+    return start(types, file, written)[1]
 
 
 def follow(types: CsTypeIndex, cur: TypeRef | Unknown, path: tuple[str, ...] | list[str],
@@ -49,7 +48,7 @@ def follow(types: CsTypeIndex, cur: TypeRef | Unknown, path: tuple[str, ...] | l
 def member_name(types: CsTypeIndex | None, file: str, written: str, path: tuple[str, ...]) -> str | None:
     """The simple name the code writes for the type a receiver's members end in; None when one of them is unknown."""
     cur, name = start_of(types, file, written)
-    args = arguments(types, file, written) if types is not None else ()
+    args = arguments(types, file, written) if types is not None and path else ()
     for member in path:
         field = types.field(cur, member, args) if not isinstance(cur, Unknown) else cur
         if isinstance(field, Unknown):
@@ -59,15 +58,22 @@ def member_name(types: CsTypeIndex | None, file: str, written: str, path: tuple[
 
 
 def written_type(types: CsTypeIndex, file: str, written: str) -> TypeRef | Unknown:
-    """A receiver's type as the one answer writes it: a type's name, a capitalized name (`named`), or
-    `call:(R).a.M#await`, what the method `M` returns, called on the member `a` of `R` (awaited)."""
+    return start(types, file, written)[0]
+
+
+def start(types: CsTypeIndex, file: str, written: str) -> tuple[TypeRef | Unknown, tuple[Arg, ...]]:
+    """A receiver's type as the one answer writes it, and the type arguments it is given: a type's name, a capitalized
+    name (`named`), or `call:(R).a.M#await`, what the method `M` returns, called on the member `a` of `R` (awaited)."""
     if written.startswith("name:"):
-        return named(types, file, written)[0]
+        return named(types, file, written)[0], ()
     if not written.startswith("call:("):
-        return types.type_named(bare(written), file)
+        return types.type_named(bare(written), file), tuple(types.read(types.file(file), a)
+                                                            for a in type_arguments(written))
     close = written.rindex(")")
     rest = written[close + 1:]
     names = rest.removesuffix("#await").split(".")[1:]
-    start = written[6:close]
-    cur = follow(types, written_type(types, file, start), names[:-1], arguments(types, file, start))
-    return cur if isinstance(cur, Unknown) else types.method_result(cur, names[-1], rest.endswith("#await"))
+    owner, args = start(types, file, written[6:close])
+    cur = follow(types, owner, names[:-1], args)
+    if isinstance(cur, Unknown):
+        return cur, ()
+    return types.result_of(cur, names[-1], rest.endswith("#await"), args if len(names) == 1 else ())

@@ -9,7 +9,7 @@ from typing import Any, Iterator, NamedTuple
 from tree_sitter import Node
 
 from ..base import node_text, walk
-from .type_syntax import type_parameters, type_text
+from .type_syntax import type_parameters, type_text, written_text
 
 NAMESPACE_NODES = frozenset({"namespace_declaration", "file_scoped_namespace_declaration"})
 TYPE_DECLARATIONS = ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration")
@@ -28,9 +28,9 @@ class CsType(NamedTuple):
                                                             # simple name of its type, or of a type parameter
     explicit: dict[str, str]                                # method → the interface it implements explicitly
     partial: bool                                           # one part of a type other files may declare more of
-    results: dict[str, tuple[str, str]]                     # method → the simple name of the type it returns, and of
-                                                            # the one `await` gives; "" for none, or for overloads
-                                                            # that declare two
+    results: dict[str, tuple[str, str]]                     # method → the type it returns, and the one `await`
+                                                            # gives, as `written_text` writes them; "" for none, or
+                                                            # for overloads that declare two
     outer: str = ""                                         # the types it is nested in, outermost first (`A.B`)
     params: tuple[tuple[str, str], ...] = ()                # its type parameters, each with the one type its
                                                             # constraints name ("" for none)
@@ -209,7 +209,7 @@ def _results(type_node: Node, src: bytes) -> dict[str, tuple[str, str]]:
         name = m.child_by_field_name("name") if m.type == "method_declaration" else None
         if name is not None:
             ret = m.child_by_field_name("returns") or m.child_by_field_name("type")
-            found = (type_text(ret, src) or "", _awaited(ret, src) or "")
+            found = (written_text(ret, src) or "", _awaited(ret, src) or "")
             out[node_text(name, src)] = found if out.get(node_text(name, src), found) == found else ("", "")
     return out
 
@@ -219,7 +219,7 @@ def _awaited(ret: Node | None, src: bytes) -> str | None:
     if ret is None or ret.type != "generic_name" or type_text(ret, src) not in ("Task", "ValueTask"):
         return None
     targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
-    return type_text(next((c for c in targs.children if c.is_named), None), src) if targs is not None else None
+    return written_text(next((c for c in targs.children if c.is_named), None), src) if targs is not None else None
 
 
 def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:

@@ -23,7 +23,7 @@ from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
 from .type_index import CsTypeIndex, qualified, ref as type_ref
 from .type_syntax import bare
 from .wiring import di_chain, handlers
-from .written import arguments, follow, named, written_type
+from .written import arguments, follow, named, start
 
 HERE = Path(__file__).parent
 
@@ -115,8 +115,8 @@ class CSharpSupport(LanguageSupport):
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         types = self._types(ctx)
-        start = written_type(types, file.path, receiver_type)
-        cur = follow(types, start, path, arguments(types, file.path, receiver_type))
+        cur, args = start(types, file.path, receiver_type)
+        cur = follow(types, cur, path, args)
         return qualified(cur) if not isinstance(cur, Unknown) else None
 
     def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,

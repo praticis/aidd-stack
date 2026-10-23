@@ -13,6 +13,7 @@ from ...core.model import FileInfo
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from ..base import ResolveContext
 from .type_facts import CsType, CsTypes, scopes
+from .type_syntax import bare, type_arguments
 
 NOT_A_FILE = Unknown("not a file of the repo")
 OUTSIDE = Unknown("no type of the repo has that name, or the file sees more than one")
@@ -93,23 +94,27 @@ class CsTypeIndex(TypeIndex):
 
     # ---- C#'s own
     def method_result(self, owner: TypeRef, method: str, awaited: bool) -> TypeRef | Unknown:
+        return self.result_of(owner, method, awaited)[0]
+
+    def result_of(self, owner: TypeRef, method: str, awaited: bool,
+                  args: tuple[Arg, ...] = ()) -> tuple[TypeRef | Unknown, tuple[Arg, ...]]:
         """What `owner`'s method returns (`awaited`: what awaiting it gives), declared on the type, any of its parts,
-        or the shallowest base that declares it, and read in the file that declares it."""
+        or the shallowest base that declares it, read in the file that declares it, and the type arguments it passes; a
+        type parameter's, what `bindings` give it, `args` given to `owner`."""
         seen, queue = {qualified(owner)}, [qualified(owner)]
         while queue:
             q = queue.pop(0)
             found = next(((d, d.type.results[method]) for d in self.parts(q, last=True) if method in d.type.results),
                          None)
             if found is not None:
-                written = found[1][1] if awaited else found[1][0]
-                typ = self.lookup(found[0].file, written) if written else None
-                return ref(typ.qualified) if typ is not None else OUTSIDE if written else NOT_A_NAME
+                env = self.bindings(qualified(owner), args).get(found[0].qualified, {})
+                return self._result(found[0], found[1][1] if awaited else found[1][0], env)
             bases = self.bases(ref(q))
             for b in bases if not isinstance(bases, Unknown) else ():
                 if not isinstance(b, Unknown) and qualified(b) not in seen:
                     seen.add(qualified(b))
                     queue.append(qualified(b))
-        return NO_METHOD
+        return NO_METHOD, ()
 
     def ancestry(self, q: str) -> tuple[list[str], set[str]]:
         """The type and its bases in the repo, nearest first, and the names its chain gives to bases outside the
@@ -265,6 +270,14 @@ class CsTypeIndex(TypeIndex):
         written = d.type.members[name]
         typ, written = bindings.get(d.qualified, {}).get(written) or self.read(d.file, written)
         return Field(typ, written, promoted)
+
+    def _result(self, d: Declared, written: str, env: dict[str, Arg]) -> tuple[TypeRef | Unknown, tuple[Arg, ...]]:
+        """The type `d`'s method writes as its result, and the type arguments it passes: one of `d`'s type parameters,
+        what `env` gives it."""
+        if not written:
+            return NOT_A_NAME, ()
+        typ = (env.get(bare(written)) or self.read(d.file, bare(written)))[0]
+        return typ, tuple(env.get(a) or self.read(d.file, a) for a in type_arguments(written))
 
     def _passed(self, d: Declared, base: str, env: dict[str, Arg]) -> tuple[Arg, ...]:
         """The type arguments `d`'s base list passes its base `base`: one of `d`'s type parameters, what it is."""
