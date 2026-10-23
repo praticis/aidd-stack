@@ -238,21 +238,34 @@ def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:
 
 
 def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None, str], ...]:
-    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method: the
-    first parameter carries `this` — after attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this
-    Guid? g)`). The type is its simple name, None for a predefined type or one of the method's type parameters."""
+    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method. The
+    type is its simple name, None for a predefined type or one of the method's type parameters."""
     out = []
     for n in walk(root):
-        if n.type != "method_declaration" or n.child_by_field_name("name") is None:
-            continue
-        pl = n.child_by_field_name("parameters")
-        first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
-        if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
-            own = dict(type_parameters(n, src))
-            t = type_text(first.child_by_field_name("type"), src)
+        found = _receiver(n, src) if n.type == "method_declaration" and n.child_by_field_name("name") else None
+        if found is not None:
+            typ, own = found[0].child_by_field_name("type"), found[1]
+            t = type_text(typ, src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
-                        _passes(first.child_by_field_name("type"), src, own)))
+                        _passes(typ, src, own)))
     return tuple(out)
+
+
+def _receiver(m: Node, src: bytes) -> tuple[Node, dict[str, str]] | None:
+    """The parameter an extension method takes its value as, with the type parameters it may name: the first one, when
+    it carries `this` — after attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this Guid? g)`);
+    in an extension block (`extension(Guid? g) { .. }`), the block's, for a method that is not static."""
+    own = dict(type_parameters(m, src))
+    block = m.parent.parent if m.parent is not None and m.parent.type == "extension_body" else None
+    if block is not None:
+        static = any(c.type == "modifier" and node_text(c, src) == "static" for c in m.children)
+        rp = next((c for c in block.children if c.type == "receiver_parameter"), None)
+        return (rp, own | dict(type_parameters(block, src))) if rp is not None and not static else None
+    pl = m.child_by_field_name("parameters")
+    first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
+    if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
+        return first, own
+    return None
 
 
 def _passes(t: Node | None, src: bytes, own: dict[str, str]) -> str:
