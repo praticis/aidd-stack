@@ -108,7 +108,8 @@ def type_text(node: Node | None, src: bytes) -> str | None:
 
 
 def members(type_node: Node, src: bytes) -> dict[str, str]:
-    """Field/property/primary-constructor-parameter name → declared type (simple name)."""
+    """Field/property/primary-constructor-parameter name → declared type (simple name); "" for one of the type's own
+    type parameters, which declares no type."""
     out: dict[str, str] = {}
     pl = next((c for c in type_node.children if c.type == "parameter_list"), None)
     for prm in (pl.children if pl is not None else []):
@@ -120,7 +121,14 @@ def members(type_node: Node, src: bytes) -> dict[str, str]:
             _fields(out, m, src)
         elif m.type == "property_declaration":
             _declare(out, m.child_by_field_name("name"), m.child_by_field_name("type"), src)
-    return out
+    own = _type_parameters(type_node, src)
+    return {name: "" if t in own else t for name, t in out.items()}
+
+
+def _type_parameters(n: Node, src: bytes) -> set[str]:
+    tps = n.child_by_field_name("type_parameters") \
+        or next((c for c in n.children if c.type == "type_parameter_list"), None)
+    return {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
 
 
 def _declare(out: dict[str, str], name: Node | None, typ: Node | None, src: bytes) -> None:
@@ -249,8 +257,7 @@ def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | No
         pl = n.child_by_field_name("parameters")
         first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
         if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
-            tps = n.child_by_field_name("type_parameters")
-            own = {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
+            own = _type_parameters(n, src)
             t = type_text(first.child_by_field_name("type"), src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
                         _passes(first.child_by_field_name("type"), src, own)))

@@ -157,7 +157,6 @@ CASES = [
     case("an-extension-of-a-member-after-a-types-name", {("Api.Services.HttpExtensions.Warm", "receiver-type")},
          body="await Engine.Current.Warm();"),
     case("a-member-whose-type-is-a-type-parameter-goes-by-name", {("Api.Services.HttpService.Ping", "same-module")},
-         resolver="none: the type parameter is taken for a type outside the repo, which only an extension can take",
          declaration=" : Generic<HttpService>", body="Http.Ping();", every=True),
     case("a-member-of-a-caller-nested-in-another-type", TYPED, WRAPPED,
          resolver="none: the caller's type is named without the type it is nested in", scanner="none, the same",
