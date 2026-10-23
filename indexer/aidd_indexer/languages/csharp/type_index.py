@@ -1,8 +1,8 @@
 """C#'s answers to the type service. A type of the repo is found by its simple name from a file: the only one of that
-name, or the one C# finds first from the file (its namespace, the ones around it, then its `using`s). Then its
-members, its bases, the types that implement an interface, and what the DI container builds for one. Built once per
-repo, on its first question, from every C# file's type facts: every receiver, base and implementer asks, and a scan of
-all files per question is quadratic in the repo."""
+name, or the one C# finds first from the file (its namespace, the ones around it, then its `using`s and its project's
+`global using`s). Then its members, its bases, the types that implement an interface, and what the DI container builds
+for one. Built once per repo, on its first question, from every C# file's type facts: every receiver, base and
+implementer asks, and a scan of all files per question is quadratic in the repo."""
 
 from __future__ import annotations
 
@@ -49,6 +49,7 @@ class CsTypeIndex(TypeIndex):
         self._types: dict[str, list[Declared]] = {}
         self._implementers: dict[str, list[str]] | None = None
         self._chains: dict[str, list[str]] | None = None
+        self._project_usings: dict[str, frozenset[str]] | None = None
 
     # ---- the type service's questions
     def type_named(self, written: str, file: str) -> TypeRef | Unknown:
@@ -155,9 +156,9 @@ class CsTypeIndex(TypeIndex):
 
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
         """The type a file means by a simple name: the only one of that name; one nested in a type the file declares;
-        or the first C# finds from the file (its namespace, the ones around it, then the `using`s), when no other is
-        found at that step. Of the global namespace, only the file's project counts: other projects keep their
-        programs there. A partial type counts once, by its first part."""
+        or the first C# finds from the file (its namespace, the ones around it, then the `using`s, its project's
+        `global using`s among them), when no other is found at that step. Of the global namespace, only the file's
+        project counts: other projects keep their programs there. A partial type counts once, by its first part."""
         if "." in simple:                                   # the enclosing type, by its qualified name
             found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
             return found[0] if len(found) == 1 else None
@@ -167,12 +168,23 @@ class CsTypeIndex(TypeIndex):
         inner = [h for h in hits if h.type.outer and h.file.id == file.id]
         if inner:
             return inner[0] if len(inner) == 1 else None
-        for scope in scopes(CsTypes.of(self._ctx.facts.get(file.id))):
+        for scope in scopes(CsTypes.of(self._ctx.facts.get(file.id)), self.project_usings(file)):
             seen = [h for h in hits if h.type.ns in scope and not h.type.outer
                     and (h.type.ns is not None or h.file.module_id == file.module_id)]
             if seen:
                 return seen[0] if len(seen) == 1 else None
         return None
+
+    def project_usings(self, file: FileInfo) -> frozenset[str]:
+        """What the `global using`s of the file's project import: every file of the project sees it."""
+        if self._project_usings is None:
+            found: dict[str, set[str]] = {}
+            for fid, facts in self._ctx.facts.items():
+                f = self._ctx.files_by_id.get(fid)
+                if f is not None and CsTypes.of(facts).global_usings:
+                    found.setdefault(f.module_id, set()).update(CsTypes.of(facts).global_usings)
+            self._project_usings = {m: frozenset(u) for m, u in found.items()}
+        return self._project_usings.get(file.module_id, frozenset())
 
     def member(self, owner: str, name: str) -> Field | None:
         """The member `name` the type `owner` (qualified) declares in any part, or a class of the repo it derives from,

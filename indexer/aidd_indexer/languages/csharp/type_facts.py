@@ -43,6 +43,8 @@ class CsTypes(NamedTuple):
                                                               # and what a value of a repo type must be to pass as its
                                                               # `this`: that name, "object" for any, "" for none)
     namespaces: tuple[str, ...] = ()                        # every namespace the file declares, block or file-scoped
+    global_usings: tuple[str, ...] = ()                     # what its `global using`s import into every file of
+                                                            # its project
 
     @classmethod
     def of(cls, facts: Any) -> CsTypes:
@@ -57,28 +59,33 @@ def type_facts(root: Node, src: bytes) -> CsTypes:
     declared, file_ns = namespaces(root, src)
     types: dict[str, CsType] = {}
     usings: list[tuple[str | None, str]] = []
+    project: list[str] = []
     for n in walk(root):
         if n.type == "using_directive":
             q = next((c for c in n.children if c.type in ("qualified_name", "identifier")), None)
-            if q is not None:
+            if q is not None and any(c.type == "global" for c in n.children):
+                project.append(node_text(q, src))
+            elif q is not None:
                 usings.append((namespace_of(n, src), node_text(q, src)))
         elif n.type in TYPE_DECLARATIONS and n.child_by_field_name("name") is not None:
             types[node_text(n.child_by_field_name("name"), src)] = _type(n, src, file_ns)
     registrations = tuple(r for r in (_registration(n, src) for n in walk(root)) if r is not None)
-    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src), tuple(declared))
+    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src), tuple(declared),
+                   tuple(project))
 
 
-def scopes(facts: CsTypes) -> Iterator[set[str | None]]:
+def scopes(facts: CsTypes, project: frozenset[str] = frozenset()) -> Iterator[set[str | None]]:
     """Where C# looks for a type's simple name from a file, in order: the namespace the code is in, then each one around
     it out to the global namespace, each followed by the `using`s its declaration holds; the file's own `using`s come
-    last. A file that declares more than one namespace looks in all of them at each step out."""
+    last, with the `global using`s of its `project`. A file that declares more than one namespace looks in all of them
+    at each step out."""
     parts = [ns.split(".") for ns in facts.namespaces]
     for out in range(max(map(len, parts), default=0)):
         here = {".".join(p[:len(p) - out]) for p in parts if len(p) > out}
         yield here
         yield {u for holder, u in facts.usings if holder in here}
     yield {None}
-    yield {u for holder, u in facts.usings if holder is None}
+    yield {u for holder, u in facts.usings if holder is None} | project
 
 
 def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:
