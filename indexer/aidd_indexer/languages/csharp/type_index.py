@@ -1,8 +1,8 @@
 """C#'s answers to the type service. A type of the repo is found by its simple name from a file: the only one of that
-name, or the only one among the namespaces the file can see (its own and its `using`s). Then its members, its bases,
-the types that implement an interface, and what the DI container builds for one. Built once per repo, on its first
-question, from every C# file's type facts: every receiver, base and implementer asks, and a scan of all files per
-question is quadratic in the repo."""
+name, or the one C# finds first from the file (its namespace, the ones around it, then its `using`s). Then its
+members, its bases, the types that implement an interface, and what the DI container builds for one. Built once per
+repo, on its first question, from every C# file's type facts: every receiver, base and implementer asks, and a scan of
+all files per question is quadratic in the repo."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from ...core.config import is_test_path
 from ...core.model import FileInfo
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from ..base import ResolveContext
-from .type_facts import CsType, CsTypes
+from .type_facts import CsType, CsTypes, scopes
 
 NOT_A_FILE = Unknown("not a file of the repo")
 OUTSIDE = Unknown("no type of the repo has that name, or the file sees more than one")
@@ -170,18 +170,20 @@ class CsTypeIndex(TypeIndex):
         return found[-1:] if last else found[:1]
 
     def lookup(self, file: FileInfo, simple: str) -> Declared | None:
-        """The type a file means by a simple name, preferring the namespaces it can see (its own, its usings). A
-        partial type counts once, by its first part."""
+        """The type a file means by a simple name: the only one of that name, or the first C# finds from the file (its
+        namespace, the ones around it, then the `using`s), when no other is found at that step. A partial type counts
+        once, by its first part."""
         if "." in simple:                                   # the enclosing type, by its qualified name
             found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
             return found[0] if len(found) == 1 else None
         hits = self._types_named(simple)
         if len(hits) <= 1:
             return hits[0] if hits else None
-        mine = CsTypes.of(self._ctx.facts.get(file.id))
-        visible = set(mine.usings) | ({mine.file_ns} if mine.file_ns else set())
-        seen = [h for h in hits if h.type.ns in visible]
-        return seen[0] if len(seen) == 1 else None
+        for scope in scopes(CsTypes.of(self._ctx.facts.get(file.id))):
+            seen = [h for h in hits if h.type.ns in scope]
+            if seen:
+                return seen[0] if len(seen) == 1 else None
+        return None
 
     def inherited_member_type(self, owner: str, member: str) -> str | None:
         """Declared type of `member` on the type `owner` (qualified) or on its bases in this repo, a few levels up;

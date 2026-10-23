@@ -4,7 +4,7 @@ They hold no tree node, so they travel; the resolver reads them across files."""
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, Iterator, NamedTuple
 
 from tree_sitter import Node
 
@@ -34,12 +34,14 @@ class CsType(NamedTuple):
 
 class CsTypes(NamedTuple):
     types: dict[str, CsType]                                # simple name → the file's last declaration of it
-    usings: tuple[str, ...]
+    usings: tuple[tuple[str | None, str], ...]              # (the block namespace whose declaration holds it, None
+                                                            # for the file's own; the namespace it imports)
     file_ns: str | None                                     # a file-scoped namespace
     registrations: tuple[tuple[str, tuple[str, str]], ...]  # (`AddScoped`, `Decorate`.., (interface, implementation))
     extensions: tuple[tuple[str, int, str | None, str], ...]  # (name, line, the simple name of the type it extends,
                                                               # and what a value of a repo type must be to pass as its
                                                               # `this`: that name, "object" for any, "" for none)
+    namespaces: tuple[str, ...] = ()                        # every namespace the file declares, block or file-scoped
 
     @classmethod
     def of(cls, facts: Any) -> CsTypes:
@@ -51,18 +53,31 @@ NONE = CsTypes({}, (), None, (), ())
 
 
 def type_facts(root: Node, src: bytes) -> CsTypes:
-    _, file_ns = namespaces(root, src)
+    declared, file_ns = namespaces(root, src)
     types: dict[str, CsType] = {}
-    usings: list[str] = []
+    usings: list[tuple[str | None, str]] = []
     for n in walk(root):
         if n.type == "using_directive":
             q = next((c for c in n.children if c.type in ("qualified_name", "identifier")), None)
             if q is not None:
-                usings.append(node_text(q, src))
+                usings.append((namespace_of(n, src), node_text(q, src)))
         elif n.type in TYPE_DECLARATIONS and n.child_by_field_name("name") is not None:
             types[node_text(n.child_by_field_name("name"), src)] = _type(n, src, file_ns)
     registrations = tuple(r for r in (_registration(n, src) for n in walk(root)) if r is not None)
-    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src))
+    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src), tuple(declared))
+
+
+def scopes(facts: CsTypes) -> Iterator[set[str | None]]:
+    """Where C# looks for a type's simple name from a file, in order: the namespace the code is in, then each one around
+    it out to the global namespace, each followed by the `using`s its declaration holds; the file's own `using`s come
+    last. A file that declares more than one namespace looks in all of them at each step out."""
+    parts = [ns.split(".") for ns in facts.namespaces]
+    for out in range(max(map(len, parts), default=0)):
+        here = {".".join(p[:len(p) - out]) for p in parts if len(p) > out}
+        yield here
+        yield {u for holder, u in facts.usings if holder in here}
+    yield {None}
+    yield {u for holder, u in facts.usings if holder is None}
 
 
 def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:

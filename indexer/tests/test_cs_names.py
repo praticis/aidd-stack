@@ -68,7 +68,6 @@ GET = 'await svc.HttpGet<string>("items");'
 HTTP_GET = 'await Http.HttpGet<string>("items");'
 TYPED = {("Api.Services.HttpService.HttpGet", "receiver-type")}
 WRAPPED = {("GET", "/items")}
-USING = "the using's homonym: the block namespace is not seen"
 HOMONYM = "the homonym type `Http`: a member the type inherits is read as a static access to a type"
 NOT_A_WRAPPER = "none: read as the type `Http`, which wraps no client"
 
@@ -83,19 +82,16 @@ def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
 
 
 CASES = [
-    case("a-type-of-the-block-namespace-before-a-using", TYPED, WRAPPED, resolver=USING, usings="using Api.Legacy;",
+    case("a-type-of-the-block-namespace-before-a-using", TYPED, WRAPPED, usings="using Api.Legacy;",
          params="HttpService svc", body=GET, **block("Api.Services")),
-    case("a-type-of-the-block-namespace", TYPED, WRAPPED, resolver="none: the block namespace is not seen", usings="",
-         params="HttpService svc", body=GET, **block("Api.Services")),
-    case("a-type-of-the-file-namespace-before-a-using", TYPED, WRAPPED,
-         resolver="none: the file's namespace and the using's count alike", usings="using Api.Legacy;",
+    case("a-type-of-the-block-namespace", TYPED, WRAPPED, usings="", params="HttpService svc", body=GET,
+         **block("Api.Services")),
+    case("a-type-of-the-file-namespace-before-a-using", TYPED, WRAPPED, usings="using Api.Legacy;",
          namespace="namespace Api.Services;", params="HttpService svc", body=GET),
     case("a-type-of-an-enclosing-namespace-before-a-using", {("Api.Ledger.Post", "receiver-type")},
-         resolver="the using's homonym: the namespaces around the file's are not seen", usings="using Api.Legacy;",
-         params="Ledger l", body="l.Post();"),
+         usings="using Api.Legacy;", params="Ledger l", body="l.Post();"),
     case("a-type-of-the-global-namespace-before-a-using", {("Clock.Tick", "receiver-type")},
-         resolver="the using's homonym: the global namespace is not seen", usings="using Api.Legacy;",
-         params="Clock c", body="c.Tick();"),
+         usings="using Api.Legacy;", params="Clock c", body="c.Tick();"),
     case("a-using-of-the-block-before-an-enclosing-namespace", {("Api.Legacy.Ledger.Post", "receiver-type")},
          inner="using Api.Legacy;", params="Ledger l", body="l.Post();", **block("Api.Items")),
     case("a-type-a-using-shows", {("Api.Legacy.Ledger.Post", "receiver-type")}, usings="using Api.Legacy;",
