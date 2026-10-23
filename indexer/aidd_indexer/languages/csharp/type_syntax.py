@@ -10,12 +10,15 @@ from ..base import node_text
 GENERIC_DECLARATIONS = ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration",
                         "method_declaration", "local_function_statement")
 NOT_TYPES = frozenset({"notnull", "unmanaged", "default"})   # constraints the grammar reads as a type's name
+ARRAY = "Array"                                              # what a value of any array type is: `System.Array`
 
 
 def type_text(node: Node | None, src: bytes) -> str | None:
     """`IAccountQuery`, `List<Foo>?`, `Microsoft.EntityFrameworkCore.DbSet<T>` → simple type name (`IAccountQuery`,
-    `List`, `DbSet`); None for var/predefined."""
+    `List`, `DbSet`); `Array` for `Foo[]`; None for var/predefined."""
     n = _named(node)
+    if n is not None and n.type == "array_type":
+        return ARRAY
     if n is not None and n.type == "generic_name":
         n = next((c for c in n.children if c.type == "identifier"), None)
     return node_text(n, src) if n is not None and n.type == "identifier" else None
@@ -42,9 +45,9 @@ def type_arguments(written: str) -> tuple[str, ...]:
 
 
 def _named(node: Node | None) -> Node | None:
-    """The name a written type ends in, past `?`, `[]` and a namespace."""
+    """The name a written type ends in, past `?` and a namespace; an array is no name of its element."""
     n = node
-    while n is not None and n.type in ("nullable_type", "array_type"):
+    while n is not None and n.type == "nullable_type":
         n = next((c for c in n.children if c.is_named), None)
     return n.child_by_field_name("name") if n is not None and n.type == "qualified_name" else n
 
