@@ -68,17 +68,14 @@ GET = 'await svc.HttpGet<string>("items");'
 HTTP_GET = 'await Http.HttpGet<string>("items");'
 TYPED = {("Api.Services.HttpService.HttpGet", "receiver-type")}
 WRAPPED = {("GET", "/items")}
-HOMONYM = "the homonym type `Http`: a member the type inherits is read as a static access to a type"
-NOT_A_WRAPPER = "none: read as the type `Http`, which wraps no client"
 
 
 def block(ns: str) -> dict:
     return {"namespace": f"namespace {ns}\n{{", "close": "}"}
 
 
-def case(id, edges, calls=frozenset(), resolver=None, scanner=None, **fields):
-    """`resolver` / `scanner`: what that side gives today when it is wrong, an xfail on that side."""
-    return id, fields, edges, set(calls), resolver, scanner
+def case(id, edges, calls=frozenset(), **fields):
+    return pytest.param(fields, (edges, set(calls)), id=id)
 
 
 CASES = [
@@ -96,33 +93,20 @@ CASES = [
          inner="using Api.Legacy;", params="Ledger l", body="l.Post();", **block("Api.Items")),
     case("a-type-a-using-shows", {("Api.Legacy.Ledger.Post", "receiver-type")}, usings="using Api.Legacy;",
          namespace="namespace Shop.Items;", params="Ledger l", body="l.Post();"),
-    case("a-member-a-base-of-the-repo-declares", TYPED, WRAPPED, resolver=HOMONYM, scanner=NOT_A_WRAPPER,
-         declaration=" : Feature", body=HTTP_GET),
-    case("a-member-a-base-two-levels-up-declares", TYPED, WRAPPED, resolver=HOMONYM, scanner=NOT_A_WRAPPER,
-         declaration=" : DeepFeature", body=HTTP_GET),
+    case("a-member-a-base-of-the-repo-declares", TYPED, WRAPPED, declaration=" : Feature", body=HTTP_GET),
+    case("a-member-a-base-two-levels-up-declares", TYPED, WRAPPED, declaration=" : DeepFeature", body=HTTP_GET),
     case("an-extension-of-the-members-type", {("Api.Services.HttpExtensions.Warm", "receiver-type")},
-         resolver="none: read as the type `Http`, whose name reaches no extension", declaration=" : Feature",
-         body="await Http.Warm();"),
-    case("a-member-another-part-of-the-type-declares", TYPED, WRAPPED, resolver=HOMONYM, scanner=NOT_A_WRAPPER,
-         partial="partial ", body=HTTP_GET, files={"Items/ItemsClient.Http.cs": OTHER_PART}),
+         declaration=" : Feature", body="await Http.Warm();"),
+    case("a-member-another-part-of-the-type-declares", TYPED, WRAPPED, partial="partial ", body=HTTP_GET,
+         files={"Items/ItemsClient.Http.cs": OTHER_PART}),
     case("the-types-own-member", TYPED, WRAPPED, body=HTTP_GET,
          members="    public HttpService Http { get; } = new HttpService(new HttpClient(), Urls.Base);"),
     case("a-static-call-on-the-type", {("Api.Services.Http.Reset", "receiver-type")}, body="await Http.Reset();"),
     case("a-call-on-the-types-name-reaches-no-extension", set(), body="await Http.Warm();"),
-    case("a-member-whose-type-is-outside-the-repo", set(), resolver=HOMONYM, declaration=" : LoggedFeature",
-         body=HTTP_GET),
+    case("a-member-whose-type-is-outside-the-repo", set(), declaration=" : LoggedFeature", body=HTTP_GET),
     case("a-name-a-base-outside-the-repo-may-declare", {("Api.Services.Http.Reset", "receiver-type")},
          declaration=" : ControllerBase", body="await Http.Reset();"),
 ]
-
-
-def _params(side: int):
-    """One side's expectation per case, an xfail where that side is wrong today."""
-    out = []
-    for id, fields, edges, calls, *wrong in CASES:
-        marks = pytest.mark.xfail(strict=True, reason=wrong[side]) if wrong[side] else ()
-        out.append(pytest.param(fields, (edges, calls)[side], id=id, marks=marks))
-    return out
 
 
 def _extract(root, fields: dict):
@@ -143,16 +127,16 @@ def _extract(root, fields: dict):
         return extract_and_resolve(RepoInfo(tenant="t", name="repo", ref="main", commit_sha="x", root=str(root)))
 
 
-@pytest.mark.parametrize("fields,edges", _params(0))
-def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, edges):
+@pytest.mark.parametrize("fields,expected", CASES)
+def test_a_name_reaches_what_csharp_means_by_it(tmp_path, fields, expected):
     res, rv = _extract(tmp_path, fields)
     names = {s.id: s.qualified_name for s in res.symbols}
     found = {(names[c.callee_id], c.strategy) for c in rv.calls if names.get(c.caller_id, "").endswith(".ItemsClient.Run")
              and c.strategy.startswith(("receiver-type", "inherited"))}
-    assert found == edges
+    assert found == expected[0]
 
 
-@pytest.mark.parametrize("fields,calls", _params(1))
-def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, calls):
+@pytest.mark.parametrize("fields,expected", CASES)
+def test_a_call_goes_through_the_wrapper_csharp_means(tmp_path, fields, expected):
     res, _ = _extract(tmp_path, fields)
-    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == calls
+    assert {(c.method, c.path) for c in res.http_calls if "ItemsClient" in c.evidence} == expected[1]

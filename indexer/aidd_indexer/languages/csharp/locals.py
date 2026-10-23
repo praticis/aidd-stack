@@ -25,7 +25,9 @@ CLASSES = ("class_declaration", "record_declaration", "struct_declaration")
 def receiver_type(call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
     """The type a call's receiver starts from, as the code writes it, and the members after it:
     `this._query.FindByIdAsync()` → (the enclosing type, ("_query",)). The enclosing type goes by its qualified name,
-    so that a type of the same simple name another namespace declares is not taken for it."""
+    so that a type of the same simple name another namespace declares is not taken for it. A capitalized name that is
+    no local, parameter or member of the declaration around the call is `name:(the enclosing type).Name`: a member a
+    base or another part of the type declares, or a type's name, which only the type service tells apart."""
     chain: list[str] = []
     n = receiver
     while n.type == "member_access_expression":
@@ -58,8 +60,8 @@ def _start(call: Node, n: Node, src: bytes, chain: tuple[str, ...]) -> tuple[str
         return (local, chain) if local else None
     if owner and ident in members(cls, src):                           # a field/property of the enclosing type
         return (owner, (ident, *chain))
-    if ident[:1].isupper():
-        return (ident, chain)                                          # static access: `Foo.Bar()` → type Foo
+    if ident[:1].isupper():                                            # a member the type inherits, or a type's name
+        return (f"name:({owner}).{ident}" if owner else f"name:{ident}", chain)
     return (owner, (ident, *chain)) if owner else None                 # inherited member of an in-repo base, maybe
 
 

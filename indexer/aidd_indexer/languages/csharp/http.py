@@ -22,7 +22,7 @@ from ...core.model import RepoInfo
 from ...core import ids
 from ...core.types import Unknown
 from .locals import receiver_type
-from .type_index import NOT_A_FILE, written_type
+from .type_index import start_of
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -1098,12 +1098,11 @@ class CsScanner(BaseScanner):
         method's result and the members after it read through the type service (a base's field, another part of a
         partial class, a field's field)."""
         found = receiver_type(at, recv, self.src)
-        if found is None or not found[1] and not found[0].startswith("call:"):
+        if found is None or not found[1] and not found[0].startswith(("call:", "name:")):
             return found[0].rpartition(".")[2] if found is not None else None
         view = self.ctx.view
         types = view.types.of("csharp") if view is not None and view.types is not None else None
-        cur = written_type(types, self.fx.file.path, found[0]) if types is not None else NOT_A_FILE
-        name = cur.name if not isinstance(cur, Unknown) else None
+        cur, name = start_of(types, self.fx.file.path, found[0])
         for member in found[1]:
             field = types.field(cur, member) if not isinstance(cur, Unknown) else cur
             if isinstance(field, Unknown):

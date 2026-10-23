@@ -21,7 +21,6 @@ UNDECLARED = Unknown("no file of the repo declares it")
 NO_FIELD = Unknown("neither the type nor a base it names declares that member")
 NO_METHOD = Unknown("neither the type nor its bases declare the method")
 NOT_A_NAME = Unknown("the method declares no result that is a name, or its overloads declare two")
-DEPTH = 4                                   # bases followed for a member a caller's own type inherits
 INTERFACE = re.compile(r"^I[A-Z]")
 
 
@@ -41,9 +40,36 @@ def ref(q: str) -> TypeRef:
     return TypeRef(package, name)
 
 
+def read_name(written: str) -> tuple[str | None, str]:
+    """`name:(O).X` → ("O", "X"), a capitalized name read inside the type `O`; `name:X` → (None, "X"); any other form
+    → (None, itself)."""
+    if not written.startswith("name:("):
+        return None, written.removeprefix("name:")
+    owner, _, name = written[6:].rpartition(").")
+    return owner, name
+
+
+def named(types: CsTypeIndex, file: str, written: str) -> tuple[TypeRef | Unknown, str]:
+    """A capitalized name: the member the type it is read inside has, with the type it writes, else the type named."""
+    owner, name = read_name(written)
+    member = types.member(owner, name) if owner else None
+    return (member.type, member.written) if member is not None else (types.type_named(name, file), name)
+
+
+def start_of(types: CsTypeIndex | None, file: str, written: str) -> tuple[TypeRef | Unknown, str | None]:
+    """The type a receiver's written start gives, and the simple name the code writes for it: a capitalized name's
+    member or its own name, or the name of the type found."""
+    if written.startswith("name:"):
+        return named(types, file, written) if types is not None else (NOT_A_FILE, read_name(written)[1])
+    cur = written_type(types, file, written) if types is not None else NOT_A_FILE
+    return cur, cur.name if not isinstance(cur, Unknown) else None
+
+
 def written_type(types: CsTypeIndex, file: str, written: str) -> TypeRef | Unknown:
-    """A receiver's type as the one answer writes it: a type's name, or `call:(R).a.M#await`, what the method `M`
-    returns, called on the member `a` of `R` (awaited)."""
+    """A receiver's type as the one answer writes it: a type's name, a capitalized name (`named`), or
+    `call:(R).a.M#await`, what the method `M` returns, called on the member `a` of `R` (awaited)."""
+    if written.startswith("name:"):
+        return named(types, file, written)[0]
     if not written.startswith("call:("):
         return types.type_named(written, file)
     close = written.rindex(")")
@@ -185,21 +211,20 @@ class CsTypeIndex(TypeIndex):
                 return seen[0] if len(seen) == 1 else None
         return None
 
-    def inherited_member_type(self, owner: str, member: str) -> str | None:
-        """Declared type of `member` on the type `owner` (qualified) or on its bases in this repo, a few levels up;
-        "" when a base outside the repo may declare it; None when no type of the chain has it."""
-        parts = self.parts(owner, last=True)
-        for _ in range(DEPTH):
-            if not parts:
-                return None
-            own = next((d.type.members[member] for d in parts if member in d.type.members), None)
-            if own is not None:
-                return own
-            base = next((bt for d in parts for b in d.type.bases if (bt := self.lookup(d.file, b)) is not None), None)
-            if base is None and any(not INTERFACE.match(b) for d in parts for b in d.type.bases):
-                return ""                                   # a class base outside the repo
-            parts = self.parts(base.qualified, last=True) if base is not None else []
+    def member(self, owner: str, name: str) -> Field | None:
+        """The member `name` that the type `owner` (qualified) declares in any of its parts, or that a class of the repo
+        it derives from declares, the nearest first; its type is read in the file that declares it. None when none
+        does."""
+        for t in self.ancestry(owner)[0]:
+            for d in self.parts(t, last=True):
+                if name in d.type.members and (t == owner or d.type.kind != "interface"):
+                    typ = self.lookup(d.file, d.type.members[name])
+                    return Field(ref(typ.qualified) if typ is not None else OUTSIDE, d.type.members[name], t != owner)
         return None
+
+    def class_base_outside(self, owner: str) -> bool:
+        """The type `owner` (qualified) derives from a class outside the repo, which may declare any member."""
+        return any(not INTERFACE.match(b) for b in self.ancestry(owner)[1])
 
     def explicit_interface(self, implementation: str, method: str) -> str | None:
         """The interface `implementation` implements `method` for explicitly, if it does."""
