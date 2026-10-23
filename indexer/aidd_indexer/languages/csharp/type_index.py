@@ -40,6 +40,12 @@ def ref(q: str) -> TypeRef:
     return TypeRef(package, name)
 
 
+def typed(t: CsType, written: str) -> str:
+    """A type `t`'s member writes `written` for its type: one of `t`'s type parameters is the one type its constraints
+    name, "" for none."""
+    return dict(t.params).get(written, written)
+
+
 class CsTypeIndex(TypeIndex):
     """A type is its namespace ("" for none) and its simple name."""
 
@@ -192,8 +198,9 @@ class CsTypeIndex(TypeIndex):
         for t in self.ancestry(owner)[0]:
             for d in self.parts(t, last=True):
                 if name in d.type.members and (t == owner or d.type.kind != "interface"):
-                    typ = self.lookup(d.file, d.type.members[name])
-                    return Field(ref(typ.qualified) if typ is not None else OUTSIDE, d.type.members[name], t != owner)
+                    written = typed(d.type, d.type.members[name])
+                    typ = self.lookup(d.file, written)
+                    return Field(ref(typ.qualified) if typ is not None else OUTSIDE, written, t != owner)
         return None
 
     def nested(self, owner: str, name: str) -> str | None:
@@ -268,12 +275,12 @@ class CsTypeIndex(TypeIndex):
     def _member(self, parts: list[Declared], name: str) -> tuple[str, FileInfo, bool] | None:
         for d in parts:
             if name in d.type.members:
-                return d.type.members[name], d.file, False
+                return typed(d.type, d.type.members[name]), d.file, False
         for d in parts:
             for b in d.type.bases:
                 bt = self.lookup(d.file, b)
                 found = next((p for p in self.parts(bt.qualified, last=True) if name in p.type.members), None) \
                     if bt is not None else None
                 if found is not None:
-                    return found.type.members[name], found.file, True
+                    return typed(found.type, found.type.members[name]), found.file, True
         return None

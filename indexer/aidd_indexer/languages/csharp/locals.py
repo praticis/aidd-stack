@@ -10,7 +10,8 @@ from tree_sitter import Node
 
 from ...tree import NodeCache
 from ..base import node_text
-from .type_facts import TYPE_DECLARATIONS, members, namespace_of, namespaces, outer_of, type_text
+from .type_facts import TYPE_DECLARATIONS, members, namespace_of, namespaces, outer_of
+from .type_syntax import bound_in_scope, type_text
 
 FUNCTIONS = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
              "anonymous_method_expression", "property_declaration", "accessor_declaration")
@@ -56,6 +57,8 @@ def _start(call: Node, n: Node, src: bytes, chain: tuple[str, ...]) -> tuple[str
         return None
     ident = node_text(n, src)
     local = local_type(ident, call, src)
+    bound = bound_in_scope(local, call, src) if local and not local.startswith("call:") else None
+    local = local if bound is None else bound                          # a type parameter: what its constraint names
     if local is not None:
         return (local, chain) if local else None
     if owner and ident in members(cls, src):                           # a field/property of the enclosing type

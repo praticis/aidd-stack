@@ -9,6 +9,7 @@ from typing import Any, Iterator, NamedTuple
 from tree_sitter import Node
 
 from ..base import node_text, walk
+from .type_syntax import type_parameters, type_text
 
 NAMESPACE_NODES = frozenset({"namespace_declaration", "file_scoped_namespace_declaration"})
 TYPE_DECLARATIONS = ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration")
@@ -24,13 +25,15 @@ class CsType(NamedTuple):
     bases: tuple[str, ...]                                  # the simple names its base list writes
     generic_bases: tuple[tuple[str, tuple[str, ...]], ...]  # `IRequestHandler<X, Y>` → ("IRequestHandler", ("X", "Y"))
     members: dict[str, str]                                 # field, property or primary-constructor parameter → the
-                                                            # simple name of its type
+                                                            # simple name of its type, or of a type parameter
     explicit: dict[str, str]                                # method → the interface it implements explicitly
     partial: bool                                           # one part of a type other files may declare more of
     results: dict[str, tuple[str, str]]                     # method → the simple name of the type it returns, and of
                                                             # the one `await` gives; "" for none, or for overloads
                                                             # that declare two
     outer: str = ""                                         # the types it is nested in, outermost first (`A.B`)
+    params: tuple[tuple[str, str], ...] = ()                # its type parameters, each with the one type its
+                                                            # constraints name ("" for none)
 
 
 class CsTypes(NamedTuple):
@@ -101,22 +104,9 @@ def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:
     return found, file_ns
 
 
-def type_text(node: Node | None, src: bytes) -> str | None:
-    """`IAccountQuery`, `List<Foo>?`, `Microsoft.EntityFrameworkCore.DbSet<T>` → simple type name (`IAccountQuery`,
-    `List`, `DbSet`); None for var/predefined."""
-    n = node
-    while n is not None and n.type in ("nullable_type", "array_type"):
-        n = next((c for c in n.children if c.is_named), None)
-    if n is not None and n.type == "qualified_name":
-        n = n.child_by_field_name("name")
-    if n is not None and n.type == "generic_name":
-        n = next((c for c in n.children if c.type == "identifier"), None)
-    return node_text(n, src) if n is not None and n.type == "identifier" else None
-
-
 def members(type_node: Node, src: bytes) -> dict[str, str]:
-    """Field/property/primary-constructor-parameter name → declared type (simple name); "" for one of the type's own
-    type parameters, which declares no type."""
+    """Field/property/primary-constructor-parameter name → declared type (simple name), which may be one of the type's
+    own type parameters."""
     out: dict[str, str] = {}
     pl = next((c for c in type_node.children if c.type == "parameter_list"), None)
     for prm in (pl.children if pl is not None else []):
@@ -128,14 +118,7 @@ def members(type_node: Node, src: bytes) -> dict[str, str]:
             _fields(out, m, src)
         elif m.type == "property_declaration":
             _declare(out, m.child_by_field_name("name"), m.child_by_field_name("type"), src)
-    own = _type_parameters(type_node, src)
-    return {name: "" if t in own else t for name, t in out.items()}
-
-
-def _type_parameters(n: Node, src: bytes) -> set[str]:
-    tps = n.child_by_field_name("type_parameters") \
-        or next((c for c in n.children if c.type == "type_parameter_list"), None)
-    return {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
+    return out
 
 
 def _declare(out: dict[str, str], name: Node | None, typ: Node | None, src: bytes) -> None:
@@ -163,7 +146,8 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
     # a file-scoped namespace: its declarations are siblings of it, not children
     partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
     return CsType(n.type.split("_")[0], namespace_of(n, src) or file_ns, bases, _generic_bases(bl, src),
-                  members(n, src), _explicit_impls(n, src), partial, _results(n, src), outer_of(n, src))
+                  members(n, src), _explicit_impls(n, src), partial, _results(n, src), outer_of(n, src),
+                  type_parameters(n, src))
 
 
 def outer_of(n: Node, src: bytes) -> str:
@@ -264,7 +248,7 @@ def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | No
         pl = n.child_by_field_name("parameters")
         first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
         if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
-            own = _type_parameters(n, src)
+            own = {p for p, _ in type_parameters(n, src)}
             t = type_text(first.child_by_field_name("type"), src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
                         _passes(first.child_by_field_name("type"), src, own)))
