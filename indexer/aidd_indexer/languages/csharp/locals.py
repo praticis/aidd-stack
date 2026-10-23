@@ -10,7 +10,7 @@ from tree_sitter import Node
 
 from ...tree import NodeCache
 from ..base import node_text
-from .type_facts import TYPE_DECLARATIONS, members, namespace_of, namespaces, type_text
+from .type_facts import TYPE_DECLARATIONS, members, namespace_of, namespaces, outer_of, type_text
 
 FUNCTIONS = ("method_declaration", "constructor_declaration", "local_function_statement", "lambda_expression",
              "anonymous_method_expression", "property_declaration", "accessor_declaration")
@@ -144,13 +144,14 @@ _FILE_NAMESPACE = NodeCache(lambda root, src: namespaces(root, src)[1])
 
 
 def qualified_name(type_node: Node, src: bytes) -> str:
-    """A type declaration's name as the type facts qualify it: its namespace, block or file-scoped, and its name."""
+    """A type declaration's name as the type facts qualify it: its namespace, block or file-scoped, the types it is
+    nested in, and its name."""
     root = type_node
     while root.parent is not None:
         root = root.parent
     ns = namespace_of(type_node, src) or _FILE_NAMESPACE.get(root, src)
     name = node_text(type_node.child_by_field_name("name"), src)
-    return f"{ns}.{name}" if ns else name
+    return ".".join(p for p in (ns, outer_of(type_node, src), name) if p)
 
 
 def _first_base(cls: Node, src: bytes) -> str | None:

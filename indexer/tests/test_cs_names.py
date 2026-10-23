@@ -159,7 +159,6 @@ CASES = [
     case("a-member-whose-type-is-a-type-parameter-goes-by-name", {("Api.Services.HttpService.Ping", "same-module")},
          declaration=" : Generic<HttpService>", body="Http.Ping();", every=True),
     case("a-member-of-a-caller-nested-in-another-type", TYPED, WRAPPED,
-         resolver="none: the caller's type is named without the type it is nested in", scanner="none, the same",
          inner="public class Outer\n{", close="}",
          members="    private readonly HttpService svc = new HttpService(new HttpClient(), Urls.Base);", body=GET),
     case("a-type-nested-in-a-base-of-the-callers", {("Api.Services.BaseController.Error.BadRequest", "receiver-type")},
