@@ -20,9 +20,9 @@ from ...core.http_scope import enclosing_function
 from ...core.http_wrappers import param_shape, wrapped_path
 from ...core.model import RepoInfo
 from ...core import ids
-from ...core.types import Unknown
 from .locals import receiver_type
-from .type_index import NOT_A_FILE, written_type
+from .type_syntax import bare
+from .written import member_name
 from .http_facts import (Action, Area, AreaRoute, AttrAction, AttrActionRoute, CharArray, ClientWrapper,
                          ClientWrapperCall, ConventionUse, CsClass, DefaultApiVersion, DefaultVersionRoute, FastBase,
                          FastEndpointRoutes, FeGroup, FeGroupRoute, FePrefix, FePrefixOverride, InheritedActions,
@@ -991,7 +991,8 @@ class CsScanner(BaseScanner):
                 at = fn.child_by_field_name("name") if fn.type == "member_access_expression" else None
                 self.add_endpoint(at or n, method or "ANY", p, "aspnet-minimal", arg_nodes[-1], router=recv_last)
                 return
-        if name in OUTBOUND and name.endswith("Async"):
+        # with no receiver, the call is the type's own method or a base's: a request only when given the request's verb
+        if name in OUTBOUND and name.endswith("Async") and ("." in callee or self.method_from_args(arg_nodes)):
             if name == "SendAsync" and arg_nodes and arg_nodes[0].type == "identifier":
                 val = self.resolve_local(arg_nodes[0])
                 if val is not None and val.type == "object_creation_expression" and "HttpRequestMessage" in text(val, self.src):
@@ -1098,18 +1099,11 @@ class CsScanner(BaseScanner):
         method's result and the members after it read through the type service (a base's field, another part of a
         partial class, a field's field)."""
         found = receiver_type(at, recv, self.src)
-        if found is None or not found[1] and not found[0].startswith("call:"):
-            return found[0].rpartition(".")[2] if found is not None else None
+        if found is None or not found[1] and not found[0].startswith(("call:", "name:")):
+            return bare(found[0]).rpartition(".")[2] if found is not None else None
         view = self.ctx.view
         types = view.types.of("csharp") if view is not None and view.types is not None else None
-        cur = written_type(types, self.fx.file.path, found[0]) if types is not None else NOT_A_FILE
-        name = cur.name if not isinstance(cur, Unknown) else None
-        for member in found[1]:
-            field = types.field(cur, member) if not isinstance(cur, Unknown) else cur
-            if isinstance(field, Unknown):
-                return None
-            name, cur = field.written, field.type
-        return name
+        return member_name(types, self.fx.file.path, found[0], found[1])
 
     def _flurl_path(self, n: Node) -> str | None:
         """URL built by Flurl chaining: base.AppendPathSegment("orders").AppendPathSegment(id).SetQueryParam(...)."""

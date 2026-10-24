@@ -182,12 +182,11 @@ class LanguageSupport:
         method of *that* type among homonyms (strategy `receiver-type`)."""
         return None
 
-    def external_receiver(self, ctx: ResolveContext, file: "FileInfo", receiver_type: str, path: tuple[str, ...],
-                          owner: str | None = None) -> str | None:
+    def external_receiver(self, ctx: ResolveContext, file: "FileInfo", receiver_type: str,
+                          path: tuple[str, ...]) -> str | None:
         """The receiver's type when it is named in the code and declared outside the repo (`Substitute.For<T>()`, a
         `Fixture fixture`, an `ILogger _logger`): a method on it is the package's, so the resolver does not guess a
-        homonym of the repo by name — except an extension method (`is_extension_method`). `owner`: the caller's type,
-        whose inherited members a capitalized receiver may name. None otherwise."""
+        homonym of the repo by name — except an extension method (`is_extension_method`). None otherwise."""
         return None
 
     def is_extension_method(self, ctx: ResolveContext, symbol: "SymbolInfo", receiver_type: str | None = None,
@@ -196,10 +195,12 @@ class LanguageSupport:
         `receiver_type` when it is known, on anything when the receiver's type is `unknown`."""
         return False
 
-    def extension_methods(self, ctx: ResolveContext, symbols: list["SymbolInfo"],
-                          qualified_type: str) -> list[tuple[list["SymbolInfo"], str]]:
+    def extension_methods(self, ctx: ResolveContext, symbols: list["SymbolInfo"], qualified_type: str,
+                          written: str = "") -> list[tuple[list["SymbolInfo"], str]]:
         """Among `symbols`, the methods of the repo a call on a value of the repo's `qualified_type` reaches when no
-        method of the type takes its arguments (C# extension methods), with the strategy that found them."""
+        method of the type takes its arguments (C# extension methods), with the strategy that found them. `written`:
+        the receiver's type as `call_receiver` wrote it, when no member follows it: it tells a value from a type's
+        name."""
         return []
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:

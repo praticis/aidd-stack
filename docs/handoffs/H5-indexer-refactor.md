@@ -9,7 +9,7 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-29`).
 >
-> **State (2026-10-22):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
+> **State (2026-10-23):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
 > 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
 > The rest follows in new PRs, each validated on a live install before its merge. Each is a refactor under the gates,
 > except step 5's changes of behavior, which are judged (H5-D10, H5-D12).
@@ -91,13 +91,18 @@
 >   a typed receiver, and a type written with its namespace and type arguments. Judged by case; the corpus and the
 >   hold-out are unchanged, so the baseline stays `-29`. "C#'s change of behavior" below has the results. Two more gaps
 >   of what a name means in C# go in a PR of their own, right after (H5-D17).
+> - **Step 5, what a name means in C# (H5-D17, a `fix(csharp)` PR, done on 2026-10-23, before its review).** A type's
+>   simple name looked up as C# does, a capitalized member, nested types, `global using`, a type parameter's
+>   constraint and type argument, an array, an extension block, and a call with no receiver. Judged by case; the corpus
+>   and the hold-out are unchanged, so the baseline stays `-29`. "What a name means in C#" below has the results and
+>   what stays out.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
 >   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
 >     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
 >     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
->     PR #19. C#'s refactor and its change of behavior are done. Next: the `fix(csharp)` of H5-D17, then Python and
+>     PR #19. C#'s refactor, its change of behavior and the `fix(csharp)` of H5-D17 are done. Next: Python, then
 >     TS;
 >   - 6 (recognizers with a YAML catalog, one language per commit);
 >   - 12 (the rest of the code to the shape targets, H5-D6);
@@ -610,6 +615,141 @@ Every xfail of the three tables is gained, and no guard is lost.
   C# repos 279 and 274 s; the others, whose code did not change, 533 and 502 s). Full dry-runs of umbraco, elsa,
   bitwarden and smartstore, which run the resolver, take the same time on both.
 
+### What a name means in C# (H5-D17)
+
+C#'s change of behavior gave one answer to a name's type, but the answer still read a name in ways C# does not. A
+type's simple name skipped a block namespace and the namespaces around the code, a capitalized member was read as a
+homonym type, and a type parameter was read as a type outside the repo. The fix reads each as C# does:
+
+- **A type's simple name** is looked up in the namespace the code is in, then in each one around it out to the global
+  namespace, each followed by the `using`s its declaration holds; the file's own `using`s come last, with every
+  `global using` of its project. Of the global namespace, only the file's own project counts: other projects keep
+  their programs there (bitwarden's `Program`).
+- **A type nested in another** is no name of its namespace. Only the file that declares it, and the types deriving
+  from the one it is in, see it by its simple name, and it is named with the types around it on both sides
+  (`BaseController.Error`).
+- **A capitalized name** the caller's type has as a member, on it, on another of its parts or on a base of the repo, is
+  that member; else a type nested in the caller's type or a base of it; else a type. With a base outside the repo,
+  which may declare the name, it is still read as a type's, and a member after it is a value an extension may take
+  (smartstore's `EngineContext.Current.ResolveService<T>()`).
+- **A value typed by a type parameter** has the type argument given for it: by the type a local, a parameter or a
+  method's result writes (`SutProvider<CiphersController> sutProvider`, `Task<Provider<IPaymentMethod>>`), or by the
+  base lists down from the caller's type (`AddFixture : CoreTest<PendingReleaseService>`, whose `TestBase<TSubject>`
+  declares `Subject`). Failing that, it has the type its one constraint names (`where TItem : NavigationItem`); with
+  none, or more than one, it declares none, and its call goes by name. A method's result typed by one is given its
+  argument too, and an extension whose `this` is one takes a value of the type its constraint names (smartstore's
+  `GetLocalized<T>(this T entity) where T : class, ILocalizedEntity`).
+- **A value of an array type** is the array, `System.Array`, a type outside the repo, never a value of its element's
+  type. A call on it reaches the repo's extension methods only.
+- **A method of an extension block** (C# 14, `extension(byte[] value) { public byte[] Unzip() .. }`) that is not static
+  extends the block's receiver.
+- **A call with no receiver** is a method of the caller's type or a base of it, never an `HttpClient`'s: smartstore's
+  `CompositeFileSystem.GetAsync(subpath, ..)` was read as a client call, which made `GetDirectoryAsync("images/flags")`
+  a request. It is a request only when it is given the request's verb, as bitwarden's
+  `SendAsync(HttpMethod.Post, "push/register", body)`, which its `BaseIdentityClientService` sends.
+
+The code:
+
+- `languages/csharp/type_syntax.py` reads how C# writes a type: its simple name, the type arguments it passes, and the
+  type parameters a declaration introduces with what their constraints name;
+- `languages/csharp/written.py` reads the receiver's written start through the `CsTypeIndex`, with the type arguments
+  it is given, then the members after it, for the resolver and the scanner alike;
+- the `CsTypeIndex` answers what each type parameter of a type and of its bases is (`bindings`), and a method's result
+  with its type arguments (`result_of`);
+- `languages/csharp/wiring.py` holds the DI chain and the mediator's handlers, which left `type_index.py` to keep it
+  under 300 lines.
+
+**Done (2026-10-23).** Thirty commits: thirteen of cases, each followed by the fixes that pass them, seventeen, each
+measured against the commit before. The cases (`indexer/tests/test_cs_names.py`, 42 of them) are each checked on both
+sides, the resolver's edges and the scanner's calls through a client wrapper. In order:
+
+1. the namespaces around the code before the `using`s;
+2. a capitalized name the caller's type has as a member;
+3. a type nested in another;
+4. the global namespace, from the file's own project only;
+5. a call with no receiver;
+6. a member after a type's name is a value; a member typed by a type parameter declares no type; the nested caller
+   named with its outer types; a type nested in a base of the caller's;
+7. a call with no receiver given the request's verb;
+8. `global using`;
+9. a type parameter's one constraint;
+10. the type argument a base list or the receiver's type gives;
+11. an extension whose `this` is a type parameter;
+12. a method's result keeps its type arguments;
+13. an array is no value of its element's type;
+14. a method of an extension block.
+
+Each judgment found what the next fixes closed: the nested types the namespaces' lookup took for top-level ones
+(`Attempt`, `RootObject`); the other project's `Program`; the no-receiver call that dropped bitwarden's seven relay
+calls; the members typed by a type parameter that a constraint, a base list or a result types; the arrays that
+the constraints exposed; and the extension blocks that a typed receiver no longer reaches by name.
+
+- **The corpus and the hold-out:** `0 repo(s) differ` against `-29` and `-26` at the last commit. In between, two
+  commits changed the corpus, and a later one undid each. The capitalized member (2) typed smartstore's
+  `WebRoot.GetDirectoryAsync("images/flags")`, which reached a "wrapper" built on the type's own `GetAsync`, a false
+  `GET /images/flags`; the call with no receiver (5) removed it. That one also dropped bitwarden's seven relay calls
+  (`POST /push/register` and the others, checked in its list), which the request's verb (7) brought back. No expected
+  list changes, and the baseline stays `-29`.
+- **The micro set:** the 8 repos of other languages are identical, and so are clean-arch-dotnet and rapid-blazor. On
+  the other 13 C# repos, from `main`: +18,137 and −2,480 typed edges, +2,676 and −674 typed among overloads, +1,403
+  and −488 `inherited`, and +2,412 and −5,639 found by name. Judged by case on seeded samples, at each commit and from
+  `main`:
+  - a capitalized member is the member: umbraco's `ScopeProvider.CreateScope()` reaches `IScopeProvider`, jellyfin's
+    `LibraryManager.ParseName(..)` `ILibraryManager` and its implementation, umbraco's `Database.Execute(..)`
+    `IUmbracoDatabase`, and notifo's `Mediator.SendAsync(..)` `IMediator` and `DefaultMediator`. `main` read each as
+    a static call on the homonym class;
+  - the type arguments: bitwarden's `sutProvider.Sut.X()`, about 4,200 sites in its tests, reaches the class under
+    test, and radarr's `Subject.X()`, about 1,500, the fixture's subject. umbraco's `MediaEditingService` calls
+    `ContentService.SortChildren(..)` on `IMediaService` and `MediaService`, where `main` took `ContentService`'s;
+    smartstore's `provider.Value.GetPaymentSummaryAsync()` reaches `IPaymentMethod` through
+    `Task<Provider<IPaymentMethod>>`;
+  - the constraints: radarr's `Settings.Validate()` reaches `IProviderConfig`, smartstore's `Item.Route(..)` the
+    `INavigatable` extension, and smartstore's `product.GetLocalized(x => x.Name)`, an `inherited` edge on `main`, the
+    extension;
+  - a type nested in a base: bitwarden's `Error.BadRequest(..)` reaches `BaseBillingController.Error`, where `main`
+    guessed between two bases' `Error`;
+  - the `global using`s type elsa's secret managers and azure-saas's tenant DTOs, and eshop's `mediator.Send(command)`
+    reaches `CancelOrderCommandHandler.Handle`;
+  - an array's `Tags.Contains("Kids", ..)` reaches jellyfin's `EnumerableExtensions.Contains`, and the `inherited`
+    edges to an array's element type go;
+  - the extension blocks: elsa's `context.HasScheduledActivity(..)`, an `inherited` edge on `main`, reaches
+    `ActivityExecutionContextExtensions`;
+  - the guesses by name that go were wrong: a mock's `.Setup(..)` sent to a test class's `Setup`, `Collector.Dispose()`
+    to another class's, radarr's `movie.Tags.Remove(tag)` to a service, a `List.Add(..)` to
+    `WorkflowDictionaryExtensions.Add`, an `ICollection`'s `IsNullOrEmpty()` to the overload that takes an array.
+- **The time, alone,** on one image: the corpus took 259 s of wall time on `main` and 255 s on the branch. Full
+  dry-runs of umbraco, elsa, bitwarden and smartstore, which run the resolver, take the same time on both, within 2 s.
+- **What stays out.** Each item names a case to start from, for a later PR:
+  1. **Type arguments in the middle of a chain.** A member's type is kept by its simple name, so only the chain's start
+     (a local, a parameter, a method's result) and the base lists pass type arguments. A field `SutProvider<Foo> _sut`
+     and then `_sut.Sut.X()`, or a member `TreeNode<MenuItem> Node` and then `Node.Value.X()`, go by name. The way in:
+     keep members as `written_text` writes them and give the next field its type arguments.
+  2. **A method's own type parameters.** `T Get<T>()` and `Create<TFoo>()` take nothing from the call's type arguments
+     or its arguments; only the DI's `GetRequiredService<T>()` is read.
+  3. **A type parameter with more than one constraint** (`where T : IA, IB`) declares no type: a value of it has the
+     members of both, which one type cannot say.
+  4. **Nested type arguments** keep their outer name: `Map<string, List<Item>>` passes `List`, not `List<Item>`.
+  5. **Between extension overloads of one arity**, the one whose `this` names the receiver's type is not preferred to
+     one that takes an interface. smartstore's `customQuantities.IsNullOrEmpty()` on an `int[]` sees
+     `IsNullOrEmpty<T>(this T[]?)` and the block's `IsNullOrEmpty()` on `IEnumerable<T>`, and reaches neither. An
+     extension on an interface is also still taken for any receiver outside the repo (H5-D16), so an array's
+     `.Where(..)` reaches smartstore's `RuleQueryableExtensions.Where` among others.
+  6. **A capitalized name a base outside the repo may declare** goes by name, as on `main`. eshop's
+     `Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)` (`DbContext.Database`) reaches the
+     `OrderingContext`'s own `BeginTransactionAsync()`, though it takes no argument: the guess in the same file does
+     not check the count.
+  7. **A DI registration counts for the whole repo**, not for the project that runs it. eshop's WebApp and HybridApp
+     each register their `ProductImageUrlProvider`, so `ChatState`'s `_productImages.GetProductImageUrl(..)` has no
+     single implementation (one site that `main` had, because it did not see HybridApp's types).
+  8. **Other `using`s.** MSBuild's (`<Using Include=".."/>` in a `.csproj` or `Directory.Build.props`) are not read;
+     `using static X;` is read as a namespace, and an alias (`using A = B.C;`) is not read.
+  9. **A namespace nested in a block one** (`namespace A { namespace B { } }`) is named `B`, not `A.B`.
+  10. **`this.x` two bases up.** `field()` looks one base up, where `member()` reads the whole chain.
+  11. **Project references are not read.** A type of the global namespace counts only from its own project, but a
+      namespaced type of a project the file's project does not reference is still seen.
+  12. **An extension block's static members** (`Type.M()`) and its extension properties are not read.
+  13. **An array's element where C# reads it:** `arr[0].M()` and `foreach (var x in arr)` still type nothing.
+
 ## Decisions made (2026-10-18, by the author)
 
 - **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
@@ -698,6 +838,12 @@ Every xfail of the three tables is gained, and no guard is lost.
   found a second case: a capitalized name that is a member the caller's type inherits from a base of the repo is read
   as a static access to a homonym type. In elsa's features, `Module.UseWorkflowManagement(..)` is `FeatureBase.Module`,
   an `IModule`. `main` has no edge there either.
+
+  Widened on 2026-10-23, by the author: what the PR's judgment found of the same kind goes in it, even if the scope
+  grows, and what does not is recorded in detail. In: the namespaces around the code, a type nested in another, the
+  global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
+  result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
+  under "What a name means in C#".
 
 ## Pitfalls
 

@@ -18,9 +18,12 @@ from ...core.model import FileInfo
 from ...core.types import RepoTypes, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
-from .locals import local_type, new_type, receiver_type as declared_receiver
+from .locals import local_type, new_type, read_name, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
-from .type_index import CsTypeIndex, qualified, ref as type_ref, written_type
+from .type_index import CsTypeIndex, qualified, ref as type_ref
+from .type_syntax import bare
+from .wiring import di_chain, handlers
+from .written import arguments, follow, named, start
 
 HERE = Path(__file__).parent
 
@@ -93,13 +96,13 @@ class CSharpSupport(LanguageSupport):
             return None
         made = new_type(expr, src)
         if made or expr.type != "identifier":
-            return made
+            return bare(made) if made else made
         found = local_type(node_text(expr, src), call, src, prefer_new=True)
-        return found if found and not found.startswith("call:") else None
+        return bare(found) if found and not found.startswith("call:") else None
 
     def message_handlers(self, ctx: ResolveContext, file: FileInfo, message_type: str,
                          handler_bases: frozenset[str]) -> list[str]:
-        return self._types(ctx).handlers(file, message_type, handler_bases)
+        return handlers(self._types(ctx), file, message_type, handler_bases)
 
     def type_index(self, ctx: ResolveContext) -> CsTypeIndex:
         return CsTypeIndex(ctx)
@@ -112,34 +115,28 @@ class CSharpSupport(LanguageSupport):
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
         types = self._types(ctx)
-        cur = written_type(types, file.path, receiver_type)
-        for member in path:
-            if isinstance(cur, Unknown):
-                return None
-            found = types.field(cur, member)
-            cur = found.type if not isinstance(found, Unknown) else found
+        cur, args = start(types, file.path, receiver_type)
+        cur = follow(types, cur, path, args)
         return qualified(cur) if not isinstance(cur, Unknown) else None
 
-    def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...],
-                          owner: str | None = None) -> str | None:
+    def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
+                          path: tuple[str, ...]) -> str | None:
         """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
-        (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`). A name before a path
-        (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member (inherited from a base
-        outside the repo) or a name two repo types share says nothing, and so does a method's result."""
+        (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`, or `Logger` that a base
+        declares). A name before a path (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member
+        or a name two repo types share says nothing, and so does a method's result."""
         types = self._types(ctx)
         if receiver_type.startswith("call:"):
             return None
-        cur = types.type_named(receiver_type, file.path)
-        if isinstance(cur, Unknown) and not path and owner:
-            # `ParentId.IsEmpty()`: a capitalized name that is not a type may be a member the caller's type inherits —
-            # from a base outside the repo too (`HttpContext` of a controller), and then nothing is known
-            mt = types.inherited_member_type(owner, receiver_type)
-            if mt is not None:
-                return mt if mt and not types.is_type_name(mt) else None
+        owner, name = read_name(receiver_type)
+        cur, written = named(types, file.path, receiver_type)
         if isinstance(cur, Unknown):
-            return receiver_type if not path and not types.is_type_name(receiver_type) else None
+            # `HttpContext.X()` in a controller: a base outside the repo may declare the name, and then nothing is known
+            hidden = owner is not None and types.member(owner, name) is None and types.class_base_outside(owner)
+            return written if not path and not hidden and not types.is_type_name(written) else None
+        args = arguments(types, file.path, receiver_type)
         for member in path:
-            found = types.field(cur, member)
+            found, args = types.field(cur, member, args), ()
             if isinstance(found, Unknown):
                 return None
             if isinstance(found.type, Unknown):
@@ -159,11 +156,16 @@ class CSharpSupport(LanguageSupport):
                 return loose or this_type == receiver_type if (receiver_type or unknown) else True
         return False
 
-    def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str) -> list[tuple[list, str]]:
+    def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str,
+                          written: str = "") -> list[tuple[list, str]]:
         """Those whose `this` takes the type or a base of it, an interface it names included, the nearest first. Failing
         that, the only one that takes any value; on a type with a base outside the repo, only when no other method of
-        the repo has its name, since that base may declare the method."""
+        the repo has its name, since that base may declare the method. A call on a type's name (`Type.M()`) has no
+        value to extend."""
         types = self._types(ctx)
+        owner, name = read_name(written)
+        if written.startswith("name:") and (owner is None or types.member(owner, name) is None):
+            return []
         chain, outside = types.ancestry(qualified_type)
         near: dict[int, list] = {}
         anything = []
@@ -199,7 +201,7 @@ class CSharpSupport(LanguageSupport):
     def implementation_target(self, ctx: ResolveContext, qualified_type: str, method: str,
                               from_type: str | None = None) -> str | None:
         types = self._types(ctx)
-        chain = types.di_chain(qualified_type)
+        chain = di_chain(types, qualified_type)
         if chain:
             if from_type in chain:                       # a decorator calling the instance it wraps: the next one inward
                 i = chain.index(from_type)

@@ -4,11 +4,12 @@ They hold no tree node, so they travel; the resolver reads them across files."""
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, Iterator, NamedTuple
 
 from tree_sitter import Node
 
 from ..base import node_text, walk
+from .type_syntax import type_parameters, type_text, written_text
 
 NAMESPACE_NODES = frozenset({"namespace_declaration", "file_scoped_namespace_declaration"})
 TYPE_DECLARATIONS = ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration")
@@ -24,22 +25,29 @@ class CsType(NamedTuple):
     bases: tuple[str, ...]                                  # the simple names its base list writes
     generic_bases: tuple[tuple[str, tuple[str, ...]], ...]  # `IRequestHandler<X, Y>` → ("IRequestHandler", ("X", "Y"))
     members: dict[str, str]                                 # field, property or primary-constructor parameter → the
-                                                            # simple name of its type
+                                                            # simple name of its type, or of a type parameter
     explicit: dict[str, str]                                # method → the interface it implements explicitly
     partial: bool                                           # one part of a type other files may declare more of
-    results: dict[str, tuple[str, str]]                     # method → the simple name of the type it returns, and of
-                                                            # the one `await` gives; "" for none, or for overloads
-                                                            # that declare two
+    results: dict[str, tuple[str, str]]                     # method → the type it returns, and the one `await`
+                                                            # gives, as `written_text` writes them; "" for none, or
+                                                            # for overloads that declare two
+    outer: str = ""                                         # the types it is nested in, outermost first (`A.B`)
+    params: tuple[tuple[str, str], ...] = ()                # its type parameters, each with the one type its
+                                                            # constraints name ("" for none)
 
 
 class CsTypes(NamedTuple):
     types: dict[str, CsType]                                # simple name → the file's last declaration of it
-    usings: tuple[str, ...]
+    usings: tuple[tuple[str | None, str], ...]              # (the block namespace whose declaration holds it, None
+                                                            # for the file's own; the namespace it imports)
     file_ns: str | None                                     # a file-scoped namespace
     registrations: tuple[tuple[str, tuple[str, str]], ...]  # (`AddScoped`, `Decorate`.., (interface, implementation))
     extensions: tuple[tuple[str, int, str | None, str], ...]  # (name, line, the simple name of the type it extends,
                                                               # and what a value of a repo type must be to pass as its
                                                               # `this`: that name, "object" for any, "" for none)
+    namespaces: tuple[str, ...] = ()                        # every namespace the file declares, block or file-scoped
+    global_usings: tuple[str, ...] = ()                     # what its `global using`s import into every file of
+                                                            # its project
 
     @classmethod
     def of(cls, facts: Any) -> CsTypes:
@@ -51,18 +59,36 @@ NONE = CsTypes({}, (), None, (), ())
 
 
 def type_facts(root: Node, src: bytes) -> CsTypes:
-    _, file_ns = namespaces(root, src)
+    declared, file_ns = namespaces(root, src)
     types: dict[str, CsType] = {}
-    usings: list[str] = []
+    usings: list[tuple[str | None, str]] = []
+    project: list[str] = []
     for n in walk(root):
         if n.type == "using_directive":
             q = next((c for c in n.children if c.type in ("qualified_name", "identifier")), None)
-            if q is not None:
-                usings.append(node_text(q, src))
+            if q is not None and any(c.type == "global" for c in n.children):
+                project.append(node_text(q, src))
+            elif q is not None:
+                usings.append((namespace_of(n, src), node_text(q, src)))
         elif n.type in TYPE_DECLARATIONS and n.child_by_field_name("name") is not None:
             types[node_text(n.child_by_field_name("name"), src)] = _type(n, src, file_ns)
     registrations = tuple(r for r in (_registration(n, src) for n in walk(root)) if r is not None)
-    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src))
+    return CsTypes(types, tuple(usings), file_ns, registrations, _extension_methods(root, src), tuple(declared),
+                   tuple(project))
+
+
+def scopes(facts: CsTypes, project: frozenset[str] = frozenset()) -> Iterator[set[str | None]]:
+    """Where C# looks for a type's simple name from a file, in order: the namespace the code is in, then each one around
+    it out to the global namespace, each followed by the `using`s its declaration holds; the file's own `using`s come
+    last, with the `global using`s of its `project`. A file that declares more than one namespace looks in all of them
+    at each step out."""
+    parts = [ns.split(".") for ns in facts.namespaces]
+    for out in range(max(map(len, parts), default=0)):
+        here = {".".join(p[:len(p) - out]) for p in parts if len(p) > out}
+        yield here
+        yield {u for holder, u in facts.usings if holder in here}
+    yield {None}
+    yield {u for holder, u in facts.usings if holder is None} | project
 
 
 def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:
@@ -78,21 +104,9 @@ def namespaces(root: Node, src: bytes) -> tuple[list[str], str | None]:
     return found, file_ns
 
 
-def type_text(node: Node | None, src: bytes) -> str | None:
-    """`IAccountQuery`, `List<Foo>?`, `Microsoft.EntityFrameworkCore.DbSet<T>` → simple type name (`IAccountQuery`,
-    `List`, `DbSet`); None for var/predefined."""
-    n = node
-    while n is not None and n.type in ("nullable_type", "array_type"):
-        n = next((c for c in n.children if c.is_named), None)
-    if n is not None and n.type == "qualified_name":
-        n = n.child_by_field_name("name")
-    if n is not None and n.type == "generic_name":
-        n = next((c for c in n.children if c.type == "identifier"), None)
-    return node_text(n, src) if n is not None and n.type == "identifier" else None
-
-
 def members(type_node: Node, src: bytes) -> dict[str, str]:
-    """Field/property/primary-constructor-parameter name → declared type (simple name)."""
+    """Field/property/primary-constructor-parameter name → declared type (simple name), which may be one of the type's
+    own type parameters."""
     out: dict[str, str] = {}
     pl = next((c for c in type_node.children if c.type == "parameter_list"), None)
     for prm in (pl.children if pl is not None else []):
@@ -132,7 +146,19 @@ def _type(n: Node, src: bytes, file_ns: str | None) -> CsType:
     # a file-scoped namespace: its declarations are siblings of it, not children
     partial = any(c.type == "modifier" and node_text(c, src) == "partial" for c in n.children)
     return CsType(n.type.split("_")[0], namespace_of(n, src) or file_ns, bases, _generic_bases(bl, src),
-                  members(n, src), _explicit_impls(n, src), partial, _results(n, src))
+                  members(n, src), _explicit_impls(n, src), partial, _results(n, src), outer_of(n, src),
+                  type_parameters(n, src))
+
+
+def outer_of(n: Node, src: bytes) -> str:
+    """The types a declaration is nested in, outermost first: `Constants.Conventions` for its `Content`."""
+    names: list[str] = []
+    a = n.parent
+    while a is not None and a.type not in NAMESPACE_NODES:
+        if a.type in TYPE_DECLARATIONS and a.child_by_field_name("name") is not None:
+            names.insert(0, node_text(a.child_by_field_name("name"), src))
+        a = a.parent
+    return ".".join(names)
 
 
 def namespace_of(n: Node, src: bytes) -> str | None:
@@ -183,7 +209,7 @@ def _results(type_node: Node, src: bytes) -> dict[str, tuple[str, str]]:
         name = m.child_by_field_name("name") if m.type == "method_declaration" else None
         if name is not None:
             ret = m.child_by_field_name("returns") or m.child_by_field_name("type")
-            found = (type_text(ret, src) or "", _awaited(ret, src) or "")
+            found = (written_text(ret, src) or "", _awaited(ret, src) or "")
             out[node_text(name, src)] = found if out.get(node_text(name, src), found) == found else ("", "")
     return out
 
@@ -193,7 +219,7 @@ def _awaited(ret: Node | None, src: bytes) -> str | None:
     if ret is None or ret.type != "generic_name" or type_text(ret, src) not in ("Task", "ValueTask"):
         return None
     targs = next((c for c in ret.children if c.type == "type_argument_list"), None)
-    return type_text(next((c for c in targs.children if c.is_named), None), src) if targs is not None else None
+    return written_text(next((c for c in targs.children if c.is_named), None), src) if targs is not None else None
 
 
 def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:
@@ -212,30 +238,42 @@ def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:
 
 
 def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None, str], ...]:
-    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method: the
-    first parameter carries `this` — after attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this
-    Guid? g)`). The type is its simple name, None for a predefined type or one of the method's type parameters."""
+    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method. The
+    type is its simple name, None for a predefined type or one of the method's type parameters."""
     out = []
     for n in walk(root):
-        if n.type != "method_declaration" or n.child_by_field_name("name") is None:
-            continue
-        pl = n.child_by_field_name("parameters")
-        first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
-        if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
-            tps = n.child_by_field_name("type_parameters")
-            own = {node_text(c, src) for c in walk(tps) if c.type == "identifier"} if tps is not None else set()
-            t = type_text(first.child_by_field_name("type"), src)
+        found = _receiver(n, src) if n.type == "method_declaration" and n.child_by_field_name("name") else None
+        if found is not None:
+            typ, own = found[0].child_by_field_name("type"), found[1]
+            t = type_text(typ, src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
-                        _passes(first.child_by_field_name("type"), src, own)))
+                        _passes(typ, src, own)))
     return tuple(out)
 
 
-def _passes(t: Node | None, src: bytes, own: set[str]) -> str:
+def _receiver(m: Node, src: bytes) -> tuple[Node, dict[str, str]] | None:
+    """The parameter an extension method takes its value as, with the type parameters it may name: the first one, when
+    it carries `this` — after attributes, over lines (`static bool IsNullOrEmpty([NotNullWhen(false)] this Guid? g)`);
+    in an extension block (`extension(Guid? g) { .. }`), the block's, for a method that is not static."""
+    own = dict(type_parameters(m, src))
+    block = m.parent.parent if m.parent is not None and m.parent.type == "extension_body" else None
+    if block is not None:
+        static = any(c.type == "modifier" and node_text(c, src) == "static" for c in m.children)
+        rp = next((c for c in block.children if c.type == "receiver_parameter"), None)
+        return (rp, own | dict(type_parameters(block, src))) if rp is not None and not static else None
+    pl = m.child_by_field_name("parameters")
+    first = next((c for c in pl.children if c.type == "parameter"), None) if pl is not None else None
+    if first is not None and any(node_text(c, src) == "this" for c in first.children if c.type != "attribute_list"):
+        return first, own
+    return None
+
+
+def _passes(t: Node | None, src: bytes, own: dict[str, str]) -> str:
     """What a value of a type of the repo must be to pass as a `this` of type `t`: the simple name of the type `t`
-    names; "object" when any value passes (`object`, one of the method's type parameters); "" when none does (an array,
-    another predefined type)."""
+    names, or that one of the method's type parameters' constraint names; "object" when any value passes (`object`, a
+    type parameter with no such constraint); "" when none does (an array, another predefined type)."""
     n = next((c for c in t.children if c.is_named), None) if t is not None and t.type == "nullable_type" else t
     if n is not None and n.type == "predefined_type":
         return "object" if node_text(n, src) == "object" else ""
     name = type_text(n, src) if n is not None and n.type != "array_type" else None
-    return "object" if name in own else name or ""
+    return (own[name] or "object") if name in own else name or ""
