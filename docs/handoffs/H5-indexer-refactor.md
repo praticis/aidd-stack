@@ -91,7 +91,9 @@
 >   a typed receiver, and a type written with its namespace and type arguments. Judged by case; the corpus and the
 >   hold-out are unchanged, so the baseline stays `-29`. "C#'s change of behavior" below has the results. Two more gaps
 >   of what a name means in C# go in a PR of their own, right after (H5-D17).
-> - **Step 5, what a name means in C# (H5-D17, a `fix(csharp)` PR, done on 2026-10-23, before its review).** A type's
+> - **Step 5, what a name means in C# (H5-D17, a `fix(csharp)` PR, done on 2026-10-23; merged as PR #27 on
+>   2026-10-24; its validation after the merge, on a live install, passed on 2026-10-26, and the eleventh golden
+>   round that records it is still to be written: see `docs/indexer/validation-and-continuity.md`).** A type's
 >   simple name looked up as C# does, a capitalized member, nested types, `global using`, a type parameter's
 >   constraint and type argument, an array, an extension block, and a call with no receiver. Judged by case; the corpus
 >   and the hold-out are unchanged, so the baseline stays `-29`. "What a name means in C#" below has the results and

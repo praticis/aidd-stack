@@ -13,3 +13,6 @@ indexer/tests/mcp_it/**/obj/
 
 # MCP client config copied into each repo by setup/install.sh (template: setup/.mcp.json)
 /.mcp.json
+
+# local working data that names private tenants or repos (live pictures, golden calls); never versioned
+/.local/

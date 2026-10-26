@@ -4,6 +4,11 @@ Every check the CI runs on a pull request (`.github/workflows/indexer.yml`) is a
 a laptop. The shell scripts run in the indexer's Docker image with this tree mounted read-only. The corpus clones and
 runs live in `$AIDD_CORPUS_HOME` (default `~/.cache/aidd-corpus`), outside the repository.
 
+The image is `aidd-indexer:local`. CI builds it from `indexer/` alone (`docker build -t aidd-indexer:local indexer`),
+with no `.env`. The stack's `docker compose build` builds the same image, but needs an installed `.env`, since the
+compose file requires its variables. On a machine that runs the stack, rebuilding the tag also changes the image the
+live install uses.
+
 | Script | What it checks | Locally | CI job |
 |---|---|---|---|
 | `test.sh` | the tests, in the test image | `indexer/scripts/test.sh [pytest args]` | `tests` |
@@ -28,3 +33,18 @@ git log --format=%s origin/main..HEAD \
 A branch named `refactor/…` or `refact/…`, or one commit whose subject starts with `refactor:` or `refact:` (with or
 without a scope), makes the whole pull request a refactor, where any difference fails. The labels `holdout-measurement`
 and `graph-change` (`--label`) let a judged change through.
+
+## Local tools, which CI does not run
+
+The method's other steps, each in a folder of its own:
+
+- **`protocol/`:** the protocol on each commit, a micro comparison through fresh paths, the shape ratchet in the
+  image, timing alone;
+- **`judgment/`:** the micro graph's changes by kind and class, the loss analysis and the viewers;
+- **`probes/`:** a small repo's `CALLS`, a snippet's tree;
+- **`live/`:** the live install's picture, its golden calls and its dry-runs, before and after a merge. Their outputs
+  name the install's tenants, so they go outside the repository;
+- **`checks/`:** offline comparisons of expected lists and runs, the writer's mutation test, the walk's equivalence;
+- **`recovery/`:** lost scratchpad files rebuilt from a session's transcript.
+
+Where each one came from, what it needs and how far it was checked is in `docs/indexer/resource-catalog.md`.
