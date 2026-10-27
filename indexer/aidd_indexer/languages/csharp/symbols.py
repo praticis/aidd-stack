@@ -120,11 +120,12 @@ class CSharpSupport(LanguageSupport):
         return qualified(cur) if not isinstance(cur, Unknown) else None
 
     def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
-                          path: tuple[str, ...]) -> str | None:
-        """The type the receiver chain ends in is named and no type of this repo has that name: the receiver itself
+                          path: tuple[str, ...]) -> tuple[str, bool] | None:
+        """A type the receiver chain reaches is named and no type of this repo has that name: the receiver itself
         (`Substitute`, a `Fixture fixture`) or a member of a repo type (`ILogger _logger`, or `Logger` that a base
-        declares). A name before a path (`Company.Shop.Infrastructure.Dependencies`: a namespace), an unknown member
-        or a name two repo types share says nothing, and so does a method's result."""
+        declares); with whether the chain ends in it. A member after it (`_lazy.Value`) has a type the repo cannot read,
+        so the receiver is not that one. A name before a path (`Company.Shop.Infrastructure.Dependencies`: a namespace),
+        an unknown member or a name two repo types share says nothing, and so does a method's result."""
         types = self._types(ctx)
         if receiver_type.startswith("call:"):
             return None
@@ -133,28 +134,38 @@ class CSharpSupport(LanguageSupport):
         if isinstance(cur, Unknown):
             # `HttpContext.X()` in a controller: a base outside the repo may declare the name, and then nothing is known
             hidden = owner is not None and types.member(owner, name) is None and types.class_base_outside(owner)
-            return written if not path and not hidden and not types.is_type_name(written) else None
+            return (written, True) if not path and not hidden and not types.is_type_name(written) else None
         args = arguments(types, file.path, receiver_type)
-        for member in path:
+        for i, member in enumerate(path):
             found, args = types.field(cur, member, args), ()
             if isinstance(found, Unknown):
                 return None
             if isinstance(found.type, Unknown):
-                return found.written if not types.is_type_name(found.written) else None
+                return (found.written, i == len(path) - 1) if not types.is_type_name(found.written) else None
             cur = found.type
         return None
 
-    def is_extension_method(self, ctx: ResolveContext, symbol, receiver_type: str | None = None, unknown: bool = False) -> bool:
-        """An extension method that can take the receiver: with its type known, one extending that type; with it
-        `unknown`, one extending what may be anything — an interface, a type parameter, `object`, a predefined type
-        (`this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver)."""
+    def extension_fit(self, ctx: ResolveContext, symbol, package: str | None = None, ends: bool = False,
+                      generic: bool = False) -> str | None:
+        """How an extension method takes the receiver of a call only extensions can serve: one whose type is outside
+        the repo (`package`, which the chain `ends` in or only passes through), or unknown. None for one extending
+        another type than `package`, or than what may be anything (an interface, a type parameter, `object`, a
+        predefined type): `this WebApplicationFactory f` takes neither an `HttpClient` nor an unknown receiver.
+        "incompatible" when C# proves it cannot take the call: the call passes type arguments (`generic`) and neither
+        it nor its block declares type parameters; or the receiver's type is outside the repo, which no type of the
+        repo is, and the `this` is one. "compatible" when the `this` is the receiver's type or takes any value, and
+        "unknown" otherwise."""
         if symbol.kind != "method" or ctx.files_by_id[symbol.file_id].language != self.id:   # a homonym of another language
-            return False
-        for name, line, this_type, _ in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
+            return None
+        for name, line, this_type, passes, typed, arity in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions:
             if name == symbol.name and line == symbol.line_start:
-                loose = not this_type or this_type == "object" or bool(re.match(r"^I[A-Z]", this_type))
-                return loose or this_type == receiver_type if (receiver_type or unknown) else True
-        return False
+                if not (not this_type or this_type in ("object", package) or re.match(r"^I[A-Z]", this_type)):
+                    return None
+                if (generic and not typed) or (ends and this_type and this_type != package and self._types(ctx).lookup(
+                        ctx.files_by_id[symbol.file_id], this_type, arity) is not None):
+                    return "incompatible"
+                return "compatible" if (ends and this_type == package) or passes == "object" else "unknown"
+        return None
 
     def extension_methods(self, ctx: ResolveContext, symbols: list, qualified_type: str,
                           written: str = "") -> list[tuple[list, str]]:
@@ -232,7 +243,7 @@ class CSharpSupport(LanguageSupport):
 
 def _takes(ctx: ResolveContext, symbol) -> str | None:
     """What a value of a repo type must be to pass as the method's `this`; None when it is not an extension method."""
-    return next((passes for name, line, _, passes in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions
+    return next((passes for name, line, _, passes, *_ in CsTypes.of(ctx.facts.get(symbol.file_id)).extensions
                  if name == symbol.name and line == symbol.line_start), None)
 
 

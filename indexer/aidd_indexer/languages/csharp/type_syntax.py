@@ -33,6 +33,15 @@ def written_text(node: Node | None, src: bytes) -> str | None:
     return f"{name}<{', '.join(type_text(a, src) or '' for a in targs.children if a.is_named)}>" if targs else name
 
 
+def type_arity(node: Node | None) -> int:
+    """How many type arguments a written type passes: 1 for `ISet<T>`, 0 for `ISet` — C# tells types of one name
+    apart by it."""
+    n = _named(node)
+    targs = next((c for c in n.children if c.type == "type_argument_list"), None) \
+        if n is not None and n.type == "generic_name" else None
+    return sum(1 for a in targs.children if a.is_named) if targs is not None else 0
+
+
 def bare(written: str) -> str:
     """A written type without the type arguments `written_text` gives it."""
     return written.partition("<")[0]

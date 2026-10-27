@@ -17,6 +17,7 @@ from .config import is_test_path
 from .dispatch import DispatchRule
 from .extract import CALLABLE_KINDS, FileExtractor
 from .model import ExtractionResult, FileInfo, SymbolInfo
+from .nearest import fits, fitting, nearest, pruned
 
 TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
 
@@ -60,16 +61,6 @@ class Resolved:
     # declared namespace -> declaring file ids (C#). Not written to the graph: an import of a namespace
     # targets its Module, and conventions use this to see which files (hence which layer) it reaches.
     namespace_files: dict[str, list[str]] = field(default_factory=dict)
-
-
-def _fitting(syms: list[SymbolInfo], argc: int | None) -> list[SymbolInfo]:
-    """The symbols a call with `argc` arguments can reach (overloads by arity); unchanged when the count or the
-    arities are unknown, or when none fits."""
-    return [s for s in syms if _fits(s, argc)] or syms if len(syms) > 1 else syms
-
-
-def _fits(s: SymbolInfo, argc: int | None) -> bool:
-    return argc is None or s.arity is None or (s.arity[0] <= argc and (s.arity[1] is None or argc <= s.arity[1]))
 
 
 class Resolver:
@@ -144,22 +135,21 @@ class Resolver:
                         if not found[-1][0] and not inherited:
                             unresolved += 1
                     continue
+            fit = None                       # how each extension takes the receiver, when only extensions can serve it
             if c.receiver and caller_file is not None:
                 # a receiver whose type is a package's (`Substitute.For<T>()`, `fixture.Build<T>()`, `_logger.LogX()`),
                 # or a generic method on a receiver of unknown type (`builder.Services.Configure<T>()`): only the
                 # repo's extension methods can be the target — a homonym found by name is not
                 lang = languages.by_id(caller_file.language)
-                package = lang.external_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) \
-                    if lang is not None and c.receiver_type else None
+                package, ends = (lang.external_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path)
+                                 if lang is not None and c.receiver_type else None) or (None, False)
                 if lang is not None and (package or c.generic):
                     # an extension needs an instance (`Assert.Contains(..)` is the static class's own) and must take
                     # the arguments: the type's own method wins over it (`list.Contains(x)` is `List`'s)
                     static = package is not None and c.receiver == package and not c.receiver_path
-                    cands = [] if static else [s for s in cands if lang.is_extension_method(self.ctx, s, package, unknown=not package)
-                                                and _fits(s, c.arg_count)]
-                    if not cands:
-                        unresolved += 1
-                        continue
+                    fit = {} if static else {s.id: lang.extension_fit(self.ctx, s, package, ends, c.generic)
+                                             for s in cands if fits(s, c.arg_count)}
+                    cands = [s for s in cands if fit.get(s.id)]
             if not cands:
                 unresolved += 1
                 continue
@@ -167,29 +157,12 @@ class Resolver:
             if c.receiver and lang is not None and c.receiver in lang.parent_receivers:
                 unresolved += 1              # `base.X()` with the base type outside the repo (or implicit): the name fallback would only find the override itself
                 continue
-            same_file = [s for s in cands if s.file_id == c.file_id]
-            if same_file:
-                chosen, strat = same_file, "same-file"
-            else:
-                mod = caller_file.module_id if caller_file else None
-                same_mod = [s for s in cands if self.files_by_id[s.file_id].module_id == mod]
-                if same_mod:
-                    chosen, strat = same_mod, "same-module"
-                elif len(cands) == 1:
-                    chosen, strat = cands, "unique-name"
-                else:
-                    unresolved += 1
-                    continue
-            # `this.x()` / `self.x()` / `s.x()` with a receiver only makes sense for methods
-            if c.receiver and c.receiver not in ("this", "self", "cls"):
-                methods = [s for s in chosen if s.kind == "method"] or chosen
-                chosen = methods
-            if len(chosen) > 1:
-                # homonyms found by name: the argument count trims the guesses, it does not make one of them proven
-                strat += "-ambiguous"
-                chosen = _fitting(chosen, c.arg_count)[:3]
-            for s in chosen:
-                edges.append(CallEdge(c.caller_id, s.id, c.line, strat))
+            mod = caller_file.module_id if caller_file else None
+            picked = nearest(c, cands, self.files_by_id, mod) if fit is None \
+                else pruned(lambda found: nearest(c, found, self.files_by_id, mod), cands, fit)
+            if not picked:
+                unresolved += 1
+            edges.extend(CallEdge(c.caller_id, s.id, c.line, strat) for s, strat in picked)
         return edges, unresolved
 
     def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str]]:
@@ -199,9 +172,9 @@ class Resolver:
         impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
         impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
         found = [(typed, "receiver-type"), (impl_typed, "receiver-type-impl")]
-        if any(_fits(s, c.arg_count) for s in typed + impl_typed):
+        if any(fits(s, c.arg_count) for s in typed + impl_typed):
             return found
-        return lang.extension_methods(self.ctx, [s for s in cands if _fits(s, c.arg_count)], qtype,
+        return lang.extension_methods(self.ctx, [s for s in cands if fits(s, c.arg_count)], qtype,
                                       "" if c.receiver_path else c.receiver_type) or found
 
     def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
@@ -261,7 +234,7 @@ class Resolver:
         for t in [qtype] + lang.supertypes(self.ctx, qtype):
             hit = [s for s in cands if s.qualified_name == f"{t}.{name}"]
             if hit:
-                return _fitting(hit, argc)
+                return fitting(hit, argc)
         return []
 
     # -- imports ---------------------------------------------------------------------
