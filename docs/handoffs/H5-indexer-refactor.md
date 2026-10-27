@@ -23,7 +23,8 @@ review from the branch `fix/h5-csharp-extension-binding`.
 - An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
   the 106 changed edges. That review is the judgment (H7-D6): a person's check is not feasible today.
 - The inherited wrong edges it found, and the count of type arguments, are debts that do not block:
-  `docs/tech-debt.md` (TD-001 to TD-006), each with a strict xfail test.
+  `docs/tech-debt.md` (TD-001 to TD-006), each with a strict xfail test. The gaps H5-D16 and H5-D17 left out are
+  there too (TD-007 to TD-022).
 - Record: `docs/indexer/evidence/h5-d18.md`.
 
 **What is left for it:** CI, with `graph-change` applied by the author; the merge; the reinstall (the author's); the
@@ -542,17 +543,9 @@ Every xfail of the three tables is gained, and no guard is lost.
     `RoleManagerExtensions`, umbraco's `created.GetValue<string>(..)` to `DictionaryExtensions`, and btcpay's LINQ
     `invoices.Where(..)` to the `DbSet` one.
 - **What stays lost:** 188 edges to extension methods that `main` had. Most were guesses that the receiver's type
-  now proves wrong, as above. The rest is what H5-D16 leaves out:
-  - an instance method and an extension that take as many arguments, which only the arguments' types tell apart
-    (about 20 sites: smartstore's `_mediaService.GetUrl(file, thumbPictureSize, host)`, elsa's `Get(blockId)`);
-  - a form neither side reads, where the call goes back to a guess by name, or to none (about 20 sites). These are a
-    lambda parameter without a type (btcpay's `coin => coin.Value.GetValue(..)`, umbraco's `(source, target,
-    context) => target.EnableChangeTracking()`) and a `foreach` variable, typed or not;
-  - a member of a package's type, whose own type is not known (`_httpRequest.HttpContext.GetItemAsync(..)`, 3 sites);
-  - an extension of a type outside the repo on a type with a base outside it (notifo's
-    `user.Settings.GetOrDefault(..)`, 4 sites): that base may declare the method, as `DbContext.AddRange` and NPoco's
-    `ExecuteScalarAsync` do;
-  - the block namespace of H5-D17 (btcpay's `result.StoreData.GetStoreBlob()`).
+  now proves wrong, as above. The rest is what H5-D16 leaves out, now debts (`docs/tech-debt.md`): the arguments' types
+  between overloads (TD-004), a `foreach` variable and a lambda parameter (TD-007, TD-008), a member of a package's type
+  (TD-003), and a type with a base outside the repo (TD-009).
 - **The time, alone,** on one image: the corpus summed 812 s on `main` and 776 s on the branch, within the noise (the
   C# repos 279 and 274 s; the others, whose code did not change, 533 and 502 s). Full dry-runs of umbraco, elsa,
   bitwarden and smartstore, which run the resolver, take the same time on both.
@@ -661,36 +654,7 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
     `WorkflowDictionaryExtensions.Add`, an `ICollection`'s `IsNullOrEmpty()` to the overload that takes an array.
 - **The time, alone,** on one image: the corpus took 259 s of wall time on `main` and 255 s on the branch. Full
   dry-runs of umbraco, elsa, bitwarden and smartstore, which run the resolver, take the same time on both, within 2 s.
-- **What stays out.** Each item names a case to start from, for a later PR:
-  1. **Type arguments in the middle of a chain.** A member's type is kept by its simple name, so only the chain's start
-     (a local, a parameter, a method's result) and the base lists pass type arguments. A field `SutProvider<Foo> _sut`
-     and then `_sut.Sut.X()`, or a member `TreeNode<MenuItem> Node` and then `Node.Value.X()`, go by name. The way in:
-     keep members as `written_text` writes them and give the next field its type arguments.
-  2. **A method's own type parameters.** `T Get<T>()` and `Create<TFoo>()` take nothing from the call's type arguments
-     or its arguments; only the DI's `GetRequiredService<T>()` is read.
-  3. **A type parameter with more than one constraint** (`where T : IA, IB`) declares no type: a value of it has the
-     members of both, which one type cannot say.
-  4. **Nested type arguments** keep their outer name: `Map<string, List<Item>>` passes `List`, not `List<Item>`.
-  5. **Between extension overloads of one arity**, the one whose `this` names the receiver's type is not preferred to
-     one that takes an interface. smartstore's `customQuantities.IsNullOrEmpty()` on an `int[]` sees
-     `IsNullOrEmpty<T>(this T[]?)` and the block's `IsNullOrEmpty()` on `IEnumerable<T>`, and reaches neither. An
-     extension on an interface is also still taken for any receiver outside the repo (H5-D16), so an array's
-     `.Where(..)` reaches smartstore's `RuleQueryableExtensions.Where` among others.
-  6. **A capitalized name a base outside the repo may declare** goes by name, as on `main`. eshop's
-     `Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)` (`DbContext.Database`) reaches the
-     `OrderingContext`'s own `BeginTransactionAsync()`, though it takes no argument: the guess in the same file does
-     not check the count.
-  7. **A DI registration counts for the whole repo**, not for the project that runs it. eshop's WebApp and HybridApp
-     each register their `ProductImageUrlProvider`, so `ChatState`'s `_productImages.GetProductImageUrl(..)` has no
-     single implementation (one site that `main` had, because it did not see HybridApp's types).
-  8. **Other `using`s.** MSBuild's (`<Using Include=".."/>` in a `.csproj` or `Directory.Build.props`) are not read;
-     `using static X;` is read as a namespace, and an alias (`using A = B.C;`) is not read.
-  9. **A namespace nested in a block one** (`namespace A { namespace B { } }`) is named `B`, not `A.B`.
-  10. **`this.x` two bases up.** `field()` looks one base up, where `member()` reads the whole chain.
-  11. **Project references are not read.** A type of the global namespace counts only from its own project, but a
-      namespaced type of a project the file's project does not reference is still seen.
-  12. **An extension block's static members** (`Type.M()`) and its extension properties are not read.
-  13. **An array's element where C# reads it:** `arr[0].M()` and `foreach (var x in arr)` still type nothing.
+- **What stays out:** thirteen gaps, now debts (`docs/tech-debt.md`, TD-010 to TD-022), each with a strict xfail test.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -768,11 +732,9 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   is one type; a method's declared result counts on any type; a typed receiver reaches the repo's extension methods;
   and a type written with its namespace and type arguments is named by its last name. Each comes with its cases first.
   The one answer types more receivers, and its micro set lost the edges `main`'s guesses had found on them. Some
-  things stay out:
-  - a `foreach`, `out var` or pattern variable;
-  - the arguments' types between overloads of one arity;
-  - a member of a package's type;
-  - an extension of a type outside the repo on a type with a base outside it.
+  things stay out, now debts (`docs/tech-debt.md`, TD-003, TD-004, TD-007 to TD-009): a `foreach`, `out var` or pattern
+  variable, a lambda parameter, the arguments' types between overloads of one arity, a member of a package's type, and
+  an extension of a type outside the repo on a type with a base outside it.
 - **H5-D17 (2026-10-22), what a name means in C# goes in a `fix(csharp)` PR of its own, right after C#'s change of
   behavior.** The lookup counts a file's namespace only when it is file-scoped (`namespace X;`). In `namespace X { }`,
   a type of `X` loses to a homonym that a `using` shows: btcpay's `result.StoreData` reads as
@@ -784,8 +746,8 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   Widened on 2026-10-23, by the author: what the PR's judgment found of the same kind goes in it, even if the scope
   grows, and what does not is recorded in detail. In: the namespaces around the code, a type nested in another, the
   global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
-  result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
-  under "What a name means in C#".
+  result with its type arguments, an array, an extension block and a call with no receiver. Out: thirteen gaps, now
+  debts (TD-010 to TD-022).
 - **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by

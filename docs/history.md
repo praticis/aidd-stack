@@ -169,7 +169,7 @@
 - 2026-10-24: what a name means in C# merges as PR #27, a `fix(csharp)` (H5-D17). A type's simple name is looked up
   as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and type
   argument, an array and an extension block are read as C# reads them. It was judged by case on the corpus (baseline
-  `-29`) and on the micro set, and thirteen gaps stay out, recorded in the H5 handoff.
+  `-29`) and on the micro set, and thirteen gaps stay out, registered as debts on 2026-10-27 (`docs/tech-debt.md`).
   - Its validation after the merge was left open when the session that ran it stopped. Its method was recovered into
     `docs/indexer/`.
   - On 2026-10-26 the live install showed the graph identical but for the build, as the dry-runs said, and the 27
@@ -186,4 +186,5 @@
   the micro graph differs on 6 C# repos (−815 and +97 edges), an independent review of 189 items finds no wrong changed
   edge, and the live check before the merge is identical, though its snapshots hold none of the calls the change
   reaches. The author accepts the review as the judgment, registers the defects the fix leaves as debts
-  (`docs/tech-debt.md`) and decides that the judgment is to be automated (H7-D6).
+  (`docs/tech-debt.md`), moves the gaps H5-D16 and H5-D17 left out to the same register (TD-007 to TD-022) and decides
+  that the judgment is to be automated (H7-D6).

@@ -83,7 +83,7 @@ the document, then run the test again in another new session.
 | 3 | Its state of H5 matches the handoff, with dates, and it does not call an open gate passed |
 | 4 | It treated `.local/`, the corpus cache and the live install as missing by design, and did not try to recreate private evidence |
 | 5 | Its safe and authorized checks match method.md §2 |
-| 6 | It handled a semantic mismatch by judgment.md: judged at the source, one wrong item in a case blocks, a gap with a case |
+| 6 | It handled a semantic mismatch by judgment.md: judged at the source, one wrong item in a case blocks, a debt with a case |
 | 7 | Its prohibited actions include git mutations, a reinstall, live checks, running third parties' code, and copying private data into the repository |
 | 8 | It reported any contradiction between documents, or found none that is unexplained |
 | 9 | It stopped after the report |

@@ -24,8 +24,8 @@
   - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
     `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
     and C# (PRs #23, #25 and the `fix(csharp)` of H5-D17, #27) are merged and validated on a live install. A wrong edge
-    PR #27 exposed has a fix in review (H5-D18); the defects it leaves are debts (`docs/tech-debt.md`), two of them due in
-    a `fix(csharp)` PR before F1.2. Next, Python and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    PR #27 exposed has a fix in review (H5-D18); the defects it leaves, and the gaps H5-D16 and H5-D17 left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022);
+    TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, Python and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -294,7 +294,8 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004 (`docs/tech-debt.md`), C# defects `main` has, each with a strict xfail test. SCIP is
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012 and TD-015 (`docs/tech-debt.md`), C# defects `main` has, each
+    with a strict xfail test. SCIP is
     a possible remedy for them, not a proven one; the first case of TD-001 may be fixed in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot

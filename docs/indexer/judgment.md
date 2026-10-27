@@ -30,7 +30,7 @@ The commands that produce the differences are in [method.md](method.md).
 - **The rule that decides it:** the language's (for C#, "a name is what its nearest declaration in scope makes it";
   "only a declared type counts") or the list's.
 - **Never a guess.** What needs a type not declared in sight is `needs-resolver`: left out of the rule, recorded as a
-  gap with a case, and left to SCIP.
+  debt with a case, and left to SCIP.
 
 ## 4. The terms
 
@@ -51,7 +51,7 @@ What blocks or passes:
 | A gate fails (precision lower, a win lost, hold-out changed, micro changed without `graph-change`) | the PR fails; then judged whether the extractor regressed or the list is wrong |
 | A corpus item "to judge" | candidate until judged at its evidence line |
 | A micro difference in a change of behavior | candidate until judged by case. **One wrong item in a case blocks the PR** |
-| A loss of the PR's own kind | fixed in the PR. Another kind is a gap with a case |
+| A loss of the PR's own kind | fixed in the PR. Another kind is a debt with a case |
 | A live difference outside the change | blocks unless explained |
 | A new hold-out difference between H5's code and the commit before | an H5 regression, unless a judged case explains it |
 
@@ -63,13 +63,13 @@ What blocks or passes:
    and record only numbers.
 4. **Sample.** A seeded sample per case and repo, drawn from sorted sites. `chain_diff.py` draws `N` per kind across the
    repos it is given: give it one repo at a time for a sample per repo. Sizes are in method.md §4.4.
-5. **Decide.** `right`, `wrong` or `undecided`. When the source cannot decide, `undecided`, and a gap with a case.
+5. **Decide.** `right`, `wrong` or `undecided`. When the source cannot decide, `undecided`, and a debt with a case.
 6. **Record.**
    - a list edit, with `file:line` evidence, in its own commit;
    - a case as a test: a strict xfail with its reason on the wrong side, before the fix;
-   - a gap under "What stays out", with a case to start from.
+   - a gap, as a debt in `docs/tech-debt.md` with its strict xfail case.
 7. **Give it a status:** blocks, fixed in this PR, a debt that does not block (registered in `docs/tech-debt.md` with a
-   strict xfail test), a gap with a case, or explained.
+   strict xfail test), or explained.
 8. **Report judged and unjudged apart,** with the sample sizes. Tick a test-plan item only when it is done.
 
 A sample drawn now from a past diff is a new judgment, dated now, never the past one. A new case says when it was
