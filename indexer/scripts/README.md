@@ -16,6 +16,7 @@ live install uses.
 | `micro.sh`, with `micro.py` | the micro graph (files, symbols, `CALLS`, `IMPORTS`, violations): full dry-runs of 12 repos by `main` and by the tree, compared record by record | `indexer/scripts/micro.sh` | `micro` |
 | `gates.sh`, with `gates.py` | the method's gates over two corpus runs: the precision ratchet, no win lost, the hold-out untouched, a refactor that changes nothing, and the micro graph's verdict. It also decides whether the pull request is a refactor, from its branch and its commits | see below | `gates` |
 | `shape.py` | the shape ratchet: no function above complexity 9 and no module above 300 lines that is new, or worse than at the base | `python indexer/scripts/shape.py --against main` (needs `ruff`) | `shape`, required through `gates` |
+| `debts.py` | the register of technical debts: each case it names is a case of the debts' tests and the reverse, and the ROADMAP's lists of the open debts by due agree with it | `python3 -I indexer/scripts/debts.py` | `debts`, on every pull request |
 | `mcp-it.sh` | every atlas tool against a throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge keys | `indexer/scripts/mcp-it.sh` (after `test.sh`, which builds the test image) | `tests` |
 
 ## The gates, as CI runs them
