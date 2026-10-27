@@ -18,9 +18,9 @@ outputs. The tools are listed with their arguments in [`indexer/scripts/README.m
 | 6 | Judgment (changes only) | `scripts/judgment/` and [judgment.md](judgment.md) | no wrong item in any case |
 | 7 | Time | `scripts/protocol/time-alone.sh MAIN_WORKTREE BRANCH_WORKTREE` | no worse than `main` unless justified. Judged, never a gate |
 | 8 | PR and CI | the `gates` job | green; the labels `graph-change` and `holdout-measurement` only after judgment |
-| 9 | Live, before the merge | `scripts/live/pre-merge.sh` (§4.7) | dry-runs identical outside the change; picture and golden answers the same |
+| 9 | Live, before the merge | `scripts/live/validate.sh before` (§4.7) | dry-runs identical outside the change; picture and golden answers the same |
 | 10 | Merge, reinstall | the author only. `install.sh` copies the working tree, so `main` is checked out first | `install-check.sh` ends in "All checks passed" |
-| 11 | Live, after | picture, golden answers, graph against dry-runs (§4.8) | as step 9, plus the graph holds the branch's dry-run |
+| 11 | Live, after | `scripts/live/validate.sh after` (§4.8) | as step 9, plus the graph holds the branch's dry-run |
 | 12 | Record | a golden round, `docs/history.md`, the H5 handoff, the ROADMAP | each change supported by the evidence |
 
 A change to the extractor adds, before step 4: corpus `--baseline`, judgment at the source, the expected lists
@@ -44,7 +44,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 | 2. Offline analysis of saved artifacts | `judgment/` tools, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
 | 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/` | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
-| 5. Live install | `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
+| 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
 Whatever the class: never run the code of a corpus repo (they belong to third parties; read and measure through the
@@ -130,28 +130,65 @@ codes, compared with `cmp`, shows whether a refactor changed a fact.
 
 ### 4.7 Live, before the merge (class 5)
 
-`LIVE_DIR` is `.local/indexer/live/inflight`. It holds `main_src/indexer` and `head_src/indexer`, copies of the two
-codes (check each copy against `git ls-files` with `shasum`: copies get served stale). The golden calls file is
-`.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `live/golden-calls.example.json`
-shows its shape.
-
 ```sh
-indexer/scripts/live/pre-merge.sh LIVE_DIR GOLDEN_CALLS_JSON
+indexer/scripts/live/validate.sh before BEFORE_COMMIT AFTER_COMMIT   # main before the merge, and the merge
 ```
 
-It takes the graph's picture (`graph-picture.sh`), runs the golden calls, dry-runs every live snapshot with both
-codes (`dryrun-live.sh`, with `-w` on the mounted code), then compares them by section (`dry_sections.py`) and
-against the graph by merge key (`graph_vs_dry.py`). Take the "before" picture before the reinstall: afterwards it
-cannot be retaken, and it is taken afresh for each PR, not copied from `merged/after`: the snapshots move as the
-workspace repos change. Comparing the two is a consistency check.
+It works in `.local/indexer/live/inflight`. It extracts both codes from git and checks every file against it, and
+refuses unless the installed code is BEFORE_COMMIT's: the "before" is taken once, before the reinstall, never rewritten,
+and afresh for each PR, not copied from `merged/after`, because the snapshots move as the workspace repos change. Then it
+runs `pre-merge.sh`: the graph's picture (`graph-picture.sh`), the golden calls (`golden.py`, from
+`.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `golden-calls.example.json`
+shows its shape), the dry-runs of every live snapshot with both codes (`dryrun-live.sh`, with `-w` on the mounted code)
+and their comparison by section and against the graph (`dry_sections.py`, `graph_vs_dry.py`). It seals the folder in
+`SHA256SUMS` and prints counts.
 
 ### 4.8 Live, after the merge (class 5)
 
-After the author's reinstall: `graph-picture.sh LIVE_DIR/after`, `golden.py CALLS LIVE_DIR/after/golden` with the same
-calls file as before, `graph_vs_dry.py BEFORE AFTER DRY`, and `json_paths_diff.py A B` for each pair of answers. Pass
-criteria: the picture is identical but for the build and `IndexRun`; the graph holds the branch's dry-run on every
-snapshot; the answers are the same or differ only in time and build fields. When the PR is validated, delete
-`merged/` and rename `inflight/` to `merged/`.
+After the author's reinstall: `indexer/scripts/live/validate.sh after`. It refuses until the installed code is
+AFTER_COMMIT's and every snapshot has an ok run since the before (the refresh runs every 15 min). It takes the picture
+and the golden answers again, compares the graph with the dry-runs (`graph_vs_dry.py`) and each pair of answers
+(`json_paths_diff.py`), seals `SHA256SUMS.after` and prints counts. Pass criteria: the picture is identical but for the
+build and `IndexRun`; the graph holds the branch's dry-run on every snapshot; the answers are the same or differ only in
+time and build fields. When the PR is validated, `validate.sh rotate --yes` makes `inflight/` the new `merged/` and
+deletes the old one.
+
+### 4.9 Running the live validation
+
+A PR's pair lives in `.local/indexer/live/inflight`; `merged/` holds the last one. Each run of the agent's steps is
+class 5: ask for it. The reinstall is the author's.
+
+| # | Who | Command | Needs |
+|---|---|---|---|
+| 1 | agent | `indexer/scripts/live/validate.sh before BEFORE AFTER` | the install still on BEFORE's code; Docker and the stack up; `golden-calls.json` with its `SHA256SUMS` in `.local/indexer/live/`. About 2 min |
+| 2 | author | `install.sh` from `main`, then `install-check.sh` | the PR merged, `main` checked out and up to date |
+| 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and every snapshot re-indexed (the refresh runs every 15 min) |
+| 4 | agent | read the counts against §4.8; report numbers only | |
+| 5 | agent | `indexer/scripts/live/validate.sh rotate --yes` | `after/` taken, the PR's records done |
+
+AFTER is the commit that merged the PR on `main` (`git log --oneline -1 main` once it is merged) and BEFORE its first
+parent, `git rev-parse AFTER^1`, which is `main` before the merge, for a merge commit and for a squash alike.
+`AIDD_LIVE` (default `.local/indexer/live`) and `AIDD_HOME` (default `~/.aidd`) move the two folders it uses; a trial in
+a scratch folder sets both. The scripts print counts, never names: the live install's tenants, repositories and answers
+stay out of chats, PRs and docs.
+
+It refuses with exit code 2 and says why:
+
+| It says | What to do |
+|---|---|
+| `inflight exists: the before is taken once` | the PR there is validated: `rotate --yes`; if not, ask the author |
+| `the installed code is not X's: the before can only be taken before the reinstall` | the install already moved, so this PR has no "before": say so in the record and ask the author |
+| `the golden calls file does not match SHA256SUMS` | ask the author; the file is private and never regenerated |
+| `a container sees other files than the host's` | a folder recreated at one path is served stale: use another `AIDD_LIVE` |
+| `the installed code is not X's: the author reinstalls from main first` | step 2 is not done: ask the author |
+| `N snapshot(s) have no ok run since the before` | wait for the refresh (up to 15 min) and run it again |
+| `after exists: the after is taken once` | it is taken: go to step 4 |
+
+What the counts say. After `before`: the dry-runs of `main` and of the branch are identical in every snapshot except
+where the change reaches, the graph has 0 mismatching snapshots against `main`'s dry-run, and one golden call is refused
+(the Cypher write that must be refused). After `after`: the picture differs only in the build and the `IndexRun`
+counts, 0 snapshots mismatch against the branch's dry-run, the answers differ only in time and build fields, and every
+snapshot has an ok run. Anything else is a difference to judge as `judgment.md` says, never a pass.
 
 ## 5. Criteria
 

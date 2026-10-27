@@ -49,7 +49,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |
 | | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
 | `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
-| `live/` | `pre-merge.sh` and what it chains (`graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`); `json_paths_diff.py` | the live install before and after a merge, read-only | the install, with the author's authorization |
+| `live/` | `validate.sh` (`before`, `after`, `rotate`) with `validate_summary.py`; what it chains: `pre-merge.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`, `json_paths_diff.py` | the live install before and after a merge, read-only; the numbers as counts | the install, with the author's authorization |
 
 The image's grammar cache belongs to root, so tools that parse run without `--user`. A tool's arguments are in its
 docstring.
