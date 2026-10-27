@@ -17,31 +17,23 @@ change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of beha
 Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
 `corpus-report.md`.
 
-**In progress: which extension method a C# call reaches (H5-D18).** The fix of a wrong edge that PR #27 exposed.
-- The code and its tests are 9 files on the branch `fix/h5-csharp-extension-binding`, in the worktree
-  `~/.cache/aidd-worktrees/h5-d18`, based on `0725d47` (it must be rebased on `main`). Two local commits, the fix and
-  its record; not pushed, so a clean clone does not see them. The suite passes.
+**In progress: which extension method a C# call reaches (H5-D18).** The fix of a wrong edge that PR #27 exposed, in
+review from the branch `fix/h5-csharp-extension-binding`.
 - Corpus and hold-out: 0 repos differ. Micro graph: 6 C# repos differ, −815 and +97 edges.
 - An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
-  the 106 changed edges. The author accepted it as complementary evidence, not as the check by a person that H3 and
-  H4.1 ask for.
-- Record: `docs/indexer/evidence/h5-d18.md`, on the fix branch.
+  the 106 changed edges. That review is the judgment (H7-D6): a person's check is not feasible today.
+- The inherited wrong edges it found, and the count of type arguments, are debts that do not block:
+  `docs/tech-debt.md` (TD-001 to TD-006), each with a strict xfail test. The gaps H5-D16 and H5-D17 left out are
+  there too (TD-007 to TD-022).
+- Record: `docs/indexer/evidence/h5-d18.md`.
 
-**The gate is open. It needs the author to:**
-1. decide whether the gate also needs a person's check of a sample, or proceeds on the independent review;
-2. classify the 10 other inherited wrong edges: 7 fall under limitations of H5-D16 or H5-D17, and 3 are unresolved
-   (E1-011, F1-004, F2-012);
-3. give the two debt records (`EvaluateAsync`, `List<T>.AsReadOnly()`) a place in the plan, under F1.2;
-4. authorize the commit and the PR, with `graph-change`.
+**What is left for it:** CI, with `graph-change` applied by the author; the merge; the reinstall (the author's); the
+live validation before and after it (`docs/indexer/method.md` §4.7 and §4.8); the records.
 
-Then CI, the merge, the reinstall (the author's), the live validation after it (`docs/indexer/method.md` §4.8) and
-the records. The count of type arguments (C2-002) is a separate follow-up, not part of H5-D18.
-
-**Method recovery.** The validation method was rebuilt from a lost session into `docs/indexer/` (the entry point is
-its `README.md`) and `indexer/scripts/`; merged as PR #28. Left: a run of `docs/indexer/resume-test.md` in a clean
-clone, with `indexer/scripts/protocol/resume-test.sh` (three runs so far, in its §4; the first two had isolation faults, now
-fixed). The tools that were never run (`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/`
-chain) are exercised for the first time on H5-D18's PR.
+**Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
+`docs/indexer/resume-test.md` passed all nine criteria in a clone (run 4, 2026-10-27). `protocol.sh`, `micro-fresh.sh`,
+`time-alone.sh`, `mutate.sh` and the `live/` chain ran before the recovery edited them, or never; they are exercised
+again on H5-D18's PR.
 
 **Next.**
 1. Close H5-D18 (above).
@@ -57,6 +49,8 @@ chain) are exercised for the first time on H5-D18's PR.
 - **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's
   (`why_a.py`) was not recovered and needs a module that was not found; C# was judged with
   `indexer/scripts/judgment/csharp_extensions.py`; Python and TS have nothing. Design one before step 5 for Python.
+- **Judgment is not yet automated (H7-D6).** G1's attribution and the verdict record (H7-D2) are to build; until then
+  each change of behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
   integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds PR #27's pair.
 
@@ -549,17 +543,9 @@ Every xfail of the three tables is gained, and no guard is lost.
     `RoleManagerExtensions`, umbraco's `created.GetValue<string>(..)` to `DictionaryExtensions`, and btcpay's LINQ
     `invoices.Where(..)` to the `DbSet` one.
 - **What stays lost:** 188 edges to extension methods that `main` had. Most were guesses that the receiver's type
-  now proves wrong, as above. The rest is what H5-D16 leaves out:
-  - an instance method and an extension that take as many arguments, which only the arguments' types tell apart
-    (about 20 sites: smartstore's `_mediaService.GetUrl(file, thumbPictureSize, host)`, elsa's `Get(blockId)`);
-  - a form neither side reads, where the call goes back to a guess by name, or to none (about 20 sites). These are a
-    lambda parameter without a type (btcpay's `coin => coin.Value.GetValue(..)`, umbraco's `(source, target,
-    context) => target.EnableChangeTracking()`) and a `foreach` variable, typed or not;
-  - a member of a package's type, whose own type is not known (`_httpRequest.HttpContext.GetItemAsync(..)`, 3 sites);
-  - an extension of a type outside the repo on a type with a base outside it (notifo's
-    `user.Settings.GetOrDefault(..)`, 4 sites): that base may declare the method, as `DbContext.AddRange` and NPoco's
-    `ExecuteScalarAsync` do;
-  - the block namespace of H5-D17 (btcpay's `result.StoreData.GetStoreBlob()`).
+  now proves wrong, as above. The rest is what H5-D16 leaves out, now debts (`docs/tech-debt.md`): the arguments' types
+  between overloads (TD-004), a `foreach` variable and a lambda parameter (TD-007, TD-008), a member of a package's type
+  (TD-003), and a type with a base outside the repo (TD-009).
 - **The time, alone,** on one image: the corpus summed 812 s on `main` and 776 s on the branch, within the noise (the
   C# repos 279 and 274 s; the others, whose code did not change, 533 and 502 s). Full dry-runs of umbraco, elsa,
   bitwarden and smartstore, which run the resolver, take the same time on both.
@@ -668,36 +654,7 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
     `WorkflowDictionaryExtensions.Add`, an `ICollection`'s `IsNullOrEmpty()` to the overload that takes an array.
 - **The time, alone,** on one image: the corpus took 259 s of wall time on `main` and 255 s on the branch. Full
   dry-runs of umbraco, elsa, bitwarden and smartstore, which run the resolver, take the same time on both, within 2 s.
-- **What stays out.** Each item names a case to start from, for a later PR:
-  1. **Type arguments in the middle of a chain.** A member's type is kept by its simple name, so only the chain's start
-     (a local, a parameter, a method's result) and the base lists pass type arguments. A field `SutProvider<Foo> _sut`
-     and then `_sut.Sut.X()`, or a member `TreeNode<MenuItem> Node` and then `Node.Value.X()`, go by name. The way in:
-     keep members as `written_text` writes them and give the next field its type arguments.
-  2. **A method's own type parameters.** `T Get<T>()` and `Create<TFoo>()` take nothing from the call's type arguments
-     or its arguments; only the DI's `GetRequiredService<T>()` is read.
-  3. **A type parameter with more than one constraint** (`where T : IA, IB`) declares no type: a value of it has the
-     members of both, which one type cannot say.
-  4. **Nested type arguments** keep their outer name: `Map<string, List<Item>>` passes `List`, not `List<Item>`.
-  5. **Between extension overloads of one arity**, the one whose `this` names the receiver's type is not preferred to
-     one that takes an interface. smartstore's `customQuantities.IsNullOrEmpty()` on an `int[]` sees
-     `IsNullOrEmpty<T>(this T[]?)` and the block's `IsNullOrEmpty()` on `IEnumerable<T>`, and reaches neither. An
-     extension on an interface is also still taken for any receiver outside the repo (H5-D16), so an array's
-     `.Where(..)` reaches smartstore's `RuleQueryableExtensions.Where` among others.
-  6. **A capitalized name a base outside the repo may declare** goes by name, as on `main`. eshop's
-     `Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)` (`DbContext.Database`) reaches the
-     `OrderingContext`'s own `BeginTransactionAsync()`, though it takes no argument: the guess in the same file does
-     not check the count.
-  7. **A DI registration counts for the whole repo**, not for the project that runs it. eshop's WebApp and HybridApp
-     each register their `ProductImageUrlProvider`, so `ChatState`'s `_productImages.GetProductImageUrl(..)` has no
-     single implementation (one site that `main` had, because it did not see HybridApp's types).
-  8. **Other `using`s.** MSBuild's (`<Using Include=".."/>` in a `.csproj` or `Directory.Build.props`) are not read;
-     `using static X;` is read as a namespace, and an alias (`using A = B.C;`) is not read.
-  9. **A namespace nested in a block one** (`namespace A { namespace B { } }`) is named `B`, not `A.B`.
-  10. **`this.x` two bases up.** `field()` looks one base up, where `member()` reads the whole chain.
-  11. **Project references are not read.** A type of the global namespace counts only from its own project, but a
-      namespaced type of a project the file's project does not reference is still seen.
-  12. **An extension block's static members** (`Type.M()`) and its extension properties are not read.
-  13. **An array's element where C# reads it:** `arr[0].M()` and `foreach (var x in arr)` still type nothing.
+- **What stays out:** thirteen gaps, now debts (`docs/tech-debt.md`, TD-010 to TD-022), each with a strict xfail test.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -775,11 +732,9 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   is one type; a method's declared result counts on any type; a typed receiver reaches the repo's extension methods;
   and a type written with its namespace and type arguments is named by its last name. Each comes with its cases first.
   The one answer types more receivers, and its micro set lost the edges `main`'s guesses had found on them. Some
-  things stay out:
-  - a `foreach`, `out var` or pattern variable;
-  - the arguments' types between overloads of one arity;
-  - a member of a package's type;
-  - an extension of a type outside the repo on a type with a base outside it.
+  things stay out, now debts (`docs/tech-debt.md`, TD-003, TD-004, TD-007 to TD-009): a `foreach`, `out var` or pattern
+  variable, a lambda parameter, the arguments' types between overloads of one arity, a member of a package's type, and
+  an extension of a type outside the repo on a type with a base outside it.
 - **H5-D17 (2026-10-22), what a name means in C# goes in a `fix(csharp)` PR of its own, right after C#'s change of
   behavior.** The lookup counts a file's namespace only when it is file-scoped (`namespace X;`). In `namespace X { }`,
   a type of `X` loses to a homonym that a `using` shows: btcpay's `result.StoreData` reads as
@@ -791,13 +746,13 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   Widened on 2026-10-23, by the author: what the PR's judgment found of the same kind goes in it, even if the scope
   grows, and what does not is recorded in detail. In: the namespaces around the code, a type nested in another, the
   global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
-  result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
-  under "What a name means in C#".
+  result with its type arguments, an array, an extension block and a call with no receiver. Out: thirteen gaps, now
+  debts (TD-010 to TD-022).
 - **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
-  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided four points of its acceptance (`docs/decisions.md`, H5-D18). Not merged; its record
-  is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided its acceptance (`docs/decisions.md`, H5-D18 and H7-D6). Its record is
+  `docs/indexer/evidence/h5-d18.md`.
 
 ## Pitfalls
 

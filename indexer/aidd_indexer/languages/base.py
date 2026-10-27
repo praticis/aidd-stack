@@ -183,17 +183,20 @@ class LanguageSupport:
         return None
 
     def external_receiver(self, ctx: ResolveContext, file: "FileInfo", receiver_type: str,
-                          path: tuple[str, ...]) -> str | None:
-        """The receiver's type when it is named in the code and declared outside the repo (`Substitute.For<T>()`, a
-        `Fixture fixture`, an `ILogger _logger`): a method on it is the package's, so the resolver does not guess a
-        homonym of the repo by name — except an extension method (`is_extension_method`). None otherwise."""
+                          path: tuple[str, ...]) -> tuple[str, bool] | None:
+        """A type the receiver's chain reaches that is named in the code and declared outside the repo
+        (`Substitute.For<T>()`, a `Fixture fixture`, an `ILogger _logger`), and whether the chain ends in it: a method
+        on it is the package's, so the resolver does not guess a homonym of the repo by name — except an extension
+        method (`extension_fit`). None otherwise."""
         return None
 
-    def is_extension_method(self, ctx: ResolveContext, symbol: "SymbolInfo", receiver_type: str | None = None,
-                            unknown: bool = False) -> bool:
-        """A method of the repo callable on a type declared elsewhere (C# `static X M(this T x)`) — on
-        `receiver_type` when it is known, on anything when the receiver's type is `unknown`."""
-        return False
+    def extension_fit(self, ctx: ResolveContext, symbol: "SymbolInfo", package: str | None = None, ends: bool = False,
+                      generic: bool = False) -> str | None:
+        """How a method of the repo callable on a type declared elsewhere (C# `static X M(this T x)`) takes a call's
+        receiver of type `package` (the chain `ends` in it, or only passes through it), or of unknown type; `generic`:
+        the call is written with type arguments. "compatible" when it takes it, "incompatible" when the language
+        proves it cannot, "unknown" when it may; None when it is no such method or is not considered."""
+        return None
 
     def extension_methods(self, ctx: ResolveContext, symbols: list["SymbolInfo"], qualified_type: str,
                           written: str = "") -> list[tuple[list["SymbolInfo"], str]]:

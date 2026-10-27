@@ -166,16 +166,20 @@ class CsTypeIndex(TypeIndex):
             return found
         return found[-1:] if last else found[:1]
 
-    def lookup(self, file: FileInfo, simple: str) -> Declared | None:
+    def lookup(self, file: FileInfo, simple: str, arity: int | None = None) -> Declared | None:
         """The type a file means by a simple name: the only one of that name; one nested in a type the file declares;
         or the first C# finds from the file (its namespace, the ones around it, then the `using`s, its project's
         `global using`s among them), when no other is found at that step. Of the global namespace, only the file's
-        project counts: other projects keep their programs there. A partial type counts once, by its first part."""
+        project counts: other projects keep their programs there. A partial type counts once, by its first part.
+        Given the `arity` the name is written with, only a type of that many type parameters the file sees counts, as
+        C# binds it: the only one of the name may be a framework's (`ISet<T>`) the repo's homonym does not stand for."""
         if "." in simple:                                   # the enclosing type, by its qualified name
             found = [d for d in self._types_named(simple.rpartition(".")[2]) if d.qualified == simple]
             return found[0] if len(found) == 1 else None
         hits = self._types_named(simple)
-        if len(hits) <= 1:
+        if arity is not None:
+            hits = [h for h in hits if len(h.type.params) == arity]
+        elif len(hits) <= 1:
             return hits[0] if hits else None
         inner = [h for h in hits if h.type.outer and h.file.id == file.id]
         if inner:

@@ -11,7 +11,8 @@ A type nested in another is no name of its namespace: only the file that declare
 it is in, see it by its simple name, and a type nested in another is named with it on both sides. A call with no
 receiver is a method of the caller's own type, never a client's, unless it is given the request's verb: then it is a
 request the type, or a base of it, sends. A value of an array type is the array, a type outside the repo, never a value
-of its element's type. A method of an extension block (`extension(IHttpService s) { .. }`) extends its receiver.
+of its element's type. A method of an extension block (`extension(IHttpService s) { .. }`) extends its receiver. A call
+written with type arguments reaches only a method that declares type parameters, its own or its extension block's.
 
 A member, a parameter or a local whose type is a type parameter has the type its one constraint names; with none, or
 more than one, it declares none, and its call goes by name. An extension whose `this` is one takes a value of the type
@@ -131,6 +132,24 @@ NESTED = "namespace Api.Items;\n\npublic class Box { public class Ledger { publi
 TOOLS = {"Tools/Tools.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>',
          "Tools/Ledger.cs": "public class Ledger { public void Post() { } }\n"}
 GLOBAL_USING = "global using Api.Services;\n"
+INPUTS = {"Services/Inputs.cs": """namespace Api.Services;
+
+public class Context { }
+public class Definition { }
+
+public static class ActivityInputs
+{
+    extension(IHttpService s) { public string? Read(string name) => null; public T? Take<T>(string name) => default; }
+}
+
+public static class ContextInputs { extension(Context c) { public T? Read<T>(Definition d) => default; } }
+
+public static class Providers
+{
+    public static T Make<T>(this IServiceProvider p, params object[] args) => default!;
+    public static object Make(this IServiceProvider p, Type type, params object[] args) => new object();
+}
+"""}
 GET = 'await svc.HttpGet<string>("items");'
 BOUND = "<TService> where TService : HttpService"
 HTTP_GET = 'await Http.HttpGet<string>("items");'
@@ -235,6 +254,14 @@ CASES = [
     case("a-call-with-no-receiver-given-the-verb-is-a-request", {("Api.Services.Relay.SendAsync", "same-module")},
          {("POST", "/push/register")},
          declaration=" : Relay", body='await SendAsync(HttpMethod.Post, "push/register", new object());', every=True),
+    case("a-call-with-type-arguments-reaches-no-method-without-type-parameters", set(),
+         params="Definition definition", body="Func<Context, string?> show = x => x.Read<string>(definition);",
+         every=True, files=INPUTS),
+    case("a-call-with-type-arguments-reaches-a-generic-extension-of-an-interface",
+         {("Api.Services.ActivityInputs.Take", "same-module")},
+         body='Func<Context, string?> show = x => x.Take<string>("name");', every=True, files=INPUTS),
+    case("a-call-with-type-arguments-takes-the-generic-overload", {("Api.Services.Providers.Make", "same-module")},
+         params="IServiceProvider provider", body="provider.Make<HttpService>(1);", every=True, files=INPUTS),
 ]
 
 

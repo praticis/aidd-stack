@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -169,7 +169,7 @@
 - 2026-10-24: what a name means in C# merges as PR #27, a `fix(csharp)` (H5-D17). A type's simple name is looked up
   as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and type
   argument, an array and an extension block are read as C# reads them. It was judged by case on the corpus (baseline
-  `-29`) and on the micro set, and thirteen gaps stay out, recorded in the H5 handoff.
+  `-29`) and on the micro set, and thirteen gaps stay out, registered as debts on 2026-10-27 (`docs/tech-debt.md`).
   - Its validation after the merge was left open when the session that ran it stopped. Its method was recovered into
     `docs/indexer/`.
   - On 2026-10-26 the live install showed the graph identical but for the build, as the dry-runs said, and the 27
@@ -180,3 +180,11 @@
 - 2026-10-27: the indexer's validation method, rebuilt from a lost session, merges as PR #28: the cycle of a change, how
   a difference becomes a verdict, a test that a new session can resume from the repository alone, and the local tools
   (`indexer/scripts/`) cut to the 23 in use.
+- 2026-10-27: the method's resume test becomes repeatable (`indexer/scripts/protocol/resume-test.sh`, PR #29), and what
+  its first three runs found is fixed; a fourth, in a clone, passes all nine criteria.
+- 2026-10-27: the fix for the wrong edge PR #27 exposed (H5-D18) is judged. The corpus and the hold-out are unchanged,
+  the micro graph differs on 6 C# repos (−815 and +97 edges), an independent review of 189 items finds no wrong changed
+  edge, and the live check before the merge is identical, though its snapshots hold none of the calls the change
+  reaches. The author accepts the review as the judgment, registers the defects the fix leaves as debts
+  (`docs/tech-debt.md`), moves the gaps H5-D16 and H5-D17 left out to the same register (TD-007 to TD-022) and decides
+  that the judgment is to be automated (H7-D6).

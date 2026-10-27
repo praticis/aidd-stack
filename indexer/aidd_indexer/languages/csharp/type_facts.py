@@ -9,7 +9,7 @@ from typing import Any, Iterator, NamedTuple
 from tree_sitter import Node
 
 from ..base import node_text, walk
-from .type_syntax import type_parameters, type_text, written_text
+from .type_syntax import type_arity, type_parameters, type_text, written_text
 
 NAMESPACE_NODES = frozenset({"namespace_declaration", "file_scoped_namespace_declaration"})
 TYPE_DECLARATIONS = ("class_declaration", "record_declaration", "struct_declaration", "interface_declaration")
@@ -42,9 +42,11 @@ class CsTypes(NamedTuple):
                                                             # for the file's own; the namespace it imports)
     file_ns: str | None                                     # a file-scoped namespace
     registrations: tuple[tuple[str, tuple[str, str]], ...]  # (`AddScoped`, `Decorate`.., (interface, implementation))
-    extensions: tuple[tuple[str, int, str | None, str], ...]  # (name, line, the simple name of the type it extends,
-                                                              # and what a value of a repo type must be to pass as its
-                                                              # `this`: that name, "object" for any, "" for none)
+    extensions: tuple[tuple[str, int, str | None, str, bool, int], ...]  # (name, line, the simple name of the type
+                                                              # it extends, what a value of a repo type must be to pass
+                                                              # as its `this`: that name, "object" for any, "" for none,
+                                                              # whether it or its block declares type parameters, and
+                                                              # how many type arguments its `this` passes)
     namespaces: tuple[str, ...] = ()                        # every namespace the file declares, block or file-scoped
     global_usings: tuple[str, ...] = ()                     # what its `global using`s import into every file of
                                                             # its project
@@ -237,9 +239,10 @@ def _explicit_impls(type_node: Node, src: bytes) -> dict[str, str]:
     return out
 
 
-def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None, str], ...]:
-    """(name, line, the type it extends, what a value of a repo type must be to pass) of every extension method. The
-    type is its simple name, None for a predefined type or one of the method's type parameters."""
+def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | None, str, bool, int], ...]:
+    """(name, line, the type it extends, what a value of a repo type must be to pass, whether it declares type
+    parameters, how many type arguments the type is written with) of every extension method. The type is its simple
+    name, None for a predefined type or one of the method's type parameters."""
     out = []
     for n in walk(root):
         found = _receiver(n, src) if n.type == "method_declaration" and n.child_by_field_name("name") else None
@@ -247,7 +250,7 @@ def _extension_methods(root: Node, src: bytes) -> tuple[tuple[str, int, str | No
             typ, own = found[0].child_by_field_name("type"), found[1]
             t = type_text(typ, src)
             out.append((node_text(n.child_by_field_name("name"), src), n.start_point[0] + 1, None if t in own else t,
-                        _passes(typ, src, own)))
+                        _passes(typ, src, own), bool(own), type_arity(typ)))
     return tuple(out)
 
 

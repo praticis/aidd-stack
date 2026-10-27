@@ -26,12 +26,17 @@ outputs. The tools are listed with their arguments in [`indexer/scripts/README.m
 A change to the extractor adds, before step 4: corpus `--baseline`, judgment at the source, the expected lists
 (`checks/expected_lists_diff.py`), and a new baseline only after its diff was judged item by item.
 
+What judgment finds and does not block is registered as a debt (`docs/tech-debt.md`) with a strict xfail test, never
+as a note.
+
 A refactor and a change of behavior never share a commit: one `refactor:` commit makes the whole PR strict.
 
 ## 2. Who authorizes what
 
 Permission to read or document a procedure is not permission to run it. Each class needs its own authorization, per
 task; approval in one task does not carry over.
+
+The classes bind an agent; the author runs any of these tools without asking.
 
 | Class | Examples | Authorization |
 |---|---|---|
