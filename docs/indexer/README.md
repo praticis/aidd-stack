@@ -14,6 +14,7 @@ are".
 | 3 | [method.md](method.md) | the cycle of a change, its commands and criteria, who authorizes what |
 | 4 | [judgment.md](judgment.md) | how a difference becomes a verdict |
 | 5 | [`indexer/scripts/README.md`](../../indexer/scripts/README.md) | every tool, what it answers and how it runs |
+| 6 | [evidence/](evidence/) | the record of a validation whose gate is open; deleted once the PR merges (the decision stays in `decisions.md`) |
 
 [resume-test.md](resume-test.md) is the test of these documents. A session under test should not read it first.
 

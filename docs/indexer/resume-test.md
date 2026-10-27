@@ -3,8 +3,9 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: three runs (§4). The third isolated the memory; one with the fixed prompt is still to do.** It needs a clean
-clone of a commit that is pushed, and a session that is not a subagent of the one that wrote these documents.
+**Status: passed in run 4 (§4), in a clone with the fixed prompt.** Run it again after a change to these documents
+or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a subagent of
+the one that wrote them.
 
 ## 1. Preconditions
 
@@ -137,3 +138,17 @@ the prompt from the commit under test, so the fixed prompt can only be tested on
   PR #28 (added).
 - Changed because of it: method.md §2, the README (`origin/h6/step1-proto`), the handoff, the ROADMAP's F1.2 entry,
   `history.md` and the runner. Open: a run with the fixed prompt, after this merges.
+
+**Run 4, 2026-10-27, commit `82032e8`: headless, in a clone, with the fixed prompt: passed.** `claude-opus-5-5`; 22
+turns, 111 s. `memory_paths` named the clone, no call touched a path outside it, and one call was refused (a shell `for`
+loop).
+- All nine criteria passed. It read AGENTS.md, then the README's documents in order; it described H5 and the open gate as
+  the handoff does; it called the cache, the image, `.local/` and the live install "missing by design in a clean clone"
+  without looking for them; it stopped after the report.
+- A grep returned three lines of this page by accident; it said so and did not use them.
+- It reported five tensions: the State block did not yet carry the author's decisions of that day; `history.md` lacked
+  a line for PR #29 and its heading stopped at #23; the timing rule against the practice (a documented deviation);
+  `shape.py` presented as a routine local gate while `method.md` §2 puts it in class 4; the handoff's reading list is
+  not in the README's order.
+- Changed because of it: the State block, `history.md`, and a sentence in `method.md` §2: the classes bind an agent,
+  and the author runs any tool.

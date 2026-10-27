@@ -33,6 +33,8 @@ A refactor and a change of behavior never share a commit: one `refactor:` commit
 Permission to read or document a procedure is not permission to run it. Each class needs its own authorization, per
 task; approval in one task does not carry over.
 
+The classes bind an agent; the author runs any of these tools without asking.
+
 | Class | Examples | Authorization |
 |---|---|---|
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view` | the task |
