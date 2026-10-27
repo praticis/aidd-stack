@@ -177,3 +177,6 @@
     reaches, so that round checks the install, not the change.
   - A new judgment on the corpus that day found one wrong edge the PR added: elsa's `x.GetInput<string>(item)` went
     to a method that is not generic. Its cause is older than the PR, and its fix is H5-D18.
+- 2026-10-27: the indexer's validation method, rebuilt from a lost session, merges as PR #28: the cycle of a change, how
+  a difference becomes a verdict, a test that a new session can resume from the repository alone, and the local tools
+  (`indexer/scripts/`) cut to the 23 in use.

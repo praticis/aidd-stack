@@ -30,7 +30,7 @@ Steps 1 to 5 only read.
    - the tools, by their paths in `indexer/scripts/README.md`;
    - the baselines: `ls ~/.cache/aidd-corpus/runs/2026-10-18-v2-baseline-29`;
    - private live evidence in `.local/indexer/live/`, checked as its README says, never copied out;
-   - an H6 script's branch: `git ls-tree h6/step1-proto`.
+   - an H6 script's branch: `git ls-tree origin/h6/step1-proto`.
 5. **Pin the versions:** the code tree (`git rev-parse <ref>:indexer/aidd_indexer`), the image
    (`docker image inspect -f '{{.Id}}' aidd-indexer:local`) and whether a micro base exists for that pair
    (`ls ~/.cache/aidd-corpus/micro`).
@@ -48,6 +48,6 @@ A shell note: under zsh, a separator such as `echo ====` fails with "not found";
 | `.local/` | private evidence (live pictures, golden calls); never in git |
 | `~/.cache/aidd-corpus` | clones, runs, baselines and micro bases are regenerable; baselines are not published |
 | the live install (`~/.aidd`, its Neo4j and MCP) | its checks need the author's authorization |
-| the H6 branch's files | they are on `h6/step1-proto`, read with `git ls-tree`, never merged |
+| the H6 branch's files | they are on `origin/h6/step1-proto`, read with `git ls-tree`, never merged |
 
 A missing item here is not a failed check. Private evidence is never recreated.

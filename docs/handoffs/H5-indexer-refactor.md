@@ -19,7 +19,8 @@ Each merge and its live validation are in `docs/history.md`; the results are in 
 
 **In progress: which extension method a C# call reaches (H5-D18).** The fix of a wrong edge that PR #27 exposed.
 - The code and its tests are 9 files on the branch `fix/h5-csharp-extension-binding`, in the worktree
-  `~/.cache/aidd-worktrees/h5-d18` (from `origin/main`). Not committed, not pushed. The suite passes.
+  `~/.cache/aidd-worktrees/h5-d18`, based on `0725d47` (it must be rebased on `main`). Two local commits, the fix and
+  its record; not pushed, so a clean clone does not see them. The suite passes.
 - Corpus and hold-out: 0 repos differ. Micro graph: 6 C# repos differ, −815 and +97 edges.
 - An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
   the 106 changed edges. The author accepted it as complementary evidence, not as the check by a person that H3 and
@@ -37,10 +38,10 @@ Then CI, the merge, the reinstall (the author's), the live validation after it (
 the records. The count of type arguments (C2-002) is a separate follow-up, not part of H5-D18.
 
 **Method recovery.** The validation method was rebuilt from a lost session into `docs/indexer/` (the entry point is
-its `README.md`) and `indexer/scripts/`, in PR #28 (branch `docs/h5-validation-recovery`). Left: review and merge it, then run
-`docs/indexer/resume-test.md` on the merged result; a first run, on 2026-10-27, was preliminary (its §4). The tools that were never run
-(`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/` chain) are exercised for the first time on
-H5-D18's PR.
+its `README.md`) and `indexer/scripts/`; merged as PR #28. Left: a run of `docs/indexer/resume-test.md` in a clean
+clone, with `indexer/scripts/protocol/resume-test.sh` (three runs so far, in its §4; the first two had isolation faults, now
+fixed). The tools that were never run (`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/`
+chain) are exercised for the first time on H5-D18's PR.
 
 **Next.**
 1. Close H5-D18 (above).
@@ -795,7 +796,8 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
 - **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
-  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. Not merged; its record is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided four points of its acceptance (`docs/decisions.md`, H5-D18). Not merged; its record
+  is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
 
 ## Pitfalls
 

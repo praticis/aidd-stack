@@ -290,6 +290,10 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
+  - Cases to measure it on: two C# defects `main` has, non-blocking debt candidates the author associated with F1.2 on
+    2026-10-27 (record: `docs/indexer/evidence/h5-d18.md`, on the fix branch), each with a regression case still to
+    write, first, as a strict xfail. SCIP is a possible remedy for both, not a proven one, and the first may be fixed in
+    the resolver instead
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`
