@@ -29,7 +29,7 @@ Steps 1 to 5 only read.
 4. **What the task needs exists:**
    - the tools, by their paths in `indexer/scripts/README.md`;
    - the baselines: `ls ~/.cache/aidd-corpus/runs/2026-10-18-v2-baseline-29`;
-   - private evidence in `.local/`, checked with `shasum -a 256 -c SHA256SUMS` inside its folder, never copied out;
+   - private live evidence in `.local/indexer/live/`, checked as its README says, never copied out;
    - an H6 script's branch: `git ls-tree h6/step1-proto`.
 5. **Pin the versions:** the code tree (`git rev-parse <ref>:indexer/aidd_indexer`), the image
    (`docker image inspect -f '{{.Id}}' aidd-indexer:local`) and whether a micro base exists for that pair

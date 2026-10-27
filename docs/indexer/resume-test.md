@@ -3,15 +3,17 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: prepared, not executed.** It can run only on a clean clone of a commit that is pushed; until then it would
-test a working tree, not the repository.
+**Status: one preliminary run (§4); a clean run is still to do.** It needs a clean clone of a commit that is pushed,
+and a session that is not a subagent of the one that wrote these documents.
 
 ## 1. Preconditions
 
 - The commit under test is pushed and named.
 - The session gets a clean clone or worktree of it, with nothing from `.local/`, `~/.cache/aidd-corpus`, a
   scratchpad, or an earlier session's transcripts or memory.
-- The session is new and is given only the prompt below.
+- The session is new and is given only the prompt below. A subagent of the working session is not clean: it inherits
+  the project's instructions and memory and can read outside the checkout. Start a new top-level session in a detached
+  worktree outside the workspace: `git worktree add --detach <fresh path> <commit>`.
 - Missing by design, and not a failure: `.local/`, the corpus cache, the live install.
 
 ## 2. The prompt
@@ -60,5 +62,19 @@ the document, then run the test again in another new session.
 
 ## 4. Runs
 
-None yet. Record, for each: the date, the commit under test, the kind of session (tool and model, no account detail),
-the result of each criterion, and the documents changed because of it. Leave out any private name or path.
+Record, for each: the date, the commit under test, the kind of session (tool and model, no account detail), the
+result of each criterion, and the documents changed because of it. Leave out any private name or path.
+
+**Run 1, 2026-10-27, commit `ea4bd58`: preliminary.** A subagent of the writing session, in a worktree the harness based
+on `origin/main`, not on the commit, so it reached the method only through the open PR. It inherited the project's
+instructions and memory, and read outside the checkout (the primary checkout, `~/.cache`, Docker, GitHub); it read no
+private evidence.
+- Passed: 2, 3, 4, 6, 7 and 9. It stated H5 exactly, with the four open decisions and whose each is.
+- 1 partial: AGENTS.md at its base had no row for `docs/indexer/`.
+- 5 passed with a gap: six tools had no authorization class in method.md §2.
+- 8 passed: it reported 8 inconsistencies. Four were document faults: the handoff said the PR was still to open, it
+  pointed to a record that moved to the fix branch, the timing rule contradicted the practice, and H5-D18 is cited
+  while its decision row is on the fix branch (open). One was git state: local `main` is a commit ahead of the remote.
+  Three came from the setup: the base, a stale copy of AGENTS.md in its context, the clean-clone table.
+- Changed because of it: the handoff's state, method.md §2 and §4.5, and this page's §1. Open: where H5-D18's decision
+  row lives (this branch or the fix branch).

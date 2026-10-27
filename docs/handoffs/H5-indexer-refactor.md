@@ -24,7 +24,7 @@ Each merge and its live validation are in `docs/history.md`; the results are in 
 - An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
   the 106 changed edges. The author accepted it as complementary evidence, not as the check by a person that H3 and
   H4.1 ask for.
-- Record: `docs/indexer/evidence/h5-d18-validation-state.md`.
+- Record: `docs/indexer/evidence/h5-d18.md`, on the fix branch.
 
 **The gate is open. It needs the author to:**
 1. decide whether the gate also needs a person's check of a sample, or proceeds on the independent review;
@@ -37,8 +37,8 @@ Then CI, the merge, the reinstall (the author's), the live validation after it (
 the records. The count of type arguments (C2-002) is a separate follow-up, not part of H5-D18.
 
 **Method recovery.** The validation method was rebuilt from a lost session into `docs/indexer/` (the entry point is
-its `README.md`) and `indexer/scripts/`, on the branch `docs/h5-validation-recovery`. Left: finish the condensing of
-the docs, open its PR, then run `docs/indexer/resume-test.md` on the merged result. The tools that were never run
+its `README.md`) and `indexer/scripts/`, in PR #28 (branch `docs/h5-validation-recovery`). Left: review and merge it, then run
+`docs/indexer/resume-test.md` on the merged result; a first run, on 2026-10-27, was preliminary (its §4). The tools that were never run
 (`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/` chain) are exercised for the first time on
 H5-D18's PR.
 
@@ -56,9 +56,8 @@ H5-D18's PR.
 - **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's
   (`why_a.py`) was not recovered and needs a module that was not found; C# was judged with
   `indexer/scripts/judgment/csharp_extensions.py`; Python and TS have nothing. Design one before step 5 for Python.
-- Evidence that cannot be regenerated has a single copy and no backup policy: PR #27's pictures and answers in
-  `.local/indexer/pr27/` (check with `shasum -a 256 -c SHA256SUMS` inside it) and the past PRs' micro runs in
-  `~/.cache/aidd-corpus/micro-fresh`.
+- Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
+  integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds PR #27's pair.
 
 The author's decisions are under "Decisions made". This handoff was born from a review asked for in the middle of the
 F1.14 close: after 24 rule commits since corpus v2, the extractor had functions of very high complexity, large files

@@ -36,9 +36,9 @@ task; approval in one task does not carry over.
 | Class | Examples | Authorization |
 |---|---|---|
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view` | the task |
-| 2. Offline analysis of saved artifacts | `judgment/` tools, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
+| 2. Offline analysis of saved artifacts | `judgment/` tools, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `dump.py` | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `checks/mutate.sh`, `checks/dump.py`, `probes/` | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -48,10 +48,12 @@ task; approval in one task does not carry over.
 |---|---|---|
 | Procedures, tools, these docs | the repository | yes |
 | Clones, runs, baselines, micro bases | `$C`, CI's cache | no (regenerable) |
-| Golden calls, live pictures, dry-runs of live snapshots, answers | `.local/` or a folder outside the repo | never |
-| Evidence that cannot be regenerated (a "before" picture, the past PRs' micro runs) | `.local/`, `$C` | no. Keep a second copy: no backup policy exists |
+| Live validation data: golden calls, pictures, dry-runs of live snapshots, answers | `.local/indexer/live/`: `golden-calls.json`, `inflight/` (the PR being validated), `merged/` (the last PR merged); layout in its README | never |
+| What cannot be regenerated: the "before" picture of the PR in flight | `.local/indexer/live/inflight/before/` | no. Keep a second copy until the PR is validated: no backup policy exists |
 
-Private data reaches the repository only as counts, snapshot numbers and public repos. No tenant, client or private
+Only two live pairs ever exist: the PR in flight and the last one merged. Extraction is deterministic, so an older
+pair is not kept: a snapshot's sha and the indexer's commit (the build id) give the same dry-run again. Private data
+reaches the repository only as counts, snapshot numbers and public repos. No tenant, client or private
 repo name appears in code, docs or tests: the repository is public. A read-only tool can still leak: the live
 scripts print snapshots by number, and their raw outputs name tenants.
 
@@ -111,7 +113,7 @@ same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each comm
 ### 4.5 Timing alone
 
 `time-alone.sh` runs the corpus's wall time and four full dry-runs on `main`'s worktree, then the branch's, with no
-other load. One run per side: the median of three is not practiced.
+other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ran one per side. Run three when time matters.
 
 ### 4.6 Equivalence of a representation
 
@@ -120,9 +122,10 @@ codes, compared with `cmp`, shows whether a refactor changed a fact.
 
 ### 4.7 Live, before the merge (class 5)
 
-`LIVE_DIR` holds `main_src/indexer` and `head_src/indexer`, copies of the two codes (check each copy against
-`git ls-files` with `shasum`: copies get served stale). The golden calls file is private; use
-`live/golden-calls.example.json` for its shape.
+`LIVE_DIR` is `.local/indexer/live/inflight`. It holds `main_src/indexer` and `head_src/indexer`, copies of the two
+codes (check each copy against `git ls-files` with `shasum`: copies get served stale). The golden calls file is
+`.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `live/golden-calls.example.json`
+shows its shape.
 
 ```sh
 indexer/scripts/live/pre-merge.sh LIVE_DIR GOLDEN_CALLS_JSON
@@ -131,14 +134,16 @@ indexer/scripts/live/pre-merge.sh LIVE_DIR GOLDEN_CALLS_JSON
 It takes the graph's picture (`graph-picture.sh`), runs the golden calls, dry-runs every live snapshot with both
 codes (`dryrun-live.sh`, with `-w` on the mounted code), then compares them by section (`dry_sections.py`) and
 against the graph by merge key (`graph_vs_dry.py`). Take the "before" picture before the reinstall: afterwards it
-cannot be retaken.
+cannot be retaken, and it is taken afresh for each PR, not copied from `merged/after`: the snapshots move as the
+workspace repos change. Comparing the two is a consistency check.
 
 ### 4.8 Live, after the merge (class 5)
 
 After the author's reinstall: `graph-picture.sh LIVE_DIR/after`, `golden.py CALLS LIVE_DIR/after/golden` with the same
 calls file as before, `graph_vs_dry.py BEFORE AFTER DRY`, and `json_paths_diff.py A B` for each pair of answers. Pass
 criteria: the picture is identical but for the build and `IndexRun`; the graph holds the branch's dry-run on every
-snapshot; the answers are the same or differ only in time and build fields.
+snapshot; the answers are the same or differ only in time and build fields. When the PR is validated, delete
+`merged/` and rename `inflight/` to `merged/`.
 
 ## 5. Criteria
 
