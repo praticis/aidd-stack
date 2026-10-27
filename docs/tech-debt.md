@@ -13,7 +13,12 @@ Rules:
   judgment finds and does not block is registered here with its strict xfail, never left as a note in a handoff.
 - A phase of the [ROADMAP](ROADMAP.md) lists the debts due in it and closes only when they are settled or the author
   moves them.
-- A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR.
+- A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR (its Due reads
+  `closed in PR #n`).
+- CI checks this table (the `debts` job, `indexer/scripts/debts.py`) against the tests and the ROADMAP: each case named
+  here is a case of a `indexer/tests/test_*_debts.py`, in the form `case("id", ...)`, and each case there is named here;
+  the ROADMAP's `Debts due here:` (F1.2) and `are due in `fix(csharp)` PRs before F1.2` lists are the open debts of
+  those dues; no document names a debt this table lacks.
 
 Seen at: a public corpus repo's file and line, or the decision whose judgment found it when no site was kept. Decided by the author on 2026-10-27: TD-001 to TD-006 with the acceptance of H5-D18
 ([decisions.md](decisions.md)), and TD-007 to TD-022 by moving here the gaps that H5-D16 and H5-D17 had left in the H5

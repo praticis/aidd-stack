@@ -136,6 +136,7 @@ code from any fork's PR. So it has two parts:
 | `corpus` | restores the base's corpus and hold-out runs from the cache, or computes them at the base; runs the branch's; counts the hold-out repos that changed, so that its items never reach an artifact |
 | `micro` | runs `micro.sh` against the base, whose dry-runs come from the cache or are computed |
 | `shape` | the shape ratchet: `shape.py --against` the base fails on a function above complexity 9 or a module above 300 lines that is new or grew (H5-D9) |
+| `debts` | `debts.py` checks `docs/tech-debt.md` against the debts' tests and the ROADMAP. It runs on every PR, docs-only ones included, so it can be a required check of its own |
 | `gates` | reads the PR's labels and its commits' subjects when it runs, and hands them to `gates.sh`. `gates.py` decides whether the PR is a refactor and judges the micro graph, so a local run decides the same. It writes everything to the job's summary and fails when the `shape` job did |
 
 - **The base** is the first parent of the PR's merge commit, which is `main`'s tip. Both sides then hold the same

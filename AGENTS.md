@@ -35,8 +35,8 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003); in Go and C#, also the type facts and the language's `TypeIndex` |
 | `indexer/conventions/` | architecture conventions as extensions (the reference one is `dotnet-praticis`) |
 | `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
-| `indexer/scripts/` | every check CI runs, each runnable locally (`README.md` lists them): the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`), the shape ratchet (`shape.py`) and the tests (`test.sh`) |
-| `.github/workflows/` | `indexer.yml`: the gates on every PR that touches the indexer |
+| `indexer/scripts/` | every check CI runs, each runnable locally (`README.md` lists them): the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`), the shape ratchet (`shape.py`), the debts check (`debts.py`) and the tests (`test.sh`) |
+| `.github/workflows/` | `indexer.yml`: the gates on every PR that touches the indexer, and the debts check on every PR |
 | `docs/` | the ROADMAP, the decisions, the history, the indexer guide, the corpus report, the golden questions, the ADRs and the handoffs |
 
 ## The architecture in one figure
@@ -93,6 +93,8 @@ The full text is in the ROADMAP, under "Principles".
 - **The gates, in CI on every PR that touches the indexer** (`.github/workflows/indexer.yml`):
   - it runs the tests, the MCP and the graph writer against a throwaway Neo4j, the corpus, the hold-out, the micro
     set and the code's shape against `main`;
+  - the `debts` job also runs on every PR, docs-only ones included: it checks the register of technical debts against
+    its test cases and the ROADMAP (`indexer/scripts/debts.py`);
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one
