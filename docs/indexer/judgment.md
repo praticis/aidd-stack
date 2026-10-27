@@ -68,7 +68,8 @@ What blocks or passes:
    - a list edit, with `file:line` evidence, in its own commit;
    - a case as a test: a strict xfail with its reason on the wrong side, before the fix;
    - a gap under "What stays out", with a case to start from.
-7. **Give it a status:** blocks, fixed in this PR, a gap with a case, or explained.
+7. **Give it a status:** blocks, fixed in this PR, a debt that does not block (registered in `docs/tech-debt.md` with a
+   strict xfail test), a gap with a case, or explained.
 8. **Report judged and unjudged apart,** with the sample sizes. Tick a test-plan item only when it is done.
 
 A sample drawn now from a past diff is a new judgment, dated now, never the past one. A new case says when it was

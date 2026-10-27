@@ -9,7 +9,8 @@ answer, the case passes, the strict xfail fails the suite, and the mark has to g
 remembering.
 
 Rules:
-- A debt enters with the author's decision and a case.
+- A debt enters with the author's decision and a case. This is the standing process (AGENTS.md, Principles): what a
+  judgment finds and does not block is registered here with its strict xfail, never left as a note in a handoff.
 - A phase of the [ROADMAP](ROADMAP.md) lists the debts due in it and closes only when they are settled or the author
   moves them.
 - A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR.

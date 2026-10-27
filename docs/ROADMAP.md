@@ -62,7 +62,8 @@
   `confidence` + `evidence`.
 - Secrets never enter the index (extract the env var's *name*, never its value).
 - Every phase ends with the **golden questions** passing (recall measured, not felt).
-- Every phase also ends with its **technical debts** (`docs/tech-debt.md`) settled, or moved by the author.
+- A defect that does not block is a **debt** (`docs/tech-debt.md`), not a note: it has a strict xfail test, so the
+  suite fails when it is fixed. Every phase ends with its debts settled, or moved by the author.
 - **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
   complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
   fails what is new or grew over a target (a ratchet, H5-D9), and full blocking comes when the author decides. New

@@ -69,6 +69,8 @@ The full text is in the ROADMAP, under "Principles".
   no heuristic.
 - **Secrets never enter the index:** only the env var's name.
 - **Every phase closes with the golden questions passing.**
+- **A defect that does not block is a registered debt, with a strict xfail test** (`docs/tech-debt.md`): the suite
+  fails when it is fixed, so nobody has to remember it.
 - **Code shape:**
   - complexity ≤ 9 per function (`ruff C901`) and modules of at most 300 lines. What is still over a target may not
     grow, and nothing new joins it: CI holds that ratchet (`indexer/scripts/shape.py --against main`);
@@ -104,7 +106,7 @@ The full text is in the ROADMAP, under "Principles".
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
-  3. judgment at the source;
+  3. judgment at the source; what it finds and does not block becomes a debt, with a strict xfail test;
   4. expected lists (H2-D15);
   5. a new baseline.
 - **Before a merge**, also validate on a live install: a dry-run of `main` against the branch on each snapshot (with
@@ -140,6 +142,7 @@ The full text is in the ROADMAP, under "Principles".
 | How the indexer decides (rules, the cycle of a change, the code map) | `docs/indexer-evolution.md` |
 | The HTTP extractor's numbers and what is missing | `docs/corpus-report.md` |
 | How the indexer's changes are validated (the cycle, the tools, how a difference is judged) and how to resume safely | `docs/indexer/README.md`, the entry point to `docs/indexer/` |
+| The known defects that do not block, and the phase each is due in | `docs/tech-debt.md` |
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
