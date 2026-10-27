@@ -56,8 +56,9 @@ H5-D18's PR.
 - **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's
   (`why_a.py`) was not recovered and needs a module that was not found; C# was judged with
   `indexer/scripts/judgment/csharp_extensions.py`; Python and TS have nothing. Design one before step 5 for Python.
-- Evidence that cannot be regenerated (PR #27's "before" picture, the past PRs' micro runs) has a single copy and no
-  backup policy.
+- Evidence that cannot be regenerated has a single copy and no backup policy: PR #27's pictures and answers in
+  `.local/indexer/pr27/` (check with `shasum -a 256 -c SHA256SUMS` inside it) and the past PRs' micro runs in
+  `~/.cache/aidd-corpus/micro-fresh`.
 
 The author's decisions are under "Decisions made". This handoff was born from a review asked for in the middle of the
 F1.14 close: after 24 rule commits since corpus v2, the extractor had functions of very high complexity, large files
