@@ -39,7 +39,7 @@ the records. The count of type arguments (C2-002) is a separate follow-up, not p
 
 **Method recovery.** The validation method was rebuilt from a lost session into `docs/indexer/` (the entry point is
 its `README.md`) and `indexer/scripts/`; merged as PR #28. Left: a run of `docs/indexer/resume-test.md` in a clean
-clone, with `indexer/scripts/protocol/resume-test.sh` (two runs so far, in its §4, both with isolation faults now
+clone, with `indexer/scripts/protocol/resume-test.sh` (three runs so far, in its §4; the first two had isolation faults, now
 fixed). The tools that were never run (`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/`
 chain) are exercised for the first time on H5-D18's PR.
 
@@ -796,7 +796,8 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
 - **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
-  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. Not merged; its record is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided four points of its acceptance (`docs/decisions.md`, H5-D18). Not merged; its record
+  is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
 
 ## Pitfalls
 

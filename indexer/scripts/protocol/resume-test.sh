@@ -25,7 +25,7 @@ print(re.search(r"## 2\. The prompt.*?```text\n(.*?)```", text, re.S).group(1))'
 # read-only by construction: no write tools, and only these commands. A refused call is kept in calls.txt.
 allowed="Read,Grep,Glob"
 for c in "git status" "git diff" "git log" "git show" "git branch" "git worktree list" "git rev-parse" "git rev-list" \
-         "git ls-tree" "git ls-files" "git merge-base" "git stash list" "ls" "wc" "head" "tail" "cat" "grep" \
+         "git ls-tree" "git ls-files" "git merge-base" "git stash list" "ls" "wc" "head" "tail" "cat" "grep" "echo" "awk" "sort" "git ls-remote" \
          "docker image inspect" "docker image ls" "gh pr view" "gh pr list" "gh pr checks" "gh run list"; do
   allowed="$allowed,Bash($c:*)"
 done
@@ -75,4 +75,4 @@ with open(out + "/calls.txt", "w") as fh:
 print(out)
 EOF
 
-echo "the clone is $out/checkout; delete the folder when done" >&2
+echo "the run folder holds the clone and the outputs; delete it whole when done: rm -rf $out" >&2

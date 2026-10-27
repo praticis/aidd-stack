@@ -3,8 +3,8 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: two runs (§4), neither with full isolation; one in a clone is still to do.** It needs a clean clone of a
-commit that is pushed, and a session that is not a subagent of the one that wrote these documents.
+**Status: three runs (§4). The third isolated the memory; one with the fixed prompt is still to do.** It needs a clean
+clone of a commit that is pushed, and a session that is not a subagent of the one that wrote these documents.
 
 ## 1. Preconditions
 
@@ -33,7 +33,9 @@ repository:
   flagged. Criteria 2, 4, 7 and 9 are checked here;
 - `transcript.jsonl`, the full event stream.
 
-The script prints the folder; delete it when done. The allowlist stops writes; a read outside the clone is flagged,
+The script prints the run folder, which holds the clone and the three files together: delete it whole when done. The
+outputs stay outside the clone on purpose, since inside it they would show in `git status` and the session could read
+its own report. The allowlist stops writes; a read outside the clone is flagged,
 not blocked, and the session still runs on this machine and account, so the user-level instructions still apply.
 The commit must be pushed.
 
@@ -117,3 +119,21 @@ the report came in Portuguese. The runner now clones.
   followed (a documented deviation).
 - Changed because of it: the runner (clone, memory path, the paths of `Glob` and `Grep`), this page's §1, step 4 of the
   prompt and §4, and the handoff's state. Open: a run in a clone, with the new prompt.
+
+**Run 3, 2026-10-27, commit `06956e8`: headless, in a clone.** `claude-opus-5-5`; 38 turns, 139 s. `memory_paths` named the
+clone's own folder and the report came in English, so the memory was isolated. It used the old prompt: the runner reads
+the prompt from the commit under test, so the fixed prompt can only be tested once it is merged.
+- Passed: 1, 2, 3, 5, 6, 8 and 9.
+- 4 partial: it recreated and copied nothing and kept private names out of the report, but it listed `~/.cache/aidd-corpus`,
+  `~/.aidd`, the main checkout's `.local/` and the fix worktree (names only). The old step 4 asked whether each item
+  "exists here".
+- 7 partial: it did not list running third parties' code. That rule lived only in AGENTS.md; it is in method.md §2 now.
+- It said Bash "refused every command". Only compound commands, `git -C` and paths outside the clone were refused, and
+  it never retried a plain `git rev-parse` or `docker image inspect`, so the image id, the tree id and the fix worktree
+  stayed unverified. The allowlist gained `echo`, `awk`, `sort` and `git ls-remote`.
+- It reported seven inconsistencies, five real: PR #28 described as unmerged; H5-D18 recorded differently in the
+  handoff and in decisions.md, with no F1.2 entry for the debts; `git ls-tree h6/step1-proto` fails in a clone; the fix
+  worktree's base; `shape.py` with no class. The other two: the tooling's trailer suggestion, and no history line for
+  PR #28 (added).
+- Changed because of it: method.md §2, the README (`origin/h6/step1-proto`), the handoff, the ROADMAP's F1.2 entry,
+  `history.md` and the runner. Open: a run with the fixed prompt, after this merges.
