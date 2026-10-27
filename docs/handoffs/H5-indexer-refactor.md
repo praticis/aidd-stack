@@ -792,6 +792,10 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
   result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
   under "What a name means in C#".
+- **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
+  bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
+  type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. Not merged; its record is `docs/indexer/evidence/h5-d18.md`, on the fix branch.
 
 ## Pitfalls
 
