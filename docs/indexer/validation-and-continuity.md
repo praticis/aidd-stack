@@ -52,6 +52,7 @@ left. These documents record:
 | [Semantic judgment and regressions](semantic-judgment-and-regressions.md) | How does a difference become a verdict: gains, losses, FP, FN, regressions, and what evidence a verdict needs? |
 | [Operational workflow and continuity](operational-workflow-and-continuity.md) | In what order do the phases run, what survives an interruption, and who may run what? |
 | [PR #27's validation state](evidence/pr27-validation-state.md) | What ran for PR #27, what it gave, and what is still open? |
+| [H5-D18's validation state](evidence/h5-d18-validation-state.md) | What ran for H5-D18, the fix of the wrong edge PR #27 exposed, what it gave, and what is still open? |
 | [PR #5's validation plan](evidence/pr5-validation-plan.md) | Where did the two-phase validation, offline then live, come from? |
 
 **The reading order for a newcomer:**
@@ -102,11 +103,15 @@ Rules carry a label in the later documents:
 
 **None of it is committed or pushed.** The earlier files are staged, and the later edits are unstaged or untracked
 until the author stages them; `git status` gives the current split. The recovery exists only on this disk (§7).
+**Later on 2026-10-26:** the documents, the 38 files, the README and `.gitignore` were committed as `21f9670`, signed,
+on `docs/h5-validation-recovery` and on the local `main`. It is not pushed and no PR holds it, so it still exists only
+on this disk (§13). `.local/` stays out of git by design.
 
 ### 4.2 PR #27: five kinds of status
 
 PR #27 is merged, and its live validation after the merge passed later on 2026-10-26 (§11). **Its record is not
 complete: the eleventh golden round and the line in `docs/history.md` are still unwritten. H5 is not done either.**
+**Later on 2026-10-26:** both were written in the working tree, not yet committed (§13).
 
 | Kind | What |
 |---|---|
@@ -139,7 +144,7 @@ The status column uses the terms of §3. "Detailed in" points at a document and 
 | Time | V17 | [`protocol/time-alone.sh`](../../indexer/scripts/protocol/time-alone.sh) | benchmark §4.7, §5.10 | Partially confirmed (one run per side) | the median of 3 not practiced (contradiction 9) |
 | Historical equivalence checks | V19 | [`checks/dump.py`](../../indexer/scripts/checks/dump.py), [`checks/walkcmp.py`](../../indexer/scripts/checks/walkcmp.py) | benchmark §4.9 | Historical only; the scripts Reconstructed | Go's facts, `tools/list`'s and the ASTs' checks not found |
 | Tests, shape, the writer, CI | V06, V15, V16, V20, V26 | [`test.sh`](../../indexer/scripts/test.sh), [`shape.py`](../../indexer/scripts/shape.py), [`mcp-it.sh`](../../indexer/scripts/mcp-it.sh), [`indexer.yml`](../../.github/workflows/indexer.yml) | inventory | Confirmed | H7's slices 1b and 2 to 6 open |
-| Continuity and recovery | V29, V30, V31 | [`recovery/recover.py`](../../indexer/scripts/recovery/recover.py), [`heredoc.py`](../../indexer/scripts/recovery/heredoc.py); `.local/`; `$C` | operational §3, §4 | Partially confirmed | no backup; the recovery uncommitted; an untagged image (§7) |
+| Continuity and recovery | V29, V30, V31 | [`recovery/recover.py`](../../indexer/scripts/recovery/recover.py), [`heredoc.py`](../../indexer/scripts/recovery/heredoc.py); `.local/`; `$C` | operational §3, §4 | Partially confirmed | no backup; the recovery uncommitted (committed later that day as `21f9670`, not pushed); an untagged image (§7) |
 
 The classes agree across the documents. The inventory counts 13 Confirmed, 16 Partially confirmed and 2 Historical
 only, and the benchmark protocols' overview gives each procedure the same class.
@@ -190,7 +195,7 @@ authorization.**
 
 | Risk | Evidence on 2026-10-26 |
 |---|---|
-| **The recovery is uncommitted.** The documents and the 38 files exist only in this working tree and its index. A lost disk loses them, and so would any operation that discards the index or the working tree | `git status`: staged, plus later unstaged and untracked edits; no commit after `0725d47` |
+| **The recovery is uncommitted.** The documents and the 38 files exist only in this working tree and its index. A lost disk loses them, and so would any operation that discards the index or the working tree. **Later on 2026-10-26:** committed as `21f9670`, not pushed. A lost disk still loses it | `git status`: staged, plus later unstaged and untracked edits; no commit after `0725d47` |
 | **PR #27's private evidence has one copy.** `.local/indexer/pr27/` survived the reboot of 2026-10-26, but a file that survives a reboot on one disk is not a backup. **No independent backup is confirmed,** of it or of anything else outside GitHub | `shasum -c`: 89 of 89; no other copy checked |
 | **The before picture cannot be retaken.** The graph no longer holds `main`'s build of 2026-10-23 | the reinstall of 2026-10-24 |
 | **The images behind the micro bases are untagged.** `927f5b4115c5` is still present, but a prune would remove it. Later on 2026-10-26, `f07550cbe2e2`, the image of the base made that day, lost its tag to a twin with the same layers (§11) | `docker image inspect`, 2026-10-26 |
@@ -321,8 +326,8 @@ what a clone holds, and what each instruction needs.
 
 | What they need | From a fresh clone | Gap |
 |---|---|---|
-| The entry point | `AGENTS.md` → this page | **none of `docs/indexer/` and none of the local tools is committed yet.** Until the author commits them, a clone has neither this page nor the pointer to it |
-| The project's state, and where H5 stands | the ROADMAP and the H5 handoff | their correction for PR #27 is uncommitted too |
+| The entry point | `AGENTS.md` → this page | **none of `docs/indexer/` and none of the local tools is committed yet.** Until the author commits them, a clone has neither this page nor the pointer to it. **Later on 2026-10-26:** committed as `21f9670`, not pushed, so a clone of GitHub still has neither |
+| The project's state, and where H5 stands | the ROADMAP and the H5 handoff | their correction for PR #27 is uncommitted too. **Later on 2026-10-26:** committed in `21f9670`, not pushed |
 | The decisions and their reasons | `docs/decisions.md`, the ADRs, the handoffs | none found |
 | The procedures and their acceptance criteria | `AGENTS.md`, the scripts' README, `docs/indexer/` | once committed |
 | Telling confirmed from reconstructed or proposed | the evidence terms (§3) and the labels | once committed |
@@ -347,7 +352,7 @@ only the author reinstalls. These now also stand in the operational workflow's �
 ### 10.4 The next steps, in the order their dependencies impose
 
 1. **The author commits the recovery,** in commits and a PR they choose. Every later step, for anyone but this
-   session, depends on it.
+   session, depends on it. **Committed later on 2026-10-26** as `21f9670`; its push and PR are still to come.
 2. **The author repairs the install's Neo4j,** for instance by recreating its container (the graph is in the
    `neo4j_data` volume), then checks `install-check.sh` until it passes. **Done later on 2026-10-26** (§11).
 3. **With authorization, PR #27's after side:**
@@ -358,7 +363,7 @@ only the author reinstalls. These now also stand in the operational workflow's �
    **Done later on 2026-10-26, and it passes** (§11). Left: the eleventh round and the `history.md` line, in a docs
    PR.
 4. **The author decides on the new wrong edge** of §8 of the PR #27 evidence: a case for a later PR, or a gap left as
-   it is.
+   it is. **Decided later that day:** H5-D18 (§12).
 5. **A backup of `.local/indexer/pr27/`,** at least until the eleventh round is written: it holds the only before
    side, and now the after side too.
 6. **Then H5 step 5 for Python** (the ROADMAP), with the protocol on each commit. The micro base made on 2026-10-26
@@ -384,11 +389,70 @@ and `post-merge-2026-10-26/`.
 
 - PR #27's live graph equals the before one, but for the build, because these snapshots' code has none of the calls
   the change reaches. This checks the install, not the change. The change was judged on the corpus.
-- The eleventh round and the `history.md` line are still unwritten; they go in a docs PR.
-- §8's new wrong edge still waits for the author.
+- The eleventh round and the `history.md` line are still unwritten; they go in a docs PR. **Later that day:** written
+  in the working tree (§13).
+- §8's new wrong edge still waits for the author. **Later that day:** its fix is H5-D18 (§12).
 - `install-check.sh`'s output of 2026-10-24 stays unknown.
 
 **One operational change was found.** The tag `aidd-indexer:local` now names `9e6dd3753826`, not `f07550cbe2e2`.
 Both images were built at the same second from the same layers, and they differ only in compose's service label. How
 the tag moved is not known. `micro.sh` keys its base by the tagged image's id, so it will make a new base on its next
 run.
+
+## 12. H5-D18, later on 2026-10-26
+
+The wrong edge of [the PR #27 evidence](evidence/pr27-validation-state.md), §8 and §10, has a fix: H5-D18, decided by
+the author, implemented in the working tree and not committed. Its record is
+[H5-D18's evidence](evidence/h5-d18-validation-state.md); the live outputs are in a folder outside the repository.
+
+| Validation | Result | Kind |
+|---|---|---|
+| The tests, `mcp-it.sh` and the shape ratchet | all pass; "0 new or worse over a target" | fresh |
+| The corpus and the hold-out | 0 repos differ from `-29` and from `-26` | fresh |
+| The micro graph, 23 repos | 17 identical; 6 C# repos differ, −815 and +97 edges. The real diff equals the diagnosis's measure item for item. Each class read at the source, with no right edge found lost, by the agent that wrote the change: a proposal for the author's review | fresh |
+| V21, V22, V25: the live check before a merge | the two codes' dry-runs identical on all 10 snapshots; the graph holds `main`'s; the picture equals PR #27's after one; the 27 calls of a recovered list answer as expected, with 22 inferred, not compared, against the eleventh round. An unplanned early run of the same calls happened (its evidence, §7) | fresh, read-only |
+
+**On 2026-10-27,** an AI agent independent of the change, not a person, judged a seeded sample of 189 items by
+reading the source. Nothing was compiled.
+
+- It found no wrong item among the 106 changed edges. Among `main`'s untouched edges it found 15 inherited wrong
+  ones, each traced to its cause.
+- The author accepted it that day as complementary engineering evidence. It is not a human review, so the method's
+  check by a person is not literally met.
+- Two groups of inherited defects, `EvaluateAsync` and `List<T>.AsReadOnly()`, are non-blocking debt candidates for
+  F1.2, by the author's decision. The other ten are not classified as non-blocking: seven fall under H5-D16 or
+  H5-D17, and three are unresolved.
+- These decisions are recorded in [the decisions](../decisions.md), H5-D18.
+- The count of type arguments is a separate follow-up, kept out of H5-D18.
+
+They are in its evidence, §5.3, §6.2, §6.4 and §8.
+
+**What it does not change:**
+
+- **The semantic gate stays open** until the criteria of its evidence, §8, are met. Nothing is committed, and nothing
+  merged.
+- The live snapshots hold none of the calls H5-D18 reaches, so the live check shows the install, not the change.
+- What H5-D18 inherits from `main`, and what it leaves out, is in its evidence, §6.
+
+## 13. What changed after §4 to §11, later on 2026-10-26
+
+§4 to §11 record what held when they were written. They stay as they were, but for "Later" pointers in §4.1, §4.2,
+§5, §7, §10.3, §10.4 and §11.
+
+**The recovery is committed:** `21f9670`, signed, on 2026-10-26 at 16:18.
+
+- It is on `docs/h5-validation-recovery`, and on the local `main`, which is one commit ahead of `origin/main`.
+- It is not pushed, and no PR holds it.
+
+**Since then, in the working tree, not yet committed:**
+
+- **The eleventh golden round** is written in [the golden questions](../golden-questions.md), and **PR #27's line** in
+  `docs/history.md`. The ROADMAP's and the H5 handoff's states say so.
+- **§8's wrong edge** of the PR #27 evidence has a fix, H5-D18 (§12), which is not merged and not accepted.
+- **Other documents** still say the eleventh round is unwritten: the inventory, the operational workflow, the benchmark
+  protocols, the semantic judgment and the PR #27 evidence, §7. They are records of 2026-10-26 too, and are left as
+  they were.
+- **The twelfth golden round** records H5-D18's live check before a merge.
+- **A continuity test** is prepared, not executed: [continuity-test.md](continuity-test.md).
+  - It can run only from a clean clone, once the recovery and its follow-ups are pushed.
+  - It is left out of §2's reading list, because a session under test should not read the criteria it is judged by.

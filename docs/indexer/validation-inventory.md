@@ -142,8 +142,8 @@ Paths used throughout:
 ### Confirmed on 2026-10-24, beyond the history
 
 - `0725d47` is `main`'s tip and the working tree is clean. **C**, on 2026-10-24, before the recovery's files were
-  added. Since then the working tree holds them, staged and uncommitted
-  ([the entry point](validation-and-continuity.md), §4).
+  added. Since then the working tree held them, staged and uncommitted, until they were committed on 2026-10-26 as
+  `21f9670`, which is not pushed ([the entry point](validation-and-continuity.md), §4.1 and §13).
 - The install's code equals `main`'s (`diff -rq ~/.aidd/indexer/aidd_indexer indexer/aidd_indexer` gives nothing). **C**
 - `atlas_status`: build `0.2.15+ccc54d86dbc7` everywhere, 10 snapshots indexed between 06:36:48 and 06:37:12 UTC,
   `outdated: false` on all, every tenant's last refresh at rc 0 with `changed: 0`. This answers B4's first criterion
@@ -1023,9 +1023,10 @@ Each entry gives:
   2026-10-24 (the catalog, §2 and §3).
 - **Needs:** none.
 - **Gaps:**
-  - Until 2026-10-24 the method's live and judgment tools existed only in a volatile place. They are now in the
-    working tree, not committed. The private inputs, the golden calls and the live pictures, are in
-    `.local/indexer/pr27/` since 2026-10-24, on this disk only; `$S` was emptied on 2026-10-26.
+  - Until 2026-10-24 the method's live and judgment tools existed only in a volatile place. They were then in the
+    working tree, not committed; on 2026-10-26 they were committed as `21f9670`, not pushed. The private inputs,
+    the golden calls and the live pictures, are in `.local/indexer/pr27/` since 2026-10-24, on this disk only; `$S`
+    was emptied on 2026-10-26.
   - `$T` is 950 MB, and a blocked session cannot be resumed.
 - **Resources:** [`recovery/recover.py`](../../indexer/scripts/recovery/recover.py) and
   [`recovery/heredoc.py`](../../indexer/scripts/recovery/heredoc.py); [`the resource catalog`](resource-catalog.md);

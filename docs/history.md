@@ -166,3 +166,17 @@
   namespace and type arguments (H5-D16). It was judged by case on the corpus (baseline `-29`) and on the micro set;
   two more gaps of what a name means in C# go in a `fix(csharp)` (H5-D17). On a live install the graph is identical,
   as the dry-runs said (the tenth golden round).
+- 2026-10-24: what a name means in C# merges as PR #27, a `fix(csharp)` (H5-D17). A type's simple name is looked up
+  as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and type
+  argument, an array and an extension block are read as C# reads them. It was judged by case on the corpus (baseline
+  `-29`) and on the micro set, and thirteen gaps stay out, recorded in the H5 handoff.
+  - Its validation after the merge was left open when the session that ran it stopped. Its method was recovered into
+    `docs/indexer/`.
+  - On 2026-10-26 the live install showed the graph identical but for the build, as the dry-runs said, and the 27
+    calls gave the same answers (the eleventh golden round). These snapshots hold none of the calls the change
+    reaches, so that round checks the install, not the change.
+  - A new judgment on the corpus that day found one wrong edge the PR added: elsa's `x.GetInput<string>(item)` went
+    to a method that is not generic. Its cause is older than the PR, and its fix is H5-D18.
+  - Later that day H5-D18, that fix, was implemented and judged on the corpus. It was checked on the live install
+    before a merge, whose snapshots hold none of the calls it reaches. It is not merged, and its result waits for the
+    author's review (`docs/indexer/evidence/h5-d18-validation-state.md`).

@@ -5,6 +5,7 @@
 > `0725d47`.
 >
 > **"Persisted" means in this repository's working tree, not committed yet.** No commit, push or PR was made.
+> **Later on 2026-10-26:** the persisted files were committed as `21f9670`, which is not pushed and in no PR.
 >
 > The paths `$S` (the previous session's scratchpad, volatile), `$C` (`~/.cache/aidd-corpus`) and `$T` (the previous
 > session's transcript) are defined in the inventory, under "How to read this document".

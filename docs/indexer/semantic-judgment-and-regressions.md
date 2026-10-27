@@ -300,6 +300,14 @@ decides the receiver's type, in the public repo at its pin. The full rows are in
   decision**. It was not taken here.
 - Why the resolver chose that method among the repo's `GetInput`s was not traced. The verdict rests on the source,
   not on the mechanism.
+- **Traced later that day** (the PR #27 evidence, §10).
+  - PR #27's last fix commit gave an extension block's methods their extension facts, which C# calls for. An older
+    filter then kept `ActivityExtensions.GetInput` for a receiver of unknown type, because its `this` is an interface.
+  - No code checked that a call written with type arguments needs a method that declares type parameters.
+  - That missing check was categorized nowhere, so H2-D14 did not apply, and the semantic gate stood blocked.
+  - The author chose to fix it by C#'s rule: H5-D18, a call written with type arguments reaches only a method that
+    declares type parameters. Its judgment widened it to what C# proves an extension cannot take. The fix, its
+    validation and what stays out are in [H5-D18's evidence](evidence/h5-d18-validation-state.md).
 
 ## 5. Cases, golden questions and regression records
 

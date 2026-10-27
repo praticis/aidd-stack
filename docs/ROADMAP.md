@@ -26,7 +26,9 @@
     its change of behavior as PR #25, each validated on a live install (the ninth and tenth golden rounds). The
     `fix(csharp)` for what a name means in C# (H5-D17) merged as PR #27 on 2026-10-24; thirteen gaps it found stay
     out, recorded in the H5 handoff. Its validation after the merge, on the live install, passed on 2026-10-26; the
-    eleventh golden round that records it is still to be written (`docs/indexer/validation-and-continuity.md`).
+    eleventh golden round records it (`docs/indexer/validation-and-continuity.md`). A wrong edge PR #27 exposed has a
+    fix, H5-D18, which is not merged and not accepted (`docs/indexer/evidence/h5-d18-validation-state.md`). An
+    independent AI review of a seeded sample found no wrong changed edge, and the gate stays open.
     Next, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the rest of the code to the
     shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
@@ -295,6 +297,9 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
+  - Cases to measure it on: two C# defects `main` has, non-blocking debt candidates the author associated with F1.2
+    on 2026-10-27 (`docs/indexer/evidence/h5-d18-validation-state.md`, §6.2), each with its regression cases. SCIP is
+    a possible remedy for both, not a proven one, and the first may be fixed in the resolver instead
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`

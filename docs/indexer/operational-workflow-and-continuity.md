@@ -103,7 +103,7 @@ The order that PRs #17 to #27 followed is drawn in the inventory's §6, and it i
 | Artifact | Canonical place | Conversation or agent lost | Reboot | This disk lost |
 |---|---|---|---|---|
 | Committed code and docs | `main`, on GitHub | yes | yes | yes |
-| **The recovery's files** (§1) | this working tree and its index: staged, uncommitted, unpushed | yes | yes | **no** |
+| **The recovery's files** (§1) | this working tree and its index: staged, uncommitted, unpushed. **Later on 2026-10-26:** the commit `21f9670`, on `docs/h5-validation-recovery` and the local `main`; still unpushed | yes | yes | **no** |
 | The reference branch | `h6/step1-proto`, local and on GitHub | yes | yes | yes |
 | The draft release `h6-step1-results` | GitHub | yes | yes | yes |
 | CI's baselines and artifacts | the Actions cache (until evicted); artifacts for 14 days | yes | yes | yes, within those limits |
@@ -205,9 +205,9 @@ the historical one.** This document, too, leaves PR #27's body as it is.
   - the protocol's summaries and the judged samples cannot be recovered as files;
   - the evidence documents keep their summaries;
   - counts can be re-derived from `$C`, and samples cannot.
-- **A lost disk:** everything not on GitHub goes with it. That is the recovery's uncommitted files, `.local/`, `$C`,
-  the transcripts and the untagged image. **This is the largest continuity risk, and no backup policy exists for it
-  (§4.3).**
+- **A lost disk:** everything not on GitHub goes with it. That is the recovery's files (committed later that day as
+  `21f9670`, but not pushed), `.local/`, `$C`, the transcripts and the untagged image. **This is the largest
+  continuity risk, and no backup policy exists for it (§4.3).**
 
 ## 4. Persistence and privacy
 
@@ -215,7 +215,7 @@ the historical one.** This document, too, leaves PR #27's body as it is.
 
 | Class | Examples | Where | In git | Basis |
 |---|---|---|---|---|
-| Durable, non-sensitive procedures | the CI scripts; the local tools in `indexer/scripts/`; these documents | the repository | yes. The recovery's files are staged, not yet committed | `AGENTS.md`; the catalog |
+| Durable, non-sensitive procedures | the CI scripts; the local tools in `indexer/scripts/`; these documents | the repository | yes. The recovery's files are staged, not yet committed; later on 2026-10-26, committed as `21f9670`, not pushed | `AGENTS.md`; the catalog |
 | Reconstructed scripts | `json_paths_diff.py`, `walkcmp.py`, `dump.py`, `mutate.sh`, the `checks/a*.py` | the repository, **only** with their provenance in the catalog (nature "reconstructed"), and in the file when the author asks, as `dump.py`'s docstring line | yes, staged | the author's conditions, 2026-10-24 and 2026-10-26 **[practice]** |
 | Reconstructable tools not persisted | `why_a.py`, `go_graph_diff.py`, H2's verdict tools, `h6/measure.py` | `$T` | no; persisting one needs the author's authorization | the catalog, §4 |
 | Private inputs and outputs | the golden calls, the live pictures, the dry-runs, the snapshot exports, the answers | `.local/` (ignored), or a folder outside the repository | **never** | `AGENTS.md`; the rule `/.local/` in `.gitignore`; the inventory, V31 |

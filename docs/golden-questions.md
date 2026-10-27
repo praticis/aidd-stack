@@ -429,3 +429,79 @@ build fields. `who_calls`, `symbol_context` and `impact_of` on the C# repo answe
 | Q3 map | ✅ the same on the 3 tenants |
 | Q4a and Q4b `impact_of` | ✅ the same |
 | Q5 `ref_diff` | ✅ the same |
+
+## Eleventh round: validating PR #27 on a live install (2026-10-26, build `0.2.15+ccc54d86dbc7`)
+
+What changed since the tenth round: what a name means in C# (PR #27, H5-D17), a `fix(csharp)`. A type's simple name
+is looked up as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and
+type argument, an array and an extension block are read as C# reads them. The graph may change on purpose, in C#'s
+`CALLS` only. The validation had the tenth round's two phases, on the same 3 tenants and 10 snapshots:
+
+- **before the merge, read-only (2026-10-23):** dry-runs of `main` and of the branch on each snapshot, at its sha,
+  are identical in every section, and on 2026-10-26 they were found identical record by record in every list.
+  Counted by the writer's merge keys, the live graph holds `main`'s dry-run on every snapshot;
+- **after the merge and a reinstall from `main` (2026-10-24):** the refresher re-indexed the 10 snapshots with no
+  error. The after side was taken only on 2026-10-26: the session that ran the validation stopped, and then the
+  install's Neo4j looped on restart until its container was recreated. By then ten refresher cycles had re-indexed
+  none.
+
+**The picture of the graph** is identical before and after, in the same counts and sorted lists as the tenth round.
+Only the build and the `IndexRun` nodes changed, one more run per snapshot. Counted by the merge keys, the graph after
+holds the branch's dry-run on every snapshot.
+
+**The 27 calls** give the same answers: 22 are byte for byte the same, and the other 5 differ only in their time and
+build fields. `cypher_readonly` still refuses a write, and no snapshot is `outdated`.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round does not show.** As in the tenth round, these snapshots hold none of the calls the change reaches, so
+the round checks the install, not the change. The change was judged on the corpus. A new judgment on 2026-10-26 found
+one wrong edge it added there: elsa's `x.GetInput<string>(item)`, in a lambda without a type, went to a method that is
+not generic. The cause is older than the PR, since a call written with type arguments was never checked against the
+method's type parameters. The fix is H5-D18, in a PR of its own.
+
+## Twelfth round: H5-D18 before its merge, on a live install (2026-10-26, build `0.2.15+ccc54d86dbc7`)
+
+What changed since the eleventh round: nothing in the install. H5-D18 is in a working tree, not merged: which
+extension method a C# call reaches when only one can serve it. The graph may change on purpose, in C#'s `CALLS` only.
+This round is the read-only side before a merge, on the same 3 tenants and 10 snapshots:
+
+- **the dry-runs** of `main` and of the branch on each snapshot, at its sha, are identical record by record in all 12
+  lists;
+- **the graph** holds `main`'s dry-run on every snapshot, counted by the writer's merge keys;
+- **the picture of the graph** equals the eleventh round's after picture in all 15 lists, by the digests the PR #27
+  evidence records.
+
+**The 27 calls.** This round is the planned run inside `pre-merge.sh`.
+
+- **Where the calls came from.** The eleventh round's private calls file was not read, by the author's instruction.
+  The 27 calls came from the original `golden.py` that the recovery rebuilt from a transcript. Their labels are the 27
+  the documents name, but the list was not compared with the eleventh round's file.
+- **An earlier, unplanned run.** Loading that recovered script to read its calls also ran them, a few minutes before
+  the planned run: the same 27 calls, with the same write refused. It is not a round of its own. It only shows that
+  the answers are stable: 26 are byte for byte the planned run's, and `atlas_status` differs only in its time fields,
+  since a refresher cycle ran in between.
+- **The planned run:** all 27 reached the MCP. 26 gave no error, `cypher_readonly` still refuses a write, and no
+  snapshot is `outdated`.
+- **Against the eleventh round:** the 5 answers that hold time fields are the five that the PR #27 evidence, §9,
+  names. The eleventh round's answers are kept privately and were not read for this round, so the other 22 were
+  **not** compared with them file by file. They are inferred the same, since the graph and the build are.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ one route, one consumer, `exact`; no `possible_consumers` |
+| Q2 `http_map` | ✅ the outbound call linked; the other repo calls out to none |
+| Q3 map | ✅ one `CONSUMES` on one tenant, none on the other two |
+| Q4a and Q4b `impact_of` | ✅ answered, with consumers and callers |
+| Q5 `ref_diff` | ✅ answered |
+
+**What the round does not show.** As in the tenth and eleventh rounds, these snapshots hold none of the calls the change
+reaches, so the round checks the install, not the change. The change was judged on the corpus, and that judgment
+still waits for the author's review. The after side waits for the merge. The details are in
+[H5-D18's evidence](indexer/evidence/h5-d18-validation-state.md), §7.

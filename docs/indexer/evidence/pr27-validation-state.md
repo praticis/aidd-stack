@@ -389,3 +389,97 @@ on the corpus, in §3 and in §8's new judgment, and §8's wrong item 1 waits fo
   - How and when the tag moved is not known: Docker kept no event of it.
   - `micro.sh` keys its base by the tagged image's id, so its next run will build `micro/base-ed46a54b…-9e6dd3753826`.
     §8's base stays valid for `f07550cbe2e2`.
+
+## 10. The wrong edge of §8, traced (2026-10-26)
+
+§8's item 1 was judged wrong at the source but not traced. It was traced the same day, after the after side, with
+dry-runs of the public corpus only. Nothing private is involved.
+
+### The site, and what C# binds it to
+
+elsa at `df0697f`, `…/Composition/BulkDispatchWorkflows/Workflows/FruitWorkflow.cs:16` (under
+`core/test/component/Elsa.Workflows.ComponentTests/Scenarios/Activities/`):
+
+```csharp
+var item = builder.WithInput<string>("Item");
+builder.Root = new WriteLine(x => $"Mixing {x.GetInput<string>(item)}");
+```
+
+- **`item`** is an `InputDefinition`, since `IWorkflowBuilder.WithInput<T>` returns one.
+- **`x`** can only be an `ExpressionExecutionContext`. Of `WriteLine`'s constructors, only
+  `WriteLine(Func<ExpressionExecutionContext, string?>)` takes a lambda of one parameter.
+- **The method** is therefore `GetInput<T>(InputDefinition)`, a member of `ExpressionExecutionContextExtensions`'s
+  `extension(ExpressionExecutionContext)` block.
+- **The edge** went to `ActivityExtensions.GetInput(string)`, a member of an `extension(IActivity)` block. It has no
+  type parameter, so C# cannot bind a call written with type arguments to it.
+
+### The causal trace, in `main`'s code
+
+The code is `0725d47`'s, whose `aidd_indexer` tree, `ed46a54b`, is n17's.
+
+1. **The extraction** records the call with receiver `x`, no receiver type (a lambda parameter without a type, the
+   gap H5-D16 leaves), type arguments, and one argument.
+2. **`core/resolve.py`, the path of a receiver of unknown type:** a call written with type arguments may reach only
+   the repo's extension methods. The language's `is_extension_method` filters the six `GetInput`s of the repo.
+3. **`languages/csharp/symbols.py`, `is_extension_method`:** for a receiver of unknown type, it keeps an extension
+   whose `this` may be anything, an interface included.
+   - `IActivity` is an interface, so the method is kept.
+   - `ExpressionExecutionContext` is a class, so the right method is dropped.
+   - The other four `GetInput`s are no extensions.
+4. **The one candidate left** is neither in the caller's file nor in its module, so it becomes `unique-name`.
+5. **Nothing on that path** checks that a call written with type arguments needs a method that declares type
+   parameters.
+
+**Why the edge appears at n17.** Until n16, `type_facts.py` recorded only extensions with a `this` parameter. So an
+extension block's methods had no extension fact, the filter kept nothing, and the site had no edge. n17 (`53a87c0`,
+"a method of an extension block that is not static extends the block's receiver") recorded them, which is right for
+C#. That made `ActivityExtensions.GetInput` pass the filter of step 3. Between n16 and n17, that function is the only
+change in `aidd_indexer`.
+
+### The comparisons
+
+| Side | Run | The site's edges |
+|---|---|---|
+| `main` before PR #27 (`274d63b`) | `$C/micro-fresh/csn-n17-183358-base` | none |
+| n1 to n16, one run per commit | `$C/micro-fresh/csn-n<k>-*-copy` | none |
+| n17 (`53a87c0`) | `$C/micro-fresh/csn-n17-183358-copy` | `ActivityExtensions.GetInput`, `unique-name` |
+| `main` (`0725d47`), a fresh dry-run on 2026-10-26 | a new folder under `$C/diag/` | the same. The run equals n17's record by record, in all 12 lists |
+| A small repo of the same shape, with `4108aef`'s code (n16) | the same folder | no extension fact for the block's methods, and no edge |
+| The same repo, with `0725d47`'s code | the same folder | the block's `IActivity` fact passes the filter, and the edge is `unique-name` |
+
+- **Reading the site:** `indexer/scripts/judgment/site_edges.py elsa FruitWorkflow.cs:16 <run dirs>`.
+- **Which run is which commit:** this comes from §2's table and from the runs' times, since the runs record no sha.
+  The small repo, run with each commit's code, does not depend on that mapping.
+
+### The attribution
+
+| Question | Answer | Evidence |
+|---|---|---|
+| Who introduced the edge? | PR #27, at `53a87c0` | the comparisons above |
+| Who introduced the cause? | older code | the filter of step 3 came in `5428eb1` (2026-10-16); no code ever checked a call's type arguments |
+| Was it categorized? | in part | H5-D16 leaves a lambda parameter without a type to a guess by name or to none. H5-D17's fifth gap says an extension on an interface is still taken for a receiver outside the repo. Neither names the missing check of type arguments |
+
+So the edge is a new defect, which the PR exposed through an older, uncategorized one. H2-D14 does not apply cleanly,
+since H2-D14 covers a defect already categorized. **The semantic gate stood blocked** until a fix or the author's
+acceptance.
+
+### How far it reaches
+
+The measure ran on the 15 C# repos of PR #27's protocol, through a copy of `main`'s code with one line added to
+record the filter's input and output. The repository's code was not changed. Each flagged method's declaration was
+then read again from the clone.
+
+- **104 edges** go from a call written with type arguments to a method that declares no type parameter.
+- **24** go to an extension block's method, the path n17 opened: elsa 20, smartstore 4. Of these, 11 are
+  `x.GetInput<..>` sites and 6 `x.GetOutput<..>` sites in elsa.
+- **80** go to an extension with a `this` parameter, which is older than PR #27: elsa 45, radarr 18, umbraco 9,
+  smartstore 6, jellyfin 1 and notifo 1.
+  - radarr's `Builder().Join<Blocklist, Movie>(..)` reaches `StringExtensions.Join(this IEnumerable<string>,
+    string)`, where it should reach `BuilderExtensions.Join<TLeft, TRight>(this SqlBuilder, ..)`.
+  - umbraco's `_serviceProvider.CreateInstance<TNotification>(msgObject, type)` is ambiguous between the generic
+    method and the overload that takes a `Type`.
+
+### The fix
+
+H5-D18 fixes the cause by C#'s binding rules, in a PR of its own. Its code, its judgment and its validation are in
+[H5-D18's evidence](h5-d18-validation-state.md). It is not merged.

@@ -93,11 +93,20 @@
 >   of what a name means in C# go in a PR of their own, right after (H5-D17).
 > - **Step 5, what a name means in C# (H5-D17, a `fix(csharp)` PR, done on 2026-10-23; merged as PR #27 on
 >   2026-10-24; its validation after the merge, on a live install, passed on 2026-10-26, and the eleventh golden
->   round that records it is still to be written: see `docs/indexer/validation-and-continuity.md`).** A type's
+>   round records it: see `docs/indexer/validation-and-continuity.md`).** A type's
 >   simple name looked up as C# does, a capitalized member, nested types, `global using`, a type parameter's
 >   constraint and type argument, an array, an extension block, and a call with no receiver. Judged by case; the corpus
 >   and the hold-out are unchanged, so the baseline stays `-29`. "What a name means in C#" below has the results and
 >   what stays out.
+> - **Step 5, which extension method a C# call reaches (H5-D18, decided on 2026-10-26; in the working tree, not
+>   merged, and its result not yet accepted).** The fix of a wrong edge PR #27 exposed, by C#'s binding rules. Judged
+>   on the corpus, whose HTTP results and hold-out are unchanged. On 2026-10-27 an AI agent independent of the change
+>   judged a seeded sample at the source, and found no wrong changed edge. The author accepted that judgment as
+>   complementary evidence; it is not the check by a person the method asks for. Two inherited defects are
+>   non-blocking debt candidates for F1.2. Ten more inherited wrong edges are not classified as non-blocking: seven
+>   fall under H5-D16 or H5-D17, and three are unresolved. Checked on the live install before a merge, whose
+>   snapshots hold none of the calls it reaches. Its judgment, its validation, its debt and what stays out are in
+>   `docs/indexer/evidence/h5-d18-validation-state.md`.
 > - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
 >   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
 >   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
@@ -846,6 +855,11 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
   result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
   under "What a name means in C#".
+- **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
+  bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
+  type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed (its
+  evidence, §10). Not merged; its record is `docs/indexer/evidence/h5-d18-validation-state.md`.
 
 ## Pitfalls
 
