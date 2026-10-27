@@ -4,6 +4,11 @@ Every check the CI runs on a pull request (`.github/workflows/indexer.yml`) is a
 a laptop. The shell scripts run in the indexer's Docker image with this tree mounted read-only. The corpus clones and
 runs live in `$AIDD_CORPUS_HOME` (default `~/.cache/aidd-corpus`), outside the repository.
 
+The image is `aidd-indexer:local`. CI builds it from `indexer/` alone (`docker build -t aidd-indexer:local indexer`),
+with no `.env`. The stack's `docker compose build` builds the same image, but needs an installed `.env`, since the
+compose file requires its variables. On a machine that runs the stack, rebuilding the tag also changes the image the
+live install uses.
+
 | Script | What it checks | Locally | CI job |
 |---|---|---|---|
 | `test.sh` | the tests, in the test image | `indexer/scripts/test.sh [pytest args]` | `tests` |
@@ -28,3 +33,22 @@ git log --format=%s origin/main..HEAD \
 A branch named `refactor/…` or `refact/…`, or one commit whose subject starts with `refactor:` or `refact:` (with or
 without a scope), makes the whole pull request a refactor, where any difference fails. The labels `holdout-measurement`
 and `graph-change` (`--label`) let a judged change through.
+
+## Local tools, which CI does not run
+
+Each answers a question of the method (`docs/indexer/`). Their inputs and outputs stay outside the repository
+(`$AIDD_CORPUS_HOME`, `.local/`).
+
+| Folder | Tools | Question | Runs |
+|---|---|---|---|
+| `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; the shape ratchet in the image | Docker |
+| `judgment/` | `chain_diff.py`, `show.py`, `site_edges.py` | which `CALLS` edges changed between two dry-runs, by kind; the sampled sites' source lines; one site's edges | `python3 -I` |
+| | `csharp_extensions.py` | the edges to the repo's C# extension methods that went away or came: `sites`, `back`, `classes`, `this-kind`, `blocks` | `python3 -I` |
+| `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
+| | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |
+| | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
+| `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
+| `live/` | `pre-merge.sh` and what it chains (`graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`); `json_paths_diff.py` | the live install before and after a merge, read-only | the install, with the author's authorization |
+
+The image's grammar cache belongs to root, so tools that parse run without `--user`. A tool's arguments are in its
+docstring.

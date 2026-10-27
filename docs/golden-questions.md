@@ -429,3 +429,37 @@ build fields. `who_calls`, `symbol_context` and `impact_of` on the C# repo answe
 | Q3 map | ✅ the same on the 3 tenants |
 | Q4a and Q4b `impact_of` | ✅ the same |
 | Q5 `ref_diff` | ✅ the same |
+
+## Eleventh round: validating PR #27 on a live install (2026-10-26, build `0.2.15+ccc54d86dbc7`)
+
+What changed since the tenth round: what a name means in C# (PR #27, H5-D17), a `fix(csharp)`. A type's simple name
+is looked up as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and
+type argument, an array and an extension block are read as C# reads them. The graph may change on purpose, in C#'s
+`CALLS` only. The validation had the tenth round's two phases, on the same 3 tenants and 10 snapshots:
+
+- **before the merge, read-only (2026-10-23):** dry-runs of `main` and of the branch on each snapshot, at its sha,
+  are identical in every section, and on 2026-10-26 they were found identical record by record in every list.
+  Counted by the writer's merge keys, the live graph holds `main`'s dry-run on every snapshot;
+- **after the merge and a reinstall from `main` (2026-10-24):** the refresher re-indexed the 10 snapshots with no
+  error. The after side was taken on 2026-10-26, after the install's Neo4j container was recreated.
+
+**The picture of the graph** is identical before and after, in the same counts and sorted lists as the tenth round.
+Only the build and the `IndexRun` nodes changed, one more run per snapshot. Counted by the merge keys, the graph after
+holds the branch's dry-run on every snapshot.
+
+**The 27 calls** give the same answers: 22 are byte for byte the same, and the other 5 differ only in their time and
+build fields. `cypher_readonly` still refuses a write, and no snapshot is `outdated`.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same consumer, `exact` |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round does not show.** As in the tenth round, these snapshots hold none of the calls the change reaches, so
+the round checks the install, not the change. The change was judged on the corpus. A new judgment on 2026-10-26 found
+one wrong edge it added there: elsa's `x.GetInput<string>(item)`, in a lambda without a type, went to a method that is
+not generic. The cause is older than the PR, since a call written with type arguments was never checked against the
+method's type parameters. The fix is H5-D18, in a PR of its own.

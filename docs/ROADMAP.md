@@ -19,14 +19,11 @@
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`. Since slice 1c
   (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
 - **In progress:**
-  - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
-    as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
-    (H5-D10): Go's refactor merged as PR #17, the `fix(mcp)` for `symbol_context`'s imports as PR #19, and Go's change
-    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23 and
-    its change of behavior as PR #25, each validated on a live install (the ninth and tenth golden rounds). The
-    `fix(csharp)` for what a name means in C# (H5-D17) is done and goes to review; thirteen gaps it found stay out,
-    recorded in the H5 handoff. Next, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the
-    rest of the code to the shape targets), then 10 and 11;
+  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
+    `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
+    and C# (PRs #23, #25 and the `fix(csharp)` of H5-D17, #27) are merged and validated on a live install. A wrong edge
+    PR #27 exposed has a fix that waits for the author's decisions (H5-D18; the handoff lists them). Next, Python and
+    TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
