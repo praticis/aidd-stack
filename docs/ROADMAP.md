@@ -18,12 +18,14 @@
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`. Since slice 1c
   (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
+- **Technical debts:** `docs/tech-debt.md` lists the known defects that do not block, each with the phase it is due in
+  and a strict xfail test that fails the suite when it is fixed.
 - **In progress:**
   - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
     `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
     and C# (PRs #23, #25 and the `fix(csharp)` of H5-D17, #27) are merged and validated on a live install. A wrong edge
-    PR #27 exposed has a fix that waits for the author's decisions (H5-D18; the handoff lists them). Next, Python and
-    TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    PR #27 exposed has a fix in review (H5-D18); the defects it leaves are debts (`docs/tech-debt.md`), two of them due in
+    a `fix(csharp)` PR before F1.2. Next, Python and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -32,7 +34,7 @@
       package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
     - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
       14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
-  - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open.
+  - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
@@ -60,6 +62,7 @@
   `confidence` + `evidence`.
 - Secrets never enter the index (extract the env var's *name*, never its value).
 - Every phase ends with the **golden questions** passing (recall measured, not felt).
+- Every phase also ends with its **technical debts** (`docs/tech-debt.md`) settled, or moved by the author.
 - **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
   complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
   fails what is new or grew over a target (a ratchet, H5-D9), and full blocking comes when the author decides. New
@@ -290,10 +293,8 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Cases to measure it on: two C# defects `main` has, non-blocking debt candidates the author associated with F1.2 on
-    2026-10-27 (record: `docs/indexer/evidence/h5-d18.md`, on the fix branch), each with a regression case still to
-    write, first, as a strict xfail. SCIP is a possible remedy for both, not a proven one, and the first may be fixed in
-    the resolver instead
+  - Debts due here: TD-001 to TD-004 (`docs/tech-debt.md`), C# defects `main` has, each with a strict xfail test. SCIP is
+    a possible remedy for them, not a proven one; the first case of TD-001 may be fixed in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`
@@ -343,6 +344,8 @@ Open:
   and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
   untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
   on merge, a nightly trend, and a live check on a demo tenant
+  - Next slice, decided on 2026-10-27 (H7-D6): automate the judgment of a change of behavior, since a person's check is
+    not feasible: the per-site attribution (H5's gap G1), the verdict record (H7-D2) and each judged case as a test
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

@@ -463,3 +463,40 @@ the round checks the install, not the change. The change was judged on the corpu
 one wrong edge it added there: elsa's `x.GetInput<string>(item)`, in a lambda without a type, went to a method that is
 not generic. The cause is older than the PR, since a call written with type arguments was never checked against the
 method's type parameters. The fix is H5-D18, in a PR of its own.
+
+## Twelfth round: H5-D18 before its merge, on a live install (2026-10-26, build `0.2.15+ccc54d86dbc7`)
+
+What changed since the eleventh round: nothing in the install. H5-D18 is in a working tree, not merged: which
+extension method a C# call reaches when only one can serve it. The graph may change on purpose, in C#'s `CALLS` only.
+This round is the read-only side before a merge, on the same 3 tenants and 10 snapshots:
+
+- **the dry-runs** of `main` and of the branch on each snapshot, at its sha, are identical record by record in all 12
+  lists;
+- **the graph** holds `main`'s dry-run on every snapshot, counted by the writer's merge keys;
+- **the picture of the graph** equals the eleventh round's after picture in all 15 lists, by the digests kept with that round's private evidence.
+
+**The 27 calls.** This round is the planned run inside `pre-merge.sh`.
+
+- **Where the calls came from.** The eleventh round's private calls file was not read, by the author's instruction.
+  The 27 calls came from the original `golden.py` that the recovery rebuilt from a transcript. Their labels are the 27
+  the documents name, but the list was not compared with the eleventh round's file.
+- **An earlier, unplanned run.** Loading that recovered script to read its calls also ran them, a few minutes before
+  the planned run: the same 27 calls, with the same write refused. It is not a round of its own. It only shows that
+  the answers are stable: 26 are byte for byte the planned run's, and `atlas_status` differs only in its time fields,
+  since a refresher cycle ran in between.
+- **The planned run:** all 27 reached the MCP. 26 gave no error, `cypher_readonly` still refuses a write, and no
+  snapshot is `outdated`.
+- **Against the eleventh round:** the 5 answers that hold time fields are the five of the eleventh round. The eleventh round's answers are kept privately and were not read for this round, so the other 22 were
+  **not** compared with them file by file. They are inferred the same, since the graph and the build are.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ one route, one consumer, `exact`; no `possible_consumers` |
+| Q2 `http_map` | ✅ the outbound call linked; the other repo calls out to none |
+| Q3 map | ✅ one `CONSUMES` on one tenant, none on the other two |
+| Q4a and Q4b `impact_of` | ✅ answered, with consumers and callers |
+| Q5 `ref_diff` | ✅ answered |
+
+**What the round does not show.** As in the tenth and eleventh rounds, these snapshots hold none of the calls the change
+reaches, so the round checks the install, not the change. The change was judged on the corpus (H5-D18's evidence, §5). The after side waits for the merge. The details are in
+[H5-D18's evidence](indexer/evidence/h5-d18.md), §7.

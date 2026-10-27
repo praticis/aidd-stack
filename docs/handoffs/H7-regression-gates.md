@@ -182,6 +182,7 @@ the branch, counted by the writer's merge key, and that comparison now runs on e
 | H7-D1 | **The baselines live in the Actions cache**, keyed by the code's tree. A push to `main` fills it, and a miss recomputes the base in the PR's run. GHCR comes later, if contributors need to download baselines | The extraction is deterministic, so a baseline is derived data: what must not be lost is in git (the code and the expected lists). No infrastructure, no write token |
 | H7-D3 | **The gates run on every PR that touches the indexer**, and every push to `main` fills the baselines | A gate that runs only when someone remembers is not a gate |
 | H7-D5 | **Slice 1 now, before H6's step 1** | Better now than later, while the context that built the method is fresh: no gain may be lost |
+| H7-D6 | **The judgment of a change of behavior is automated, not checked by a person** (2026-10-27) | A person's check is not feasible; what a script repeats, a person need not redo. It needs H5's per-site attribution (gap G1) and the verdict record (H7-D2) |
 
 ## Decisions to make with the author
 

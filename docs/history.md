@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -180,3 +180,10 @@
 - 2026-10-27: the indexer's validation method, rebuilt from a lost session, merges as PR #28: the cycle of a change, how
   a difference becomes a verdict, a test that a new session can resume from the repository alone, and the local tools
   (`indexer/scripts/`) cut to the 23 in use.
+- 2026-10-27: the method's resume test becomes repeatable (`indexer/scripts/protocol/resume-test.sh`, PR #29), and what
+  its first three runs found is fixed; a fourth, in a clone, passes all nine criteria.
+- 2026-10-27: the fix for the wrong edge PR #27 exposed (H5-D18) is judged. The corpus and the hold-out are unchanged,
+  the micro graph differs on 6 C# repos (−815 and +97 edges), an independent review of 189 items finds no wrong changed
+  edge, and the live check before the merge is identical, though its snapshots hold none of the calls the change
+  reaches. The author accepts the review as the judgment, registers the defects the fix leaves as debts
+  (`docs/tech-debt.md`) and decides that the judgment is to be automated (H7-D6).
