@@ -13,30 +13,23 @@
 ## State (2026-10-27)
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
-change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means, #27).
-Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
-`corpus-report.md`.
+change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
+extension method a call reaches #30). Each merge and its live validation are in `docs/history.md`; the results are in
+the sections below and in `corpus-report.md`.
 
-**In progress: which extension method a C# call reaches (H5-D18).** The fix of a wrong edge that PR #27 exposed, in
-review from the branch `fix/h5-csharp-extension-binding`.
-- Corpus and hold-out: 0 repos differ. Micro graph: 6 C# repos differ, −815 and +97 edges.
-- An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
-  the 106 changed edges. That review is the judgment (H7-D6): a person's check is not feasible today.
-- The inherited wrong edges it found, and the count of type arguments, are debts that do not block:
-  `docs/tech-debt.md` (TD-001 to TD-006), each with a strict xfail test. The gaps H5-D16 and H5-D17 left out are
-  there too (TD-007 to TD-022).
-- Record: `docs/indexer/evidence/h5-d18.md`.
-
-**What is left for it:** CI, with `graph-change` applied by the author; the merge; the reinstall (the author's); the
-live validation before and after it (`docs/indexer/method.md` §4.7 and §4.8); the records.
+**C# is closed, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a strict xfail
+test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that did not
+write it (H7-D6): a person's check is not feasible today.
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
-`docs/indexer/resume-test.md` passed all nine criteria in a clone (run 4, 2026-10-27). `protocol.sh`, `micro-fresh.sh`,
-`time-alone.sh`, `mutate.sh` and the `live/` chain ran before the recovery edited them, or never; they are exercised
-again on H5-D18's PR.
+`docs/indexer/resume-test.md` passed all nine criteria in a clone (run 4, 2026-10-27). The `live/` chain ran on #30,
+and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy of its folder.
+`protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or never: they
+are exercised again on the next PR of the indexer.
 
 **Next.**
-1. Close H5-D18 (above).
+1. The check that every case in `docs/tech-debt.md` is a strict xfail in the tests, and the reverse. It runs outside the
+   test container, which does not see `docs/`.
 2. Step 5 for Python, then TS: each a refactor, then a change of behavior. Judging by case needs a per-site
    attribution first (gap G1 below).
 3. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
@@ -52,7 +45,8 @@ again on H5-D18's PR.
 - **Judgment is not yet automated (H7-D6).** G1's attribution and the verdict record (H7-D2) are to build; until then
   each change of behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
-  integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds PR #27's pair.
+  integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds the last
+  validated PR's pair.
 
 The author's decisions are under "Decisions made". This handoff was born from a review asked for in the middle of the
 F1.14 close: after 24 rule commits since corpus v2, the extractor had functions of very high complexity, large files
@@ -751,8 +745,7 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
 - **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
-  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided its acceptance (`docs/decisions.md`, H5-D18 and H7-D6). Its record is
-  `docs/indexer/evidence/h5-d18.md`.
+  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided its acceptance (`docs/decisions.md`, H5-D18 and H7-D6). Merged as PR #30.
 
 ## Pitfalls
 

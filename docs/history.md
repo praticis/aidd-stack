@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -188,3 +188,8 @@
   reaches. The author accepts the review as the judgment, registers the defects the fix leaves as debts
   (`docs/tech-debt.md`), moves the gaps H5-D16 and H5-D17 left out to the same register (TD-007 to TD-022) and decides
   that the judgment is to be automated (H7-D6).
+- 2026-10-27: the fix merges as PR #30 and is validated on a live install (the thirteenth golden round). The dry-runs
+  of `main` and of the merge are identical, the graph holds them before and after the reinstall, the picture differs
+  only in the build and the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold none of
+  the calls the change reaches, so the round checks the install, not the change. The live validation becomes one
+  command, `indexer/scripts/live/validate.sh` (PR #31).

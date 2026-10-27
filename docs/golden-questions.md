@@ -498,5 +498,38 @@ This round is the read-only side before a merge, on the same 3 tenants and 10 sn
 | Q5 `ref_diff` | ✅ answered |
 
 **What the round does not show.** As in the tenth and eleventh rounds, these snapshots hold none of the calls the change
-reaches, so the round checks the install, not the change. The change was judged on the corpus (H5-D18's evidence, §5). The after side waits for the merge. The details are in
-[H5-D18's evidence](indexer/evidence/h5-d18.md), §7.
+reaches, so the round checks the install, not the change. The change was judged on the corpus and by an independent review (H5-D18 in [the decisions](decisions.md)). The after
+side is the thirteenth round.
+
+## Thirteenth round: validating PR #30 on a live install (2026-10-27, build `0.2.15+ccc54d86dbc7` to `0.2.15+2aa181ba2eec`)
+
+What changed since the twelfth round: H5-D18 is merged (PR #30): which extension method a C# call reaches when only one
+can serve it. The graph may change on purpose, in C#'s `CALLS` only. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the dry-runs of `main` (`82032e8`) and of the merge (`2aa26b0`) on each snapshot,
+  at its sha, are identical section by section in all 10. The live graph holds `main`'s dry-run on every snapshot,
+  counted by the writer's merge keys (0 mismatching). The "before" was taken afresh, not copied from an earlier round:
+  10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules, 0 violations.
+- **After the author's reinstall from `main`:** the refresher re-indexed the 10 snapshots, one run each, `ok` and with
+  no error, and no snapshot is `outdated`.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round does not show.** As in the tenth to twelfth rounds, these snapshots hold none of the calls the change
+reaches, so the round checks the install, not the change. The change was judged on the corpus and by an independent
+review of a seeded sample (H5-D18 in [the decisions](decisions.md)).
+
+**How it was taken.** The steps of `docs/indexer/method.md` §4.7 and §4.8, by hand. `indexer/scripts/live/validate.sh`
+(PR #31) gave the same counts for the after side on a copy of the folder.

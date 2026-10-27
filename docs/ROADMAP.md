@@ -23,9 +23,12 @@
 - **In progress:**
   - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
     `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
-    and C# (PRs #23, #25 and the `fix(csharp)` of H5-D17, #27) are merged and validated on a live install. A wrong edge
-    PR #27 exposed has a fix in review (H5-D18); the defects it leaves, and the gaps H5-D16 and H5-D17 left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022);
-    TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, Python and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
+    H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
+    left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
+    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, the check that the debts' cases exist; then Python
+    and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10
+    and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
