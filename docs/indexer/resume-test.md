@@ -16,6 +16,27 @@ and a session that is not a subagent of the one that wrote these documents.
   worktree outside the workspace: `git worktree add --detach <fresh path> <commit>`.
 - Missing by design, and not a failure: `.local/`, the corpus cache, the live install.
 
+### Running it
+
+```sh
+indexer/scripts/protocol/resume-test.sh COMMIT
+```
+
+It makes a detached worktree outside the workspace, starts a new headless `claude` session in it with no memory, no
+MCP servers and read-only tools, gives it the prompt of §2, and writes next to the worktree, outside the repository:
+
+- `report.md`, the session's report, to judge against §3;
+- `calls.txt`, every tool call it made, with the failed or refused ones and those that touched a path outside the
+  checkout flagged. Criteria 2, 4, 7 and 9 are checked here;
+- `transcript.jsonl`, the full event stream.
+
+The script prints the folder and removes the worktree (`--keep` leaves it). The allowlist stops writes; a read outside
+the checkout is flagged, not blocked, and the session still runs on this machine and account.
+
+By hand: `git worktree add --detach <fresh path> <commit>`, open that folder in a new window (a new chat in the current
+window is not isolated), paste only the block of §2 so the criteria of §3 stay unread, copy the report out, then
+`git worktree remove <path>`.
+
 ## 2. The prompt
 
 ```text
