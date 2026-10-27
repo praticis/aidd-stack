@@ -1,9 +1,9 @@
-"""Prints the tree-sitter C# tree of a snippet, named nodes only, with field names."""
+"""Prints the tree-sitter tree of a snippet, named nodes only, with field names.   tree.py FILE [GRAMMAR=csharp]"""
 import sys
 from tree_sitter_language_pack import get_parser
 
 src = open(sys.argv[1], "rb").read()
-tree = get_parser("csharp").parse(src)
+tree = get_parser(sys.argv[2] if len(sys.argv) > 2 else "csharp").parse(src)
 
 
 def show(n, depth=0, field=None):

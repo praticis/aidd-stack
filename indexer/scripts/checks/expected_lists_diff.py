@@ -1,8 +1,9 @@
-"""Every change between main's gabaritos and HEAD's, classified.
+"""Every change between main's expected lists and HEAD's, classified.
 
-usage: a2_gabaritos.py MAIN_DIR HEAD_DIR RUN_DIR
+usage: expected_lists_diff.py MAIN_DIR HEAD_DIR RUN_DIR
   expected pairs removed or added; categories cleared (and whether RUN finds the pair) or newly set;
-  checked verdicts flipped, checked items dropped or added."""
+  checked verdicts flipped, checked items dropped or added.
+Needs corpus_metrics and aidd_indexer importable: in the indexer image, PYTHONPATH=/src:/src/scripts."""
 import json
 import sys
 from pathlib import Path
@@ -25,8 +26,8 @@ for hp in sorted(head_dir.glob("*.json")):
         continue
     repo = hp.stem
     if m is None:
-        print(f"== {repo}: new gabarito")
-        bump("new gabaritos")
+        print(f"== {repo}: new expected list")
+        bump("new expected lists")
         continue
     run_path = run_dir / f"{repo}.json"
     run = json.loads(run_path.read_text()) if run_path.exists() else {}

@@ -8,8 +8,8 @@ label="$1"; shift
 repo="${AIDD_REPO:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 indexer=$repo/indexer home=$HOME/.cache/aidd-corpus image=aidd-indexer:local
 img=$(docker image inspect -f '{{.Id}}' "$image" | sed 's/^sha256://' | cut -c1-12)
-# the base is the commit the branch starts from: main may have moved on with code the dry-runs do not run
-tree=$(git -C "$indexer" rev-parse "$(git -C "$indexer" merge-base main HEAD):./aidd_indexer")
+# the base is the commit the branch starts from ($AIDD_BASE_REF, default origin/main): main may have moved on with code the dry-runs do not run
+tree=$(git -C "$indexer" rev-parse "$(git -C "$indexer" merge-base "${AIDD_BASE_REF:-origin/main}" HEAD):./aidd_indexer")
 base="$home/micro/base-$tree-$img"
 stamp=$(date +%H%M%S)
 head="$home/micro-fresh/$label-$stamp" copy="$home/micro-fresh/$label-$stamp-copy"

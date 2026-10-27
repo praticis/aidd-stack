@@ -14,8 +14,11 @@ indexer/scripts/corpus.sh --label "$label" --baseline "${AIDD_BASELINE:-2026-10-
 echo "corpus rc=$? $(grep 'repo(s) differ' "$out/corpus.txt" | tail -1) $(date +%T)"
 indexer/scripts/corpus.sh --holdout --label "$label-holdout" --baseline "${AIDD_HOLDOUT_BASELINE:-2026-10-18-v2-holdout-26}" >"$out/holdout.txt" 2>&1
 echo "holdout rc=$? $(grep 'repo(s) differ' "$out/holdout.txt" | tail -1) $(date +%T)"
-# the micro set, and any more repos after the label; through fresh paths (micro-fresh.sh)
-micro="eshop jellyfin btcpayserver umbraco vikunja gitea mattermost grafana dispatch netbox ghost outline"
+# the micro set (micro.py's MICRO), and any more repos after the label; through fresh paths (micro-fresh.sh)
+micro=$(python3 -I -c 'import ast, sys
+tree = ast.parse(open(sys.argv[1]).read())
+print(*next(ast.literal_eval(n.value) for n in tree.body
+            if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "MICRO"))' "$here/../micro.py")
 # shellcheck disable=SC2086
 "$here/micro-fresh.sh" "$label" $micro "$@" >"$out/micro.txt" 2>&1
 rc=$?

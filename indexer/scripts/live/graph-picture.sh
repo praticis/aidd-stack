@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Read-only picture of the live graph: counts per snapshot and the sorted lists the before/after diff compares.
-#   foto.sh OUT_DIR
+#   graph-picture.sh OUT_DIR
 set -euo pipefail
 out="$1"; mkdir -p "$out"
 

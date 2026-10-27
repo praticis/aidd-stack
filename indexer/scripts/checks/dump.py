@@ -1,7 +1,6 @@
-"""Every C# file's type facts under /corpus, as JSON in field order, one line per file: `repo/path<TAB>json`.
-The code is the indexer mounted at /src; the repos are only parsed.   dump.py OUT_FILE
-
-Rebuilt from the transcript of the session that wrote it on 2026-10-22, not recovered as a file."""
+"""Every file's type facts under /corpus, as JSON in field order, one line per file: `repo/path<TAB>json`. The same
+dump from two codes shows whether a refactor changed a fact. Only languages with type facts: csharp, go.
+The code is the indexer mounted at /src; the repos are only parsed.   dump.py LANGUAGE OUT_FILE"""
 import json
 import sys
 from pathlib import Path
@@ -21,11 +20,12 @@ def plain(x):
     return x
 
 
-lang, parser = languages.by_id("csharp"), get_parser("csharp")
+lang = languages.by_id(sys.argv[1])
+parser = get_parser(lang.grammar)
 n = 0
-with open(sys.argv[1], "w") as out:
+with open(sys.argv[2], "w") as out:
     for repo in sorted(Path("/corpus").iterdir()):
-        for f in sorted(repo.rglob("*.cs")):
+        for f in sorted(p for ext in lang.extensions for p in repo.rglob(f"*{ext}")):
             if not f.is_file() or f.is_symlink():
                 continue
             src = f.read_bytes()

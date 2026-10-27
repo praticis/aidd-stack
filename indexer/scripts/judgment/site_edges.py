@@ -1,6 +1,7 @@
 """The CALLS edges of given sites in dry-runs: site_edges.py REPO FILE_SUFFIX:LINE[,..] DIR..."""
+import os
 import sys
-sys.path.insert(0, sys.argv[0].rsplit("/", 1)[0])
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from edges_lib import edges, load  # noqa: E402
 
 repo, sites = sys.argv[1], [s.rsplit(":", 1) for s in sys.argv[2].split(",")]

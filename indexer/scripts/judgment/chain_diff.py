@@ -4,10 +4,11 @@ narrowed or changed), with seeded samples of the kinds that change a callee.
    chain_diff.py BEFORE_DIR AFTER_DIR SAMPLE REPO... > OUT   (samples as JSON lines on stderr)"""
 import collections
 import json
+import os
 import random
 import sys
 
-sys.path.insert(0, sys.argv[0].rsplit("/", 1)[0])
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from edges_lib import edges, load  # noqa: E402
 
 

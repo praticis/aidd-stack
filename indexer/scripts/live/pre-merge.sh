@@ -5,7 +5,7 @@
 #   pre-merge.sh LIVE_DIR GOLDEN_CALLS_JSON
 V="$(cd "$(dirname "$0")" && pwd)"
 L="$1"; calls="$2"
-"$V/foto.sh" "$L/before" > "$L/foto_before.txt" 2>&1; echo "foto rc=$?"
+"$V/graph-picture.sh" "$L/before" > "$L/picture_before.txt" 2>&1; echo "picture rc=$?"
 python3 -I "$V/golden.py" "$calls" "$L/before/golden" > "$L/golden_before.txt" 2>&1; echo "golden rc=$?"
 "$V/dryrun-live.sh" "$L" "$L/head_src/indexer" "$L/main_src/indexer" "$L" > "$L/dryrun.txt" 2>&1; echo "dryrun rc=$?"
 python3 -I "$V/dry_sections.py" "$L/dry" > "$L/dry_sections.txt" 2>&1; echo "sections rc=$?"

@@ -36,15 +36,19 @@ and `graph-change` (`--label`) let a judged change through.
 
 ## Local tools, which CI does not run
 
-The method's other steps, each in a folder of its own:
+Each answers a question of the method (`docs/indexer/`). Their inputs and outputs stay outside the repository
+(`$AIDD_CORPUS_HOME`, `.local/`).
 
-- **`protocol/`:** the protocol on each commit, a micro comparison through fresh paths, the shape ratchet in the
-  image, timing alone;
-- **`judgment/`:** the micro graph's changes by kind and class, the loss analysis and the viewers;
-- **`probes/`:** a small repo's `CALLS`, a snippet's tree;
-- **`live/`:** the live install's picture, its golden calls and its dry-runs, before and after a merge. Their outputs
-  name the install's tenants, so they go outside the repository;
-- **`checks/`:** offline comparisons of expected lists and runs, the writer's mutation test, the walk's equivalence;
-- **`recovery/`:** lost scratchpad files rebuilt from a session's transcript.
+| Folder | Tools | Question | Runs |
+|---|---|---|---|
+| `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; the shape ratchet in the image | Docker |
+| `judgment/` | `chain_diff.py`, `show.py`, `site_edges.py` | which `CALLS` edges changed between two dry-runs, by kind; the sampled sites' source lines; one site's edges | `python3 -I` |
+| | `csharp_extensions.py` | the edges to the repo's C# extension methods that went away or came: `sites`, `back`, `classes`, `this-kind`, `blocks` | `python3 -I` |
+| `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
+| | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |
+| | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
+| `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
+| `live/` | `pre-merge.sh` and what it chains (`graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`); `json_paths_diff.py` | the live install before and after a merge, read-only | the install, with the author's authorization |
 
-Where each one came from, what it needs and how far it was checked is in `docs/indexer/resource-catalog.md`.
+The image's grammar cache belongs to root, so tools that parse run without `--user`. A tool's arguments are in its
+docstring.
