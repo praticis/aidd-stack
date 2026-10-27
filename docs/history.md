@@ -177,6 +177,3 @@
     reaches, so that round checks the install, not the change.
   - A new judgment on the corpus that day found one wrong edge the PR added: elsa's `x.GetInput<string>(item)` went
     to a method that is not generic. Its cause is older than the PR, and its fix is H5-D18.
-  - Later that day H5-D18, that fix, was implemented and judged on the corpus. It was checked on the live install
-    before a merge, whose snapshots hold none of the calls it reaches. It is not merged, and its result waits for the
-    author's review (`docs/indexer/evidence/h5-d18-validation-state.md`).

@@ -7,125 +7,62 @@
 > - ADRs 002 and 003;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
->   `2026-10-18-v2-baseline-29`).
->
-> **State (2026-10-23):** in progress. The first part merged as PR #7 (`efeb63d`), a checkpoint the author decided on
-> 2026-10-21 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part. Step 5's Go refactor merged as PR #17 (`3d20873`).
-> The rest follows in new PRs, each validated on a live install before its merge. Each is a refactor under the gates,
-> except step 5's changes of behavior, which are judged (H5-D10, H5-D12).
->
-> - **Done on the night of 2026-10-19.** Corpus and hold-out gave `0 repo(s) differ` against the starting baselines
->   at every code step; the numbers are in `corpus-report.md`, under "H5 baseline" and "H5 steps".
->   - **Step 0:** the baseline and `indexer/scripts/shape.py`, with a CI job that only reports.
->   - **Step 1:** 147 unit tests (`paths`, mounts, `Scopes`, `path_of`).
->   - **Step 2:** `tree.py` (a cursor `walk`, 2.5× faster), the on-demand registry and the end of the import cycle.
->   - **Step 3, in part:** a per-function declarations index for Go's declared type and C#'s locals (`NodeCache`).
->     On vikunja, `walk` dropped to 18 %. The shared `FileIndex` was not done: keeping every node of a file weighs on
->     memory (mattermost has 8 M nodes), and the design is to be decided with the author.
->   - **Step 4:**
->     - Go's, Python's and TS's package facts left the core (`languages/<lang>/package_facts.py`, the
->       `LanguageSupport.package_facts` hook);
->     - Go's `url.URL` and grpc-gateway went to `languages/go/paths.py`;
->     - no core decision tests the language's name any more;
->     - **on 2026-10-20, the typed facts.** Each language's facts are a dataclass (`GoFacts`, `PyFacts`, `TsFacts`)
->       whose fields each declare how two files' values join: one value or none, the last one, or a union
->       (`core/package_facts.py`). The core's `PackageContext` holds them by key and no field of its own is a
->       language's. Go's verb lists and its passthrough lookup left `core/http_expr.py`. A lookup across the repo
->       is a question to the view (`RepoView.defining`; C#'s qualified constants by `RepoView.constant_values`),
->       never a loop over the directories, and a test keeps the view the only code that walks them
->       (`test_repo_view.py`). Tests keep the core free of a language's module or id (`test_core_neutral.py`).
->
->     What the core still names is frameworks, in `http_base`'s receiver catalog and in examples: step 6's catalog.
->   - **Step 7:** every fact a file publishes and every request it leaves pending is a `NamedTuple` of its
->     language, read by field (`languages/<lang>/http_facts.py`; the mount and client-wrapper kinds the core's
->     machinery shares live in the core). A fact is published and looked up by its type (`HttpResult.publish`,
->     `facts_of`), and a pending item carries its request (`Pending.wait`, `HttpResult.waiting`). A shared kind adds
->     its language's scope (`mount_scope`), so each language composes its own. No text key and no positional tuple is
->     left between a scanner and its `compose`. `compose` as an ordered list of steps comes with step 6's
->     `http/compose.py`.
->   - **Step 8:** `core/matching.py`, the MCP split (`tools/list` byte for byte the same) and the Cypher tested
->     against a real Neo4j (`scripts/mcp-it.sh`, 14 cases).
->   - **Step 9:** the docstring without hand-written numbers. The summed time is at 54 % of step 0, within the noise.
->   - **Step 10, in part:** the comments without references to docs or project names, with a test that keeps it so.
->     Reviewing what each comment says is still missing.
-> - **The micro graph, checked afterwards (2026-10-19).** The protocol's corpus does not run the resolver, so step 3a's
->   changes to Go's and C#'s types were proven for `CALLS` only by the fixtures. Since then, full dry-runs of `main`
->   (`d055783`) and of the branch (`e5796a0`) have been compared record by record on 12 repos, and they are
->   identical. That check is now item 4 of the protocol.
-> - **Step 5, Go's refactor (PR #17, merged on 2026-10-21 and validated on a live install, the seventh golden
->   round).** Three commits, each under the protocol, with the graph identical:
->   - **The `TypeIndex` API in the core** (`core/types.py`). `RepoTypes` builds each language's index once per repo,
->     on its first question, and the HTTP pass and the resolver share the instance (`ExtractionResult.types`).
->   - **Go's type facts as typed values with no tree node** (`languages/go/type_facts.py`). They were checked equal to
->     the old dicts on the 21,624 Go files of the corpus and the hold-out. A C# generic call tests every homonym as an
->     extension method, so it now leaves out the symbols of another language: a Go method of the same name would
->     have had its typed facts read as C#'s dict.
->   - **Go's resolver asks `GoTypeIndex`** (`languages/go/type_index.py`), which holds PR #9's indexes: the files by
->     package and the method sets. The micro graph was compared on the 12 repos and on the corpus's 13 other Go
->     repos, and all are identical. The protocol first caught a crash: a `#` inside a call's own text
->     (`doc.Find("#id").Children()`) was read as a result number. `test_a_hash_in_the_text_of_a_call_is_no_result_number`
->     holds the case.
->
->   `go/symbols.py` went from 497 to 288 lines. The scanner's read of a field through the index went to the change of
->   behavior (H5-D11).
-> - **Step 5, Go's change of behavior (PR #20, merged on 2026-10-21 and validated on a live install, the eighth
->   golden round).** One answer for the resolver and the scanner, Go's own scoping, three older gaps of the type service
->   closed (H5-D15), judged by case, and baseline `-29`. "Go's change of behavior" below has the results.
-> - **Step 5, C#'s refactor (PR #23, merged on 2026-10-22 and validated on a live install, the ninth golden round).**
->   Two commits, each under the protocol, with the graph identical:
->   - **C#'s type facts as typed values with no tree node** (`languages/csharp/type_facts.py`: `CsTypes`, `CsType`).
->     They were checked equal to the old dicts, in their order, on the 35,255 C# files of the corpus and the hold-out.
->   - **C#'s resolver asks `CsTypeIndex`** (`languages/csharp/type_index.py`), which holds the indexes the resolver
->     kept in the context: the types by simple and by qualified name, the implementers and the DI chains. A type is
->     found from a file as before: the only one of its name, or the only one among the namespaces the file sees. A
->     type found that way has a single declaration, so the API by `TypeRef` answers what the old tuples did, partial
->     types included.
->
->   The micro graph was compared on the 12 repos and on the corpus's 11 other C# repos, and all are identical.
->   Alone, on one image, the corpus summed 746 s on `main` and 774 s on the branch, within the noise: the repos whose
->   code did not change moved more than the C# ones. `csharp/symbols.py` went from 674 to 396 lines. The scanner takes
->   `members` and `type_text` from the facts module; its read of a local's type goes to the change of behavior.
-> - **Step 5, C#'s change of behavior (PR #25, merged on 2026-10-22 and validated on a live install, the tenth golden
->   round).** One answer for the resolver and the scanner, with C#'s own scoping, and four older gaps of the type
->   service closed (H5-D16): a `partial` type is one type, a method's declared result, the repo's extension methods on
->   a typed receiver, and a type written with its namespace and type arguments. Judged by case; the corpus and the
->   hold-out are unchanged, so the baseline stays `-29`. "C#'s change of behavior" below has the results. Two more gaps
->   of what a name means in C# go in a PR of their own, right after (H5-D17).
-> - **Step 5, what a name means in C# (H5-D17, a `fix(csharp)` PR, done on 2026-10-23; merged as PR #27 on
->   2026-10-24; its validation after the merge, on a live install, passed on 2026-10-26, and the eleventh golden
->   round records it: see `docs/indexer/validation-and-continuity.md`).** A type's
->   simple name looked up as C# does, a capitalized member, nested types, `global using`, a type parameter's
->   constraint and type argument, an array, an extension block, and a call with no receiver. Judged by case; the corpus
->   and the hold-out are unchanged, so the baseline stays `-29`. "What a name means in C#" below has the results and
->   what stays out.
-> - **Step 5, which extension method a C# call reaches (H5-D18, decided on 2026-10-26; in the working tree, not
->   merged, and its result not yet accepted).** The fix of a wrong edge PR #27 exposed, by C#'s binding rules. Judged
->   on the corpus, whose HTTP results and hold-out are unchanged. On 2026-10-27 an AI agent independent of the change
->   judged a seeded sample at the source, and found no wrong changed edge. The author accepted that judgment as
->   complementary evidence; it is not the check by a person the method asks for. Two inherited defects are
->   non-blocking debt candidates for F1.2. Ten more inherited wrong edges are not classified as non-blocking: seven
->   fall under H5-D16 or H5-D17, and three are unresolved. Checked on the live install before a merge, whose
->   snapshots hold none of the calls it reaches. Its judgment, its validation, its debt and what stays out are in
->   `docs/indexer/evidence/h5-d18-validation-state.md`.
-> - **Next (H6-D1):** H6 (`docs/handoffs/H6-extraction-pipeline.md`) is designed: the extraction as a parallel map,
->   a reduce and a per-file cache, with ADR-004 to ADR-006 accepted on 2026-10-20. Step 3's `FileIndex` becomes H6's
->   per-file index, and steps 5 and 6 are designed against it (ADR-005, ADR-006). Then, built toward that design:
->   - 5 (`TypeIndex`, built in the reduce, and from a batch's facts for the scans made in map 1): the API in the
->     core, then Go, C#, Python and TS, each a refactor and then a change of behavior (H5-D7, H5-D10). Go's refactor
->     and its change of behavior are done, and the `fix(mcp)` for the order of `symbol_context`'s imports merged as
->     PR #19. C#'s refactor, its change of behavior and the `fix(csharp)` of H5-D17 are done. Next: Python, then
->     TS;
->   - 6 (recognizers with a YAML catalog, one language per commit);
->   - 12 (the rest of the code to the shape targets, H5-D6);
->   - the rest of 10;
->   - 11 (docs).
->
->   Then H6 is plugged in.
->
-> The author's decisions are under "Decisions made". The handoff was born from a review asked for in the middle of
-> the F1.14 close. After 24 rule commits since corpus v2, the extractor's code had functions of very high complexity,
-> large files and two parallel implementations of "what is the type of this". That has to be solved before SCIP
-> (F1.1/F1.2), because SCIP plugs in exactly at that seam.
+>   `2026-10-18-v2-baseline-29`);
+> - `docs/indexer/README.md`: the validation method and how to resume.
+
+## State (2026-10-27)
+
+**Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
+change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means, #27).
+Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
+`corpus-report.md`.
+
+**In progress: which extension method a C# call reaches (H5-D18).** The fix of a wrong edge that PR #27 exposed.
+- The code and its tests are 9 files on the branch `fix/h5-csharp-extension-binding`, in the worktree
+  `~/.cache/aidd-worktrees/h5-d18` (from `origin/main`). Not committed, not pushed. The suite passes.
+- Corpus and hold-out: 0 repos differ. Micro graph: 6 C# repos differ, −815 and +97 edges.
+- An AI agent independent of the change read a seeded sample of 189 items at the source and found no wrong item among
+  the 106 changed edges. The author accepted it as complementary evidence, not as the check by a person that H3 and
+  H4.1 ask for.
+- Record: `docs/indexer/evidence/h5-d18-validation-state.md`.
+
+**The gate is open. It needs the author to:**
+1. decide whether the gate also needs a person's check of a sample, or proceeds on the independent review;
+2. classify the 10 other inherited wrong edges: 7 fall under limitations of H5-D16 or H5-D17, and 3 are unresolved
+   (E1-011, F1-004, F2-012);
+3. give the two debt records (`EvaluateAsync`, `List<T>.AsReadOnly()`) a place in the plan, under F1.2;
+4. authorize the commit and the PR, with `graph-change`.
+
+Then CI, the merge, the reinstall (the author's), the live validation after it (`docs/indexer/method.md` §4.8) and
+the records. The count of type arguments (C2-002) is a separate follow-up, not part of H5-D18.
+
+**Method recovery.** The validation method was rebuilt from a lost session into `docs/indexer/` (the entry point is
+its `README.md`) and `indexer/scripts/`, on the branch `docs/h5-validation-recovery`. Left: finish the condensing of
+the docs, open its PR, then run `docs/indexer/resume-test.md` on the merged result. The tools that were never run
+(`protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `mutate.sh`, the `live/` chain) are exercised for the first time on
+H5-D18's PR.
+
+**Next.**
+1. Close H5-D18 (above).
+2. Step 5 for Python, then TS: each a refactor, then a change of behavior. Judging by case needs a per-site
+   attribution first (gap G1 below).
+3. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
+   step 11 (docs).
+4. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
+   cache, designed against ADR-004 to ADR-006. Then the new hold-out, P2 (the indexer in its own repo) and SCIP
+   (F1.1, F1.2).
+
+**Gaps.**
+- **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's
+  (`why_a.py`) was not recovered and needs a module that was not found; C# was judged with
+  `indexer/scripts/judgment/csharp_extensions.py`; Python and TS have nothing. Design one before step 5 for Python.
+- Evidence that cannot be regenerated (PR #27's "before" picture, the past PRs' micro runs) has a single copy and no
+  backup policy.
+
+The author's decisions are under "Decisions made". This handoff was born from a review asked for in the middle of the
+F1.14 close: after 24 rule commits since corpus v2, the extractor had functions of very high complexity, large files
+and two parallel implementations of "what is the type of this". That has to be solved before SCIP (F1.1, F1.2),
+because SCIP plugs in exactly at that seam.
 
 ## Context in one paragraph
 
@@ -855,11 +792,6 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   global namespace from its own project, `global using`, a type parameter's constraint and type argument, a method's
   result with its type arguments, an array, an extension block and a call with no receiver. Out: the thirteen items
   under "What a name means in C#".
-- **H5-D18 (2026-10-26), a C# call that only the repo's extension methods can serve reaches one only where C# can
-  bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
-  type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
-  C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed (its
-  evidence, §10). Not merged; its record is `docs/indexer/evidence/h5-d18-validation-state.md`.
 
 ## Pitfalls
 

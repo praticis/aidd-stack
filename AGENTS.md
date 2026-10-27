@@ -139,7 +139,7 @@ The full text is in the ROADMAP, under "Principles".
 | What happened, and when | `docs/history.md`; the full old text is in git (`git show 1d73bb0:docs/ROADMAP.md`) |
 | How the indexer decides (rules, the cycle of a change, the code map) | `docs/indexer-evolution.md` |
 | The HTTP extractor's numbers and what is missing | `docs/corpus-report.md` |
-| How the indexer's changes are validated, where H5 and its last PR stand, and how to resume safely | `docs/indexer/validation-and-continuity.md`, the entry point to `docs/indexer/` |
+| How the indexer's changes are validated (the cycle, the tools, how a difference is judged) and how to resume safely | `docs/indexer/README.md`, the entry point to `docs/indexer/` |
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |

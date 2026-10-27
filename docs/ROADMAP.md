@@ -19,18 +19,11 @@
   hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`. Since slice 1c
   (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
 - **In progress:**
-  - H5: its first part merged as PR #7 (H5-D8): steps 0–2, 4 and 7–9, and 3 and 10 in part, each passing the gates
-    as a refactor. Step 5 (the `TypeIndex`) goes one language at a time, a refactor and then a change of behavior
-    (H5-D10): Go's refactor merged as PR #17, the `fix(mcp)` for `symbol_context`'s imports as PR #19, and Go's change
-    of behavior as PR #20, validated on a live install (the eighth golden round). C#'s refactor merged as PR #23 and
-    its change of behavior as PR #25, each validated on a live install (the ninth and tenth golden rounds). The
-    `fix(csharp)` for what a name means in C# (H5-D17) merged as PR #27 on 2026-10-24; thirteen gaps it found stay
-    out, recorded in the H5 handoff. Its validation after the merge, on the live install, passed on 2026-10-26; the
-    eleventh golden round records it (`docs/indexer/validation-and-continuity.md`). A wrong edge PR #27 exposed has a
-    fix, H5-D18, which is not merged and not accepted (`docs/indexer/evidence/h5-d18-validation-state.md`). An
-    independent AI review of a seeded sample found no wrong changed edge, and the gate stays open.
-    Next, Python and TS. After step 5: step 6 (recognizers and the catalog), step 12 (the rest of the code to the
-    shape targets), then 10 and 11;
+  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
+    `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
+    and C# (PRs #23, #25 and the `fix(csharp)` of H5-D17, #27) are merged and validated on a live install. A wrong edge
+    PR #27 exposed has a fix that waits for the author's decisions (H5-D18; the handoff lists them). Next, Python and
+    TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -297,9 +290,6 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Cases to measure it on: two C# defects `main` has, non-blocking debt candidates the author associated with F1.2
-    on 2026-10-27 (`docs/indexer/evidence/h5-d18-validation-state.md`, §6.2), each with its regression cases. SCIP is
-    a possible remedy for both, not a proven one, and the first may be fixed in the resolver instead
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`
