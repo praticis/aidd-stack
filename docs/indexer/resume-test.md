@@ -3,17 +3,18 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: one preliminary run (§4); a clean run is still to do.** It needs a clean clone of a commit that is pushed,
-and a session that is not a subagent of the one that wrote these documents.
+**Status: two runs (§4), neither with full isolation; one in a clone is still to do.** It needs a clean clone of a
+commit that is pushed, and a session that is not a subagent of the one that wrote these documents.
 
 ## 1. Preconditions
 
 - The commit under test is pushed and named.
-- The session gets a clean clone or worktree of it, with nothing from `.local/`, `~/.cache/aidd-corpus`, a
-  scratchpad, or an earlier session's transcripts or memory.
+- The session gets a clean clone of it, with nothing from `.local/`, `~/.cache/aidd-corpus`, a scratchpad, or an
+  earlier session's transcripts or memory. A worktree is not enough: it shares the project's memory with the main
+  checkout (run 2 showed it).
 - The session is new and is given only the prompt below. A subagent of the working session is not clean: it inherits
-  the project's instructions and memory and can read outside the checkout. Start a new top-level session in a detached
-  worktree outside the workspace: `git worktree add --detach <fresh path> <commit>`.
+  the project's instructions and memory and can read outside the checkout. Start a new top-level session in a clone
+  outside the workspace: `git clone <url> <fresh path> && git -C <fresh path> checkout --detach <commit>`.
 - Missing by design, and not a failure: `.local/`, the corpus cache, the live install.
 
 ### Running it
@@ -22,20 +23,22 @@ and a session that is not a subagent of the one that wrote these documents.
 indexer/scripts/protocol/resume-test.sh COMMIT
 ```
 
-It makes a detached worktree outside the workspace, starts a new headless `claude` session in it with no memory, no
-MCP servers and read-only tools, gives it the prompt of §2, and writes next to the worktree, outside the repository:
+It clones the remote outside the workspace, checks out the commit, starts a new headless `claude` session in the clone
+with no MCP servers and read-only tools, gives it the prompt of §2, and writes next to the clone, outside the
+repository:
 
 - `report.md`, the session's report, to judge against §3;
-- `calls.txt`, every tool call it made, with the failed or refused ones and those that touched a path outside the
-  checkout flagged. Criteria 2, 4, 7 and 9 are checked here;
+- `calls.txt`, whose first line holds the model and `memory_paths` (it must name the clone, not the project's own
+  memory), then every tool call, with the failed or refused ones and those that touched a path outside the clone
+  flagged. Criteria 2, 4, 7 and 9 are checked here;
 - `transcript.jsonl`, the full event stream.
 
-The script prints the folder and removes the worktree (`--keep` leaves it). The allowlist stops writes; a read outside
-the checkout is flagged, not blocked, and the session still runs on this machine and account.
+The script prints the folder; delete it when done. The allowlist stops writes; a read outside the clone is flagged,
+not blocked, and the session still runs on this machine and account, so the user-level instructions still apply.
+The commit must be pushed.
 
-By hand: `git worktree add --detach <fresh path> <commit>`, open that folder in a new window (a new chat in the current
-window is not isolated), paste only the block of §2 so the criteria of §3 stay unread, copy the report out, then
-`git worktree remove <path>`.
+By hand: clone as above, open that folder in a new window (a new chat in the current window is not isolated), paste only
+the block of §2 so the criteria of §3 stay unread, and copy the report out.
 
 ## 2. The prompt
 
@@ -51,8 +54,9 @@ micro set, the indexer, any live-install check or any Docker command that writes
    anything not committed.
 3. State where H5 stands, which gate is open, what is missing and what comes next. Cite the document and section
    behind each claim.
-4. List what the next step needs (tools, images, baselines, private evidence, the live install) and check whether each
-   exists here: "present", "missing by design in a clean clone" or "missing, unexpected".
+4. List what the next step needs (tools, images, baselines, private evidence, the live install). For what is in this
+   checkout, say "present" or "missing, unexpected". What lives outside it (the corpus cache, Docker images, `.local/`,
+   the live install) is "missing by design in a clean clone": say so, and do not look for it.
 5. Name the checks you could run safely, with the exact command for each, and those that need the author's
    authorization, with their class from method.md.
 6. Say how a semantic mismatch is handled and what blocks a PR, citing the rules by id.
@@ -99,3 +103,17 @@ private evidence.
   Three came from the setup: the base, a stale copy of AGENTS.md in its context, the clean-clone table.
 - Changed because of it: the handoff's state, method.md §2 and §4.5, and this page's §1. Open: where H5-D18's decision
   row lives (this branch or the fix branch).
+
+**Run 2, 2026-10-27, commit `06956e8` (PR #28 merged): headless, by `resume-test.sh`.** `claude-opus-5-5`, no
+MCP servers, read-only tools; 28 turns, 152 s. It ran in a worktree: `memory_paths` pointed at the project's own memory, and
+the report came in Portuguese. The runner now clones.
+- All nine criteria passed. It read the README's documents in order and never read this page; it stated H5, the open
+  gate and the four decisions with whose each is; it made no write call; it stopped after the report.
+- It left the checkout to look for the corpus cache and `.local/` (names only) and said so. The cause was step 4 of the
+  prompt, which asked whether each item "exists here". The prompt is fixed.
+- Five calls were refused (compound commands, paths outside the checkout): the allowlist held, and the session adapted.
+- It reported four inconsistencies, all real: the handoff said the fix was not committed (it has two local commits) and
+  that PR #28 was still to merge; two micro bases exist for one tree under two image ids; the timing rule is not
+  followed (a documented deviation).
+- Changed because of it: the runner (clone, memory path, the paths of `Glob` and `Grep`), this page's §1, step 4 of the
+  prompt and §4, and the handoff's state. Open: a run in a clone, with the new prompt.

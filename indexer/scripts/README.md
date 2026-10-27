@@ -42,7 +42,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | Folder | Tools | Question | Runs |
 |---|---|---|---|
 | `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; the shape ratchet in the image | Docker |
-| | `resume-test.sh` | whether a new session can resume from a commit: a headless, read-only `claude` run, with its report and its tool calls in files | `claude` |
+| | `resume-test.sh` | whether a new session can resume from a pushed commit: a headless, read-only `claude` run in a fresh clone, with its report and its tool calls in files | `claude`, network |
 | `judgment/` | `chain_diff.py`, `show.py`, `site_edges.py` | which `CALLS` edges changed between two dry-runs, by kind; the sampled sites' source lines; one site's edges | `python3 -I` |
 | | `csharp_extensions.py` | the edges to the repo's C# extension methods that went away or came: `sites`, `back`, `classes`, `this-kind`, `blocks` | `python3 -I` |
 | `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |

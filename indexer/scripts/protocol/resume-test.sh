@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
-# The resume test (docs/indexer/resume-test.md) on a commit, headless: a detached worktree outside the workspace, a new
-# `claude` session with no memory, no MCP servers and read-only tools, the prompt of §2, and the report in a file.
-# Everything is written to a folder next to the worktree, outside the repository:
-#   report.md       the session's report
-#   calls.txt       every tool call it made, and which failed or read outside the checkout (criteria 2, 4, 7, 9)
+# The resume test (docs/indexer/resume-test.md) on a pushed commit, headless: a fresh clone outside the workspace (a
+# worktree would share the project's memory), a new `claude` session with no MCP servers and read-only tools, the prompt
+# of §2, and the report in a file. Written to a folder next to the clone, outside the repository:
+#   report.md         the session's report
+#   calls.txt         its first line says which memory it loaded; then every tool call, with the failed or refused ones
+#                     and those that touched a path outside the clone flagged (criteria 2, 4, 7, 9)
 #   transcript.jsonl  the full event stream
-#   resume-test.sh COMMIT [--keep]      --keep leaves the worktree
+#   resume-test.sh COMMIT                the clone stays; delete the folder when done
 set -euo pipefail
 
-commit="${1:?usage: resume-test.sh COMMIT [--keep]}"; keep="${2:-}"
+commit="${1:?usage: resume-test.sh COMMIT}"
 repo="$(cd "$(dirname "$0")/../../.." && pwd)"
 sha="$(git -C "$repo" rev-parse --short "$commit")"
 out="${AIDD_RESUME_RUNS:-$HOME/.cache/aidd-worktrees}/resume-test-$sha-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$out"
-git -C "$repo" worktree add --detach "$out/checkout" "$commit" >/dev/null
+git clone --quiet "$(git -C "$repo" remote get-url origin)" "$out/checkout"
+git -C "$out/checkout" checkout --quiet --detach "$(git -C "$repo" rev-parse "$commit")" \
+  || { echo "$commit is not on the remote: push it first" >&2; exit 2; }
 
 prompt="$(python3 -I -c 'import re, sys
 text = open(sys.argv[1]).read()
@@ -22,7 +25,7 @@ print(re.search(r"## 2\. The prompt.*?```text\n(.*?)```", text, re.S).group(1))'
 # read-only by construction: no write tools, and only these commands. A refused call is kept in calls.txt.
 allowed="Read,Grep,Glob"
 for c in "git status" "git diff" "git log" "git show" "git branch" "git worktree list" "git rev-parse" "git rev-list" \
-         "git ls-tree" "git ls-files" "git merge-base" "git stash list" "ls" "wc" "head" "tail" "cat" \
+         "git ls-tree" "git ls-files" "git merge-base" "git stash list" "ls" "wc" "head" "tail" "cat" "grep" \
          "docker image inspect" "docker image ls" "gh pr view" "gh pr list" "gh pr checks" "gh run list"; do
   allowed="$allowed,Bash($c:*)"
 done
@@ -45,12 +48,13 @@ for line in open(out + "/transcript.jsonl"):
         continue
     kind = ev.get("type")
     if kind == "system" and ev.get("subtype") == "init":
-        meta = {k: ev.get(k) for k in ("model", "cwd", "mcp_servers", "permissionMode")}
+        meta = {k: ev.get(k) for k in ("model", "cwd", "mcp_servers", "permissionMode", "memory_paths")}
     elif kind == "assistant":
         for block in ev.get("message", {}).get("content", []):
             if block.get("type") == "tool_use":
-                arg = block["input"].get("command") or block["input"].get("file_path") or block["input"].get("pattern") \
-                    or block["input"].get("path") or ""
+                inp = block["input"]
+                arg = inp.get("command") or inp.get("file_path") or " in ".join(
+                    x for x in (inp.get("pattern"), inp.get("path")) if x)
                 names[block["id"]] = len(calls)
                 calls.append([block["name"], str(arg), ""])
     elif kind == "user":
@@ -65,10 +69,10 @@ open(out + "/report.md", "w").write(report + "\n")
 with open(out + "/calls.txt", "w") as fh:
     fh.write(json.dumps(meta) + "\n")
     for name, arg, flag in calls:
-        paths = [arg] if name in ("Read", "Grep", "Glob") else arg.split()
+        paths = arg.replace(" in ", " ").split()
         outside = any(t.startswith(("/", "~")) and not t.startswith(checkout) for t in paths)
         fh.write(f"{name}\t{arg}\t{flag}{' OUTSIDE THE CHECKOUT' if outside else ''}\n")
 print(out)
 EOF
 
-[ -n "$keep" ] || git -C "$repo" worktree remove --force "$out/checkout"
+echo "the clone is $out/checkout; delete the folder when done" >&2
