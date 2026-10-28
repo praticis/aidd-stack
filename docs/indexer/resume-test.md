@@ -3,7 +3,7 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: passed in runs 4 to 6 (§4), in a clone with the fixed prompt.** Run it again after a change to these
+**Status: passed in runs 4 to 7 (§4), in a clone with the fixed prompt.** Run it again after a change to these
 documents or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a
 subagent of the one that wrote them.
 
@@ -183,3 +183,17 @@ one with `git fetch --dry-run`, and a shell `for` loop), and the session adapted
   cannot verify.
 - Changed because of it: the handoff's gap G1 and H5-D1, method.md §4.12 and §7, and AGENTS.md. Step 6's order was the
   author's: decided the same day (H5-D20), in the steps table, ADR-006 and the decisions.
+
+**Run 7, 2026-10-28, commit `0e3e672` (PR #39 merged): headless, in a clone: passed.** `claude-opus-5-5`; 24 turns,
+125 s. `memory_paths` named the clone. Two calls were refused (a shell `for` loop checking files, and
+`git check-ignore`), and the session checked the same files with Glob.
+- All nine criteria passed. It read the README's documents in order; it found no open gate and G1 closed by H5-D21,
+  with the next step as step 5 for Python (a `chore(scripts)` PR only if its cases need a fact the probe lacks, then
+  the refactor, then the change of behavior); it called the cache, the image, `.local/` and the live install missing
+  by design without looking for them, and stopped after the report.
+- It reported four points, two real: H5-D19's text still had each language's `<lang>_answers.py`, with the amendment
+  stated only in H5-D21; and the handoff's State gave the resume test's runs as 4 and 5. The other two: the tooling's
+  trailer suggestion against the project's rule, and gaps the documents already state (`checks/dump.py` covers only
+  C# and Go; the timing rule against one run per side).
+- Changed because of it: H5-D19 in the handoff and `decisions.md` (amended by H5-D21), the handoff's State, this
+  page's status and `history.md`.
