@@ -114,7 +114,7 @@ python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.t
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
-python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR]
+python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
 ```
 
@@ -272,6 +272,10 @@ extraction's API (`list_files`, `discover_modules`, `build_files`, `extract_file
    before the change, in a `--cases` file whose `case_of(d)` reads the types, the source line and the facts the probe
    gives (`closures`, the function literals around the use: Go's func literals, Python's lambdas and functions defined
    in another), and returns the case, or None for the answer's own.
+4. Read how the language's `CALLS` are found, at the end of the report: each repo's edges by strategy on both sides,
+   and the share the resolver found among several homonyms (`-ambiguous`), of the edges and of the sites (a file and a
+   line). A site emits up to three ambiguous edges, so the two shares differ; a line with two calls is one site,
+   ambiguous when either call is. `attribution.sh` passes the language, so only the calls made in its files count.
 
 The probe sees the type a call's receiver is given in its file, not what the resolver makes of it: a changed edge
 whose receiver has the same type on both sides is `unexplained`, even when the change is to how that type resolves.
