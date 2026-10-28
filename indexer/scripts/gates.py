@@ -91,22 +91,22 @@ class Listed:
         return f"{verb}, {'another place of an expected pair' if _hits(key[:2], self.expected) else 'outside the list'}"
 
 
-def _listed(name: str, kind: str, base: dict, head: dict, gab: dict | None, f: Findings) -> Listed:
-    if gab is None or kind not in gab:
+def _listed(name: str, kind: str, base: dict, head: dict, expected_list: dict | None, f: Findings) -> Listed:
+    if expected_list is None or kind not in expected_list:
         return Listed()
-    sb, sh = M.score(base, gab, kind), M.score(head, gab, kind)
+    sb, sh = M.score(base, expected_list, kind), M.score(head, expected_list, kind)
     _ratchet(name, kind, sb, sh, f)
     lost = set(sh.false_negatives) - set(sb.false_negatives)
     f.failed["No win lost"] += [f"{name} {kind}: expected `{m} {p}` no longer found" for m, p in sorted(lost)]
-    return Listed(set(sb.false_negatives) - set(sh.false_negatives), lost, {M.item_key(i) for i in gab[kind]})
+    return Listed(set(sb.false_negatives) - set(sh.false_negatives), lost, {M.item_key(i) for i in expected_list[kind]})
 
 
-def _classify(name: str, kind: str, base: dict, head: dict, gab: dict | None, f: Findings) -> None:
+def _classify(name: str, kind: str, base: dict, head: dict, expected_list: dict | None, f: Findings) -> None:
     """The diff's items: gains, wins lost (a gate) and items to judge."""
     d = M.diff_runs(base, head, kind)
     if not d:
         return
-    ls = _listed(name, kind, base, head, gab, f)
+    ls = _listed(name, kind, base, head, expected_list, f)
     for key in d.added:
         if _hits(key[:2], ls.gained):
             f.gains.append(_item(name, kind, key, head))
@@ -117,10 +117,10 @@ def _classify(name: str, kind: str, base: dict, head: dict, gab: dict | None, f:
     f.to_judge += [f"{M.SECONDARY[kind]} changed: {_item(name, kind, key, head)}" for key in d.resolution]
 
 
-def _checked(name: str, base: dict, head: dict, gab: dict, f: Findings) -> None:
+def _checked(name: str, base: dict, head: dict, expected_list: dict, f: Findings) -> None:
     """A sampled item judged right that the base extracted and the branch does not."""
     for kind in M.KINDS:
-        cb, ch = M.checked_precision(base, gab, kind), M.checked_precision(head, gab, kind)
+        cb, ch = M.checked_precision(base, expected_list, kind), M.checked_precision(head, expected_list, kind)
         if cb is None or ch is None:
             continue
         before = {M._check_id(i) for i in cb.stale}
@@ -129,10 +129,10 @@ def _checked(name: str, base: dict, head: dict, gab: dict, f: Findings) -> None:
                 f.failed["No win lost"].append(f"{name} {kind}: checked `{i['method']} {i['path']}` at {i['evidence']} is gone")
 
 
-def _pool(name: str, base: dict, head: dict, gab: dict, f: Findings) -> None:
-    langs = gab.get("language") or {}
+def _pool(name: str, base: dict, head: dict, expected_list: dict, f: Findings) -> None:
+    langs = expected_list.get("language") or {}
     for kind in M.KINDS:
-        sb, sh = M.score(base, gab, kind), M.score(head, gab, kind)
+        sb, sh = M.score(base, expected_list, kind), M.score(head, expected_list, kind)
         if sb is None or sh is None:
             continue
         c = f.pooled[langs.get(kind) or H.LANGUAGE.get(name, "?")][kind]
@@ -146,14 +146,14 @@ def compare_repo(name: str, base: dict, head: dict, expected: Path, f: Findings)
         f.notes.append(f"{name}: the pin changed ({base.get('sha', '?')[:10]} → {head.get('sha', '?')[:10]}), so ids may "
                        "differ for that reason alone")
     gf = expected / f"{name}.json"
-    gab = json.loads(gf.read_text()) if gf.exists() else None
+    expected_list = json.loads(gf.read_text()) if gf.exists() else None
     if any(M.diff_runs(base, head, k) for k in M.KINDS):
         f.differ.append(name)
     for kind in M.KINDS:
-        _classify(name, kind, base, head, gab, f)
-    if gab is not None:
-        _checked(name, base, head, gab, f)
-        _pool(name, base, head, gab, f)
+        _classify(name, kind, base, head, expected_list, f)
+    if expected_list is not None:
+        _checked(name, base, head, expected_list, f)
+        _pool(name, base, head, expected_list, f)
 
 
 def compare_corpus(base: dict[str, dict], head: dict[str, dict], expected: Path, f: Findings) -> None:

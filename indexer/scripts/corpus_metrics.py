@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Measurement for the HTTP corpus (`scripts/http_corpus.py`): ids and diffs between two runs,
-precision/recall against a gabarito (`tests/corpus_expected/<repo>.json`), OpenAPI → gabarito and
+precision/recall against an expected list (`tests/corpus_expected/<repo>.json`), OpenAPI → expected list and
 reproducible samples for manual checking. Pure functions over a run (the per-repo JSON the corpus
 writes) — no tree-sitter, no network.
 
-Gabarito, one per repo:
+Expected list, one per repo:
 
     {"source": "openapi" | "routes-dump" | "manual",     # or per kind, like scope
      "sha": "<pinned commit it was read from>",
@@ -25,7 +25,7 @@ Gabarito, one per repo:
 Matching is by `(method, path_key)` over distinct pairs: placeholder names do not matter, an
 extracted ANY matches every method of the same path (and the other way round), and a route of a framework
 that matches paths without case (ASP.NET, `core/matching.py`'s `CASE_INSENSITIVE`) matches without case. A kind that is absent
-from the gabarito is not measured; present and empty means nothing is expected. `checked` is the
+from the expected list is not measured; present and empty means nothing is expected. `checked` is the
 manual sample of extracted items over the whole repo (H2-D6): precision = ok / checked with a verdict.
 
     python scripts/corpus_metrics.py from-openapi spec.yaml [more.yaml ...] [--prefix /api] [--scope dir/] [--sha X]
@@ -98,18 +98,18 @@ class Score:
         return (self.expected - len(self.false_negatives)) / self.expected if self.expected else None
 
 
-def score(run: dict, gabarito: dict, kind: str) -> Score | None:
-    if kind not in gabarito:
+def score(run: dict, expected_list: dict, kind: str) -> Score | None:
+    if kind not in expected_list:
         return None
-    scope = gabarito.get("scope") or ()
+    scope = expected_list.get("scope") or ()
     scope = tuple((scope.get(kind) or ()) if isinstance(scope, dict) else scope)
-    paths = gabarito.get("scope_paths") or ()
+    paths = expected_list.get("scope_paths") or ()
     paths = tuple((paths.get(kind) or ()) if isinstance(paths, dict) else paths)
     counted = [i for i in run.get(kind, []) if (not scope or evidence_file(i["evidence"]).startswith(scope))
                and (not paths or _under(normalize_path(i["path"]), paths))]
     x = {item_key(i) for i in counted}
     ci = {item_key(i) for i in counted if i.get("framework") in CASE_INSENSITIVE}   # Radarr's `/api/v3/AutoTagging`
-    e = {item_key(i) for i in gabarito[kind]}
+    e = {item_key(i) for i in expected_list[kind]}
 
     def match(k: tuple[str, str], j: tuple[str, str]) -> bool:
         return _matches((k[0], k[1].lower()), (j[0], j[1].lower())) if k in ci else _matches(k, j)
@@ -123,10 +123,10 @@ def _under(path: str, prefixes: tuple[str, ...]) -> bool:
     return any(path == p.rstrip("/") or path.startswith(p.rstrip("/") + "/") for p in prefixes)
 
 
-def miss_categories(gabarito: dict, kind: str, sc: Score) -> dict[tuple[str, str], str | None]:
+def miss_categories(expected_list: dict, kind: str, sc: Score) -> dict[tuple[str, str], str | None]:
     """Each false negative → the `category` its expected entry records (why it is missed), if any."""
     cats: dict[tuple[str, str], str | None] = {}
-    for item in gabarito.get(kind, []):
+    for item in expected_list.get(kind, []):
         key = item_key(item)
         if key in sc.false_negatives and not cats.get(key):
             cats[key] = item.get("category")
@@ -150,8 +150,8 @@ class Checked:
         return self.ok / self.judged if self.judged else None
 
 
-def checked_precision(run: dict, gabarito: dict, kind: str) -> Checked | None:
-    items = (gabarito.get("checked") or {}).get(kind)
+def checked_precision(run: dict, expected_list: dict, kind: str) -> Checked | None:
+    items = (expected_list.get("checked") or {}).get(kind)
     if not items:
         return None
     present = {_check_id(x) for x in run.get(kind, [])}
@@ -202,18 +202,18 @@ def load_spec(path: Path) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    oa = sub.add_parser("from-openapi", help="print a gabarito with the routes an OpenAPI/Swagger spec declares")
+    oa = sub.add_parser("from-openapi", help="print an expected list with the routes an OpenAPI/Swagger spec declares")
     oa.add_argument("spec", type=Path, nargs="+", help="several specs (API versions) → their union")
     oa.add_argument("--prefix", default=None, help="override the basePath/servers prefix ('' for none)")
     oa.add_argument("--scope", action="append", default=[], help="file prefix the extracted routes must be under")
     oa.add_argument("--sha", default="")
     args = ap.parse_args()
     routes = {(r["method"], r["path"]): r for sp in args.spec for r in from_openapi(load_spec(sp), args.prefix, sp.parent)}
-    gab = {"source": "openapi", "sha": args.sha, "spec": [str(sp) for sp in args.spec],
+    expected_list = {"source": "openapi", "sha": args.sha, "spec": [str(sp) for sp in args.spec],
            "endpoints": [routes[k] for k in sorted(routes, key=lambda t: (t[1], t[0]))]}
     if args.scope:
-        gab["scope"] = args.scope
-    json.dump(gab, sys.stdout, indent=1)
+        expected_list["scope"] = args.scope
+    json.dump(expected_list, sys.stdout, indent=1)
     print()
     return 0
 

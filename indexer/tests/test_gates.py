@@ -23,8 +23,8 @@ def run(eps):
     return {**RUN, "endpoints": eps}
 
 
-def check(tmp_path, base, head, labels=(), hold_base=None, hold_head=None, gab=LIST):
-    (tmp_path / "r.json").write_text(json.dumps(gab))
+def check(tmp_path, base, head, labels=(), hold_base=None, hold_head=None, expected_list=LIST):
+    (tmp_path / "r.json").write_text(json.dumps(expected_list))
     f = G.Findings()
     G.compare_corpus({"r": base} if base else {}, {"r": head} if head else {}, tmp_path, f)
     changed = G.holdout_changed(hold_base or {}, hold_head or {})
@@ -64,9 +64,9 @@ def test_a_handler_change_is_to_judge(tmp_path):
 
 
 def test_a_checked_item_judged_right_that_goes_is_a_win_lost(tmp_path):
-    gab = {**LIST, "checked": {"endpoints": [{**ep("POST", "/items", 2), "ok": True}]}}
-    del gab["endpoints"]
-    f, _ = check(tmp_path, RUN, run(RUN["endpoints"][:1]), gab=gab)
+    expected_list = {**LIST, "checked": {"endpoints": [{**ep("POST", "/items", 2), "ok": True}]}}
+    del expected_list["endpoints"]
+    f, _ = check(tmp_path, RUN, run(RUN["endpoints"][:1]), expected_list=expected_list)
     assert failing(f) == {"No win lost"}
 
 

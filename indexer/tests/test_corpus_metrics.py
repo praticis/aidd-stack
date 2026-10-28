@@ -1,5 +1,5 @@
-"""Corpus measurement (scripts/corpus_metrics.py): run diffs, precision/recall against a gabarito,
-OpenAPI → gabarito and reproducible samples. No network, no tree-sitter."""
+"""Corpus measurement (scripts/corpus_metrics.py): run diffs, precision/recall against an expected list,
+OpenAPI → expected list and reproducible samples. No network, no tree-sitter."""
 from __future__ import annotations
 
 import sys
@@ -41,11 +41,11 @@ def test_diff_reports_removed_added_and_resolution_changes():
 
 
 def test_score_matches_by_path_key_and_any():
-    gab = {"endpoints": [{"method": "GET", "path": "/v1/items/:itemId"},       # express-style name, same key
+    expected_list = {"endpoints": [{"method": "GET", "path": "/v1/items/:itemId"},       # express-style name, same key
                          {"method": "POST", "path": "/v1/items/"},
                          {"method": "GET", "path": "/health"}, {"method": "HEAD", "path": "/health"},   # ANY covers both
                          {"method": "DELETE", "path": "/v1/items/{id}"}]}
-    s = M.score(RUN, gab, "endpoints")
+    s = M.score(RUN, expected_list, "endpoints")
     assert (s.extracted, s.expected) == (4, 5)
     assert s.false_positives == [("GET", "/debug/vars")]
     assert s.false_negatives == [("DELETE", "/v1/items/{param}")]
@@ -53,35 +53,35 @@ def test_score_matches_by_path_key_and_any():
 
 
 def test_miss_categories_come_from_the_expected_entries():
-    gab = {"endpoints": [{"method": "DELETE", "path": "/v1/items/{id}", "category": "verb-alias"},
+    expected_list = {"endpoints": [{"method": "DELETE", "path": "/v1/items/{id}", "category": "verb-alias"},
                          {"method": "PUT", "path": "/v1/items/{itemId}"},
                          {"method": "PUT", "path": "/v1/items/{id}", "category": "route-constraint-syntax"},
                          {"method": "GET", "path": "/health"}]}
-    s = M.score(RUN, gab, "endpoints")
-    assert M.miss_categories(gab, "endpoints", s) == {("DELETE", "/v1/items/{param}"): "verb-alias",
+    s = M.score(RUN, expected_list, "endpoints")
+    assert M.miss_categories(expected_list, "endpoints", s) == {("DELETE", "/v1/items/{param}"): "verb-alias",
                                                       ("PUT", "/v1/items/{param}"): "route-constraint-syntax"}
 
 
 def test_scope_limits_extracted_and_absent_kind_is_not_measured():
-    gab = {"scope": ["api/"], "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"}]}
-    s = M.score(RUN, gab, "endpoints")
+    expected_list = {"scope": ["api/"], "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"}]}
+    s = M.score(RUN, expected_list, "endpoints")
     assert (s.precision, s.recall) == (1.0, 1.0)
-    assert M.score(RUN, gab, "calls") is None
+    assert M.score(RUN, expected_list, "calls") is None
 
 
 def test_scope_per_kind():
-    gab = {"scope": {"endpoints": ["api/"], "calls": ["nowhere/"]},
+    expected_list = {"scope": {"endpoints": ["api/"], "calls": ["nowhere/"]},
            "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"}], "calls": []}
-    assert M.score(RUN, gab, "endpoints").extracted == 2
-    assert M.score(RUN, gab, "calls").extracted == 0
+    assert M.score(RUN, expected_list, "endpoints").extracted == 2
+    assert M.score(RUN, expected_list, "calls").extracted == 0
 
 
 def test_path_scope_limits_extracted_to_the_spec_subspace():
     # a spec covers /v1 and /health; the same files also serve other surfaces (a web UI, debug pages)
-    gab = {"scope_paths": ["/v1/", "/health"],
+    expected_list = {"scope_paths": ["/v1/", "/health"],
            "endpoints": [{"method": "GET", "path": "/v1/items/{id}"}, {"method": "POST", "path": "/v1/items"},
                          {"method": "GET", "path": "/health"}]}
-    s = M.score(RUN, gab, "endpoints")
+    s = M.score(RUN, expected_list, "endpoints")
     assert (s.extracted, s.precision, s.recall) == (3, 1.0, 1.0)
     assert M.score(RUN, {"scope_paths": {"calls": ["/v2/"]}, "endpoints": []}, "endpoints").extracted == 4
 
@@ -90,8 +90,8 @@ def test_aspnet_routes_match_without_case():
     # ASP.NET routing ignores case (`[controller]` gives `AutoTagging`, Radarr's spec writes `autotagging`); others do not
     run = {"endpoints": [{**ep("GET", "/api/v3/AutoTagging", "r:a.cs:1"), "framework": "aspnet"},
                          {**ep("GET", "/Users", "r:b.go:1"), "framework": "gin/echo"}]}
-    gab = {"endpoints": [{"method": "GET", "path": "/api/v3/autotagging"}, {"method": "GET", "path": "/users"}]}
-    s = M.score(run, gab, "endpoints")
+    expected_list = {"endpoints": [{"method": "GET", "path": "/api/v3/autotagging"}, {"method": "GET", "path": "/users"}]}
+    s = M.score(run, expected_list, "endpoints")
     assert s.false_positives == [("GET", "/Users")] and s.false_negatives == [("GET", "/users")]
 
 
@@ -106,16 +106,16 @@ def test_empty_expectation_makes_every_extracted_item_a_false_positive():
 
 
 def test_checked_precision_counts_verdicts_pending_and_stale():
-    gab = {"checked": {"endpoints": [
+    expected_list = {"checked": {"endpoints": [
         {"evidence": "r:api/items.go:10", "method": "GET", "path": "/v1/items/{id}", "ok": True},
         {"evidence": "r:internal/debug.go:3", "method": "GET", "path": "/debug/vars", "ok": False, "category": "debug-handler"},
         {"evidence": "r:old.go:1", "method": "GET", "path": "/gone", "ok": True},
         {"evidence": "r:main.go:5", "method": "ANY", "path": "/health", "ok": None}]}}
-    c = M.checked_precision(RUN, gab, "endpoints")
+    c = M.checked_precision(RUN, expected_list, "endpoints")
     assert (c.ok, c.judged, c.pending) == (2, 3, 1)
     assert [i["path"] for i in c.stale] == ["/gone"]
     assert [i["category"] for i in c.wrong] == ["debug-handler"]
-    assert M.checked_precision(RUN, gab, "calls") is None
+    assert M.checked_precision(RUN, expected_list, "calls") is None
 
 
 def test_sample_is_reproducible_and_bounded():

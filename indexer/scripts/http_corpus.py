@@ -11,10 +11,10 @@ heuristics do not drift towards one team's style. Needs network + the grammars c
         [--expected [dir]]             # precision/recall against tests/corpus_expected/<repo>.json
         [--sample N [--seed S]]        # N routes + N calls per repo, reproducible, to check by hand
         [--show K]                     # list up to K items behind each number (default 10, 0 = none)
-        [--reuse runs/<earlier>/]      # score that saved run instead of extracting (editing gabaritos only)
-        [--holdout]                    # the hold-out set (HOLDOUT) and its gabaritos, instead of CORPUS
+        [--reuse runs/<earlier>/]      # score that saved run instead of extracting (editing expected lists only)
+        [--holdout]                    # the hold-out set (HOLDOUT) and its expected lists, instead of CORPUS
 
-The measuring is in `corpus_metrics.py` (gabarito format, matching rules).
+The measuring is in `corpus_metrics.py` (expected list format, matching rules).
 
 Every repo is pinned to a commit (`CORPUS`: name -> (slug, sha)) so a run is comparable with an
 earlier one; bump a sha deliberately and re-run the baseline in the same change. Clones live outside
@@ -112,9 +112,9 @@ CORPUS = {                                                    # pinned 2026-10-1
 
 
 # Hold-out (H2 Phase 5, pinned 2026-10-17): repositories the rules were never written against, measured once at the
-# close of H2 to check overfitting to CORPUS (`--holdout`, gabaritos in corpus_expected/holdout/). Never tune a rule
-# against them: what they show goes to the ROADMAP (F1.14). A repository F1.14 works on moves to CORPUS, and F1.14's
-# close needs a new hold-out.
+# close of H2 to check overfitting to CORPUS (`--holdout`, expected lists in corpus_expected/holdout/). Never tune a
+# rule against them: what they show goes to the ROADMAP (F1.14). A repository F1.14 works on moves to CORPUS, and
+# F1.14's close needs a new hold-out.
 HOLDOUT = {
     "go-boilerplate": ("meghrazchi/go-boilerplate", "836d02be2e8bef4cf21a481614cc3c81678ae922"),
     # the first recommendation, added the same day
@@ -204,19 +204,19 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
     f = expected / f"{name}.json"
     if not f.exists():
         return None
-    gab = json.loads(f.read_text())
-    if gab.get("sha") and gab["sha"] != run["sha"]:
-        print(f"  expected: gabarito read at {gab['sha'][:10]}, run at {run['sha'][:10]} — re-check it before trusting P/R")
+    expected_list = json.loads(f.read_text())
+    if expected_list.get("sha") and expected_list["sha"] != run["sha"]:
+        print(f"  expected list: read at {expected_list['sha'][:10]}, run at {run['sha'][:10]} — re-check before trusting P/R")
     out = {}
-    langs = gab.get("language") or {}              # a kind written in another language than the repo's (a UI's calls)
+    langs = expected_list.get("language") or {}              # a kind in another language than the repo's
     for k in M.KINDS:
-        sc, ck = M.score(run, gab, k), M.checked_precision(run, gab, k)
+        sc, ck = M.score(run, expected_list, k), M.checked_precision(run, expected_list, k)
         if sc is not None:
-            src = gab.get("source", "?")
+            src = expected_list.get("source", "?")
             print(f"  expected {k:9} ({src.get(k, '?') if isinstance(src, dict) else src}): P {_pct(sc.precision)} R {_pct(sc.recall)} "
                   f"| extracted {sc.extracted} expected {sc.expected} fp {len(sc.false_positives)} fn {len(sc.false_negatives)}")
             _items("fp", sc.false_positives, show)
-            misses = M.miss_categories(gab, k, sc)
+            misses = M.miss_categories(expected_list, k, sc)
             _items("fn", [f"{m} {p}" + (f" [{c}]" if c else "") for (m, p), c in misses.items()], show)
             for c in misses.values():
                 CATEGORIES[(k, c or "uncategorized")]["fn"] += 1
@@ -233,7 +233,7 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
                 extracted=sc.extracted, tp_x=sc.extracted - len(sc.false_positives),
                 expected=sc.expected, tp_e=sc.expected - len(sc.false_negatives))
         if ck is not None:                          # each sampled item counts for the language of its own file
-            for i in (gab.get("checked") or {}).get(k, []):
+            for i in (expected_list.get("checked") or {}).get(k, []):
                 if i.get("ok") is not None:
                     lang = EXT_LANGUAGE.get(Path(M.evidence_file(i["evidence"])).suffix, LANGUAGE.get(name, "?"))
                     POOLED[lang][k].update(judged=1, ok=int(i["ok"]))
@@ -260,14 +260,14 @@ def main() -> int:
     ap.add_argument("--json", default=None, help="directory to dump per-repo candidates as JSON")
     ap.add_argument("--baseline", type=Path, default=None, help="directory of an earlier --json run to diff against")
     ap.add_argument("--reuse", type=Path, default=None,
-                    help="score a saved --json run (same pinned sha) instead of extracting again — for editing gabaritos, "
+                    help="score a saved --json run (same pinned sha) instead of extracting again — to edit lists, "
                          "never for measuring an extractor change")
     ap.add_argument("--expected", type=Path, nargs="?", const=EXPECTED_DIR, default=None,
-                    help=f"gabarito directory (default {EXPECTED_DIR.relative_to(Path(__file__).resolve().parents[1])})")
+                    help=f"lists directory (default {EXPECTED_DIR.relative_to(Path(__file__).resolve().parents[1])})")
     ap.add_argument("--sample", type=int, default=0, help="print N sampled routes and N calls per repo")
     ap.add_argument("--seed", default="0")
     ap.add_argument("--show", type=int, default=10)
-    ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own gabaritos")
+    ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own lists")
     ap.add_argument("--list", action="store_true", help="print the selected repositories, the largest clone first, and exit")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
@@ -324,10 +324,10 @@ def main() -> int:
     if args.baseline:
         print(f"\nbaseline {args.baseline}: {len(changed)} repo(s) differ" + (f" — {', '.join(changed)}" if changed else ""))
     if args.expected:
-        print(f"\nexpected {args.expected}: {len(measured)} repo(s) with a gabarito" + (f" — {', '.join(measured)}" if measured else ""))
+        print(f"\nexpected {args.expected}: {len(measured)} repo(s) with an expected list" + (f" — {', '.join(measured)}" if measured else ""))
         if POOLED:
             ratio = lambda a, b: _pct(a / b if b else None)
-            print(f"\n{'language':8} {'kind':10} {'P checked':>16} {'P gabarito':>16} {'R gabarito':>16}")
+            print(f"\n{'language':8} {'kind':10} {'P checked':>16} {'P expected':>16} {'R expected':>16}")
             for lang, kinds in sorted(POOLED.items()):
                 for k, c in kinds.items():
                     if c:
