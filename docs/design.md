@@ -81,6 +81,11 @@ answers the six questions:
 The author approves the plan before a branch is created. A choice that sets the direction is recorded as a decision
 (`docs/decisions.md`).
 
+An alternative left out because what it needs does not exist yet is not dropped:
+- it is written into the item of the work that builds what it needs, in the handoff or the ROADMAP;
+- where a test can tell that what it needs has come, a test fails then, and is replaced by the alternative's own
+  check.
+
 ## 5. Two examples
 
 **The attribution probe (H5-D21).**
@@ -100,3 +105,7 @@ The author approves the plan before a branch is created. A choice that sets the 
   small table of declaration forms sits on top, and modules and classes are both namespaces, reached through one hook
   in the core.
 - The proof, an oracle: CPython's `symtable`, over every Python file of the corpus, kept in the checks.
+- The proof of the case table, an oracle too: CPython runs each case, and the method it enters is the one the case
+  names.
+- The alternative left for later: checking the scope index itself against `symtable`, on the table's scope traps,
+  needs the index. It is in the refactor's item, and a test of the table fails when Python gets its `TypeIndex`.

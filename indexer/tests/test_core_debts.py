@@ -3,9 +3,12 @@ case states the right shape and is a strict xfail with the reason: when the code
 fails the suite, and the mark has to go.
 
 A name belongs to one language when only that language's grammars have it, as a node kind or as a field; a name
-several languages share (`identifier`, `arguments`) says nothing about any of them."""
+several languages share (`identifier`, `arguments`) says nothing about any of them. A framework's or a client
+library's vocabulary has no such reference until each language's catalog of frameworks holds it, so its case names
+the vocabulary the core holds today."""
 
 import ast
+import re
 from pathlib import Path
 
 import pytest
@@ -23,6 +26,16 @@ NOT_SYNTAX = {
     "manifest.py": {"none", "path"},
     "policy.py": {"source"},
 }
+
+FRAMEWORK_NAMES = frozenset({
+    "RouterGroup", "Echo", "ServeMux", "APIRouter", "FastAPI", "Flask", "Blueprint", "Starlette", "Sanic", "Quart",
+    "resty", "axios", "superagent", "ky", "ofetch", "$fetch", "requests", "httpx", "aiohttp",
+    "PostJSON", "GetJSON", "PutJSON", "PatchJSON", "DeleteJSON", "DoJSON", "DoRequest", "NewRequest",
+    "NewRequestWithContext", "PostForm", "GetAsync", "GetStringAsync", "GetStreamAsync", "GetByteArrayAsync",
+    "GetFromJsonAsync", "PostAsync", "PostAsJsonAsync", "PutAsync", "PutAsJsonAsync", "PatchAsync", "PatchAsJsonAsync",
+    "DeleteAsync", "DeleteFromJsonAsync", "SendAsync", "JoinPath", "urljoin", "UrlCombine", "HttpMethod",
+    "aspnet", "aspnet-minimal", "fastendpoints",
+})
 
 
 def case(id, why):
@@ -67,3 +80,26 @@ def test_each_string_kept_out_is_still_in_its_module_and_of_one_language():
     for module, kept in NOT_SYNTAX.items():
         strings = {n.value for n in ast.walk(ast.parse((CORE / module).read_text())) if isinstance(n, ast.Constant)}
         assert kept <= strings and all(len(owners[s]) == 1 for s in kept), module
+
+
+def code_words(path: Path) -> set[str]:
+    """The strings of a module's code, docstrings aside, and the words in them (a pattern's alternatives)."""
+    tree = ast.parse(path.read_text())
+    docs = {id(n.body[0].value) for n in ast.walk(tree)
+            if isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef)) and n.body and isinstance(n.body[0], ast.Expr)}
+    strings = [n.value for n in ast.walk(tree)
+               if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in docs]
+    return set(strings) | {w for s in strings for w in re.findall(r"[$\w]+", s)}
+
+
+@pytest.mark.parametrize("_", [
+    case("the-core-names-no-framework-or-client-library",
+         "the core holds router types, client libraries and their methods, which belong to each language's frameworks"),
+])
+def test_the_core_names_no_framework_or_client_library(_):
+    found = {p.name: sorted(names) for p in sorted(CORE.glob("*.py")) if (names := FRAMEWORK_NAMES & code_words(p))}
+    assert found == {}
+
+
+def test_each_framework_name_listed_is_still_in_the_cores_code():
+    assert FRAMEWORK_NAMES <= set().union(*(code_words(p) for p in CORE.glob("*.py")))
