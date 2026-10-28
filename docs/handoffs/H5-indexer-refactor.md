@@ -35,8 +35,8 @@ are exercised again on the next PR of the indexer.
 3. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 4. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
-   cache, designed against ADR-004 to ADR-006. Then the new hold-out, P2 (the indexer in its own repo) and SCIP
-   (F1.1, F1.2).
+   cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
+   `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
 
 **Gaps.**
 - **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's

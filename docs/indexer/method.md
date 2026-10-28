@@ -193,10 +193,10 @@ snapshot has an ok run. Anything else is a difference to judge as `judgment.md` 
 
 ### 4.10 Expected lists
 
-`indexer/scripts/lists/expected_lists.py` edits `indexer/tests/corpus_expected/` (plain Python, no Docker; the hold-out's
-lists are not its to touch). A list is written back in the order it was read, so an edit is a small diff, and a test
-keeps every real list identical through a read and a write. RUN is a label under `$C/runs`. After a change to the
-extractor, with the branch's run:
+`indexer/scripts/lists/expected_lists.py` edits `indexer/tests/corpus_expected/` (plain Python, no Docker; the
+hold-out's lists only with `--holdout`, §4.11). A list is written back in the order it was read, so an edit is a small
+diff, and a test keeps every real list identical through a read and a write. RUN is a label under `$C/runs`. After a
+change to the extractor, with the branch's run:
 
 1. `sync RUN` prints the `checked` items the run moved (`changed`), lost (`gone`) or gives more than one route for
    (`ambiguous`); `--apply` writes it. A moved item is right when the list has its route, and pending otherwise.
@@ -208,8 +208,40 @@ extractor, with the branch's run:
 4. `add`, `cat`, `set` and `new` change what a list expects: each in its own commit, with the `file:line` evidence at
    the pinned sha. `resample RUN NAME KIND` draws a kind's sample again with the list's seed, keeping the verdicts of
    the routes that did not move.
+5. `sample RUN NAME` draws the first sample of each kind the run has and the list has none for (a repo new to the
+   corpus): 20 routes, as the existing lists have, with the list's seed (`--n`, `--seed`). A route the list expects is
+   marked right and the rest are pending, for `pending` and `judge` as in 2. A kind that has a sample is not drawn
+   again; `resample` does that.
 
-Not during a corpus run (§6). Without `--apply`, `found`, `sync` and `resample` only print.
+Not during a corpus run (§6). Without `--apply`, `found`, `sync`, `resample` and `sample` only print.
+
+### 4.11 A new hold-out
+
+The new hold-out is measured after H5 and H6 are in (H2-D21, H5-D1). It exists to check the rules against repos they
+never saw, and it only does so if it stays unseen (H2-D20, H5-D13): the lists are written before the run, the sample is
+judged at the source once, the measure is taken once, and after that it is read only in aggregate. A repo that gets
+worked on becomes corpus. `expected_lists.py --holdout` (before the command) works on `corpus_expected/holdout/` and
+keeps that order:
+
+1. **Choose and pin.** Repos that are not in `CORPUS`, by name or by GitHub repo, with a profile like the portfolio's.
+   Pin each in `HOLDOUT` of `indexer/scripts/http_corpus.py` as `name: (owner/repo, sha)`. What becomes of the current
+   three (`go-boilerplate`, `kavita`, `sftpgo`) is the author's decision then: they were measured, not worked on. A
+   test fails if `HOLDOUT` and `CORPUS` share a name or a repo, or if a pin and its list differ in sha.
+2. **Write each list before the extractor runs on it.** `--holdout new NAME SHA [--spec FILE]`: the routes of an OpenAPI
+   dump (`corpus_metrics.py from-openapi`) when the repo has a spec, or by hand from the source (`add`, and `set` for
+   `scope` and `notes`). `new` refuses a name that is not pinned, a sha other than the pin's, and a repo the corpus
+   has. Commit the pins and the lists, with the `file:line` evidence, before step 3.
+3. **Measure once.** `corpus.sh --holdout --label L-holdout`, with H5's code and, as H2-D21 says, with the commit
+   before H5.
+4. **Draw the sample.** `--holdout sample RUN NAME` prints, per kind, how many routes it draws, how many the list
+   expects and how many are left to judge, and no route; `--apply` writes `checked` and `checked_seed`.
+5. **Judge once, at the source.** `--holdout pending` prints each item with its evidence; read it at the pinned sha as
+   [judgment.md](judgment.md) says, then `--holdout judge NAME KIND DEFAULT [N=VERDICT ...]`. This is the only reading
+   of the new hold-out's items.
+6. **It is measured.** With every item judged, `add`, `cat`, `set`, `found`, `sync`, `resample` and `sample` refuse the
+   list and say to make the repo corpus: move its list to `corpus_expected/` and its pin to `CORPUS`. From then on a
+   change reads the hold-out through `corpus.sh --holdout` and the `gates` job, which count the repos that changed.
+7. **What it shows** becomes a handoff of its own (H2-D21), without reopening F1.14.
 
 ## 5. Criteria
 
