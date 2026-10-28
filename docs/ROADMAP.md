@@ -27,8 +27,8 @@
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
     TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, Python and TS, each with its attribution probe
-    first, before the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog), step 12 (the rest of the
-    code to the shape targets), then 10 and 11;
+    first, before the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20),
+    step 12 (the rest of the code to the shape targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).

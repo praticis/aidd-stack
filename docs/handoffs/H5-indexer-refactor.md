@@ -24,8 +24,8 @@ did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 | Python | pending | not started | `languages/python/http.py`, 438 |
+| TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -292,7 +292,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
 | 5 | `TypeIndex` (ADR-005), first its API in the core, then one language at a time: Go, C#, Python, TS (H5-D7), each a refactor and then a change of behavior (H5-D10, "Step 5" below). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
-| 6 | Recognizers + the YAML catalog, **one language per commit**, from the worst to the smallest: C# (`_controller`, `_invocation`), Go (`_call`), TS (`_read_call`), Python | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
+| 6 | Recognizers + the YAML catalog, **one language per commit**, in the portfolio's order (H5-D20): C# (`_controller`, `_invocation`), Go (`_call`), Python, TS (`_read_call`) | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
@@ -762,6 +762,9 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   refactor. The `fix(csharp)` PRs of the debts due before F1.2 come before F1.2, in the order the author picks. F1.2
   comes after H6, the new hold-out and P2, so those debts do not hold the refactor, and with the probe first the
   language's first judgment already attributes each changed site.
+- **H5-D20 (2026-10-28), step 6 goes in the portfolio's order: C#, Go, Python, TS.** The steps table and ADR-006 had
+  "from the worst to the smallest" (TS before Python), against the portfolio priority the constraints give step 6. The
+  same order as step 5's.
 
 ## Pitfalls
 
@@ -808,7 +811,7 @@ H2's:
 - **Parser:** an LLM is never the parser.
 - **Temporary files:** in the session's scratchpad.
 - **Corpus repos:** do not run Python inside the clones; use `python -I`, or Docker with the guide's mounts.
-- **Portfolio priority:** .NET first, then Go and Python, then TS. It guides the order of step 6.
+- **Portfolio priority:** .NET first, then Go and Python, then TS. It sets the order of step 6 (H5-D20).
 
 ## Expected deliverables
 
