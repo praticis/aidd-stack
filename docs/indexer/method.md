@@ -45,7 +45,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
 | 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `checks/python_scopes.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -131,6 +131,11 @@ other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ra
 
 `checks/dump.py LANGUAGE OUT` (`csharp` or `go`) dumps every file's type facts under `/corpus`. The same dump from two
 codes, compared with `cmp`, shows whether a refactor changed a fact.
+
+`checks/python_scopes.py [N]` compares Python's scope index with CPython's `symtable` over every Python file under
+`/corpus`: each scope paired with symtable's, each name classified the same (local, global or free). It prints the
+counts, the files it compared and those CPython 3.12 does not compile, and N samples of each difference. symtable only
+compiles a file's symbols; no repository's code runs.
 
 ### 4.7 Live, before the merge (class 5)
 

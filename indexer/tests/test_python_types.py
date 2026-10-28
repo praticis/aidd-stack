@@ -8,9 +8,13 @@ import contextlib
 import io
 import subprocess
 import sys
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
+from python_scopes import compare  # noqa: E402
 
 PYPROJECT = '[project]\nname = "app"\n'
 MODELS = """class A:
@@ -256,11 +260,6 @@ def test_a_routers_prefix_reaches_its_routes(tmp_path, files):
     assert {(e.method, e.path) for e in res.endpoints} == {("GET", "/api/users")}
 
 
-def test_the_scope_index_is_checked_against_symtable_when_it_comes():
-    """Python's scopes get an index of their own with its `TypeIndex`, and that index is then checked against CPython's
-    `symtable`, each binding of each name, on the scope traps here and on every Python file of the corpus. The check
-    needs the index, so it cannot be written before it: until then Python has no `TypeIndex`, and when one comes this
-    test fails, to be replaced by that check."""
-    from aidd_indexer.languages.base import LanguageSupport
-    from aidd_indexer.languages.python.symbols import PythonSupport
-    assert PythonSupport.type_index is LanguageSupport.type_index
+@pytest.mark.parametrize("case", _cases())
+def test_the_scope_index_classifies_every_name_of_a_case_as_cpython(case):
+    assert compare(case.use.encode()) == []

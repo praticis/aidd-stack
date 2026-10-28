@@ -108,4 +108,5 @@ An alternative left out because what it needs does not exist yet is not dropped:
 - The proof of the case table, an oracle too: CPython runs each case, and the method it enters is the one the case
   names.
 - The alternative left for later: checking the scope index itself against `symtable`, on the table's scope traps,
-  needs the index. It is in the refactor's item, and a test of the table fails when Python gets its `TypeIndex`.
+  needed the index. It went into the refactor's item, with a test of the table that would fail when the index came;
+  the index came in the refactor's first PR, and the check replaced that test.
