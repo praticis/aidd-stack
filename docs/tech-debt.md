@@ -17,14 +17,16 @@ Rules:
   `closed in PR #n`).
 - CI checks this table (the `debts` job, `indexer/scripts/debts.py`) against the tests and the ROADMAP: each case named
   here is a case of a `indexer/tests/test_*_debts.py`, in the form `case("id", ...)`, and each case there is named here;
-  the ROADMAP's `Debts due here:` (F1.2) and `are due in `fix(csharp)` PRs before F1.2` lists are the open debts of
-  those dues; no document names a debt this table lacks.
+  the ROADMAP's `Debts due here:` (F1.2), `are due in `fix(csharp)` PRs before F1.2` and `due in an H5 step` lists are
+  the open debts of those dues; no document names a debt this table lacks.
 
 Seen at: a public corpus repo's file and line, or the decision whose judgment found it when no site was kept. Decided by the author on 2026-10-27: TD-001 to TD-006 with the acceptance of H5-D18
 ([decisions.md](decisions.md)), and TD-007 to TD-022 by moving here the gaps that H5-D16 and H5-D17 had left in the H5
-handoff. SCIP is a possible remedy for some of them, not a proven one. A due of `fix(csharp)` is a PR of that kind
+handoff; TD-023 on 2026-10-28, from the design review of H5-D22. SCIP is a possible remedy for some of them, not a
+proven one. A due of `fix(csharp)` is a PR of that kind
 before F1.2, for a defect whose answer is declared in the repo; F1.2 is for one that needs a type or a model the
-resolver does not have.
+resolver does not have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architecture that the
+step removes.
 
 | ID | The debt | Seen at | Due | Case |
 |---|---|---|---|---|
@@ -50,3 +52,4 @@ resolver does not have.
 | TD-020 | Project references are not read: a type of a project the file's project does not reference is still seen, by its namespace | H5-D17 | a `fix(csharp)` PR before F1.2 | `a-namespace-of-an-unreferenced-project-is-not-seen` |
 | TD-021 | An extension block's static members (`Type.M()`) are not read; nor are its extension properties, which make no `CALLS` edge and have no case | H5-D17 | a `fix(csharp)` PR before F1.2 | `an-extension-blocks-static-member-is-called-on-the-type` |
 | TD-022 | An array's element types nothing: `arr[0].M()` and `foreach (var x in arr)` | H5-D17 | a `fix(csharp)` PR before F1.2 | `an-array-element-has-the-element-type`, `a-foreach-over-an-array-has-the-element-type` |
+| TD-023 | The core holds the syntax of each language: 96 node kinds and fields that only one language's grammars have, in 7 modules (`http_nodes.py` 54, `http_expr.py` 23, `extract.py` 8, `http_base.py` 5, `http_scope.py` 3, `http_wrappers.py` 2, `nearest.py` 1). A language's syntax lives in the core and a new language edits it, where each language's module should declare its own and the core read them through a hook | `indexer/aidd_indexer/core/`; the design review of H5-D22 | H5 steps 6 and 12 | `the-core-names-no-syntax-of-one-language` |
