@@ -113,11 +113,13 @@ python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.t
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
+python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR]
+indexer/scripts/judgment/go_attribution.sh OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
 ```
 
 `BEFORE` and `AFTER` hold `<repo>.json.gz` dry-runs. `chain_diff` samples with a fixed seed over sorted sites, so the
 same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each commit against the one before, 40 for
-`main` against the tip.
+`main` against the tip. `attribution.py` is §4.12.
 
 ### 4.5 Timing alone
 
@@ -243,6 +245,31 @@ keeps that order:
    change reads the hold-out through `corpus.sh --holdout` and the `gates` job, which count the repos that changed.
 7. **What it shows** becomes a handoff of its own (H2-D21), without reopening F1.14.
 
+### 4.12 Attributing a changed edge to its rule
+
+A change to how a language types a receiver changes `CALLS` edges at the sites where the typing answer changes, and
+nowhere else. `attribution.py` checks that. It takes the sites whose edges differ between two micro dry-runs and the
+answers each tree gives at the calls (one JSON line per call: repo, file, line, receiver, type, src, and the facts a
+case reads), keeps the sites where the answers differ, and prints the changed sites by case and kind, with seeded
+samples of each. A changed site whose answer is the same on both sides is `unexplained`: another rule changed it, or
+the change has a defect. It is listed with its source line and judged apart, never dropped.
+
+For Go:
+
+1. A worktree for each tree, the base and the branch, and the micro dry-runs of both on the Go repos: `micro.sh --base
+   REF REPO...` in the branch's worktree leaves the `BEFORE` and `AFTER` directories in `$C/micro`.
+2. `go_attribution.sh OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]` asks each tree, in the image, what it
+   types each name a method is called on (`go_answers.py`; each tree answers with its own code), then runs
+   `attribution.py`. Both trees need `locals.declared_type`; the answers stay in `$AIDD_ATTRIBUTION_OUT`.
+3. Read the table, then the samples at the source as `judgment.md` §5 says. Without a table the cases are the answer's
+   own: `typed-now`, `untyped-now` and `retyped`. The rule that explains a difference is a case of the change: write it
+   before the change, in a `--cases` file whose `case_of(d)` reads the types, the source line and the facts the probe
+   gives (`closures`, the function literals around the use), and returns the case, or None for the answer's own.
+
+For another language the probe is the part to write: a `<lang>_answers.py` that, run with a tree on `PYTHONPATH`, writes
+the same lines from that tree's own typing. The join, the cases, the samples and the unexplained list are the same.
+Write it with the language's step 5, before its change of behavior, so the first judgment already has it.
+
 ## 5. Criteria
 
 | Criterion | Rule | Kind |
@@ -273,9 +300,8 @@ keeps that order:
 
 ## 7. Not specified yet
 
-- **Per-site attribution for judgment.** Judging "by case" needs each changed call site tied to the rule that explains
-  it. The tool that did it for Go (`why_a.py`) is not in the repository and needs a module that was not recovered; C#
-  was judged with `csharp_extensions.py`; Python and TS have nothing. Design one before the Python step.
+- **Per-site attribution for Python and TS.** §4.12 has the join and the Go probe; C# was judged with
+  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py` at their step 5.
 - **The size of a judgment sample.** Not fixed; §4.4 gives the sizes used.
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)

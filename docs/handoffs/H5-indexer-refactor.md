@@ -39,11 +39,12 @@ are exercised again on the next PR of the indexer.
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
 
 **Gaps.**
-- **G1.** No per-site attribution of a changed call to the rule that explains it exists in the repository. Go's
-  (`why_a.py`) was not recovered and needs a module that was not found; C# was judged with
-  `indexer/scripts/judgment/csharp_extensions.py`; Python and TS have nothing. Design one before step 5 for Python.
-- **Judgment is not yet automated (H7-D6).** G1's attribution and the verdict record (H7-D2) are to build; until then
-  each change of behavior needs the review of an agent that did not write it.
+- **G1.** The per-site attribution of a changed call to the answer that explains it exists for Go
+  (`indexer/scripts/judgment/attribution.py` with `go_answers.py`; `docs/indexer/method.md` §4.12). C# was judged with
+  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS need their `<lang>_answers.py` before step 5 for
+  Python.
+- **Judgment is not yet automated (H7-D6).** G1's attribution exists for Go and C# only, and the verdict record
+  (H7-D2) is to build; until then each change of behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
   integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds the last
   validated PR's pair.
