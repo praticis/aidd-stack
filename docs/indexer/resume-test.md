@@ -181,5 +181,5 @@ one with `git fetch --dry-run`, and a shell `for` loop), and the session adapted
   Python, by size) against the portfolio priority the constraints give it; H5-D1's `-28` with no note, which run 5
   saw too; and AGENTS.md's micro graph without the violations `micro.py` compares. The fifth: signatures a clone
   cannot verify.
-- Changed because of it: the handoff's gap G1 and H5-D1, method.md §4.12 and §7, and AGENTS.md. Open: step 6's order,
-  the author's.
+- Changed because of it: the handoff's gap G1 and H5-D1, method.md §4.12 and §7, and AGENTS.md. Step 6's order was the
+  author's: decided the same day (H5-D20), in the steps table, ADR-006 and the decisions.

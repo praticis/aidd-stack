@@ -204,4 +204,5 @@
   (`52b1e1b` to `1d56070`) it explains all 1,782 changed sites of 7 repos. H5's state is corrected: step 5 is closed
   for C#, and steps 6 and 12 are open in every language.
 - 2026-10-28: the fifth resume run, in a clone, passes all nine criteria; what it found is fixed, and the author
-  decides H5-D19: Python's step 5 before the `fix(csharp)` PRs, each language's attribution probe first.
+  decides H5-D19: Python's step 5 before the `fix(csharp)` PRs, each language's attribution probe first. The sixth
+  run, on those fixes, passes too; the author decides H5-D20: step 6 in the portfolio's order, C#, Go, Python, TS.

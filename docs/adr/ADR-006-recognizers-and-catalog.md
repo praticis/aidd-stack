@@ -112,7 +112,8 @@ No function goes past complexity 9, and no module past 300 lines.
 
 The migration is H5 step 6:
 
-- **one language per commit**, from the worst to the smallest: C#, Go, TS, Python;
+- **one language per commit**, from the worst to the smallest: C#, Go, TS, Python (amended by H5-D20 on 2026-10-28:
+  the portfolio's order, C#, Go, Python, TS);
 - **each commit is a `refactor:`,** so the gates require `0 repo(s) differ` on the corpus, the hold-out and the micro
   set (H5's protocol, H7's refactor gate);
 - **the order of the recognizers reproduces today's order** of the `if`s, and a difference in the corpus is a
