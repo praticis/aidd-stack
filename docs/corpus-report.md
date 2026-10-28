@@ -209,6 +209,9 @@ against the previous one was judged item by item. The **current** ones are `2026
 | `-29` | H5 step 5, Go's change of behavior: a local typed by a constructor's declared result (vikunja `POST /api/v2/mcp`, memos `ANY /`) |
 | `2026-10-18-v2-holdout-26` | the hold-out's three repositories, unchanged since increment 5 |
 
+C#'s step 5 (PRs #23, #25, #27 and #30) left the corpus and the hold-out identical to `-29` and `-26` at each merge,
+so it added no baseline: `-29` is the current one.
+
 ## H5 baseline (2026-10-19)
 
 The H5 refactor (`docs/handoffs/H5-indexer-refactor.md`) changes no behavior. At every step the corpus must give

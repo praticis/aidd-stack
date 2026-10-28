@@ -3,9 +3,9 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: passed in run 4 (§4), in a clone with the fixed prompt.** Run it again after a change to these documents
-or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a subagent of
-the one that wrote them.
+**Status: passed in runs 4 and 5 (§4), in a clone with the fixed prompt.** Run it again after a change to these
+documents or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a
+subagent of the one that wrote them.
 
 ## 1. Preconditions
 
@@ -152,3 +152,20 @@ loop).
   not in the README's order.
 - Changed because of it: the State block, `history.md`, and a sentence in `method.md` §2: the classes bind an agent,
   and the author runs any tool.
+
+**Run 5, 2026-10-28, commit `c591922` (PRs #33 to #36 merged): headless, in a clone: passed.** `claude-opus-5-5`; 17
+turns, 119 s. `memory_paths` named the clone; no call was refused, failed or touched a path outside it.
+- All nine criteria passed. It read the README's documents in order; it described H5 with the table by language and no
+  open gate; it called the cache, the image, `.local/` and the live install missing by design without looking for
+  them; it stopped after the report, recommending Python's step 5 with its attribution probe first.
+- 5 with a gap: `debts.py` had no class in method.md §2 (it guessed class 2), and the `judgment/` row put
+  `go_attribution.sh`, which runs the indexer in the image, in class 2.
+- It reported seven points, four real: the handoff said G1's attribution exists "for Go and C#" (Go only); the
+  handoff's reading list was not the README's, as in run 4; H5-D1 left P2's position "to be confirmed", which H6-D1
+  had settled; and the baselines table did not say why C#'s step 5 kept `-29` current. The other three: `baseline-28`
+  in H5-D1 (explained by H5-D12), the tooling's trailer suggestion against the project's rule, and signatures that a
+  clone cannot verify.
+- It raised two decisions for the author, the order of Python's step 5 and the `fix(csharp)` PRs, and a PR of its own
+  for the probe; the author decided both (H5-D19). It did not notice that `history.md` stopped at PR #31.
+- Changed because of it: method.md §2, the handoff (its reading list, the gap's wording, H5-D1, H5-D19, "Next"), the
+  ROADMAP, the corpus report, `history.md` and `decisions.md`.

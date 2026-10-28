@@ -193,3 +193,15 @@
   only in the build and the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold none of
   the calls the change reaches, so the round checks the install, not the change. The live validation becomes one
   command, `indexer/scripts/live/validate.sh` (PR #31).
+- 2026-10-27: PR #30's merge and live validation are recorded, and its evidence file goes (PR #32).
+- 2026-10-27: the register of technical debts is checked in CI against its cases and the ROADMAP (the `debts` job,
+  PR #33). On 2026-10-28 the author makes it a required check of `main`.
+- 2026-10-28: the expected lists get one tool that edits them and keeps their checked samples true to a corpus run,
+  and "expected list" becomes their one name (PR #34).
+- 2026-10-28: the new hold-out gets its procedure and tools: a list's first sample, and a guard that keeps a measured
+  hold-out unopened (PR #35).
+- 2026-10-28: Go's per-site attribution (H5's gap G1) merges as PR #36. On a real change of Go's local typing
+  (`52b1e1b` to `1d56070`) it explains all 1,782 changed sites of 7 repos. H5's state is corrected: step 5 is closed
+  for C#, and steps 6 and 12 are open in every language.
+- 2026-10-28: the fifth resume run, in a clone, passes all nine criteria; what it found is fixed, and the author
+  decides H5-D19: Python's step 5 before the `fix(csharp)` PRs, each language's attribution probe first.
