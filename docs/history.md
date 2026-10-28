@@ -206,3 +206,6 @@
 - 2026-10-28: the fifth resume run, in a clone, passes all nine criteria; what it found is fixed, and the author
   decides H5-D19: Python's step 5 before the `fix(csharp)` PRs, each language's attribution probe first. The sixth
   run, on those fixes, passes too; the author decides H5-D20: step 6 in the portfolio's order, C#, Go, Python, TS.
+- 2026-10-28: the per-site attribution gets one probe for every language, read from each tree's own extraction
+  (H5-D21), and merges as PR #39. On Go's change of local typing it prints the same output as Go's own probe, which it
+  replaces. The seventh resume run, on that merge, passes all nine criteria; what it found is fixed.

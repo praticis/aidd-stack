@@ -31,7 +31,7 @@ The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scr
 (step 12).
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
-`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 and 5, 2026-10-27 and 2026-10-28). The `live/`
+`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 to 7, 2026-10-27 and 2026-10-28). The `live/`
 chain ran on #30, and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy
 of its folder. `protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or
 never: they are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the
@@ -761,7 +761,7 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   probe comes first.** The language's `<lang>_answers.py` (G1) goes in a `chore(scripts)` PR of its own, before its
   refactor. The `fix(csharp)` PRs of the debts due before F1.2 come before F1.2, in the order the author picks. F1.2
   comes after H6, the new hold-out and P2, so those debts do not hold the refactor, and with the probe first the
-  language's first judgment already attributes each changed site.
+  language's first judgment already attributes each changed site. Amended by H5-D21: one probe for every language.
 - **H5-D20 (2026-10-28), step 6 goes in the portfolio's order: C#, Go, Python, TS.** The steps table and ADR-006 had
   "from the worst to the smallest" (TS before Python), against the portfolio priority the constraints give step 6. The
   same order as step 5's.
