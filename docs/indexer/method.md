@@ -268,7 +268,8 @@ For Go:
 
 For another language the probe is the part to write: a `<lang>_answers.py` that, run with a tree on `PYTHONPATH`, writes
 the same lines from that tree's own typing. The join, the cases, the samples and the unexplained list are the same.
-Write it with the language's step 5, before its change of behavior, so the first judgment already has it.
+Write it in a `chore(scripts)` PR of its own, before the language's refactor (H5-D19), so the first judgment already
+has it.
 
 ## 5. Criteria
 
@@ -301,7 +302,7 @@ Write it with the language's step 5, before its change of behavior, so the first
 ## 7. Not specified yet
 
 - **Per-site attribution for Python and TS.** §4.12 has the join and the Go probe; C# was judged with
-  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py` at their step 5.
+  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py`, before their refactor (H5-D19).
 - **The size of a judgment sample.** Not fixed; §4.4 gives the sizes used.
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)

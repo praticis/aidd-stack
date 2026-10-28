@@ -51,8 +51,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and Go's 
 **Gaps.**
 - **G1.** The per-site attribution of a changed call to the answer that explains it exists for Go
   (`indexer/scripts/judgment/attribution.py` with `go_answers.py`; `docs/indexer/method.md` §4.12). C# was judged with
-  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS need their `<lang>_answers.py` before step 5 for
-  Python.
+  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS each need their `<lang>_answers.py`, in a
+  `chore(scripts)` PR before the language's refactor (H5-D19).
 - **Judgment is not yet automated (H7-D6).** G1's attribution exists for Go only, and the verdict record
   (H7-D2) is to build; until then each change of behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
@@ -671,9 +671,9 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
      those items meets the targets from the start (H5-D3). *Done on 2026-10-18, without the new hold-out, which went
      to step 4 (H2-D21);*
   2. H4 phase 0a (recycling the working docs). *Done on 2026-10-19 (PR #6);*
-  3. do H5, which absorbs the refactoring part of item 7 (the catalog and the `built_bundle` thresholds). The
-     regression net is the corpus (`2026-10-18-v2-baseline-28`) and the 3-repo hold-out (`2026-10-18-v2-holdout-26`),
-     identical at every step;
+  3. do H5, which absorbs the refactoring part of item 7 (the catalog and the `built_bundle` thresholds). The regression
+     net is the corpus (`2026-10-18-v2-baseline-28`; `-29` since Go's change of behavior, H5-D12) and the 3-repo
+     hold-out (`2026-10-18-v2-holdout-26`), identical at every step;
   4. the new hold-out, measured once with H5's code and with the commit before it, and the handoff of what it shows,
      already in the recognizer format. Any difference between the two commits is an H5 regression, which is fixed
      first;

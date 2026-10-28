@@ -3,7 +3,7 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: passed in runs 4 and 5 (§4), in a clone with the fixed prompt.** Run it again after a change to these
+**Status: passed in runs 4 to 6 (§4), in a clone with the fixed prompt.** Run it again after a change to these
 documents or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a
 subagent of the one that wrote them.
 
@@ -169,3 +169,17 @@ turns, 119 s. `memory_paths` named the clone; no call was refused, failed or tou
   for the probe; the author decided both (H5-D19). It did not notice that `history.md` stopped at PR #31.
 - Changed because of it: method.md §2, the handoff (its reading list, the gap's wording, H5-D1, H5-D19, "Next"), the
   ROADMAP, the corpus report, `history.md` and `decisions.md`.
+
+**Run 6, 2026-10-28, commit `f293f19` (the head of the PR with run 5's fixes): headless, in a clone: passed.**
+`claude-opus-5-5`; 28 turns, 149 s. `memory_paths` named the clone. Three calls were refused (two compound commands,
+one with `git fetch --dry-run`, and a shell `for` loop), and the session adapted.
+- All nine criteria passed. Criterion 5 with no gap: it classed `debts.py`, `go_attribution.sh` and `resume-test.sh` as
+  method.md §2 does. It said that the state it read came from an unmerged branch, and that `main` still had the older
+  one.
+- It reported five points, four real: the probe's deadline said three ways (before step 5 for Python, before the
+  change of behavior, at the step) against H5-D19's "before the refactor"; step 6's order in the steps table (TS before
+  Python, by size) against the portfolio priority the constraints give it; H5-D1's `-28` with no note, which run 5
+  saw too; and AGENTS.md's micro graph without the violations `micro.py` compares. The fifth: signatures a clone
+  cannot verify.
+- Changed because of it: the handoff's gap G1 and H5-D1, method.md §4.12 and §7, and AGENTS.md. Open: step 6's order,
+  the author's.
