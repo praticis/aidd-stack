@@ -9,7 +9,8 @@ The commands that produce the differences are in [method.md](method.md).
   reads.
 - The agent that wrote the change does not judge it: its reading is a proposal. An agent that did not write it may
   judge by reading the source, and the author decides whether that is enough to open a gate.
-- For the hold-out, no item at all: it is read only in aggregate.
+- For a measured hold-out, no item at all: it is read only in aggregate. A new hold-out's sample is read once, at the
+  source (method.md §4.11).
 
 ## 2. Where the verdict is made
 
