@@ -223,3 +223,7 @@
   repo's edges by strategy on both sides, and the share found among several homonyms, of the edges and of the sites.
   On `main`, 65.6 % of the edges and 40.4 % of the sites of `dispatch`'s Python files are found so, and 63.1 % and
   38.2 % of `netbox`'s; the shares H5-D22 first quoted mixed two measures.
+- 2026-10-28: Python's scope index merges as PR #44, the first of its refactor's two PRs (H5-D24). Of the corpus's
+  7,124 Python files, CPython 3.12 compiles 7,114, and the index classifies every name of every scope of them as
+  `symtable` does; the other ten are in Python 3.14's syntax. The case table's test that waited for the index is now
+  that check, case by case.

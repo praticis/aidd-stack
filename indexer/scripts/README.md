@@ -50,6 +50,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | | `csharp_extensions.py` | the edges to the repo's C# extension methods that went away or came: `sites`, `back`, `classes`, `this-kind`, `blocks` | `python3 -I` |
 | `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
 | | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |
+| | `python_scopes.py` | whether Python's scope index classifies every name of every Python file as CPython's `symtable` does | the image, `PYTHONPATH=/src`, the repos at `/corpus` |
 | | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
 | `lists/` | `expected_lists.py` | edits the expected lists (`new`, `add`, `cat`, `set`, `judge`), draws a list's first sample (`sample`) and keeps its checked samples true to a corpus run (`sync`, `resample`, `found`, `pending`); a list is written back in the order it was read. `--holdout` works on the hold-out's lists: `new` needs a pin, and a measured one is not opened | `python3 -I`; it writes the repository's lists |
 | `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |

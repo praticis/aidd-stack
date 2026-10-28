@@ -13,7 +13,7 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Python's step 5 has its case table (#42, H5-D22). Each merge and its live
+extension method a call reaches #30). Python's step 5 has its case table (#42) and its scope index (#44). Each merge and its live
 validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
@@ -26,7 +26,7 @@ names of frameworks and client libraries it holds:
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| Python | the case table merged (#42); the refactor next | not started | `languages/python/http.py`, 438 |
+| Python | the case table (#42) and the scope index (#44) merged; the types' refactor next | not started | `languages/python/http.py`, 438 |
 | TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
@@ -44,10 +44,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 1. Step 5 for Python, then TS (H5-D19).
    - For each: a refactor, then a change of behavior, both judged with the per-site attribution (`attribution.sh
      LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
-   - Python goes in H5-D22's three PRs. Its case table is in (#42, "Step 5" below). Next, the refactor: its scope
-     index is checked against `symtable` on the table's scope traps as well as over every Python file of the corpus.
-     A test of the table fails when Python gets its `TypeIndex`, and that check replaces it. `attribution.py` reports
-     the ambiguous share (#43); the refactor carries the reason of an `Unknown` beside the type in `CallInfo` (H5-D23).
+   - Python goes in H5-D22's PRs, its refactor in two (H5-D24). In: the case table (#42, "Step 5" below), the
+     attribution's ambiguous share (#43) and the scope index (#44), which classifies every name of the 7,114 Python
+     files of the corpus that CPython 3.12 compiles as `symtable` does. Next, the types' refactor: Python's type
+     facts and `TypeIndex`, the resolver's hooks, the core's hook for namespaces and the reason of an `Unknown` beside
+     the type in `CallInfo` (H5-D23), with Python's `call_receiver` still answering nothing. Then the change of
+     behavior.
    - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
@@ -687,8 +689,8 @@ runs every case that can run in the test image, under `sys.setprofile`, to show 
 | scanner: a repo class over `APIRouter`; a router handed to a function with an annotated parameter | the prefix reaches the routes | the same | guards |
 | scanner: a router handed to a method of a typed value (`users.register(v1)`) | `GET /users` | `GET /api/users` | xfail |
 
-A last test fails when Python gets its `TypeIndex`. Checking the scope index itself against `symtable` needs the
-index, so the refactor replaces that test with the check.
+The scope index came in the refactor's first PR (#44, H5-D24), and the test that waited for it is now the check
+itself: the index classifies every name of every case as `symtable` does.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -817,7 +819,8 @@ index, so the refactor replaces that test with the check.
   It goes in three PRs:
   1. the case table, with guards and strict xfails, each case's method the one CPython runs (#42);
   2. the refactor, with the graph identical: the scope index, checked against `symtable` on the table's scope traps
-     and over every Python file of the corpus; Python in `checks/dump.py`; the `TypeIndex` and the hook;
+     and over every Python file of the corpus; Python in `checks/dump.py`; the `TypeIndex` and the hook. It goes in
+     two PRs (H5-D24);
   3. the change of behavior, judged with `attribution.sh python`, which reports Python's ambiguous share and the
      reasons of `Unknown` (H5-D23). Of the `CALLS` made in Python files on `main`'s tree of 2026-10-28, the resolver
      found among several homonyms 65.6 % of the edges and 40.4 % of the sites in `dispatch`, and 63.1 % and 38.2 % in
@@ -831,6 +834,18 @@ index, so the refactor replaces that test with the check.
   - The reason of an `Unknown` travels in the contract that carries the type: the refactor puts it beside
     `CallInfo.receiver_type`, and `answers.py` reads it as it reads the type. Read from Python's own typing, it would
     couple the probe to it, which H5-D21 removed.
+- **H5-D24 (2026-10-28), Python's refactor goes in two PRs.** The scope index carries the step's largest risk and has
+  an oracle of its own, CPython's `symtable`; joined to the types, it made one PR of two proofs.
+  1. The scope index (#44), in `languages/python/scope_build.py` (what each statement binds, and where) and
+     `scopes.py` (what a name refers to). `checks/python_scopes.py` compares it with `symtable` over every Python file
+     of the corpus: of 7,124, CPython 3.12 compiles 7,114, and every name of every scope is classified the same. The
+     ten others are written in Python 3.14's syntax (`except A, B:`). CPython 3.12 inlines list, set and dict
+     comprehensions (PEP 709), so the check gives symtable each as the generator expression whose rules it keeps.
+     Where a file defers annotations (`from __future__ import annotations`), an annotation's names read nothing, as
+     in the compiler, and still know their scope. Nothing in production reads the index yet.
+  2. The types: Python's type facts and `TypeIndex`, the resolver's hooks, the core's hook for namespaces, and the
+     reason of an `Unknown` in `CallInfo` (H5-D23). Python's `call_receiver` still answers nothing, so the graph stays
+     identical.
 
 ## Pitfalls
 
