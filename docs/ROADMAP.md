@@ -26,8 +26,9 @@
     and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
-    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. A debt of the core's architecture, the syntax of each
-    language it holds, TD-023, is due in an H5 step: 6 and 12. Next, Python (in H5-D22's three PRs) and TS, judged
+    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
+    language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, are due in an H5
+    step: 6 and 12 for TD-023, 6 for TD-024. Next, Python (in H5-D22's three PRs) and TS, judged
     with the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
     (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets),
     then 10 and 11;
