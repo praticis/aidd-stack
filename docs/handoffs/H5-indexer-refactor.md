@@ -39,9 +39,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for Python, then TS (H5-D19). For each: a refactor, then a change of behavior, both judged with the
-   per-site attribution (`attribution.sh LANG`, H5-D21); a fact the language's cases need goes into the probe first, in
-   a `chore(scripts)` PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
+1. Step 5 for Python, then TS (H5-D19).
+   - For each: a refactor, then a change of behavior, both judged with the per-site attribution (`attribution.sh
+     LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
+   - Python goes in H5-D22's three PRs, starting with its case table.
+   - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -771,6 +773,26 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   may change the language's typing hook without breaking it. `attribution.sh LANG` replaces Go's probe and runner; on
   Go's change of local typing (`52b1e1b` to `1d56070`) it gives the same table and samples. It amends H5-D19: a fact a
   language's cases need goes into the probe, in a `chore(scripts)` PR before the language's refactor.
+- **H5-D22 (2026-10-28), Python's step 5 separates scoping from typing.** A table of cases (`self`, `x = C()`, an
+  annotated parameter, a closure) would mix which binding a name refers to with what type that binding declares, and
+  the core's generic scopes already get the first wrong in Python: they bind a comprehension's variable to an
+  assignment outside it. So:
+  - Python's scoping (the function scope, a class body that does not enclose its methods, comprehensions, `global` and
+    `nonlocal`) is modeled once in Python's per-file index, and the resolver and the scanner share it.
+  - It is proven against CPython's `symtable` over every Python file of the corpus, an oracle kept in the checks
+    (ADR-002). Comprehensions, which CPython 3.12 inlines (PEP 709), are checked apart.
+  - Types come from a table of declaration forms on any binding: an annotation (`C | None`, `Optional[C]` and `"C"`
+    read as `C`; containers and unions of several types do not), a call of a class, a function's declared result,
+    the import of a repo class or module.
+  - Bindings that disagree, and an external base ahead in the MRO, give `Unknown` with its reason.
+  - Modules and classes are both namespaces, through one hook of the core.
+
+  It goes in three PRs:
+  1. the case table, with guards and strict xfails;
+  2. the refactor, with the graph identical: the scope index and its oracle, Python in `checks/dump.py`, the
+     `TypeIndex` and the hook;
+  3. the change of behavior, judged with `attribution.sh python`, which reports Python's ambiguous share (64 % of
+     `dispatch`'s `CALLS` and 58 % of `netbox`'s today) and the reasons of `Unknown`.
 
 ## Pitfalls
 
@@ -815,6 +837,7 @@ H2's:
 - **Language:** everything in the repo is in English: code, commits, PRs and docs (H4-D1).
 - **Privacy:** no tenant or private project name in the docs, the code, the tests or the fixtures.
 - **Parser:** an LLM is never the parser.
+- **Design:** by contracts, boundaries and proof (`docs/design.md`). Every plan has a section of that name.
 - **Temporary files:** in the session's scratchpad.
 - **Corpus repos:** do not run Python inside the clones; use `python -I`, or Docker with the guide's mounts.
 - **Portfolio priority:** .NET first, then Go and Python, then TS. It sets the order of step 6 (H5-D20).

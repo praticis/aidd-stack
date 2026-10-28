@@ -10,6 +10,7 @@ outputs. The tools are listed with their arguments in [`indexer/scripts/README.m
 
 | # | Step | How | Passes when |
 |---|---|---|---|
+| 0 | Design | the plan's section "Contracts, boundaries and proof" ([`docs/design.md`](../design.md) §4) | it names the contract it reads, the module that holds each piece of knowledge, the reference that proves it and what stays `Unknown`; the author approved it |
 | 1 | Context | `git status`, `git worktree list`, `docker image inspect aidd-indexer:local` | branch, commit and image are the ones the run is meant to measure |
 | 2 | Case first | a fixture case or test that fails without the rule (`indexer/tests`) | fails on `main`, passes on the tree |
 | 3 | Tests, writer, shape | `scripts/test.sh`; `scripts/mcp-it.sh`; `scripts/protocol/shape.sh` | all pass; `0 new or worse over a target` |

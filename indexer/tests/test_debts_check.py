@@ -13,7 +13,8 @@ import debts as D  # noqa: E402
 HEAD = "| ID | The debt | Seen at | Due | Case |\n|---|---|---|---|---|\n"
 FIX = "a `fix(csharp)` PR before F1.2"
 ROADMAP = ("- F1.2\n  - Debts due here: TD-001 to TD-002 (`docs/tech-debt.md`), C# defects\n"
-           "- H5: the debts (`docs/tech-debt.md`, TD-001 to TD-003); TD-003 are due in `fix(csharp)` PRs before F1.2.\n")
+           "- H5: the debts (`docs/tech-debt.md`, TD-001 to TD-003); TD-003 are due in `fix(csharp)` PRs before F1.2; "
+           "none is due in an H5 step.\n")
 TESTS = ('import pytest\n\n\ndef case(id, *rest):\n    return pytest.param(id=id, marks=pytest.mark.xfail(strict=True))\n\n\n'
          'CASES = [case("a-first-case"), case("a-second-case"), case("a-third-case")]\n')
 
@@ -79,7 +80,17 @@ def test_a_closed_debt_still_listed_in_the_roadmap_is_found(tmp_path):
 def test_a_roadmap_without_the_list_of_a_due_is_found(tmp_path):
     found, _ = make(tmp_path, roadmap="- nothing\n")
     assert found == ["the ROADMAP has no `Debts due here:` list of the debts due in F1.2",
-                     "the ROADMAP has no `are due in `fix(csharp)` PRs before F1.2` list of the debts due in a `fix(csharp)` PR before F1.2"]
+                     "the ROADMAP has no `are due in `fix(csharp)` PRs before F1.2` list of the debts due in a `fix(csharp)` PR before F1.2",
+                     "the ROADMAP has no `due in an H5 step` list of the debts due in an H5 step"]
+
+
+def test_a_debt_due_in_a_step_of_h5_is_checked_against_the_roadmaps_list_of_that_due(tmp_path):
+    rows = ROWS + [row("TD-004", "H5 step 6", "`a-fourth-case`")]
+    tests = TESTS.replace('case("a-third-case")]', 'case("a-third-case"), case("a-fourth-case")]')
+    assert make(tmp_path / "listed", rows=rows, tests=tests,
+                roadmap=ROADMAP.replace("none is due in an H5 step", "TD-004 is due in an H5 step"))[0] == []
+    assert make(tmp_path / "missing", rows=rows, tests=tests)[0] == [
+        "the ROADMAP's list of the debts due in an H5 step lacks TD-004"]
 
 
 def test_a_due_the_check_does_not_know_is_found(tmp_path):
