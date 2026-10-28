@@ -26,7 +26,7 @@
     and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
-    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, the check that the debts' cases exist; then Python
+    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Next, Python
     and TS; then step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), then 10
     and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
@@ -350,7 +350,8 @@ Open:
   untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
   on merge, a nightly trend, and a live check on a demo tenant
   - Next slice, decided on 2026-10-27 (H7-D6): automate the judgment of a change of behavior, since a person's check is
-    not feasible: the per-site attribution (H5's gap G1), the verdict record (H7-D2) and each judged case as a test
+    not feasible: the per-site attribution (H5's gap G1: built for Go, and for Python and TS at their step 5), the verdict record
+    (H7-D2) and each judged case as a test
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

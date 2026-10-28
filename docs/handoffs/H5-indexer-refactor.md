@@ -10,31 +10,40 @@
 >   `2026-10-18-v2-baseline-29`);
 > - `docs/indexer/README.md`: the validation method and how to resume.
 
-## State (2026-10-27)
+## State (2026-10-28)
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
 extension method a call reaches #30). Each merge and its live validation are in `docs/history.md`; the results are in
 the sections below and in `corpus-report.md`.
 
-**C# is closed, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a strict xfail
-test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that did not
-write it (H7-D6): a person's check is not feasible today.
+**Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
+strict xfail test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that
+did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language:
+
+| Language | Step 5 (`TypeIndex`) | Step 6 (recognizers, catalog) | Step 12: the largest module over 300 lines |
+|---|---|---|---|
+| C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
+| Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
+| TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| Python | pending | not started | `languages/python/http.py`, 438 |
+
+The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
+(step 12).
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
 `docs/indexer/resume-test.md` passed all nine criteria in a clone (run 4, 2026-10-27). The `live/` chain ran on #30,
 and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy of its folder.
 `protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or never: they
-are exercised again on the next PR of the indexer.
+are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the expected-list tool
+(`lists/`, PR #34) are in; the new hold-out's tools and Go's attribution are `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. The check that every case in `docs/tech-debt.md` is a strict xfail in the tests, and the reverse. It runs outside the
-   test container, which does not see `docs/`.
-2. Step 5 for Python, then TS: each a refactor, then a change of behavior. Judging by case needs a per-site
-   attribution first (gap G1 below).
-3. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
+1. Step 5 for Python, then TS: each a refactor, then a change of behavior. Judging by case needs the language's
+   `<lang>_answers.py` first (gap G1 below).
+2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
-4. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
+3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
    cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
 
