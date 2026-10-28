@@ -34,6 +34,13 @@ def _verdict(item: dict, g: dict, kind: str) -> dict:
     return {**item, "ok": True if in_expected(item, g, kind) else None, "category": None}
 
 
+def _seed(g: dict, name: str, seed: str | None) -> str:
+    kept = g.get("checked_seed")
+    if seed is not None and kept is not None and str(kept) != seed:
+        raise SyncError(f"'{name}' keeps seed {kept}, not {seed}")
+    return str(kept) if kept is not None else (seed if seed is not None else "0")
+
+
 def _moved(item: dict, found: dict, g: dict, kind: str) -> dict:
     route = {"evidence": item["evidence"], "method": found["method"], "path": found["path"],
              "raw": found.get("raw_pattern") or found.get("raw_path")}
@@ -87,3 +94,17 @@ def resample(g: dict, run: dict, kind: str, name: str) -> list[Change]:
     gone = [Change(kind, "gone", i) for i in old if (i["method"], i["evidence"], i["path"]) not in key]
     made = {(i["method"], i["evidence"], i["path"]) for i in old}
     return gone + [Change(kind, "new", None, i) for i in drawn if (i["method"], i["evidence"], i["path"]) not in made]
+
+
+def draw(g: dict, run: dict, name: str, n: int, seed: str | None = None) -> list[str]:
+    """A first sample for each kind the run has and the list has none for: `n` routes drawn with the list's seed, or with
+    the one given, which the list then keeps. A route the expected list has is right; the rest are pending."""
+    seed = _seed(g, name, seed)
+    kinds = [k for k in M.KINDS if run.get(k) and not (g.get("checked") or {}).get(k)]
+    if not kinds:
+        raise SyncError(f"nothing to draw for '{name}': the run has no routes, or every kind it has is sampled "
+                        "(resample draws one again)")
+    for kind in kinds:
+        g.setdefault("checked", {})[kind] = [_verdict(item, g, kind) for item in M.sample(run, kind, n, seed, name)]
+    g.setdefault("checked_seed", seed)
+    return kinds
