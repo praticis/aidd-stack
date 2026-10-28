@@ -24,7 +24,8 @@ outputs. The tools are listed with their arguments in [`indexer/scripts/README.m
 | 12 | Record | a golden round, `docs/history.md`, the H5 handoff, the ROADMAP | each change supported by the evidence |
 
 A change to the extractor adds, before step 4: corpus `--baseline`, judgment at the source, the expected lists
-(`checks/expected_lists_diff.py`), and a new baseline only after its diff was judged item by item.
+(`lists/expected_lists.py` edits them, `checks/expected_lists_diff.py` shows what changed; §4.10), and a new
+baseline only after its diff was judged item by item.
 
 What judgment finds and does not block is registered as a debt (`docs/tech-debt.md`) with a strict xfail test, never
 as a note.
@@ -42,7 +43,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 |---|---|---|
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view` | the task |
 | 2. Offline analysis of saved artifacts | `judgment/` tools, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
-| 3. Local files | editing docs or scripts; writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
+| 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
 | 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/` | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
@@ -189,6 +190,26 @@ where the change reaches, the graph has 0 mismatching snapshots against `main`'s
 (the Cypher write that must be refused). After `after`: the picture differs only in the build and the `IndexRun`
 counts, 0 snapshots mismatch against the branch's dry-run, the answers differ only in time and build fields, and every
 snapshot has an ok run. Anything else is a difference to judge as `judgment.md` says, never a pass.
+
+### 4.10 Expected lists
+
+`indexer/scripts/lists/expected_lists.py` edits `indexer/tests/corpus_expected/` (plain Python, no Docker; the hold-out's
+lists are not its to touch). A list is written back in the order it was read, so an edit is a small diff, and a test
+keeps every real list identical through a read and a write. RUN is a label under `$C/runs`. After a change to the
+extractor, with the branch's run:
+
+1. `sync RUN` prints the `checked` items the run moved (`changed`), lost (`gone`) or gives more than one route for
+   (`ambiguous`); `--apply` writes it. A moved item is right when the list has its route, and pending otherwise.
+2. `pending` lists the items with no verdict. Read each at its evidence, as `judgment.md` says, then
+   `judge NAME KIND DEFAULT [N=VERDICT ...]`, with `ok`, `wrong` or `wrong:CATEGORY`. The tool records a verdict and
+   never replaces one; it decides nothing.
+3. `found RUN` lists the items that still carry a miss category though the run finds them; `--apply` clears the
+   category. The corpus report counts misses by those categories, so clear one only when the miss is fixed.
+4. `add`, `cat`, `set` and `new` change what a list expects: each in its own commit, with the `file:line` evidence at
+   the pinned sha. `resample RUN NAME KIND` draws a kind's sample again with the list's seed, keeping the verdicts of
+   the routes that did not move.
+
+Not during a corpus run (§6). Without `--apply`, `found`, `sync` and `resample` only print.
 
 ## 5. Criteria
 

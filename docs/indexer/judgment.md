@@ -65,7 +65,7 @@ What blocks or passes:
    repos it is given: give it one repo at a time for a sample per repo. Sizes are in method.md §4.4.
 5. **Decide.** `right`, `wrong` or `undecided`. When the source cannot decide, `undecided`, and a debt with a case.
 6. **Record.**
-   - a list edit, with `file:line` evidence, in its own commit;
+   - a list edit (`lists/expected_lists.py`, method.md §4.10), with `file:line` evidence, in its own commit;
    - a case as a test: a strict xfail with its reason on the wrong side, before the fix;
    - a gap, as a debt in `docs/tech-debt.md` with its strict xfail case.
 7. **Give it a status:** blocks, fixed in this PR, a debt that does not block (registered in `docs/tech-debt.md` with a
