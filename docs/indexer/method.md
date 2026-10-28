@@ -42,9 +42,9 @@ The classes bind an agent; the author runs any of these tools without asking.
 | Class | Examples | Authorization |
 |---|---|---|
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
-| 2. Offline analysis of saved artifacts | `judgment/` tools but `go_attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
+| 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/`, `judgment/go_attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -114,7 +114,7 @@ python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
 python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR]
-indexer/scripts/judgment/go_attribution.sh OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
+indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
 ```
 
 `BEFORE` and `AFTER` hold `<repo>.json.gz` dry-runs. `chain_diff` samples with a fixed seed over sorted sites, so the
@@ -254,22 +254,28 @@ case reads), keeps the sites where the answers differ, and prints the changed si
 samples of each. A changed site whose answer is the same on both sides is `unexplained`: another rule changed it, or
 the change has a defect. It is listed with its source line and judged apart, never dropped.
 
-For Go:
+The answers come from one probe for every language, `answers.py` (H5-D21). It runs a tree's own discovery and
+extraction and reads, from each call the extractor records, the receiver's type (`CallInfo.receiver_type`): the files,
+the calls and the types are the ones that tree's resolver reads, however the language types inside. A tree that types
+no receiver of the language writes no line, so on its side every receiver is untyped. Both trees must share the
+extraction's API (`list_files`, `discover_modules`, `build_files`, `extract_file`); where they do not, the probe fails.
 
-1. A worktree for each tree, the base and the branch, and the micro dry-runs of both on the Go repos: `micro.sh --base
-   REF REPO...` in the branch's worktree leaves the `BEFORE` and `AFTER` directories in `$C/micro`.
-2. `go_attribution.sh OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]` asks each tree, in the image, what it
-   types each name a method is called on (`go_answers.py`; each tree answers with its own code), then runs
-   `attribution.py`. Both trees need `locals.declared_type`; the answers stay in `$AIDD_ATTRIBUTION_OUT`.
+1. A worktree for each tree, the base and the branch, and the micro dry-runs of both on the language's repos:
+   `micro.sh --base REF REPO...` in the branch's worktree leaves the `BEFORE` and `AFTER` directories in `$C/micro`.
+   A tree the run only reads can be a `git archive` of its `indexer/` instead of a worktree.
+2. `attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]` runs the probe with each tree, in the
+   image, then `attribution.py`. The answers stay in `$AIDD_ATTRIBUTION_OUT`; the probe's stderr names the
+   `aidd_indexer` it imported and counts, per repo, the typed calls of all the method calls on a receiver.
 3. Read the table, then the samples at the source as `judgment.md` §5 says. Without a table the cases are the answer's
    own: `typed-now`, `untyped-now` and `retyped`. The rule that explains a difference is a case of the change: write it
    before the change, in a `--cases` file whose `case_of(d)` reads the types, the source line and the facts the probe
-   gives (`closures`, the function literals around the use), and returns the case, or None for the answer's own.
+   gives (`closures`, the function literals around the use: Go's func literals, Python's lambdas and functions defined
+   in another), and returns the case, or None for the answer's own.
 
-For another language the probe is the part to write: a `<lang>_answers.py` that, run with a tree on `PYTHONPATH`, writes
-the same lines from that tree's own typing. The join, the cases, the samples and the unexplained list are the same.
-Write it in a `chore(scripts)` PR of its own, before the language's refactor (H5-D19), so the first judgment already
-has it.
+The probe sees the type a call's receiver is given in its file, not what the resolver makes of it: a changed edge
+whose receiver has the same type on both sides is `unexplained`, even when the change is to how that type resolves.
+A language whose cases need another fact gets it in `FACTS`, in a `chore(scripts)` PR before the language's refactor
+(H5-D19), so the first judgment already has it.
 
 ## 5. Criteria
 
@@ -301,8 +307,6 @@ has it.
 
 ## 7. Not specified yet
 
-- **Per-site attribution for Python and TS.** §4.12 has the join and the Go probe; C# was judged with
-  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py`, before their refactor (H5-D19).
 - **The size of a judgment sample.** Not fixed; §4.4 gives the sizes used.
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)
