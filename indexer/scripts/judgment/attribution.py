@@ -3,14 +3,16 @@
 changes edges at the sites where the typing answer changes, and nowhere else, so a changed edge at a site whose answer
 is the same on both sides is not explained by it, and is listed apart.
 
-    attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR]
+    attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 
 BEFORE and AFTER hold `<repo>.json.gz` dry-runs. OLD.jsonl and NEW.jsonl hold what each side answers at a call, one JSON
 object per line, as `answers.py` writes them: repo, file, line, receiver, type, src, and any fact the case table
 reads. A side with no row for a receiver does not type it. FILE defines `case_of(d)` for a site whose answer differs
 (d: repo, file, line, receiver, old, new, src and the facts) and returns its case, or None for the answer's own:
 typed-now, untyped-now or retyped. Prints the changed sites by case and kind, then N seeded samples of each case and kind
-that changes a callee, and the first N unexplained sites, with --repos DIR their source lines."""
+that changes a callee, and the first N unexplained sites, with --repos DIR their source lines. Last, each repo's CALLS
+edges by strategy on both sides, and the share of edges and of sites the resolver found among several homonyms
+(`-ambiguous`); with --language LANG, of the calls made in that language's files only."""
 from __future__ import annotations
 
 import argparse
@@ -118,6 +120,21 @@ def samples(rows: list, n: int, root: Optional[str]) -> list:
     return lines
 
 
+def share(part: int, whole: int) -> str:
+    return f"{100 * part / whole:.1f} %" if whole else "-"
+
+
+def strategy_table(repo: str, before: dict, after: dict, language: Optional[str]) -> list:
+    b, a = L.strategies(before, language), L.strategies(after, language)
+    eb, ea = sum(b.edges.values()), sum(a.edges.values())
+    rows = [(s, b.edges[s], a.edges[s]) for s in sorted(set(b.edges) | set(a.edges))]
+    rows += [("edges", eb, ea), ("ambiguous edges", share(b.ambiguous_edges, eb), share(a.ambiguous_edges, ea)),
+             ("sites", b.sites, a.sites),
+             ("ambiguous sites", share(b.ambiguous_sites, b.sites), share(a.ambiguous_sites, a.sites))]
+    title = f"\n{language or 'every language'}'s CALLS in {repo}, by strategy"
+    return [title, f"  {'':26} {'before':>9} {'after':>9}"] + [f"  {name:26} {x:>9} {y:>9}" for name, x, y in rows]
+
+
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     for name in ("before", "after", "old", "new"):
@@ -126,6 +143,7 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("names", nargs="+", metavar="REPO")
     ap.add_argument("--cases")
     ap.add_argument("--repos")
+    ap.add_argument("--language")
     return ap
 
 
@@ -133,15 +151,18 @@ def main(argv: list) -> int:
     a = parser().parse_args(argv)
     try:
         case_of, diffs = load_cases(a.cases), differences(read_answers(a.old), read_answers(a.new))
-        rows = []
+        rows, strategy_lines = [], []
         for repo in a.names:
-            mine = explain(repo, L.load(a.before, repo), L.load(a.after, repo), diffs, case_of)
-            print(f"{len(mine)} changed site(s) in {repo}, {sum(r['case'] == UNEXPLAINED for r in mine)} unexplained")
+            before, after = L.load(a.before, repo), L.load(a.after, repo)
+            mine = explain(repo, before, after, diffs, case_of)
+            unexplained = sum(r["case"] == UNEXPLAINED for r in mine)
+            print(f"{len(mine)} changed site(s) in {repo}, {unexplained} unexplained")
             rows += mine
+            strategy_lines += strategy_table(repo, before, after, a.language)
     except (AttributionError, OSError) as e:
         print(f"attribution: {e}", file=sys.stderr)
         return 2
-    print("\n" + "\n".join(table(rows) + samples(rows, a.n, a.repos)))
+    print("\n" + "\n".join(table(rows) + samples(rows, a.n, a.repos) + strategy_lines))
     return 0
 
 

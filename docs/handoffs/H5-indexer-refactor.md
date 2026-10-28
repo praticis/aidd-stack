@@ -46,9 +46,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
      LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
    - Python goes in H5-D22's three PRs. Its case table is in (#42, "Step 5" below). Next, the refactor: its scope
      index is checked against `symtable` on the table's scope traps as well as over every Python file of the corpus.
-     A test of the table fails when Python gets its `TypeIndex`, and that check replaces it. Before the refactor, a
-     `chore(scripts)` PR has `attribution.py` report the ambiguous share; the refactor carries the reason of an
-     `Unknown` beside the type in `CallInfo` (H5-D23).
+     A test of the table fails when Python gets its `TypeIndex`, and that check replaces it. `attribution.py` reports
+     the ambiguous share (#43); the refactor carries the reason of an `Unknown` beside the type in `CallInfo` (H5-D23).
    - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
@@ -819,13 +818,16 @@ index, so the refactor replaces that test with the check.
   1. the case table, with guards and strict xfails, each case's method the one CPython runs (#42);
   2. the refactor, with the graph identical: the scope index, checked against `symtable` on the table's scope traps
      and over every Python file of the corpus; Python in `checks/dump.py`; the `TypeIndex` and the hook;
-  3. the change of behavior, judged with `attribution.sh python`, which reports Python's ambiguous share (64 % of
-     `dispatch`'s `CALLS` and 58 % of `netbox`'s today) and the reasons of `Unknown` (H5-D23).
+  3. the change of behavior, judged with `attribution.sh python`, which reports Python's ambiguous share and the
+     reasons of `Unknown` (H5-D23). Of the `CALLS` made in Python files on `main`'s tree of 2026-10-28, the resolver
+     found among several homonyms 65.6 % of the edges and 40.4 % of the sites in `dispatch`, and 63.1 % and 38.2 % in
+     `netbox`.
 - **H5-D23 (2026-10-28), what the per-site attribution reports for Python's change of behavior.** The eighth resume
   run found that H5-D22's third PR promised the ambiguous share and the reasons of `Unknown`, and the probe reported
   neither.
   - The ambiguous share comes from the edges' strategies, so `attribution.py` reports it for every language, in a
-    `chore(scripts)` PR before Python's refactor.
+    `chore(scripts)` PR before Python's refactor (#43): of the language's files, the share of the edges and of the
+    sites found among several homonyms, beside the edges by strategy.
   - The reason of an `Unknown` travels in the contract that carries the type: the refactor puts it beside
     `CallInfo.receiver_type`, and `answers.py` reads it as it reads the type. Read from Python's own typing, it would
     couple the probe to it, which H5-D21 removed.

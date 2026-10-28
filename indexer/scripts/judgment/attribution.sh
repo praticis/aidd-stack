@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Which answer explains each CALLS edge of a language's repos that changed between two trees of the indexer: what each
 # tree's extraction types the receivers of method calls as (answers.py, once per tree, in the image), then
-# attribution.py over the two micro dry-runs. The trees are checkouts, one each, because each answers with its own code.
+# attribution.py over the two micro dry-runs, with the language's CALLS by strategy on both sides. The trees are
+# checkouts, one each, because each answers with its own code.
 #
 #   indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
 #
@@ -39,4 +40,4 @@ answers() {
 answers "$old" "$out/old.jsonl"
 answers "$new" "$out/new.jsonl"
 python3 -I "$here/attribution.py" "$before" "$after" "$out/old.jsonl" "$out/new.jsonl" "$n" "${repos[@]}" \
-  --repos "$home/repos" ${extra[@]+"${extra[@]}"}
+  --repos "$home/repos" --language "$lang" ${extra[@]+"${extra[@]}"}

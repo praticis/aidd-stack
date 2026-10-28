@@ -219,3 +219,7 @@
   eighth resume run, on #41's merge, passes all nine criteria. What it found is fixed, or decided by the author:
   H5-D23, what the attribution reports for Python's change of behavior, and TD-024, the names of frameworks and
   client libraries in the core.
+- 2026-10-28: the per-site attribution reports how a language's `CALLS` are found, and merges as PR #43 (H5-D23): each
+  repo's edges by strategy on both sides, and the share found among several homonyms, of the edges and of the sites.
+  On `main`, 65.6 % of the edges and 40.4 % of the sites of `dispatch`'s Python files are found so, and 63.1 % and
+  38.2 % of `netbox`'s; the shares H5-D22 first quoted mixed two measures.

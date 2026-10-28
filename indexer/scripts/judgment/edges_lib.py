@@ -1,10 +1,14 @@
-"""A micro dry-run's CALLS edges per call site, shared by the judgment scripts: a site is its caller's file and the
-call's line, and its edges are (callee's qualified name, strategy)."""
+"""A micro dry-run's CALLS edges per call site and by strategy, shared by the judgment scripts: a site is its caller's
+file and the call's line, and its edges are (callee's qualified name, strategy)."""
 import collections
 import gzip
 import json
 import random
 import sys
+import typing
+
+# the resolver's mark on an edge to one of several homonyms a call found by name could reach
+AMBIGUOUS = "-ambiguous"
 
 
 def load(d, repo):
@@ -23,6 +27,33 @@ def edges(run):
         callee = sym.get(c["callee_id"], {}).get("qualified_name", c["callee_id"])
         out.setdefault((f, c["line"]), set()).add((callee, c["strategy"]))
     return out
+
+
+class Strategies(typing.NamedTuple):
+    edges: collections.Counter      # strategy -> edges
+    sites: int
+    ambiguous_sites: int            # sites with an edge to one of several homonyms the call could reach
+
+    @property
+    def ambiguous_edges(self) -> int:
+        return sum(n for strategy, n in self.edges.items() if strategy.endswith(AMBIGUOUS))
+
+
+def strategies(run, language=None) -> Strategies:
+    """The CALLS edges of a dry-run by strategy, and its call sites; with `language`, only the calls made in that
+    language's files. A line with two calls is one site, ambiguous when either call is."""
+    files = {f["id"]: f for f in run["files"]}
+    sym = {s["id"]: s for s in run["symbols"]}
+    by_strategy, sites = collections.Counter(), {}
+    for c in run["calls"]:
+        caller = sym.get(c["caller_id"])
+        f = files.get(caller["file_id"] if caller else c["caller_id"])
+        if language is not None and (f is None or f.get("language") != language):
+            continue
+        by_strategy[c["strategy"]] += 1
+        site = (f["path"] if f else "?", c["line"])
+        sites[site] = sites.get(site, False) or c["strategy"].endswith(AMBIGUOUS)
+    return Strategies(by_strategy, len(sites), sum(sites.values()))
 
 
 

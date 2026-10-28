@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -148,3 +149,48 @@ def test_the_samples_are_the_same_for_the_same_inputs(tmp_path, capsys):
     first = report(tmp_path, capsys, run(*edges), run(*changed), [], answers)
     again = report(tmp_path, capsys, run(*edges), run(*changed), [], answers)
     assert first == again and first.count("[typed-now / changed]") == 2
+
+
+def made_in(*calls):
+    """A dry-run of a Python file and a Vue file whose calls are (file, line, strategy); the calls on line 9 are made
+    from the file itself, not from one of its symbols."""
+    files = [{"id": "py", "path": "a.py", "language": "python"}, {"id": "vue", "path": "b.vue", "language": "vue"}]
+    return {"files": files, "symbols": [{"id": f"s-{f}", "file_id": f, "qualified_name": f} for f in ("py", "vue")],
+            "calls": [{"caller_id": f if line == 9 else f"s-{f}", "callee_id": f"c{i}", "line": line, "strategy": st}
+                      for i, (f, line, st) in enumerate(calls)]}
+
+
+def test_the_edges_are_counted_by_strategy_and_a_site_is_ambiguous_when_one_of_its_edges_is():
+    s = L.strategies(made_in(("py", 3, "same-module-ambiguous"), ("py", 3, "same-file"), ("py", 5, "receiver-type"),
+                             ("py", 7, "same-module-ambiguous"), ("py", 7, "same-module-ambiguous"),
+                             ("py", 9, "unique-name")))
+    assert s.edges == {"same-module-ambiguous": 3, "same-file": 1, "receiver-type": 1, "unique-name": 1}
+    assert (s.ambiguous_edges, s.sites, s.ambiguous_sites) == (3, 4, 2)
+
+
+def test_a_language_keeps_only_the_calls_made_in_its_files():
+    run_ = made_in(("py", 3, "same-file"), ("vue", 3, "same-module-ambiguous"), ("vue", 9, "unique-name"))
+    assert L.strategies(run_, "python") == ({"same-file": 1}, 1, 0)
+    assert L.strategies(run_) == ({"same-file": 1, "same-module-ambiguous": 1, "unique-name": 1}, 3, 1)
+
+
+def strategy_section(out: str, title: str) -> list:
+    lines = out[out.index(title):].splitlines()[1:]
+    return [tuple(c.strip() for c in re.fullmatch(r"  (.{26}) (.{9}) (.{9})", line).groups()) for line in lines]
+
+
+def test_the_report_ends_with_the_languages_calls_by_strategy_and_the_shares_found_among_homonyms(tmp_path, capsys):
+    before = made_in(("py", 3, "same-module-ambiguous"), ("py", 3, "same-module-ambiguous"), ("py", 5, "same-file"),
+                     ("vue", 3, "same-module-ambiguous"))
+    after = made_in(("py", 3, "receiver-type"), ("py", 5, "same-file"), ("vue", 3, "same-module-ambiguous"))
+    out = report(tmp_path, capsys, before, after, [], [], "--language", "python")
+    assert strategy_section(out, "python's CALLS in r, by strategy") == [
+        ("", "before", "after"), ("receiver-type", "0", "1"), ("same-file", "1", "1"),
+        ("same-module-ambiguous", "2", "0"), ("edges", "3", "2"), ("ambiguous edges", "66.7 %", "0.0 %"),
+        ("sites", "2", "2"), ("ambiguous sites", "50.0 %", "0.0 %")]
+
+
+def test_without_a_language_the_report_counts_every_file_and_a_share_of_nothing_is_a_dash(tmp_path, capsys):
+    out = report(tmp_path, capsys, made_in(("vue", 3, "same-module-ambiguous")), made_in(), [], [])
+    assert strategy_section(out, "every language's CALLS in r, by strategy")[-4:] == [
+        ("edges", "1", "0"), ("ambiguous edges", "100.0 %", "-"), ("sites", "1", "0"), ("ambiguous sites", "100.0 %", "-")]
