@@ -6,7 +6,7 @@ is the same on both sides is not explained by it, and is listed apart.
     attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR]
 
 BEFORE and AFTER hold `<repo>.json.gz` dry-runs. OLD.jsonl and NEW.jsonl hold what each side answers at a call, one JSON
-object per line, as `go_answers.py` writes them: repo, file, line, receiver, type, src, and any fact the case table
+object per line, as `answers.py` writes them: repo, file, line, receiver, type, src, and any fact the case table
 reads. A side with no row for a receiver does not type it. FILE defines `case_of(d)` for a site whose answer differs
 (d: repo, file, line, receiver, old, new, src and the facts) and returns its case, or None for the answer's own:
 typed-now, untyped-now or retyped. Prints the changed sites by case and kind, then N seeded samples of each case and kind
