@@ -45,6 +45,8 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; the shape ratchet in the image | Docker |
 | | `resume-test.sh` | whether a new session can resume from a pushed commit: a headless, read-only `claude` run in a fresh clone, with its report and its tool calls in files | `claude`, network |
 | `judgment/` | `chain_diff.py`, `show.py`, `site_edges.py` | which `CALLS` edges changed between two dry-runs, by kind; the sampled sites' source lines; one site's edges | `python3 -I` |
+| | `attribution.py` | which changed `CALLS` edges a difference in what two trees answer at the site explains, by case and kind, and which nothing explains | `python3 -I` |
+| | `go_attribution.sh` with `go_answers.py` | what each of two trees types the receivers of Go method calls as, then `attribution.py` over the two dry-runs | Docker, two worktrees |
 | | `csharp_extensions.py` | the edges to the repo's C# extension methods that went away or came: `sites`, `back`, `classes`, `this-kind`, `blocks` | `python3 -I` |
 | `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
 | | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |

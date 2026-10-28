@@ -63,7 +63,8 @@ What blocks or passes:
 3. **Read the source.** `show.py` prints the sampled sites' lines. For live snapshots read the private source locally
    and record only numbers.
 4. **Sample.** A seeded sample per case and repo, drawn from sorted sites. `chain_diff.py` draws `N` per kind across the
-   repos it is given: give it one repo at a time for a sample per repo. Sizes are in method.md §4.4.
+   repos it is given: give it one repo at a time for a sample per repo. `attribution.py` draws `N` per case and kind, and
+   lists the changed sites no answer explains. Sizes are in method.md §4.4.
 5. **Decide.** `right`, `wrong` or `undecided`. When the source cannot decide, `undecided`, and a debt with a case.
 6. **Record.**
    - a list edit (`lists/expected_lists.py`, method.md §4.10), with `file:line` evidence, in its own commit;
@@ -100,5 +101,5 @@ Not yet decided (H7-D2); recommended. One row per item judged, one per item left
 - `dry_sections.py` compares six sections (`files`, `symbols`, `calls`, `imports`, `endpoints`, `http_calls`) by a few
   keys each: "identical" means identical in those, by those keys. Modules, packages and violations are not compared.
 - A historical result whose inputs are missing is evidence that it was reported, not that it would reproduce.
-- The per-site attribution that ties a changed site to the rule that explains it does not exist in the repository
-  (method.md §7). Until it does, a case is read from the rule and the commit.
+- The per-site attribution (method.md §4.12) exists for Go only. For Python and TS, until their probe is written, a
+  case is read from the rule and the commit.

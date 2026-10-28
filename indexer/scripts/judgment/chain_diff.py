@@ -9,7 +9,7 @@ import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from edges_lib import edges, load  # noqa: E402
+from edges_lib import changed, kind, load  # noqa: E402
 
 
 def cls(strategy: str) -> str:
@@ -19,28 +19,12 @@ def cls(strategy: str) -> str:
     return ("inherited" if strategy.startswith("inherited") else "name") + amb
 
 
-def kind(was: set, now: set) -> str:
-    cw, cn = {c for c, _ in was}, {c for c, _ in now}
-    if cw == cn:
-        return "strategy"
-    if not cw:
-        return "added"
-    if not cn:
-        return "dropped"
-    return "widened" if cw < cn else "narrowed" if cn < cw else "changed"
-
-
 before, after, n = sys.argv[1], sys.argv[2], int(sys.argv[3])
 rng = random.Random(20261021)
 total, kinds, pick = collections.Counter(), collections.Counter(), collections.defaultdict(list)
 for repo in sys.argv[4:]:
-    b, h = edges(load(before, repo)), edges(load(after, repo))
     per = collections.Counter()
-    # sorted: a set's order changes from one process to the next, and the seeded sample is drawn in this order
-    for key in sorted(set(b) | set(h)):
-        was, now = b.get(key, set()), h.get(key, set())
-        if was == now:
-            continue
+    for key, was, now in changed(load(before, repo), load(after, repo)):
         k = kind(was, now)
         kinds[k] += 1
         per[k] += 1
