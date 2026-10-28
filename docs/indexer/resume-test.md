@@ -3,7 +3,7 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: passed in runs 4 to 7 (§4), in a clone with the fixed prompt.** Run it again after a change to these
+**Status: passed in runs 4 to 8 (§4), in a clone with the fixed prompt.** Run it again after a change to these
 documents or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a
 subagent of the one that wrote them.
 
@@ -197,3 +197,19 @@ one with `git fetch --dry-run`, and a shell `for` loop), and the session adapted
   C# and Go; the timing rule against one run per side).
 - Changed because of it: H5-D19 in the handoff and `decisions.md` (amended by H5-D21), the handoff's State, this
   page's status and `history.md`.
+
+**Run 8, 2026-10-28, commit `f000776` (PR #41 merged): headless, in a clone: passed.** `claude-opus-5-5`; 28 turns,
+146 s. `memory_paths` named the clone. One call was refused (a shell `for` loop that checked files and ran
+`debts.py`); the session checked the files with Glob, and said it had not run `debts.py`.
+- All nine criteria passed. It read the README's documents in order, then the ROADMAP, `design.md` and the debts
+  register. It found no open gate, and gave the next step as H5-D22's first PR, whose plan needs the section
+  "Contracts, boundaries and proof" and the author's approval before a branch (`design.md` §4). It called the cache,
+  the image, `.local/` and the live install missing by design without looking for them, and stopped after the report.
+- It reported seven points, three real: the handoff's State did not name TD-023; step 4's criterion ("names no
+  language or framework") reads stronger than its test, which checks a language's imports and ids only; and H5-D22's
+  third PR promises Python's ambiguous share and the reasons of `Unknown`, which the probe does not report. Three were
+  explained already: H5-D19's text, amended by H5-D21; the tooling's trailer suggestion against the project's rule;
+  deviations the documents state. One was wrong: that a fresh clone may lack `origin/h6/step1-proto`. A clone has it,
+  and the session did not check.
+- Changed because of it: the handoff's State and step 4's criterion. The author decided the same day what the
+  attribution reports for H5-D22's third PR (H5-D23), and made the core's framework names a debt (TD-024).

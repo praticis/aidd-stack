@@ -13,25 +13,27 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Each merge and its live validation are in `docs/history.md`; the results are in
-the sections below and in `corpus-report.md`.
+extension method a call reaches #30). Python's step 5 has its case table (#42, H5-D22). Each merge and its live
+validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that
-did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language:
+did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
+and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
+names of frameworks and client libraries it holds:
 
 | Language | Step 5 (`TypeIndex`) | Step 6 (recognizers, catalog) | Step 12: the largest module over 300 lines |
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| Python | pending | not started | `languages/python/http.py`, 438 |
+| Python | the case table merged (#42); the refactor next | not started | `languages/python/http.py`, 438 |
 | TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
-`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 to 7, 2026-10-27 and 2026-10-28). The `live/`
+`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 to 8, 2026-10-27 and 2026-10-28). The `live/`
 chain ran on #30, and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy
 of its folder. `protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or
 never: they are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the
@@ -42,7 +44,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 1. Step 5 for Python, then TS (H5-D19).
    - For each: a refactor, then a change of behavior, both judged with the per-site attribution (`attribution.sh
      LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
-   - Python goes in H5-D22's three PRs, starting with its case table.
+   - Python goes in H5-D22's three PRs. Its case table is in (#42, "Step 5" below). Next, the refactor: its scope
+     index is checked against `symtable` on the table's scope traps as well as over every Python file of the corpus.
+     A test of the table fails when Python gets its `TypeIndex`, and that check replaces it. Before the refactor, a
+     `chore(scripts)` PR has `attribution.py` report the ambiguous share; the refactor carries the reason of an
+     `Unknown` beside the type in `CallInfo` (H5-D23).
    - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
@@ -292,7 +298,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 1 | A unit test net: a case table for `normalize_path`/`mask_placeholders`/`path_key` (each regex with a case, and the pairs whose order matters), `http_mounts`, `Scopes`, `path_of` | covers each rule of `paths.py`; mutating a regex breaks a named test |
 | 2 | `aidd_indexer/tree.py`: a `TreeCursor` `walk`, `node_text`, the end of the import cycle, the on-demand registry | `import aidd_indexer.core.http_base` alone works; the `walk` profile drops |
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
-| 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework |
+| 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework (`test_core_neutral.py` checks that no core module imports a language's module or names a language's id; the syntax of each language the core holds is TD-023, and its framework names are TD-024) |
 | 5 | `TypeIndex` (ADR-005), first its API in the core, then one language at a time: Go, C#, Python, TS (H5-D7), each a refactor and then a change of behavior (H5-D10, "Step 5" below). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
 | 6 | Recognizers + the YAML catalog, **one language per commit**, in the portfolio's order (H5-D20): C# (`_controller`, `_invocation`), Go (`_call`), Python, TS (`_read_call`) | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
@@ -663,6 +669,28 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   dry-runs of umbraco, elsa, bitwarden and smartstore, which run the resolver, take the same time on both, within 2 s.
 - **What stays out:** thirteen gaps, now debts (`docs/tech-debt.md`, TD-010 to TD-022), each with a strict xfail test.
 
+### Python's case table (H5-D22)
+
+In `indexer/tests/test_python_types.py`. Today the resolver types no receiver, so it finds every method by name, and
+the scanner follows a router only into a function. Each case names the method CPython runs for its call, and the test
+runs every case that can run in the test image, under `sys.setprofile`, to show it.
+
+| Case | Today | After the change | Test |
+|---|---|---|---|
+| `self.m()`, `cls.m()`, a method only a repo base declares, a repo base ahead of an external one | by name | the method CPython runs, `receiver-type` | xfails `self`, `cls`, `a-method-of-a-repo-base`, `a-repo-base-ahead-of-an-external-one` |
+| `super().m()` | the class's own `m`, by name | the base's | xfail `super` |
+| `C()`, `x = C()`, `C` under an alias or through its module, `x: C`, `Optional[C]`, `C \| None`, `"C"`, `x: C = f()`, `x = f()` where `f` declares `-> C`, `self.x = C()` in a method, `x: C` in the class body | by name | typed | xfails, one per form |
+| `mod.f()`, a function of a repo module | the methods named `f`, never the function | the function | xfail `a-function-of-a-repo-module` |
+| a name a class body binds, read in a method; a closure's; a `global` bound in a function; a walrus in a comprehension | by name | typed from the binding CPython's scopes give the name | xfails; guards: never the type of the other binding |
+| a comprehension's variable; a `global` or `nonlocal` that rebinds; two bindings that disagree; a `for` or `with` target | by name | `Unknown`, so by name | guards: no typed edge |
+| `list[C]`, `Union[A, B]`, `Model.objects`, an attribute an external base gives, an external base ahead in the MRO | by name | `Unknown` | guards |
+| a value of an external class (`JSONDecoder()`) | the repo's homonym, by name | no edge | xfail `an-instance-of-an-external-class` |
+| scanner: a repo class over `APIRouter`; a router handed to a function with an annotated parameter | the prefix reaches the routes | the same | guards |
+| scanner: a router handed to a method of a typed value (`users.register(v1)`) | `GET /users` | `GET /api/users` | xfail |
+
+A last test fails when Python gets its `TypeIndex`. Checking the scope index itself against `symtable` needs the
+index, so the refactor replaces that test with the check.
+
 ## Decisions made (2026-10-18, by the author)
 
 - **H5-D1, the order: everything before SCIP.** Revised the same day: the author wanted to put an end to H2 before
@@ -788,11 +816,19 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   - Modules and classes are both namespaces, through one hook of the core.
 
   It goes in three PRs:
-  1. the case table, with guards and strict xfails;
-  2. the refactor, with the graph identical: the scope index and its oracle, Python in `checks/dump.py`, the
-     `TypeIndex` and the hook;
+  1. the case table, with guards and strict xfails, each case's method the one CPython runs (#42);
+  2. the refactor, with the graph identical: the scope index, checked against `symtable` on the table's scope traps
+     and over every Python file of the corpus; Python in `checks/dump.py`; the `TypeIndex` and the hook;
   3. the change of behavior, judged with `attribution.sh python`, which reports Python's ambiguous share (64 % of
-     `dispatch`'s `CALLS` and 58 % of `netbox`'s today) and the reasons of `Unknown`.
+     `dispatch`'s `CALLS` and 58 % of `netbox`'s today) and the reasons of `Unknown` (H5-D23).
+- **H5-D23 (2026-10-28), what the per-site attribution reports for Python's change of behavior.** The eighth resume
+  run found that H5-D22's third PR promised the ambiguous share and the reasons of `Unknown`, and the probe reported
+  neither.
+  - The ambiguous share comes from the edges' strategies, so `attribution.py` reports it for every language, in a
+    `chore(scripts)` PR before Python's refactor.
+  - The reason of an `Unknown` travels in the contract that carries the type: the refactor puts it beside
+    `CallInfo.receiver_type`, and `answers.py` reads it as it reads the type. Read from Python's own typing, it would
+    couple the probe to it, which H5-D21 removed.
 
 ## Pitfalls
 

@@ -213,3 +213,9 @@
   (`docs/design.md`): every plan says what already answers its question, where each piece of knowledge belongs and
   what reference proves it. The core's syntax of each language becomes a debt (TD-023). With it, the
   author decides H5-D22: Python's step 5 separates scoping, proven against CPython's `symtable`, from typing.
+- 2026-10-28: Python's case table merges as PR #42 (H5-D22): 24 strict xfails and 27 guards, and each of the 31
+  cases that can run is run under CPython to show the method it names. An alternative a plan leaves for want of what
+  it needs is now tracked in the item that builds it, with a test where one can tell (`docs/design.md` §4). The
+  eighth resume run, on #41's merge, passes all nine criteria. What it found is fixed, or decided by the author:
+  H5-D23, what the attribution reports for Python's change of behavior, and TD-024, the names of frameworks and
+  client libraries in the core.
