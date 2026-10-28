@@ -162,7 +162,7 @@ Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-28`):
 | `prefix-in-router-type` | 1 | 12 | 1 | limitation: kratos' `RouterAdmin` prefix is a field set at run time |
 | `route-by-name-convention` | 0 | 10 | 1 | the project's convention (F0.4.5 `route_patterns`) |
 | `multi-app-repo` | 0 | 8 | 4 | limitation: two apps inside one module |
-| 24 other categories | 12 | 35 | — | none above 5 items; each is in its gabaritos' notes, for when a portfolio shows it |
+| 24 other categories | 12 | 35 | — | none above 5 items; each is in its expected lists' notes, for when a portfolio shows it |
 
 The choice of what came next is recorded in the ROADMAP. First comes the H4 recycling of the working docs, then the
 H5 refactor. After it, the new hold-out is measured, then P2, the indexer in its own repository. SCIP (F1.1, F1.2)

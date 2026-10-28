@@ -363,19 +363,19 @@ inspecionar o que o extrator viu num repo específico.
   proposital por fixture), `edges` (`CALLS` com estratégia) e `gaps` (ligações que o grafo ainda não vê — xfail até
   aparecerem; quando aparecem, o teste pede para movê-las a `edges`). Regenerar `expected.json` só depois de
   conferir cada linha na fonte — nunca a partir da saída do extrator sem revisão.
-- **Corpus público** (`scripts/http_corpus.py`, 42 repos fixados por SHA, 41 com gabarito): `--baseline <execução>`
+- **Corpus público** (`scripts/http_corpus.py`, 42 repos fixados por SHA, 41 com expected list): `--baseline <execução>`
   lista, por repo, os ids `method path_key evidence` que entraram e saíram — toda mudança no extrator é julgada item a
   item nesse diff; `--expected` dá precisão/recall contra `tests/corpus_expected/<repo>.json` (spec commitada ou lista
   lida na fonte, com `scope`, a `category` de cada falta e a amostra `checked` julgada na fonte; formato no
   docstring de `scripts/corpus_metrics.py`) e fecha com os resumos por linguagem e por categoria (com o número de
   repos em que cada uma aparece); `--reuse <execução>` pontua uma execução salva sem extrair de novo — só para
-  editar gabaritos, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`. Quando a spec
-  cobre um subespaço de URL e os mesmos arquivos servem outros (UI web, páginas de debug), `scope_paths` no gabarito
+  editar expected lists, nunca para medir mudança no extrator. Números e ranking: `docs/corpus-report.md`. Quando a spec
+  cobre um subespaço de URL e os mesmos arquivos servem outros (UI web, páginas de debug), `scope_paths` na expected list
   restringe a precisão da lista aos paths dele — e a amostra julga o resto. Rota de framework que casa sem caixa
-  (ASP.NET, o `CASE_INSENSITIVE` do linker) casa sem caixa com o gabarito: `[controller]` dá `AutoTagging` e a spec
+  (ASP.NET, o `CASE_INSENSITIVE` do linker) casa sem caixa com a expected list: `[controller]` dá `AutoTagging` e a spec
   do Radarr escreve `autotagging` (F1.14).
-- **Hold-out** (`http_corpus.py --holdout`, `HOLDOUT` no script, gabaritos em `tests/corpus_expected/holdout/`):
-  repos que as regras nunca viram, medidos uma vez no fechamento de um incremento, com o gabarito escrito antes de
+- **Hold-out** (`http_corpus.py --holdout`, `HOLDOUT` no script, expected lists em `tests/corpus_expected/holdout/`):
+  repos que as regras nunca viram, medidos uma vez no fechamento de um incremento, com a expected list escrita antes de
   rodar e a amostra julgada na fonte (H2-D20). Nenhuma regra se ajusta por ele; quando um incremento trabalha sobre
   esses repos eles viram corpus, e o fechamento seguinte precisa de outro hold-out.
 - **O ciclo de uma mudança no extrator** (o do H2b, um commit por categoria):
@@ -394,13 +394,13 @@ inspecionar o que o extrator viu num repo específico.
      Quantos containers ao mesmo tempo sai da memória do Docker: 3 a partir de 9 GiB, 2 a partir de 7, senão 1.
      Com 3, o corpus inteiro leva ~8 min, contra ~21 em sequência. `--jobs` e `--memory` (ou `AIDD_CORPUS_JOBS` e
      `AIDD_CORPUS_MEMORY`) trocam o padrão; o script termina com os maiores picos de memória, que dizem quanto cabe.
-     A medida que vale é a do corpus inteiro. Para pontuar de novo depois de editar gabaritos,
+     A medida que vale é a do corpus inteiro. Para pontuar de novo depois de editar expected lists,
      `http_corpus.py --reuse <run>` direto (passo 5);
   4. julgar o diff **item a item na fonte**: cada item que sai tem de estar errado antes, e cada um que entra, certo.
      Mudança que a regra não explica é defeito da regra, mesmo com P/R subindo — no H2b, assim apareceram a chamada
      do k6 engolida por uma candidata a wrapper e a precisão do NodeBB caindo de 94 para 80 % com prefixos de runtime.
      Nenhum repo pode regredir (H2-D11);
-  5. gabaritos: rota que só existe na spec sai, e rota real fora dela achada ao conferir um item entra (H2-D15); a
+  5. expected lists: rota que só existe na spec sai, e rota real fora dela achada ao conferir um item entra (H2-D15); a
      linguagem é declarada por tipo quando difere da do repo (H2-D17); um item `checked` cuja `evidence` mudou de
      linha é reconferido, não copiado; depois de editar, `--reuse` pontua de novo;
   6. docs: linha "sintoma → regra" no §3, seção "Update" no `corpus-report.md`, item e log no `H2-roadmap.md`;
@@ -489,7 +489,7 @@ inspecionar o que o extrator viu num repo específico.
     diretório exato); config de alias (`tsconfig` `paths`, `svelte.config.js`); valor de constante; regra da
     linguagem (em Go, método não exportado nunca é de framework);
   - lacuna cuja decisão pede o **tipo de uma expressão que não está declarado à vista** — retorno inferido de uma
-    chamada, serviço injetado, despacho por interface, sobrecarga, genérico — não ganha heurística: o gabarito marca
+    chamada, serviço injetado, despacho por interface, sobrecarga, genérico — não ganha heurística: a expected list marca
     a falta com `category: needs-resolver`, o guia registra a limitação, e ela espera o resolvedor do F1.2 (um
     gancho no `http_base`, por nome por padrão e SCIP quando a snapshot tem índice, consultado só nesses pontos).
   O sinal de que uma regra está invadindo: ela reimplementa inferência de tipos (seguir retornos entre funções,

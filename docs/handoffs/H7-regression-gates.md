@@ -216,7 +216,8 @@ the branch, counted by the writer's merge key, and that comparison now runs on e
 - Everything in the repo is in English; one-line conventional commits, with no body and no attribution.
 - New code meets the shape targets: complexity ≤ 9, modules ≤ 300 lines.
 - No real tenant or private project names, in the code, the workflows or the comments the bot posts.
-- An LLM is never the parser, and never the judge of a gate.
+- An LLM is never the parser, and no CI gate is decided by one. The judgment of a change of behavior is H7-D6's: a
+  script, and until it exists the review of an agent that did not write the change.
 
 ## Expected deliverables
 

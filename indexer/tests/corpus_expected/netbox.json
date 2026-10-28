@@ -6291,5 +6291,5 @@
    "category": "django-urlconf"
   }
  ],
- "notes": "Endpoints: the committed OpenAPI spec (contrib/openapi.json, 1256 operations under /api), scope netbox/. The REST API is Django REST Framework routers — router = NetBoxRouter(); router.register('regions', views.RegionViewSet) in each app's api/urls.py, mounted through urlconf include()s — and nothing is extracted (django-urlconf, recall 0; the method set of each path comes from the viewset's actions). The UI views are Django urlconf path() entries, not in the spec. No outbound-call gabarito: the few calls (plugin catalog, release check) take URLs from settings."
+ "notes": "Endpoints: the committed OpenAPI spec (contrib/openapi.json, 1256 operations under /api), scope netbox/. The REST API is Django REST Framework routers — router = NetBoxRouter(); router.register('regions', views.RegionViewSet) in each app's api/urls.py, mounted through urlconf include()s — and nothing is extracted (django-urlconf, recall 0; the method set of each path comes from the viewset's actions). The UI views are Django urlconf path() entries, not in the spec. No outbound-call expected list: the few calls (plugin catalog, release check) take URLs from settings."
 }

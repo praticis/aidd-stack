@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # The public HTTP corpus (scripts/http_corpus.py) in parallel: one container per repository, the largest first, each
 # under a memory cap; then one report for the whole run, with the diff against a baseline and precision/recall against
-# the gabaritos. Everything runs in the indexer image with this tree mounted read-only; the clones and the runs live
-# in $AIDD_CORPUS_HOME (default ~/.cache/aidd-corpus), outside the repository.
+# the expected lists. Everything runs in the indexer image with this tree mounted read-only; the clones and the runs
+# live in $AIDD_CORPUS_HOME (default ~/.cache/aidd-corpus), outside the repository.
 #
 #   indexer/scripts/corpus.sh [--label NAME] [--baseline NAME] [--holdout] [--jobs N] [--memory SIZE] [--show N]
 #                             [--no-expected] [repo ...]
 #
 #   --label NAME     the run's directory under runs/ (default: <date>-<commit>, plus -dirty with local changes)
 #   --baseline NAME  an earlier run under runs/ to diff against
-#   --holdout        the hold-out set instead of the corpus, with its own gabaritos
+#   --holdout        the hold-out set instead of the corpus, with its own expected lists
 #   --jobs N         containers at once (default: $AIDD_CORPUS_JOBS, else by Docker's memory: 3 from 9 GiB, 2 from
 #                    7 GiB, else 1)
 #   --memory SIZE    memory cap of each container (default: $AIDD_CORPUS_MEMORY, else 3g)
 #   --show N         items listed per repository in the report (default: 60)
-#   --no-expected    no precision/recall against the gabaritos
+#   --no-expected    no precision/recall against the expected lists
 #   repo ...         only these repositories (default: every pinned one)
 #
 # Writes runs/<label>/<repo>.json, and in runs/<label>.logs/ each container's log (with its peak memory), summary.txt

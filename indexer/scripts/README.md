@@ -49,6 +49,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
 | | `dump.py` | every file's type facts (`csharp`, `go`), to compare two codes | the image, as root |
 | | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
+| `lists/` | `expected_lists.py` | edits the expected lists (`new`, `add`, `cat`, `set`, `judge`) and keeps their checked samples true to a corpus run (`sync`, `resample`, `found`, `pending`); a list is written back in the order it was read | `python3 -I`; it writes the repository's lists |
 | `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
 | `live/` | `validate.sh` (`before`, `after`, `rotate`) with `validate_summary.py`; what it chains: `pre-merge.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`, `json_paths_diff.py` | the live install before and after a merge, read-only; the numbers as counts | the install, with the author's authorization |
 
