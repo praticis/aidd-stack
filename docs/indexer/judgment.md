@@ -101,5 +101,5 @@ Not yet decided (H7-D2); recommended. One row per item judged, one per item left
 - `dry_sections.py` compares six sections (`files`, `symbols`, `calls`, `imports`, `endpoints`, `http_calls`) by a few
   keys each: "identical" means identical in those, by those keys. Modules, packages and violations are not compared.
 - A historical result whose inputs are missing is evidence that it was reported, not that it would reproduce.
-- The per-site attribution (method.md §4.12) exists for Go only. For Python and TS, until their probe is written, a
-  case is read from the rule and the commit.
+- The per-site attribution (method.md §4.12) sees the type a receiver is given in its file, not how the resolver
+  resolves it: an edge that changed because the same type now resolves elsewhere is `unexplained`, and judged apart.

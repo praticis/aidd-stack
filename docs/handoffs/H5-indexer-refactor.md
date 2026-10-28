@@ -35,13 +35,13 @@ The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scr
 chain ran on #30, and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy
 of its folder. `protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or
 never: they are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the
-expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and Go's attribution are `docs/indexer/method.md`
-§4.11 and §4.12.
+expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the per-site attribution are
+`docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for Python, then TS (H5-D19). For each: the language's `<lang>_answers.py` in a `chore(scripts)` PR of its
-   own (gap G1 below), then a refactor, then a change of behavior. The `fix(csharp)` PRs of the debts due before F1.2
-   do not hold it.
+1. Step 5 for Python, then TS (H5-D19). For each: a refactor, then a change of behavior, both judged with the
+   per-site attribution (`attribution.sh LANG`, H5-D21); a fact the language's cases need goes into the probe first, in
+   a `chore(scripts)` PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -49,12 +49,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and Go's 
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
 
 **Gaps.**
-- **G1.** The per-site attribution of a changed call to the answer that explains it exists for Go
-  (`indexer/scripts/judgment/attribution.py` with `go_answers.py`; `docs/indexer/method.md` §4.12). C# was judged with
-  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS each need their `<lang>_answers.py`, in a
-  `chore(scripts)` PR before the language's refactor (H5-D19).
-- **Judgment is not yet automated (H7-D6).** G1's attribution exists for Go only, and the verdict record
-  (H7-D2) is to build; until then each change of behavior needs the review of an agent that did not write it.
+- **G1, closed.** The per-site attribution of a changed call to the answer that explains it exists for every
+  language: one probe, `indexer/scripts/judgment/answers.py`, reads each tree's own extraction, and
+  `attribution.py` joins it to the changed edges (`docs/indexer/method.md` §4.12, H5-D21). C# was judged with
+  `indexer/scripts/judgment/csharp_extensions.py`.
+- **Judgment is not yet automated (H7-D6).** The verdict record (H7-D2) is to build; until then each change of
+  behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
   integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds the last
   validated PR's pair.
@@ -765,6 +765,12 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
 - **H5-D20 (2026-10-28), step 6 goes in the portfolio's order: C#, Go, Python, TS.** The steps table and ADR-006 had
   "from the worst to the smallest" (TS before Python), against the portfolio priority the constraints give step 6. The
   same order as step 5's.
+- **H5-D21 (2026-10-28), the per-site attribution has one probe for every language, read from each tree's own
+  extraction.** `answers.py` reads the receiver's type from each call the extractor records (`CallInfo.receiver_type`),
+  so the sites and the types are the ones the tree's resolver reads, whatever the language does inside, and a refactor
+  may change the language's typing hook without breaking it. `attribution.sh LANG` replaces Go's probe and runner; on
+  Go's change of local typing (`52b1e1b` to `1d56070`) it gives the same table and samples. It amends H5-D19: a fact a
+  language's cases need goes into the probe, in a `chore(scripts)` PR before the language's refactor.
 
 ## Pitfalls
 
