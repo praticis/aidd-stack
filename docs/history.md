@@ -209,3 +209,7 @@
 - 2026-10-28: the per-site attribution gets one probe for every language, read from each tree's own extraction
   (H5-D21), and merges as PR #39. On Go's change of local typing it prints the same output as Go's own probe, which it
   replaces. The seventh resume run, on that merge, passes all nine criteria; what it found is fixed.
+- 2026-10-28: the author makes "design a change by its contracts, boundaries and proof" a principle
+  (`docs/design.md`): every plan says what already answers its question, where each piece of knowledge belongs and
+  what reference proves it. The core's syntax of each language becomes a debt (TD-023). With it, the
+  author decides H5-D22: Python's step 5 separates scoping, proven against CPython's `symtable`, from typing.

@@ -67,6 +67,13 @@ The full text is in the ROADMAP, under "Principles".
 - **Orchestrator-independent:** MCP and skills only.
 - **Deterministic extraction:** a gap that needs a type not declared in sight becomes `needs-resolver` for F1.2, with
   no heuristic.
+- **Design a change by its contracts, boundaries and proof** (`docs/design.md`). Before a refactor or a new
+  implementation, ask four things:
+  - what already answers the question: a contract the system keeps, or the language's own reference;
+  - where each piece of knowledge belongs: the core stays universal, and a language's, framework's or convention's
+    specifics live in its own module;
+  - what independent reference proves it, over the real data;
+  - what stays `Unknown`, and why.
 - **Secrets never enter the index:** only the env var's name.
 - **Every phase closes with the golden questions passing.**
 - **A defect that does not block is a registered debt, with a strict xfail test** (`docs/tech-debt.md`): the suite
@@ -141,6 +148,7 @@ The full text is in the ROADMAP, under "Principles".
 | What is open, and in what order | `docs/ROADMAP.md` |
 | Why a choice was made | `docs/decisions.md` and `docs/adr/` (ADR-002 tree-sitter vs SCIP, ADR-003 per-language modules, ADR-004 the extraction pipeline, ADR-005 the type service, ADR-006 recognizers and the catalog) |
 | What happened, and when | `docs/history.md`; the full old text is in git (`git show 1d73bb0:docs/ROADMAP.md`) |
+| How a change is designed: its contracts, its boundaries (the core and the edges) and its proof | `docs/design.md` |
 | How the indexer decides (rules, the cycle of a change, the code map) | `docs/indexer-evolution.md` |
 | The HTTP extractor's numbers and what is missing | `docs/corpus-report.md` |
 | How the indexer's changes are validated (the cycle, the tools, how a difference is judged) and how to resume safely | `docs/indexer/README.md`, the entry point to `docs/indexer/` |
@@ -154,6 +162,8 @@ The full text is in the ROADMAP, under "Principles".
 
 - **Commits:** a one-line conventional subject that names the capability, with no body and no attribution trailer;
   signed.
+- **A plan has a section called "Contracts, boundaries and proof"** (`docs/design.md` §4), and the author approves
+  the plan before a branch is created.
 - **New code meets the shape targets from the start**; H5 brings the old code up to them.
 - **Corpus repos belong to third parties:** never run their code. Read and measure through the indexer's container.
 - **Long commands** (corpus, refresh) run in the background. Don't edit the indexer or the expected lists during a

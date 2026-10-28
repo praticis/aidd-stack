@@ -27,9 +27,10 @@
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
     TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. A debt of the core's architecture, the syntax of each
-    language it holds, TD-023, is due in an H5 step: 6 and 12. Next, Python and TS, judged with the per-site
-    attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and
-    the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets), then 10 and 11;
+    language it holds, TD-023, is due in an H5 step: 6 and 12. Next, Python (in H5-D22's three PRs) and TS, judged
+    with the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
+    (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets),
+    then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -62,6 +63,13 @@
   Goose, Claude Code or Aider consume the same backend.
 - **Deterministic** extraction (SCIP / tree-sitter). An LLM only summarizes and disambiguates; never the primary
   parser.
+- **Design a change by its contracts, boundaries and proof** (decided on 2026-10-28, `docs/design.md`).
+  - A refactor or a new implementation first asks what already answers its question: a contract the system keeps
+    between its stages, or a reference outside it. Only then does it write a new answer.
+  - The core stays universal and reads each language, framework or convention through a hook; their specifics live
+    in their own modules.
+  - A design is proven against an independent reference over the real data.
+  - What the facts in sight do not decide is `Unknown`, with its reason.
 - Every node/edge carries `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; macro edges carry
   `confidence` + `evidence`.
 - Secrets never enter the index (extract the env var's *name*, never its value).
@@ -419,11 +427,14 @@ scan ──► flow / impact ──► refine-business ──► refine-tech ─
   - Step 7: the card's note starts to include the **delimited area of work** (repos, modules, entry symbols) — it is
     `refine-tech`'s input
 - [ ] S5 `refine-tech`: from the delimited area, zoom in with `flow`/`get_callers`; produces a technical spec (files,
-  contracts, tests, risks, ADRs); explicit human validation before moving on
+  contracts, tests, risks, ADRs); explicit human validation before moving on. The spec has a section called
+  "Contracts, boundaries and proof", with `docs/design.md`'s questions asked of the project: what it already has that
+  answers the card (a contract, a module, a convention `scan` found), where each piece of the change belongs, and what
+  proves it
 - [ ] S6 `implement`: runs the spec on the chosen orchestrator (harness: tests, coverage, lessons → `record_insight`,
   the **Project knowledge** track)
 - [ ] S7 `review`: injected context (spec + diff + coverage + the graph's conventions + the area's
-  `accepted`/`enforced` insights) → a senior opinion; PR
+  `accepted`/`enforced` insights) → a senior opinion, which asks `docs/design.md`'s questions of the diff; PR
 - [ ] S8 Define a common contract between skills (frontmatter + the format of the output note) so that one's output
   is the next one's input — the knowledge part (the project index + the insight note) is K1
 - [ ] S9 (handoff H3) Measure the effect of the atlas and of knowledge on AI-assisted development — tokens, time,
