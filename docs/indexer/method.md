@@ -41,10 +41,10 @@ The classes bind an agent; the author runs any of these tools without asking.
 
 | Class | Examples | Authorization |
 |---|---|---|
-| 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view` | the task |
-| 2. Offline analysis of saved artifacts | `judgment/` tools, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
+| 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
+| 2. Offline analysis of saved artifacts | `judgment/` tools but `go_attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/` | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `probes/`, `judgment/go_attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -268,7 +268,8 @@ For Go:
 
 For another language the probe is the part to write: a `<lang>_answers.py` that, run with a tree on `PYTHONPATH`, writes
 the same lines from that tree's own typing. The join, the cases, the samples and the unexplained list are the same.
-Write it with the language's step 5, before its change of behavior, so the first judgment already has it.
+Write it in a `chore(scripts)` PR of its own, before the language's refactor (H5-D19), so the first judgment already
+has it.
 
 ## 5. Criteria
 
@@ -301,7 +302,7 @@ Write it with the language's step 5, before its change of behavior, so the first
 ## 7. Not specified yet
 
 - **Per-site attribution for Python and TS.** §4.12 has the join and the Go probe; C# was judged with
-  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py` at their step 5.
+  `csharp_extensions.py`. Python and TS need their `<lang>_answers.py`, before their refactor (H5-D19).
 - **The size of a judgment sample.** Not fixed; §4.4 gives the sizes used.
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)

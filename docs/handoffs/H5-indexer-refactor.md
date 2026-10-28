@@ -1,14 +1,13 @@
 # Handoff H5 — Refactor the indexer before SCIP
 
 > Paste this file (or ask for `docs/handoffs/H5-indexer-refactor.md` to be read) at the start of a new chat. Before
-> anything else, the chat should read:
-> - `AGENTS.md`, the entry point;
+> anything else, the chat should read `docs/indexer/README.md` and the documents of its reading order, in that order:
+> `AGENTS.md`, this file's "State", the method, the judgment and the scripts. Then, for the refactor's context:
 > - `docs/ROADMAP.md`: "Where we are", "Principles", F1.1, F1.2 and F1.13;
 > - ADRs 002 and 003;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
->   `2026-10-18-v2-baseline-29`);
-> - `docs/indexer/README.md`: the validation method and how to resume.
+>   `2026-10-18-v2-baseline-29`).
 
 ## State (2026-10-28)
 
@@ -32,15 +31,17 @@ The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scr
 (step 12).
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
-`docs/indexer/resume-test.md` passed all nine criteria in a clone (run 4, 2026-10-27). The `live/` chain ran on #30,
-and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy of its folder.
-`protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or never: they
-are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the expected-list tool
-(`lists/`, PR #34) are in; the new hold-out's tools and Go's attribution are `docs/indexer/method.md` §4.11 and §4.12.
+`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 and 5, 2026-10-27 and 2026-10-28). The `live/`
+chain ran on #30, and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy
+of its folder. `protocol.sh`, `micro-fresh.sh`, `time-alone.sh` and `mutate.sh` ran before the recovery edited them, or
+never: they are exercised again on the next PR of the indexer. The debts check (`debts.py`, PR #33) and the
+expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and Go's attribution are `docs/indexer/method.md`
+§4.11 and §4.12.
 
 **Next.**
-1. Step 5 for Python, then TS: each a refactor, then a change of behavior. Judging by case needs the language's
-   `<lang>_answers.py` first (gap G1 below).
+1. Step 5 for Python, then TS (H5-D19). For each: the language's `<lang>_answers.py` in a `chore(scripts)` PR of its
+   own (gap G1 below), then a refactor, then a change of behavior. The `fix(csharp)` PRs of the debts due before F1.2
+   do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -50,9 +51,9 @@ are exercised again on the next PR of the indexer. The debts check (`debts.py`, 
 **Gaps.**
 - **G1.** The per-site attribution of a changed call to the answer that explains it exists for Go
   (`indexer/scripts/judgment/attribution.py` with `go_answers.py`; `docs/indexer/method.md` §4.12). C# was judged with
-  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS need their `<lang>_answers.py` before step 5 for
-  Python.
-- **Judgment is not yet automated (H7-D6).** G1's attribution exists for Go and C# only, and the verdict record
+  `indexer/scripts/judgment/csharp_extensions.py`. Python and TS each need their `<lang>_answers.py`, in a
+  `chore(scripts)` PR before the language's refactor (H5-D19).
+- **Judgment is not yet automated (H7-D6).** G1's attribution exists for Go only, and the verdict record
   (H7-D2) is to build; until then each change of behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
   integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds the last
@@ -670,16 +671,16 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
      those items meets the targets from the start (H5-D3). *Done on 2026-10-18, without the new hold-out, which went
      to step 4 (H2-D21);*
   2. H4 phase 0a (recycling the working docs). *Done on 2026-10-19 (PR #6);*
-  3. do H5, which absorbs the refactoring part of item 7 (the catalog and the `built_bundle` thresholds). The
-     regression net is the corpus (`2026-10-18-v2-baseline-28`) and the 3-repo hold-out (`2026-10-18-v2-holdout-26`),
-     identical at every step;
+  3. do H5, which absorbs the refactoring part of item 7 (the catalog and the `built_bundle` thresholds). The regression
+     net is the corpus (`2026-10-18-v2-baseline-28`; `-29` since Go's change of behavior, H5-D12) and the 3-repo
+     hold-out (`2026-10-18-v2-holdout-26`), identical at every step;
   4. the new hold-out, measured once with H5's code and with the commit before it, and the handoff of what it shows,
      already in the recognizer format. Any difference between the two commits is an H5 regression, which is fixed
      first;
   5. only then SCIP (F1.1/F1.2).
 
-  P2 (the indexer in its own repo) also comes before SCIP, after H5, to take the already clean code. Its exact
-  position is to be confirmed with the author.
+  P2 (the indexer in its own repo) also comes before SCIP, after H5, to take the already clean code. Its
+  position was set by H6-D1: after H6 is plugged in and the new hold-out.
 - **H5-D2, the catalog is YAML** (architecture, item 6), with a validated schema and a test, in the same format the
   conventions are already written in.
 - **H5-D3, the targets are complexity ≤ 9 and modules ≤ 300 lines.** During H5, CI only reports, without blocking. The
@@ -756,6 +757,11 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
   bind it.** A call written with type arguments needs a method that declares type parameters. A receiver whose
   type, outside the repo, ends its chain takes no extension of a type of the repo, read in the extension's file by
   C#'s scopes and arity. Dropping those may only take targets away. It fixes the wrong edge PR #27 exposed. On 2026-10-27 the author decided its acceptance (`docs/decisions.md`, H5-D18 and H7-D6). Merged as PR #30.
+- **H5-D19 (2026-10-28), step 5 goes on with Python, then TS, before the `fix(csharp)` PRs, and each language's
+  probe comes first.** The language's `<lang>_answers.py` (G1) goes in a `chore(scripts)` PR of its own, before its
+  refactor. The `fix(csharp)` PRs of the debts due before F1.2 come before F1.2, in the order the author picks. F1.2
+  comes after H6, the new hold-out and P2, so those debts do not hold the refactor, and with the probe first the
+  language's first judgment already attributes each changed site.
 
 ## Pitfalls
 
