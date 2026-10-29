@@ -75,6 +75,11 @@ TYPED = {
         "app/main.py": MAIN % ("from app import routes", "routes.register(v1)")},
 }
 CLASSES = {
+    "a-router-class-a-function-imports": {
+        "app/routes.py": ROUTER_CLASS % "APIRouter",
+        "app/main.py": 'from fastapi import FastAPI\napp = FastAPI()\ndef build():\n'
+                       '    from app.routes import VersionedRouter\n    v1 = VersionedRouter(prefix="/api")\n'
+                       '    @v1.get("/users")\n    def list_users(): return []\n    app.include_router(v1)\nbuild()\n'},
     "a-repo-router-class-whose-base-has-a-homonym": {
         "app/base/routers.py": "from fastapi import APIRouter\nclass BaseRouter(APIRouter):\n    pass\n",
         "app/other/routers.py": "class Mixin:\n    pass\nclass BaseRouter(Mixin):\n    pass\n",

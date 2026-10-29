@@ -89,11 +89,11 @@ class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
         """`UserAPIRouter(prefix="/recipes")`, `routers.UserAPIRouter(..)`: a class of the repo with a framework's router
         in its MRO, the class and its bases read as the resolver reads them — (that router, what the first `__init__` of
         the repo's classes up the MRO makes of the prefix: `package_facts._init_prefix`)."""
-        view, written, file = self.ctx.view, text(fn, self.src), self.fx.file.path
+        view = self.ctx.view
         types = view.types.of("python") if view is not None and view.types is not None else None
-        cls = types.value(written, file) if types is not None else None
-        if not isinstance(cls, TypeRef) or types.value(f"call:{written}", file) != cls:
-            return None                                                 # not a class: a function or an instance
+        cls = self.callee_class(fn, types) if types is not None else None
+        if cls is None:
+            return None
         mro, init = types.mro(cls), None
         for t in mro if not isinstance(mro, Unknown) else ():
             if isinstance(t, TypeRef):

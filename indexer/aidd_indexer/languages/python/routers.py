@@ -11,10 +11,11 @@ from tree_sitter import Node
 from ...core.http_base import text
 from ...core.http_scope import Scopes
 from ...core.types import TypeRef, Unknown
-from .declared import instance, owner
+from .declared import imports_of, instance, owner
+from .forms import BOUND_IN_A_FUNCTION, ref
 from .forms import path as class_path
 from .scopes import PyScopes
-from .type_index import typed
+from .type_index import PythonTypeIndex, typed
 
 
 class PyRouterScopes(Scopes):
@@ -51,6 +52,17 @@ class PyRouters:
 
     def is_app(self, name: str, at: Node) -> bool:
         return (self.scopes.binding_scope(name, at), name) in self.app_vars
+
+    def callee_class(self, fn: Node, types: PythonTypeIndex) -> TypeRef | None:
+        """The class of the repo a call's callee names, where the call binds the name: a module's or a class body's in
+        the module's terms, or what a function's import binds. None for a function or an instance."""
+        index, file = self.scopes.python, self.fx.file.path
+        written = ref(index, fn)
+        if isinstance(written, str):
+            cls = types.value(written, file)
+            return cls if isinstance(cls, TypeRef) and types.value(f"call:{written}", file) == cls else None
+        member = imports_of(index, fn) if written == BOUND_IN_A_FUNCTION and fn.type == "identifier" else None
+        return types.imported_class(member.written, file) if member is not None and member.kind == "import" else None
 
     # -- routers other files name: module variables, router parameters, returned routers ----------------------
     def global_of(self, key: tuple[int, str]) -> str | None:
