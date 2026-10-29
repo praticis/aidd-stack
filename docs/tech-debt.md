@@ -22,7 +22,9 @@ Rules:
 
 Seen at: a public corpus repo's file and line, or the decision whose judgment found it when no site was kept. Decided by the author on 2026-10-27: TD-001 to TD-006 with the acceptance of H5-D18
 ([decisions.md](decisions.md)), and TD-007 to TD-022 by moving here the gaps that H5-D16 and H5-D17 had left in the H5
-handoff; TD-023 on 2026-10-28, from the design review of H5-D22, and TD-024 the same day, from the eighth resume run.
+handoff; TD-023 on 2026-10-28, from the design review of H5-D22, and TD-024 the same day, from the eighth resume run;
+TD-025 on 2026-10-29, from the judgment of Python's change of behavior, with H5-D26: unlike the others, that change
+creates it, and the author keeps the change's rule.
 SCIP is a possible remedy for some of them, not a proven one. A due of `fix(csharp)` is a PR of that kind before F1.2,
 for a defect whose answer is declared in the repo; F1.2 is for one that needs a type or a model the resolver does not
 have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architecture that the step removes.
@@ -53,3 +55,4 @@ have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architec
 | TD-022 | An array's element types nothing: `arr[0].M()` and `foreach (var x in arr)` | H5-D17 | a `fix(csharp)` PR before F1.2 | `an-array-element-has-the-element-type`, `a-foreach-over-an-array-has-the-element-type` |
 | TD-023 | The core holds the syntax of each language: 96 node kinds and fields that only one language's grammars have, in 7 modules (`http_nodes.py` 54, `http_expr.py` 23, `extract.py` 8, `http_base.py` 5, `http_scope.py` 3, `http_wrappers.py` 2, `nearest.py` 1). A language's syntax lives in the core and a new language edits it, where each language's module should declare its own and the core read them through a hook | `indexer/aidd_indexer/core/`; the design review of H5-D22 | H5 steps 6 and 12 | `the-core-names-no-syntax-of-one-language` |
 | TD-024 | The core holds the vocabulary of frameworks and HTTP client libraries: 50 router types, client libraries, client methods and framework ids, in 3 modules (`http_base.py` 43, `http_expr.py` 4, `matching.py` 3). A new framework edits the core, where each language's catalog of frameworks should hold its names (ADR-006 §4) | `indexer/aidd_indexer/core/`; the eighth resume run | H5 step 6 | `the-core-names-no-framework-or-client-library` |
+| TD-025 | The result of a Python call of a function outside the repo is taken for an instance of the function, so a call on it reaches no method of the repo, where the function may return a value of the repo: `get_object_or_404(Token, ..)` gives a `Token`. Which names outside the repo are classes, and what a function returns, is the package's to say (H5-D26) | netbox `account/views.py:420` (`token.get_auth_header_prefix()`), `dcim/api/views.py:224` (`rack.get_elevation_svg(..)`), `core/views.py:515` (`candidate_config.activate()`) | F1.2 | `a-function-outside-the-repo-may-return-a-value-of-the-repo` |
