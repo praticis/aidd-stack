@@ -61,7 +61,7 @@ def rows(root: Path, lang: str) -> list:
     return A.survey(root, "r", lang)[0]
 
 
-def every_receiver_but_other(call, receiver, src):
+def every_receiver_but_other(call, receiver, src, index=None):
     return None if src[receiver.start_byte:receiver.end_byte] == b"other" else ("T", ())
 
 
@@ -104,7 +104,7 @@ def test_only_the_files_the_extraction_reads_are_surveyed(go):
 
 
 def test_the_type_is_the_trees_own(go, monkeypatch):
-    monkeypatch.setattr(languages.by_id("go"), "call_receiver", lambda call, receiver, src: None)
+    monkeypatch.setattr(languages.by_id("go"), "call_receiver", lambda call, receiver, src, index=None: None)
     assert rows(go, "go") == []
 
 
@@ -118,7 +118,7 @@ def test_only_the_languages_files_are_surveyed(py, typed_python):
 
 
 def test_a_tree_that_types_nothing_gives_no_row_and_still_counts_the_calls_on_a_receiver(py, monkeypatch, capsys):
-    monkeypatch.setattr(languages.by_id("python"), "call_receiver", lambda call, receiver, src: None)
+    monkeypatch.setattr(languages.by_id("python"), "call_receiver", lambda call, receiver, src, index=None: None)
     assert A.main(["python", str(py), "r"]) == 0
     out, err = capsys.readouterr()
     assert out == "" and "r: 0 typed of 6 method calls on a receiver" in err

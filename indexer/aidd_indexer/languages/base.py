@@ -32,6 +32,7 @@ from ..tree import node_text, walk  # noqa: F401  the language modules import th
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
     from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
+    from ..core.types import Unknown
 
 
 @dataclass
@@ -129,14 +130,22 @@ class LanguageSupport:
         none."""
         return None
 
-    def file_facts(self, root: Node, src: bytes) -> Any:
+    def file_index(self, root: Node, src: bytes) -> Any:
+        """The file's own index, built once before the hooks that read one file and handed to them (Python: what each
+        name refers to). It may hold the tree's nodes, so it lives only while the file is extracted, never in the
+        facts. None: the language reads the tree at each question."""
+        return None
+
+    def file_facts(self, root: Node, src: bytes, index: Any = None) -> Any:
         """Per-file type facts the resolver and the scanners read across files, holding no tree node (Go: `GoTypes`).
         Stored on the extractor and handed to `resolve_receiver` via ctx.facts."""
         return {}
 
-    def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
+    def call_receiver(self, call: Node, receiver: Node, src: bytes,
+                      index: Any = None) -> "tuple[str, tuple[str, ...]] | Unknown | None":
         """(static type of the receiver's base variable as written, field path) for `x.y.Method()`,
-        when the enclosing function declares it (receiver, parameter, typed local). None = unknown."""
+        when the enclosing function declares it (receiver, parameter, typed local); `Unknown` with its reason when
+        the declarations in sight do not decide it. None = unknown."""
         return None
 
     def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:

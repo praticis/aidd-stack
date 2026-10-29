@@ -7,6 +7,7 @@ built exclusively through `ids.py`, never by hand.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -71,10 +72,19 @@ class CallInfo:
     receiver_type: str | None = None       # static type of the receiver's base variable as written (`*Complete`, `pw.Policy`,
                                            # or `call:pw.NewPolicy` when it comes from a constructor) — language hook
     receiver_path: tuple[str, ...] = ()    # field chain after the base variable: `uc.policy.Validate` -> ("policy",)
+    receiver_unknown: str | None = None    # why the language, asked, gives the receiver no type (`Unknown.reason`)
     arg_count: int | None = None           # arguments passed (None = unknown, e.g. a spread) — picks among overloads
     arg_type: str | None = None            # static type of the first argument, as written — only for the bus methods
                                            # a convention declares (`dispatch`), see core/dispatch.py
     generic: bool = False                  # written with type arguments (`x.Find<T>()`) — resolver only, not in the graph
+
+
+def receiver_fields(answer: Any) -> dict[str, Any]:
+    """A language's `call_receiver` answer as the call's fields: (its type as written, the field path), or an
+    `Unknown`, which has a reason; None when it gives none."""
+    reason = getattr(answer, "reason", None)
+    typed = answer if answer is not None and reason is None else (None, ())
+    return {"receiver_type": typed[0], "receiver_path": typed[1], "receiver_unknown": reason}
 
 
 @dataclass

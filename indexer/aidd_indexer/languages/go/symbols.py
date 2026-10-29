@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 from tree_sitter import Node
 
@@ -90,7 +91,7 @@ class GoSupport(LanguageSupport):
         return import_aliases(stmt, spec, src)
 
     # ---- static receiver types
-    def file_facts(self, root: Node, src: bytes) -> GoTypes:
+    def file_facts(self, root: Node, src: bytes, index: Any = None) -> GoTypes:
         return type_facts(root, src)
 
     def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:
@@ -111,7 +112,8 @@ class GoSupport(LanguageSupport):
             return None                                     # `f(xs...)`: unknown
         return sum(1 for a in args.children if a.is_named and a.type != "comment")
 
-    def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
+    def call_receiver(self, call: Node, receiver: Node, src: bytes,
+                      index: Any = None) -> tuple[str, tuple[str, ...]] | None:
         found = receiver_chain(receiver, src)
         typ = declared_type(node_text(found[0], src), found[0], src) if found is not None else None
         return (typ, found[1]) if typ else None
