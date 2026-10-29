@@ -220,6 +220,11 @@ class LanguageSupport:
         from a base class declared in this repo still resolves by receiver type."""
         return []
 
+    def member_name(self, owner: str, name: str) -> str:
+        """Qualified name of the member `name` of `owner`, a type `resolve_receiver` answers. A language whose modules
+        are namespaces too (Python: `path:function` beside `path:Class.method`) tells them apart here."""
+        return f"{owner}.{name}"
+
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """Whether the type (or one of its in-repo bases) extends/embeds a type declared outside the repo —
         so a method the repo does not declare may come from there (`ITodoRepository : IBaseRepository<T>`
