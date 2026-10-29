@@ -18,6 +18,7 @@ class Linearized:
     def __init__(self) -> None:
         self._linear: dict[TypeRef, list | Unknown] = {}
         self._after: dict[TypeRef, set] | None = None
+        self._open: Unknown | None = None
 
     def mro(self, cls: TypeRef) -> list | Unknown:
         if cls not in self._linear:
@@ -40,26 +41,19 @@ class Linearized:
         return not isinstance(found, Unknown) and any(not isinstance(t, TypeRef) for t in found)
 
     def following(self, cls: TypeRef) -> set:
-        """What follows `cls` in the MRO of each class the index sees that has it; an `Unknown` where such a class's
-        MRO is not known."""
+        """What follows `cls` in the MRO of each class the index sees that has it. A class of one base keeps its base's
+        MRO as it is; one of several bases whose MRO the index cannot see may put any class after another, and then
+        what follows every class is that `Unknown`. A class defined in a function is not seen."""
         if self._after is None:
             self._after = defaultdict(set)
             for d in self.classes():
                 found = self.mro(d)
-                pairs = zip(found, found[1:]) if not isinstance(found, Unknown) else \
-                    ((a, found) for a in self._ancestors(d))
-                for a, b in pairs:
-                    self._after[a].add(b)
-        return self._after.get(cls, set())
-
-    def _ancestors(self, cls: TypeRef) -> set[TypeRef]:
-        seen, todo = set(), [cls]
-        while todo:
-            for b in self._bases(todo.pop()):
-                if isinstance(b, TypeRef) and b not in seen:
-                    seen.add(b)
-                    todo.append(b)
-        return seen
+                if not isinstance(found, Unknown):
+                    for a, b in zip(found, found[1:]):
+                        self._after[a].add(b)
+                elif len(self._bases(d)) > 1:
+                    self._open = found
+        return {self._open} if self._open is not None else self._after.get(cls, set())
 
     def _c3(self, cls: TypeRef) -> list | Unknown:
         bases = self._bases(cls)

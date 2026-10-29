@@ -167,7 +167,7 @@ UNDECIDED = {
     "super-in-a-class-a-subclass-puts-before-another": Case(
         "from app.models import Base\nclass Mixin(Base):\n    def go(self): return super().run()\nclass Other(Base):\n"
         "    def run(self): pass\nclass C(Mixin, Other):\n    pass\ndef main(): return C().go()\n", "app/use:Other.run",
-        "unknown", BASE_RUN, reason="super() in a class a class of the repo puts before another than its base"),
+        "unknown", BASE_RUN, reason="super() in a class a class of the repo may put before another than its base"),
     "a-parameter-annotated-any": Case(
         "from typing import Any\nfrom app.models import B\ndef f(x: Any): return x.run()\ndef main(): return f(B())\n",
         B_RUN, "unknown", reason="typing's Any, which any type is"),

@@ -212,6 +212,16 @@ RULES = {
         {"app/__init__.py": "", "app/json.py": "",
          "app/use.py": "import json\ndef f(): return json.JSONDecoder().decode('1')\n"},
         "json.JSONDecoder().decode('1')", "outside:json.JSONDecoder"),
+    "super-past-a-class-of-several-bases-the-index-cannot-see": (
+        {"app/models.py": MODELS, "app/other.py": "from app.models import A\nclass Other(A):\n    def run(self): pass\n",
+         "app/use.py": "from app.models import A\nclass M(A):\n    def go(self): return super().run()\n",
+         "app/views.py": "from app.use import *\nfrom app.other import Other\nclass D(M, Other):\n    pass\n"},
+        "super().run()", "super() in a class a class of the repo may put before another than its base"),
+    "super-past-a-class-of-one-base-the-index-cannot-see": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import A\nclass M(A):\n    def go(self): return super().run()\n",
+         "app/views.py": "from app.use import *\nclass D(M):\n    pass\n"},
+        "super().run()", "app/models:A"),
     "a-class-a-module-of-a-star-import-declares": (
         {"app/models.py": MODELS, "app/everything.py": "from app.models import *\nclass C:\n    def run(self): pass\n",
          "app/use.py": "from app import everything\ndef f(): return everything.C().run()\n"},
