@@ -11,13 +11,14 @@ from tree_sitter import Node
 from ...core.types import Unknown
 from ..base import node_text
 from .declared import agree, instance
-from .forms import UNBOUND, Member, path, ref
+from .forms import STAR, UNBOUND, Member, path, ref
 from .scope_build import NESTED_TARGETS
 from .scopes import PyScopes, Scope
 
 
 class Namespace(NamedTuple):
-    bases: tuple[str | Unknown, ...]    # a class's bases, in order, in its module's terms, or why one is not in them
+    bases: tuple[str | Unknown, ...]    # a class's bases, in order, in its module's terms, or why one is not in them;
+                                        # a module's, the star import that may bind a name it does not
     members: dict[str, Member]
 
 
@@ -35,7 +36,7 @@ EMPTY = Namespace((), {})
 
 
 def type_facts(index: PyScopes) -> PyTypes:
-    namespaces = {"": Namespace((), _module_members(index))}
+    namespaces = {"": Namespace((STAR,) if index.module.star_import else (), _module_members(index))}
     for scope in index.scopes:
         found = path(index, scope) if scope.kind == "class" else None
         if isinstance(found, str):

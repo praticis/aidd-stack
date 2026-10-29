@@ -1,7 +1,8 @@
 """Python's answers to the type questions across files, from every Python file's type facts. A module and a class are
 both namespaces: a name is looked up among a module's members, then its package's submodules; among a class's, then
 its bases', in the order of its MRO. The MRO is read up to its first base outside the repo: that base may give the
-name, so no answer goes past it. A base the index cannot see leaves only the class's own names known."""
+name, so no answer goes past it. A base the index cannot see leaves only the class's own names known, and a star
+import, the module's."""
 
 from __future__ import annotations
 
@@ -192,7 +193,10 @@ class PythonTypeIndex(TypeIndex):
         if member is not None and f is not None:
             return self._denote(f, member, depth)
         sub = self._modules.submodule(module.package, name)
-        return Denoted("module", TypeRef(sub, "")) if sub is not None else NO_MEMBER
+        if sub is not None:
+            return Denoted("module", TypeRef(sub, ""))
+        mro = self._mro(module)
+        return mro if isinstance(mro, Unknown) else NO_MEMBER
 
     def _denote(self, f: FileInfo, member: Member, depth: int) -> Denoted | Outside | Unknown:
         if depth > DEPTH:

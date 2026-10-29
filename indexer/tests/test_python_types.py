@@ -153,6 +153,9 @@ UNDECIDED = {
     "a-base-only-a-star-import-binds": Case(
         "from app.models import *\nclass C(Base):\n    pass\ndef main(): return C().run()\n", BASE_RUN, "unknown",
         reason="a name only a star import may bind"),
+    "a-function-a-module-may-get-by-a-star-import": Case(
+        "from app import everything\ndef main(): return everything.make()\n", "app/models:make", "unknown",
+        method="make", reason="a name only a star import may bind"),
     "a-method-a-builtin-base-gives": Case(
         "class D(dict):\n    pass\ndef main(): return D().get('x')\n", None, "unknown", method="get",
         reason="a method a base outside the repo may give, ahead in the MRO"),
@@ -185,7 +188,7 @@ def _write(root, files: dict[str, str]) -> None:
 
 def _repo(root, files: dict[str, str]) -> None:
     _write(root, {"pyproject.toml": PYPROJECT, "app/__init__.py": "", "app/models.py": MODELS,
-                  "app/service.py": SERVICE, **files})
+                  "app/service.py": SERVICE, "app/everything.py": "from app.models import *\n", **files})
 
 
 def _extract(root):
@@ -235,6 +238,13 @@ def test_cpython_runs_the_method_the_case_names(tmp_path, case):
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].wrong])
 def test_a_name_never_takes_the_type_of_a_binding_not_its_own(tmp_path, case):
     assert case.wrong not in typed_targets(_edges(tmp_path, case))
+
+
+@pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].answer == "unknown"
+                                  and (p.values[0].runs or "").startswith("app/")])
+def test_an_undecided_receiver_is_found_by_name(tmp_path, case):
+    edges = _edges(tmp_path, case)
+    assert edges and {strategy.removesuffix("-ambiguous") for _, strategy in edges} <= set(NAMED)
 
 
 @pytest.mark.parametrize("case", _cases())
