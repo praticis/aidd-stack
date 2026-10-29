@@ -533,3 +533,40 @@ review of a seeded sample (H5-D18 in [the decisions](decisions.md)).
 
 **How it was taken.** The steps of `docs/indexer/method.md` §4.7 and §4.8, by hand. `indexer/scripts/live/validate.sh`
 (PR #31) gave the same counts for the after side on a copy of the folder.
+
+## Fourteenth round: validating PR #47 on a live install (2026-10-29, build `0.2.15+2aa181ba2eec` to `0.2.15+665c35e2b90b`)
+
+What changed since the thirteenth round: Python's step 5 is merged (PRs #42, #44, #45 and #47, with the `fix(python)`
+#46). The graph may change on purpose, in Python's `CALLS` and the routes its scanner finds. The same 3 tenants and 10
+snapshots.
+
+- **The install was behind `main`.** It still ran the package PR #30 merged: #44, #45 and #46 changed it and were not
+  reinstalled, so none had a round of its own. The author chose one pair for all of them: the installed code
+  (`ed80de7`, #43's merge, whose package is #30's) against the branch (`de3de69`).
+- **Before the reinstall, read-only:** the dry-runs of the installed code and of the branch on each snapshot, at its
+  sha, are identical section by section in all 10. The live graph holds the installed code's dry-run on every snapshot
+  (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`9a7a585`):** the refresher re-indexed the 10 snapshots, `ok` and with no
+  error.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change,
+for all four PRs. They were judged on the corpus, the micro set with its per-site attribution, and by an independent
+review of seeded samples (H5-D22 to H5-D27 in [the decisions](decisions.md)).
+
+**How it was taken.** `indexer/scripts/live/validate.sh`, on its first real run. It copied the whole `indexer/`, and an
+IDE watching the folder built a test fixture's C# project in the copy, so its check of the copy failed; it now copies
+only `indexer/aidd_indexer`, the package a dry-run imports (in #47).

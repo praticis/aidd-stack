@@ -741,7 +741,7 @@ repo (`languages/python/mro.py`).
     as the extraction types it (`CallInfo`);
   - a router class is read where the call binds its name, and its bases through the `TypeIndex`'s MRO.
 
-**Done (2026-10-29).** Fourteen commits:
+**Done (2026-10-29).** Sixteen commits:
 
 1. the scanner's router cases, each run by CPython (`indexer/tests/test_python_routers.py`);
 2. a call's receiver has the type its declarations give it;
@@ -767,7 +767,9 @@ repo (`languages/python/mro.py`).
     - `super()` is unknown where a class of several bases the index cannot see may reorder the MRO. netbox's
       `CustomFieldsMixin.clean` calls `super().clean()`, and in a model the class after it is another mixin of the
       repo, not `models.Model` (6 sites);
-14. the docs of commits 11 to 13.
+14. the docs of commits 11 to 13;
+15. the overrides' decision (H5-D27);
+16. the live validation copies only the package a dry-run imports.
 
 Every xfail of the table is gained, and no guard is lost.
 
@@ -824,6 +826,9 @@ Every xfail of the table is gained, and no guard is lost.
     netbox, 67 narrowed sites lose an override the guess by name found, 46 of them `_get_queryset`. The query reaches
     them (H5-D27, F1.16);
   - a class defined in a function is not seen, so one of several bases there could reorder an MRO the index reads.
+- **On a live install** (the fourteenth golden round): the install still ran #30's package, so one pair covers #44 to
+  #47. The dry-runs are identical, the graph holds them before and after the reinstall, and the 27 calls give the
+  same answers. The live snapshots hold no Python file, so the round checks the install, not the change.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -1047,6 +1052,10 @@ Every xfail of the table is gained, and no guard is lost.
   checked out into `~/.aidd`, so check out `main` before one, unless a branch is what the live install should run.
   The micro set's base runs are keyed by the image's id, so after a reinstall they are made again (`micro.sh
   --base-only`).
+- **Each merge that changes `indexer/aidd_indexer` is reinstalled and validated before the next.** Otherwise the next
+  PR's `validate.sh before` refuses, since the install is not `main`'s, and one pair has to cover every PR since.
+- **An IDE watching the repo builds a C# project that appears under it**, writing `obj/` in place: a fixture's in a
+  copy of `indexer/`, a snapshot's under `.local/`. `validate.sh` copies only the package, and discovery skips `obj/`.
 
 ## Constraints and conventions
 
