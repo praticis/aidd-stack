@@ -129,8 +129,9 @@ other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ra
 
 ### 4.6 Equivalence of a representation
 
-`checks/dump.py LANGUAGE OUT` (`csharp` or `go`) dumps every file's type facts under `/corpus`. The same dump from two
-codes, compared with `cmp`, shows whether a refactor changed a fact.
+`checks/dump.py LANGUAGE OUT` (`csharp`, `go` or `python`) dumps every file's type facts under `/corpus`, read as the
+extractor reads them, through the language's per-file index. The same dump from two codes, compared with `cmp`, shows
+whether a refactor changed a fact.
 
 `checks/python_scopes.py [N]` compares Python's scope index with CPython's `symtable` over every Python file under
 `/corpus`: each scope paired with symtable's, each name classified the same (local, global or free). It prints the
@@ -255,15 +256,16 @@ keeps that order:
 
 A change to how a language types a receiver changes `CALLS` edges at the sites where the typing answer changes, and
 nowhere else. `attribution.py` checks that. It takes the sites whose edges differ between two micro dry-runs and the
-answers each tree gives at the calls (one JSON line per call: repo, file, line, receiver, type, src, and the facts a
-case reads), keeps the sites where the answers differ, and prints the changed sites by case and kind, with seeded
-samples of each. A changed site whose answer is the same on both sides is `unexplained`: another rule changed it, or
-the change has a defect. It is listed with its source line and judged apart, never dropped.
+answers each tree gives at the calls (one JSON line per call: repo, file, line, receiver, type, the reason it has none,
+src, and the facts a case reads), keeps the sites where the answers differ, and prints the changed sites by case and
+kind, with seeded samples of each. A changed site whose answer is the same on both sides is `unexplained`: another rule
+changed it, or the change has a defect. It is listed with its source line and judged apart, never dropped.
 
 The answers come from one probe for every language, `answers.py` (H5-D21). It runs a tree's own discovery and
-extraction and reads, from each call the extractor records, the receiver's type (`CallInfo.receiver_type`): the files,
-the calls and the types are the ones that tree's resolver reads, however the language types inside. A tree that types
-no receiver of the language writes no line, so on its side every receiver is untyped. Both trees must share the
+extraction and reads, from each call the extractor records, the receiver's type (`CallInfo.receiver_type`), or the
+reason the language gives for not typing it (`receiver_unknown`, H5-D23): the files, the calls and the types are the
+ones that tree's resolver reads, however the language types inside. A tree that neither types a receiver of the
+language nor gives a reason writes no line, so on its side every receiver is untyped. Both trees must share the
 extraction's API (`list_files`, `discover_modules`, `build_files`, `extract_file`); where they do not, the probe fails.
 
 1. A worktree for each tree, the base and the branch, and the micro dry-runs of both on the language's repos:
@@ -281,6 +283,7 @@ extraction's API (`list_files`, `discover_modules`, `build_files`, `extract_file
    and the share the resolver found among several homonyms (`-ambiguous`), of the edges and of the sites (a file and a
    line). A site emits up to three ambiguous edges, so the two shares differ; a line with two calls is one site,
    ambiguous when either call is. `attribution.sh` passes the language, so only the calls made in its files count.
+   Last, the receivers each side leaves untyped, by the reason the language gives.
 
 The probe sees the type a call's receiver is given in its file, not what the resolver makes of it: a changed edge
 whose receiver has the same type on both sides is `unexplained`, even when the change is to how that type resolves.

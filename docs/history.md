@@ -227,3 +227,11 @@
   7,124 Python files, CPython 3.12 compiles 7,114, and the index classifies every name of every scope of them as
   `symtable` does; the other ten are in Python 3.14's syntax. The case table's test that waited for the index is now
   that check, case by case.
+- 2026-10-28: Python's types merge as PR #45, the second of its refactor's two PRs (H5-D24), with the graph identical.
+  The core builds a language's per-file index once and hands it to the hooks that read the file, a receiver carries
+  why it has no type, and a module's members are named apart from a class's. Python's declaration forms, type facts
+  and `TypeIndex` answer every case of its table, read by them in the tests, while its `call_receiver` still answers
+  nothing; the table's guards count an `inherited` edge as no method's (H5-D25). The facts of the corpus's 7,124
+  Python files are values, the same in two runs. Building them costs netbox's extraction 2.2 s (5.8 to 8.0) and
+  14 MiB of peak memory; the index, kept beside the tree, cost it about 270 MiB more, so it lives only while its file
+  is extracted.
