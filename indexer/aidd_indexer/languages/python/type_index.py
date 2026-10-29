@@ -124,6 +124,9 @@ class PythonTypeIndex(TypeIndex):
             out.append(t)
         return out
 
+    def mro(self, cls: TypeRef) -> list[TypeRef | Outside] | Unknown:
+        return self._mro(cls)
+
     def outside_base(self, cls: TypeRef) -> bool:
         found = self._mro(cls) if cls.name else []
         return not isinstance(found, Unknown) and any(isinstance(t, Outside) for t in found)

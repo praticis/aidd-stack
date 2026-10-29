@@ -83,13 +83,11 @@ CLASSES = {
 }
 
 
-def _cases(cases: dict, why: str | None = None, routes: set = API_USERS) -> list:
-    marks = [pytest.mark.xfail(strict=True, reason=why)] if why else []
-    return [pytest.param(files, routes, id=i, marks=marks) for i, files in cases.items()]
+def _cases(cases: dict, routes: set = API_USERS) -> list:
+    return [pytest.param(files, routes, id=i) for i, files in cases.items()]
 
 
-CASES = _cases(ROUTES) + _cases(SCOPED) + _cases(APPLICATION, routes=ROOT) + _cases(TYPED) \
-    + _cases(CLASSES, "the scanner finds a router class's base by its name")
+CASES = _cases(ROUTES) + _cases(SCOPED) + _cases(APPLICATION, ROOT) + _cases(TYPED) + _cases(CLASSES)
 
 
 def _repo(root, files: dict[str, str]):

@@ -10,6 +10,7 @@ from tree_sitter import Node
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
 from .package_facts import PREFIX_KEYWORDS, PyFacts
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from ...core.types import TypeRef, Unknown
 from .client_wrappers import PyClientWrappers, compose_wrapped_calls
 from .routers import PyRouters
 
@@ -85,42 +86,22 @@ class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
             self.group_prefix[self.group_key(name, n)] = prefix
 
     def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
-        """`UserAPIRouter(prefix="/recipes")`: a class of the repo whose bases reach the framework's router —
-        (that class, what the first `__init__` up the bases makes of the prefix: `package_facts._init_prefix`). The class
-        is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
-        it, its own directory's, else the one class of that name in the repo."""
-        head, _, cname = text(fn, self.src).rpartition(".")
-        spec, orig = self.imports.get(head or cname) or (None, None)
-        view = self.ctx.view
-        if head or spec is not None:                                    # `routers.UserAPIRouter`, or imported by name
-            target = (self._module(spec, orig) if head else self.resolve_import(spec) if orig is not None else None) \
-                if spec is not None else None
-            cname = cname if head else orig
-            ctx = view.constants(target) if target is not None and view is not None else None
-        else:
-            ctx = self.ctx
-        init, seen = None, set()
-        while ctx is not None and cname not in seen and len(seen) < 6:
-            seen.add(cname)
-            classes = PyFacts.read(ctx).classes
-            info = classes.get(cname)
-            if info is None:
-                return None
-            bases, own = info
-            init = init or own
-            fw = next((b for b in bases if b in ROUTER_CLASSES), None)
-            if fw is not None:
-                return fw, init
-            for b in bases:
-                there = ctx if b in classes else None
-                if there is None and view is not None:
-                    named = [c for c in view.defining(PyFacts, "classes", b) if PyFacts.read(c).classes.get(b) is not None]
-                    there = named[0] if len(named) == 1 else None
-                if there is not None:
-                    ctx, cname = there, b
-                    break
-            else:
-                return None
+        """`UserAPIRouter(prefix="/recipes")`, `routers.UserAPIRouter(..)`: a class of the repo with a framework's router
+        in its MRO, the class and its bases read as the resolver reads them — (that router, what the first `__init__` of
+        the repo's classes up the MRO makes of the prefix: `package_facts._init_prefix`)."""
+        view, written, file = self.ctx.view, text(fn, self.src), self.fx.file.path
+        types = view.types.of("python") if view is not None and view.types is not None else None
+        cls = types.value(written, file) if types is not None else None
+        if not isinstance(cls, TypeRef) or types.value(f"call:{written}", file) != cls:
+            return None                                                 # not a class: a function or an instance
+        mro, init = types.mro(cls), None
+        for t in mro if not isinstance(mro, Unknown) else ():
+            if isinstance(t, TypeRef):
+                ctx = view.constants(f"{t.package}.py")
+                own = PyFacts.read(ctx).classes.get(t.name.rpartition(".")[2]) if ctx is not None else None
+                init = init or (own[1] if own else None)
+            elif (name := t.name.replace(":", ".").rpartition(".")[2]) in ROUTER_CLASSES:
+                return name, init
         return None
 
     def _restx(self, fn: Node) -> bool:
