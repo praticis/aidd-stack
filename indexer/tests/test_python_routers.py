@@ -88,8 +88,8 @@ def _cases(cases: dict, why: str | None = None, routes: set = API_USERS) -> list
     return [pytest.param(files, routes, id=i, marks=marks) for i, files in cases.items()]
 
 
-CASES = _cases(ROUTES) + _cases(SCOPED) + _cases(APPLICATION, routes=ROOT) \
-    + _cases(TYPED, "the scanner follows a router into functions only") + _cases(CLASSES, "the scanner finds a router class's base by its name")
+CASES = _cases(ROUTES) + _cases(SCOPED) + _cases(APPLICATION, routes=ROOT) + _cases(TYPED) \
+    + _cases(CLASSES, "the scanner finds a router class's base by its name")
 
 
 def _repo(root, files: dict[str, str]):

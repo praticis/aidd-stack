@@ -321,67 +321,12 @@ class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
         target = self._module(spec, orig) if spec is not None else None
         return f"var:{target}:{text(attr, self.src)}" if target is not None and target.endswith(".py") else None
 
-    def global_of(self, key: tuple[int, str]) -> str | None:
-        scope, name = key
-        path = self.fx.file.path
-        if scope == 0:
-            if not re.fullmatch(r"[A-Za-z_]\w*", name):
-                return None
-            if self.module_binds(name):
-                return f"var:{path}:{name}"
-            spec, orig = self.imports.get(name) or (None, None)
-            target = self.resolve_import(spec) if spec is not None and orig is not None else None
-            return f"var:{target}:{orig}" if target is not None and target.endswith(".py") else None
-        fn = self.function_of(scope)
-        if fn is None or fn.type != "function_definition":
-            return None
-        fname = text(fn.child_by_field_name("name"), self.src)
-        i = self._param(fn, name)[0]
-        if i is not None:
-            return f"param:{path}:{fname}:{i}"
-        return f"ret:{path}:{fname}" if self.returns_name(fn, name) else None
-
-    def router_param_type(self, fn: Node, name: str) -> str | None:
-        decl = self._param(fn, name)[1] if fn.type == "function_definition" else None
-        typ = decl.child_by_field_name("type") if decl is not None else None
-        return text(typ, self.src) if typ is not None else "" if decl is not None else None
-
-    def _param(self, fn: Node, name: str) -> tuple[int | None, Node | None]:
-        """Position of the positional parameter `name` of `fn`, and its declaration."""
-        params = fn.child_by_field_name("parameters")
-        i = 0
-        for d in params.named_children if params is not None else ():
-            if d.type not in ("identifier", "typed_parameter", "default_parameter", "typed_default_parameter"):
-                continue
-            ident = d if d.type == "identifier" else d.child_by_field_name("name") or \
-                next((c for c in d.children if c.type == "identifier"), None)
-            if ident is not None and text(ident, self.src) == name:
-                return i, d
-            i += 1
-        return None, None
-
-    def _router_arguments(self, n: Node, fn: Node, args: Node) -> None:
-        """`register_routes(app)`, `init_app(app)`: a router handed to a function of this file or an imported one."""
-        fname = text(fn, self.src)
-        if any(s.kind == "function" for s in self.symbols_by_name.get(fname, ())):
-            unit = self.fx.file.path
-        else:
-            spec, orig = self.imports.get(fname) or (None, None)
-            unit = self.resolve_import(spec) if spec is not None and orig is not None else None
-            fname = orig or fname
-        if unit is None:
-            return
-        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
-        for i, a in enumerate(pos):
-            if a.type == "identifier":
-                self.router_args.append((f"param:{unit}:{fname}:{i}", text(a, self.src), n, ""))
-
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        if fn.type == "identifier":
+        if fn.type in ("identifier", "attribute"):
             self._router_arguments(n, fn, args)
         if fn.type == "call":
             self._applied_decorator(n, fn, args)
