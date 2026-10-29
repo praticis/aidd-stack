@@ -1,5 +1,5 @@
 """Every file's type facts under /corpus, as JSON in field order, one line per file: `repo/path<TAB>json`. The same
-dump from two codes shows whether a refactor changed a fact. Only languages with type facts: csharp, go.
+dump from two codes shows whether a refactor changed a fact. Only languages with type facts: csharp, go, python.
 The code is the indexer mounted at /src; the repos are only parsed.   dump.py LANGUAGE OUT_FILE"""
 import json
 import sys
@@ -29,7 +29,8 @@ with open(sys.argv[2], "w") as out:
             if not f.is_file() or f.is_symlink():
                 continue
             src = f.read_bytes()
-            facts = lang.file_facts(parser.parse(src).root_node, src)
+            root = parser.parse(src).root_node
+            facts = lang.file_facts(root, src, lang.file_index(root, src))
             out.write(f"{f.relative_to('/corpus')}\t{json.dumps(plain(facts), ensure_ascii=False)}\n")
             n += 1
 print(f"{n} files")

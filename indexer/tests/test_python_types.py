@@ -2,7 +2,8 @@
 type a call's receiver for `CALLS`, and the HTTP scanner to follow a router into a method of a typed value. The two
 questions are apart: a scope trap binds a name to a declaration that is not its own, and a declaration form reads the
 type of the right one. The method a case names is the one CPython runs for its call: every case that can run here is
-run, and the method it enters is compared with the case."""
+run, and the method it enters is compared with the case. Python's types answer every case; the extraction reads them
+once its `call_receiver` does (test_python_type_index.py reads every case by them meanwhile)."""
 
 import contextlib
 import io
@@ -38,6 +39,7 @@ def build():
 """
 SERVICE = "def run(): pass\n"
 NAMED = ("same-file", "same-module", "unique-name")
+INHERITED = ("inherited", "inherited-impl")     # an edge to the type: the method may come from a base outside the repo
 
 
 class Case(NamedTuple):
@@ -46,6 +48,7 @@ class Case(NamedTuple):
     answer: str                 # typed: the declarations decide it; unknown: they do not; external: no repo method
     wrong: str | None = None    # what a binding that is not the name's own, or a misread declaration, would give
     method: str = "run"
+    reason: str | None = None   # unknown and external: why the declarations in sight give no type
 
 
 B_RUN, BASE_RUN = "app/models:B.run", "app/models:Base.run"
@@ -96,7 +99,7 @@ DECLARED = {
 SCOPES = {
     "a-comprehension-variable": Case(
         "from app.models import A, B\ndef main():\n    x = A()\n    return [x.run() for x in [B()]][0]\n",
-        B_RUN, "unknown", "app/models:A.run"),
+        B_RUN, "unknown", "app/models:A.run", reason="a comprehension's variable"),
     "a-class-body-does-not-enclose-its-methods": Case(
         "from app.models import A, B\nclass C:\n    x = A()\n    def go(self): return x.run()\nx = B()\n"
         "def main(): return C().go()\n", B_RUN, "typed", "app/models:A.run"),
@@ -107,44 +110,50 @@ SCOPES = {
         "    return x\ndef main():\n    setup()\n    return x.run()\n", B_RUN, "typed", "app/models:A.run"),
     "a-global-rebinding-a-module-variable": Case(
         "from app.models import A, B\nx = A()\ndef setup():\n    global x\n    x = B()\n"
-        "def main():\n    setup()\n    return x.run()\n", B_RUN, "unknown", "app/models:A.run"),
+        "def main():\n    setup()\n    return x.run()\n", B_RUN, "unknown", "app/models:A.run",
+        reason="bindings that disagree"),
     "a-nonlocal-rebinding": Case(
         "from app.models import A, B\ndef main():\n    x = B()\n    def inner():\n        nonlocal x\n"
-        "        x = A()\n    inner()\n    return x.run()\n", "app/models:A.run", "unknown", B_RUN),
+        "        x = A()\n    inner()\n    return x.run()\n", "app/models:A.run", "unknown", B_RUN,
+        reason="bindings that disagree"),
     "a-walrus-in-a-comprehension-binds-in-the-function": Case(
         "from app.models import A, B\nx = A()\ndef main():\n    [y for y in [0] if (x := B())]\n"
         "    return x.run()\n", B_RUN, "typed", "app/models:A.run"),
     "two-bindings-that-disagree": Case(
         "from app.models import A, B\ndef main(flag=True):\n    x = A()\n    if flag:\n        x = B()\n"
-        "    return x.run()\n", B_RUN, "unknown", "app/models:A.run"),
+        "    return x.run()\n", B_RUN, "unknown", "app/models:A.run",
+        reason="bindings that disagree"),
     "a-for-target": Case("from app.models import B\ndef main():\n    for x in [B()]:\n        return x.run()\n",
-                         B_RUN, "unknown"),
+                         B_RUN, "unknown", reason="a for target"),
     "a-with-target": Case(
         "from app.models import A\nclass Session:\n    def run(self): pass\n    def __enter__(self): return A()\n"
         "    def __exit__(self, *exc): return False\ndef main():\n    with Session() as x:\n        return x.run()\n",
-        "app/models:A.run", "unknown", "app/use:Session.run"),
+        "app/models:A.run", "unknown", "app/use:Session.run", reason="a with target"),
 }
 
 # -- what the declarations in sight do not decide, or decide is not the repo's ------------------------------------
 UNDECIDED = {
-    "a-container": Case("from app.models import B\ndef f(x: list[B]): return x.run()\n", None, "unknown", B_RUN),
+    "a-container": Case("from app.models import B\ndef f(x: list[B]): return x.run()\n", None, "unknown", B_RUN,
+                        reason="a builtin, or a name no statement of the file binds"),
     "a-union": Case("from typing import Union\nfrom app.models import A, B\ndef f(x: Union[A, B]): return x.run()\n"
-                    "def main(): return f(B())\n", B_RUN, "unknown", "app/models:A.run"),
+                    "def main(): return f(B())\n", B_RUN, "unknown", "app/models:A.run",
+                    reason="a union of several types"),
     "a-manager-of-an-external-base": Case(
         "from django.db import models\nclass Item(models.Model):\n    pass\nclass Repo:\n    def filter(self): pass\n"
-        "def main(): return Item.objects.filter()\n", None, "unknown", method="filter"),
+        "def main(): return Item.objects.filter()\n", None, "unknown", method="filter",
+        reason="an attribute a base outside the repo may give"),
     "an-attribute-of-an-external-base": Case(
         "from rest_framework.views import APIView\nfrom app.models import B\nclass C(APIView):\n"
         "    def go(self): return self.request.run()\nclass D:\n    def __init__(self): self.request = B()\n",
-        None, "unknown", B_RUN),
+        None, "unknown", B_RUN, reason="an attribute a base outside the repo may give"),
     "an-external-base-ahead-in-the-mro": Case(
         "from threading import Thread\nfrom app.models import Base\nclass C(Thread, Base):\n"
         "    def go(self): return self.run()\ndef main(): return C().go()\n", "threading:Thread.run", "unknown",
-        BASE_RUN),
+        BASE_RUN, reason="a method a base outside the repo may give, ahead in the MRO"),
     "an-instance-of-an-external-class": Case(
         "from json import JSONDecoder\nclass Codec:\n    def decode(self, text): pass\ndef main():\n"
         '    d = JSONDecoder()\n    return d.decode("1")\n', "json/decoder:JSONDecoder.decode", "external",
-        "app/use:Codec.decode", "decode"),
+        "app/use:Codec.decode", "decode", "a type of a package outside the repo"),
 }
 CASES = DECLARED | SCOPES | UNDECIDED
 
@@ -181,10 +190,14 @@ def _extract(root):
         return extract_and_resolve(repo)
 
 
-def _edges(root, case: Case) -> set[tuple[str, str]]:
-    """The targets and strategies of the edges of the case's calls of its method."""
+def extracted(root, case: Case):
+    """The extraction and the resolution of the case's repo."""
     _repo(root, {"app/use.py": case.use})
-    res, rv = _extract(root)
+    return _extract(root)
+
+
+def edges_of(res, rv, case: Case) -> set[tuple[str, str]]:
+    """The targets and strategies of the edges of the case's calls of its method."""
     sym = {s.id: s for s in res.symbols}
     use = next(f.id for f in res.files if f.path == "app/use.py")
     return {(sym[e.callee_id].qualified_name, e.strategy) for e in rv.calls
@@ -192,8 +205,13 @@ def _edges(root, case: Case) -> set[tuple[str, str]]:
             and (e.method or sym[e.callee_id].name) == case.method}
 
 
-def _typed(edges: set[tuple[str, str]]) -> set[str]:
-    return {target for target, strategy in edges if strategy.removesuffix("-ambiguous") not in NAMED}
+def _edges(root, case: Case) -> set[tuple[str, str]]:
+    return edges_of(*extracted(root, case), case)
+
+
+def typed_targets(edges: set[tuple[str, str]]) -> set[str]:
+    """The methods the edges reach by type; an inherited edge reaches the type, not a method of the repo."""
+    return {target for target, strategy in edges if strategy.removesuffix("-ambiguous") not in NAMED + INHERITED}
 
 
 def _cases(answer: str | None = None, why: str | None = None) -> list:
@@ -209,19 +227,19 @@ def test_cpython_runs_the_method_the_case_names(tmp_path, case):
     assert ran == case.runs != case.wrong
 
 
-@pytest.mark.parametrize("case", _cases("typed", "Python's receivers have no type yet"))
+@pytest.mark.parametrize("case", _cases("typed", "Python's call_receiver answers nothing yet"))
 def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, case):
     assert _edges(tmp_path, case) == {(case.runs, "receiver-type")}
 
 
 @pytest.mark.parametrize("case", _cases("unknown"))
 def test_no_type_where_the_declarations_in_sight_do_not_decide(tmp_path, case):
-    assert _typed(_edges(tmp_path, case)) == set()
+    assert typed_targets(_edges(tmp_path, case)) == set()
 
 
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].wrong])
 def test_a_name_never_takes_the_type_of_a_binding_not_its_own(tmp_path, case):
-    assert case.wrong not in _typed(_edges(tmp_path, case))
+    assert case.wrong not in typed_targets(_edges(tmp_path, case))
 
 
 @pytest.mark.parametrize("case", _cases("external", "a value of an external class reaches the repo's homonym by name"))

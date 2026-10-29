@@ -13,8 +13,9 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Python's step 5 has its case table (#42) and its scope index (#44). Each merge and its live
-validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
+extension method a call reaches #30). Python's step 5 has its case table (#42), its scope index (#44) and its types
+(#45). Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
+`corpus-report.md`.
 
 **Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that
@@ -26,7 +27,7 @@ names of frameworks and client libraries it holds:
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| Python | the case table (#42) and the scope index (#44) merged; the types' refactor next | not started | `languages/python/http.py`, 438 |
+| Python | the case table (#42), the scope index (#44) and the types (#45) merged; the change of behavior next | not started | `languages/python/http.py`, 438 |
 | TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
@@ -45,11 +46,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    - For each: a refactor, then a change of behavior, both judged with the per-site attribution (`attribution.sh
      LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
    - Python goes in H5-D22's PRs, its refactor in two (H5-D24). In: the case table (#42, "Step 5" below), the
-     attribution's ambiguous share (#43) and the scope index (#44), which classifies every name of the 7,114 Python
-     files of the corpus that CPython 3.12 compiles as `symtable` does. Next, the types' refactor: Python's type
-     facts and `TypeIndex`, the resolver's hooks, the core's hook for namespaces and the reason of an `Unknown` beside
-     the type in `CallInfo` (H5-D23), with Python's `call_receiver` still answering nothing. Then the change of
-     behavior.
+     attribution's ambiguous share (#43), the scope index (#44), which classifies every name of the 7,114 Python
+     files of the corpus that CPython 3.12 compiles as `symtable` does, and the types (#45), which answer every case
+     of the table while Python's `call_receiver` still answers nothing. Next, the change of behavior: Python's
+     `call_receiver` reads the types, and the scanner moves onto the index and the `TypeIndex`, judged with
+     `attribution.sh python` under `graph-change`. The scanner runs after every file is extracted, so it builds each
+     file's index again or the extractor keeps it (about 270 MiB on netbox): the change measures which.
    - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
@@ -690,7 +692,9 @@ runs every case that can run in the test image, under `sys.setprofile`, to show 
 | scanner: a router handed to a method of a typed value (`users.register(v1)`) | `GET /users` | `GET /api/users` | xfail |
 
 The scope index came in the refactor's first PR (#44, H5-D24), and the test that waited for it is now the check
-itself: the index classifies every name of every case as `symtable` does.
+itself: the index classifies every name of every case as `symtable` does. The types came in the second (#45): read by
+them (`test_python_type_index.py`), every case already gets its answer, and each `unknown` or `external` case the
+reason it names. The table's guards count an `inherited` edge as no method's (H5-D25).
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -843,9 +847,25 @@ itself: the index classifies every name of every case as `symtable` does.
      comprehensions (PEP 709), so the check gives symtable each as the generator expression whose rules it keeps.
      Where a file defers annotations (`from __future__ import annotations`), an annotation's names read nothing, as
      in the compiler, and still know their scope. Nothing in production reads the index yet.
-  2. The types: Python's type facts and `TypeIndex`, the resolver's hooks, the core's hook for namespaces, and the
-     reason of an `Unknown` in `CallInfo` (H5-D23). Python's `call_receiver` still answers nothing, so the graph stays
-     identical.
+  2. The types (#45):
+     - the core builds a language's per-file index once and hands it to the hooks that read one file
+       (`LanguageSupport.file_index`); Python's is its scopes, and it lives only while its file is extracted: kept
+       beside the tree, it cost netbox's dry-run about 270 MiB of peak memory, and nothing read it after;
+     - Python's declaration forms (`forms.py`, how a type is written; `declared.py`, what a binding declares;
+       `receivers.py`, a call's receiver), its type facts (`type_facts.py`, each module's and class's names) and its
+       `TypeIndex` (`type_index.py`): modules and classes are namespaces, and a class's MRO is C3's, read up to its
+       first base outside the repo;
+     - the resolver's hooks, and the core's hook for a member's name (`member_name`: `path:function` beside
+       `path:Class.method`);
+     - the reason of an `Unknown` beside the type in `CallInfo` (`receiver_unknown`, H5-D23), which `answers.py`
+       writes and `attribution.py` reports by reason.
+
+     Python's `call_receiver` still answers nothing, so the graph stays identical.
+- **H5-D25 (2026-10-28), Python's case table counts an `inherited` edge as no method's.** With the receivers read by the
+  types, a call whose method neither its class nor a base of the repo ahead of one outside it declares gets, as in Go
+  and C#, an `inherited` edge to the type. In `C(Thread, Base)`, CPython runs `Thread.run` for `self.run()`; leaving the
+  receiver untyped would find `Base.run` by name again. The table's guards count only the edges that reach a method by
+  type.
 
 ## Pitfalls
 
@@ -856,6 +876,10 @@ itself: the index classifies every name of every case as `symtable` does.
   problem: the first runs by script path and the second already uses `-w /src`.
 - **tree-sitter node identity.** `node.child_by_field_name(..)` creates a new object on every call, so `a is b` is
   always false. Compare by `node.id`, which holds within one tree. That cost a debugging session in F1.14 item 2.
+- **`monkeypatch.setattr` on a language object leaves a method behind.** Undoing a patch of a hook of
+  `languages.by_id(..)` puts the old bound method back as the object's own attribute, so a later patch of the class
+  (`PythonSupport.call_receiver`) no longer reaches the registry's object. Patch the object, as the tests do. That cost
+  a run of the whole suite in Python's types (#45).
 - **The order of the regexes in `normalize_path` is semantic.** Examples: the optional `:x?` before cutting the query,
   Hono's constraint before the `?`. Move a regex only with step 1's unit test in place.
 - **Per-file × per-repo state.** The scanners are per file, and `compose` is per repo. An index or cache that outlives

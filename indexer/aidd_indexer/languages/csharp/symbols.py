@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 from tree_sitter import Node
 
@@ -58,10 +59,11 @@ class CSharpSupport(LanguageSupport):
         return namespaces(root, src)
 
     # ---- static receiver types
-    def file_facts(self, root: Node, src: bytes) -> CsTypes:
+    def file_facts(self, root: Node, src: bytes, index: Any = None) -> CsTypes:
         return type_facts(root, src)
 
-    def call_receiver(self, call: Node, receiver: Node, src: bytes) -> tuple[str, tuple[str, ...]] | None:
+    def call_receiver(self, call: Node, receiver: Node, src: bytes,
+                      index: Any = None) -> tuple[str, tuple[str, ...]] | None:
         return declared_receiver(call, receiver, src)
 
     def arity(self, node: Node, src: bytes) -> tuple[int, int | None] | None:

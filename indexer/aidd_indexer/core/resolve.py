@@ -232,7 +232,7 @@ class Resolver:
         """The method declared on `qtype` or, failing that, on its nearest in-repo supertype — the overloads that
         accept `argc` arguments (all of them when none does: the arity read may be incomplete)."""
         for t in [qtype] + lang.supertypes(self.ctx, qtype):
-            hit = [s for s in cands if s.qualified_name == f"{t}.{name}"]
+            hit = [s for s in cands if s.qualified_name == lang.member_name(t, name)]
             if hit:
                 return fitting(hit, argc)
         return []

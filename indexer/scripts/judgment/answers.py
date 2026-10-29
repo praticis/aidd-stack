@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """What a tree's extraction records as the type of each method call's receiver, in one language's files of the given
-repos: one JSON line per call whose receiver the tree types (repo, file, line, receiver, type, the language's facts,
-src). The files, the calls and the types are the tree's own: its discovery, its query and `CallInfo.receiver_type`,
-which is what its resolver reads. Run once per tree to compare, with that tree's `indexer/` on PYTHONPATH, and give
+repos: one JSON line per call whose receiver the tree types, or gives a reason for not typing (repo, file, line,
+receiver, type, unknown, the language's facts, src). The files, the calls and the types are the tree's own: its
+discovery, its query, and `CallInfo.receiver_type` and `receiver_unknown`, which is what its resolver reads. Run once per tree to compare, with that tree's `indexer/` on PYTHONPATH, and give
 both files to `attribution.py`. In the indexer's image.
 
     answers.py LANG REPOS_DIR REPO... > ANSWERS.jsonl
@@ -65,9 +65,10 @@ def rows_of(name: str, fx, facts: dict) -> list:
         raise ProbeError(f"{name}/{fx.file.path}: the query's calls are not the ones the extractor recorded")
     lines, rows = fx.src.splitlines(), []
     for call, (_, receiver) in zip(fx.calls, nodes):
-        if call.receiver_type:
+        if call.receiver_type or call.receiver_unknown:
             rows.append({"repo": name, "file": fx.file.path, "line": call.line, "receiver": call.receiver,
-                         "type": call.receiver_type, **{k: fact(receiver) for k, fact in facts.items()},
+                         "type": call.receiver_type, "unknown": call.receiver_unknown,
+                         **{k: fact(receiver) for k, fact in facts.items()},
                          "src": lines[call.line - 1].decode(errors="replace").strip()[:160]})
     return rows
 
@@ -102,7 +103,9 @@ def main(argv: list) -> int:
             rows, calls = survey(root, repo, lang)
             for row in rows:
                 print(json.dumps(row))
-            print(f"{repo}: {len(rows)} typed of {calls} method calls on a receiver", file=sys.stderr)
+            typed = sum(row["type"] is not None for row in rows)
+            print(f"{repo}: {typed} typed of {calls} method calls on a receiver, {len(rows) - typed} untyped with a reason",
+                  file=sys.stderr)
     except ProbeError as e:
         print(f"answers: {e}", file=sys.stderr)
         return 2

@@ -25,7 +25,7 @@ from ..languages.base import LanguageSupport
 from ..tree import node_text as _text, walk as _walk
 from . import ids
 from .dispatch import call_names
-from .model import CallInfo, FileInfo, ImportInfo, RepoInfo, SymbolInfo
+from .model import CallInfo, FileInfo, ImportInfo, RepoInfo, SymbolInfo, receiver_fields
 
 # Symbol kinds that a call can target.
 CALLABLE_KINDS = {"function", "method", "class", "struct"}
@@ -293,7 +293,8 @@ class FileExtractor:
                         bindings=_import_bindings(inode, spec, self.src, self.lang),
                     ))
         self.namespaces, self.file_namespace = self.lang.file_scope(self.tree.root_node, self.src)
-        self.facts = self.lang.file_facts(self.tree.root_node, self.src)
+        index = self.lang.file_index(self.tree.root_node, self.src)
+        self.facts = self.lang.file_facts(self.tree.root_node, self.src, index)
 
         # materialize symbols outer-first so parents exist before children
         for (dnode_id, _), (kind, nnode) in sorted(self.defs.items(), key=lambda kv: kv[1][1].start_byte):
@@ -302,7 +303,7 @@ class FileExtractor:
 
         for cnode, callee, receiver in raw_calls:
             caller = self._enclosing_symbol(cnode)
-            typed = self.lang.call_receiver(cnode, receiver, self.src) if receiver is not None else None
+            typed = self.lang.call_receiver(cnode, receiver, self.src, index) if receiver is not None else None
             name = _text(callee, self.src)
             self.calls.append(CallInfo(
                 caller_id=caller.id if caller else self.file.id,
@@ -310,8 +311,7 @@ class FileExtractor:
                 receiver=(_text(receiver, self.src)[:80] if receiver is not None else None),
                 line=cnode.start_point[0] + 1,
                 file_id=self.file.id,
-                receiver_type=typed[0] if typed else None,
-                receiver_path=typed[1] if typed else (),
+                **receiver_fields(typed),
                 arg_count=self.lang.call_arg_count(cnode, self.src),
                 arg_type=self.lang.call_argument_type(cnode, self.src) if name in self.dispatch_calls else None,
                 generic=callee.parent is not None and callee.parent.type == "generic_name",

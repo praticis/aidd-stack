@@ -6,13 +6,14 @@ is the same on both sides is not explained by it, and is listed apart.
     attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 
 BEFORE and AFTER hold `<repo>.json.gz` dry-runs. OLD.jsonl and NEW.jsonl hold what each side answers at a call, one JSON
-object per line, as `answers.py` writes them: repo, file, line, receiver, type, src, and any fact the case table
-reads. A side with no row for a receiver does not type it. FILE defines `case_of(d)` for a site whose answer differs
+object per line, as `answers.py` writes them: repo, file, line, receiver, type, the reason it has none (unknown), src,
+and any fact the case table reads. A side with no row for a receiver, or no type in it, does not type it. FILE defines `case_of(d)` for a site whose answer differs
 (d: repo, file, line, receiver, old, new, src and the facts) and returns its case, or None for the answer's own:
 typed-now, untyped-now or retyped. Prints the changed sites by case and kind, then N seeded samples of each case and kind
 that changes a callee, and the first N unexplained sites, with --repos DIR their source lines. Last, each repo's CALLS
 edges by strategy on both sides, and the share of edges and of sites the resolver found among several homonyms
-(`-ambiguous`); with --language LANG, of the calls made in that language's files only."""
+(`-ambiguous`); with --language LANG, of the calls made in that language's files only. Then the receivers each side
+leaves untyped by the reason it gives."""
 from __future__ import annotations
 
 import argparse
@@ -135,6 +136,19 @@ def strategy_table(repo: str, before: dict, after: dict, language: Optional[str]
     return [title, f"  {'':26} {'before':>9} {'after':>9}"] + [f"  {name:26} {x:>9} {y:>9}" for name, x, y in rows]
 
 
+def reasons_table(old: dict, new: dict) -> list:
+    """The receivers each side leaves untyped, by the reason the language gives, the most frequent after the change first."""
+    def count(side: dict) -> collections.Counter:
+        return collections.Counter(r["unknown"] for receivers in side.values() for r in receivers.values()
+                                   if r.get("unknown"))
+    b, a = count(old), count(new)
+    reasons = sorted(set(b) | set(a), key=lambda reason: (-a[reason], -b[reason], reason))
+    width = max([26] + [len(reason) for reason in reasons])
+    lines = [f"  {reason:{width}} {b[reason]:>9} {a[reason]:>9}" for reason in reasons] or ["  no side gives one"]
+    return ["\nreceivers with no type, by the reason the language gives",
+            f"  {'':{width}} {'before':>9} {'after':>9}"] + lines
+
+
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     for name in ("before", "after", "old", "new"):
@@ -150,7 +164,8 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list) -> int:
     a = parser().parse_args(argv)
     try:
-        case_of, diffs = load_cases(a.cases), differences(read_answers(a.old), read_answers(a.new))
+        old, new = read_answers(a.old), read_answers(a.new)
+        case_of, diffs = load_cases(a.cases), differences(old, new)
         rows, strategy_lines = [], []
         for repo in a.names:
             before, after = L.load(a.before, repo), L.load(a.after, repo)
@@ -162,7 +177,7 @@ def main(argv: list) -> int:
     except (AttributionError, OSError) as e:
         print(f"attribution: {e}", file=sys.stderr)
         return 2
-    print("\n" + "\n".join(table(rows) + samples(rows, a.n, a.repos) + strategy_lines))
+    print("\n" + "\n".join(table(rows) + samples(rows, a.n, a.repos) + strategy_lines + reasons_table(old, new)))
     return 0
 
 
