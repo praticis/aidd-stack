@@ -1,7 +1,7 @@
-"""Where the module a Python import names is in the repo: relative to the importing file, or under the root of the
-file's module, the repo's root or `src/`. The import resolver and the type index read the same answer. A module is
-named by its path without `.py` (`app/models`, `app/__init__`); a directory of Python files with no `__init__.py`, a
-namespace package, by its `__init__` all the same."""
+"""Where the module a Python import names is in the repo: relative to the importing file, or under the directory its
+package runs from, the root of the file's module, the repo's root or `src/`. The import resolver and the type index read
+the same answer. A module is named by its path without `.py` (`app/models`, `app/__init__`); a directory of Python files
+with no `__init__.py`, a namespace package, by its `__init__` all the same."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 def module_bases(ctx: ResolveContext, file: FileInfo, spec: str) -> list[str]:
     """The paths, without `.py`, the module `spec` may have, in the order they are tried: an absolute import under
-    the root of the file's module first, the nearest evidence of where its project runs from, then the repo's root,
-    then `src/`."""
+    the directory the file's package runs from first, then the root of the file's module, where its project declares
+    itself, then the repo's root, then `src/`."""
     if spec.startswith("."):
         dots = len(spec) - len(spec.lstrip("."))
         base = PurePosixPath(file.path).parent
@@ -26,8 +26,25 @@ def module_bases(ctx: ResolveContext, file: FileInfo, spec: str) -> list[str]:
         return [str(base / tail if tail else base)]
     parts = spec.split(".")
     mod = ctx.module_by_id.get(file.module_id)
+    roots = (_runs_from(ctx, file), mod.path if mod else "", "", "src")
     return [str(PurePosixPath(root) / "/".join(parts) if root else PurePosixPath("/".join(parts)))
-            for root in dict.fromkeys((mod.path if mod else "", "", "src"))]
+            for root in dict.fromkeys(r for r in roots if r is not None)]
+
+
+def _runs_from(ctx: ResolveContext, file: FileInfo) -> str | None:
+    """The directory above the file's top regular package, or the file's own for a module of none: CPython finds the
+    package by its name, or runs the file as a script, only with it on `sys.path`. None when a regular package holds
+    that directory, which is then a namespace portion of the package, not a place code runs from."""
+    d = PurePosixPath(file.path).parent
+    while d.name and _package(ctx, d):
+        d = d.parent
+    if any(_package(ctx, a) for a in d.parents if a.name):
+        return None
+    return str(d) if d.name else ""
+
+
+def _package(ctx: ResolveContext, directory: PurePosixPath) -> bool:
+    return f"{directory}/__init__.py" in ctx.files_by_path
 
 
 def module_file(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:
