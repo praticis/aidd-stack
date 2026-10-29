@@ -10,7 +10,9 @@ from tree_sitter import Node
 from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_callee, text, walk
 from .package_facts import PREFIX_KEYWORDS, PyFacts
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
+from ...core.types import TypeRef, Unknown
 from .client_wrappers import PyClientWrappers, compose_wrapped_calls
+from .routers import PyRouters
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
 APP_CLASSES = {"FastAPI", "Flask", "Starlette", "Sanic", "Quart"}
@@ -20,7 +22,7 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
            "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
 
 
-class PyScanner(PyClientWrappers, BaseScanner):
+class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
     mount_scope = "py"
 
@@ -84,42 +86,22 @@ class PyScanner(PyClientWrappers, BaseScanner):
             self.group_prefix[self.group_key(name, n)] = prefix
 
     def _router_class(self, fn: Node) -> tuple[str, tuple | None] | None:
-        """`UserAPIRouter(prefix="/recipes")`: a class of the repo whose bases reach the framework's router —
-        (that class, what the first `__init__` up the bases makes of the prefix: `package_facts._init_prefix`). The class
-        is this directory's or the import's (`from .routers import UserAPIRouter`, `routers.UserAPIRouter`); a base of
-        it, its own directory's, else the one class of that name in the repo."""
-        head, _, cname = text(fn, self.src).rpartition(".")
-        spec, orig = self.imports.get(head or cname) or (None, None)
+        """`UserAPIRouter(prefix="/recipes")`, `routers.UserAPIRouter(..)`: a class of the repo with a framework's router
+        in its MRO, the class and its bases read as the resolver reads them — (that router, what the first `__init__` of
+        the repo's classes up the MRO makes of the prefix: `package_facts._init_prefix`)."""
         view = self.ctx.view
-        if head or spec is not None:                                    # `routers.UserAPIRouter`, or imported by name
-            target = (self._module(spec, orig) if head else self.resolve_import(spec) if orig is not None else None) \
-                if spec is not None else None
-            cname = cname if head else orig
-            ctx = view.constants(target) if target is not None and view is not None else None
-        else:
-            ctx = self.ctx
-        init, seen = None, set()
-        while ctx is not None and cname not in seen and len(seen) < 6:
-            seen.add(cname)
-            classes = PyFacts.read(ctx).classes
-            info = classes.get(cname)
-            if info is None:
-                return None
-            bases, own = info
-            init = init or own
-            fw = next((b for b in bases if b in ROUTER_CLASSES), None)
-            if fw is not None:
-                return fw, init
-            for b in bases:
-                there = ctx if b in classes else None
-                if there is None and view is not None:
-                    named = [c for c in view.defining(PyFacts, "classes", b) if PyFacts.read(c).classes.get(b) is not None]
-                    there = named[0] if len(named) == 1 else None
-                if there is not None:
-                    ctx, cname = there, b
-                    break
-            else:
-                return None
+        types = view.types.of("python") if view is not None and view.types is not None else None
+        cls = self.callee_class(fn, types) if types is not None else None
+        if cls is None:
+            return None
+        mro, init = types.mro(cls), None
+        for t in mro if not isinstance(mro, Unknown) else ():
+            if isinstance(t, TypeRef):
+                ctx = view.constants(f"{t.package}.py")
+                own = PyFacts.read(ctx).classes.get(t.name.rpartition(".")[2]) if ctx is not None else None
+                init = init or (own[1] if own else None)
+            elif (name := t.name.replace(":", ".").rpartition(".")[2]) in ROUTER_CLASSES:
+                return name, init
         return None
 
     def _restx(self, fn: Node) -> bool:
@@ -320,67 +302,12 @@ class PyScanner(PyClientWrappers, BaseScanner):
         target = self._module(spec, orig) if spec is not None else None
         return f"var:{target}:{text(attr, self.src)}" if target is not None and target.endswith(".py") else None
 
-    def global_of(self, key: tuple[int, str]) -> str | None:
-        scope, name = key
-        path = self.fx.file.path
-        if scope == 0:
-            if not re.fullmatch(r"[A-Za-z_]\w*", name):
-                return None
-            if self.module_binds(name):
-                return f"var:{path}:{name}"
-            spec, orig = self.imports.get(name) or (None, None)
-            target = self.resolve_import(spec) if spec is not None and orig is not None else None
-            return f"var:{target}:{orig}" if target is not None and target.endswith(".py") else None
-        fn = self.function_of(scope)
-        if fn is None or fn.type != "function_definition":
-            return None
-        fname = text(fn.child_by_field_name("name"), self.src)
-        i = self._param(fn, name)[0]
-        if i is not None:
-            return f"param:{path}:{fname}:{i}"
-        return f"ret:{path}:{fname}" if self.returns_name(fn, name) else None
-
-    def router_param_type(self, fn: Node, name: str) -> str | None:
-        decl = self._param(fn, name)[1] if fn.type == "function_definition" else None
-        typ = decl.child_by_field_name("type") if decl is not None else None
-        return text(typ, self.src) if typ is not None else "" if decl is not None else None
-
-    def _param(self, fn: Node, name: str) -> tuple[int | None, Node | None]:
-        """Position of the positional parameter `name` of `fn`, and its declaration."""
-        params = fn.child_by_field_name("parameters")
-        i = 0
-        for d in params.named_children if params is not None else ():
-            if d.type not in ("identifier", "typed_parameter", "default_parameter", "typed_default_parameter"):
-                continue
-            ident = d if d.type == "identifier" else d.child_by_field_name("name") or \
-                next((c for c in d.children if c.type == "identifier"), None)
-            if ident is not None and text(ident, self.src) == name:
-                return i, d
-            i += 1
-        return None, None
-
-    def _router_arguments(self, n: Node, fn: Node, args: Node) -> None:
-        """`register_routes(app)`, `init_app(app)`: a router handed to a function of this file or an imported one."""
-        fname = text(fn, self.src)
-        if any(s.kind == "function" for s in self.symbols_by_name.get(fname, ())):
-            unit = self.fx.file.path
-        else:
-            spec, orig = self.imports.get(fname) or (None, None)
-            unit = self.resolve_import(spec) if spec is not None and orig is not None else None
-            fname = orig or fname
-        if unit is None:
-            return
-        pos = [a for a in args.children if a.is_named and a.type != "keyword_argument"]
-        for i, a in enumerate(pos):
-            if a.type == "identifier":
-                self.router_args.append((f"param:{unit}:{fname}:{i}", text(a, self.src), n, ""))
-
     def _call(self, n: Node) -> None:
         fn = n.child_by_field_name("function")
         args = n.child_by_field_name("arguments")
         if fn is None or args is None:
             return
-        if fn.type == "identifier":
+        if fn.type in ("identifier", "attribute"):
             self._router_arguments(n, fn, args)
         if fn.type == "call":
             self._applied_decorator(n, fn, args)

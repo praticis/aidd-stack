@@ -225,6 +225,12 @@ class LanguageSupport:
         are namespaces too (Python: `path:function` beside `path:Class.method`) tells them apart here."""
         return f"{owner}.{name}"
 
+    def member_by_name(self, ctx: ResolveContext, qualified_type: str, name: str) -> bool:
+        """Whether a call of a method the type declares nowhere, and no base outside the repo may give, still reaches
+        one of the repo's at run time, so it goes by name: where another class may give it. Never in a language that
+        checks a call against its receiver's type."""
+        return False
+
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         """Whether the type (or one of its in-repo bases) extends/embeds a type declared outside the repo —
         so a method the repo does not declare may come from there (`ITodoRepository : IBaseRepository<T>`

@@ -21,12 +21,7 @@ from test_python_types import CASES, edges_of, extracted, typed_targets
 PYTHON = languages.by_id("python")
 
 
-# -- the case table, with the receiver read by the types, as the change of behavior will read it --------------------
-@pytest.fixture
-def read_by_the_types(monkeypatch):
-    monkeypatch.setattr(PYTHON, "call_receiver", lambda call, receiver, src, index=None: receiver_of(receiver, index))
-
-
+# -- the case table: each case's edges, and the reason a receiver gets no type ----------------------------------------
 def cases(answer: str) -> list:
     return [pytest.param(c, id=i) for i, c in CASES.items() if c.answer == answer]
 
@@ -51,18 +46,18 @@ def reason(types, call, method: str) -> str | None:
 
 
 @pytest.mark.parametrize("case", cases("typed"))
-def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, read_by_the_types, case):
+def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, case):
     assert answered(tmp_path, case) == ({(case.runs, "receiver-type")}, set())
 
 
 @pytest.mark.parametrize("case", cases("unknown"))
-def test_an_undecided_receiver_reaches_no_method_by_type_and_says_why(tmp_path, read_by_the_types, case):
+def test_an_undecided_receiver_reaches_no_method_by_type_and_says_why(tmp_path, case):
     edges, reasons = answered(tmp_path, case)
     assert (typed_targets(edges), reasons) == (set(), {case.reason})
 
 
 @pytest.mark.parametrize("case", cases("external"))
-def test_a_value_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, read_by_the_types, case):
+def test_a_value_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, case):
     assert answered(tmp_path, case) == (set(), {case.reason})
 
 
@@ -181,6 +176,56 @@ RULES = {
     "a-package-module": (
         {"app/use.py": "import requests\ndef f(): return requests.Session().get()\n"},
         "requests.Session().get()", "outside:requests.Session"),
+    "a-module-the-repo-holds-under-no-root-of-its-imports": (
+        {"lib/shop/models.py": MODELS, "app/use.py": "from shop.models import B\ndef f(): return B().run()\n"},
+        "B().run()", "a module of the repo's names, under a root its imports are not looked for in"),
+    "a-name-a-module-may-get-by-a-star-import": (
+        {"app/models.py": MODELS, "app/everything.py": "from app.models import *\n",
+         "app/use.py": "from app import everything\ndef f(): return everything.B().run()\n"},
+        "everything.B().run()", "a name only a star import may bind"),
+    "a-class-attribute-a-descriptor-of-the-repo-reads": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import B\nclass Lazy:\n    def __get__(self, obj, owner): return B()\n"
+                       "class C:\n    b = Lazy()\n    def go(self): return self.b.run()\n"},
+        "self.b.run()", "a class attribute a descriptor may read as another value"),
+    "a-class-attribute-of-a-plain-class-of-the-repo": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import B\nclass C:\n    b = B()\n    def go(self): return self.b.run()\n"},
+        "self.b.run()", "app/models:B"),
+    "an-annotated-class-attribute": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from dataclasses import field\nfrom app.models import B\nclass C:\n    b: B = field()\n"
+                       "    def go(self): return self.b.run()\n"},
+        "self.b.run()", "app/models:B"),
+    "an-attribute-the-instance-holds": (
+        {"app/use.py": "from json import JSONDecoder\nclass C:\n    def __init__(self): self.d = JSONDecoder()\n"
+                       "    def go(self): return self.d.decode('1')\n"},
+        "self.d.decode('1')", "outside:json:JSONDecoder"),
+    "a-type-variable": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from typing import TypeVar\nfrom app.models import B\nT = TypeVar('T', bound=B)\n"
+                       "def f(x: T): return x.run()\n"}, "x.run()", "a type parameter or a type alias"),
+    "a-package-named-like-the-standard-librarys": (
+        {"lib/email/models.py": MODELS, "app/use.py": "from email.models import B\ndef f(): return B().run()\n"},
+        "B().run()", "a module of the repo's names, under a root its imports are not looked for in"),
+    "a-module-of-a-package-is-at-no-top": (
+        {"app/__init__.py": "", "app/json.py": "",
+         "app/use.py": "import json\ndef f(): return json.JSONDecoder().decode('1')\n"},
+        "json.JSONDecoder().decode('1')", "outside:json.JSONDecoder"),
+    "super-past-a-class-of-several-bases-the-index-cannot-see": (
+        {"app/models.py": MODELS, "app/other.py": "from app.models import A\nclass Other(A):\n    def run(self): pass\n",
+         "app/use.py": "from app.models import A\nclass M(A):\n    def go(self): return super().run()\n",
+         "app/views.py": "from app.use import *\nfrom app.other import Other\nclass D(M, Other):\n    pass\n"},
+        "super().run()", "super() in a class a class of the repo may put before another than its base"),
+    "super-past-a-class-of-one-base-the-index-cannot-see": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import A\nclass M(A):\n    def go(self): return super().run()\n",
+         "app/views.py": "from app.use import *\nclass D(M):\n    pass\n"},
+        "super().run()", "app/models:A"),
+    "a-class-a-module-of-a-star-import-declares": (
+        {"app/models.py": MODELS, "app/everything.py": "from app.models import *\nclass C:\n    def run(self): pass\n",
+         "app/use.py": "from app import everything\ndef f(): return everything.C().run()\n"},
+        "everything.C().run()", "app/everything:C"),
 }
 
 

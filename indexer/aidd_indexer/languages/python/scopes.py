@@ -9,6 +9,7 @@ from typing import NamedTuple
 
 from tree_sitter import Node
 
+from ...tree import walk
 from ..base import node_text
 from .scope_build import Builder, Scope
 
@@ -32,6 +33,14 @@ class PyScopes:
     def scope_at(self, identifier: Node) -> Scope | None:
         """The scope an identifier is read or bound in; None for a name that is no variable (an attribute's)."""
         return self._at.get(identifier.id)
+
+    def scope_of(self, node: Node) -> Scope:
+        """The scope a node is evaluated in: the outermost of its names' scopes, since a scope the node holds is inside
+        its own; for a node with no name, the scope around it."""
+        found = [self._at[n.id] for n in walk(node) if n.id in self._at]
+        if found:
+            return min(found, key=_depth)
+        return self.scope_of(node.parent) if node.parent is not None else self.module
 
     def binding(self, identifier: Node) -> Binding | None:
         scope = self.scope_at(identifier)
@@ -66,3 +75,10 @@ class PyScopes:
 
     def _global(self, name: str) -> Binding:
         return Binding("global", self.module if name in self._module_names else None)
+
+
+def _depth(scope: Scope) -> int:
+    depth = 0
+    while scope.parent is not None:
+        scope, depth = scope.parent, depth + 1
+    return depth

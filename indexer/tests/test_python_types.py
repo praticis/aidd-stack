@@ -1,9 +1,9 @@
 """Python's answers to which binding a name refers to and what type that binding declares, which the resolver asks to
-type a call's receiver for `CALLS`, and the HTTP scanner to follow a router into a method of a typed value. The two
-questions are apart: a scope trap binds a name to a declaration that is not its own, and a declaration form reads the
-type of the right one. The method a case names is the one CPython runs for its call: every case that can run here is
-run, and the method it enters is compared with the case. Python's types answer every case; the extraction reads them
-once its `call_receiver` does (test_python_type_index.py reads every case by them meanwhile)."""
+type a call's receiver for `CALLS` (the HTTP scanner's questions are test_python_routers.py's). The two questions are
+apart: a scope trap binds a name to a declaration that is not its own, and a declaration form reads the type of the
+right one. The method a case names is the one CPython runs for its call: every case that can run here is run, and the
+method it enters is compared with the case. What the extraction gives each case, and why a receiver gets no type, is
+test_python_type_index.py's."""
 
 import contextlib
 import io
@@ -150,6 +150,33 @@ UNDECIDED = {
         "from threading import Thread\nfrom app.models import Base\nclass C(Thread, Base):\n"
         "    def go(self): return self.run()\ndef main(): return C().go()\n", "threading:Thread.run", "unknown",
         BASE_RUN, reason="a method a base outside the repo may give, ahead in the MRO"),
+    "a-base-only-a-star-import-binds": Case(
+        "from app.models import *\nclass C(Base):\n    pass\ndef main(): return C().run()\n", BASE_RUN, "unknown",
+        reason="a name only a star import may bind"),
+    "a-function-a-module-may-get-by-a-star-import": Case(
+        "from app import everything\ndef main(): return everything.make()\n", "app/models:make", "unknown",
+        method="make", reason="a name only a star import may bind"),
+    "a-class-attribute-a-descriptor-reads": Case(
+        "from functools import cached_property\nfrom app.models import B\nclass C:\n"
+        "    b = cached_property(lambda self: B())\n    def go(self): return self.b.run()\ndef main(): return C().go()\n",
+        B_RUN, "unknown", reason="a class attribute a descriptor may read as another value"),
+    "a-method-only-a-subclass-may-give": Case(
+        "from app.models import Base\nclass Mixin:\n    def go(self): return self.run()\nclass C(Mixin, Base):\n"
+        "    pass\ndef main(): return C().go()\n", BASE_RUN, "unknown",
+        reason="no class of its MRO declares the method"),
+    "super-in-a-class-a-subclass-puts-before-another": Case(
+        "from app.models import Base\nclass Mixin(Base):\n    def go(self): return super().run()\nclass Other(Base):\n"
+        "    def run(self): pass\nclass C(Mixin, Other):\n    pass\ndef main(): return C().go()\n", "app/use:Other.run",
+        "unknown", BASE_RUN, reason="super() in a class a class of the repo may put before another than its base"),
+    "a-parameter-annotated-any": Case(
+        "from typing import Any\nfrom app.models import B\ndef f(x: Any): return x.run()\ndef main(): return f(B())\n",
+        B_RUN, "unknown", reason="typing's Any, which any type is"),
+    "a-function-its-module-imports": Case(
+        "from app import exports\ndef main(): return exports.make()\n", "app/models:make", "unknown", method="make",
+        reason="a name its module imports from another"),
+    "a-method-a-builtin-base-gives": Case(
+        "class D(dict):\n    pass\ndef main(): return D().get('x')\n", None, "unknown", method="get",
+        reason="a method a base outside the repo may give, ahead in the MRO"),
     "an-instance-of-an-external-class": Case(
         "from json import JSONDecoder\nclass Codec:\n    def decode(self, text): pass\ndef main():\n"
         '    d = JSONDecoder()\n    return d.decode("1")\n', "json/decoder:JSONDecoder.decode", "external",
@@ -179,7 +206,8 @@ def _write(root, files: dict[str, str]) -> None:
 
 def _repo(root, files: dict[str, str]) -> None:
     _write(root, {"pyproject.toml": PYPROJECT, "app/__init__.py": "", "app/models.py": MODELS,
-                  "app/service.py": SERVICE, **files})
+                  "app/service.py": SERVICE, "app/everything.py": "from app.models import *\n",
+                  "app/exports.py": "from app.models import make\n", **files})
 
 
 def _extract(root):
@@ -214,9 +242,8 @@ def typed_targets(edges: set[tuple[str, str]]) -> set[str]:
     return {target for target, strategy in edges if strategy.removesuffix("-ambiguous") not in NAMED + INHERITED}
 
 
-def _cases(answer: str | None = None, why: str | None = None) -> list:
-    marks = [pytest.mark.xfail(strict=True, reason=why)] if why else []
-    return [pytest.param(c, id=i, marks=marks) for i, c in CASES.items() if answer is None or c.answer == answer]
+def _cases() -> list:
+    return [pytest.param(c, id=i) for i, c in CASES.items()]
 
 
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].runs])
@@ -227,55 +254,16 @@ def test_cpython_runs_the_method_the_case_names(tmp_path, case):
     assert ran == case.runs != case.wrong
 
 
-@pytest.mark.parametrize("case", _cases("typed", "Python's call_receiver answers nothing yet"))
-def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, case):
-    assert _edges(tmp_path, case) == {(case.runs, "receiver-type")}
-
-
-@pytest.mark.parametrize("case", _cases("unknown"))
-def test_no_type_where_the_declarations_in_sight_do_not_decide(tmp_path, case):
-    assert typed_targets(_edges(tmp_path, case)) == set()
-
-
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].wrong])
 def test_a_name_never_takes_the_type_of_a_binding_not_its_own(tmp_path, case):
     assert case.wrong not in typed_targets(_edges(tmp_path, case))
 
 
-@pytest.mark.parametrize("case", _cases("external", "a value of an external class reaches the repo's homonym by name"))
-def test_a_method_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, case):
-    assert _edges(tmp_path, case) == set()
-
-
-# -- the scanner: a router's prefix reaches the routes registered through a typed value ----------------------------
-ROUTER_MAIN = ('from fastapi import APIRouter, FastAPI\nfrom app.routes import %s\napp = FastAPI()\n'
-               'v1 = APIRouter(prefix="/api")\n%s\napp.include_router(v1)\n')
-ROUTES = {
-    "a-repo-router-class": {
-        "app/routes.py": "from fastapi import APIRouter\nclass VersionedRouter(APIRouter):\n    pass\n",
-        "app/main.py": 'from fastapi import FastAPI\nfrom app.routes import VersionedRouter\napp = FastAPI()\n'
-                       'v1 = VersionedRouter(prefix="/api")\n@v1.get("/users")\ndef list_users(): return []\n'
-                       "app.include_router(v1)\n"},
-    "an-annotated-router-parameter": {
-        "app/routes.py": 'from fastapi import APIRouter\ndef register(router: APIRouter):\n'
-                         '    @router.get("/users")\n    def list_users(): return []\n',
-        "app/main.py": ROUTER_MAIN % ("register", "register(v1)")},
-}
-TYPED_ROUTES = {
-    "a-router-handed-to-a-method-of-a-typed-value": {
-        "app/routes.py": 'from fastapi import APIRouter\nclass Users:\n    def register(self, router: APIRouter):\n'
-                         '        @router.get("/users")\n        def list_users(): return []\n',
-        "app/main.py": ROUTER_MAIN % ("Users", "users = Users()\nusers.register(v1)")},
-}
-
-
-@pytest.mark.parametrize("files", [pytest.param(f, id=i) for i, f in ROUTES.items()] + [
-    pytest.param(f, id=i, marks=pytest.mark.xfail(strict=True, reason="the scanner follows a router into functions only"))
-    for i, f in TYPED_ROUTES.items()])
-def test_a_routers_prefix_reaches_its_routes(tmp_path, files):
-    _repo(tmp_path, files)
-    res, _ = _extract(tmp_path)
-    assert {(e.method, e.path) for e in res.endpoints} == {("GET", "/api/users")}
+@pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].answer == "unknown"
+                                  and (p.values[0].runs or "").startswith("app/")])
+def test_an_undecided_receiver_is_found_by_name(tmp_path, case):
+    edges = _edges(tmp_path, case)
+    assert edges and {strategy.removesuffix("-ambiguous") for _, strategy in edges} <= set(NAMED)
 
 
 @pytest.mark.parametrize("case", _cases())

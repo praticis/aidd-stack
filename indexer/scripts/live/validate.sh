@@ -61,10 +61,13 @@ before() {
   same_tree "$old" indexer/aidd_indexer "$home/indexer/aidd_indexer" \
     || die "the installed code is not ${old:0:7}'s: the before can only be taken before the reinstall"
   mkdir -p "$inflight/main_src" "$inflight/head_src"
-  git -C "$repo" archive "$old" indexer | tar -x -C "$inflight/main_src"
-  git -C "$repo" archive "$new" indexer | tar -x -C "$inflight/head_src"
-  same_tree "$old" indexer "$inflight/main_src/indexer" || die "the copy of ${old:0:7} does not match git"
-  same_tree "$new" indexer "$inflight/head_src/indexer" || die "the copy of ${new:0:7} does not match git"
+  # only the package a dry-run imports: an IDE watching the folder builds a test fixture's project in place
+  git -C "$repo" archive "$old" indexer/aidd_indexer | tar -x -C "$inflight/main_src"
+  git -C "$repo" archive "$new" indexer/aidd_indexer | tar -x -C "$inflight/head_src"
+  same_tree "$old" indexer/aidd_indexer "$inflight/main_src/indexer/aidd_indexer" \
+    || die "the copy of ${old:0:7} does not match git"
+  same_tree "$new" indexer/aidd_indexer "$inflight/head_src/indexer/aidd_indexer" \
+    || die "the copy of ${new:0:7} does not match git"
   seen_by_docker "$inflight/main_src/indexer" && seen_by_docker "$inflight/head_src/indexer" \
     || die "a container sees other files than the host's in $inflight: use a fresh path"
   printf 'before_commit %s\nafter_commit %s\ntools_commit %s\n' "$old" "$new" "$(git -C "$repo" rev-parse HEAD)" \

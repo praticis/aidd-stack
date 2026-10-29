@@ -28,8 +28,9 @@
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
     TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, are due in an H5
-    step: 6 and 12 for TD-023, 6 for TD-024. Next, Python (H5-D22's PRs, the refactor in two: H5-D24) and TS, judged
-    with the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
+    step: 6 and 12 for TD-023, 6 for TD-024. Python's step 5 is merged too (H5-D22's PRs: #42, #44, #45, #47),
+    with TD-025 due in F1.2 (H5-D26). Next, the `fix(python)` PRs of what its judgment found, then TS, judged with
+    the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
     (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets),
     then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
@@ -307,9 +308,9 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012 and TD-015 (`docs/tech-debt.md`), C# defects `main` has, each
-    with a strict xfail test. SCIP is
-    a possible remedy for them, not a proven one; the first case of TD-001 may be fixed in the resolver earlier
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015 and TD-025 (`docs/tech-debt.md`), C# defects
+    `main` has and a Python one its change of behavior made (H5-D26), each with a strict xfail test. SCIP is a
+    possible remedy for them, not a proven one; the first case of TD-001 may be fixed in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`
@@ -362,6 +363,12 @@ Open:
   - Next slice, decided on 2026-10-27 (H7-D6): automate the judgment of a change of behavior, since a person's check is
     not feasible: the per-site attribution (H5's gap G1: built for every language, H5-D21), the verdict record
     (H7-D2) and each judged case as a test
+
+- [ ] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
+  gives, in every language. Each language's type index writes `EXTENDS` from the bases it reads (Python's MRO, C#'s
+  bases), and `who_calls` and `impact_of` expand a method through the methods it overrides and those that override
+  it, marked as a dispatch that may happen. Proven on netbox's 67 sites that lose an override, 46 of them
+  `_get_queryset`. SCIP (F1.2) may then confirm the `EXTENDS` read from tree-sitter, or replace it
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

@@ -11,13 +11,14 @@ from tree_sitter import Node
 
 from ...core.types import Unknown
 from ..base import node_text
-from .forms import (AUGMENTED, COLLECTS, COMPREHENSION, DELETED, DISAGREE, EXCEPT, FOR, MATCH, NO_ANNOTATION,
+from .forms import (ANY, AUGMENTED, COLLECTS, COMPREHENSION, DELETED, DISAGREE, EXCEPT, FOR, MATCH, NO_ANNOTATION,
                     NO_RESULT, NOT_A_NAME, OTHER, STAR, TYPE_PARAMETER, UNBOUND, UNION, UNPACKED, WITH, Member,
                     declared, forward_reference, path, ref, unknown, value)
 from .scope_build import NESTED_TARGETS
 from .scopes import PyScopes, Scope
 
 TYPING = ("typing", "typing_extensions")
+TYPE_VARIABLES = frozenset({"TypeVar", "ParamSpec", "TypeVarTuple", "NewType"})
 TRANSPARENT = frozenset({"parenthesized_expression", "as_pattern_target"})
 PARAMETERS = frozenset({"parameters", "lambda_parameters"})
 
@@ -143,12 +144,27 @@ def annotation(index: PyScopes, node: Node | None) -> str | Unknown:
     if node.type == "string":
         return forward_reference(index, node)
     if node.type in ("identifier", "attribute"):
-        return ref(index, node)
+        return _named(index, node)
     if node.type == "binary_operator" and node_text(node.child_by_field_name("operator"), index.src) == "|":
         return _union(index, _alternatives(node, index.src))
     if node.type in ("generic_type", "subscript"):
         return _generic(index, node)
     return NOT_A_NAME
+
+
+def _named(index: PyScopes, node: Node) -> str | Unknown:
+    """A type by its name: `typing.Any` is any type, and a name a `TypeVar` binds stands for the types it may be."""
+    if _typing(index, node) == "Any":
+        return ANY
+    return TYPE_PARAMETER if node.type == "identifier" and _type_variable(index, node) else ref(index, node)
+
+
+def _type_variable(index: PyScopes, identifier: Node) -> bool:
+    binding = index.binding(identifier)
+    sites = index.sites(binding, node_text(identifier, index.src)) if binding is not None else []
+    values = [s.parent.child_by_field_name("right") for s in sites if s.parent is not None and s.parent.type == "assignment"]
+    return any(v is not None and v.type == "call" and _typing(index, v.child_by_field_name("function")) in TYPE_VARIABLES
+               for v in values)
 
 
 def _alternatives(node: Node, src: bytes) -> list[Node]:
@@ -184,17 +200,17 @@ def _generic(index: PyScopes, node: Node) -> str | Unknown:
 def _typing(index: PyScopes, origin: Node | None) -> str | None:
     """The name of `typing`'s that `origin` refers to, if it refers to one."""
     if origin is not None and origin.type == "identifier":
-        member = _import(index, origin)
+        member = imports_of(index, origin)
         spec, _, name = member.written.rpartition(":") if member is not None else ("", "", "")
         return name if member is not None and member.kind == "import" and spec in TYPING else None
     base = origin.child_by_field_name("object") if origin is not None and origin.type == "attribute" else None
-    member = _import(index, base) if base is not None and base.type == "identifier" else None
+    member = imports_of(index, base) if base is not None and base.type == "identifier" else None
     if member is not None and member.kind == "module" and member.written in TYPING:
         return node_text(origin.child_by_field_name("attribute"), index.src)
     return None
 
 
-def _import(index: PyScopes, identifier: Node) -> Member | None:
+def imports_of(index: PyScopes, identifier: Node) -> Member | None:
     """What the imports that bind a name import, when only imports bind it. Read apart from what the other forms
     declare: an annotation asks it, and a binding's annotation may name that binding (`def list(self) -> list[str]`)."""
     binding = index.binding(identifier)
