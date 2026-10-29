@@ -11,6 +11,7 @@ from ...core.http_base import BaseScanner, CLIENT_RECEIVER, OUTBOUND, split_call
 from .package_facts import PREFIX_KEYWORDS, PyFacts
 from ...core.paths import HTTP_METHODS, VERB_BY_NAME, unquote
 from .client_wrappers import PyClientWrappers, compose_wrapped_calls
+from .routers import PyRouters
 
 PY_REGISTRARS = {"get", "post", "put", "patch", "delete", "head", "options", "route", "api_route", "websocket"}
 APP_CLASSES = {"FastAPI", "Flask", "Starlette", "Sanic", "Quart"}
@@ -20,7 +21,7 @@ AIOHTTP = {"add_get": "GET", "add_post": "POST", "add_put": "PUT", "add_patch": 
            "add_head": "HEAD", "add_route": None, "add_view": "ANY"}                # app.router.add_*(path, handler)
 
 
-class PyScanner(PyClientWrappers, BaseScanner):
+class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
     """FastAPI / Flask / Starlette decorators; requests / httpx / aiohttp outbound."""
     mount_scope = "py"
 
