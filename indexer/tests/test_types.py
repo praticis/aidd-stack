@@ -30,7 +30,7 @@ def test_each_language_builds_its_index_once(monkeypatch):
     types = RepoTypes.of_files("/repo", [], [], {})
     assert types.of("go").bases(T) == [TypeRef("internal.app", "Base")]
     assert types.of("go") is types.of("go") and len(built) == 1
-    assert types.of("python").bases(T) == UNANSWERED          # a language that answers none
+    assert types.of("typescript").bases(T) == UNANSWERED      # a language that answers none
     assert types.of("cobol").bases(T) == UNANSWERED           # nor one the indexer does not know
 
 

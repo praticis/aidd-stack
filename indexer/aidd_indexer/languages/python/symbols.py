@@ -8,14 +8,20 @@ from __future__ import annotations
 import re
 import sys
 import tomllib
-from pathlib import Path, PurePosixPath
+from pathlib import Path
+from typing import Any
 
 from tree_sitter import Node
 
 from ...core.model import FileInfo, SymbolInfo
+from ...core.types import RepoTypes, TypeRef
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
-from .package_facts import read_package_facts
 from .http import PyScanner
+from .modules import module_file
+from .package_facts import read_package_facts
+from .scopes import PyScopes
+from .type_facts import PyTypes, type_facts
+from .type_index import Outside, PythonTypeIndex, qualified, ref, typed
 
 HERE = Path(__file__).parent
 
@@ -92,29 +98,48 @@ class PythonSupport(LanguageSupport):
         return names, deps
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
-        here = PurePosixPath(file.path).parent
+        found = module_file(ctx, file, spec)
+        if found is not None:
+            return (found.id, "File")
         if spec.startswith("."):
-            dots = len(spec) - len(spec.lstrip("."))
-            base = here
-            for _ in range(dots - 1):
-                base = base.parent
-            tail = spec[dots:].replace(".", "/")
-            base = base / tail if tail else base
-            for cand in (f"{base}.py", f"{base}/__init__.py"):
-                t = ctx.file_at(cand.lstrip("./"))
-                if t:
-                    return (t.id, "File")
             return None
-        parts = spec.split(".")
-        mod = ctx.module_by_id.get(file.module_id)
-        for root in {mod.path if mod else "", "", "src"}:
-            base = PurePosixPath(root) / "/".join(parts) if root else PurePosixPath("/".join(parts))
-            for cand in (f"{base}.py", f"{base}/__init__.py"):
-                t = ctx.file_at(str(cand))
-                if t:
-                    return (t.id, "File")
-        top = parts[0]
+        top = spec.split(".")[0]
         return (pkg("pypi", top, top in STDLIB), "Package")
+
+    # ---- types: a module and a class are both namespaces
+    def file_index(self, root: Node, src: bytes) -> PyScopes:
+        return PyScopes(root, src)
+
+    def file_facts(self, root: Node, src: bytes, index: Any = None) -> PyTypes:
+        return type_facts(index if index is not None else PyScopes(root, src))
+
+    def type_index(self, ctx: ResolveContext) -> PythonTypeIndex:
+        return PythonTypeIndex(ctx)
+
+    def _types(self, ctx: ResolveContext) -> PythonTypeIndex:
+        """The repo's Python type index: the one the HTTP pass shares, or one over this context."""
+        if ctx.types is None:
+            ctx.types = RepoTypes(ctx)
+        return ctx.types.of(self.id)
+
+    def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
+        found = typed(self._types(ctx), file.path, receiver_type, path)
+        return qualified(found) if isinstance(found, TypeRef) else None
+
+    def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
+                          path: tuple[str, ...]) -> tuple[str, bool] | None:
+        """A receiver whose chain ends in a package's class, module or function: no method of the repo is its."""
+        found = typed(self._types(ctx), file.path, receiver_type, path)
+        return (found.name, True) if isinstance(found, Outside) else None
+
+    def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
+
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        return self._types(ctx).outside_base(ref(qualified_type))
+
+    def member_name(self, owner: str, name: str) -> str:
+        return f"{owner}.{name}" if ":" in owner else f"{owner}:{name}"
 
 
 LANGUAGES = [

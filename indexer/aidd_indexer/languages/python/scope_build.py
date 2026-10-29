@@ -64,7 +64,7 @@ class Builder:
 
     def _push_all(self, nodes, scope: Scope, skip: tuple[Node | None, ...] = ()) -> None:
         ids = {n.id for n in skip if n is not None}
-        self._stack.extend((n, scope) for n in nodes if n.id not in ids)
+        self._stack.extend((n, scope) for n in nodes if not ids or n.id not in ids)
 
     def _bind(self, identifier: Node | None, scope: Scope) -> None:
         if identifier is not None and identifier.type == "identifier":
@@ -258,6 +258,7 @@ HANDLERS: dict[str, Callable[[Builder, Node, Scope], None]] = {
     "identifier": lambda s, n, scope: s._use(n, scope),
     "keyword_argument": lambda s, n, scope: s._push(n.child_by_field_name("value"), scope),
     "attribute": lambda s, n, scope: s._push(n.child_by_field_name("object"), scope),
+    "string": lambda s, n, scope: s._push_all([c for c in n.named_children if c.type == "interpolation"], scope),
     "function_definition": _function, "lambda": _function, "class_definition": _class,
     **{k: _comprehension for k in COMPREHENSIONS}, "named_expression": _assignment_expression,
     "assignment": _assignment, "augmented_assignment": _assignment, "for_statement": _assignment,
