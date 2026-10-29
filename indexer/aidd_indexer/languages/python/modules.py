@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 
 def module_bases(ctx: ResolveContext, file: FileInfo, spec: str) -> list[str]:
-    """The paths, without `.py`, the module `spec` may have, in the order they are tried."""
+    """The paths, without `.py`, the module `spec` may have, in the order they are tried: an absolute import under
+    the root of the file's module first, the nearest evidence of where its project runs from, then the repo's root,
+    then `src/`."""
     if spec.startswith("."):
         dots = len(spec) - len(spec.lstrip("."))
         base = PurePosixPath(file.path).parent
@@ -25,7 +27,7 @@ def module_bases(ctx: ResolveContext, file: FileInfo, spec: str) -> list[str]:
     parts = spec.split(".")
     mod = ctx.module_by_id.get(file.module_id)
     return [str(PurePosixPath(root) / "/".join(parts) if root else PurePosixPath("/".join(parts)))
-            for root in {mod.path if mod else "", "", "src"}]
+            for root in dict.fromkeys((mod.path if mod else "", "", "src"))]
 
 
 def module_file(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:

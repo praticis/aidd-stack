@@ -235,3 +235,9 @@
   Python files are values, the same in two runs. Building them costs netbox's extraction 2.2 s (5.8 to 8.0) and
   14 MiB of peak memory; the index, kept beside the tree, cost it about 270 MiB more, so it lives only while its file
   is extracted.
+- 2026-10-29: an absolute Python import resolves to the same module in every run, PR #46 (`fix(python)`). The roots
+  it is looked for under, the root of the importing file's module, the repo's root and `src/`, were a set, ordered by
+  the process's hash seed: of eight runs with seeds 0 to 7, two resolved a service's `app.models` to the service's own
+  module and six to the repo root's. They are now tried in that order, the module's root first, and the test runs
+  those eight seeds. None of the corpus's 42,298 absolute Python imports is found under two roots, so no graph of it
+  changes.
