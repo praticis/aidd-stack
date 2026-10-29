@@ -13,13 +13,13 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Python's step 5 has its case table (#42), its scope index (#44) and its types
-(#45); before its change of behavior, `fix(python)` #46 tries an import's roots in a fixed order, where a set's order
-followed the hash seed. Each merge and its live validation are in `docs/history.md`; the results are in the sections
+extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45)
+and its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where
+a set's order followed the hash seed. Each merge and its live validation are in `docs/history.md`; the results are in the sections
 below and in `corpus-report.md`.
 
-**Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
-strict xfail test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that
+**Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
+strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2. The judgment of H5-D18 was the review of an agent that
 did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
 and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
 names of frameworks and client libraries it holds:
@@ -28,10 +28,10 @@ names of frameworks and client libraries it holds:
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| Python | the case table (#42), the scope index (#44) and the types (#45) merged; the change of behavior next | not started | `languages/python/http.py`, 438 |
+| Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
 | TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
-The counts are `shape.py`'s on 2026-10-28. The core, the conventions and the scripts have modules over 300 lines too
+The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
@@ -43,20 +43,18 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for Python, then TS (H5-D19).
-   - For each: a refactor, then a change of behavior, both judged with the per-site attribution (`attribution.sh
-     LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)` PR.
-   - Python goes in H5-D22's PRs, its refactor in two (H5-D24). In: the case table (#42, "Step 5" below), the
-     attribution's ambiguous share (#43), the scope index (#44), which classifies every name of the 7,114 Python
-     files of the corpus that CPython 3.12 compiles as `symtable` does, and the types (#45), which answer every case
-     of the table while Python's `call_receiver` still answers nothing. Next, the change of behavior: Python's
-     `call_receiver` reads the types, and the scanner moves onto the index and the `TypeIndex`, judged with
-     `attribution.sh python` under `graph-change`. The scanner runs after every file is extracted, so it builds each
-     file's index again or the extractor keeps it (about 270 MiB on netbox): the change measures which.
-   - The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
-2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
+1. Before TS, what the judgment of Python's change of behavior found, in `fix(python)` PRs:
+   - the roots of a project's absolute imports: netbox runs from `netbox/`, where its `manage.py` is, so its 7,661
+     absolute imports resolve to nothing, and most of its classes have an MRO the index cannot see. Then its mixins'
+     `self.m()` is judged again (H5-D25);
+   - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
+     answer beside the `TypeIndex`, which step 5 makes one.
+2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
+   (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
+   PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
+3. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
-3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
+4. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
    cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
 
@@ -675,27 +673,111 @@ the constraints exposed; and the extension blocks that a typed receiver no longe
 
 ### Python's case table (H5-D22)
 
-In `indexer/tests/test_python_types.py`. Today the resolver types no receiver, so it finds every method by name, and
-the scanner follows a router only into a function. Each case names the method CPython runs for its call, and the test
-runs every case that can run in the test image, under `sys.setprofile`, to show it.
+The resolver's cases are in `indexer/tests/test_python_types.py`, and the scanner's in
+`indexer/tests/test_python_routers.py`. Each case names what CPython does:
+- a resolver case names the method CPython runs for its call, and the test runs every case that can run in the test
+  image, under `sys.setprofile`, to show it;
+- a scanner case names the routes CPython registers, with a router that composes prefixes as FastAPI's does, outside
+  the case's repo.
 
-| Case | Today | After the change | Test |
+Before the change of behavior (#47), the resolver typed no receiver, so it found every method by name, and the scanner
+keyed a router by the core's scopes and followed one only into a function. Every xfail of the table now passes, and no
+guard is lost.
+
+| Case | Before #47 | Now | Test |
 |---|---|---|---|
-| `self.m()`, `cls.m()`, a method only a repo base declares, a repo base ahead of an external one | by name | the method CPython runs, `receiver-type` | xfails `self`, `cls`, `a-method-of-a-repo-base`, `a-repo-base-ahead-of-an-external-one` |
-| `super().m()` | the class's own `m`, by name | the base's | xfail `super` |
-| `C()`, `x = C()`, `C` under an alias or through its module, `x: C`, `Optional[C]`, `C \| None`, `"C"`, `x: C = f()`, `x = f()` where `f` declares `-> C`, `self.x = C()` in a method, `x: C` in the class body | by name | typed | xfails, one per form |
-| `mod.f()`, a function of a repo module | the methods named `f`, never the function | the function | xfail `a-function-of-a-repo-module` |
-| a name a class body binds, read in a method; a closure's; a `global` bound in a function; a walrus in a comprehension | by name | typed from the binding CPython's scopes give the name | xfails; guards: never the type of the other binding |
+| `self.m()`, `cls.m()`, a method only a repo base declares, a repo base ahead of an external one | by name | the method CPython runs, `receiver-type` | `self`, `cls`, `a-method-of-a-repo-base`, `a-repo-base-ahead-of-an-external-one` |
+| `super().m()` | the class's own `m`, by name | the base's | `super` |
+| `C()`, `x = C()`, `C` under an alias or through its module, `x: C`, `Optional[C]`, `C \| None`, `"C"`, `x: C = f()`, `x = f()` where `f` declares `-> C`, `self.x = C()` in a method, `x: C` in the class body | by name | typed | one per form |
+| `mod.f()`, a function of a repo module | the methods named `f`, never the function | the function | `a-function-of-a-repo-module` |
+| a name a class body binds, read in a method; a closure's; a `global` bound in a function; a walrus in a comprehension | by name | typed from the binding CPython's scopes give the name | one per form; guards: never the type of the other binding |
 | a comprehension's variable; a `global` or `nonlocal` that rebinds; two bindings that disagree; a `for` or `with` target | by name | `Unknown`, so by name | guards: no typed edge |
-| `list[C]`, `Union[A, B]`, `Model.objects`, an attribute an external base gives, an external base ahead in the MRO | by name | `Unknown` | guards |
-| a value of an external class (`JSONDecoder()`) | the repo's homonym, by name | no edge | xfail `an-instance-of-an-external-class` |
-| scanner: a repo class over `APIRouter`; a router handed to a function with an annotated parameter | the prefix reaches the routes | the same | guards |
-| scanner: a router handed to a method of a typed value (`users.register(v1)`) | `GET /users` | `GET /api/users` | xfail |
+| `list[C]`, `Union[A, B]`, `Model.objects`, an attribute an external base gives, an external base ahead in the MRO, a base only a star import binds, a method a builtin base gives, a name a module may get by a star import, a class attribute a descriptor reads | by name | `Unknown`, so by name | guards: no typed edge, and the ones CPython can run reach a method by name |
+| a value of an external class (`JSONDecoder()`) | the repo's homonym, by name | no edge | `an-instance-of-an-external-class` |
+| scanner: a repo class over `APIRouter`, under an alias or over a base of another package; a router handed to a function with an annotated parameter | the prefix reaches the routes | the same | guards |
+| scanner: a router a function binds as `global` | `GET /users` | `GET /api/users` | `a-router-a-function-binds-as-global` |
+| scanner: a router a class body binds, read in a method, where the module binds the same name | `GET /other/users`, the class body's | `GET /api/users`, the module's | `a-class-body-does-not-enclose-its-methods` |
+| scanner: an application a function binds as `global` | no route | `GET /` | `an-application-a-function-binds-as-global` |
+| scanner: a router handed to a method of a typed value (`users.register(v1)`) or to a function of an imported module (`routes.register(v1)`) | `GET /users` | `GET /api/users` | `a-router-handed-to-a-method-of-a-typed-value`, `a-router-handed-to-a-function-of-an-imported-module` |
+| scanner: a repo router class whose base has a homonym in another package | `GET /users` | `GET /api/users` | `a-repo-router-class-whose-base-has-a-homonym` |
 
 The scope index came in the refactor's first PR (#44, H5-D24), and the test that waited for it is now the check
 itself: the index classifies every name of every case as `symtable` does. The types came in the second (#45): read by
-them (`test_python_type_index.py`), every case already gets its answer, and each `unknown` or `external` case the
-reason it names. The table's guards count an `inherited` edge as no method's (H5-D25).
+them (`test_python_type_index.py`), every case gets its answer, and each `unknown` or `external` case the reason it
+names. The table's guards count an `inherited` edge as no method's (H5-D25).
+
+### Python's change of behavior
+
+One answer, with Python's own rule: **a name is the binding CPython's scopes give it, and its type is the one that
+binding declares.** An annotation (`C | None`, `Optional[C]` and `"C"` read as `C`), a call of a class, a function's
+declared result, `self` and `cls`, `super()`, the import of a repo class or module. Across files, the
+`PythonTypeIndex` reads modules and classes as namespaces, and a class's MRO as C3's up to its first base outside the
+repo.
+
+- **Outside the repo only where it is proven.** A module of the standard library, an import of a top-level name the
+  repo holds nowhere, and a builtin base are outside it. What the index cannot see is `Unknown`, and the call goes by
+  name as on `main`:
+  - a module the repo holds under a root its imports are not looked for in;
+  - a base only a star import binds;
+  - a module with a star import, past its own names;
+  - a class attribute's value, which a descriptor may read as another, unless its class is the repo's, all its MRO,
+    and declares no `__get__`.
+
+  A call of a name outside the repo is an instance of it (H5-D26).
+- **The resolver** (`resolve_receiver`). A typed receiver reaches the method its MRO declares, or the `inherited` edge
+  of H5-D25. A class or a module whose names the index cannot all see gives no type, so its calls go by name.
+- **The scanner** asks the same scopes and types (`languages/python/routers.py`):
+  - a router's name is keyed by the scope Python binds it in;
+  - a router handed to a method of a typed value, or to a function of an imported module, follows the call's receiver
+    as the extraction types it (`CallInfo`);
+  - a router class's bases are read through the `TypeIndex`'s MRO.
+
+**Done (2026-10-29).** Nine commits and the docs, each code commit measured against the one before:
+
+1. the scanner's router cases, each run by CPython (`indexer/tests/test_python_routers.py`);
+2. a call's receiver has the type its declarations give it;
+3. the scanner keys a router by the scope Python binds it in;
+4. a router handed to a method of a typed value takes the caller's prefix;
+5. the scanner reads a router class's bases through the `TypeIndex`;
+6. a module or a base the types cannot see is unknown, not outside the repo. The judgment of commit 2 found netbox's
+   absolute imports, under a root the import resolver does not try (`netbox/`), taken for packages outside the repo:
+   `self.assertHttpStatus(..)` lost `TestCase.assertHttpStatus`, and 12,940 edges went;
+7. a module with a star import knows only its own names: netbox's `serializers.RackElevationDetailFilterSerializer(..)`,
+   through `from .serializers_.racks import *`, had lost its class (55 sites);
+8. a class attribute a descriptor may read is unknown, not outside the repo: netbox's `self.rack.get_available_units(..)`,
+   through `rack = models.ForeignKey(..)`, had lost `Rack.get_available_units` (34 sites);
+9. TD-025, the debt H5-D26 leaves.
+
+Every xfail of the table is gained, and no guard is lost.
+
+- **The corpus and the hold-out:** `0 repo(s) differ` at commits 5, 6, 7 and 8, against `-29` and `-26`. No expected
+  list changes, and the baseline stays `-29`.
+- **The micro set:** the other 8 repos are identical. From `main`: dispatch −3,175 and
+  +1,429 `CALLS`, netbox −4,588 and +2,158, mattermost −42 and +17, grafana −2.
+- **The per-site attribution** (`attribution.sh python`) explains all 4,570 changed sites, with none unexplained. 2,070
+  keep their method, now found by type; 641 change it, 721 narrow it, 87 gain one, 19 widen, and 1,032 lose theirs.
+  The share found among several homonyms falls in dispatch from 65.6 % to 53.1 % of the edges and from 40.4 % to
+  28.5 % of the sites, and in netbox from 63.1 % to 61.4 % and from 38.2 % to 36.8 %. Judged by case on seeded
+  samples:
+  - typed: dispatch's `@message_dispatcher.add(..)` reaches `MessageDispatcher.add`, not three plugins' `add`, and
+    `case_service.create(..)` reaches the case service's function, not a plugin's method;
+  - lost, and wrong on `main`: a call on a value of a class outside the repo (236 on FastAPI's `APIRouter` in
+    dispatch, `@router.get(..)`, and 74 on SQLAlchemy's `Session`); `super()` of a base outside the repo (282 sites,
+    where `super().clean()` reached the class's own `clean` or a sibling's); `self.client.get(..)` of Django's test client; Python scripts' `m.group(1)` that reached a Go or a TS
+    method in mattermost and grafana;
+  - lost, and right on `main`: about 40 sites of netbox on the result of a function outside the repo,
+    `get_object_or_404(Token, ..)` among them, TD-025 (H5-D26).
+- **The cost**, in three rounds interleaved with `main`:
+  - netbox's extraction goes from 7.5–8.0 s to 8.5–8.7 s, where receivers are now typed;
+  - netbox's HTTP pass goes from 5.2–5.3 s to 6.5–6.9 s, where the scanner builds a file's scope index again, on
+    its first question about a router's scope, and only then;
+  - peak memory grows by 4 MiB.
+
+  Keeping the index beside the tree instead cost about 270 MiB (#45), so it is built again. dispatch's HTTP pass
+  goes from 1.6–1.8 s to 2.1–2.3 s.
+- **What the judgment leaves open:** netbox's absolute imports resolve to nothing, so most of its classes have an MRO
+  the index cannot see, and its calls still go by name. Its `self.m()` in a mixin whose method a subclass's other base
+  gives, `ContactsMixin.get_ancestors`, is H5-D25's rule; it is judged again once those imports resolve.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -867,6 +949,12 @@ reason it names. The table's guards count an `inherited` edge as no method's (H5
   and C#, an `inherited` edge to the type. In `C(Thread, Base)`, CPython runs `Thread.run` for `self.run()`; leaving the
   receiver untyped would find `Base.run` by name again. The table's guards count only the edges that reach a method by
   type.
+- **H5-D26 (2026-10-29), a Python call of a name outside the repo stays an instance of it.** The judgment of
+  Python's change of behavior found that the type index takes the result of a call of a function outside the
+  repo for an instance of the function: `get_object_or_404(Token, ..)` is not a `Token` to it, so about 40 sites
+  of netbox lose what the guess by name found. Only the package's code tells a class from a function. The author
+  keeps the rule, which removes 451 guesses by name on the four repos judged, and registers the loss as TD-025,
+  due in F1.2.
 
 ## Pitfalls
 
