@@ -175,7 +175,7 @@ def test_a_language_keeps_only_the_calls_made_in_its_files():
 
 
 def strategy_section(out: str, title: str) -> list:
-    lines = out[out.index(title):].splitlines()[1:]
+    lines = out[out.index(title):].split("\n\n")[0].splitlines()[1:]
     return [tuple(c.strip() for c in re.fullmatch(r"  (.{26}) (.{9}) (.{9})", line).groups()) for line in lines]
 
 
@@ -194,3 +194,21 @@ def test_without_a_language_the_report_counts_every_file_and_a_share_of_nothing_
     out = report(tmp_path, capsys, made_in(("vue", 3, "same-module-ambiguous")), made_in(), [], [])
     assert strategy_section(out, "every language's CALLS in r, by strategy")[-4:] == [
         ("edges", "1", "0"), ("ambiguous edges", "100.0 %", "-"), ("sites", "1", "0"), ("ambiguous sites", "100.0 %", "-")]
+
+
+def untyped(line, why):
+    return {**row(line, "h", None), "unknown": why}
+
+
+def test_the_report_ends_with_the_receivers_each_side_leaves_untyped_by_the_reason_it_gives(tmp_path, capsys):
+    old = [untyped(3, "a for target")]
+    new = [untyped(3, "a for target"), untyped(5, "bindings that disagree"), row(7, "g", "T")]
+    out = report(tmp_path, capsys, run(), run(), old, new)
+    assert strategy_section(out, "receivers with no type, by the reason the language gives") == [
+        ("", "before", "after"), ("a for target", "1", "1"), ("bindings that disagree", "0", "1")]
+
+
+def test_a_language_that_gives_no_reason_says_so(tmp_path, capsys):
+    out = report(tmp_path, capsys, run(), run(), [row(3, "h", "T")], [row(3, "h", "T")])
+    assert out.rstrip().endswith("receivers with no type, by the reason the language gives\n"
+                                 f"  {'':26} {'before':>9} {'after':>9}\n  no side gives one")

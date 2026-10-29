@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "judgme
 import answers as A  # noqa: E402
 import aidd_indexer  # noqa: E402
 from aidd_indexer import languages  # noqa: E402
+from aidd_indexer.core.types import Unknown  # noqa: E402
 
 GO = '''package a
 
@@ -122,6 +123,16 @@ def test_a_tree_that_types_nothing_gives_no_row_and_still_counts_the_calls_on_a_
     assert A.main(["python", str(py), "r"]) == 0
     out, err = capsys.readouterr()
     assert out == "" and "r: 0 typed of 6 method calls on a receiver" in err
+
+
+def test_a_reason_the_language_gives_for_no_type_is_a_row_without_a_type(py, monkeypatch, capsys):
+    monkeypatch.setattr(languages.by_id("python"), "call_receiver",
+                        lambda call, receiver, src, index=None: Unknown("a for target"))
+    assert A.main(["python", str(py), "r"]) == 0
+    out, err = capsys.readouterr()
+    got = [json.loads(line) for line in out.splitlines()]
+    assert len(got) == 6 and {(r["type"], r["unknown"]) for r in got} == {(None, "a for target")}
+    assert "r: 0 typed of 6 method calls on a receiver, 6 untyped with a reason" in err
 
 
 def test_the_probe_prints_a_json_line_per_row_the_counts_and_the_tree_it_imported(go, capsys):
