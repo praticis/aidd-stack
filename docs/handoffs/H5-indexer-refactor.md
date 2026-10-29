@@ -9,13 +9,14 @@
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-29`).
 
-## State (2026-10-28)
+## State (2026-10-29)
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
 extension method a call reaches #30). Python's step 5 has its case table (#42), its scope index (#44) and its types
-(#45). Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
-`corpus-report.md`.
+(#45); before its change of behavior, `fix(python)` #46 tries an import's roots in a fixed order, where a set's order
+followed the hash seed. Each merge and its live validation are in `docs/history.md`; the results are in the sections
+below and in `corpus-report.md`.
 
 **Step 5 is closed for C#, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. The judgment of H5-D18 was the review of an agent that
