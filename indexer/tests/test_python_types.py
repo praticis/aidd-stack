@@ -2,8 +2,8 @@
 type a call's receiver for `CALLS` (the HTTP scanner's questions are test_python_routers.py's). The two questions are
 apart: a scope trap binds a name to a declaration that is not its own, and a declaration form reads the type of the
 right one. The method a case names is the one CPython runs for its call: every case that can run here is run, and the
-method it enters is compared with the case. Python's types answer every case; the extraction reads them once its
-`call_receiver` does (test_python_type_index.py reads every case by them meanwhile)."""
+method it enters is compared with the case. What the extraction gives each case, and why a receiver gets no type, is
+test_python_type_index.py's."""
 
 import contextlib
 import io
@@ -214,9 +214,8 @@ def typed_targets(edges: set[tuple[str, str]]) -> set[str]:
     return {target for target, strategy in edges if strategy.removesuffix("-ambiguous") not in NAMED + INHERITED}
 
 
-def _cases(answer: str | None = None, why: str | None = None) -> list:
-    marks = [pytest.mark.xfail(strict=True, reason=why)] if why else []
-    return [pytest.param(c, id=i, marks=marks) for i, c in CASES.items() if answer is None or c.answer == answer]
+def _cases() -> list:
+    return [pytest.param(c, id=i) for i, c in CASES.items()]
 
 
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].runs])
@@ -227,24 +226,9 @@ def test_cpython_runs_the_method_the_case_names(tmp_path, case):
     assert ran == case.runs != case.wrong
 
 
-@pytest.mark.parametrize("case", _cases("typed", "Python's call_receiver answers nothing yet"))
-def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, case):
-    assert _edges(tmp_path, case) == {(case.runs, "receiver-type")}
-
-
-@pytest.mark.parametrize("case", _cases("unknown"))
-def test_no_type_where_the_declarations_in_sight_do_not_decide(tmp_path, case):
-    assert typed_targets(_edges(tmp_path, case)) == set()
-
-
 @pytest.mark.parametrize("case", [p for p in _cases() if p.values[0].wrong])
 def test_a_name_never_takes_the_type_of_a_binding_not_its_own(tmp_path, case):
     assert case.wrong not in typed_targets(_edges(tmp_path, case))
-
-
-@pytest.mark.parametrize("case", _cases("external", "a value of an external class reaches the repo's homonym by name"))
-def test_a_method_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, case):
-    assert _edges(tmp_path, case) == set()
 
 
 @pytest.mark.parametrize("case", _cases())

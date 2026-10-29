@@ -21,12 +21,7 @@ from test_python_types import CASES, edges_of, extracted, typed_targets
 PYTHON = languages.by_id("python")
 
 
-# -- the case table, with the receiver read by the types, as the change of behavior will read it --------------------
-@pytest.fixture
-def read_by_the_types(monkeypatch):
-    monkeypatch.setattr(PYTHON, "call_receiver", lambda call, receiver, src, index=None: receiver_of(receiver, index))
-
-
+# -- the case table: each case's edges, and the reason a receiver gets no type ----------------------------------------
 def cases(answer: str) -> list:
     return [pytest.param(c, id=i) for i, c in CASES.items() if c.answer == answer]
 
@@ -51,18 +46,18 @@ def reason(types, call, method: str) -> str | None:
 
 
 @pytest.mark.parametrize("case", cases("typed"))
-def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, read_by_the_types, case):
+def test_a_declared_receiver_reaches_the_method_cpython_runs(tmp_path, case):
     assert answered(tmp_path, case) == ({(case.runs, "receiver-type")}, set())
 
 
 @pytest.mark.parametrize("case", cases("unknown"))
-def test_an_undecided_receiver_reaches_no_method_by_type_and_says_why(tmp_path, read_by_the_types, case):
+def test_an_undecided_receiver_reaches_no_method_by_type_and_says_why(tmp_path, case):
     edges, reasons = answered(tmp_path, case)
     assert (typed_targets(edges), reasons) == (set(), {case.reason})
 
 
 @pytest.mark.parametrize("case", cases("external"))
-def test_a_value_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, read_by_the_types, case):
+def test_a_value_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, case):
     assert answered(tmp_path, case) == (set(), {case.reason})
 
 

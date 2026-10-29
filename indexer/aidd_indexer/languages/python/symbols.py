@@ -14,11 +14,12 @@ from typing import Any
 from tree_sitter import Node
 
 from ...core.model import FileInfo, SymbolInfo
-from ...core.types import RepoTypes, TypeRef
+from ...core.types import RepoTypes, TypeRef, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import PyScanner
 from .modules import module_file
 from .package_facts import read_package_facts
+from .receivers import receiver_of
 from .scopes import PyScopes
 from .type_facts import PyTypes, type_facts
 from .type_index import Outside, PythonTypeIndex, qualified, ref, typed
@@ -112,6 +113,15 @@ class PythonSupport(LanguageSupport):
 
     def file_facts(self, root: Node, src: bytes, index: Any = None) -> PyTypes:
         return type_facts(index if index is not None else PyScopes(root, src))
+
+    def call_receiver(self, call: Node, receiver: Node, src: bytes,
+                      index: Any = None) -> tuple[str, tuple[str, ...]] | Unknown:
+        if index is None:
+            root = call
+            while root.parent is not None:
+                root = root.parent
+            index = PyScopes(root, src)
+        return receiver_of(receiver, index)
 
     def type_index(self, ctx: ResolveContext) -> PythonTypeIndex:
         return PythonTypeIndex(ctx)
