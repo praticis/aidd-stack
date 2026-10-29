@@ -133,8 +133,10 @@ class PythonSupport(LanguageSupport):
         return ctx.types.of(self.id)
 
     def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str, path: tuple[str, ...]) -> str | None:
-        found = typed(self._types(ctx), file.path, receiver_type, path)
-        return qualified(found) if isinstance(found, TypeRef) else None
+        """The receiver's type; none for a class with a base the index cannot see, which may give the method."""
+        types = self._types(ctx)
+        found = typed(types, file.path, receiver_type, path)
+        return qualified(found) if isinstance(found, TypeRef) and not isinstance(types.mro(found), Unknown) else None
 
     def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
                           path: tuple[str, ...]) -> tuple[str, bool] | None:

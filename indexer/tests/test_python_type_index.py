@@ -176,6 +176,9 @@ RULES = {
     "a-package-module": (
         {"app/use.py": "import requests\ndef f(): return requests.Session().get()\n"},
         "requests.Session().get()", "outside:requests.Session"),
+    "a-module-the-repo-holds-under-no-root-of-its-imports": (
+        {"lib/shop/models.py": MODELS, "app/use.py": "from shop.models import B\ndef f(): return B().run()\n"},
+        "B().run()", "a module of the repo's names, under a root its imports are not looked for in"),
 }
 
 

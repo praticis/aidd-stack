@@ -17,7 +17,7 @@ from .scopes import PyScopes, Scope
 
 
 class Namespace(NamedTuple):
-    bases: tuple[str, ...]          # a class's bases, in order, in its module's terms; "" for one it names no other way
+    bases: tuple[str | Unknown, ...]    # a class's bases, in order, in its module's terms, or why one is not in them
     members: dict[str, Member]
 
 
@@ -103,7 +103,7 @@ TARGET_FIELDS = {"assignment": "left", "augmented_assignment": "left", "for_stat
                  "for_in_clause": "left", "as_pattern": "alias"}
 
 
-def _bases(index: PyScopes, scope: Scope) -> tuple[str, ...]:
+def _bases(index: PyScopes, scope: Scope) -> tuple[str | Unknown, ...]:
     """The bases a class names, in order; `object`, every class's last base, is left out."""
     args = scope.node.child_by_field_name("superclasses")
     out = []
@@ -114,5 +114,5 @@ def _bases(index: PyScopes, scope: Scope) -> tuple[str, ...]:
         found = ref(index, origin)
         if found == UNBOUND and node_text(base, index.src) == "object":
             continue
-        out.append(found if not isinstance(found, Unknown) else "")
+        out.append(found)
     return tuple(out)

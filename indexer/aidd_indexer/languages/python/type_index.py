@@ -1,14 +1,14 @@
 """Python's answers to the type questions across files, from every Python file's type facts. A module and a class are
 both namespaces: a name is looked up among a module's members, then its package's submodules; among a class's, then
 its bases', in the order of its MRO. The MRO is read up to its first base outside the repo: that base may give the
-name, so no answer goes past it."""
+name, so no answer goes past it. A base the index cannot see leaves only the class's own names known."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
-from .forms import Member
+from .forms import UNBOUND, Member
 from .modules import Modules, module_path
 from .type_facts import EMPTY, Namespace, PyTypes
 
@@ -22,6 +22,8 @@ OUTSIDE = Unknown("a type of a package outside the repo")
 ATTRIBUTE_OUTSIDE = Unknown("an attribute of a type outside the repo")
 NOT_A_FILE = Unknown("not a Python file of the repo")
 NO_MODULE = Unknown("a relative import of no module of the repo")
+UNSEEN_MODULE = Unknown("a module of the repo's names, under a root its imports are not looked for in")
+NOT_A_CLASS = Unknown("a base that is not a class")
 NO_MEMBER = Unknown("its module or class declares no such name")
 BASE_OUTSIDE = Unknown("an attribute a base outside the repo may give")
 METHOD_OUTSIDE = Unknown("a method a base outside the repo may give, ahead in the MRO")
@@ -103,7 +105,7 @@ class PythonTypeIndex(TypeIndex):
         return found[0] if found[1].kind == "function" else NOT_A_METHOD
 
     def bases(self, of: TypeRef) -> list[TypeRef | Unknown] | Unknown:
-        return [b if isinstance(b, TypeRef) else OUTSIDE for b in self._bases(of)]
+        return [b if isinstance(b, (TypeRef, Unknown)) else OUTSIDE for b in self._bases(of)]
 
     def value(self, written: str, file: str) -> TypeRef | Outside | Unknown:
         """What a value the file at path `file` writes is (as `forms.py` writes it): the class of an instance, a class
@@ -220,13 +222,13 @@ class PythonTypeIndex(TypeIndex):
         found = self._modules.imported(f, spec)
         if found is not None:
             return TypeRef(found, "")
-        return NO_MODULE if spec.startswith(".") else Outside(spec)
+        return NO_MODULE if spec.startswith(".") else UNSEEN_MODULE if self._modules.holds(spec) else Outside(spec)
 
     def _lookup(self, cls: TypeRef, name: str, outside: Unknown = BASE_OUTSIDE,
                 missing: Unknown = NO_MEMBER) -> tuple[TypeRef, Member] | Unknown:
         """The class of `cls`'s MRO that declares `name`, and what it is."""
         mro = self._mro(cls)
-        for t in mro if not isinstance(mro, Unknown) else ():
+        for t in mro if not isinstance(mro, Unknown) else [cls]:
             if isinstance(t, Outside):
                 return outside
             member = self._namespace(t).members.get(name)
@@ -244,23 +246,23 @@ class PythonTypeIndex(TypeIndex):
         bases = self._bases(cls)
         heads: list[list[TypeRef | Outside]] = []
         for base in bases:
-            found = self._mro(base) if isinstance(base, TypeRef) else [base]
+            found = self._mro(base) if isinstance(base, TypeRef) else base if isinstance(base, Unknown) else [base]
             if isinstance(found, Unknown):
                 return found
             heads.append(found)
         merged = _merge(heads + [list(bases)])
         return [cls, *merged] if merged is not None else NO_MRO
 
-    def _bases(self, cls: TypeRef) -> list[TypeRef | Outside]:
-        """A class's bases; one the repo does not declare as a class is outside it."""
+    def _bases(self, cls: TypeRef) -> list[TypeRef | Outside | Unknown]:
+        """A class's bases: a builtin is outside the repo; one the index cannot see, as a star import's, is unknown."""
         f = self._file_of(cls)
-        out: list[TypeRef | Outside] = []
+        out: list[TypeRef | Outside | Unknown] = []
         for i, written in enumerate(self._namespace(cls).bases):
-            found = self._name(f, written, 0) if written and f is not None else None
-            if isinstance(found, Denoted) and found.kind == "class":
-                out.append(found.type)
+            found = written if isinstance(written, Unknown) else self._name(f, written, 0) if f is not None else NOT_A_FILE
+            if isinstance(found, Denoted):
+                out.append(found.type if found.kind == "class" else NOT_A_CLASS)
             else:
-                out.append(found if isinstance(found, Outside) else Outside(f"{qualified(cls)}#{i}"))
+                out.append(Outside(f"{qualified(cls)}#{i}") if found == UNBOUND else found)
         return out
 
     def _namespace(self, t: TypeRef) -> Namespace:

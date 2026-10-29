@@ -150,6 +150,12 @@ UNDECIDED = {
         "from threading import Thread\nfrom app.models import Base\nclass C(Thread, Base):\n"
         "    def go(self): return self.run()\ndef main(): return C().go()\n", "threading:Thread.run", "unknown",
         BASE_RUN, reason="a method a base outside the repo may give, ahead in the MRO"),
+    "a-base-only-a-star-import-binds": Case(
+        "from app.models import *\nclass C(Base):\n    pass\ndef main(): return C().run()\n", BASE_RUN, "unknown",
+        reason="a name only a star import may bind"),
+    "a-method-a-builtin-base-gives": Case(
+        "class D(dict):\n    pass\ndef main(): return D().get('x')\n", None, "unknown", method="get",
+        reason="a method a base outside the repo may give, ahead in the MRO"),
     "an-instance-of-an-external-class": Case(
         "from json import JSONDecoder\nclass Codec:\n    def decode(self, text): pass\ndef main():\n"
         '    d = JSONDecoder()\n    return d.decode("1")\n', "json/decoder:JSONDecoder.decode", "external",

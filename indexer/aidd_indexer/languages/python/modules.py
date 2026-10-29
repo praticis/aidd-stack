@@ -5,6 +5,7 @@ namespace package, by its `__init__` all the same."""
 
 from __future__ import annotations
 
+import sys
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -50,6 +51,7 @@ class Modules:
     def __init__(self, ctx: ResolveContext) -> None:
         self._ctx = ctx
         self._dirs: set[str] | None = None
+        self._names: set[str] | None = None
 
     def imported(self, file: FileInfo, spec: str) -> str | None:
         """The module `spec` names from `file`; None for one outside the repo."""
@@ -69,6 +71,15 @@ class Modules:
             return base
         found = f"{base}/__init__.py" in self._ctx.files_by_path or base in self._directories()
         return f"{base}/__init__" if found else None
+
+    def holds(self, spec: str) -> bool:
+        """Whether the repo has a module or a package named like the top of an absolute import it finds under no root:
+        the directory above it may be on the path the code runs with. The standard library's never is the repo's."""
+        if self._names is None:
+            self._names = {PurePosixPath(d).name for d in self._directories()} | \
+                {PurePosixPath(p).stem for p in self._ctx.files_by_path if p.endswith(".py")}
+        top = spec.split(".")[0]
+        return top in self._names and top not in sys.stdlib_module_names
 
     def _directories(self) -> set[str]:
         if self._dirs is None:
