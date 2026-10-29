@@ -49,6 +49,10 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
      `self.m()` is judged again (H5-D25);
    - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
      answer beside the `TypeIndex`, which step 5 makes one.
+
+   And the author's decision on how a typed call reaches a subclass's override, in every language: a rule that a
+   `CALLS` edge is the declaration its type gives, with the overrides reached in the query through `EXTENDS`, or edges
+   to the overrides.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
    PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
@@ -712,27 +716,33 @@ One answer, with Python's own rule: **a name is the binding CPython's scopes giv
 binding declares.** An annotation (`C | None`, `Optional[C]` and `"C"` read as `C`), a call of a class, a function's
 declared result, `self` and `cls`, `super()`, the import of a repo class or module. Across files, the
 `PythonTypeIndex` reads modules and classes as namespaces, and a class's MRO as C3's up to its first base outside the
-repo.
+repo (`languages/python/mro.py`).
 
 - **Outside the repo only where it is proven.** A module of the standard library, an import of a top-level name the
-  repo holds nowhere, and a builtin base are outside it. What the index cannot see is `Unknown`, and the call goes by
-  name as on `main`:
-  - a module the repo holds under a root its imports are not looked for in;
-  - a base only a star import binds;
-  - a module with a star import, past its own names;
+  repo holds nowhere, and a builtin base are outside it. A call of a name outside the repo is an instance of it
+  (H5-D26).
+- **What the index cannot see is `Unknown`, and the call goes by name as on `main`:**
+  - a module the repo holds at the top of a directory that is no package, under a root its imports are not looked for
+    in, even with a name of the standard library;
+  - a base only a star import binds, and a module with a star import, past its own names;
   - a class attribute's value, which a descriptor may read as another, unless its class is the repo's, all its MRO,
-    and declares no `__get__`.
-
-  A call of a name outside the repo is an instance of it (H5-D26).
-- **The resolver** (`resolve_receiver`). A typed receiver reaches the method its MRO declares, or the `inherited` edge
-  of H5-D25. A class or a module whose names the index cannot all see gives no type, so its calls go by name.
+    and declares no `__get__`;
+  - `typing.Any`, and a name a `TypeVar` binds;
+  - `super()` in a class that a class of the repo may put before another than its base. A class of one base keeps
+    its base's MRO; one of several bases whose MRO the index cannot see may reorder any.
+- **The resolver.**
+  - A typed receiver reaches the method its MRO declares, or the `inherited` edge of H5-D25.
+  - A class or a module whose names the index cannot all see gives no type.
+  - A method no class of an MRO all the repo's declares goes by name, because a subclass's other base gives it. So
+    does a name its module imports from another module. This is `LanguageSupport.member_by_name`, which no other
+    language answers.
 - **The scanner** asks the same scopes and types (`languages/python/routers.py`):
   - a router's name is keyed by the scope Python binds it in;
   - a router handed to a method of a typed value, or to a function of an imported module, follows the call's receiver
     as the extraction types it (`CallInfo`);
-  - a router class's bases are read through the `TypeIndex`'s MRO.
+  - a router class is read where the call binds its name, and its bases through the `TypeIndex`'s MRO.
 
-**Done (2026-10-29).** Nine commits and the docs, each code commit measured against the one before:
+**Done (2026-10-29).** Fourteen commits:
 
 1. the scanner's router cases, each run by CPython (`indexer/tests/test_python_routers.py`);
 2. a call's receiver has the type its declarations give it;
@@ -746,38 +756,75 @@ repo.
    through `from .serializers_.racks import *`, had lost its class (55 sites);
 8. a class attribute a descriptor may read is unknown, not outside the repo: netbox's `self.rack.get_available_units(..)`,
    through `rack = models.ForeignKey(..)`, had lost `Rack.get_available_units` (34 sites);
-9. TD-025, the debt H5-D26 leaves.
+9. TD-025, the debt H5-D26 leaves;
+10. the docs;
+11. to 13, what the review of an agent that did not write the change found (H7-D6):
+    - a receiver is unknown where a subclass, typing or a re-export decides its method. netbox's
+      `BulkCreateModelMixin`, a class of no base, calls `self.perform_create(..)`, which only its subclass's other base
+      gives (5 sites); 39 receivers were annotated `Any` or a `TypeVar`; `pkg.f()` re-exported by its `__init__`, and a
+      package of the repo named like the standard library's, had no site in the four repos;
+    - the scanner reads a router class where the call binds its name, so a router class a function imports is read
+      again;
+    - `super()` is unknown where a class of several bases the index cannot see may reorder the MRO. netbox's
+      `CustomFieldsMixin.clean` calls `super().clean()`, and in a model the class after it is another mixin of the
+      repo, not `models.Model` (6 sites);
+14. the docs of commits 11 to 13.
 
 Every xfail of the table is gained, and no guard is lost.
 
-- **The corpus and the hold-out:** `0 repo(s) differ` at commits 5, 6, 7 and 8, against `-29` and `-26`. No expected
-  list changes, and the baseline stays `-29`.
-- **The micro set:** the other 8 repos are identical. From `main`: dispatch −3,175 and
-  +1,429 `CALLS`, netbox −4,588 and +2,158, mattermost −42 and +17, grafana −2.
-- **The per-site attribution** (`attribution.sh python`) explains all 4,570 changed sites, with none unexplained. 2,070
-  keep their method, now found by type; 641 change it, 721 narrow it, 87 gain one, 19 widen, and 1,032 lose theirs.
-  The share found among several homonyms falls in dispatch from 65.6 % to 53.1 % of the edges and from 40.4 % to
-  28.5 % of the sites, and in netbox from 63.1 % to 61.4 % and from 38.2 % to 36.8 %. Judged by case on seeded
-  samples:
-  - typed: dispatch's `@message_dispatcher.add(..)` reaches `MessageDispatcher.add`, not three plugins' `add`, and
-    `case_service.create(..)` reaches the case service's function, not a plugin's method;
-  - lost, and wrong on `main`: a call on a value of a class outside the repo (236 on FastAPI's `APIRouter` in
-    dispatch, `@router.get(..)`, and 74 on SQLAlchemy's `Session`); `super()` of a base outside the repo (282 sites,
-    where `super().clean()` reached the class's own `clean` or a sibling's); `self.client.get(..)` of Django's test client; Python scripts' `m.group(1)` that reached a Go or a TS
-    method in mattermost and grafana;
-  - lost, and right on `main`: about 40 sites of netbox on the result of a function outside the repo,
-    `get_object_or_404(Token, ..)` among them, TD-025 (H5-D26).
-- **The cost**, in three rounds interleaved with `main`:
-  - netbox's extraction goes from 7.5–8.0 s to 8.5–8.7 s, where receivers are now typed;
-  - netbox's HTTP pass goes from 5.2–5.3 s to 6.5–6.9 s, where the scanner builds a file's scope index again, on
-    its first question about a router's scope, and only then;
-  - peak memory grows by 4 MiB.
+- **The corpus and the hold-out:** `0 repo(s) differ` at commits 5, 6, 7, 8, 12 and 13, against `-29` and `-26`. No
+  expected list changes, and the baseline stays `-29`.
+- **The micro set:** the other 8 repos are identical, so the core's new hook changes no language but Python. From
+  `main`: dispatch −3,174 and +1,429 `CALLS`, netbox −3,797 and +2,085, mattermost −42 and +17, grafana −2.
+- **The per-site attribution** (`attribution.sh python`) explains all 4,188 changed sites, with none unexplained:
 
-  Keeping the index beside the tree instead cost about 270 MiB (#45), so it is built again. dispatch's HTTP pass
-  goes from 1.6–1.8 s to 2.1–2.3 s.
-- **What the judgment leaves open:** netbox's absolute imports resolve to nothing, so most of its classes have an MRO
-  the index cannot see, and its calls still go by name. Its `self.m()` in a mixin whose method a subclass's other base
-  gives, `ContactsMixin.get_ancestors`, is H5-D25's rule; it is judged again once those imports resolve.
+  | Kind | Sites |
+  |---|---|
+  | keep their method, now found by type | 2,070 |
+  | change it | 630 |
+  | narrow it | 654 |
+  | gain one | 87 |
+  | widen | 19 |
+  | lose theirs | 728 |
+
+  The share found among several homonyms:
+
+  | Repo | Of the edges | Of the sites |
+  |---|---|---|
+  | dispatch | 65.6 % → 53.0 % | 40.4 % → 28.5 % |
+  | netbox | 63.1 % → 61.7 % | 38.2 % → 37.1 % |
+- **Judged by case on seeded samples.** The review drew 47 seeded rows, read each at the source, and found none
+  wrong.
+  - Typed:
+    - dispatch's `@message_dispatcher.add(..)` reaches `MessageDispatcher.add`, not three plugins' `add`;
+    - `case_service.create(..)` reaches the case service's function, not a plugin's method.
+  - Lost, and wrong on `main`:
+    - a call on a value of a class outside the repo: 236 on FastAPI's `APIRouter` in dispatch (`@router.get(..)`),
+      and 74 on SQLAlchemy's `Session`;
+    - Django's test client;
+    - a method an outside base gives, called inside its own type (83 sites, H5-D25);
+    - Python scripts' `m.group(1)` that reached a Go or a TS method in mattermost and grafana.
+  - Lost, and right on `main`: about 40 sites of netbox on the result of a function outside the repo,
+    `get_object_or_404(Token, ..)` among them. This is TD-025 (H5-D26).
+- **The cost**, in three rounds interleaved with `main`, on commit 9 and on commit 13:
+  - netbox's extraction, where receivers are now typed:
+    - commit 9: from 7.5–8.0 s to 8.5–8.7 s;
+    - commit 13: from 8.7–9.5 s to 9.6–11.1 s, in a noisier round.
+  - netbox's HTTP pass, where the scanner builds a file's scope index again, on its first question about a router's
+    scope, and only then:
+    - commit 9: from 5.2–5.3 s to 6.5–6.9 s;
+    - commit 13: from 5.6–7.5 s to 7.6–8.1 s.
+  - peak memory grows by 4 MiB, then by 9 MiB once `super()` reads the MRO of every class.
+
+  Keeping the index beside the tree instead cost about 270 MiB (#45), so it is built again. dispatch's HTTP pass goes
+  from 1.8–2.1 s to 2.3–2.4 s.
+- **What the judgment leaves open:**
+  - netbox's absolute imports resolve to nothing, so most of its classes have an MRO the index cannot see. Its calls
+    on them, and its `super()`, still go by name; they are judged again once those imports resolve;
+  - a typed `self.m()` reaches the method its class's MRO gives, not a subclass's override, as in C# and Go. In
+    netbox, 67 narrowed sites lose an override the guess by name found, 46 of them `_get_queryset`. How a call reaches
+    an override is for the author to decide;
+  - a class defined in a function is not seen, so one of several bases there could reorder an MRO the index reads.
 
 ## Decisions made (2026-10-18, by the author)
 
@@ -953,7 +1000,7 @@ Every xfail of the table is gained, and no guard is lost.
   Python's change of behavior found that the type index takes the result of a call of a function outside the
   repo for an instance of the function: `get_object_or_404(Token, ..)` is not a `Token` to it, so about 40 sites
   of netbox lose what the guess by name found. Only the package's code tells a class from a function. The author
-  keeps the rule, which removes 451 guesses by name on the four repos judged, and registers the loss as TD-025,
+  keeps the rule, which removes 454 guesses by name on the four repos judged, and registers the loss as TD-025,
   due in F1.2.
 
 ## Pitfalls

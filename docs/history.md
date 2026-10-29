@@ -245,10 +245,19 @@
   type its declarations give the binding CPython's scopes give its name, and the HTTP scanner asks the same scopes and
   types for its routers. Every xfail of the case table is gained, and the corpus and the hold-out do not change.
 
-  The per-site attribution explains all 4,570 changed sites of the micro set's four Python repos. dispatch's share of
-  edges found among several homonyms falls from 65.6 % to 53.1 %. Its judgment found three answers of "outside the
-  repo" the index had not proven: an import under a root it does not try, a module with a star import, and a class
-  attribute a descriptor may read. Each became `Unknown`, so the call goes by name as on `main`.
+  The per-site attribution explains all 4,188 changed sites of the micro set's four Python repos. dispatch's share of
+  edges found among several homonyms falls from 65.6 % to 53.0 %.
+
+  Its judgment found three answers of "outside the repo" the index had not proven: an import under a root it does not
+  try, a module with a star import, and a class attribute a descriptor may read. The review of an agent that did not
+  write the change (H7-D6) found five more:
+  - a mixin's method only a subclass gives;
+  - `super()` that a class of several bases may reorder;
+  - `typing.Any` and a `TypeVar`;
+  - a re-exported function;
+  - a router class a function imports.
+
+  Each became `Unknown`, so the call goes by name as on `main`.
 
   The author keeps a call of a name outside the repo as an instance of it (H5-D26). The edges it loses on a function's
   result are TD-025, due in F1.2.
