@@ -364,6 +364,12 @@ Open:
     not feasible: the per-site attribution (H5's gap G1: built for every language, H5-D21), the verdict record
     (H7-D2) and each judged case as a test
 
+- [ ] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
+  gives, in every language. Each language's type index writes `EXTENDS` from the bases it reads (Python's MRO, C#'s
+  bases), and `who_calls` and `impact_of` expand a method through the methods it overrides and those that override
+  it, marked as a dispatch that may happen. Proven on netbox's 67 sites that lose an override, 46 of them
+  `_get_queryset`. SCIP (F1.2) may then confirm the `EXTENDS` read from tree-sitter, or replace it
+
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
 ## Phase 2 — Complete macro (contract linker + governance)

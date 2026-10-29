@@ -50,9 +50,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
      answer beside the `TypeIndex`, which step 5 makes one.
 
-   And the author's decision on how a typed call reaches a subclass's override, in every language: a rule that a
-   `CALLS` edge is the declaration its type gives, with the overrides reached in the query through `EXTENDS`, or edges
-   to the overrides.
+   Then F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of` through the
+   overrides. Its place before or after TS is the author's.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
    PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
@@ -822,8 +821,8 @@ Every xfail of the table is gained, and no guard is lost.
   - netbox's absolute imports resolve to nothing, so most of its classes have an MRO the index cannot see. Its calls
     on them, and its `super()`, still go by name; they are judged again once those imports resolve;
   - a typed `self.m()` reaches the method its class's MRO gives, not a subclass's override, as in C# and Go. In
-    netbox, 67 narrowed sites lose an override the guess by name found, 46 of them `_get_queryset`. How a call reaches
-    an override is for the author to decide;
+    netbox, 67 narrowed sites lose an override the guess by name found, 46 of them `_get_queryset`. The query reaches
+    them (H5-D27, F1.16);
   - a class defined in a function is not seen, so one of several bases there could reorder an MRO the index reads.
 
 ## Decisions made (2026-10-18, by the author)
@@ -1002,6 +1001,12 @@ Every xfail of the table is gained, and no guard is lost.
   of netbox lose what the guess by name found. Only the package's code tells a class from a function. The author
   keeps the rule, which removes 454 guesses by name on the four repos judged, and registers the loss as TD-025,
   due in F1.2.
+- **H5-D27 (2026-10-29), a `CALLS` edge is the declaration the receiver's type gives, in every language.** A typed
+  `self.m()` reaches the method its class's MRO declares, as C# and Go already do and SCIP's references will; a
+  subclass's override is reached in the query. Each language's type index writes `EXTENDS`, and `who_calls` and
+  `impact_of` expand a method through the methods it overrides and those that override it, marked as a dispatch that
+  may happen (F1.16). Edges to every override would make one fact of a call into many and mix "calls" with "may
+  call".
 
 ## Pitfalls
 
