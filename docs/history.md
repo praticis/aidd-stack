@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #47)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -261,3 +261,9 @@
 
   The author keeps a call of a name outside the repo as an instance of it (H5-D26). The edges it loses on a function's
   result are TD-025, due in F1.2.
+- 2026-10-29: PR #47 is validated on a live install (the fourteenth golden round), together with #44 to #46: the
+  install still ran the package #30 merged, so the author chose one pair for all of them. The dry-runs of the installed
+  code and of the branch are identical, the graph holds them before and after the reinstall, the picture differs only
+  in the build and the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file,
+  so the round checks the install, not the change. It is `validate.sh`'s first run: it now copies only the package a
+  dry-run imports, since an IDE watching the folder built a test fixture's C# project in its copy.
