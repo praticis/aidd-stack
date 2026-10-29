@@ -10,7 +10,7 @@ from tree_sitter import Node
 
 from ...core.types import Unknown
 from ..base import node_text
-from .declared import agree, instance
+from .declared import agree, instance, site
 from .forms import STAR, UNBOUND, Member, path, ref
 from .scope_build import NESTED_TARGETS
 from .scopes import PyScopes, Scope
@@ -54,12 +54,21 @@ def _module_members(index: PyScopes) -> dict[str, Member]:
 
 
 def _class_members(index: PyScopes, scope: Scope) -> dict[str, Member]:
-    sites = {name: list(nodes) for name, nodes in scope.bindings.items()
-             if name not in scope.globals and name not in scope.nonlocals}
+    body = {name for name in scope.bindings if name not in scope.globals and name not in scope.nonlocals}
+    sites = {name: list(scope.bindings[name]) for name in body}
     for method in _methods(scope):
         for name, nodes in _assigned(index, method).items():
             sites.setdefault(name, []).extend(nodes)
-    return _agreed(index, sites)
+    return {name: _on_class(index, member, sites[name]) if name in body else member
+            for name, member in _agreed(index, sites).items()}
+
+
+def _on_class(index: PyScopes, member: Member, sites: list[Node]) -> Member:
+    """A value the class body gives a name, with no annotation to say what it reads as: read on an instance or the
+    class, it goes through the descriptor protocol."""
+    if member.kind != "value" or any((found := site(index, s)) is not None and found[1] for s in sites):
+        return member
+    return Member("attribute", member.written)
 
 
 def _agreed(index: PyScopes, sites: dict[str, list[Node]]) -> dict[str, Member]:

@@ -183,6 +183,24 @@ RULES = {
         {"app/models.py": MODELS, "app/everything.py": "from app.models import *\n",
          "app/use.py": "from app import everything\ndef f(): return everything.B().run()\n"},
         "everything.B().run()", "a name only a star import may bind"),
+    "a-class-attribute-a-descriptor-of-the-repo-reads": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import B\nclass Lazy:\n    def __get__(self, obj, owner): return B()\n"
+                       "class C:\n    b = Lazy()\n    def go(self): return self.b.run()\n"},
+        "self.b.run()", "a class attribute a descriptor may read as another value"),
+    "a-class-attribute-of-a-plain-class-of-the-repo": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from app.models import B\nclass C:\n    b = B()\n    def go(self): return self.b.run()\n"},
+        "self.b.run()", "app/models:B"),
+    "an-annotated-class-attribute": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from dataclasses import field\nfrom app.models import B\nclass C:\n    b: B = field()\n"
+                       "    def go(self): return self.b.run()\n"},
+        "self.b.run()", "app/models:B"),
+    "an-attribute-the-instance-holds": (
+        {"app/use.py": "from json import JSONDecoder\nclass C:\n    def __init__(self): self.d = JSONDecoder()\n"
+                       "    def go(self): return self.d.decode('1')\n"},
+        "self.d.decode('1')", "outside:json:JSONDecoder"),
     "a-class-a-module-of-a-star-import-declares": (
         {"app/models.py": MODELS, "app/everything.py": "from app.models import *\nclass C:\n    def run(self): pass\n",
          "app/use.py": "from app import everything\ndef f(): return everything.C().run()\n"},

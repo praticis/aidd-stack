@@ -156,6 +156,10 @@ UNDECIDED = {
     "a-function-a-module-may-get-by-a-star-import": Case(
         "from app import everything\ndef main(): return everything.make()\n", "app/models:make", "unknown",
         method="make", reason="a name only a star import may bind"),
+    "a-class-attribute-a-descriptor-reads": Case(
+        "from functools import cached_property\nfrom app.models import B\nclass C:\n"
+        "    b = cached_property(lambda self: B())\n    def go(self): return self.b.run()\ndef main(): return C().go()\n",
+        B_RUN, "unknown", reason="a class attribute a descriptor may read as another value"),
     "a-method-a-builtin-base-gives": Case(
         "class D(dict):\n    pass\ndef main(): return D().get('x')\n", None, "unknown", method="get",
         reason="a method a base outside the repo may give, ahead in the MRO"),

@@ -46,9 +46,10 @@ OTHER = Unknown("a binding the table does not read")
 
 class Member(NamedTuple):
     """What a name of a module or of a class denotes, as the file declares it."""
-    kind: str           # class, function, module, import, value or unknown
+    kind: str           # class, function, module, import, value, attribute (a value a class body gives) or unknown
     written: str        # class: its path in the module; function: its declared result ("" for none); module: the
-                        # module imported; import: the module and the name (`app.models:B`); value: its declared type
+                        # module imported; import: the module and the name (`app.models:B`); value and attribute:
+                        # its declared type
     why: str = ""       # unknown, or a function whose result has no type: the reason
 
 
