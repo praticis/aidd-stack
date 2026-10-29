@@ -201,6 +201,17 @@ RULES = {
         {"app/use.py": "from json import JSONDecoder\nclass C:\n    def __init__(self): self.d = JSONDecoder()\n"
                        "    def go(self): return self.d.decode('1')\n"},
         "self.d.decode('1')", "outside:json:JSONDecoder"),
+    "a-type-variable": (
+        {"app/models.py": MODELS,
+         "app/use.py": "from typing import TypeVar\nfrom app.models import B\nT = TypeVar('T', bound=B)\n"
+                       "def f(x: T): return x.run()\n"}, "x.run()", "a type parameter or a type alias"),
+    "a-package-named-like-the-standard-librarys": (
+        {"lib/email/models.py": MODELS, "app/use.py": "from email.models import B\ndef f(): return B().run()\n"},
+        "B().run()", "a module of the repo's names, under a root its imports are not looked for in"),
+    "a-module-of-a-package-is-at-no-top": (
+        {"app/__init__.py": "", "app/json.py": "",
+         "app/use.py": "import json\ndef f(): return json.JSONDecoder().decode('1')\n"},
+        "json.JSONDecoder().decode('1')", "outside:json.JSONDecoder"),
     "a-class-a-module-of-a-star-import-declares": (
         {"app/models.py": MODELS, "app/everything.py": "from app.models import *\nclass C:\n    def run(self): pass\n",
          "app/use.py": "from app import everything\ndef f(): return everything.C().run()\n"},

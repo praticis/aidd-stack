@@ -160,6 +160,20 @@ UNDECIDED = {
         "from functools import cached_property\nfrom app.models import B\nclass C:\n"
         "    b = cached_property(lambda self: B())\n    def go(self): return self.b.run()\ndef main(): return C().go()\n",
         B_RUN, "unknown", reason="a class attribute a descriptor may read as another value"),
+    "a-method-only-a-subclass-may-give": Case(
+        "from app.models import Base\nclass Mixin:\n    def go(self): return self.run()\nclass C(Mixin, Base):\n"
+        "    pass\ndef main(): return C().go()\n", BASE_RUN, "unknown",
+        reason="no class of its MRO declares the method"),
+    "super-in-a-class-a-subclass-puts-before-another": Case(
+        "from app.models import Base\nclass Mixin(Base):\n    def go(self): return super().run()\nclass Other(Base):\n"
+        "    def run(self): pass\nclass C(Mixin, Other):\n    pass\ndef main(): return C().go()\n", "app/use:Other.run",
+        "unknown", BASE_RUN, reason="super() in a class a class of the repo puts before another than its base"),
+    "a-parameter-annotated-any": Case(
+        "from typing import Any\nfrom app.models import B\ndef f(x: Any): return x.run()\ndef main(): return f(B())\n",
+        B_RUN, "unknown", reason="typing's Any, which any type is"),
+    "a-function-its-module-imports": Case(
+        "from app import exports\ndef main(): return exports.make()\n", "app/models:make", "unknown", method="make",
+        reason="a name its module imports from another"),
     "a-method-a-builtin-base-gives": Case(
         "class D(dict):\n    pass\ndef main(): return D().get('x')\n", None, "unknown", method="get",
         reason="a method a base outside the repo may give, ahead in the MRO"),
@@ -192,7 +206,8 @@ def _write(root, files: dict[str, str]) -> None:
 
 def _repo(root, files: dict[str, str]) -> None:
     _write(root, {"pyproject.toml": PYPROJECT, "app/__init__.py": "", "app/models.py": MODELS,
-                  "app/service.py": SERVICE, "app/everything.py": "from app.models import *\n", **files})
+                  "app/service.py": SERVICE, "app/everything.py": "from app.models import *\n",
+                  "app/exports.py": "from app.models import make\n", **files})
 
 
 def _extract(root):

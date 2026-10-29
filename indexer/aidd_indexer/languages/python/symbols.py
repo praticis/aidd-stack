@@ -150,6 +150,12 @@ class PythonSupport(LanguageSupport):
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
         return self._types(ctx).outside_base(ref(qualified_type))
 
+    def member_by_name(self, ctx: ResolveContext, qualified_type: str, name: str) -> bool:
+        """A method no class of an MRO all the repo's declares is a subclass's other base's; a name a module imports is
+        declared in the module it comes from."""
+        types, t = self._types(ctx), ref(qualified_type)
+        return not types.outside_base(t) if t.name else types.binds(t, name)
+
     def member_name(self, owner: str, name: str) -> str:
         return f"{owner}.{name}" if ":" in owner else f"{owner}:{name}"
 

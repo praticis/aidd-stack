@@ -9,9 +9,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
-from .c3 import merge
 from .forms import UNBOUND, Member
 from .modules import Modules, module_path
+from .mro import Linearized
 from .type_facts import EMPTY, Namespace, PyTypes
 
 if TYPE_CHECKING:
@@ -34,8 +34,9 @@ NO_METHOD = Unknown("no class of its MRO declares the method")
 NOT_A_METHOD = Unknown("its class declares the name, not as a method")
 NOT_A_TYPE = Unknown("a function, not a class or a module")
 NOT_CALLABLE = Unknown("a call of what is not a class or a function")
-NO_MRO = Unknown("bases CPython cannot order")
 SUPER = Unknown("super() in a class of several bases, or of none")
+SUPER_ELSEWHERE = Unknown("super() in a class a class of the repo puts before another than its base")
+REEXPORTED = Unknown("a name its module imports from another")
 ONE_RESULT = Unknown("a Python function returns one value")
 TOO_DEEP = Unknown("a chain of names longer than the index follows")
 
@@ -75,14 +76,14 @@ def ref(qualified_type: str) -> TypeRef:
     return TypeRef(package, name)
 
 
-class PythonTypeIndex(TypeIndex):
+class PythonTypeIndex(Linearized, TypeIndex):
     """A type is its module's path without `.py` (`app/models`, `app/__init__`) and its path in the module
     (`Outer.Inner`), "" for the module itself."""
 
     def __init__(self, ctx: ResolveContext) -> None:
+        super().__init__()
         self._ctx = ctx
         self._modules = Modules(ctx)
-        self._linear: dict[TypeRef, list[TypeRef | Outside] | Unknown] = {}
 
     def type_named(self, written: str, file: str) -> TypeRef | Unknown:
         return _public(self.value(written, file))
@@ -105,7 +106,9 @@ class PythonTypeIndex(TypeIndex):
         found = self._lookup(owner, name, METHOD_OUTSIDE, NO_METHOD)
         if isinstance(found, Unknown):
             return found
-        return found[0] if found[1].kind == "function" else NOT_A_METHOD
+        if found[1].kind == "function":
+            return found[0]
+        return REEXPORTED if not owner.name and found[1].kind == "import" else NOT_A_METHOD
 
     def bases(self, of: TypeRef) -> list[TypeRef | Unknown] | Unknown:
         return [b if isinstance(b, (TypeRef, Unknown)) else OUTSIDE for b in self._bases(of)]
@@ -119,19 +122,19 @@ class PythonTypeIndex(TypeIndex):
     def attribute(self, owner: TypeRef, name: str) -> TypeRef | Outside | Unknown:
         return self._type(self._attribute(_held(owner), name, 0))
 
-    def supertypes(self, cls: TypeRef) -> list[TypeRef]:
-        """The repo's classes after `cls` in its MRO, up to the first base outside the repo."""
-        found = self.mro(cls) if cls.name else []
-        out: list[TypeRef] = []
-        for t in found[1:] if not isinstance(found, Unknown) else ():
-            if isinstance(t, Outside):
-                break
-            out.append(t)
-        return out
+    def binds(self, t: TypeRef, name: str) -> bool:
+        return name in self._namespace(t).members
 
-    def outside_base(self, cls: TypeRef) -> bool:
-        found = self.mro(cls) if cls.name else []
-        return not isinstance(found, Unknown) and any(isinstance(t, Outside) for t in found)
+    def classes(self) -> list[TypeRef]:
+        """The repo's classes the index sees: a class defined in a function has no name in a module."""
+        return [TypeRef(module_path(f), name) for f in self._ctx.files_by_path.values()
+                for name in PyTypes.of(self._ctx.facts.get(f.id)).namespaces if name]
+
+    def imported_class(self, written: str, file: str) -> TypeRef | None:
+        """The class of the repo an import binds (`app.routes:Router`, as `forms.py` writes one); None for any other."""
+        f = self._ctx.files_by_path.get(file)
+        found = self._imported(f, written, 0) if f is not None else None
+        return found.type if isinstance(found, Denoted) and found.kind == "class" else None
 
     def _value(self, f: FileInfo, written: str, depth: int) -> TypeRef | Outside | Unknown:
         if written.startswith("call:"):
@@ -158,11 +161,14 @@ class PythonTypeIndex(TypeIndex):
         return self._value(found.file, member.written, depth + 1) if member.written else Unknown(member.why)
 
     def _super(self, found: Denoted | Outside | Unknown) -> TypeRef | Outside | Unknown:
-        """What follows a class in its MRO, read where it is its only base: then the base's own MRO is the rest."""
+        """What follows a class in the MRO of an instance, read where it is its only base and no class of the repo puts
+        another after it: then the base's own MRO is the rest."""
         if not isinstance(found, Denoted) or found.kind != "class":
             return found if isinstance(found, Unknown) else SUPER
         bases = self._bases(found.type)
-        return bases[0] if len(bases) == 1 else SUPER
+        if len(bases) != 1:
+            return SUPER
+        return bases[0] if self.following(found.type) <= {bases[0]} else SUPER_ELSEWHERE
 
     def _name(self, f: FileInfo, dotted: str, depth: int) -> Denoted | Outside | Unknown:
         first, *rest = dotted.split(".")
@@ -247,23 +253,6 @@ class PythonTypeIndex(TypeIndex):
             if member is not None:
                 return t, member
         return mro if isinstance(mro, Unknown) else missing
-
-    def mro(self, cls: TypeRef) -> list[TypeRef | Outside] | Unknown:
-        if cls not in self._linear:
-            self._linear[cls] = NO_MRO              # a class among its own bases has none
-            self._linear[cls] = self._c3(cls)
-        return self._linear[cls]
-
-    def _c3(self, cls: TypeRef) -> list[TypeRef | Outside] | Unknown:
-        bases = self._bases(cls)
-        heads: list[list[TypeRef | Outside]] = []
-        for base in bases:
-            found = self.mro(base) if isinstance(base, TypeRef) else base if isinstance(base, Unknown) else [base]
-            if isinstance(found, Unknown):
-                return found
-            heads.append(found)
-        merged = merge(heads + [list(bases)])
-        return [cls, *merged] if merged is not None else NO_MRO
 
     def _bases(self, cls: TypeRef) -> list[TypeRef | Outside | Unknown]:
         """A class's bases: a builtin is outside the repo; one the index cannot see, as a star import's, is unknown."""

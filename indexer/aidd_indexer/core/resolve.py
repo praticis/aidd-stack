@@ -121,19 +121,10 @@ class Resolver:
             if c.receiver_type and caller_file is not None:
                 lang = languages.by_id(caller_file.language)
                 qtype = lang.resolve_receiver(self.ctx, caller_file, c.receiver_type, c.receiver_path) if lang else None
-                if qtype:
-                    found = self._on_type(c, cands, qtype, lang)
-                    for hits, strategy in found:
-                        # overloads the argument count cannot tell apart: all of them, marked ambiguous
-                        suffix = "-ambiguous" if len(hits) > 1 else ""
-                        edges.extend(CallEdge(c.caller_id, s.id, c.line, strategy + suffix) for s in hits[:3])
-                    if not found[0][0]:
-                        # the receiver's type does not declare the method: never guess a homonym. When the type has a
-                        # base outside the repo the method comes from there — record the dependency on the type
-                        inherited = self._inherited(c, qtype, lang, impl_found=bool(found[-1][0]))
-                        edges.extend(inherited)
-                        if not found[-1][0] and not inherited:
-                            unresolved += 1
+                typed = self._typed(c, cands, qtype, lang) if qtype else None
+                if typed is not None:
+                    edges.extend(typed[0])
+                    unresolved += typed[1]
                     continue
             fit = None                       # how each extension takes the receiver, when only extensions can serve it
             if c.receiver and caller_file is not None:
@@ -164,6 +155,22 @@ class Resolver:
                 unresolved += 1
             edges.extend(CallEdge(c.caller_id, s.id, c.line, strat) for s, strat in picked)
         return edges, unresolved
+
+    def _typed(self, c, cands: list[SymbolInfo], qtype: str, lang) -> tuple[list[CallEdge], int] | None:
+        """The edges the receiver's type gives a call, and 1 when it gives none; None when the call goes by name, its
+        type declaring no such method that the language lets another class give (`LanguageSupport.member_by_name`)."""
+        found = self._on_type(c, cands, qtype, lang)
+        # overloads the argument count cannot tell apart: all of them, marked ambiguous
+        edges = [CallEdge(c.caller_id, s.id, c.line, strategy + ("-ambiguous" if len(hits) > 1 else ""))
+                 for hits, strategy in found for s in hits[:3]]
+        if found[0][0]:
+            return edges, 0
+        # the receiver's type does not declare the method: never guess a homonym. When the type has a base outside the
+        # repo the method comes from there — record the dependency on the type
+        inherited = self._inherited(c, qtype, lang, impl_found=bool(found[-1][0]))
+        if found[-1][0] or inherited:
+            return edges + inherited, 0
+        return None if lang.member_by_name(self.ctx, qtype, c.callee_name) else (edges, 1)
 
     def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str]]:
         """The methods of the receiver's type and of the implementation it reaches; when none takes the arguments, the

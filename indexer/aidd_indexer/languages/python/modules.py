@@ -5,7 +5,6 @@ namespace package, by its `__init__` all the same."""
 
 from __future__ import annotations
 
-import sys
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -73,13 +72,15 @@ class Modules:
         return f"{base}/__init__" if found else None
 
     def holds(self, spec: str) -> bool:
-        """Whether the repo has a module or a package named like the top of an absolute import it finds under no root:
-        the directory above it may be on the path the code runs with. The standard library's never is the repo's."""
+        """Whether the repo has a module or a package named like the top of an absolute import it finds under no root,
+        in a directory that is no package: that directory may be on the path the code runs with, ahead of the standard
+        library's."""
         if self._names is None:
-            self._names = {PurePosixPath(d).name for d in self._directories()} | \
-                {PurePosixPath(p).stem for p in self._ctx.files_by_path if p.endswith(".py")}
-        top = spec.split(".")[0]
-        return top in self._names and top not in sys.stdlib_module_names
+            files = [PurePosixPath(p) for p in self._ctx.files_by_path if p.endswith(".py")]
+            packages = {f.parent for f in files if f.name == "__init__.py"}
+            tops = [PurePosixPath(d) for d in self._directories()] + [f.with_suffix("") for f in files]
+            self._names = {t.name for t in tops if t.parent not in packages}
+        return spec.split(".")[0] in self._names
 
     def _directories(self) -> set[str]:
         if self._dirs is None:
