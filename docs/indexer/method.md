@@ -255,39 +255,53 @@ keeps that order:
 
 ### 4.12 Attributing a changed edge to its rule
 
-A change to how a language types a receiver changes `CALLS` edges at the sites where the typing answer changes, and
-nowhere else. `attribution.py` checks that. It takes the sites whose edges differ between two micro dry-runs and the
-answers each tree gives at the calls (one JSON line per call: repo, file, line, receiver, type, the reason it has none,
-src, and the facts a case reads), keeps the sites where the answers differ, and prints the changed sites by case and
-kind, with seeded samples of each. A changed site whose answer is the same on both sides is `unexplained`: another rule
-changed it, or the change has a defect. It is listed with its source line and judged apart, never dropped.
+A change to how a language types a receiver, or to what the resolver makes of it, changes `CALLS` edges at the sites
+where that answer changes, and nowhere else. `attribution.py` checks that. It takes the sites whose edges differ
+between two micro dry-runs and the answers each tree gives at the calls (one JSON line per call: repo, file, line,
+receiver, type, the reason it has none, what the resolver makes of the receiver, src, and the facts a case reads),
+keeps the sites where the answers differ, and prints the changed sites by case and kind, with seeded samples of each.
+A changed site whose answers are the same on both sides is `unexplained`: another rule changed it, or the change has a
+defect. It is listed with its source line and judged apart, never dropped.
 
 The answers come from one probe for every language, `answers.py` (H5-D21). It runs a tree's own discovery and
-extraction and reads, from each call the extractor records, the receiver's type (`CallInfo.receiver_type`), or the
-reason the language gives for not typing it (`receiver_unknown`, H5-D23): the files, the calls and the types are the
-ones that tree's resolver reads, however the language types inside. A tree that neither types a receiver of the
-language nor gives a reason writes no line, so on its side every receiver is untyped. Both trees must share the
-extraction's API (`list_files`, `discover_modules`, `build_files`, `extract_file`); where they do not, the probe fails.
+extraction on the language's files, builds the resolver over them as the pipeline does, and reads two answers at each
+call on a receiver, both the tree's own, however the language types inside:
+- **The extraction's:** the receiver's type (`CallInfo.receiver_type`), or the reason the language gives for not
+  typing it (`receiver_unknown`, H5-D23).
+- **The resolver's** (`resolved`), asked as the resolver asks it, in its context and with the imports resolved: a
+  runtime builtin (`builtin`), a name an import binds to a package (`package`), the repo's type
+  `LanguageSupport.resolve_receiver` gives (`type <name>`), what `external_receiver` names outside the repo
+  (`outside <name>`), or none, where the resolver goes by name. The probe repeats one rule of the core's, the
+  receiver's root, so a change to that rule shows as `unexplained`, never as explained.
+
+A call with neither answer writes no line, so on that side the receiver is untyped and goes by name. A language's
+answers read its own files' facts and imports only, so the probe leaves the other languages and the HTTP pass out; it
+still holds the language's extraction, as the dry-run does. Both trees must share the API the probe calls (`list_files`,
+`discover_modules`, `build_files`, `extract_file`, `RepoTypes.of_files`, `Resolver.resolve_imports` and the two
+hooks); where they do not, the probe fails.
 
 1. A worktree for each tree, the base and the branch, and the micro dry-runs of both on the language's repos:
    `micro.sh --base REF REPO...` in the branch's worktree leaves the `BEFORE` and `AFTER` directories in `$C/micro`.
    A tree the run only reads can be a `git archive` of its `indexer/` instead of a worktree.
 2. `attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]` runs the probe with each tree, in the
    image, then `attribution.py`. The answers stay in `$AIDD_ATTRIBUTION_OUT`; the probe's stderr names the
-   `aidd_indexer` it imported and counts, per repo, the typed calls of all the method calls on a receiver.
+   `aidd_indexer` it imported and counts, per repo, the typed calls of all the method calls on a receiver and what the
+   resolver makes of them.
 3. Read the table, then the samples at the source as `judgment.md` §5 says. Without a table the cases are the answer's
-   own: `typed-now`, `untyped-now` and `retyped`. The rule that explains a difference is a case of the change: write it
-   before the change, in a `--cases` file whose `case_of(d)` reads the types, the source line and the facts the probe
-   gives (`closures`, the function literals around the use: Go's func literals, Python's lambdas and functions defined
-   in another), and returns the case, or None for the answer's own.
+   own: `typed-now`, `untyped-now` and `retyped` where the type differs; where it does not, the resolver's answer on
+   each side by kind (`package -> by name`, `by name -> type`, `type -> type`). The rule that explains a difference is
+   a case of the change: write it before the change, in a `--cases` file whose `case_of(d)` reads the types, the
+   resolver's answers (`old_resolved`, `new_resolved`), the source line and the facts the probe gives (`closures`, the
+   function literals around the use: Go's func literals, Python's lambdas and functions defined in another), and
+   returns the case, or None for the answer's own.
 4. Read how the language's `CALLS` are found, at the end of the report: each repo's edges by strategy on both sides,
    and the share the resolver found among several homonyms (`-ambiguous`), of the edges and of the sites (a file and a
    line). A site emits up to three ambiguous edges, so the two shares differ; a line with two calls is one site,
    ambiguous when either call is. `attribution.sh` passes the language, so only the calls made in its files count.
    Last, the receivers each side leaves untyped, by the reason the language gives.
 
-The probe sees the type a call's receiver is given in its file, not what the resolver makes of it: a changed edge
-whose receiver has the same type on both sides is `unexplained`, even when the change is to how that type resolves.
+The probe sees what the receiver is, not what the resolver then finds on it: a changed edge whose receiver has the same
+answers on both sides is `unexplained`, as when a type's bases or members change, or the call has no receiver.
 A language whose cases need another fact gets it in `FACTS`, in a `chore(scripts)` PR before the language's refactor
 (H5-D19), so the first judgment already has it.
 

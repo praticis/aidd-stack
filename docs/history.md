@@ -310,3 +310,9 @@
 - 2026-10-30: PR #55 is validated on a live install (the eighteenth golden round). The dry-runs of `main` and of the
   branch are identical on the 10 snapshots, the graph holds the branch's after the reinstall, and the 27 calls give the
   same answers. The snapshots hold no Python file, so the round checks the install, not the change.
+- 2026-10-30: the per-site attribution reads what the resolver makes of a receiver too, PR #56 (`chore(scripts)`),
+  which closes H5's gap G2. `answers.py` records, beside the extraction's type, the resolver's answer: a builtin, a
+  name an import binds to a package, the repo's type, a type outside the repo, or none. Replayed on H5-D28's import
+  roots, it explains all 8,726 changed sites, where `main`'s probe explained none, and on the star imports all 4,657,
+  where it explained 792; the `TypeIndex`'s verdict, the reference those judgments used, agrees on every site it
+  explains. #47's table is the same.

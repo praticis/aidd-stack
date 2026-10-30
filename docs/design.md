@@ -95,6 +95,8 @@ An alternative left out because what it needs does not exist yet is not dropped:
   cannot break it.
 - The proof, a parity: on Go's change of local typing, it printed the same output as the Go probe it replaced, byte
   for byte.
+- Its second answer, what the resolver makes of a receiver (H5's gap G2), keeps the rule: it asks the hooks the
+  resolver asks (`resolve_receiver`, `external_receiver`), in the resolver's context, not a language's type index.
 
 **Python's types (H5-D22).**
 - The plan: a table of cases (`self`, `x = C()`, an annotated parameter, a closure).
