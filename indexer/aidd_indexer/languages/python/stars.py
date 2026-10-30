@@ -23,6 +23,7 @@ class Starred:
     def __init__(self) -> None:
         super().__init__()
         self._exported: dict[TypeRef, frozenset[str] | Unknown] = {}
+        self._sources: dict[tuple[TypeRef, str], TypeRef | Unknown] = {}
 
     def exported(self, module: TypeRef) -> frozenset[str] | Unknown:
         """The names `from module import *` binds."""
@@ -63,5 +64,8 @@ class Starred:
         return source if isinstance(source, Unknown) else self.exported(source)
 
     def _source(self, module: TypeRef, star: Star) -> TypeRef | Unknown:
-        found = self._import(self._file_of(module), star.spec)
-        return found if isinstance(found, (TypeRef, Unknown)) else OUTSIDE_STAR
+        key = (module, star.spec)
+        if key not in self._sources:
+            found = self._import(self._file_of(module), star.spec)
+            self._sources[key] = found if isinstance(found, (TypeRef, Unknown)) else OUTSIDE_STAR
+        return self._sources[key]
