@@ -292,3 +292,9 @@
   branch are identical, the graph holds them before and after the reinstall, the picture differs only in the build and
   the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
   checks the install, not the change.
+- 2026-10-30: one `CALLS` edge per caller, callee, line and method, PR #53 (`fix(graph)`). The writer merged the edges of
+  one line to one target, the last row winning: 161 edges of the micro set lost their `method`, and 2,910 showed a
+  weaker strategy than the strongest, mostly an interface's method found again through an implementation that does not
+  declare it. The resolver now gives one edge per key, by the strongest strategy, and the writer creates it. The micro
+  set's dry-runs lose 68,769 repeated records and nothing else. The review registers TD-027: that implementation gets no
+  edge of its own, due in a `fix(csharp)` PR before F1.2.

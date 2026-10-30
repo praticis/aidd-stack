@@ -16,8 +16,9 @@ change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of beha
 extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45) and
 its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
 order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
-package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it. Each merge and its live
-validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
+package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it; `fix(graph)` #53 keeps
+one `CALLS` edge per caller, callee, line and method. Each merge and its live validation are in `docs/history.md`; the
+results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
@@ -45,8 +46,6 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 
 **Next.**
 1. Before TS, in this order (H5-D29):
-   - a `fix(graph)`: the writer keys a `CALLS` edge by its caller, target and line, so two edges of one line to one
-     target that differ in `strategy` or `method` become one (3,088 groups in the micro set);
    - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
      answer beside the `TypeIndex`, which step 5 makes one: a `fix(python)`;
    - G2's probe in `answers.py`, a `chore(scripts)`;
@@ -986,8 +985,48 @@ and import; and the docs.
 - **What stays open:**
   - a call with no receiver of a name a star import binds (`CustomField(..)`, `post_data(..)`) still goes by name;
   - a package with no `__all__` also binds the submodules its own imports load, which the index does not model;
-  - the graph writer merges `CALLS` edges of one caller, target and line that differ in `strategy` or `method` (3,088
-    groups in the micro set): the next PR, a `fix(graph)`.
+  - the graph writer merged `CALLS` edges of one caller, target and line that differ in `strategy` or `method` (3,088
+    groups in the micro set): the `fix(graph)` of the next section.
+
+### One `CALLS` edge per caller, callee, line and method
+
+The writer merged a snapshot's `CALLS` on their caller, callee and line, the last row written winning, and the resolver
+gave one row per call. Where calls of one line reach one target, the graph lost what told them apart:
+- **Two methods of a package base on one line** (`db.Add(a); db.Remove(a)`, or a Python constructor and an inherited
+  method, `Model(..).save()`): one edge lost its `method`. 161 edges in the micro set: grafana 71, netbox 59, dispatch
+  23, umbraco 6, gitea 2.
+- **One target found by two strategies:** the graph showed the last, not the strongest. 2,910 edges. Most are a
+  receiver's interface method found again through its implementation: when the implementation does not declare the
+  method, a base outside the repo gives it, and the lookup through the implementation's own bases ends at the
+  interface's method (umbraco 2,596, btcpayserver 147, jellyfin 112).
+- Neither `graph_vs_dry.py` nor the writer's test saw it: both counted a call by the key that merged it.
+
+What changes (`fix(graph)` #53):
+- **The resolver gives one edge per caller, callee, line and method** (`one_per_edge`, `core/resolve.py`), with the
+  strongest strategy of the calls that give it: by the receiver's type, the message's, a base outside the repo, then
+  the nearest homonym, and the unambiguous before the `-ambiguous`. The dry-run is the graph, record by record.
+- **The writer creates each edge.** A `MERGE` cannot key on a `method` that is null, and the snapshot's edges were just
+  dropped.
+- `neo4j/SCHEMA.md` states the identity. `graph_vs_dry.py` and `test_graph_writer_neo4j.py` count a call by it, and the
+  test checks one edge per call. `tests/mcp_it/accounts` gains the three shapes: one target found by the receiver's
+  type and by its implementation, one call twice on a line, and two methods of a package base on a line.
+
+The proof:
+- **Cases that fail on `main`:** `test_call_edges.py`, where the resolver gives four rows for one call's line, and the
+  writer's test against a throwaway Neo4j, where the graph keeps one of `Add` and `Remove` and the dry-run repeats
+  calls.
+- **The micro set:** the 12 repos differ, by 68,769 records removed and none added. Most are one call of one target
+  twice on its line (grafana 36,811, vikunja 15,331). A check proves, for each repo:
+  - no key repeats, and none is lost or new;
+  - each edge keeps the strongest strategy of its calls, at the place of the first;
+  - the other sections are the same.
+- **Corpus and hold-out:** `0 repo(s) differ` against `2026-10-18-v2-baseline-29` and `2026-10-18-v2-holdout-26`.
+- **The cost:** `one_per_edge` takes 182 ms on grafana's 610,110 calls, and 17 ms on netbox's 83,416.
+- **What stays open:**
+  - the graph keeps no column, so the calls of one target on one line stay one edge;
+  - TD-027, due in a `fix(csharp)` PR before F1.2: the implementation an interface receiver reaches gets no edge when
+    a base outside the repo gives it the method. The lookup on the implementation found the interface's method again,
+    the 2,596 edges of umbraco above among them; the answer is an `inherited-impl` edge to it, with `method`.
 
 ## Decisions made (2026-10-18, by the author)
 

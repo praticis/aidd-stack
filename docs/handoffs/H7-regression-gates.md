@@ -118,7 +118,7 @@ code from any fork's PR. So it has two parts:
 |---|---|---|
 | 1 | Baselines cached on every push to `main`; the corpus, the hold-out and the micro set on a PR; the gates of precision, no win lost, hold-out, refactor and the micro graph; the classified diff in the job's summary | a PR's checks say `0 repo(s) differ`, and a test PR that drops a route fails |
 | 1b | The classified diff as a comment on the PR, through the two-workflow pattern | a fork's PR gets the comment |
-| 1c | The MCP and the graph writer against a throwaway Neo4j, in the `tests` job: `mcp-it.sh`, with the graph read back against a dry-run of each snapshot by the writer's merge keys | a writer that drops a record or a field fails a PR |
+| 1c | The MCP and the graph writer against a throwaway Neo4j, in the `tests` job: `mcp-it.sh`, with the graph read back against a dry-run of each snapshot by each record's key in the graph | a writer that drops a record or a field fails a PR |
 | 2 | One cause per commit, `CODEOWNERS` on the expected lists, the verdicts recorded and checked | a PR with an unjudged item cannot merge |
 | 3 | The nightly trend of time and memory, for the whole pipeline phase by phase, the resolver included | a week of medians with their spread |
 | 4 | `live-check.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
@@ -168,7 +168,7 @@ the branch, counted by the writer's merge key, and that comparison now runs on e
 - `mcp-it.sh` already wrote a small graph with the real writer for the MCP's tests. It now also leaves a dry-run of
   each snapshot, and `tests/test_graph_writer_neo4j.py` reads every section back from the graph: modules, files,
   symbols, `CALLS`, `IMPORTS`, endpoints, HTTP calls and violations, field by field. A call is counted by its caller,
-  callee and line, an import by its file, target and spec, as the writer merges them;
+  callee, line and method, one edge per call, and an import by its file, target and spec, as the writer merges it;
 - in a tenant of its own, one repo is written with a file, again without it, and once more at that commit, as the
   refresher does after an upgrade. A record the second write should drop, or one the third should keep, is checked
   too;
