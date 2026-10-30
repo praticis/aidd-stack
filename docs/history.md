@@ -302,3 +302,8 @@
   before the reinstall and the branch's after, strategies included: 2 edges of one snapshot take the strongest
   strategy, and the picture differs otherwise only in the build and the `IndexRun` counts. The 27 calls give the same
   answers. The round's first two runs showed the two defects of the live check that #53 fixes.
+- 2026-10-30: a Python client wrapper's receiver is the class the type index gives it, PR #55 (`fix(python)`). The
+  scanner's own classes of a receiver, by the class's name, go: a call reaches the wrapper of the class the index finds
+  declaring the method, up the receiver's MRO. Five cases the scanner missed pass on both sides. The corpus, the
+  hold-out and the micro set are the same, and so are the outbound calls of the 15 Python repos with both codes; the
+  HTTP pass is faster. A class a function holds reaches no wrapper now: TD-028, due in F1.2.

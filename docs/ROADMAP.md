@@ -30,7 +30,7 @@
     syntax of each language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a
     gap of Python's, Django's model managers found by name, TD-026, are due in an H5 step: 6 and 12 for TD-023, 6 for
     TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
-    with TD-025 due in F1.2 (H5-D26). Next, a `fix(python)` and G2's probe, then F1.16, then TS (H5-D29), judged with
+    with TD-025 due in F1.2 (H5-D26). Next, G2's probe, then F1.16, then TS (H5-D29), judged with
     the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
     (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets), then
     10 and 11;
