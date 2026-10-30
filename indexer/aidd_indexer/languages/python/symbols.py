@@ -151,10 +151,13 @@ class PythonSupport(LanguageSupport):
         return self._types(ctx).outside_base(ref(qualified_type))
 
     def member_by_name(self, ctx: ResolveContext, qualified_type: str, name: str) -> bool:
-        """A method no class of an MRO all the repo's declares is a subclass's other base's; a name a module imports is
-        declared in the module it comes from."""
+        """A method no class of an MRO all the repo's declares is a subclass's other base's; one a class of the repo
+        declares past a base outside it may be that base's or the class's; a name a module imports is declared in the
+        module it comes from."""
         types, t = self._types(ctx), ref(qualified_type)
-        return not types.outside_base(t) if t.name else types.binds(t, name)
+        if not t.name:
+            return types.binds(t, name)
+        return not types.outside_base(t) or types.declared_past_outside(t, name)
 
     def member_name(self, owner: str, name: str) -> str:
         return f"{owner}.{name}" if ":" in owner else f"{owner}:{name}"
