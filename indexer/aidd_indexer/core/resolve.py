@@ -25,13 +25,32 @@ TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
 BUILTIN_RECEIVERS: frozenset[str] = frozenset().union(*(l.builtin_receivers for l in languages.all()))
 
 
+# strongest evidence first: the receiver's type, the message's, a base outside the repo, then the nearest homonym
+EVIDENCE = ("receiver-type", "receiver-type-impl", "dispatch", "inherited", "inherited-impl",
+            "same-file", "same-module", "unique-name")
+
+
 @dataclass
 class CallEdge:
     caller_id: str
     callee_id: str
     line: int
-    strategy: str          # receiver-type | receiver-type-impl | dispatch | inherited | inherited-impl | same-file | same-module | unique-name (+ "-ambiguous")
+    strategy: str          # one of EVIDENCE, + "-ambiguous" when the target is one of several
     method: str | None = None   # inherited*: the method called, which the repo does not declare (it comes from a package base)
+
+
+def one_per_edge(calls: list[CallEdge]) -> list[CallEdge]:
+    """One `CALLS` edge per caller, callee, line and method, by the strongest strategy of the calls that give it."""
+    out: dict[tuple, CallEdge] = {}
+    for c in calls:
+        key = (c.caller_id, c.callee_id, c.line, c.method)
+        if key not in out or _strength(c.strategy) < _strength(out[key].strategy):
+            out[key] = c
+    return list(out.values())
+
+
+def _strength(strategy: str) -> tuple[int, bool]:
+    return EVIDENCE.index(strategy.removesuffix("-ambiguous")), strategy.endswith("-ambiguous")
 
 
 @dataclass
@@ -154,7 +173,7 @@ class Resolver:
             if not picked:
                 unresolved += 1
             edges.extend(CallEdge(c.caller_id, s.id, c.line, strat) for s, strat in picked)
-        return edges, unresolved
+        return one_per_edge(edges), unresolved
 
     def _typed(self, c, cands: list[SymbolInfo], qtype: str, lang) -> tuple[list[CallEdge], int] | None:
         """The edges the receiver's type gives a call, and 1 when it gives none; None when the call goes by name, its
