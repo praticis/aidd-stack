@@ -632,3 +632,44 @@ same field by field, and the other 5 differ only in their time, build and refres
 **What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
 The change was judged on the corpus, the micro set and an independent review of seeded samples (the star imports'
 section of `docs/handoffs/H5-indexer-refactor.md`).
+
+## Seventeenth round: validating PR #53 on a live install (2026-10-30, build `0.2.15+bad2ba9c1832` to `0.2.15+cd952c66db8a`)
+
+What changed since the sixteenth round: PR #53 is merged. The resolver gives one `CALLS` edge per caller, callee, line
+and method, with the strongest strategy of the calls that give it, and the writer creates each edge. The graph may
+change on purpose, in `CALLS` only. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`c1ca087`). The branch's dry-runs (`1e2eda2`) lose
+  142 repeated records in 4 snapshots, and in one of them 2 edges take a stronger strategy; every other section is the
+  same as `main`'s. The live graph holds `main`'s dry-run on every snapshot, strategies included (0 mismatching):
+  10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`5586326`):** the refresher re-indexed the 10 snapshots, `ok` and with no
+  error.
+
+**The picture of the graph** is identical in 12 of its 15 lists. Two differ only in the build, on all 10 snapshots, and
+in the `IndexRun` counts. The third, `CALLS`, differs in the 2 edges the change gives the strongest strategy: a
+`same-module` and a `unique-name` become `receiver-type-impl`. The count of edges is the same, since no live line
+reaches one target for two methods. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** Unlike the two before it, it checks the change itself: the 2 live edges that showed a weaker
+strategy are the ones the branch's dry-run corrects. The edges the old writer lost, two methods of one line, have no
+live case; they were judged on the micro set.
+
+**How it was taken.** The before was sealed on its third run, and the two runs that failed showed two defects of the
+live check, which #53 fixes:
+- `graph_vs_dry.py` compared the graph before the reinstall with head's dry-run, not with `main`'s strategies, so it
+  failed on the 2 edges above. It now takes the before alone.
+- An IDE that had loaded the C# projects of the deleted copy wrote their `obj/` back to its paths, and `dryrun-live.sh`
+  reused two snapshot folders that held only that output: their dry-runs had no file, which the graph check caught. The
+  snapshots are now copied to a folder no earlier run used, and each copy is checked against its sha.
