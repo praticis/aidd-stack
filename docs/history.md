@@ -298,3 +298,7 @@
   declare it. The resolver now gives one edge per key, by the strongest strategy, and the writer creates it. The micro
   set's dry-runs lose 68,769 repeated records and nothing else. The review registers TD-027: that implementation gets no
   edge of its own, due in a `fix(csharp)` PR before F1.2.
+- 2026-10-30: PR #53 is validated on a live install (the seventeenth golden round). The graph holds `main`'s dry-run
+  before the reinstall and the branch's after, strategies included: 2 edges of one snapshot take the strongest
+  strategy, and the picture differs otherwise only in the build and the `IndexRun` counts. The 27 calls give the same
+  answers. The round's first two runs showed the two defects of the live check that #53 fixes.

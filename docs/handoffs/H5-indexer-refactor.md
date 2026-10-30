@@ -1022,6 +1022,9 @@ The proof:
   - the other sections are the same.
 - **Corpus and hold-out:** `0 repo(s) differ` against `2026-10-18-v2-baseline-29` and `2026-10-18-v2-holdout-26`.
 - **The cost:** `one_per_edge` takes 182 ms on grafana's 610,110 calls, and 17 ms on netbox's 83,416.
+- **On a live install** (the seventeenth golden round): the branch's dry-runs lose 142 repeated records, the graph
+  holds `main`'s before the reinstall and the branch's after, strategies included, and 2 edges of one snapshot take the
+  strongest strategy. The 27 calls give the same answers.
 - **What stays open:**
   - the graph keeps no column, so the calls of one target on one line stay one edge;
   - TD-027, due in a `fix(csharp)` PR before F1.2: the implementation an interface receiver reaches gets no edge when
