@@ -895,6 +895,9 @@ root and `src/` (#46). The core took netbox's own classes for a package's and sk
     - two calls of a mixin's method past Django's bases, which got no edge. Commit 2 fixes them, in 15 sites: 14
       have `main`'s edges again, and the guess by name reaches the mixin's method only where it is among the
       nearest homonyms.
+- **On a live install** (the fifteenth golden round): the dry-runs are identical, the graph holds them before and
+  after the reinstall, and the 27 calls give the same answers. The live snapshots hold no Python file, so the round
+  checks the install, not the change.
 - **The cost** in netbox, over three rounds interleaved with `main`:
   - the extraction is the same: 9.1–9.6 s against 9.2–9.6 s;
   - the HTTP pass grows from 7.5–7.7 s to 8.4–8.6 s;

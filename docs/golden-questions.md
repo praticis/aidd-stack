@@ -570,3 +570,34 @@ review of seeded samples (H5-D22 to H5-D27 in [the decisions](decisions.md)).
 **How it was taken.** `indexer/scripts/live/validate.sh`, on its first real run. It copied the whole `indexer/`, and an
 IDE watching the folder built a test fixture's C# project in the copy, so its check of the copy failed; it now copies
 only `indexer/aidd_indexer`, the package a dry-run imports (in #47).
+
+## Fifteenth round: validating PR #49 on a live install (2026-10-30, build `0.2.15+665c35e2b90b` to `0.2.15+6d3486cc3a3b`)
+
+What changed since the fourteenth round: H5-D28 is merged (PR #49). A Python absolute import is looked for under the
+directory its file's package runs from, and a method a class of the repo declares past a base outside it is found by
+name. The graph may change on purpose, in Python's `IMPORTS` and `CALLS` only. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`c4f1b8d`). The dry-runs of `main` and of the
+  branch (`69f5faf`) on each snapshot, at its sha, are identical section by section in all 10. The live graph holds
+  `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules,
+  0 violations.
+- **After the author's reinstall from `main` (`b233676`):** the refresher re-indexed the 10 snapshots, `ok` and with no
+  error.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
+The change was judged on the corpus, the micro set and an independent review of seeded samples (H5-D28 in
+[the decisions](decisions.md)).
