@@ -43,8 +43,6 @@ class PyScanner(PyRouters, PyClientWrappers, BaseScanner):
         for n in walk(self.fx.tree.root_node):
             if n.type == "decorated_definition":
                 self._decorated(n)
-            elif n.type == "class_definition":
-                self.publish_bases(n)
             elif n.type == "call":
                 if n.parent is not None and n.parent.type == "decorator":
                     continue

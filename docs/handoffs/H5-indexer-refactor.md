@@ -17,8 +17,9 @@ extension method a call reaches #30). Python's step 5: its case table (#42), its
 its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
 order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
 package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it; `fix(graph)` #53 keeps
-one `CALLS` edge per caller, callee, line and method. Each merge and its live validation are in `docs/history.md`; the
-results are in the sections below and in `corpus-report.md`.
+one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index.
+Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
+`corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
@@ -46,8 +47,6 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 
 **Next.**
 1. Before TS, in this order (H5-D29):
-   - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
-     answer beside the `TypeIndex`, which step 5 makes one: a `fix(python)`;
    - G2's probe in `answers.py`, a `chore(scripts)`;
    - F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of` through the overrides.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
@@ -1030,6 +1029,43 @@ The proof:
   - TD-027, due in a `fix(csharp)` PR before F1.2: the implementation an interface receiver reaches gets no edge when
     a base outside the repo gives it the method. The lookup on the implementation found the interface's method again,
     the 2,596 edges of umbraco above among them; the answer is an `inherited-impl` edge to it, with `method`.
+
+### A client wrapper's receiver, from the type index
+
+The Python scanner had a type service of its own for client wrappers (`_class_of`): `self`, a local or module variable
+assigned `Client(..)`, `self.x` assigned so in the class, all by the class's simple name, with the bases as written and
+walked level by level. Beside the `PythonTypeIndex` that was a second answer, which step 5 makes one (H5-D10), as C#'s
+scanner asks the `CsTypeIndex` (H5-D11). It missed what the resolver types (an annotated parameter, an attribute a
+base's `__init__` assigns, a module variable another module imports), took two classes of one name for one, where two
+wrappers of different shapes gave nothing, and took a direct base's wrapper before the one C3 puts first.
+
+What changes (`fix(python)` #55):
+- **A call on a receiver reaches the wrapper of the class the index finds declaring the method,** up the MRO of the type
+  the extraction gives the receiver: `types.method`, the question the routers already asked (`PyRouters.declaring`). A
+  class is named as the index names it (`app/clients:Client`), and a method's wrapper key from its scopes
+  (`forms.path`).
+- **The scanner publishes no class bases:** the index walks the MRO. `_class_of` by name, `_constructed`,
+  `_attribute_class` and `_value_of` go.
+
+The proof:
+- **Five cases** (`test_python_wrappers.py`), each checked on both sides: an annotated parameter, an attribute a base
+  assigns, a module variable another module imports, two classes of one name, and a diamond whose C3 order CPython
+  confirms. On `main` the resolver passes all five and the scanner fails all five.
+- **The corpus, the hold-out and the micro set:** `0 repo(s) differ`.
+- **An oracle over the 15 Python repos** of the corpus, the hold-out and the micro set, with both codes: the same
+  outbound calls in all. The index types 3,652 receivers `main` did not, and leaves 1,142 that `main` typed by name,
+  among them ctfd's `cache.delete`, a method its class gets from `flask_caching`. None reaches a wrapper.
+- **The cost,** three rounds interleaved with `main`; memory the same:
+
+  | | `main` | branch |
+  |---|---|---|
+  | open-webui, the HTTP pass | 7.5–8.0 s | 7.3–7.7 s |
+  | zulip | 10.0–10.9 s | 8.9–9.7 s |
+  | netbox | 6.7–7.3 s | 5.9–6.3 s |
+- **What stays open:**
+  - TD-028, due in F1.2: a class a function holds has no name in the index, so a call on `self` in its methods reaches
+    no wrapper of it, where `main` found it by the class's name. No site in the corpus;
+  - a call on a function through its module (`api.get_json("/x")`) reaches no wrapper, as on `main`.
 
 ## Decisions made (2026-10-18, by the author)
 
