@@ -316,3 +316,7 @@
   roots, it explains all 8,726 changed sites, where `main`'s probe explained none, and on the star imports all 4,657,
   where it explained 792; the `TypeIndex`'s verdict, the reference those judgments used, agrees on every site it
   explains. #47's table is the same.
+- 2026-10-30: F1.16 is planned in three PRs (H5-D30), and the first splits the graph writer before F1.16 grows it,
+  PR #57 (`refactor(graph)`): its session, the linker's reads and writes and the snapshots' bookkeeping go to modules
+  of their own, and the dry-run's payload leaves `cli.py`. `core/graph.py` goes from 462 lines to 235. The corpus,
+  the hold-out and the micro set are the same, and the MCP and the writer pass against a throwaway Neo4j.

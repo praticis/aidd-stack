@@ -7,8 +7,8 @@
 >
 > A question only counts as answered when the MCP's answer and the Cypher's agree **and** a sample was checked at the
 > source (the `evidence` points to `repo:file:line`). Regression: repeat all five after any change to what the graph
-> holds (the extractor's output, such as the `CALLS` Q4 reads, included), to `graph.py`, to `linker.py` or to the MCP
-> (`mcp/`).
+> holds (the extractor's output, such as the `CALLS` Q4 reads, included), to the graph writer (`core/graph*.py`), to
+> `linker.py` or to the MCP (`mcp/`).
 
 ## Why these five
 

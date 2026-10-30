@@ -21,7 +21,6 @@ import shutil
 import sys
 import tempfile
 import time
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -29,6 +28,7 @@ from . import INDEXER_VERSION
 from . import conventions, daemon, languages
 from .core.config import ConfigError, Neo4jConfig, resolve_repo, resolve_tenant
 from .core.deps import collect_manifest_deps
+from .core import dry_run
 from .core.dispatch import call_names
 from .core.discovery import build_files, discover_modules, list_files
 from .core.extract import GRAMMAR_ERRORS, extract_file, load_language
@@ -211,22 +211,7 @@ def cmd_index(args: argparse.Namespace) -> int:
     res, rv = extract_and_resolve(repo)
 
     if args.dry_run:
-        payload = {
-            "repo": asdict(res.repo),
-            "counts": res.counts() | {"calls_edges": len(rv.calls), "imports_edges": len(rv.imports), "packages": len(rv.packages)},
-            "modules": [asdict(m) for m in res.modules],
-            "files": [asdict(f) for f in res.files],
-            "symbols": [asdict(s) for s in res.symbols],
-            "calls": [asdict(c) for c in rv.calls],
-            "imports": [asdict(i) for i in rv.imports],
-            "packages": [asdict(p) for p in rv.packages.values()],
-            "endpoints": [asdict(e) for e in res.endpoints],
-            "http_calls": [asdict(c) for c in res.http_calls],
-            "violations": [asdict(v) for v in res.violations],
-            "provides": [asdict(p) for p in res.provides],
-            "requires": [asdict(d) for d in res.requires],
-            "warnings": res.warnings,
-        }
+        payload = dry_run.payload(res, rv)
         if args.out:
             Path(args.out).write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
             log(f"[dry-run]  wrote {args.out}")

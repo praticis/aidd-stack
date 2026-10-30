@@ -136,6 +136,10 @@ aidd_indexer/
     deps.py                 manifests → provides / requires per repo (LanguageSupport.manifest_deps)
     linker.py               HttpCall × HttpEndpoint → CONSUMES / CALLED_FROM; requires × provides → DEPENDS_ON (pure; graph.py reads and writes)
     graph.py ids.py model.py Neo4j writer (idempotent MERGE, GC), id convention, dataclasses
+    graph_session.py graph_links.py graph_snapshots.py
+                            what the writer inherits: the session, the linker's reads and writes, the snapshots'
+                            bookkeeping (shas, failures, heartbeat, status, GC, wipe)
+    dry_run.py              what `aidd index --dry-run --out` writes in place of the graph
   languages/                one folder per language; registered in languages/__init__.py
     base.py                 LanguageSupport contract (identity · discovery · symbols · resolution · http)
     go/ typescript/ csharp/ python/
