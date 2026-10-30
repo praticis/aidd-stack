@@ -111,7 +111,7 @@ rotate() {
   [ -d "$inflight/after" ] || die "$inflight has no after: the PR is not validated yet"
   (cd "$inflight" && shasum -a 256 -c SHA256SUMS >/dev/null && shasum -a 256 -c SHA256SUMS.after >/dev/null) \
     || die "the before or the after does not match its sums"
-  rm -rf "$inflight/snap" "$inflight/main_src" "$inflight/head_src" "$live/merged"
+  rm -rf "$inflight"/snap.* "$inflight/main_src" "$inflight/head_src" "$live/merged"
   mv "$inflight" "$live/merged"
   echo "merged/ holds the validated pair; inflight/ is free for the next PR"
 }

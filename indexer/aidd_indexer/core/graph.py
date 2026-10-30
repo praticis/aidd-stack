@@ -146,11 +146,11 @@ class GraphWriter:
             CALL (e) { DELETE e } IN TRANSACTIONS OF 5000 ROWS
         """, **common)
 
+        # the resolver gives one row per edge, and the snapshot's edges are gone: a MERGE would key on a null `method`
         counts["calls"] = self._batched("""
             UNWIND $rows AS c
             MATCH (a:Symbol|File {id: c.caller_id}), (b:Symbol {id: c.callee_id})
-            MERGE (a)-[e:CALLS {line: c.line}]->(b)
-            SET e.resolved = false, e.strategy = c.strategy, e.method = c.method
+            CREATE (a)-[:CALLS {line: c.line, resolved: false, strategy: c.strategy, method: c.method}]->(b)
         """, [c.__dict__ for c in rv.calls])
 
         counts["packages"] = self._batched("""

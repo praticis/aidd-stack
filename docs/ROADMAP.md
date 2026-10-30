@@ -25,13 +25,13 @@
     `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
     and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
-    left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014 and
-    TD-016 to TD-022 are due in `fix(csharp)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
-    language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
-    Django's model managers found by name, TD-026, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024 and TD-026.
-    Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in
-    F1.2 (H5-D26). Next, a `fix(graph)`, a `fix(python)` and G2's probe, then F1.16, then TS (H5-D29), judged with the
-    per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
+    left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014,
+    TD-016 to TD-022 and TD-027 are due in `fix(csharp)` PRs before F1.2. Two debts of the core's architecture, the
+    syntax of each language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a
+    gap of Python's, Django's model managers found by name, TD-026, are due in an H5 step: 6 and 12 for TD-023, 6 for
+    TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
+    with TD-025 due in F1.2 (H5-D26). Next, a `fix(python)` and G2's probe, then F1.16, then TS (H5-D29), judged with
+    the per-site attribution every language now has (H5-D21), before the `fix(csharp)` PRs (H5-D19); then step 6
     (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape targets), then
     10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,

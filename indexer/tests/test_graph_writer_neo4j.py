@@ -1,12 +1,13 @@
 """The graph the writer leaves holds what a dry-run of the same checkout computes, field by field, with the records
-counted by the writer's merge keys: a call by its caller, callee and line, an import by its file, target and spec. The
-corpus and the micro set compare dry-runs only, so a writer that drops a record or a field passes them; this reads the
-graph back. Run by `scripts/mcp-it.sh`, which indexes the repositories under tests/mcp_it, writes one of them again
-without a file and once more at the same commit, as the refresher does after an upgrade, and leaves a dry-run of each
-snapshot in AIDD_IT_DRY; skipped without them."""
+counted by their keys in the graph: a call by its caller, callee, line and method, an import by its file, target and
+spec. The corpus and the micro set compare dry-runs only, so a writer that drops a record or a field passes them; this
+reads the graph back. Run by `scripts/mcp-it.sh`, which indexes the repositories under tests/mcp_it, writes one of them
+again without a file and once more at the same commit, as the refresher does after an upgrade, and leaves a dry-run of
+each snapshot in AIDD_IT_DRY; skipped without them."""
 
 import json
 import os
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,7 @@ pytestmark = pytest.mark.skipif(not (os.getenv("NEO4J_URI") and DRY.is_dir()),
 AT = "{tenant: $tenant, repo: $repo, ref: $ref}"
 
 # each section of a dry-run: the query that reads its records back, under the dry-run's own field names, and the
-# writer's merge key
+# record's key in the graph
 SECTIONS = {
     "modules": (f"""
         MATCH (n:Module {AT})
@@ -37,7 +38,7 @@ SECTIONS = {
     "calls": (f"""
         MATCH (a:Symbol|File {AT})-[e:CALLS]->(b)
         RETURN a.id AS caller_id, b.id AS callee_id, e.line AS line, e.strategy AS strategy, e.method AS method""",
-              ("caller_id", "callee_id", "line")),
+              ("caller_id", "callee_id", "line", "method")),
     "imports": (f"""
         MATCH (f:File {AT})-[e:IMPORTS]->(t)
         RETURN f.id AS file_id, t.id AS target_id, e.spec AS spec, e.line AS line,
@@ -73,7 +74,7 @@ def store():
 
 
 def by_key(rows: list[dict], key: tuple[str, ...]) -> dict[tuple, dict]:
-    """The records as the writer merges them: one per key, the last one written winning."""
+    """The records by their key in the graph, the last one written winning where the writer merges them."""
     return {tuple(r[k] for k in key): r for r in rows}
 
 
@@ -98,9 +99,22 @@ def test_the_graph_holds_the_dry_run(store, run, section):
     assert len(graph) == len(dry)
 
 
+@pytest.mark.parametrize("run", RUNS, ids=lambda p: p.stem)
+def test_a_call_is_one_edge(store, run):
+    """The writer creates an edge per call, so a call the dry-run repeated would be two edges."""
+    payload = json.loads(run.read_text())
+    repo = payload["repo"]
+    query, key = SECTIONS["calls"]
+    keys = [tuple(r[k] for k in key) for r in payload["calls"]]
+    assert len(set(keys)) == len(keys) == len(store.read(query, tenant=repo["tenant"], repo=repo["name"],
+                                                         ref=repo["ref"]))
+
+
 def test_the_dry_runs_hold_every_kind_of_record_but_violations():
-    """A section empty in every run would pass while checking nothing."""
+    """A section empty in every run would pass while checking nothing, and so would calls of which no two of one line
+    reach one target, for two methods."""
     payloads = [json.loads(p.read_text()) for p in RUNS]
     assert {s for s in SECTIONS if any(p[s] for p in payloads)} == set(SECTIONS) - {"violations"}
+    assert max(Counter((c["caller_id"], c["callee_id"], c["line"]) for p in payloads for c in p["calls"]).values()) > 1
     assert {(p["repo"]["tenant"], p["repo"]["ref"]) for p in payloads} == \
         {("it", "main"), ("it", "feature/items"), ("it-writer", "main")}

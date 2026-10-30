@@ -149,9 +149,10 @@ refuses unless the installed code is BEFORE_COMMIT's: the "before" is taken once
 and afresh for each PR, not copied from `merged/after`, because the snapshots move as the workspace repos change. Then it
 runs `pre-merge.sh`: the graph's picture (`graph-picture.sh`), the golden calls (`golden.py`, from
 `.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `golden-calls.example.json`
-shows its shape), the dry-runs of every live snapshot with both codes (`dryrun-live.sh`, with `-w` on the mounted code)
-and their comparison by section and against the graph (`dry_sections.py`, `graph_vs_dry.py`). It seals the folder in
-`SHA256SUMS` and prints counts.
+shows its shape), the dry-runs of every live snapshot with both codes (`dryrun-live.sh`, with `-w` on the mounted code,
+each snapshot copied at its sha to a folder no earlier run used and checked against it) and their comparison by section
+(`dry_sections.py`) and against the graph, which must hold `main`'s dry-run, the strategies included (`graph_vs_dry.py`
+with the before only). It seals the folder in `SHA256SUMS` and prints counts.
 
 ### 4.8 Live, after the merge (class 5)
 
