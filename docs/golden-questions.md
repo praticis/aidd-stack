@@ -601,3 +601,34 @@ same field by field, and the other 5 differ only in their time, build and refres
 **What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
 The change was judged on the corpus, the micro set and an independent review of seeded samples (H5-D28 in
 [the decisions](decisions.md)).
+
+## Sixteenth round: validating PR #51 on a live install (2026-10-30, build `0.2.15+6d3486cc3a3b` to `0.2.15+bad2ba9c1832`)
+
+What changed since the fifteenth round: PR #51 is merged. A Python star import binds what CPython binds: the module's
+`__all__`, or its public names, with a later binding holding a name. The graph may change on purpose, in Python's
+`CALLS` only. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`b61488a`). The dry-runs of `main` and of the
+  branch (`6abfa81`) on each snapshot, at its sha, are identical section by section in all 10. The live graph holds
+  `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules,
+  0 violations.
+- **After the author's reinstall from `main` (`71d6185`):** the refresher re-indexed the 10 snapshots, `ok` and with no
+  error.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
+The change was judged on the corpus, the micro set and an independent review of seeded samples (the star imports'
+section of `docs/handoffs/H5-indexer-refactor.md`).

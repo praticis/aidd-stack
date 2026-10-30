@@ -974,6 +974,9 @@ and import; and the docs.
   - 40 are right, 3 partly and none wrong; all 43 are better than `main`.
   - Every typed edge is the first declaration of the C3 MRO, and every `inherited` one a method only Django declares.
   - The 3 partly keep guesses by name that `main` has, on what an untyped method returns.
+- **On a live install** (the sixteenth golden round): the dry-runs are identical, the graph holds them before and
+  after the reinstall, and the 27 calls give the same answers. The live snapshots hold no Python file, so the round
+  checks the install, not the change.
 - **The cost.** The rule types many more values, and each looked the module of its import up again. So the module
   an import of a file names is now found once per file and import, which changes no answer (the micro set is
   identical with and without it). netbox, over three rounds interleaved with `main`:
