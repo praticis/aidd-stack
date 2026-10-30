@@ -4,17 +4,20 @@
 # snapshot as a number.   dryrun-live.sh SCRATCH HEAD_INDEXER MAIN_INDEXER LIVE_DIR
 set -uo pipefail
 S="$1"; head_code="$2"; main_code="$3"; L="$4"
-snap="$L/snap"; out="$L/dry"; mkdir -p "$snap" "$out"
-n=0
+out="$L/dry"; mkdir -p "$out"
+# a folder no earlier run used: an IDE that loaded a project of an earlier copy writes its build output back to its path
+snap=$(mktemp -d "$L/snap.XXXXXX")
+n=0; bad=0
 while IFS= read -r line; do
   n=$((n + 1))
   tenant=$(echo "$line" | awk -F'"' '{print $2}'); repo=$(echo "$line" | awk -F'"' '{print $4}')
   ref=$(echo "$line" | awk -F'"' '{print $6}'); sha=$(echo "$line" | awk -F'"' '{print $8}')
-  dest="$snap/$tenant/$ref/$repo"
-  if [ ! -d "$dest" ]; then
-    mkdir -p "$dest" && git -C "$HOME/workspace/$tenant/$repo" archive "$sha" | tar -x -C "$dest" \
-      || { echo "snapshot $n: archive failed"; continue; }
-  fi
+  dest="$snap/$tenant/$ref/$repo"; src="$HOME/workspace/$tenant/$repo"
+  mkdir -p "$dest" && git -C "$src" archive "$sha" | tar -x -C "$dest" \
+    || { echo "snapshot $n: archive failed"; bad=1; continue; }
+  absent=$(git -C "$src" ls-tree -r -z --name-only "$sha" \
+    | while IFS= read -r -d '' f; do [ -e "$dest/$f" ] || [ -L "$dest/$f" ] || echo; done | wc -l | tr -d ' ')
+  [ "$absent" = 0 ] || { echo "snapshot $n: $absent file(s) of its sha missing from the copy"; bad=1; continue; }
   for v in main head; do
     code=$([ "$v" = main ] && echo "$main_code" || echo "$head_code")
     f="$out/${tenant}__${repo}__${ref}__${v}.json"
@@ -27,3 +30,4 @@ while IFS= read -r line; do
     echo "snapshot $n $v rc=$? $(( $(date +%s) - t0 ))s"
   done
 done < "$L/before/snapshots.txt"
+exit $bad
