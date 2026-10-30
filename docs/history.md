@@ -288,3 +288,7 @@
   edges found by type go from 4,877 to 8,319, and the share found among several homonyms from 64.0 % to 60.2 %. An
   independent review of 43 seeded rows found none wrong. The module an import names is now found once per file and
   import, and netbox's dry-run is faster than `main`'s. The author puts F1.16 before TS's step 5 (H5-D29).
+- 2026-10-30: PR #51 is validated on a live install (the sixteenth golden round). The dry-runs of `main` and of the
+  branch are identical, the graph holds them before and after the reinstall, the picture differs only in the build and
+  the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
+  checks the install, not the change.
