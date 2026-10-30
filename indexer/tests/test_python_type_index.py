@@ -179,10 +179,10 @@ RULES = {
     "a-module-the-repo-holds-under-no-root-of-its-imports": (
         {"lib/shop/models.py": MODELS, "app/use.py": "from shop.models import B\ndef f(): return B().run()\n"},
         "B().run()", "a module of the repo's names, under a root its imports are not looked for in"),
-    "a-name-a-module-may-get-by-a-star-import": (
+    "a-name-a-module-gets-by-a-star-import": (
         {"app/models.py": MODELS, "app/everything.py": "from app.models import *\n",
          "app/use.py": "from app import everything\ndef f(): return everything.B().run()\n"},
-        "everything.B().run()", "a name only a star import may bind"),
+        "everything.B().run()", "app/models:B"),
     "a-class-attribute-a-descriptor-of-the-repo-reads": (
         {"app/models.py": MODELS,
          "app/use.py": "from app.models import B\nclass Lazy:\n    def __get__(self, obj, owner): return B()\n"

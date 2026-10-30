@@ -58,7 +58,7 @@ def module_file(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | No
 
 
 def module_path(file: FileInfo) -> str:
-    return str(PurePosixPath(file.path).with_suffix(""))
+    return file.path[:-3] if file.path.endswith(".py") else str(PurePosixPath(file.path).with_suffix(""))
 
 
 class Modules:
@@ -68,9 +68,16 @@ class Modules:
         self._ctx = ctx
         self._dirs: set[str] | None = None
         self._names: set[str] | None = None
+        self._imported: dict[tuple[str, str], str | None] = {}
 
     def imported(self, file: FileInfo, spec: str) -> str | None:
         """The module `spec` names from `file`; None for one outside the repo."""
+        key = (file.path, spec)
+        if key not in self._imported:
+            self._imported[key] = self._find(file, spec)
+        return self._imported[key]
+
+    def _find(self, file: FileInfo, spec: str) -> str | None:
         found = module_file(self._ctx, file, spec)
         if found is not None:
             return module_path(found)

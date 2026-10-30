@@ -16,6 +16,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
 from python_scopes import compare  # noqa: E402
+from python_star_cases import STAR_CASES, STAR_MODULES  # noqa: E402
 
 PYPROJECT = '[project]\nname = "app"\n'
 MODELS = """class A:
@@ -95,6 +96,8 @@ DECLARED = {
                                         "app/service:run", "typed"),
 }
 
+STARS = {name: Case(*fields) for name, fields in STAR_CASES.items()}
+
 # -- a scope trap: the binding a name refers to is the one CPython's scopes give it ---------------------------------
 SCOPES = {
     "a-comprehension-variable": Case(
@@ -154,12 +157,15 @@ UNDECIDED = {
         "from json import JSONDecoder\nfrom app.models import Base\nclass Mixin(JSONDecoder):\n    pass\n"
         "class C(Mixin, Base):\n    def go(self): return self.run()\ndef main(): return C().go()\n", BASE_RUN, "unknown",
         reason="a method a base outside the repo may give, ahead in the MRO"),
-    "a-base-only-a-star-import-binds": Case(
-        "from app.models import *\nclass C(Base):\n    pass\ndef main(): return C().run()\n", BASE_RUN, "unknown",
-        reason="a name only a star import may bind"),
+    "a-name-a-star-import-of-a-package-module-may-bind": Case(
+        "from json import *\ndef main(): return JSONDecoder().decode('1')\n", "json/decoder:JSONDecoder.decode",
+        "unknown", method="decode", reason="a name a star import of a module outside the repo may bind"),
+    "a-name-a-module-whose-all-is-computed-may-bind": Case(
+        "from app.computed import *\ndef main(): return B().run()\n", B_RUN, "unknown",
+        reason="a module's __all__ the index does not read"),
     "a-function-a-module-may-get-by-a-star-import": Case(
         "from app import everything\ndef main(): return everything.make()\n", "app/models:make", "unknown",
-        method="make", reason="a name only a star import may bind"),
+        method="make", reason="a name its module imports from another"),
     "a-class-attribute-a-descriptor-reads": Case(
         "from functools import cached_property\nfrom app.models import B\nclass C:\n"
         "    b = cached_property(lambda self: B())\n    def go(self): return self.b.run()\ndef main(): return C().go()\n",
@@ -186,7 +192,7 @@ UNDECIDED = {
         '    d = JSONDecoder()\n    return d.decode("1")\n', "json/decoder:JSONDecoder.decode", "external",
         "app/use:Codec.decode", "decode", "a type of a package outside the repo"),
 }
-CASES = DECLARED | SCOPES | UNDECIDED
+CASES = DECLARED | STARS | SCOPES | UNDECIDED
 
 # the first function of the case's method name that CPython enters while `main()` runs
 TRACE = """import sys
@@ -211,7 +217,7 @@ def _write(root, files: dict[str, str]) -> None:
 def _repo(root, files: dict[str, str]) -> None:
     _write(root, {"pyproject.toml": PYPROJECT, "app/__init__.py": "", "app/models.py": MODELS,
                   "app/service.py": SERVICE, "app/everything.py": "from app.models import *\n",
-                  "app/exports.py": "from app.models import make\n", **files})
+                  "app/exports.py": "from app.models import make\n", **STAR_MODULES, **files})
 
 
 def _extract(root):

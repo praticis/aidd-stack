@@ -32,7 +32,12 @@ class Scope:
     globals: set[str] = field(default_factory=set)
     nonlocals: set[str] = field(default_factory=set)
     children: list[Scope] = field(default_factory=list)
-    star_import: bool = False       # `from m import *`: a name the module does not bind may come from it
+    stars: list[Node] = field(default_factory=list)     # `from m import *`: a name the scope does not bind may come
+                                                        # from one of them
+
+    @property
+    def star_import(self) -> bool:
+        return bool(self.stars)
 
 
 class Builder:
@@ -189,7 +194,7 @@ def _import(self: Builder, n: Node, scope: Scope) -> None:
         elif c.named_children:
             self._bind(c.named_children[0], scope)
     if any(c.type == "wildcard_import" for c in n.named_children):
-        scope.star_import = True
+        scope.stars.append(n)
 
 
 def _declaration(self: Builder, n: Node, scope: Scope) -> None:

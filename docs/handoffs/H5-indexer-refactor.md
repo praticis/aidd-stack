@@ -16,8 +16,8 @@ change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of beha
 extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45) and
 its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
 order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
-package runs from (H5-D28). Each merge and its live validation are in `docs/history.md`; the results are in the sections
-below and in `corpus-report.md`.
+package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it. Each merge and its live
+validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
@@ -44,14 +44,13 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Before TS, what the judgment of Python's change of behavior found, in `fix(python)` PRs:
-   - a name only a star import binds: CPython binds the module's `__all__`, or its public names, so the chain can be
-     followed where every module of it is seen. netbox's models are imported through `from .sites import *`;
+1. Before TS, in this order (H5-D29):
+   - a `fix(graph)`: the writer keys a `CALLS` edge by its caller, target and line, so two edges of one line to one
+     target that differ in `strategy` or `method` become one (3,088 groups in the micro set);
    - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
-     answer beside the `TypeIndex`, which step 5 makes one.
-
-   Then F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of` through the
-   overrides. Its place before or after TS is the author's.
+     answer beside the `TypeIndex`, which step 5 makes one: a `fix(python)`;
+   - G2's probe in `answers.py`, a `chore(scripts)`;
+   - F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of` through the overrides.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
    PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
@@ -68,8 +67,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
   `indexer/scripts/judgment/csharp_extensions.py`.
 - **G2, open: a change in the resolver's stage leaves every site unexplained.** `answers.py` reads what the extraction
   records for a receiver, so where an import resolves, or how the `TypeIndex` reads a name, gives both trees the same
-  answers. H5-D28 was judged with the `TypeIndex`'s verdict on each receiver, from both trees; the probe belongs in
-  `answers.py`, in a `chore(scripts)` PR.
+  answers. H5-D28 and the star imports (#51) were judged with the `TypeIndex`'s verdict on each receiver, from both
+  trees; the probe belongs in `answers.py`, in a `chore(scripts)` PR.
 - **Judgment is not yet automated (H7-D6).** The verdict record (H7-D2) is to build; until then each change of
   behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
@@ -909,8 +908,83 @@ root and `src/` (#46). The core took netbox's own classes for a package's and sk
   - a project inside a directory a regular package holds: aiohttp-demos' `demos/moderator_bot`, 4 imports. The
     language cannot tell it from a namespace portion, so it needs roots in `atlas.yaml`, or SCIP in the installed
     environment;
-  - a name only a star import binds. CPython binds a module's `__all__`, or its public names, and following the chain
-    is the next `fix(python)`.
+  - a name only a star import binds: followed since #51, in the next section.
+
+### What a Python star import binds
+
+A name that only a star import could bind was `Unknown`, so the call went by name. A class whose base came through a
+star import had an MRO the index could not see. netbox imports its models through `from dcim.models import *`, and
+`dcim/models/__init__.py` re-exports them through `from .sites import *`: 9,108 receivers of netbox were such names.
+
+- **The rule is CPython's** (`languages/python/stars.py`). `from m import *` binds each name of `m`'s `__all__`, or,
+  with none, each name of `m`'s namespace that does not begin with `_`, those its own star imports bind included.
+  Statements run in order, so of a module's own binding of a name and a star import that binds it too, the later one
+  holds it.
+- **What the facts record** (`type_facts.py`): a module's star imports, in order and where each is, where each name
+  it binds is bound last, and its `__all__` when it is a literal list or tuple of strings, with what `+=` adds.
+- **The extraction** passes a name only a star import may bind to the resolver as a name of the module, and the
+  `TypeIndex` follows the star imports from the last to the first.
+- **What stays `Unknown`:**
+  - an `__all__` the index does not read: any other binding of it, or any read of it;
+  - a star import of a module outside the repo;
+  - a name a function binds as `global` that a star import binds too, which no position orders.
+
+**Done (2026-10-30).** Three commits: the rule, with its cases; the module an import names, found once per file
+and import; and the docs.
+
+- **The cases.** CPython runs each case:
+  - a base a star import binds;
+  - a chain of two star imports;
+  - a name out of the module's `__all__`;
+  - a private name of a module with no `__all__`;
+  - a later star import that binds a name again;
+  - the module's own binding after a star import;
+  - a package's `__all__` that names a submodule;
+  - a star import of a package's module;
+  - an `__all__` the module computes.
+
+  Disabling the `__all__`, the order or the private names fails its cases. The data of the star cases is
+  `indexer/tests/python_star_cases.py`, which keeps the case table under 300 lines.
+- **The corpus's star imports.** Of 703, all name a module of the repo, every chain is seen whole, and no `__all__` is
+  computed. In netbox, 7,630 of the 9,108 receivers find their name in the chain; the rest are builtins or names
+  nothing binds.
+- **The corpus and the hold-out:** `0 repo(s) differ` against `-29` and `-26`.
+- **The micro set:**
+  - the other 10 repos are identical;
+  - netbox: −8,651 and +3,923 `CALLS`;
+  - dispatch: −8 and +7 `CALLS`.
+
+  netbox's Python calls, by how their edges are found:
+
+  | | `main` | branch |
+  |---|---|---|
+  | `receiver-type` | 4,877 | 8,319 |
+  | `inherited` | 305 | 770 |
+  | Share of edges among several homonyms | 64.0 % | 60.2 % |
+  | Share of sites among several homonyms | 39.3 % | 35.5 % |
+- **Each changed site explained.** 4,650 sites of netbox changed. The per-site attribution explains 792 by the
+  extraction's answer. The rest change in the resolver's stage (a class's MRO seen through a star import), as G2 says;
+  the `TypeIndex`'s verdict on each receiver, in both trees, explains them all:
+  - 1,880 keep their targets, now found by type;
+  - 707 drop guesses on a test client: `self.client`, which netbox's test classes inherit from Django, through bases
+    imported by a star import;
+  - the rest change, narrow or gain a target, typed now.
+- **Judged by an agent that did not write it (H7-D6).** It read 43 seeded rows at the source and followed each star
+  chain by hand.
+  - 40 are right, 3 partly and none wrong; all 43 are better than `main`.
+  - Every typed edge is the first declaration of the C3 MRO, and every `inherited` one a method only Django declares.
+  - The 3 partly keep guesses by name that `main` has, on what an untyped method returns.
+- **The cost.** The rule types many more values, and each looked the module of its import up again. So the module
+  an import of a file names is now found once per file and import, which changes no answer (the micro set is
+  identical with and without it). netbox, over three rounds interleaved with `main`:
+  - the whole run takes 20.0–20.3 s, against 21.3–21.5 s;
+  - the HTTP pass takes 7.3–7.5 s, against 8.2–8.5 s;
+  - peak memory grows by 2 MiB.
+- **What stays open:**
+  - a call with no receiver of a name a star import binds (`CustomField(..)`, `post_data(..)`) still goes by name;
+  - a package with no `__all__` also binds the submodules its own imports load, which the index does not model;
+  - the graph writer merges `CALLS` edges of one caller, target and line that differ in `strategy` or `method` (3,088
+    groups in the micro set): the next PR, a `fix(graph)`.
 
 ## Decisions made (2026-10-18, by the author)
 

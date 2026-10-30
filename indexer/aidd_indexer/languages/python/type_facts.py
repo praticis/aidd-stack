@@ -1,6 +1,7 @@
 """Python's type facts of one file: what each name of its module and of each of its classes denotes, and each class's
 bases, as the file declares them. A class's names are its body's and the attributes its methods assign on the
-instance (`self.x = ...`). The facts hold no tree node, so they travel; the type index reads them across files."""
+instance (`self.x = ...`); a module's also has its star imports, where each is, and its `__all__`. The facts hold no
+tree node, so they travel; the type index reads them across files."""
 
 from __future__ import annotations
 
@@ -11,15 +12,26 @@ from tree_sitter import Node
 from ...core.types import Unknown
 from ..base import node_text
 from .declared import agree, instance, site
-from .forms import STAR, UNBOUND, Member, path, ref
+from .forms import UNBOUND, Member, path, ref
 from .scope_build import NESTED_TARGETS
 from .scopes import PyScopes, Scope
 
 
+ALL_UNREAD = Unknown("a module's __all__ the index does not read")
+
+
+class Star(NamedTuple):
+    spec: str                           # the module a star import names, as written (`.sites`, `dcim.models`)
+    at: int                             # where it is, to order it with the module's own bindings
+
+
 class Namespace(NamedTuple):
-    bases: tuple[str | Unknown, ...]    # a class's bases, in order, in its module's terms, or why one is not in them;
-                                        # a module's, the star import that may bind a name it does not
+    bases: tuple[str | Unknown, ...]    # a class's bases, in order, in its module's terms, or why one is not in them
     members: dict[str, Member]
+    stars: tuple[Star, ...] = ()        # a module's star imports, in order
+    last: dict[str, int | None] | None = None   # a module with star imports: where each name it binds is bound last,
+                                                # None for one a function binds too, at a time no position orders
+    exports: frozenset[str] | Unknown | None = None     # a module's `__all__`, or why it is not read; None for none
 
 
 class PyTypes(NamedTuple):
@@ -36,7 +48,9 @@ EMPTY = Namespace((), {})
 
 
 def type_facts(index: PyScopes) -> PyTypes:
-    namespaces = {"": Namespace((STAR,) if index.module.star_import else (), _module_members(index))}
+    module = index.module
+    stars = tuple(Star(node_text(n.child_by_field_name("module_name"), index.src), n.start_byte) for n in module.stars)
+    namespaces = {"": Namespace((), _module_members(index), stars, _last(index) if stars else None, _exports(index))}
     for scope in index.scopes:
         found = path(index, scope) if scope.kind == "class" else None
         if isinstance(found, str):
@@ -51,6 +65,56 @@ def _module_members(index: PyScopes) -> dict[str, Member]:
         for name in scope.globals & scope.bindings.keys():
             sites.setdefault(name, []).extend(scope.bindings[name])
     return _agreed(index, sites)
+
+
+def _last(index: PyScopes) -> dict[str, int | None]:
+    module = index.module
+    inside = {name for s in index.scopes[1:] for name in s.globals & s.bindings.keys()}
+    return {name: None if name in inside else max(n.start_byte for n in nodes)
+            for name, nodes in module.bindings.items()} | dict.fromkeys(inside - module.bindings.keys())
+
+
+def _exports(index: PyScopes) -> frozenset[str] | Unknown | None:
+    """The names a literal list or tuple of strings gives `__all__`, with those `+=` adds; any other binding or read of
+    it leaves them unread."""
+    sites = index.module.bindings.get("__all__")
+    if any("__all__" in s.globals or s.uses.get("__all__") for s in index.scopes):
+        return ALL_UNREAD
+    if not sites:
+        return None
+    names: set[str] = set()
+    for node in sorted(sites, key=lambda n: n.start_byte):
+        found = _given(index, node)
+        if found is None:
+            return ALL_UNREAD
+        given, added = found
+        names = names | given if added else given
+    return frozenset(names)
+
+
+def _given(index: PyScopes, target: Node) -> tuple[set[str], bool] | None:
+    """What one binding of `__all__` gives it, and whether it adds to what it held (`+=`)."""
+    statement = target.parent
+    if statement is None or statement.type not in ("assignment", "augmented_assignment") \
+            or statement.child_by_field_name("left").id != target.id:
+        return None
+    added = statement.type == "augmented_assignment"
+    if added and node_text(statement.child_by_field_name("operator"), index.src) != "+=":
+        return None
+    given = _strings(index, statement.child_by_field_name("right"))
+    return None if given is None else (given, added)
+
+
+def _strings(index: PyScopes, node: Node | None) -> set[str] | None:
+    if node is None or node.type not in ("list", "tuple"):
+        return None
+    found = set()
+    for item in node.named_children:
+        parts = [c for c in item.named_children if c.type not in ("string_start", "string_end")]
+        if item.type != "string" or len(parts) != 1 or parts[0].type != "string_content":
+            return None
+        found.add(node_text(parts[0], index.src))
+    return found
 
 
 def _class_members(index: PyScopes, scope: Scope) -> dict[str, Member]:
