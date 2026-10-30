@@ -278,3 +278,7 @@
     does;
   - Django's model managers, `Model.objects.<method>(..)`, are found by name on more sites: 29,474 edges against
     `main`'s 15,961. The author keeps the change, and that growth is TD-026, due in step 6.
+- 2026-10-30: PR #49 is validated on a live install (the fifteenth golden round). The dry-runs of `main` and of the
+  branch are identical, the graph holds them before and after the reinstall, the picture differs only in the build and
+  the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
+  checks the install, not the change.
