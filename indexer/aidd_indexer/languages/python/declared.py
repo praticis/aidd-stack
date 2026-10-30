@@ -12,7 +12,7 @@ from tree_sitter import Node
 from ...core.types import Unknown
 from ..base import node_text
 from .forms import (ANY, AUGMENTED, COLLECTS, COMPREHENSION, DELETED, DISAGREE, EXCEPT, FOR, MATCH, NO_ANNOTATION,
-                    NO_RESULT, NOT_A_NAME, OTHER, STAR, TYPE_PARAMETER, UNBOUND, UNION, UNPACKED, WITH, Member,
+                    NO_RESULT, NOT_A_NAME, OTHER, TYPE_PARAMETER, UNBOUND, UNION, UNPACKED, WITH, Member,
                     declared, forward_reference, path, ref, unknown, value)
 from .scope_build import NESTED_TARGETS
 from .scopes import PyScopes, Scope
@@ -29,7 +29,7 @@ def name_member(index: PyScopes, identifier: Node) -> Member:
     if binding is None:
         return unknown(OTHER)
     if binding.scope is None:
-        return unknown(STAR if index.module.star_import else UNBOUND)
+        return Member("star", node_text(identifier, index.src)) if index.module.star_import else unknown(UNBOUND)
     return agree(index, index.sites(binding, node_text(identifier, index.src)))
 
 

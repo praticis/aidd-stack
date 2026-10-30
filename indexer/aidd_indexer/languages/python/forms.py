@@ -17,7 +17,6 @@ from .scopes import PyScopes, Scope
 DOTTED = re.compile(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*")
 
 UNBOUND = Unknown("a builtin, or a name no statement of the file binds")
-STAR = Unknown("a name only a star import may bind")
 BOUND_IN_A_FUNCTION = Unknown("a name bound inside a function, read as a type")
 CLASS_IN_A_FUNCTION = Unknown("a class defined in a function")
 IMPORTED_IN_A_FUNCTION = Unknown("a name a function imports")
@@ -47,10 +46,11 @@ OTHER = Unknown("a binding the table does not read")
 
 class Member(NamedTuple):
     """What a name of a module or of a class denotes, as the file declares it."""
-    kind: str           # class, function, module, import, value, attribute (a value a class body gives) or unknown
+    kind: str           # class, function, module, import, value, attribute (a value a class body gives), star (a
+                        # name only the module's star imports may bind) or unknown
     written: str        # class: its path in the module; function: its declared result ("" for none); module: the
                         # module imported; import: the module and the name (`app.models:B`); value and attribute:
-                        # its declared type
+                        # its declared type; star: the name
     why: str = ""       # unknown, or a function whose result has no type: the reason
 
 
@@ -84,7 +84,8 @@ def ref(index: PyScopes, node: Node | None) -> str | Unknown:
     if binding is None:
         return NOT_A_NAME
     if binding.scope is None:
-        return STAR if index.module.star_import else UNBOUND
+        # one the module's star imports may bind: the type index follows them
+        return ".".join([node_text(node, index.src)] + parts[::-1]) if index.module.star_import else UNBOUND
     if binding.scope.kind == "annotation":
         return TYPE_PARAMETER
     if binding.scope.kind not in ("module", "class"):
@@ -100,8 +101,8 @@ def forward_reference(index: PyScopes, node: Node) -> str | Unknown:
     text = "".join(node_text(c, index.src) for c in node.named_children if c.type == "string_content")
     if not DOTTED.fullmatch(text):
         return NOT_A_NAME
-    if index.resolve(index.module, text.split(".")[0]).scope is None:
-        return STAR if index.module.star_import else UNBOUND
+    if index.resolve(index.module, text.split(".")[0]).scope is None and not index.module.star_import:
+        return UNBOUND
     return text
 
 

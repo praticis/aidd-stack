@@ -35,7 +35,7 @@ def _held(index: PyScopes, identifier: Node, member: Member) -> str | Unknown:
     """The type of the value a name holds: a class or a module is its own namespace."""
     if member.kind in ("class", "value"):
         return member.written
-    if member.kind in ("module", "import"):
+    if member.kind in ("module", "import", "star"):
         found = ref(index, identifier)
         return IMPORTED_IN_A_FUNCTION if found == BOUND_IN_A_FUNCTION else found
     return FUNCTION if member.kind == "function" else Unknown(member.why)

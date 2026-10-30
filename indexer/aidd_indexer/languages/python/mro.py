@@ -16,6 +16,7 @@ class Linearized:
     (`classes`). An MRO holds the repo's classes and, from the first base outside the repo on, that base."""
 
     def __init__(self) -> None:
+        super().__init__()
         self._linear: dict[TypeRef, list | Unknown] = {}
         self._after: dict[TypeRef, set] | None = None
         self._open: Unknown | None = None

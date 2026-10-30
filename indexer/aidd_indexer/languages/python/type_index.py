@@ -1,8 +1,8 @@
 """Python's answers to the type questions across files, from every Python file's type facts. A module and a class are
 both namespaces: a name is looked up among a module's members, then its package's submodules; among a class's, then
 its bases', in the order of its MRO. The MRO is read up to its first base outside the repo: that base may give the
-name, so no answer goes past it. A base the index cannot see leaves only the class's own names known, and a star
-import, the module's."""
+name, so no answer goes past it. A base the index cannot see leaves only the class's own names known; a module's star
+imports are followed as CPython binds them (`stars.py`)."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from .forms import UNBOUND, Member
 from .modules import Modules, module_path
 from .mro import Linearized
+from .stars import Starred
 from .type_facts import EMPTY, Namespace, PyTypes
 
 if TYPE_CHECKING:
@@ -76,7 +77,7 @@ def ref(qualified_type: str) -> TypeRef:
     return TypeRef(package, name)
 
 
-class PythonTypeIndex(Linearized, TypeIndex):
+class PythonTypeIndex(Linearized, Starred, TypeIndex):
     """A type is its module's path without `.py` (`app/models`, `app/__init__`) and its path in the module
     (`Outer.Inner`), "" for the module itself."""
 
@@ -103,6 +104,8 @@ class PythonTypeIndex(Linearized, TypeIndex):
         return Field(_public(found), declared[1].written if declared else "", bool(declared) and declared[0] != owner)
 
     def method(self, owner: TypeRef, name: str) -> TypeRef | Unknown:
+        if not owner.name and self.star_member(owner, name, 0) is not None:
+            return REEXPORTED
         found = self._lookup(owner, name, METHOD_OUTSIDE, NO_METHOD)
         if isinstance(found, Unknown):
             return found
@@ -123,7 +126,7 @@ class PythonTypeIndex(Linearized, TypeIndex):
         return self._type(self._attribute(_held(owner), name, 0))
 
     def binds(self, t: TypeRef, name: str) -> bool:
-        return name in self._namespace(t).members
+        return name in self._namespace(t).members or not t.name and self.star_member(t, name, 0) is not None
 
     def declared_past_outside(self, cls: TypeRef, name: str) -> bool:
         """Whether a class of the repo after a base outside it in `cls`'s MRO declares `name`, which that base may give
@@ -181,6 +184,7 @@ class PythonTypeIndex(Linearized, TypeIndex):
     def _name(self, f: FileInfo, dotted: str, depth: int) -> Denoted | Outside | Unknown:
         first, *rest = dotted.split(".")
         found = self._module_member(TypeRef(module_path(f), ""), first, depth)
+        found = UNBOUND if found == NO_MEMBER else found
         for name in rest:
             found = self._attribute(found, name, depth)
         return found
@@ -201,15 +205,17 @@ class PythonTypeIndex(Linearized, TypeIndex):
 
     def _module_member(self, module: TypeRef, name: str, depth: int) -> Denoted | Outside | Unknown:
         """A module's member, or else its package's submodule: `from p import x` reads them in that order."""
+        if depth > DEPTH:
+            return TOO_DEEP
         f = self._file_of(module)
+        starred = self.star_member(module, name, depth) if f is not None else None
+        if starred is not None:
+            return starred
         member = self._namespace(module).members.get(name)
         if member is not None and f is not None:
             return self._denote(f, member, depth)
         sub = self._modules.submodule(module.package, name)
-        if sub is not None:
-            return Denoted("module", TypeRef(sub, ""))
-        mro = self.mro(module)
-        return mro if isinstance(mro, Unknown) else NO_MEMBER
+        return Denoted("module", TypeRef(sub, "")) if sub is not None else NO_MEMBER
 
     def _denote(self, f: FileInfo, member: Member, depth: int) -> Denoted | Outside | Unknown:
         if depth > DEPTH:
