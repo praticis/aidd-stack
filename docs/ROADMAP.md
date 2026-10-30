@@ -367,11 +367,12 @@ Open:
     (H7-D2) and each judged case as a test
 
 - [ ] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
-  gives, in every language. Each language's type index writes `EXTENDS` from the bases it reads (Python's MRO, C#'s
-  bases), and `who_calls` and `impact_of` expand a method through the methods it overrides and those that override
-  it, marked as a dispatch that may happen. Proven on netbox's 67 sites that lose an override, 46 of them
-  `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then confirm the `EXTENDS` read from
-  tree-sitter, or replace it
+  gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
+  and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
+  the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
+  embedding promotes and never dispatches; its interface calls are a debt. Three PRs (H5-D30). Proven on netbox's 67
+  sites that lose an override, 46 of them `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
+  confirm the `EXTENDS` read from tree-sitter, or replace it
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
