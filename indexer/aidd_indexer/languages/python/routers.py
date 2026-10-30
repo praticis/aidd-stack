@@ -136,8 +136,16 @@ class PyRouters:
         return (unit, orig) if unit is not None else None
 
     def _typed_callee(self, call: Node, fn: Node) -> tuple[str, str] | None:
-        """The file and the name of the function a call on a receiver reaches, from the type the extraction gave the
-        receiver: the class that declares the method, up the receiver's MRO, or the module of the function."""
+        """The file and the name of the function a call on a receiver reaches."""
+        declaring = self.declaring(call, fn)
+        if declaring is None:
+            return None
+        method = text(fn.child_by_field_name("attribute"), self.src)
+        return f"{declaring.package}.py", f"{declaring.name}.{method}" if declaring.name else method
+
+    def declaring(self, call: Node, fn: Node) -> TypeRef | None:
+        """What declares the function a call on a receiver reaches, from the type the extraction gave the receiver: the
+        class that declares the method, up the receiver's MRO, or the module of the function."""
         obj, attr = fn.child_by_field_name("object"), fn.child_by_field_name("attribute")
         view = self.ctx.view
         if obj is None or attr is None or view is None or view.types is None:
@@ -145,11 +153,8 @@ class PyRouters:
         receiver = self._typed_receivers().get((call.start_point[0] + 1, text(attr, self.src), text(obj, self.src)[:80]))
         types = view.types.of("python")
         found = typed(types, self.fx.file.path, *receiver) if receiver is not None else None
-        method = text(attr, self.src)
-        declaring = types.method(found, method) if isinstance(found, TypeRef) else None
-        if not isinstance(declaring, TypeRef):
-            return None
-        return f"{declaring.package}.py", f"{declaring.name}.{method}" if declaring.name else method
+        declaring = types.method(found, text(attr, self.src)) if isinstance(found, TypeRef) else None
+        return declaring if isinstance(declaring, TypeRef) else None
 
     def _typed_receivers(self) -> dict[tuple[int, str, str], tuple[str, tuple[str, ...]]]:
         if self._receivers is None:

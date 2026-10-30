@@ -2,33 +2,31 @@
 its parameters is a wrapper: `_request(self, method, path)` doing `self.client.request(method, path)`, or `api_get(path)`
 doing `requests.get(BASE_URL + path)`. A call that hands it a literal path is an outbound call
 (`self._request("GET", "/v1/orders")`); a call that hands it a parameter of its own function makes that function a
-wrapper too (`_get(self, path)` doing `self._request("GET", path)`). The receiver's class is the method's for `self`, or
-a class of the repo constructed into a local or into `self.x`; a plain name is a function of the module or imported."""
+wrapper too (`_get(self, path)` doing `self._request("GET", path)`). A call on a receiver reaches the wrapper of the
+class the type index finds declaring the method, up the MRO of the type the resolver gives the receiver, named as the index
+names it (`app/clients:Client`); a plain name is a function of the module or imported."""
 
 from __future__ import annotations
 
 from tree_sitter import Node
 
-from ...core.http_base import HttpResult, Pending, text, walk
+from ...core.http_base import HttpResult, Pending, text
 from ...core.http_nodes import has_interpolation
-from ...core.http_scope import END, enclosing_function
-from ...core.http_wrappers import (PARAM, ClassBases, WrappedCall, WrapperShape,
-                                   compose_wrapped_calls as compose_calls, param_shape, verb_of)
+from ...core.http_scope import enclosing_function
+from ...core.http_wrappers import (PARAM, WrappedCall, WrapperShape, compose_wrapped_calls as compose_calls, param_shape,
+                                   verb_of)
 from ...core.paths import HTTP_METHODS, has_literal_segment, normalize_path, unquote
+from .declared import owner
+from .forms import path as class_path
+from .modules import module_path
+from .type_index import qualified
 
 SCOPE = "py"                       # the scope of the wrapper facts the core's machinery composes for Python
 URL_KEYWORDS = ("url", "path")
 
 
 class PyClientWrappers:
-    """Mixin of the Python scanner: publishes wrappers and class bases, and keeps the calls to wrappers pending."""
-
-    def publish_bases(self, cls: Node) -> None:
-        name, sup = cls.child_by_field_name("name"), cls.child_by_field_name("superclasses")
-        bases = tuple(text(b, self.src).split(".")[-1] for b in (sup.named_children if sup is not None else ())
-                      if b.type in ("identifier", "attribute"))
-        if name is not None and bases:
-            self.out.publish(text(name, self.src), ClassBases(bases), SCOPE)
+    """Mixin of the Python scanner: publishes wrappers, and keeps the calls to wrappers pending."""
 
     def publish_wrapper(self, call: Node, method: str | None, name: str, arg_nodes: list[Node]) -> None:
         """`call`, an outbound call (`name`) whose path is built around a parameter of the function around it: that
@@ -69,18 +67,28 @@ class PyClientWrappers:
         return None
 
     def function_key(self, at: Node) -> tuple[str | None, list[str]]:
-        """The wrapper key of the function around `at` (`Class.method`, or `<file>:function` at module level) and its
-        positional parameters, without the `self` or `cls` of a method."""
+        """The wrapper key of the function around `at` (`app/clients:Client.method`, or `<file>:function` at module
+        level) and its positional parameters, without the `self` or `cls` of a method."""
         fn = enclosing_function(at)
         name = fn.child_by_field_name("name") if fn is not None and fn.type == "function_definition" else None
-        owner = _owner_class(fn) if name is not None else None
-        if name is None or owner is None and not _at_module_level(fn):
+        if name is None:
             return None, []
         params = self._positional(fn)
-        if owner is None:
+        if _at_module_level(fn):
             return f"{self.fx.file.path}:{text(name, self.src)}", params
+        cls = self._class_of(fn)
+        if cls is None:
+            return None, []
         rest = params[1:] if params[:1] in (["self"], ["cls"]) else params
-        return f"{text(owner.child_by_field_name('name'), self.src)}.{text(name, self.src)}", rest
+        return f"{cls}.{text(name, self.src)}", rest
+
+    def _class_of(self, fn: Node) -> str | None:
+        """The class whose method `fn` is, named as the type index names it; None for one a function holds."""
+        index = self.scopes.python
+        scope = next((s for s in index.scopes if s.node.id == fn.id), None)
+        cls = owner(scope) if scope is not None else None
+        found = class_path(index, cls) if cls is not None else None
+        return f"{module_path(self.fx.file)}:{found}" if isinstance(found, str) and found else None
 
     def _positional(self, fn: Node) -> list[str]:
         params = fn.child_by_field_name("parameters")
@@ -127,11 +135,10 @@ class PyClientWrappers:
     def _target(self, fn: Node, at: Node) -> tuple | None:
         if fn.type == "identifier":
             return self._function_target(text(fn, self.src))
-        obj, attr = fn.child_by_field_name("object"), fn.child_by_field_name("attribute")
-        if fn.type != "attribute" or obj is None or attr is None:
+        declaring = self.declaring(at, fn) if fn.type == "attribute" else None
+        if declaring is None or not declaring.name:
             return None
-        cls = self._class_of(obj, at)
-        return ("class", cls, text(attr, self.src)) if cls else None
+        return "class", qualified(declaring), text(fn.child_by_field_name("attribute"), self.src)
 
     def _function_target(self, name: str) -> tuple | None:
         if any(s.kind == "function" for s in self.symbols_by_name.get(name, ())):
@@ -140,62 +147,9 @@ class PyClientWrappers:
         unit = self.resolve_import(spec) if spec is not None and orig is not None else None
         return ("func", f"{unit}:{orig}") if unit else None
 
-    def _class_of(self, obj: Node, at: Node) -> str | None:
-        """The repo class a receiver is an instance of: `self` in a method, a local or module variable assigned
-        `Client(..)`, or `self.client` assigned `Client(..)` in a method of the class."""
-        if obj.type == "identifier" and text(obj, self.src) in ("self", "cls"):
-            owner = _owner_class(enclosing_function(at))
-            return text(owner.child_by_field_name("name"), self.src) if owner is not None else None
-        if obj.type == "identifier":
-            return self._constructed(self._value_of(obj, at))
-        inner = obj.child_by_field_name("object") if obj.type == "attribute" else None
-        if inner is not None and text(inner, self.src) == "self":
-            return self._attribute_class(_owner_class(enclosing_function(at)), text(obj, self.src))
-        return None
-
-    def _value_of(self, ident: Node, at: Node) -> Node | None:
-        """The value a name holds where it is used; a module variable seen from a function, its module assignment (a
-        client built once at import)."""
-        name = text(ident, self.src)
-        val = self.resolve_local(ident)
-        if val is None and self.scopes.binding_scope(name, at) == 0:
-            val = self.scopes.assigned_before(self.scopes.root, END, name)
-        return val
-
-    def _attribute_class(self, cls: Node | None, attr: str) -> str | None:
-        memo = self.__dict__.setdefault("_attribute_classes", {})
-        key = (cls.id if cls is not None else None, attr)
-        if key not in memo:
-            memo[key] = next((c for n in (walk(cls) if cls is not None else ()) if n.type == "assignment"
-                              and text(n.child_by_field_name("left"), self.src) == attr
-                              and (c := self._constructed(n.child_by_field_name("right")))), None)
-        return memo[key]
-
-    def _constructed(self, val: Node | None) -> str | None:
-        """`Client(..)` or `pkg.Client(..)` of a class the repo defines (here, or imported from a file of the repo):
-        the class name. A library's client (`httpx.Client()`) is not one."""
-        fn = val.child_by_field_name("function") if val is not None and val.type == "call" else None
-        head, _, last = text(fn, self.src).rpartition(".") if fn is not None else ("", "", "")
-        if not last[:1].isupper():
-            return None
-        if not head and any(s.kind == "class" for s in self.symbols_by_name.get(last, ())):
-            return last
-        spec, orig = self.imports.get(head.split(".")[0] if head else last) or (None, None)
-        if spec is None or self.resolve_import(spec) is None:
-            return None
-        return orig if not head and orig else last
-
 
 def compose_wrapped_calls(out: HttpResult) -> None:
     compose_calls(out, SCOPE)
-
-
-def _owner_class(fn: Node | None) -> Node | None:
-    """The class whose body declares the method `fn` directly."""
-    p = fn.parent if fn is not None else None
-    p = p.parent if p is not None and p.type == "decorated_definition" else p
-    cls = p.parent if p is not None and p.type == "block" else None
-    return cls if cls is not None and cls.type == "class_definition" else None
 
 
 def _at_module_level(fn: Node) -> bool:
