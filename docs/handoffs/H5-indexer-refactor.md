@@ -1254,6 +1254,9 @@ The proof:
   PR's `validate.sh before` refuses, since the install is not `main`'s, and one pair has to cover every PR since.
 - **An IDE watching the repo builds a C# project that appears under it**, writing `obj/` in place: a fixture's in a
   copy of `indexer/`, a snapshot's under `.local/`. `validate.sh` copies only the package, and discovery skips `obj/`.
+  The IDE also writes the `obj/` of a project it loaded back to that project's path once the path is deleted, so a
+  failed `before` deleted and taken again found its snapshot folders already there, with only that output in them.
+  `dryrun-live.sh` now copies the snapshots to a folder no earlier run used and checks each copy against its sha.
 
 ## Constraints and conventions
 
