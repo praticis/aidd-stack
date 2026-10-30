@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #49)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #51)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -282,3 +282,9 @@
   branch are identical, the graph holds them before and after the reinstall, the picture differs only in the build and
   the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
   checks the install, not the change.
+- 2026-10-30: a Python star import is followed as CPython binds it, PR #51 (`fix(python)`). `from m import *` binds
+  `m`'s `__all__`, or its public names, and a later binding holds a name. All 703 star imports of the corpus name a
+  module of the repo whose chain is seen whole. In netbox, 9,108 receivers only a star import could bind are read:
+  edges found by type go from 4,877 to 8,319, and the share found among several homonyms from 64.0 % to 60.2 %. An
+  independent review of 43 seeded rows found none wrong. The module an import names is now found once per file and
+  import, and netbox's dry-run is faster than `main`'s. The author puts F1.16 before TS's step 5 (H5-D29).
