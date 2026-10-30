@@ -32,9 +32,9 @@ def test_the_fingerprint_follows_the_code_that_shapes_the_graph(tmp_path: Path):
 
 
 def test_a_snapshot_of_another_build_is_reindexed(monkeypatch):
-    from aidd_indexer.core.graph import current_sha
-    import aidd_indexer.core.graph as graph
-    monkeypatch.setattr(graph, "indexer_build", lambda: "0.2.14+aaaaaaaaaaaa")
+    from aidd_indexer.core.graph_snapshots import current_sha
+    import aidd_indexer.core.graph_snapshots as snapshots
+    monkeypatch.setattr(snapshots, "indexer_build", lambda: "0.2.14+aaaaaaaaaaaa")
     assert current_sha("abc", "0.2.14+aaaaaaaaaaaa") == "abc"
     assert current_sha("abc", "0.2.14+bbbbbbbbbbbb") == ""     # same version, other code
     assert current_sha("abc", None) == ""                      # written before builds were recorded

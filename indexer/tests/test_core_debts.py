@@ -22,7 +22,7 @@ NOT_SYNTAX = {
     "extract.py": {"call", "import", "receiver", "class"},   # the queries' capture names; a symbol's kind
     "resolve.py": {"class"},                                  # a symbol's kind
     "http_expr.py": {"path"},                                 # a request field's name
-    "graph.py": {"result"},                                   # keys of a record
+    "graph_snapshots.py": {"result"},                         # keys of a record
     "manifest.py": {"none", "path"},
     "policy.py": {"source"},
 }
