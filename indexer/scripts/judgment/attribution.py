@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Which answer explains each CALLS edge that changed between two dry-runs. A change to how a language types a receiver
-changes edges at the sites where the typing answer changes, and nowhere else, so a changed edge at a site whose answer
-is the same on both sides is not explained by it, and is listed apart.
+"""Which answer explains each CALLS edge that changed between two dry-runs. A change to how a language types a receiver,
+or to what the resolver makes of it, changes edges at the sites where that answer changes, and nowhere else, so a
+changed edge at a site whose answers are the same on both sides is not explained by them, and is listed apart.
 
     attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 
 BEFORE and AFTER hold `<repo>.json.gz` dry-runs. OLD.jsonl and NEW.jsonl hold what each side answers at a call, one JSON
-object per line, as `answers.py` writes them: repo, file, line, receiver, type, the reason it has none (unknown), src,
-and any fact the case table reads. A side with no row for a receiver, or no type in it, does not type it. FILE defines `case_of(d)` for a site whose answer differs
-(d: repo, file, line, receiver, old, new, src and the facts) and returns its case, or None for the answer's own:
-typed-now, untyped-now or retyped. Prints the changed sites by case and kind, then N seeded samples of each case and kind
-that changes a callee, and the first N unexplained sites, with --repos DIR their source lines. Last, each repo's CALLS
-edges by strategy on both sides, and the share of edges and of sites the resolver found among several homonyms
-(`-ambiguous`); with --language LANG, of the calls made in that language's files only. Then the receivers each side
-leaves untyped by the reason it gives."""
+object per line, as `answers.py` writes them: repo, file, line, receiver, type, the reason it has none (unknown), what
+the resolver makes of the receiver (resolved), src, and any fact the case table reads. A side with no row for a
+receiver, or no type in it, does not type it, and with no `resolved` goes by name on it. FILE defines `case_of(d)` for
+a site whose answer differs (d: repo, file, line, receiver, old and new types, old_resolved, new_resolved, src and the
+facts) and returns its case, or None for the answer's own: typed-now, untyped-now or retyped when the type differs,
+else the resolver's answer on each side by kind (`package -> by name`, `by name -> type`). Prints the changed sites
+by case and kind, then N seeded samples of each case and kind that changes a callee, and the first N unexplained sites,
+with --repos DIR their source lines. Last, each repo's CALLS edges by strategy on both sides, and the share of edges
+and of sites the resolver found among several homonyms (`-ambiguous`); with --language LANG, of the calls made in that
+language's files only. Then the receivers each side leaves untyped by the reason it gives."""
 from __future__ import annotations
 
 import argparse
@@ -50,24 +52,32 @@ def read_answers(path: str) -> dict:
 
 
 def differences(old: dict, new: dict) -> dict:
-    """The sites where the two sides answer differently, by the first receiver whose type differs. A receiver one side
-    does not type is untyped there; the row keeps the facts of the side that has it."""
+    """The sites where the two sides answer differently, by the first receiver whose type or resolver's answer differs.
+    A receiver one side has no row for is untyped there, and goes by name; the row keeps the facts of the side that has
+    it."""
     out = {}
     for site in sorted(set(old) | set(new)):
         a, b = old.get(site, {}), new.get(site, {})
         for receiver in sorted(set(a) | set(b)):
-            before, after = a.get(receiver, {}).get("type"), b.get(receiver, {}).get("type")
-            if before != after:
-                row = {k: v for k, v in (b.get(receiver) or a[receiver]).items() if k != "type"}
-                out[site] = {**row, "old": before, "new": after}
+            was, now = a.get(receiver, {}), b.get(receiver, {})
+            if (was.get("type"), was.get("resolved")) != (now.get("type"), now.get("resolved")):
+                row = {k: v for k, v in (now or was).items() if k not in ("type", "resolved")}
+                out[site] = {**row, "old": was.get("type"), "new": now.get("type"),
+                             "old_resolved": was.get("resolved"), "new_resolved": now.get("resolved")}
                 break
     return out
 
 
 def default_case(d: dict) -> str:
-    if d["old"] is None:
-        return "typed-now"
-    return "untyped-now" if d["new"] is None else "retyped"
+    if d["old"] != d["new"]:
+        if d["old"] is None:
+            return "typed-now"
+        return "untyped-now" if d["new"] is None else "retyped"
+    return f"{resolver_kind(d.get('old_resolved'))} -> {resolver_kind(d.get('new_resolved'))}"
+
+
+def resolver_kind(answer: Optional[str]) -> str:
+    return answer.split(" ", 1)[0] if answer else "by name"
 
 
 def load_cases(path: Optional[str]) -> Callable[[dict], str]:
@@ -116,7 +126,10 @@ def samples(rows: list, n: int, root: Optional[str]) -> list:
         for r in items[:n] if case == UNEXPLAINED else rng.sample(items, min(n, len(items))):
             lines.append(f"\n[{case} / {kind}] {r['repo']} {r['file']}:{r['line']}  {source(root, r)}")
             if r["answer"]:
-                lines.append(f"   type {r['answer']['old']} -> {r['answer']['new']}  ({r['answer']['receiver']})")
+                d = r["answer"]
+                lines.append(f"   type {d['old']} -> {d['new']}  ({d['receiver']})")
+                if d.get("old_resolved") != d.get("new_resolved"):
+                    lines.append(f"   resolved {d.get('old_resolved')} -> {d.get('new_resolved')}")
             lines += [f"   was {r['was']}", f"   now {r['now']}"]
     return lines
 
