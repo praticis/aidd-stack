@@ -673,3 +673,34 @@ live check, which #53 fixes:
 - An IDE that had loaded the C# projects of the deleted copy wrote their `obj/` back to its paths, and `dryrun-live.sh`
   reused two snapshot folders that held only that output: their dry-runs had no file, which the graph check caught. The
   snapshots are now copied to a folder no earlier run used, and each copy is checked against its sha.
+
+## Eighteenth round: validating PR #55 on a live install (2026-10-30, build `0.2.15+cd952c66db8a` to `0.2.15+0afc39c36d2f`)
+
+What changed since the seventeenth round: PR #55 is merged. A call on a receiver reaches the wrapper of the class the
+type index finds declaring the method, up the receiver's MRO, and Python's scanner keeps no classes of its own. The
+graph may change on purpose, in Python's outbound HTTP calls only. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`a7e631a`). The dry-runs of `main` and of the
+  branch (`f4b4a42`) on each snapshot, at its sha, are identical section by section in all 10. The live graph holds
+  `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules,
+  0 violations, the same picture as the seventeenth round's after.
+- **After the author's reinstall from `main` (`167f3d4`):** the refresher re-indexed the 10 snapshots, `ok` and with no
+  error.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
+The change was judged on five cases checked on both sides, the corpus, the micro set and an oracle over the 15 Python
+repos (the client wrappers' section of `docs/handoffs/H5-indexer-refactor.md`).

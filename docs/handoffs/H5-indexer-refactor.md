@@ -1062,6 +1062,8 @@ The proof:
   | open-webui, the HTTP pass | 7.5–8.0 s | 7.3–7.7 s |
   | zulip | 10.0–10.9 s | 8.9–9.7 s |
   | netbox | 6.7–7.3 s | 5.9–6.3 s |
+- **On a live install** (the eighteenth golden round): the dry-runs of `main` and of the branch are identical on the 10
+  snapshots, which hold no Python file, and the 27 calls give the same answers.
 - **What stays open:**
   - TD-028, due in F1.2: a class a function holds has no name in the index, so a call on `self` in its methods reaches
     no wrapper of it, where `main` found it by the class's name. No site in the corpus;

@@ -307,3 +307,6 @@
   declaring the method, up the receiver's MRO. Five cases the scanner missed pass on both sides. The corpus, the
   hold-out and the micro set are the same, and so are the outbound calls of the 15 Python repos with both codes; the
   HTTP pass is faster. A class a function holds reaches no wrapper now: TD-028, due in F1.2.
+- 2026-10-30: PR #55 is validated on a live install (the eighteenth golden round). The dry-runs of `main` and of the
+  branch are identical on the 10 snapshots, the graph holds the branch's after the reinstall, and the 27 calls give the
+  same answers. The snapshots hold no Python file, so the round checks the install, not the change.
