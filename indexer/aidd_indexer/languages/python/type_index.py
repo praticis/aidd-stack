@@ -125,6 +125,14 @@ class PythonTypeIndex(Linearized, TypeIndex):
     def binds(self, t: TypeRef, name: str) -> bool:
         return name in self._namespace(t).members
 
+    def declared_past_outside(self, cls: TypeRef, name: str) -> bool:
+        """Whether a class of the repo after a base outside it in `cls`'s MRO declares `name`, which that base may give
+        first."""
+        mro = self.mro(cls)
+        found = [] if isinstance(mro, Unknown) else mro
+        first = next((i for i, t in enumerate(found) if not isinstance(t, TypeRef)), len(found))
+        return any(isinstance(t, TypeRef) and self.binds(t, name) for t in found[first:])
+
     def classes(self) -> list[TypeRef]:
         """The repo's classes the index sees: a class defined in a function has no name in a module."""
         return [TypeRef(module_path(f), name) for f in self._ctx.files_by_path.values()

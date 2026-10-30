@@ -13,13 +13,14 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45)
-and its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where
-a set's order followed the hash seed. Each merge and its live validation are in `docs/history.md`; the results are in the sections
+extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45) and
+its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
+order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
+package runs from (H5-D28). Each merge and its live validation are in `docs/history.md`; the results are in the sections
 below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
-strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2. The judgment of H5-D18 was the review of an agent that
+strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
 did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
 and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
 names of frameworks and client libraries it holds:
@@ -44,9 +45,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 
 **Next.**
 1. Before TS, what the judgment of Python's change of behavior found, in `fix(python)` PRs:
-   - the roots of a project's absolute imports: netbox runs from `netbox/`, where its `manage.py` is, so its 7,661
-     absolute imports resolve to nothing, and most of its classes have an MRO the index cannot see. Then its mixins'
-     `self.m()` is judged again (H5-D25);
+   - a name only a star import binds: CPython binds the module's `__all__`, or its public names, so the chain can be
+     followed where every module of it is seen. netbox's models are imported through `from .sites import *`;
    - the client wrappers' own class of a receiver (`client_wrappers.py`, `_class_of`, by the class's name), a second
      answer beside the `TypeIndex`, which step 5 makes one.
 
@@ -66,6 +66,10 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
   language: one probe, `indexer/scripts/judgment/answers.py`, reads each tree's own extraction, and
   `attribution.py` joins it to the changed edges (`docs/indexer/method.md` §4.12, H5-D21). C# was judged with
   `indexer/scripts/judgment/csharp_extensions.py`.
+- **G2, open: a change in the resolver's stage leaves every site unexplained.** `answers.py` reads what the extraction
+  records for a receiver, so where an import resolves, or how the `TypeIndex` reads a name, gives both trees the same
+  answers. H5-D28 was judged with the `TypeIndex`'s verdict on each receiver, from both trees; the probe belongs in
+  `answers.py`, in a `chore(scripts)` PR.
 - **Judgment is not yet automated (H7-D6).** The verdict record (H7-D2) is to build; until then each change of
   behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
@@ -820,8 +824,8 @@ Every xfail of the table is gained, and no guard is lost.
   Keeping the index beside the tree instead cost about 270 MiB (#45), so it is built again. dispatch's HTTP pass goes
   from 1.8–2.1 s to 2.3–2.4 s.
 - **What the judgment leaves open:**
-  - netbox's absolute imports resolve to nothing, so most of its classes have an MRO the index cannot see. Its calls
-    on them, and its `super()`, still go by name; they are judged again once those imports resolve;
+  - netbox's absolute imports resolved to nothing, so most of its classes had an MRO the index could not see. They
+    resolve since H5-D28, judged in the next section;
   - a typed `self.m()` reaches the method its class's MRO gives, not a subclass's override, as in C# and Go. In
     netbox, 67 narrowed sites lose an override the guess by name found, 46 of them `_get_queryset`. The query reaches
     them (H5-D27, F1.16);
@@ -829,6 +833,81 @@ Every xfail of the table is gained, and no guard is lost.
 - **On a live install** (the fourteenth golden round): the install still ran #30's package, so one pair covers #44 to
   #47. The dry-runs are identical, the graph holds them before and after the reinstall, and the 27 calls give the
   same answers. The live snapshots hold no Python file, so the round checks the install, not the change.
+
+### Where a Python absolute import is looked for (H5-D28)
+
+The judgment of Python's change of behavior found that none of netbox's 7,661 absolute imports resolved. netbox runs
+from `netbox/`, where its `manage.py` is, and the import resolver tried only the root of the file's module, the repo's
+root and `src/` (#46). The core took netbox's own classes for a package's and skipped the calls on them.
+
+- **The rule is CPython's.** An absolute import is looked for first under the directory above the file's top regular
+  package, or under the file's own directory for a module of none (`languages/python/modules.py`). CPython finds a
+  package by its name, or runs a file as a script, only with that directory on `sys.path`.
+- **A directory a regular package holds is a namespace portion of it, never a root.** open-webui's
+  `retrieval/vector/dbs/` has no `__init__.py`; as a root it would make `import redis` its own `redis.py`.
+- **One fix led to another.** With the imports resolved, a method that a class of the repo declares past a base outside
+  the repo got no edge at all:
+  - `_inherited` skips a call inside its own type;
+  - `member_by_name` refused the name because of the outside base.
+
+  That base may give the method first, so the answer is `Unknown`, and the call goes by name
+  (`PythonTypeIndex.declared_past_outside`).
+
+**Done (2026-10-30).** Four commits:
+1. an absolute import is looked for under the directory its package runs from, with two cases CPython runs: a
+   project's `manage.py` that imports its package, and a namespace portion inside a package, which is no root;
+2. a method a class of the repo declares past a base outside it is found by name, with its case;
+3. TD-026, Django's model managers found by name, with its strict xfail;
+4. the docs.
+
+- **The imports.** The corpus's 14 Python repos have 42,155 absolute imports.
+  - The rule resolves 4,054 more: netbox 3,765, elsa 271, mealie 14, flask 3 and azure-saas 1.
+  - It changes none of today's answers, and no import is found under two roots.
+  - Under the roots the indexer tries, CPython's `FileFinder` finds the indexer's file for each of the 19,522 imports it
+    resolves, and no other. So `x/__init__.py` before `x.py` changes nothing either.
+- **The corpus and the hold-out:** `0 repo(s) differ` against `-29` and `-26`.
+- **The micro set:**
+  - the other 10 repos are identical;
+  - netbox: −2,130 and +17,350 `CALLS`, and its 3,765 `IMPORTS` now reach the repo's module. Its edges found by type
+    go from 2,024 to 4,877, and `inherited` ones from 61 to 305. The share found among several homonyms goes from
+    61.7 % to 64.0 % of the edges, and from 37.1 % to 39.3 % of the sites;
+  - mattermost: −2 and +17 `CALLS`, from a test that imports its sibling script.
+- **The per-site attribution cannot explain this change.** `answers.py` reads the extraction's answer for a receiver,
+  which names the import, while where the import resolves is the resolver's. Each changed site was explained instead
+  by the `TypeIndex`'s verdict on its receivers, in both trees.
+- **Where netbox's new edges come from:**
+
+  | Sites | Edges | Found |
+  |---|---|---|
+  | 3,075 | 3,082 | by type |
+  | 5,179 | 13,520 | by name, on Django's ORM chains (`Model.objects.<method>(..)`) |
+  | 396 | 711 | by name, elsewhere |
+
+  The ORM's chains already had 15,961 edges by name on `main`, on names a star import binds. They now have 29,474. The
+  author keeps the change, and that growth is TD-026, due in step 6 (H5-D28).
+- **Judged by an agent that did not write it (H7-D6).** It read 46 seeded rows at the source.
+  - 33 rows are right, 2 partly and 11 wrong. Against `main`, 35 are better and 11 worse.
+  - Every typed edge it checked is the method CPython runs, apart from a `self.m()` that reaches the base's method, not
+    its subclasses' overrides (H5-D27).
+  - The wrong rows:
+    - seven Django manager chains, and a `dict` subclass's method read through a subscript, found by name as the rule
+      says (TD-026 for the first);
+    - two calls of a mixin's method past Django's bases, which got no edge. Commit 2 fixes them, in 15 sites: 14
+      have `main`'s edges again, and the guess by name reaches the mixin's method only where it is among the
+      nearest homonyms.
+- **The cost** in netbox, over three rounds interleaved with `main`:
+  - the extraction is the same: 9.1–9.6 s against 9.2–9.6 s;
+  - the HTTP pass grows from 7.5–7.7 s to 8.4–8.6 s;
+  - peak memory is the same, 666–667 MiB.
+- **What stays open:**
+  - a root only configuration gives (`PYTHONPATH`, pytest's `pythonpath`, setuptools' `package-dir`,
+    `sys.path.insert`): about 50 imports in the corpus. When a repo of the portfolio needs one, the options are to read
+    the declarative configuration as data, or to let a person declare the repo's roots in `atlas.yaml`;
+  - a project inside a directory a regular package holds: aiohttp-demos' `demos/moderator_bot`, 4 imports. The
+    language cannot tell it from a namespace portion, so it needs roots in `atlas.yaml`, or SCIP in the installed
+    environment;
+  - a name only a star import binds. CPython binds a module's `__all__`, or its public names, and following the chain
+    is the next `fix(python)`.
 
 ## Decisions made (2026-10-18, by the author)
 

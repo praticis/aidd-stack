@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #47)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #49)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -267,3 +267,14 @@
   in the build and the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file,
   so the round checks the install, not the change. It is `validate.sh`'s first run: it now copies only the package a
   dry-run imports, since an IDE watching the folder built a test fixture's C# project in its copy.
+- 2026-10-30: a Python absolute import is looked for under the directory its file's package runs from, PR #49
+  (`fix(python)`, H5-D28). netbox runs from `netbox/`, where its `manage.py` is, and none of its 7,661 absolute imports
+  resolved, so the core took its own classes for a package's. The rule resolves 4,054 more of the corpus's 42,155
+  absolute Python imports and changes none, and CPython's `FileFinder` finds the indexer's file for every one it
+  resolves. The corpus and the hold-out do not change. netbox's edges found by type go from 2,024 to 4,877.
+
+  Its judgment found two more things:
+  - a method a class of the repo declares past a base outside it got no edge; it goes by name again, as an `Unknown`
+    does;
+  - Django's model managers, `Model.objects.<method>(..)`, are found by name on more sites: 29,474 edges against
+    `main`'s 15,961. The author keeps the change, and that growth is TD-026, due in step 6.
