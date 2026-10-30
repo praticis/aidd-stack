@@ -309,9 +309,10 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015 and TD-025 (`docs/tech-debt.md`), C# defects
-    `main` has and a Python one its change of behavior made (H5-D26), each with a strict xfail test. SCIP is a
-    possible remedy for them, not a proven one; the first case of TD-001 may be fixed in the resolver earlier
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025 and TD-028 (`docs/tech-debt.md`), C#
+    defects `main` has and two Python ones a change of behavior made (H5-D26, and a class a function holds), each with
+    a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`

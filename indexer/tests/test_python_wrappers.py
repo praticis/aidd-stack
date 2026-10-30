@@ -75,7 +75,7 @@ CASES = [
 ]
 
 
-def _run(root, files: dict):
+def indexed(root, files: dict):
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
     for rel, source in {"app/__init__.py": "", **files}.items():
@@ -87,7 +87,7 @@ def _run(root, files: dict):
 
 @pytest.mark.parametrize("files,edges,calls", CASES)
 def test_the_resolver_reaches_the_wrapper_the_type_index_gives(tmp_path, files, edges, calls):
-    res, rv = _run(tmp_path, files)
+    res, rv = indexed(tmp_path, files)
     sym = {s.id: s for s in res.symbols}
     use = next(f.id for f in res.files if f.path == "app/use.py")
     assert {(sym[e.callee_id].qualified_name, e.strategy) for e in rv.calls
@@ -97,7 +97,7 @@ def test_the_resolver_reaches_the_wrapper_the_type_index_gives(tmp_path, files, 
 
 @pytest.mark.parametrize("files,edges,calls", CASES)
 def test_the_scanner_goes_through_the_same_wrapper(tmp_path, files, edges, calls):
-    res, _ = _run(tmp_path, files)
+    res, _ = indexed(tmp_path, files)
     assert {(c.method, c.path) for c in res.http_calls if c.file_id.endswith("/app/use.py")} == calls
 
 
