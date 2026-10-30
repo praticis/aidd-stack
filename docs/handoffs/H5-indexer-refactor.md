@@ -17,9 +17,9 @@ extension method a call reaches #30). Python's step 5: its case table (#42), its
 its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
 order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
 package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it; `fix(graph)` #53 keeps
-one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index.
-Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in
-`corpus-report.md`.
+one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index;
+`chore(scripts)` #56 has the per-site attribution read what the resolver makes of a receiver too (G2). Each merge
+and its live validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
@@ -46,9 +46,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Before TS, in this order (H5-D29):
-   - G2's probe in `answers.py`, a `chore(scripts)`;
-   - F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of` through the overrides.
+1. Before TS (H5-D29), F1.16 (H5-D27): `EXTENDS` from each language's type index, and `who_calls` and `impact_of`
+   through the overrides.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
    PR. The `fix(csharp)` PRs of the debts due before F1.2 do not hold it.
@@ -63,10 +62,25 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
   language: one probe, `indexer/scripts/judgment/answers.py`, reads each tree's own extraction, and
   `attribution.py` joins it to the changed edges (`docs/indexer/method.md` §4.12, H5-D21). C# was judged with
   `indexer/scripts/judgment/csharp_extensions.py`.
-- **G2, open: a change in the resolver's stage leaves every site unexplained.** `answers.py` reads what the extraction
-  records for a receiver, so where an import resolves, or how the `TypeIndex` reads a name, gives both trees the same
-  answers. H5-D28 and the star imports (#51) were judged with the `TypeIndex`'s verdict on each receiver, from both
-  trees; the probe belongs in `answers.py`, in a `chore(scripts)` PR.
+- **G2, closed (#56): a change in the resolver's stage is attributed too.** `answers.py` read only what the
+  extraction records for a receiver, so where an import resolves, or how the `TypeIndex` reads a name, gave both trees
+  the same answers. It now also records what the resolver makes of each receiver, asked through the hooks the resolver
+  asks (`docs/indexer/method.md` §4.12). Replayed on today's image, against the reference the judgments of H5-D28 and
+  #51 used, the `TypeIndex`'s verdict on each receiver read from Python's own index in both trees:
+  - H5-D28's import roots (`c4f1b8d` to `03e8447`), 8,726 changed sites of netbox and mattermost: `main`'s probe
+    explains none, this one all. The verdict explains 8,435 of them. The other 291 are receivers whose root an import
+    bound to a package and now binds to the repo's module (`from netbox.ui import layout`), which the verdict cannot
+    see;
+  - the star imports (#51, `e90d912` to `533d574`), 4,657 changed sites of netbox and dispatch: `main`'s probe explains
+    792, this one all, and the verdict explains each of them;
+  - H5-D28's method declared past a base outside the repo (`03e8447` to `e90d912`): its 15 sites stay `unexplained`,
+    since the change is below the receiver, as the verdict leaves them too;
+  - Python's change of behavior (#47, `65b510f` to `9a7a585`), in the extraction's stage: the same table and the same
+    samples, all 4,186 sites explained.
+
+  The probe now holds the language's extraction for the resolver, as the dry-run does: netbox takes 26–27 s against
+  17–18 s, and 671 MiB of peak memory against 389 MiB. Its rows are the same as with the pipeline's whole
+  `extract_tree`, so the other languages and the HTTP pass are left out.
 - **Judgment is not yet automated (H7-D6).** The verdict record (H7-D2) is to build; until then each change of
   behavior needs the review of an agent that did not write it.
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
@@ -1062,6 +1076,8 @@ The proof:
   | open-webui, the HTTP pass | 7.5–8.0 s | 7.3–7.7 s |
   | zulip | 10.0–10.9 s | 8.9–9.7 s |
   | netbox | 6.7–7.3 s | 5.9–6.3 s |
+- **On a live install** (the eighteenth golden round): the dry-runs of `main` and of the branch are identical on the 10
+  snapshots, which hold no Python file, and the 27 calls give the same answers.
 - **What stays open:**
   - TD-028, due in F1.2: a class a function holds has no name in the index, so a call on `self` in its methods reaches
     no wrapper of it, where `main` found it by the class's name. No site in the corpus;

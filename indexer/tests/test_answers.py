@@ -1,5 +1,6 @@
 """The attribution's probe (scripts/judgment/answers.py): what a tree's extraction records as the type of each method
-call's receiver, over synthetic repos. The tree's own typing is the current one; a stand-in plays another tree."""
+call's receiver, and what its resolver makes of the receiver, over synthetic repos. The tree's own typing is the current
+one; a stand-in plays another tree."""
 from __future__ import annotations
 
 import json
@@ -50,6 +51,24 @@ print(later)
 '''
 
 
+RESOLVED = {
+    "app/__init__.py": "",
+    "app/models.py": "class Repo:\n    def find(self):\n        pass\n",
+    "app/use.py": '''import requests
+from flask import Flask
+
+from app.models import Repo
+
+
+def handler(repo: Repo, server: Flask):
+    repo.find()
+    requests.get("/x")
+    server.run()
+    other.call()
+''',
+}
+
+
 def make(root: Path, files: dict) -> Path:
     for rel, text in files.items():
         path = root / "r" / rel
@@ -74,6 +93,15 @@ def go(tmp_path):
 @pytest.fixture
 def py(tmp_path):
     return make(tmp_path, {"a.py": PY, ".venv/v.py": PY, "b.go": GO})
+
+
+@pytest.fixture
+def resolving(tmp_path):
+    return make(tmp_path, RESOLVED)
+
+
+def answered(root: Path) -> dict:
+    return {r["receiver"]: (r["type"], r["resolved"]) for r in rows(root, "python") if r["file"] == "app/use.py"}
 
 
 @pytest.fixture
@@ -170,3 +198,42 @@ def test_calls_the_query_finds_on_other_lines_than_the_extractor_recorded_are_an
 def test_an_unknown_language_is_an_error(go, capsys):
     assert A.main(["cobol", str(go), "r"]) == 2
     assert "cobol" in capsys.readouterr().err
+
+
+def test_a_receiver_of_a_class_of_the_repo_resolves_to_the_type_the_resolver_names(resolving):
+    assert answered(resolving)["repo"] == ("Repo", "type app/models:Repo")
+
+
+def test_a_receiver_an_import_binds_to_a_package_is_the_packages(resolving):
+    assert answered(resolving)["requests"] == ("requests", "package")
+
+
+def test_a_receiver_whose_type_is_declared_outside_the_repo_is_named_outside_it(resolving):
+    typ, found = answered(resolving)["server"]
+    assert typ == "Flask" and found.startswith("outside ")
+
+
+def test_a_receiver_with_no_type_and_no_import_goes_by_name(resolving):
+    assert answered(resolving)["other"] == (None, None)
+
+
+def test_a_builtin_comes_before_the_import_that_binds_it(resolving, monkeypatch):
+    monkeypatch.setattr(A, "BUILTIN_RECEIVERS", frozenset({"requests"}))
+    assert answered(resolving)["requests"] == ("requests", "builtin")
+
+
+def test_a_type_the_resolver_cannot_place_goes_by_name(resolving, monkeypatch):
+    python = languages.by_id("python")
+    monkeypatch.setattr(python, "resolve_receiver", lambda ctx, file, written, path: None)
+    monkeypatch.setattr(python, "external_receiver", lambda ctx, file, written, path: None)
+    assert answered(resolving)["repo"] == ("Repo", None)
+
+
+def test_the_resolvers_answer_is_the_trees_own(resolving, monkeypatch):
+    monkeypatch.setattr(languages.by_id("python"), "resolve_receiver", lambda ctx, file, written, path: "x:Y")
+    assert answered(resolving)["repo"] == ("Repo", "type x:Y")
+
+
+def test_the_counts_say_what_the_resolver_makes_of_the_calls_on_a_receiver(resolving, capsys):
+    assert A.main(["python", str(resolving), "r"]) == 0
+    assert "the resolver: 1 type, 1 outside, 1 package, 0 builtin, 1 by name" in capsys.readouterr().err

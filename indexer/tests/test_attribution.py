@@ -24,9 +24,9 @@ def run(*edges):
             "calls": [{"caller_id": "s", "callee_id": c, "line": line, "strategy": st} for line, c, st in edges]}
 
 
-def row(line, receiver, typ, closures=0):
+def row(line, receiver, typ, closures=0, resolved=None):
     return {"repo": "r", "file": "a.go", "line": line, "receiver": receiver, "type": typ, "closures": closures,
-            "src": f"{receiver}.Do()"}
+            "resolved": resolved, "src": f"{receiver}.Do()"}
 
 
 def save_runs(tmp_path, before, after):
@@ -85,6 +85,32 @@ def test_without_a_table_the_case_is_what_the_answer_did(old, new, case):
     assert A.default_case({"old": old, "new": new}) == case
 
 
+def test_a_receiver_of_the_same_type_the_resolver_answers_differently_is_a_difference():
+    old = {("r", "a.go", 3): {"h": row(3, "h", "T", resolved="package")}}
+    new = {("r", "a.go", 3): {"h": row(3, "h", "T")}}
+    d = A.differences(old, new)[("r", "a.go", 3)]
+    assert (d["old"], d["new"], d["old_resolved"], d["new_resolved"]) == ("T", "T", "package", None)
+
+
+def test_answers_without_the_resolvers_are_compared_by_type_alone():
+    old = {("r", "a.go", 3): {"h": {k: v for k, v in row(3, "h", "T").items() if k != "resolved"}}}
+    assert A.differences(old, {("r", "a.go", 3): {"h": row(3, "h", "T")}}) == {}
+
+
+@pytest.mark.parametrize("old,new,case", [
+    ("package", None, "package -> by name"),
+    (None, "type app:T", "by name -> type"),
+    ("outside flask:Flask", "type app:T", "outside -> type"),
+    ("type app:T", "type app:U", "type -> type"),
+])
+def test_with_the_same_type_the_case_is_what_the_resolver_did(old, new, case):
+    assert A.default_case({"old": "T", "new": "T", "old_resolved": old, "new_resolved": new}) == case
+
+
+def test_a_type_that_differs_names_the_case_whatever_the_resolver_did():
+    assert A.default_case({"old": None, "new": "T", "old_resolved": "package", "new_resolved": None}) == "typed-now"
+
+
 def test_a_cases_file_names_the_case_and_a_none_falls_back_to_the_answer(tmp_path):
     path = tmp_path / "cases.py"
     path.write_text('def case_of(d):\n    return "closure-in-a-closure" if d["closures"] >= 2 else None\n')
@@ -133,6 +159,13 @@ def test_a_sample_shows_the_site_the_answer_and_the_edges_and_a_change_of_strate
     out = report(tmp_path, capsys, before, after, [row(3, "h", "T")], [row(3, "h", "U"), row(5, "g", "V")])
     assert "[retyped / changed] r a.go:3  h.Do()" in out and "type T -> U" in out
     assert "a.go:5" not in out
+
+
+def test_a_site_the_resolver_explains_is_counted_by_what_it_did_and_its_sample_shows_both_answers(tmp_path, capsys):
+    before, after = run((3, "A", "name")), run((3, "A", "name"), (3, "B", "name"))
+    out = report(tmp_path, capsys, before, after, [row(3, "h", "T", resolved="package")], [row(3, "h", "T")])
+    assert "package -> by name         widened   1" in out and "0 unexplained" in out
+    assert "type T -> T  (h)\n   resolved package -> None" in out
 
 
 def test_the_unexplained_sites_show_their_source_line_when_the_repos_are_given(tmp_path, capsys):
