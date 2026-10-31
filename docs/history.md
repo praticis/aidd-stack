@@ -385,3 +385,9 @@
   all but the 3 on which the path passed 30 s, and 71,285 of the 1,524,157 caller rows `main` marked lose the mark,
   each reached by a chain with no hop resolved by name among several; a dispatch adds 1,384,488 callers to 8,498
   symbols. The slowest walk takes 1.2 s. The corpus, the hold-out and the micro graph are the same.
+- 2026-10-31: PR #63 is validated on a live install (the twenty-fifth round). The graph is the same on the 10
+  snapshots and the build too, so no snapshot ran; of the 29 calls, the two on a C# override and `who_calls` on Q4a's
+  method gain their dispatching callers, Q4's callers gain `via_dispatch: false`, and the rest are the same.
+- 2026-10-31: the live check's `after` takes a change the build does not fingerprint, PR #64 (`chore(scripts)`). The
+  refresh then re-indexes nothing, so `after` no longer waits for runs: it refuses a last run since the before that is
+  not ok, or a build that moved. F1.16 is closed in the ROADMAP and in H5's Next, whose first step is now TS's.

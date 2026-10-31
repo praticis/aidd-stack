@@ -157,9 +157,11 @@ each snapshot copied at its sha to a folder no earlier run used and checked agai
 ### 4.8 Live, after the merge (class 5)
 
 After the author's reinstall: `indexer/scripts/live/validate.sh after`. It refuses until the installed code is
-AFTER_COMMIT's, every snapshot's last run since the before is ok and, when the code that shapes the graph changed (the
-parts the build fingerprints), every snapshot holds a build other than the before's: an ok run of a refresh before the
-reinstall is the old code's (the refresh runs every 15 min). A refusal writes no picture, so it runs again. It takes
+AFTER_COMMIT's and, when the code that shapes the graph changed (the parts the build fingerprints), every snapshot's last
+run since the before is ok and every snapshot holds a build other than the before's: an ok run of a refresh before the
+reinstall is the old code's (the refresh runs every 15 min). When that code did not change, as in a PR of the MCP alone,
+the build cannot tell the codes apart and the refresh re-indexes nothing: it refuses only a last run since the before
+that is not ok, or a build that moved. A refusal writes no picture, so it runs again. It takes
 the picture and the golden answers again, compares the graph with the dry-runs (`graph_vs_dry.py`) and each pair of
 answers (`json_paths_diff.py`), seals `SHA256SUMS.after` and prints counts. Pass criteria: the picture is identical but
 for the build and `IndexRun`; the graph holds the branch's dry-run on every snapshot; the answers are the same or differ
@@ -175,7 +177,7 @@ class 5: ask for it. The reinstall is the author's.
 |---|---|---|---|
 | 1 | agent | `indexer/scripts/live/validate.sh before BEFORE AFTER` | the install still on BEFORE's code; Docker and the stack up; `golden-calls.json` with its `SHA256SUMS` in `.local/indexer/live/`. About 2 min |
 | 2 | author | `install.sh` from `main`, then `install-check.sh` | the PR merged, `main` checked out and up to date |
-| 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and every snapshot re-indexed (the refresh runs every 15 min) |
+| 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and, when the build changed, every snapshot re-indexed (the refresh runs every 15 min) |
 | 4 | agent | read the counts against §4.8; report numbers only | |
 | 5 | agent | `indexer/scripts/live/validate.sh rotate --yes` | `after/` taken, the PR's records done |
 
