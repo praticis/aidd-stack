@@ -32,7 +32,7 @@ def test_two_methods_of_a_package_base_on_one_line_are_two_edges():
 
 
 def test_the_strongest_strategy_holds_the_edge_where_its_first_call_was():
-    from aidd_indexer.core.resolve import CallEdge, one_per_edge
+    from aidd_indexer.core.edges import CallEdge, one_per_edge
     calls = [CallEdge("a", "b", 1, "same-module"), CallEdge("a", "c", 1, "same-file-ambiguous"),
              CallEdge("a", "b", 1, "receiver-type"), CallEdge("a", "c", 1, "same-file"),
              CallEdge("a", "c", 2, "same-file"), CallEdge("a", "b", 1, "inherited", "Add")]

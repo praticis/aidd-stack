@@ -704,3 +704,34 @@ same field by field, and the other 5 differ only in their time, build and refres
 **What the round does not show.** These snapshots hold no Python file, so the round checks the install, not the change.
 The change was judged on five cases checked on both sides, the corpus, the micro set and an oracle over the 15 Python
 repos (the client wrappers' section of `docs/handoffs/H5-indexer-refactor.md`).
+
+## Nineteenth round: validating PR #57 on a live install (2026-10-30, build `0.2.15+0afc39c36d2f` to `0.2.15+3940c91fecfd`)
+
+What changed since the eighteenth round: PR #57 is merged. The graph writer's session, the linker's reads and writes
+and the snapshots' bookkeeping move to modules of their own, and the dry-run's payload leaves `cli.py`: a refactor,
+so the graph may not change. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`c1b355d`). The dry-runs of `main` and of the
+  branch (`29a91cd`) on each snapshot, at its sha, are identical section by section in all 10. The live graph holds
+  `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules,
+  0 violations.
+- **After the author's reinstall from `main` (`93a4de1`):** the refresher re-indexed the 10 snapshots with the moved
+  writer, `ok` and with no error.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching),
+strategies included.
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** The moved writer writes the same graph: every node and edge it writes, read back against
+the dry-runs, and the answers the MCP gives from them.

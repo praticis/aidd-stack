@@ -19,7 +19,8 @@ order followed the hash seed, and after it `fix(python)` #49 looks for an absolu
 package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it; `fix(graph)` #53 keeps
 one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index;
 `chore(scripts)` #56 has the per-site attribution read what the resolver makes of a receiver too (G2), and
-`refactor(graph)` #57 splits the graph writer, now under 300 lines, before F1.16 grows it. Each merge
+`refactor(graph)` #57 and `refactor(resolve)` #58 make room in the graph writer and the resolver before F1.16 grows
+them. Each merge
 and its live validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
@@ -47,9 +48,9 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Before TS (H5-D29), F1.16 (H5-D27), in three PRs (H5-D30):
+1. Before TS (H5-D29), F1.16 (H5-D27), in four PRs (H5-D30):
    - `refactor(graph)` #57: the graph writer's session, links and snapshots' bookkeeping, and the dry-run's payload,
-     in modules of their own;
+     in modules of their own; then `refactor(resolve)` #58: the resolver's edge records, in `core/edges.py`;
    - `feat(graph)`: `EXTENDS` and `IMPLEMENTS` from C#'s and Python's type indexes, and the calls that do not
      dispatch;
    - `feat(mcp)`: `who_calls` and `impact_of` through the overrides.
