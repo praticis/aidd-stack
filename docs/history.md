@@ -399,3 +399,9 @@
   use and the functions around it. `AGENTS.md`, the ROADMAP and the schema now say that a micro edge carries no
   `tenant`, `repo`, `ref` or `commit_sha`, which its ends carry, and which macro edges carry `confidence` and
   `evidence`.
+- 2026-10-31: TS's type cases, each checked against TypeScript's own checker, PR #66 (`test(typescript)`). The test
+  image gets Node and `typescript@6.0.3`, the last line with the compiler's JavaScript API, and `ts_checker.js` gives
+  the declarations the checker resolves each call to. Of the 33 resolver cases, 23 are typed, strict xfails until the
+  change of behavior; 9 stay `Unknown`, guards; a value of a package's class reaches no method. Of the scanner's 10, 4
+  are found today, guards, and 6 a type gives, strict xfails. The table corrects H5-D36's list of what stays
+  `Unknown`: a `let` takes its initializer's type, and a parameter injected by token declares its type.
