@@ -53,10 +53,12 @@ def register(mcp, st) -> None:
         caller carries `test: true|false` (file under a test path) and the counts are split into
         `production_caller_count` / `test_caller_count` — read the production ones first. An empty
         `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
-        app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
-        `-ambiguous` are likely, not proven. At each hop, a method is also reached by a dispatching call to
-        a method it overrides or implements, on a receiver that may hold an instance which runs it
-        (`via_dispatch: true` when every chain to the symbol goes through such a call). On a type
+        app/front-end is usually the caller. Calls are name-resolved (see who_calls): a caller with
+        `via_ambiguous: true` is likely, not proven, since every chain from it within the depth has a hop
+        resolved by name among several; its `hops` are the shortest chain's, which may be one of those. At
+        each hop, a method is also reached by a dispatching call to a method it overrides or implements, on a
+        receiver that may hold an instance which runs it (`via_dispatch: true` when every chain to the
+        symbol goes through such a call). On a type
         (class/interface/struct) the calls to its members count too (`members_included`): changing the
         class affects whoever calls its methods."""
         s = st(tenant)

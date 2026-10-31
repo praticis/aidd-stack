@@ -1,7 +1,7 @@
-"""`impact_of`'s walk, against every chain of calls enumerated: the hops are the shortest chain's, `via_ambiguous` says
-some chain within the depth has an ambiguous hop, and `via_dispatch` that every one has a dispatch. Without a
-dispatch on an acyclic graph, the chains that pass no call twice, which a Cypher `[:CALLS*1..d]` path matches, are all
-the chains, so the walk answers what that path did."""
+"""`impact_of`'s walk, against every chain of calls enumerated: the hops are the shortest chain's, and `via_ambiguous`
+and `via_dispatch` say that every chain within the depth has an ambiguous hop, or a dispatch. A chain without the mark
+that passes a call twice holds one shorter that does not, so the chains a Cypher `[:CALLS*1..d]` path matches, which
+pass no call twice, give the same answers, recursion or not."""
 
 import random
 
@@ -30,33 +30,36 @@ def _chains(edges: list[Edge], targets: list[str], depth: int, twice: bool) -> d
 
     for s in {a for a, *_ in edges} - set(targets):
         follow(s, s, [])
-    return {s: Reach(min(n for n, _, _ in c), any(a for _, a, _ in c), all(d for _, _, d in c))
+    return {s: Reach(min(n for n, _, _ in c), all(a for _, a, _ in c), all(d for _, _, d in c))
             for s, c in found.items()}
 
 
-def _graph(rng: random.Random, acyclic: bool, dispatch: bool) -> list[Edge]:
+def _graph(rng: random.Random) -> list[Edge]:
     nodes = [f"n{i}" for i in range(7)]
     edges = set()
     for _ in range(rng.randint(3, 12)):
-        a, b = rng.sample(nodes, 2)
-        if acyclic and a < b:
-            a, b = b, a
-        edges.add((a, b, rng.random() < 0.3, dispatch and rng.random() < 0.3))
+        a, b = rng.choice(nodes), rng.choice(nodes)
+        edges.add((a, b, rng.random() < 0.3, rng.random() < 0.3))
     return sorted(edges)
 
 
-def test_without_a_dispatch_on_an_acyclic_graph_the_walk_answers_what_a_cypher_path_did():
-    rng = random.Random(7)
-    for _ in range(400):
-        edges, depth = _graph(rng, acyclic=True, dispatch=False), rng.randint(1, 6)
-        assert _walk(edges, ["n0", "n1"], depth) == _chains(edges, ["n0", "n1"], depth, twice=False)
-
-
-def test_the_walk_answers_what_every_chain_does_with_recursion_and_dispatch():
+def test_the_walk_answers_what_every_chain_does_and_what_a_cypher_path_did():
     rng = random.Random(11)
-    for _ in range(400):
-        edges, depth = _graph(rng, acyclic=False, dispatch=True), rng.randint(1, 5)
-        assert _walk(edges, ["n0"], depth) == _chains(edges, ["n0"], depth, twice=True)
+    for _ in range(600):
+        edges, depth, targets = _graph(rng), rng.randint(1, 5), rng.sample(["n0", "n1", "n2"], rng.randint(1, 2))
+        assert _walk(edges, targets, depth) == _chains(edges, targets, depth, twice=True) \
+            == _chains(edges, targets, depth, twice=False)
+
+
+def test_a_chain_resolved_by_name_marks_a_caller_only_if_no_other_reaches_it():
+    edges = [("x", "t", True, False),                   # x calls t, resolved by name among several
+             ("x", "y", False, False), ("y", "t", False, False),
+             ("z", "y", True, False),
+             ("r", "r", True, False), ("r", "t", False, False)]
+    out = _walk(edges, ["t"], 6)
+    assert out == {"x": Reach(1, False, False), "y": Reach(1, False, False), "z": Reach(2, True, False),
+                   "r": Reach(1, False, False)}
+    assert _walk(edges, ["t"], 1)["x"] == Reach(1, True, False)
 
 
 def test_a_dispatch_at_any_hop_reaches_and_a_plain_chain_clears_the_mark():
