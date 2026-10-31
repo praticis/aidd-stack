@@ -393,3 +393,9 @@
   not ok, or a build that moved. F1.16 is closed in the ROADMAP and in H5's Next, whose first step is now TS's. TD-036
   registers a C# call on an interface that reaches its single implementer twice, by its own edge and by the dispatch,
   due in H5's step 6.
+- 2026-10-31: TS's step 5 is planned in five PRs, with the TypeScript compiler as its reference (H5-D36), and the
+  attribution's probe reads TS's files, PR #65 (`chore(scripts)`). `answers.py` and `attribution.sh` take several
+  languages read together (`typescript,tsx,javascript`), and the probe gives TS and JS the node that binds `this` at a
+  use and the functions around it. `AGENTS.md`, the ROADMAP and the schema now say that a micro edge carries no
+  `tenant`, `repo`, `ref` or `commit_sha`, which its ends carry, and which macro edges carry `confidence` and
+  `evidence`.
