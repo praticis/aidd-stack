@@ -1,7 +1,7 @@
 """Python's types, where the resolver or the HTTP scanner still reads a receiver wrongly. Each case states the right
-answer, the method CPython runs for its call, that no method of the repo does where a package's method serves it, or
-the client wrapper the call goes through, and is a strict xfail with the reason: when the index learns it, the case
-passes, the xfail fails the suite, and the mark has to go."""
+answer, the method CPython runs for its call, that no method of the repo does where a package's method serves it, the
+client wrapper the call goes through, or the override of the repo a call to a package's method may run, and is a strict
+xfail with the reason: when the index learns it, the case passes, the xfail fails the suite, and the mark has to go."""
 
 import subprocess
 import sys
@@ -32,6 +32,14 @@ OUTSIDE = [
     case("a-django-model-manager-without-one-of-the-repo-serves-no-method-of-it", MANAGER,
          "an attribute a base outside the repo may give is unknown, so its method is found by name"),
 ]
+OUTSIDE_METHOD = {"app/views.py": "from rest_framework.generics import GenericAPIView\n\n\n"
+                                  "class Base(GenericAPIView):\n    def fields(self):\n"
+                                  "        return self.get_serializer_class()\n\n\n"
+                                  "class Prefix(Base):\n    def get_serializer_class(self):\n        return None\n"}
+OVERRIDDEN = [
+    case("an-override-of-a-method-a-base-outside-the-repo-declares-meets-its-calls", OUTSIDE_METHOD,
+         "the method a base outside the repo declares is no symbol, so a call to it has no edge an override can meet"),
+]
 WRAPPED = [
     case("a-class-a-function-holds-reaches-its-own-wrapper", LOCAL_CLASS,
          "the type index has no name for a class a function holds, so its instance has no class"),
@@ -60,3 +68,11 @@ def test_a_call_a_package_serves_reaches_no_method_of_the_repo(tmp_path, given):
 def test_a_call_reaches_the_wrapper_of_a_class_a_function_holds(tmp_path, files):
     res, _ = indexed(tmp_path, files)
     assert {(c.method, c.path) for c in res.http_calls} == {("GET", "/v1/inner")}
+
+
+@pytest.mark.parametrize("files", OVERRIDDEN)
+def test_a_call_to_a_packages_method_meets_the_override_of_the_repo(tmp_path, files):
+    _, rv = indexed(tmp_path, files)
+    called = {c.callee_id for c in rv.calls if c.line == 6 and c.virtual}
+    assert called & {e.target_id for e in rv.hierarchy
+                     if e.kind == "OVERRIDES" and e.source_id.endswith(":Prefix.get_serializer_class#method")}

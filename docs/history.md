@@ -370,4 +370,5 @@
   instance that runs it. Of the (call, override) pairs `who_calls` would add, the receivers leave out 5,361 of 11,301 in
   netbox, 9,316 of 51,567 in umbraco and 19 of 9,883 in jellyfin, and none in dispatch, btcpayserver or eshop; what
   they keep is, in each, what the language runs on an instance at or below the receiver's type, and CPython runs the
-  Python fixture's. F1.16 goes in seven PRs. The corpus and the hold-out are the same.
+  Python fixture's. F1.16 goes in seven PRs. TD-035 registers an override of a package's method, which no call meets
+  until SCIP gives the method a symbol (F1.2). The corpus and the hold-out are the same.
