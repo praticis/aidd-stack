@@ -2,7 +2,9 @@
 the live install's tenants, repositories and answers stay out of the output.
 
 usage: validate_summary.py not-reindexed INFLIGHT   how many snapshots' last run since the before is not ok
+       validate_summary.py failed-runs INFLIGHT     of the snapshots that ran since the before, how many last ran not ok
        validate_summary.py stale-builds INFLIGHT    how many snapshots still hold the build they had in the before
+       validate_summary.py moved-builds INFLIGHT    how many snapshots hold a build other than the before's
        validate_summary.py before INFLIGHT          the dry-runs, the graph against them, the answers, the picture
        validate_summary.py after INFLIGHT           the picture, the answers and the runs, against the before"""
 import csv
@@ -28,15 +30,28 @@ def snapshots(inflight: Path) -> set[tuple[str, ...]]:
     return {tuple(r[:3]) for r in rows(lines(inflight / "before" / "snapshots.txt"))}
 
 
+def last_runs(inflight: Path) -> dict[tuple[str, ...], list[str]]:
+    """Each snapshot's last run since the before, of the snapshots the before holds."""
+    runs = inflight / "indexruns-after-before-picture.txt"
+    held, last = snapshots(inflight), {}
+    for r in rows(lines(runs)[1:]) if runs.exists() else []:
+        if tuple(r[:3]) in held and (tuple(r[:3]) not in last or r[6] > last[tuple(r[:3])][6]):
+            last[tuple(r[:3])] = r
+    return last
+
+
+def ok(run: list[str]) -> bool:
+    return run[3] == "ok" and run[4] == "0"
+
+
 def not_reindexed(inflight: Path) -> int:
     """A snapshot is re-indexed when its last run since the before is ok and has no error: an earlier ok run may be the
     old code's."""
-    runs = inflight / "indexruns-after-before-picture.txt"
-    last: dict[tuple[str, ...], list[str]] = {}
-    for r in rows(lines(runs)[1:]) if runs.exists() else []:
-        if tuple(r[:3]) not in last or r[6] > last[tuple(r[:3])][6]:
-            last[tuple(r[:3])] = r
-    return len(snapshots(inflight) - {k for k, r in last.items() if r[3] == "ok" and r[4] == "0"})
+    return len(snapshots(inflight) - {k for k, r in last_runs(inflight).items() if ok(r)})
+
+
+def failed_runs(inflight: Path) -> int:
+    return sum(not ok(r) for r in last_runs(inflight).values())
 
 
 def stale_builds(inflight: Path) -> int:
@@ -45,6 +60,10 @@ def stale_builds(inflight: Path) -> int:
     before = {tuple(r[:3]): r[BUILD_COLUMN] for r in rows(lines(inflight / "before" / "snapshots.txt"))}
     now = {tuple(r[:3]): r[3] for r in rows(lines(inflight / "builds-after.txt")[1:])}
     return sum(now.get(k, build) == build for k, build in before.items())
+
+
+def moved_builds(inflight: Path) -> int:
+    return len(snapshots(inflight)) - stale_builds(inflight)
 
 
 def only_index_runs(before: list[str], after: list[str]) -> bool:
@@ -107,13 +126,14 @@ def after(inflight: Path) -> None:
     print(picture(inflight))
     print(mismatching(inflight / "graph_vs_dry.before-after.txt"))
     print(answers(inflight))
-    total = len(snapshots(inflight))
-    print(f"index runs since the before: {total - not_reindexed(inflight)} of {total} snapshots ok, no error")
+    print(f"index runs since the before: {len(last_runs(inflight))} of {len(snapshots(inflight))} snapshots, "
+          f"{failed_runs(inflight)} of them not ok")
 
 
 def main(argv: list[str]) -> int:
     commands = {"before": before, "after": after}
-    counts = {"not-reindexed": not_reindexed, "stale-builds": stale_builds}
+    counts = {"not-reindexed": not_reindexed, "failed-runs": failed_runs, "stale-builds": stale_builds,
+              "moved-builds": moved_builds}
     if len(argv) == 3 and argv[1] in counts:
         print(counts[argv[1]](Path(argv[2])))
         return 0

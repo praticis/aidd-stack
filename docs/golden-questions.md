@@ -901,3 +901,45 @@ same field by field, and the other 5 differ only in their time, build and refres
 
 **What the round shows.** The writer writes the receivers as the dry-runs give them, and the MCP's answers do not
 change, since no tool reads them before F1.16's `feat(mcp)`.
+
+## Twenty-fifth round: validating PR #63 on a live install (2026-10-31, build `0.2.15+27df2af8e1ef`, unchanged)
+
+What changed since the twenty-fourth round: PR #63 is merged, and closes F1.16. `who_calls` lists a method's
+dispatching callers and what it overrides, and `impact_of` follows a dispatch at any hop and marks a caller
+`via_ambiguous` only when every chain from it has a hop resolved by name among several. Only the MCP changes, which the
+build does not fingerprint. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`0c66ae0`). The dry-runs of `main`
+  and of the PR's head (`1a0a2d7`) on each snapshot, at its sha, are identical in all 10. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 75 types' and
+  overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`3bf8859`, whose package is the PR head's):** the build is the same, so
+  the refresher re-indexed nothing, and `main`'s `validate.sh after` waited for runs that never come. It ran with the
+  branch's, which takes this case (PR #64): no snapshot ran since the before, and the 10 hold the before's build.
+
+**The picture of the graph** is identical in all 16 of its lists, and the graph holds the branch's dry-run on every
+snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 23 answers are the
+same field by field, `atlas_status` differs only in its time fields, and 5 differ as the PR says:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same callers, hops and `via_ambiguous`; each of the 1 and 5 callers gains `via_dispatch: false` |
+| Q5 `ref_diff` | ✅ the same |
+
+- **`who_calls` on Q4a's method**, which implements an interface's method, gains one dispatching caller and the
+  interface's method in `overrides`. The dispatching call is its one caller's: a call on the interface, which also
+  reaches the method directly, since it is the interface's only implementer (`receiver-type-impl`): the site is listed
+  twice, which TD-036 registers.
+- **`who_calls` on the C# method with no caller of its own** gains 3 dispatching callers and the interface's method in
+  `overrides`. One of them is the method itself: a call in its body on the interface may run it again.
+- **`impact_of` on that method** goes from 0 internal callers to 3, each `via_dispatch: true`: the other two
+  dispatching callers at hop 1, and a caller of them at hop 2. It leaves the method itself out, as it leaves out every
+  target. No route reaches them.
+
+**What the round shows.** The MCP reads the dispatch the graph has held since #61 and #62, and the graph does not
+change. A change the build does not fingerprint leaves no run to wait for, which the live check now knows.

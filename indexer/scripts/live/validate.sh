@@ -8,9 +8,11 @@
 #   validate.sh rotate --yes                        the PR is validated: inflight/ becomes merged/, the old merged/ goes
 # BEFORE_COMMIT is main before the merge and AFTER_COMMIT the merge. `before` refuses when the installed code is not
 # BEFORE_COMMIT's, or when inflight/ exists: the "before" is taken once and never rewritten. `after` refuses until the
-# installed code is AFTER_COMMIT's, every snapshot's last run since the before is ok and, when the code that shapes the
-# graph changed, every snapshot holds a build other than the before's: a refresh before the reinstall ran the old code
-# (the refresh runs every 15 min). A refusal writes no picture, so `after` runs again.
+# installed code is AFTER_COMMIT's and, when the code that shapes the graph changed, every snapshot's last run since the
+# before is ok and every snapshot holds a build other than the before's: a refresh before the reinstall ran the old code
+# (the refresh runs every 15 min). When it did not change, the build cannot tell the codes apart and the refresh
+# re-indexes nothing, so `after` refuses only a last run since the before that is not ok, or a build that moved. A
+# refusal writes no picture, so `after` runs again.
 # It prints counts only; the judgment of the numbers is the author's or the agent's.
 set -euo pipefail
 
@@ -102,13 +104,18 @@ after() {
   same_tree "$new" indexer/aidd_indexer "$home/indexer/aidd_indexer" \
     || die "the installed code is not ${new:0:7}'s: the author reinstalls from main first"
   runs_since "$(recorded before_done_at)" > "$inflight/indexruns-after-before-picture.txt"
-  local pending stale
-  pending=$(summary not-reindexed "$inflight")
-  [ "$pending" = 0 ] || die "$pending snapshot(s) have no ok last run since the before: wait for the refresh, then run again"
+  builds > "$inflight/builds-after.txt"
+  local pending stale failed moved
   if shapes_changed "$(recorded before_commit)" "$new"; then
-    builds > "$inflight/builds-after.txt"
+    pending=$(summary not-reindexed "$inflight")
+    [ "$pending" = 0 ] || die "$pending snapshot(s) have no ok last run since the before: wait for the refresh, then run again"
     stale=$(summary stale-builds "$inflight")
     [ "$stale" = 0 ] || die "$stale snapshot(s) still hold the before's build: wait for the refresh, then run again"
+  else
+    failed=$(summary failed-runs "$inflight")
+    [ "$failed" = 0 ] || die "$failed snapshot(s) last ran since the before not ok"
+    moved=$(summary moved-builds "$inflight")
+    [ "$moved" = 0 ] || die "$moved snapshot(s) hold a build other than the before's, though the change shapes no graph"
   fi
   "$V/graph-picture.sh" "$inflight/after" > "$inflight/picture_after.txt"
   python3 -I "$V/golden.py" "$calls" "$inflight/after/golden" > "$inflight/golden_after.txt"
@@ -119,7 +126,7 @@ after() {
   done > "$inflight/golden-before-after.paths.txt"
   (cd "$inflight" && { find after -type f | sort | xargs shasum -a 256
     shasum -a 256 picture_after.txt golden_after.txt graph_vs_dry.before-after.txt golden-before-after.paths.txt \
-      indexruns-after-before-picture.txt $([ -f builds-after.txt ] && echo builds-after.txt); } > SHA256SUMS.after)
+      indexruns-after-before-picture.txt builds-after.txt; } > SHA256SUMS.after)
   echo "sealed: $inflight/SHA256SUMS.after"
   summary after "$inflight"
 }
@@ -139,5 +146,5 @@ case "$mode" in
   before) before "$@" ;;
   after) after ;;
   rotate) rotate "$@" ;;
-  *) sed -n '2,14p' "$0" >&2; exit 2 ;;
+  *) sed -n '2,16p' "$0" >&2; exit 2 ;;
 esac
