@@ -1,7 +1,9 @@
 """Every atlas tool against a real Neo4j holding a small indexed graph: a Go service `orders` (`GET /v1/orders/{id}`,
 whose handler calls `loadOrder`; on the branch `feature/items` also `GET /v1/orders/{id}/items`), an ASP.NET service
-`accounts` (`/api/Accounts/{id}/details`, as `[controller]` writes it; its controller imports two of its own
-namespaces, one module under two specs) and a TS client `shop` that calls both, the second in lower case. Run by
+`accounts` (`/api/Accounts/{id}/details`, as `[controller]` writes it; its controller imports three of its own
+namespaces, one module under three specs, and its action reaches `INotifier.Notify`, which `Notifier` implements and
+`AuditNotifier` overrides, while a call on a `PlainNotifier` runs `Notifier`'s only) and a TS client `shop` that calls
+both, the second in lower case. Run by
 `scripts/mcp-it.sh`, which starts that Neo4j; skipped without it."""
 
 import asyncio
@@ -58,9 +60,10 @@ def test_who_calls_and_symbol_context(srv):
 
 
 def test_symbol_context_lists_a_files_imports_in_one_order(srv):
-    imports = call(srv, "symbol_context", symbol="AccountsController", repo="accounts")["file_imports"]
+    imports = call(srv, "symbol_context", symbol="Accounts.Api.AccountsController", repo="accounts")["file_imports"]
     keys = [(i["type"], i["target"], i["spec"]) for i in imports]
-    assert keys == sorted(keys) and [i["spec"] for i in imports if i["type"] == "Module"] == ["Accounts.Dto", "Accounts.Models"]
+    assert keys == sorted(keys) and [i["spec"] for i in imports if i["type"] == "Module"] == \
+        ["Accounts.Dto", "Accounts.Models", "Accounts.Services"]
 
 
 def test_http_map_of_the_service_and_of_its_client(srv):
@@ -81,6 +84,39 @@ def test_who_consumes(srv, asked):
 def test_impact_of_reaches_the_route_and_its_consumer(srv):
     out = call(srv, "impact_of", symbol="loadOrder", repo="orders")
     assert [e["path"] for e in out["exposed_through"]] == ["/v1/orders/{id}"] and out["consumer_repos"] == ["shop"]
+
+
+def test_who_calls_an_override_lists_the_dispatching_calls_that_may_run_it(srv):
+    out = call(srv, "who_calls", symbol="AuditNotifier.Notify", repo="accounts")
+    assert out["callers"] == [] and out["overridden_by"] == []
+    assert [o["qualified_name"] for o in out["overrides"]] == \
+        ["Accounts.Notifications.INotifier.Notify", "Accounts.Notifications.Notifier.Notify"]
+    assert [(c["qualified_name"], c["line"], c["via"]) for c in out["dispatched_callers"]] == [
+        ("Accounts.Services.AccountService.MarkSeen", 33, "Accounts.Notifications.INotifier.Notify"),
+        ("Accounts.Services.AccountService.MarkSeen", 33, "Accounts.Notifications.Notifier.Notify")]
+    # neither its own base call nor a call on a PlainNotifier, which never holds an AuditNotifier
+
+
+def test_who_calls_a_base_method_lists_its_overrides_without_their_callers(srv):
+    out = call(srv, "who_calls", symbol="Notifier.Notify", repo="accounts")
+    assert [(c["qualified_name"], c["line"]) for c in out["callers"]] == [
+        ("Accounts.Notifications.AuditNotifier.Notify", 15), ("Accounts.Notifications.Alerts.Plain", 24),
+        ("Accounts.Services.AccountService.MarkSeen", 33)]
+    assert [(c["qualified_name"], c["via"]) for c in out["dispatched_callers"]] == [
+        ("Accounts.Services.AccountService.MarkSeen", "Accounts.Notifications.INotifier.Notify")]
+    assert [o["qualified_name"] for o in out["overridden_by"]] == ["Accounts.Notifications.AuditNotifier.Notify"]
+
+
+def test_impact_of_an_override_reaches_the_route_through_a_dispatch(srv):
+    out = call(srv, "impact_of", symbol="AuditNotifier.Notify", repo="accounts")
+    assert [(c["qualified_name"], c["hops"], c["via_dispatch"]) for c in out["internal_callers"]] == [
+        ("Accounts.Services.AccountService.MarkSeen", 1, True), ("Accounts.Api.AccountsController.Details", 2, True)]
+    assert [e["path"] for e in out["exposed_through"]] == ["/api/Accounts/{id}/details"]
+    assert out["consumer_repos"] == ["shop"]
+    base = call(srv, "impact_of", symbol="Notifier.Notify", repo="accounts")["internal_callers"]
+    assert [(c["qualified_name"], c["hops"], c["via_dispatch"]) for c in base] == [
+        ("Accounts.Notifications.Alerts.Plain", 1, False), ("Accounts.Notifications.AuditNotifier.Notify", 1, False),
+        ("Accounts.Services.AccountService.MarkSeen", 1, False), ("Accounts.Api.AccountsController.Details", 2, False)]
 
 
 def test_ref_diff_shows_the_branchs_route(srv):
