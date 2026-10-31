@@ -23,8 +23,10 @@ one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has 
 them, and `feat(graph)` #59 writes the types' bases and marks the calls that do not dispatch; `fix(resolve)` #60
 sends a call that does not dispatch to no implementation and no homonym, and a Python `super()` to what follows the
 caller's class in each MRO (H5-D32); `feat(graph)` #61 writes `OVERRIDES`, what a dispatching call may run instead,
-as each language says (H5-D33); and a `feat(graph)` has a dispatching call keep its receiver's type and an override the
-receivers on which it may run (H5-D34). Each merge and its live validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
+as each language says (H5-D33); `feat(graph)` #62 has a dispatching call keep its receiver's type and an override the
+receivers on which it may run (H5-D34); and a `feat(mcp)` has `who_calls` list a method's dispatching callers and what
+it overrides, and `impact_of` follow a dispatch at any hop, which closes F1.16. Each merge and its live validation are
+in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
 strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
@@ -51,20 +53,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Before TS (H5-D29), F1.16 (H5-D27), in seven PRs (H5-D30 to H5-D34):
-   - `refactor(graph)` #57: the graph writer's session, links and snapshots' bookkeeping, and the dry-run's payload,
-     in modules of their own; then `refactor(resolve)` #58: the resolver's edge records, in `core/edges.py`;
-   - `feat(graph)` #59: `EXTENDS` and `IMPLEMENTS` from C#'s and Python's type indexes, and the calls that do not
-     dispatch;
-   - `fix(resolve)` #60: a call that does not dispatch reaches no implementation and no homonym, a Python `super()`
-     what follows the caller's class in each MRO, and two types of one name in one file get no base (TD-030 to
-     TD-032), measured with `judgment/hierarchy.py`;
-   - `feat(graph)` #61: `OVERRIDES` from the language's dispatch, C#'s `override`, `new`, `static` and interfaces and
-     Python's MROs, measured with `judgment/hierarchy.py`;
-   - `feat(graph)`: a dispatching call's `receivers` and an override's, so a call on a subclass reaches only the
-     overrides an instance of it may run, measured with `judgment/hierarchy.py`;
-   - `feat(mcp)`: `who_calls` and `impact_of` through `OVERRIDES` and the receivers, the walk hop by hop (H5-D34),
-     with the two golden calls added for it.
+1. F1.16 (H5-D27) closes with its seventh PR (H5-D30 to H5-D34): `refactor(graph)` #57, `refactor(resolve)` #58,
+   `feat(graph)` #59 for the types' bases and the calls that do not dispatch, `fix(resolve)` #60, `feat(graph)` #61 for
+   `OVERRIDES`, `feat(graph)` #62 for the receivers, and a `feat(mcp)`: `who_calls` and `impact_of` through
+   `OVERRIDES` and the receivers, the walk hop by hop. Its live validation is the twenty-fifth golden round, whose two
+   calls on a C# override change.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
    PR. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
