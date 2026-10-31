@@ -41,6 +41,21 @@ def test_no_run_at_all_leaves_every_snapshot_pending(inflight):
     assert S.not_reindexed(inflight) == 2
 
 
+def test_a_snapshot_whose_last_run_failed_is_pending_after_an_earlier_ok_one(inflight):
+    write(inflight / "indexruns-after-before-picture.txt",
+          RUNS + '"t", "a", "main", "ok", 0, "sha1", 1\n"t", "a", "main", "failed", 1, "sha1", 2\n'
+                 '"t", "b", "main", "failed", 1, "sha2", 1\n"t", "b", "main", "ok", 0, "sha2", 2\n')
+    assert S.not_reindexed(inflight) == 1
+
+
+def test_a_snapshot_that_still_holds_the_befores_build_is_stale(inflight):
+    builds = "tenant, repo, ref, build\n"
+    write(inflight / "builds-after.txt", builds + '"t", "a", "main", "0.2.15+new"\n"t", "b", "main", "0.2.15+old"\n')
+    assert S.stale_builds(inflight) == 1
+    write(inflight / "builds-after.txt", builds + '"t", "a", "main", "0.2.15+new"\n')
+    assert S.stale_builds(inflight) == 1
+
+
 def test_the_build_and_the_index_run_counts_are_the_only_moves_allowed(inflight):
     write(inflight / "after" / "snapshots.txt", SNAPSHOTS.replace("+old", "+new"))
     write(inflight / "after" / "labels.txt", LABELS.replace("IndexRun\", 10", "IndexRun\", 12"))

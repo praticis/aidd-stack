@@ -1,7 +1,8 @@
 """The numbers of a live validation (docs/indexer/method.md §4.7 and §4.8), read from the in-flight folder. Counts only:
 the live install's tenants, repositories and answers stay out of the output.
 
-usage: validate_summary.py not-reindexed INFLIGHT   how many snapshots have no ok run since the before
+usage: validate_summary.py not-reindexed INFLIGHT   how many snapshots' last run since the before is not ok
+       validate_summary.py stale-builds INFLIGHT    how many snapshots still hold the build they had in the before
        validate_summary.py before INFLIGHT          the dry-runs, the graph against them, the answers, the picture
        validate_summary.py after INFLIGHT           the picture, the answers and the runs, against the before"""
 import csv
@@ -12,7 +13,7 @@ from pathlib import Path
 MOVING = ("age_min", "last_finished_at", "last_success_at", "indexed_at", "indexer_build", "refresh.changed",
           "started_at", "finished_at", "success_age_min")
 BUILD_COLUMN = 4
-COUNTED = ("symbols", "calls_edges", "imports_edges", "modules", "violations")
+COUNTED = ("symbols", "calls_edges", "imports_edges", "hierarchy_edges", "modules", "violations")
 
 
 def lines(path: Path) -> list[str]:
@@ -28,9 +29,22 @@ def snapshots(inflight: Path) -> set[tuple[str, ...]]:
 
 
 def not_reindexed(inflight: Path) -> int:
+    """A snapshot is re-indexed when its last run since the before is ok and has no error: an earlier ok run may be the
+    old code's."""
     runs = inflight / "indexruns-after-before-picture.txt"
-    ok = {tuple(r[:3]) for r in rows(lines(runs)[1:]) if r[3] == "ok" and r[4] == "0"} if runs.exists() else set()
-    return len(snapshots(inflight) - ok)
+    last: dict[tuple[str, ...], list[str]] = {}
+    for r in rows(lines(runs)[1:]) if runs.exists() else []:
+        if tuple(r[:3]) not in last or r[6] > last[tuple(r[:3])][6]:
+            last[tuple(r[:3])] = r
+    return len(snapshots(inflight) - {k for k, r in last.items() if r[3] == "ok" and r[4] == "0"})
+
+
+def stale_builds(inflight: Path) -> int:
+    """Snapshots whose build in the graph is still the one the before shows: a refresh before the reinstall wrote them
+    with the old code."""
+    before = {tuple(r[:3]): r[BUILD_COLUMN] for r in rows(lines(inflight / "before" / "snapshots.txt"))}
+    now = {tuple(r[:3]): r[3] for r in rows(lines(inflight / "builds-after.txt")[1:])}
+    return sum(now.get(k, build) == build for k, build in before.items())
 
 
 def only_index_runs(before: list[str], after: list[str]) -> bool:
@@ -99,8 +113,9 @@ def after(inflight: Path) -> None:
 
 def main(argv: list[str]) -> int:
     commands = {"before": before, "after": after}
-    if len(argv) == 3 and argv[1] == "not-reindexed":
-        print(not_reindexed(Path(argv[2])))
+    counts = {"not-reindexed": not_reindexed, "stale-builds": stale_builds}
+    if len(argv) == 3 and argv[1] in counts:
+        print(counts[argv[1]](Path(argv[2])))
         return 0
     if len(argv) != 3 or argv[1] not in commands:
         print(__doc__, file=sys.stderr)
