@@ -370,7 +370,7 @@ Open:
   gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
-  embedding promotes and never dispatches; its interface calls are a debt. Three PRs (H5-D30). Proven on netbox's 67
+  embedding promotes and never dispatches; its interface calls are a debt. Four PRs (H5-D30). Proven on netbox's 67
   sites that lose an override, 46 of them `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
   confirm the `EXTENDS` read from tree-sitter, or replace it
 

@@ -320,3 +320,8 @@
   PR #57 (`refactor(graph)`): its session, the linker's reads and writes and the snapshots' bookkeeping go to modules
   of their own, and the dry-run's payload leaves `cli.py`. `core/graph.py` goes from 462 lines to 235. The corpus,
   the hold-out and the micro set are the same, and the MCP and the writer pass against a throwaway Neo4j.
+- 2026-10-30: PR #57 is validated on a live install (the nineteenth golden round). The dry-runs of `main` and of the
+  branch are identical on the 10 snapshots, the moved writer writes the same graph, and the 27 calls give the same
+  answers.
+- 2026-10-30: the resolver's edge records move to `core/edges.py`, PR #58 (`refactor(resolve)`), before F1.16's
+  `feat(graph)` grows `core/resolve.py`, which was at 300 lines; it goes to 256.

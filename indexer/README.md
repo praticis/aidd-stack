@@ -125,6 +125,7 @@ aidd_indexer/
     discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
     extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
     resolve.py dispatch.py  CALLS (mediator dispatch, the receiver's type, then by name), IMPORTS, external Packages
+    edges.py                the resolver's records: a CALLS edge and its evidence, one per key; IMPORTS; Package
     types.py                the type service (ADR-005): TypeRef, Unknown with its reason, the TypeIndex questions
     integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner → compose)
     http_base.py            BaseScanner: where a route lives, handler-vs-data, method detection
