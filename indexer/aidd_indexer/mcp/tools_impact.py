@@ -5,9 +5,39 @@ from __future__ import annotations
 from typing import Any
 
 from ..core.config import is_test_path
-from .store import MAX_ROWS, AtlasError
+from .reach import Hop, Reach, walk
+from .store import MAX_ROWS, AtlasError, Store
 from .tools_http import _collapse_refs
 from .tools_symbols import _symbol
+
+_HOP = """
+    UNWIND $ids AS id
+    MATCH (n:Symbol {id: id})
+    CALL (n) {
+        MATCH (h:Symbol)-[c:CALLS]->(n)
+        RETURN h, c, false AS dispatch
+      UNION
+        MATCH (n)-[r:OVERRIDES]->(:Symbol)<-[c:CALLS]-(h:Symbol)
+        WHERE c.virtual AND (c.receivers IS NULL OR any(t IN c.receivers WHERE t IN r.receivers))
+        RETURN h, c, true AS dispatch
+    }
+    RETURN DISTINCT h.id AS caller, n.id AS callee, c.strategy AS strategy, dispatch
+"""
+
+
+def _callers(s: Store, reach: dict[str, Reach], sy: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = s.read("""
+        UNWIND $ids AS id
+        MATCH (h:Symbol {id: id})
+        WHERE h.ref = $ref AND h.repo = $repo
+        MATCH (f:File)-[:CONTAINS]->(h)
+        RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file,
+               h.is_entry_point AS entry_point
+    """, ids=list(reach), ref=sy["ref"], repo=sy["repo"])
+    out = [{"id": r["id"], "qualified_name": r["qualified_name"], "kind": r["kind"], "file": r["file"],
+            "hops": reach[r["id"]].hops, "entry_point": r["entry_point"], "via_ambiguous": reach[r["id"]].via_ambiguous,
+            "via_dispatch": reach[r["id"]].via_dispatch} for r in rows]
+    return sorted(out, key=lambda c: (c["hops"], c["qualified_name"], c["file"], c["id"]))[:MAX_ROWS]
 
 
 def register(mcp, st) -> None:
@@ -23,26 +53,21 @@ def register(mcp, st) -> None:
         caller carries `test: true|false` (file under a test path) and the counts are split into
         `production_caller_count` / `test_caller_count` — read the production ones first. An empty
         `consumers` with non-empty `exposed_through` means "public route, no indexed caller" — the
-        app/front-end is usually the caller. Calls are name-resolved (see who_calls): hops marked
-        `-ambiguous` are likely, not proven. On a type (class/interface/struct) the calls to its members
-        count too (`members_included`): changing the class affects whoever calls its methods."""
+        app/front-end is usually the caller. Calls are name-resolved (see who_calls): a caller with
+        `via_ambiguous: true` is likely, not proven, since every chain from it within the depth has a hop
+        resolved by name among several; its `hops` are the shortest chain's, which may be one of those. At
+        each hop, a method is also reached by a dispatching call to a method it overrides or implements, on a
+        receiver that may hold an instance which runs it (`via_dispatch: true` when every chain to the
+        symbol goes through such a call). On a type
+        (class/interface/struct) the calls to its members count too (`members_included`): changing the
+        class affects whoever calls its methods."""
         s = st(tenant)
         sy = _symbol(s, symbol, repo, ref)
         depth = max(1, min(max_depth, 10))
         members = [r["id"] for r in s.read(
             "MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id", id=sy["id"])]
         targets = [sy["id"]] + members
-        callers = s.read(f"""
-            MATCH (t:Symbol) WHERE t.id IN $targets
-            MATCH p = (h:Symbol)-[:CALLS*1..{depth}]->(t)
-            WHERE h.ref = $ref AND h.repo = $repo AND NOT h.id IN $targets
-            WITH h, min(length(p)) AS hops, collect(DISTINCT [r IN relationships(p) | r.strategy]) AS strategies
-            MATCH (f:File)-[:CONTAINS]->(h)
-            RETURN h.id AS id, h.qualified_name AS qualified_name, h.kind AS kind, f.path AS file, hops,
-                   h.is_entry_point AS entry_point,
-                   any(st IN reduce(acc = [], x IN strategies | acc + x) WHERE st ENDS WITH 'ambiguous') AS via_ambiguous
-            ORDER BY hops, qualified_name LIMIT $limit
-        """, targets=targets, ref=sy["ref"], repo=sy["repo"], limit=MAX_ROWS)
+        callers = _callers(s, walk(lambda ids: [Hop(**r) for r in s.read(_HOP, ids=ids)], targets, depth), sy)
         for c in callers:
             c["test"] = is_test_path(c["file"])
         production = [c for c in callers if not c["test"]]

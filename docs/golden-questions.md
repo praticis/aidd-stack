@@ -124,10 +124,12 @@ RETURN h.qualified_name AS reaches_via, hops, e.method + ' ' + e.path AS route,
 ORDER BY hops, route;
 ```
 
-**Expected:** the internal callers up to the HTTP handler (growing `hops`; `via_ambiguous: true` when some `CALLS`
-edge on the path is `*-ambiguous`), the route `GET /v1/password-policy` in `exposed_through`, and `<project-a>` in
-`consumers` with the outbound adapter and the line. If no handler reaches the symbol, an empty `exposed_through` =
-a change internal to the service.
+**Expected:** the internal callers up to the HTTP handler (growing `hops`; `via_ambiguous: true` when every path from
+the caller has a `*-ambiguous` `CALLS` edge; at each hop a method is also reached by a dispatching call to a method it
+`OVERRIDES`, on a receiver that may hold an instance which runs it, which the Cypher above does not follow, and
+`via_dispatch: true` when every path goes through one), the route `GET /v1/password-policy` in `exposed_through`, and
+`<project-a>` in `consumers` with the outbound adapter and the line. If no handler reaches the symbol, an empty
+`exposed_through` = a change internal to the service.
 
 **Obtained (2026-10-03):** ⚠️ answered, with an important limit. The question was asked in the BFF's repo
 (`<project-a>`), and the model picked the outbound adapter (`Client.GetPasswordPolicy`) as the target. The **across
@@ -865,3 +867,37 @@ same field by field, and the other 5 differ only in their time, build and refres
 since no tool reads the edges before F1.16's `feat(mcp)`. Two calls join the list for it: `who_calls` and `impact_of` on
 a C# method that implements an interface method, with no caller of its own and three dispatching calls to the
 interface's.
+
+## Twenty-fourth round: validating PR #62 on a live install (2026-10-31, build `0.2.15+b202477c2793` to `0.2.15+27df2af8e1ef`)
+
+What changed since the twenty-third round: PR #62 is merged. A dispatching call to a method others override keeps its
+receiver's type when a supertype declares the method, and an override the receivers on which it may run: a change of
+the graph. The same 3 tenants and 10 snapshots, and 29 calls: the two the last round added ask `who_calls` and
+`impact_of` about a C# method that implements an interface's, which F1.16's `feat(mcp)` changes.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`1873a8d`). The dry-runs of `main`
+  and of the PR's head (`acc6822`) on each snapshot, at its sha, are identical section by section in 8. The two C#
+  snapshots gain only `receivers`: on their 15 and 17 `OVERRIDES` (17 and 22 types), and on one call of the first.
+  Without the field, their `calls` and `hierarchy` are the same. The live graph holds `main`'s dry-run on every
+  snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 75 types' and overrides' edges, 351
+  modules, 0 violations.
+- **After the author's reinstall from `main` (`0c66ae0`, whose package is the PR head's):** the refresher re-indexed
+  the 10 snapshots with the new build, `ok` and with no error.
+
+**The picture of the graph** is identical in 12 of its 16 lists. `CALLS` and the hierarchy hold the same edges, the 32
+`OVERRIDES` and one call now with their `receivers`; the snapshots and the labels differ only in the build and the
+`IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** The writer writes the receivers as the dry-runs give them, and the MCP's answers do not
+change, since no tool reads them before F1.16's `feat(mcp)`.

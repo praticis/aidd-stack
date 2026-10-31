@@ -69,6 +69,19 @@ def _symbol_rows(s: Store, symbol: str, repo: str | None, ref: str | None, match
         """, symbol=symbol, repo=repo, ref=ref)
 
 
+_OVERRIDING = {"overrides": "(:Symbol {id: $id})-[:OVERRIDES]->(o:Symbol)",
+               "overridden_by": "(:Symbol {id: $id})<-[:OVERRIDES]-(o:Symbol)"}
+
+
+def _overriding(s: Store, symbol_id: str, pattern: str) -> list[dict[str, Any]]:
+    return s.read(f"""
+        MATCH {pattern}
+        MATCH (f:File)-[:CONTAINS]->(o)
+        RETURN o.id AS id, o.qualified_name AS qualified_name, f.path AS file, o.line_start AS line
+        ORDER BY file, line, id LIMIT $limit
+    """, id=symbol_id, limit=MAX_ROWS)
+
+
 def register(mcp, st) -> None:
     @mcp.tool()
     def find_symbol(query: str, repo: str | None = None, ref: str | None = None,
@@ -170,17 +183,32 @@ def register(mcp, st) -> None:
         find_symbol, a qualified name (pkg.Type.Method), its `Type.Method` tail or a bare name when unambiguous. Calls are
         resolved by name within the repo (strategy on each edge) — treat cross-package hits as likely, not proven.
         On a type (class/interface/struct), `inherited` callers use a method it gets from a package base
-        (`method` says which: `repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>`)."""
+        (`method` says which: `repo.CreateAsync()` on `ITodoRepository : IBaseRepository<T>`).
+        On a method, `dispatched_callers` make a dispatching call to a method it overrides or implements
+        (`via`), on a receiver that may hold an instance which runs it; `overrides` lists those methods, and
+        `overridden_by` the methods that may run instead of it, whose callers never run it."""
         s = st(tenant)
         target = _symbol(s, symbol, repo, ref)
+        cap = min(limit, MAX_ROWS)
         callers = s.read("""
             MATCH (caller)-[c:CALLS]->(:Symbol {id: $id})
             OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
             RETURN caller.id AS id, labels(caller)[0] AS type, coalesce(caller.qualified_name, caller.path) AS qualified_name,
                    caller.kind AS kind, coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, c.method AS method
             ORDER BY file, line LIMIT $limit
-        """, id=target["id"], limit=min(limit, MAX_ROWS))
-        return {"symbol": target, "callers": callers, "caller_count": len(callers)}
+        """, id=target["id"], limit=cap)
+        dispatched = s.read("""
+            MATCH (:Symbol {id: $id})-[r:OVERRIDES]->(o:Symbol)<-[c:CALLS]-(caller)
+            WHERE c.virtual AND (c.receivers IS NULL OR any(t IN c.receivers WHERE t IN r.receivers))
+            OPTIONAL MATCH (f:File)-[:CONTAINS]->(caller)
+            RETURN caller.id AS id, labels(caller)[0] AS type,
+                   coalesce(caller.qualified_name, caller.path) AS qualified_name, caller.kind AS kind,
+                   coalesce(f.path, caller.path) AS file, c.line AS line, c.strategy AS strategy, o.qualified_name AS via
+            ORDER BY file, line, via LIMIT $limit
+        """, id=target["id"], limit=cap)
+        return {"symbol": target, "callers": callers, "caller_count": len(callers), "dispatched_callers": dispatched,
+                "dispatched_caller_count": len(dispatched),
+                **{k: _overriding(s, target["id"], pattern) for k, pattern in _OVERRIDING.items()}}
 
     @mcp.tool()
     def symbol_context(symbol: str, repo: str | None = None, ref: str | None = None, limit: int = 30, tenant: str | None = None) -> dict[str, Any]:

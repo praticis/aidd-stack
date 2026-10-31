@@ -34,8 +34,8 @@
     debts of the core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and
     client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, are due in
     an H5 step: 6 and 12 for TD-023, 6 for TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
-    with TD-025 due in F1.2 (H5-D26). Next, F1.16, then TS (H5-D29), judged with the per-site attribution every
-    language now has (H5-D21), which reads the resolver's stage too (G2, #56), before the `fix(csharp)` PRs (H5-D19);
+    with TD-025 due in F1.2 (H5-D26). F1.16 closes with its `feat(mcp)`. Next, TS (H5-D29), judged with the per-site
+    attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56), before the `fix(csharp)` PRs (H5-D19);
     then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape
     targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
@@ -370,18 +370,19 @@ Open:
     not feasible: the per-site attribution (H5's gap G1: built for every language, H5-D21), the verdict record
     (H7-D2) and each judged case as a test
 
-- [ ] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
+- [x] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
   gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
-  embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D34):
+  embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D35):
   `refactor(graph)` #57, `refactor(resolve)` #58, `feat(graph)` #59, `fix(resolve)` #60 for the calls that do not
   dispatch (a Python `super()` reaches what follows the caller's class in each MRO) and the bases of two types of one
   name, `feat(graph)` #61 for `OVERRIDES`, what a dispatching call may run instead as each language says, a
-  `feat(graph)` for the receivers a dispatching call and an override hold, so a call on a subclass reaches only the
-  overrides an instance of it may run, then `feat(mcp)`. Proven on netbox's 67 sites that lose an override, 46 of them
-  `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
-  confirm the `EXTENDS` read from tree-sitter, or replace it
+  `feat(graph)` #62 for the receivers a dispatching call and an override hold, so a call on a subclass reaches only the
+  overrides an instance of it may run, then `feat(mcp)`, which closes it: `who_calls` lists a method's dispatching
+  callers and its overrides, and `impact_of` follows a dispatch at any hop. Of netbox's 67 sites that lose an override,
+  46 of them `_get_queryset`, the override's `who_calls` reaches all but the one TD-035 holds. It comes before TS's
+  step 5 (H5-D29). SCIP (F1.2) may then confirm the `EXTENDS` read from tree-sitter, or replace it
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 

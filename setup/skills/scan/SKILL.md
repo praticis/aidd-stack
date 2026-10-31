@@ -299,7 +299,10 @@ is available — it is faster and more complete than grep:
 - `symbol_context` on the symbol you are about to change: definition,
   container, what it calls, **who calls it**, what the file imports;
 - `who_calls` to list every caller of a function you are changing —
-  those are the tests and call sites to re-check;
+  those are the tests and call sites to re-check; on a method that
+  overrides or implements another, `dispatched_callers` call the other
+  one and may run it, and `overridden_by` lists what may run instead
+  of it;
 - `cypher_readonly` for anything the other tools do not answer
   (schema: Repo, Snapshot, Module, File, Symbol, Package; edges
   HAS_SNAPSHOT, CONTAINS, IN_SNAPSHOT, CALLS, IMPORTS; `$tenant` is

@@ -36,9 +36,8 @@ class FakeStore(Store):
             return [{"id": "t/a@main/sym/pkg.Svc.Do#method", "repo": "a", "ref": "main", "kind": "method", "name": "Do",
                      "qualified_name": "pkg.Svc.Do", "file": "svc.go", "line_start": 1, "line_end": 2, "signature": "func Do()",
                      "doc": "", "visibility": "public", "entry_point": False}]
-        if "CALLS*1.." in query:                                # impact_of callers
-            return [{"id": "t/a@main/sym/pkg.Handler#function", "qualified_name": "pkg.Handler", "kind": "function",
-                     "file": "h.go", "hops": 1, "entry_point": True, "via_ambiguous": False}]
+        if "UNWIND $ids AS id" in query:                        # impact_of: a hop of callers, then the callers found
+            return _impact(query, params["ids"])
         if "HANDLED_BY {ref: $ref}]->(h:Symbol)" in query and "WHERE h.id IN $ids" in query:
             return [{"endpoint_id": "e1", "service": "a", "method": "GET", "path": "/v1/x", "handler": "pkg.Handler",
                      "consumers": [{"repo": "b", "ref": "main", "caller": "B.Call", "evidence": "b:c.go:1", "confidence": "exact", "hint": None},
@@ -61,6 +60,14 @@ class FakeStore(Store):
                 return base
             return [base[0], dict(base[1], hash="2b"), {"qualified_name": "pkg.New", "kind": "var", "file": "n.go", "line": 4, "hash": "4"}]
         return []
+
+
+def _impact(query, ids):
+    if "AS dispatch" in query:
+        return [{"caller": "t/a@main/sym/pkg.Handler#function", "callee": i, "strategy": "receiver-type",
+                 "dispatch": False} for i in ids if i == "t/a@main/sym/pkg.Svc.Do#method"]
+    return [{"id": i, "qualified_name": i.split("/sym/")[1].split("#")[0], "kind": "function", "file": "h.go",
+             "entry_point": True} for i in ids]
 
 
 def _call(srv, name, args):
@@ -256,10 +263,11 @@ def test_impact_of_a_type_counts_the_callers_of_its_members(monkeypatch):
             if "-[:CONTAINS]->(m:Symbol) RETURN m.id AS id" in query:
                 self.queries.append(query)
                 return [{"id": "t/a@main/sym/pkg.Repo.Find#method"}]
-            if "CALLS*1.." in query:
+            if "AS dispatch" in query and "t/a@main/sym/pkg.Repo.Find#method" in params["ids"]:
                 self.queries.append(query)
-                assert params["targets"] == ["t/a@main/sym/pkg.Svc.Do#method", "t/a@main/sym/pkg.Repo.Find#method"]
-                assert "NOT h.id IN $targets" in query
+                assert params["ids"] == ["t/a@main/sym/pkg.Svc.Do#method", "t/a@main/sym/pkg.Repo.Find#method"]
+                return [{"caller": "t/a@main/sym/pkg.Repo.Find#method", "callee": "t/a@main/sym/pkg.Svc.Do#method",
+                         "strategy": "same-file", "dispatch": False}, *super().read(query, **params)]
             return super().read(query, **params)
 
     monkeypatch.setenv("AIDD_TENANT", "t")
