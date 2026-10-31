@@ -41,6 +41,14 @@ def test_a_record_repeated_shows():
     assert not gone and sum(new.values()) == 1
 
 
+def test_a_field_ignored_leaves_only_what_else_changed():
+    head = {**RUN, "calls": [c | {"virtual": True} for c in RUN["calls"]]}
+    assert list(M.diff(RUN, head)) == ["calls"]
+    assert M.diff(RUN, head, frozenset({"calls.virtual"})) == {}
+    head["calls"][0]["strategy"] = "unique-name"
+    assert list(M.diff(RUN, head, frozenset({"calls.virtual"}))) == ["calls"]
+
+
 def test_the_run_metadata_is_not_the_graph():
     head = {**RUN, "repo": {"name": "r", "root": "/elsewhere"}, "counts": {"calls_edges": 3}}
     assert M.diff(RUN, head) == {}

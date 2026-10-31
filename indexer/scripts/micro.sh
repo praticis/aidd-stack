@@ -4,13 +4,15 @@
 # dry-runs are kept per version of the code and reused. Everything runs in the indexer image; the clones and the runs
 # live in $AIDD_CORPUS_HOME (default ~/.cache/aidd-corpus), outside the repository.
 #
-#   indexer/scripts/micro.sh [--base REF] [--base-only] [--jobs N] [--memory SIZE] [--show N] [repo ...]
+#   indexer/scripts/micro.sh [--base REF] [--base-only] [--jobs N] [--memory SIZE] [--show N] [--ignore LIST.FIELD]
+#                            [repo ...]
 #
 #   --base REF     the commit to compare with (default: main)
 #   --base-only    only the base's dry-runs, kept for later runs (CI fills its cache this way)
 #   --jobs N       containers at once (default: $AIDD_CORPUS_JOBS, else 2 from 9 GiB of Docker memory, else 1)
 #   --memory SIZE  memory cap of each container (default: 5g; grafana's dry-run peaks at 4.4 GiB)
 #   --show N       records listed per side of each list that differs (default: 5)
+#   --ignore L.F   a field left out of a list's records in the comparison, as `calls.virtual`; repeatable
 #   repo ...       only these repositories (default: the whole set)
 #
 # Writes micro/base-<tree>-<image>/ and micro/<label>/ (a <repo>.json.gz and a <repo>.log each) and
@@ -24,9 +26,9 @@ indexer="$(cd "$(dirname "$0")/.." && pwd)"
 home="${AIDD_CORPUS_HOME:-$HOME/.cache/aidd-corpus}"
 image="${AIDD_INDEXER_IMAGE:-aidd-indexer:local}"
 jobs="${AIDD_CORPUS_JOBS:-}"
-memory=5g base=main show=5 repos="" base_only=""
+memory=5g base=main show=5 repos="" base_only="" ignore=""
 
-usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
+usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -35,6 +37,7 @@ while [ $# -gt 0 ]; do
     --jobs) jobs="$2"; shift 2 ;;
     --memory) memory="$2"; shift 2 ;;
     --show) show="$2"; shift 2 ;;
+    --ignore) ignore="$ignore --ignore $2"; shift 2 ;;
     -h|--help) usage 0 ;;
     -*) echo "unknown option: $1" >&2; usage 2 ;;
     *) repos="$repos $1"; shift ;;
@@ -122,7 +125,7 @@ fi
 rc=0
 # shellcheck disable=SC2086
 dock --entrypoint python "$image" /src/scripts/micro.py --compare "/corpus/micro/base-$tree-$img" "/corpus/micro/$label" \
-  --show "$show" $order >"$micro/$label.report.txt" 2>&1 || rc=1
+  --show "$show" $ignore $order >"$micro/$label.report.txt" 2>&1 || rc=1
 cat "$micro/$label.report.txt"
 [ -z "$failed" ] || rc=3
 exit "$rc"

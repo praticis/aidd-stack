@@ -80,8 +80,19 @@ def test_a_closed_debt_still_listed_in_the_roadmap_is_found(tmp_path):
 def test_a_roadmap_without_the_list_of_a_due_is_found(tmp_path):
     found, _ = make(tmp_path, roadmap="- nothing\n")
     assert found == ["the ROADMAP has no `Debts due here:` list of the debts due in F1.2",
-                     "the ROADMAP has no `are due in `fix(csharp)` PRs before F1.2` list of the debts due in a `fix(csharp)` PR before F1.2",
+                     "the ROADMAP has no `due in a `fix(csharp)` PR before F1.2` list of the debts due in a `fix(csharp)` PR before F1.2",
                      "the ROADMAP has no `due in an H5 step` list of the debts due in an H5 step"]
+
+
+def test_a_debt_due_in_a_fix_of_any_scope_is_checked_against_the_roadmaps_list_of_that_scope(tmp_path):
+    rows = ROWS + [row("TD-004", "a `fix(go)` PR before F1.2", "`a-fourth-case`")]
+    tests = TESTS.replace('case("a-third-case")]', 'case("a-third-case"), case("a-fourth-case")]')
+    assert make(tmp_path / "listed", rows=rows, tests=tests,
+                roadmap=ROADMAP + "- Go: TD-004 is due in a `fix(go)` PR before F1.2.\n")[0] == []
+    assert make(tmp_path / "missing", rows=rows, tests=tests)[0] == [
+        "the ROADMAP has no `due in a `fix(go)` PR before F1.2` list of the debts due in a `fix(go)` PR before F1.2"]
+    assert make(tmp_path / "stray", roadmap=ROADMAP + "- Go: TD-001 is due in a `fix(go)` PR before F1.2.\n")[0] == [
+        "the ROADMAP's list of the debts due in a `fix(go)` PR before F1.2 names TD-001, which is not open and due there"]
 
 
 def test_a_debt_due_in_a_step_of_h5_is_checked_against_the_roadmaps_list_of_that_due(tmp_path):
