@@ -12,14 +12,16 @@ NO_MRO = Unknown("bases CPython cannot order")
 
 
 class Linearized:
-    """The MROs of a type index that gives each class's bases (`_bases`) and the classes of the repo it sees
-    (`classes`). An MRO holds the repo's classes and, from the first base outside the repo on, that base."""
+    """The MROs of a type index that gives each class's bases (`_bases`), the classes of the repo it sees (`classes`)
+    and whether a class binds a name (`binds`). An MRO holds the repo's classes and, from the first base outside the
+    repo on, that base."""
 
     def __init__(self) -> None:
         super().__init__()
         self._linear: dict[TypeRef, list | Unknown] = {}
         self._after: dict[TypeRef, set] | None = None
         self._open: Unknown | None = None
+        self._rest: dict[TypeRef, set[tuple]] | None = None
 
     def mro(self, cls: TypeRef) -> list | Unknown:
         if cls not in self._linear:
@@ -55,6 +57,26 @@ class Linearized:
                 elif len(self._bases(d)) > 1:
                     self._open = found
         return {self._open} if self._open is not None else self._after.get(cls, set())
+
+    def declaring_after(self, cls: TypeRef, name: str) -> set[TypeRef]:
+        """What `super().name` in a method of `cls` may run: in each MRO the index computes that holds `cls`, the first
+        class after it that binds `name`; none where a base outside the repo, which may bind it, comes first."""
+        found = set()
+        for rest in self._rests().get(cls, ()):
+            first = next((t for t in rest if not isinstance(t, TypeRef) or self.binds(t, name)), None)
+            if isinstance(first, TypeRef):
+                found.add(first)
+        return found
+
+    def _rests(self) -> dict[TypeRef, set[tuple]]:
+        if self._rest is None:
+            self._rest = defaultdict(set)
+            for d in self.classes():
+                found = self.mro(d)
+                for i, t in enumerate(found if not isinstance(found, Unknown) else ()):
+                    if isinstance(t, TypeRef):
+                        self._rest[t].add(tuple(found[i + 1:]))
+        return self._rest
 
     def _c3(self, cls: TypeRef) -> list | Unknown:
         bases = self._bases(cls)

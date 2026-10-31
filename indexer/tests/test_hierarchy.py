@@ -87,6 +87,11 @@ public class Failure : System.Exception { }
     "Part1.cs": "namespace App;\n\npublic partial class Service : BaseRepo { }\n",
     "Part2.cs": "namespace App;\n\npublic partial class Service : IRepo { }\n",
 }
+ONE_NAME = {
+    "App.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
+    "Handlers.cs": "namespace App;\n\npublic interface IHandler { }\npublic interface IHandler<T> : IHandler { }\n"
+                   "public class Handler : IHandler<int> { }\npublic class Plain : Handler { }\n",
+}
 GO = {
     "go.mod": "module example.com/app\n\ngo 1.22\n",
     "app.go": """package app
@@ -162,6 +167,10 @@ def test_csharp_types_extend_classes_and_interfaces_and_implement_interfaces(tmp
         ("App.Service", "EXTENDS", "App.BaseRepo"),            # the bases of a partial class's parts are the class's
         ("App.Service", "IMPLEMENTS", "App.IRepo"),
     }
+
+
+def test_two_types_of_one_name_in_one_file_have_no_edge(tmp_path):
+    assert _edges(*_resolved(_write(tmp_path / "cs", ONE_NAME))) == {("App.Plain", "EXTENDS", "App.Handler")}
 
 
 def test_a_call_on_base_does_not_dispatch_and_one_on_this_may(tmp_path):

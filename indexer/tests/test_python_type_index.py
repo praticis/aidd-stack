@@ -56,6 +56,13 @@ def test_an_undecided_receiver_reaches_no_method_by_type_and_says_why(tmp_path, 
     assert (typed_targets(edges), reasons) == (set(), {case.reason})
 
 
+@pytest.mark.parametrize("case", cases("following"))
+def test_super_its_receiver_does_not_decide_reaches_by_the_mros_what_cpython_runs(tmp_path, case):
+    edges, reasons = answered(tmp_path, case)
+    assert reasons == {case.reason} and case.runs in typed_targets(edges)
+    assert {strategy.removesuffix("-ambiguous") for _, strategy in edges} == {"receiver-type"}
+
+
 @pytest.mark.parametrize("case", cases("external"))
 def test_a_value_of_an_external_class_reaches_no_homonym_of_the_repo(tmp_path, case):
     assert answered(tmp_path, case) == (set(), {case.reason})

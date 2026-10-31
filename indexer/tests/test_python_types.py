@@ -46,10 +46,11 @@ INHERITED = ("inherited", "inherited-impl")     # an edge to the type: the metho
 class Case(NamedTuple):
     use: str                    # app/use.py; its `main()` makes the call
     runs: str | None            # the method CPython runs for the call; None for a case that cannot run here
-    answer: str                 # typed: the declarations decide it; unknown: they do not; external: no repo method
+    answer: str                 # typed: the declarations decide it; unknown: they do not; external: no repo method;
+                                # following: not the receiver's, but the MROs of the repo's classes (`super()`)
     wrong: str | None = None    # what a binding that is not the name's own, or a misread declaration, would give
     method: str = "run"
-    reason: str | None = None   # unknown and external: why the declarations in sight give no type
+    reason: str | None = None   # unknown, external and following: why the declarations in sight give no type
 
 
 B_RUN, BASE_RUN = "app/models:B.run", "app/models:Base.run"
@@ -177,7 +178,7 @@ UNDECIDED = {
     "super-in-a-class-a-subclass-puts-before-another": Case(
         "from app.models import Base\nclass Mixin(Base):\n    def go(self): return super().run()\nclass Other(Base):\n"
         "    def run(self): pass\nclass C(Mixin, Other):\n    pass\ndef main(): return C().go()\n", "app/use:Other.run",
-        "unknown", BASE_RUN, reason="super() in a class a class of the repo may put before another than its base"),
+        "following", reason="super() in a class a class of the repo may put before another than its base"),
     "a-parameter-annotated-any": Case(
         "from typing import Any\nfrom app.models import B\ndef f(x: Any): return x.run()\ndef main(): return f(B())\n",
         B_RUN, "unknown", reason="typing's Any, which any type is"),
