@@ -1,5 +1,5 @@
 """A `CALLS` edge is its caller, callee, line and method: the calls of one line that reach one target are one edge, by the
-strongest of their strategies, and two methods of a package base reached on one line are two edges. The graph writer
+strongest of their strategies, which may dispatch when one of them may, and two methods of a package base reached on one line are two edges. The graph writer
 creates one edge per call the resolver gives."""
 from __future__ import annotations
 
@@ -38,3 +38,11 @@ def test_the_strongest_strategy_holds_the_edge_where_its_first_call_was():
              CallEdge("a", "c", 2, "same-file"), CallEdge("a", "b", 1, "inherited", "Add")]
     assert one_per_edge(calls) == [CallEdge("a", "b", 1, "receiver-type"), CallEdge("a", "c", 1, "same-file"),
                                    CallEdge("a", "c", 2, "same-file"), CallEdge("a", "b", 1, "inherited", "Add")]
+
+
+def test_an_edge_may_dispatch_when_one_of_its_calls_may():
+    from aidd_indexer.core.edges import CallEdge, one_per_edge
+    calls = [CallEdge("a", "b", 1, "receiver-type", virtual=False), CallEdge("a", "b", 1, "same-file"),
+             CallEdge("a", "b", 2, "same-file", virtual=False), CallEdge("a", "b", 2, "receiver-type", virtual=False)]
+    assert one_per_edge(calls) == [CallEdge("a", "b", 1, "receiver-type"),
+                                   CallEdge("a", "b", 2, "receiver-type", virtual=False)]

@@ -31,7 +31,7 @@ from ..tree import node_text, walk  # noqa: F401  the language modules import th
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.http_base import BaseScanner
-    from ..core.model import FileInfo, ModuleInfo, RepoInfo, SymbolInfo
+    from ..core.model import CallInfo, FileInfo, ModuleInfo, RepoInfo, SymbolInfo
     from ..core.types import Unknown
 
 
@@ -214,6 +214,17 @@ class LanguageSupport:
         the receiver's type as `call_receiver` wrote it, when no member follows it: it tells a value from a type's
         name."""
         return []
+
+    def bases(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        """Qualified names of the types of the repo a type names as its direct bases, where a call on the type may run
+        a base's method or an override of it (`EXTENDS`, `IMPLEMENTS`). A base the language cannot find in the repo is
+        left out. Go embeds a type, which promotes its methods and dispatches none: no base."""
+        return []
+
+    def dispatches(self, call: "CallInfo") -> bool:
+        """Whether the class of the object the call is made on may choose the method it runs: not where the language
+        sends the call to a base's method by name (C# `base.M()`, Python `super().m()`)."""
+        return True
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         """Qualified names of the in-repo base types of a type (nearest first), so a method inherited

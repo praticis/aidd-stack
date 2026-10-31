@@ -1,9 +1,10 @@
 """The edges the resolver gives: a `CALLS` edge with the evidence that found it, one per caller, callee, line and
-method; an `IMPORTS` edge; and the external package an import may reach."""
+method, and whether the object's class may choose the method it runs; an `IMPORTS` edge; and the external package an
+import may reach."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 # strongest evidence first: the receiver's type, the message's, a base outside the repo, then the nearest homonym
 EVIDENCE = ("receiver-type", "receiver-type-impl", "dispatch", "inherited", "inherited-impl",
@@ -17,15 +18,19 @@ class CallEdge:
     line: int
     strategy: str          # one of EVIDENCE, + "-ambiguous" when the target is one of several
     method: str | None = None   # inherited*: the method called, which the repo does not declare (it comes from a package base)
+    virtual: bool = True        # False: the language sends the call to one method by name (`base.M()`, `super().m()`)
 
 
 def one_per_edge(calls: list[CallEdge]) -> list[CallEdge]:
-    """One `CALLS` edge per caller, callee, line and method, by the strongest strategy of the calls that give it."""
+    """One `CALLS` edge per caller, callee, line and method, by the strongest strategy of the calls that give it; it may
+    dispatch when one of them may."""
     out: dict[tuple, CallEdge] = {}
     for c in calls:
         key = (c.caller_id, c.callee_id, c.line, c.method)
-        if key not in out or _strength(c.strategy) < _strength(out[key].strategy):
-            out[key] = c
+        kept = out.get(key, c)
+        best = c if _strength(c.strategy) < _strength(kept.strategy) else kept
+        virtual = kept.virtual or c.virtual
+        out[key] = best if best.virtual == virtual else replace(best, virtual=virtual)
     return list(out.values())
 
 

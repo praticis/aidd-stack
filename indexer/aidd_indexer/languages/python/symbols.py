@@ -13,9 +13,10 @@ from typing import Any
 
 from tree_sitter import Node
 
-from ...core.model import FileInfo, SymbolInfo
+from ...core.model import CallInfo, FileInfo, SymbolInfo
 from ...core.types import RepoTypes, TypeRef, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
+from .forms import SUPER
 from .http import PyScanner
 from .modules import module_file
 from .package_facts import read_package_facts
@@ -29,6 +30,7 @@ HERE = Path(__file__).parent
 STDLIB = set(getattr(sys, "stdlib_module_names", ()))
 _IMPORT = re.compile(r"^\s*(?:from\s+[\w.]+\s+)?import\s+(.*)$", re.S)
 _DECORATOR_ENTRY = re.compile(r"@(app|router|api|bp|blueprint)\.(get|post|put|delete|patch|route|websocket)\b")
+_SUPER_CALL = re.compile(r"super\s*\((?:[^()]|\([^()]*\))*\)")
 
 
 _PY_REQ = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(?:\[[^\]]*\])?\s*([^;#]*)")
@@ -143,6 +145,16 @@ class PythonSupport(LanguageSupport):
         """A receiver whose chain ends in a package's class, module or function: no method of the repo is its."""
         found = typed(self._types(ctx), file.path, receiver_type, path)
         return (found.name, True) if isinstance(found, Outside) else None
+
+    def bases(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        return [qualified(b) for b in self._types(ctx).bases(ref(qualified_type)) if isinstance(b, TypeRef)]
+
+    def dispatches(self, call: CallInfo) -> bool:
+        """Not on the builtin `super()` itself, which the receiver's facts tell apart from a rebound name; a call on
+        what follows it (`super().x.m()`) may."""
+        if (call.receiver_type or "").startswith("super:"):
+            return bool(call.receiver_path)
+        return call.receiver_unknown != SUPER.reason or not _SUPER_CALL.fullmatch(call.receiver or "")
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
