@@ -313,9 +313,9 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025 and TD-028 (`docs/tech-debt.md`), C#
-    defects `main` has and two Python ones a change of behavior made (H5-D26, and a class a function holds), each with
-    a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028 and TD-035
+    (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
+    function holds), and an override of a package's method no call meets, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
@@ -374,12 +374,13 @@ Open:
   gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
-  embedding promotes and never dispatches; its interface calls are a debt. Six PRs (H5-D30 to H5-D33):
+  embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D34):
   `refactor(graph)` #57, `refactor(resolve)` #58, `feat(graph)` #59, `fix(resolve)` #60 for the calls that do not
   dispatch (a Python `super()` reaches what follows the caller's class in each MRO) and the bases of two types of one
-  name, a `feat(graph)` for `OVERRIDES`, what a dispatching call may run instead as each language says, then
-  `feat(mcp)`. Proven on netbox's 67
-  sites that lose an override, 46 of them `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
+  name, `feat(graph)` #61 for `OVERRIDES`, what a dispatching call may run instead as each language says, a
+  `feat(graph)` for the receivers a dispatching call and an override hold, so a call on a subclass reaches only the
+  overrides an instance of it may run, then `feat(mcp)`. Proven on netbox's 67 sites that lose an override, 46 of them
+  `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
   confirm the `EXTENDS` read from tree-sitter, or replace it
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.

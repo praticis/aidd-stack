@@ -14,6 +14,8 @@
 - `overrides`: the `OVERRIDES` edges by language, against the methods of one name a type and an ancestor through the
   type edges declare: a pair the edges leave out, by why, and an edge no such pair gives (a class after another in an
   MRO); and the dispatching calls each adds to `who_calls`;
+- `receivers`: for each dispatching call to a method others override, the overrides its `receivers` keep, and whether
+  they are what the language runs on an instance at or below the receiver's type;
 - `go interfaces`: Go's calls on an interface of the repo with no edge of the method's name, and how many of them are
   on an interface of two implementers or more;
 - `seconds`: the resolver's calls, the types' edges and the overrides.
@@ -40,7 +42,7 @@ from aidd_indexer.core.resolve import TYPE_KINDS, Resolver
 from aidd_indexer.core.types import TypeRef, Unknown
 from aidd_indexer.languages.python.type_index import qualified as python_qualified
 from aidd_indexer.languages.python.type_index import ref as python_ref
-from dispatching import SAMPLES, go_interfaces, not_dispatching, overrides, sample, super_calls
+from dispatching import SAMPLES, go_interfaces, not_dispatching, overrides, receivers, sample, super_calls
 
 
 class Repo:
@@ -167,7 +169,8 @@ def report(root: str, name: str) -> dict:
     return {"repo": name, "seconds": r.seconds, "edges": edges(r), "consistency": consistency(r, samples),
             "one name": one_name(r, samples), "not dispatching": not_dispatching(r, samples),
             "super": super_calls(r, samples),
-            "overrides": overrides(r, samples), "go interfaces": go_interfaces(r), "samples": samples}
+            "overrides": overrides(r, samples), "receivers": receivers(r, samples), "go interfaces": go_interfaces(r),
+            "samples": samples}
 
 
 def main(argv: list[str]) -> int:

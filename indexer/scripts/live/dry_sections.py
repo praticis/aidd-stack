@@ -1,26 +1,36 @@
 """main's and head's dry-runs of each live snapshot, section by section: the records that differ, with the snapshot as
-a number, CALLS by strategy and the CALLS that do not dispatch. No name leaves this script.   dry_sections.py DRY_DIR"""
+a number, CALLS by strategy, the CALLS that do not dispatch and those that hold receivers. No name leaves this script.
+    dry_sections.py DRY_DIR"""
 import collections
 import json
 import sys
 from pathlib import Path
 
-KEYS = {"files": ("path",), "symbols": ("id",), "calls": ("caller_id", "callee_id", "line", "strategy"),
-        "imports": ("file_id", "target_id", "spec"), "hierarchy": ("source_id", "kind", "target_id"),
+KEYS = {"files": ("path",), "symbols": ("id",), "calls": ("caller_id", "callee_id", "line", "strategy", "receivers"),
+        "imports": ("file_id", "target_id", "spec"), "hierarchy": ("source_id", "kind", "target_id", "receivers"),
         "endpoints": ("method", "path", "file_id", "line"),
         "http_calls": ("method", "path", "file_id", "line")}
 dry = Path(sys.argv[1])
+
+
+def value(r: dict, k: str):
+    return tuple(r.get(k) or ()) if k == "receivers" else r.get(k)
+
+
 for n, main in enumerate(sorted(dry.glob("*__main.json")), 1):
     a, b = json.load(open(main)), json.load(open(str(main).replace("__main.json", "__head.json")))
     out = []
     for sec, key in KEYS.items():
-        ka = collections.Counter(tuple(r.get(k) for k in key) for r in a.get(sec, []))
-        kb = collections.Counter(tuple(r.get(k) for k in key) for r in b.get(sec, []))
+        ka = collections.Counter(tuple(value(r, k) for k in key) for r in a.get(sec, []))
+        kb = collections.Counter(tuple(value(r, k) for k in key) for r in b.get(sec, []))
         if ka != kb:
             out.append(f"{sec} -{sum((ka - kb).values())} +{sum((kb - ka).values())}")
     direct = [sum(c.get("virtual") is False for c in run["calls"]) for run in (a, b)]
     if direct[0] != direct[1]:
         out.append(f"not dispatching {direct[0]} -> {direct[1]}")
+    held = [sum(bool(c.get("receivers")) for c in run["calls"]) for run in (a, b)]
+    if held[0] != held[1]:
+        out.append(f"calls with receivers {held[0]} -> {held[1]}")
     calls = ""
     if any(o.startswith("calls") for o in out):
         sa = collections.Counter(c["strategy"] for c in a["calls"])

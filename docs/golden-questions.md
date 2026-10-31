@@ -832,3 +832,36 @@ same field by field, and the other 5 differ only in their time, build and refres
 
 **What the round shows.** The install takes the new build and writes the same graph, since the live snapshots hold
 none of what the change touches: the change is proven on the micro set and against CPython.
+
+## Twenty-third round: validating PR #61 on a live install (2026-10-31, build `0.2.15+e19400dc64a7` to `0.2.15+b202477c2793`)
+
+What changed since the twenty-second round: PR #61 is merged. A method a dispatching call may run instead of another
+`OVERRIDES` it, as the instance's language says: a change of the graph. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`8fa9bf8`). The dry-runs of `main`
+  and of the PR's head (`668bbc0`) on each snapshot, at its sha, are identical section by section in 8. The two C#
+  snapshots gain only `OVERRIDES` in their `hierarchy`, 15 and 17, every one from a method to a method; their `CALLS`
+  are the same. The live graph holds `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682
+  `CALLS`, 15,890 `IMPORTS`, 43 types' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`1873a8d`, whose package is the PR head's):** the refresher re-indexed
+  the 10 snapshots with the new build, `ok` and with no error.
+
+**The picture of the graph** is identical in 13 of its 16 lists. The hierarchy goes from 43 edges to 75, the 32
+`OVERRIDES` the dry-runs gave, and nothing else in it changes; the snapshots and the labels differ only in the build
+and the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** The writer writes `OVERRIDES` as the dry-runs give them, and the MCP's answers do not change,
+since no tool reads the edges before F1.16's `feat(mcp)`. Two calls join the list for it: `who_calls` and `impact_of` on
+a C# method that implements an interface method, with no caller of its own and three dispatching calls to the
+interface's.
