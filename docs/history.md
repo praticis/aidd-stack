@@ -376,11 +376,12 @@
   `receivers`, on their 15 and 17 `OVERRIDES` (17 and 22 types) and on one call, the other 8 are identical, the graph
   holds the branch's dry-runs, and the 29 calls give the same answers, since no tool reads the receivers yet.
 - 2026-10-31: `who_calls` and `impact_of` follow a dispatch through `OVERRIDES` and the receivers, PR #63
-  (`feat(mcp)`, H5-D34), which closes F1.16. `who_calls` lists a method's `dispatched_callers`, those that call a method
-  it overrides on a receiver that may hold an instance which runs it, and what it overrides and what overrides it;
-  `impact_of` reads the calls backwards hop by hop, so a dispatch may happen at any hop, and marks `via_dispatch` a
-  caller every chain reaches through one. Of the 82 (site, override) pairs H5-D27 counted on netbox and dispatch,
-  `who_calls` reaches 81, the one left TD-035's. On 20,460 symbols of six micro repos, where no dispatch is followed,
-  the walk gives the Cypher path's callers and hops, and `via_ambiguous` differs on 69, where a chain passes one call
-  twice, as a recursion runs; a dispatch adds 1,384,488 callers to 8,454 of them. The slowest walk takes 1.5 s, where
-  the Cypher path took up to 12.7 s and passed 30 s on 4. The corpus, the hold-out and the micro graph are the same.
+  (`feat(mcp)`, H5-D34 and H5-D35), which closes F1.16. `who_calls` lists a method's `dispatched_callers`, those that
+  call a method it overrides on a receiver that may hold an instance which runs it, and what it overrides and what
+  overrides it; `impact_of` reads the calls backwards hop by hop, so a dispatch may happen at any hop, and marks a
+  caller `via_dispatch`, and now `via_ambiguous` too, only when every chain from it has one. Of the 82 (site,
+  override) pairs H5-D27 counted on netbox and dispatch, `who_calls` reaches 81, the one left TD-035's. On 20,460
+  symbols of six micro repos, where no dispatch is followed, the walk gives a Cypher path's callers, hops and mark on
+  all but the 3 on which the path passed 30 s, and 71,285 of the 1,524,157 caller rows `main` marked lose the mark,
+  each reached by a chain with no hop resolved by name among several; a dispatch adds 1,384,488 callers to 8,498
+  symbols. The slowest walk takes 1.2 s. The corpus, the hold-out and the micro graph are the same.

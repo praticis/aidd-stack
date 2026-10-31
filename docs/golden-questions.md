@@ -124,8 +124,8 @@ RETURN h.qualified_name AS reaches_via, hops, e.method + ' ' + e.path AS route,
 ORDER BY hops, route;
 ```
 
-**Expected:** the internal callers up to the HTTP handler (growing `hops`; `via_ambiguous: true` when some `CALLS`
-edge on the path is `*-ambiguous`; at each hop a method is also reached by a dispatching call to a method it
+**Expected:** the internal callers up to the HTTP handler (growing `hops`; `via_ambiguous: true` when every path from
+the caller has a `*-ambiguous` `CALLS` edge; at each hop a method is also reached by a dispatching call to a method it
 `OVERRIDES`, on a receiver that may hold an instance which runs it, which the Cypher above does not follow, and
 `via_dispatch: true` when every path goes through one), the route `GET /v1/password-policy` in `exposed_through`, and
 `<project-a>` in `consumers` with the outbound adapter and the line. If no handler reaches the symbol, an empty
