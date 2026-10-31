@@ -78,8 +78,9 @@
     in their own modules.
   - A design is proven against an independent reference over the real data.
   - What the facts in sight do not decide is `Unknown`, with its reason.
-- Every node/edge carries `tenant`, `repo`, `ref` (branch), `commit_sha`, `indexed_at`; macro edges carry
-  `confidence` + `evidence`.
+- Every micro node carries `tenant`, `repo`, `ref` (branch), `commit_sha` and `indexed_at`, and a micro edge
+  none of them, its two ends being in one snapshot; a macro edge of a ref carries that `ref` and the `commit_sha` of
+  its evidence, and all but `DEPENDS_ON` also `confidence` + `evidence`.
 - Secrets never enter the index (extract the env var's *name*, never its value).
 - Every phase ends with the **golden questions** passing (recall measured, not felt).
 - A defect that does not block is a **debt** (`docs/tech-debt.md`), not a note: it has a strict xfail test, so the

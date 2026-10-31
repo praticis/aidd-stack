@@ -24,14 +24,20 @@ Constraints and indexes that enforce this document live in `init/schema.cypher`.
 the implementation. Who implements/consumes is expressed by edges. They carry `tenant`, `id`,
 `first_seen`, `last_seen`.
 
-**Required properties on every macro edge**:
+**Micro edges** carry none of `tenant`, `repo`, `ref` or `commit_sha`: both their ends are nodes of one snapshot,
+which carry them. Each edge's own properties are in §3.
+
+**Properties of the macro edges** that link a repo's code to a contract (`EXPOSES`, `HANDLED_BY`, `CONSUMES`,
+`CALLED_FROM`). `DEPENDS_ON` carries `ref` and `commit_sha` but neither `confidence` nor `evidence`, and `DEPLOYS` none
+of them; their own properties are in §3:
 
 | prop | values | description |
 |---|---|---|
 | `confidence` | `exact` \| `heuristic` \| `llm` | how the link was established |
 | `evidence` | string | `repo:path:line` (or spec/manifest) the link came from |
 | `ref` | string | ref of the source repo where the evidence was seen |
-| `linker_version` | string | linker version that created the edge (enables re-linking) |
+| `commit_sha` | string | commit of that ref the evidence was seen at |
+| `linker_version` | string | linker version that created the edge (planned; not written yet) |
 
 Never store secret values. Environment variables enter by **name only** (`env_var: "ORDERS_API_URL"`).
 
