@@ -10,12 +10,13 @@ object per line, as `answers.py` writes them: repo, file, line, receiver, type, 
 the resolver makes of the receiver (resolved), src, and any fact the case table reads. A side with no row for a
 receiver, or no type in it, does not type it, and with no `resolved` goes by name on it. FILE defines `case_of(d)` for
 a site whose answer differs (d: repo, file, line, receiver, old and new types, old_resolved, new_resolved, src and the
-facts) and returns its case, or None for the answer's own: typed-now, untyped-now or retyped when the type differs,
-else the resolver's answer on each side by kind (`package -> by name`, `by name -> type`). Prints the changed sites
-by case and kind, then N seeded samples of each case and kind that changes a callee, and the first N unexplained sites,
-with --repos DIR their source lines. Last, each repo's CALLS edges by strategy on both sides, and the share of edges
-and of sites the resolver found among several homonyms (`-ambiguous`); with --language LANG, of the calls made in that
-language's files only. Then the receivers each side leaves untyped by the reason it gives."""
+facts) and returns its case, or None for the answer's own: typed-now, untyped-now or retyped when the type differs, else
+the resolver's answer on each side by kind (`package -> by name`, `by name -> type`). Prints the changed sites by case
+and kind, then N seeded samples of each case and kind that changes a callee, and the first N unexplained sites, with
+--repos DIR their source lines. Last, each repo's CALLS edges by strategy on both sides, and the share of edges and of
+sites the resolver found among several homonyms (`-ambiguous`); with --language LANG, a language's id or several
+separated by commas, of the calls made in their files only. Then the receivers each side leaves untyped by the reason it
+gives."""
 from __future__ import annotations
 
 import argparse

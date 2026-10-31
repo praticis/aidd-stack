@@ -56,7 +56,10 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
                     process skills + knowledge MCP (:3006) + Obsidian vault + Qdrant
 ```
 
-Every node and edge carries `tenant`, `repo`, `ref` and `commit_sha`; macro edges carry `confidence` and `evidence`.
+A micro node (a file, a symbol, a module) carries `tenant`, `repo`, `ref` and `commit_sha`, and a micro edge none of
+them: both its ends are in one snapshot. A macro node is the contract, with no `ref`. A macro edge of a ref
+(`EXPOSES`, `HANDLED_BY`, `CONSUMES`, `CALLED_FROM`, `DEPENDS_ON`) carries that `ref` and the `commit_sha` its evidence
+was seen at, and all but `DEPENDS_ON` also its `confidence` and `evidence`.
 A snapshot is one (repo, ref), and a snapshot written by another indexer build stays `outdated` until the refresh
 re-indexes it.
 

@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | pending | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in five PRs (H5-D36); the probe in #65 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -53,9 +53,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19), now that F1.16 is closed (H5-D29): a refactor, then a change of behavior, both judged with
-   the per-site attribution (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`
-   PR. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS has no type service, so it goes in five PRs, as
+   Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
+   TypeScript compiler as its reference; a refactor, TS's typed facts and `TypeIndex` with the graph identical; a
+   `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with `attribution.sh
+   typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). The `fix(csharp)`
+   PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -1087,6 +1090,26 @@ The proof:
   - TD-028, due in F1.2: a class a function holds has no name in the index, so a call on `self` in its methods reaches
     no wrapper of it, where `main` found it by the class's name. No site in the corpus;
   - a call on a function through its module (`api.get_json("/x")`) reaches no wrapper, as on `main`.
+
+### TS's step 5 (H5-D36)
+
+TS has no type service. `TypeScriptSupport` (`languages/typescript/symbols.py`), which serves `typescript`, `tsx` and
+`javascript`, overrides none of the type hooks, so the extraction records no receiver's type and the resolver finds
+every TS or JS call by name; `bases` gives nothing, so TS has no `EXTENDS`, `IMPLEMENTS` or `OVERRIDES`. The HTTP
+scanner keeps answers of its own: a module's clients (`axios.create`, `new ApiClient(..)`), a class with a base field,
+the class around `this.m()`, `const c = new Client()`, each by a class's simple name. It never reads a type annotation.
+
+The case table covers what the code declares: `this.m()` in a method, in a field's initializer and in an arrow function
+inside a method, but not in a `function` there; a method a repo base gives by `extends`; `const c = new C()`; a typed
+parameter; a parameter property (`constructor(private readonly s: S)`, then `this.s.m()`); a typed field and a field
+assigned `new C()`; a function's declared result; `x as C`; an instance a module exports. Each case's answer is the
+checker's, from a pinned `typescript` in the test image. Its guards hold what stays `Unknown`: `any`, a JS parameter, a
+union or an intersection, a type parameter, a conditional or mapped type, a type a package declares, a `let` given two
+types (the checker narrows by control flow; one declaration's answer does not), DI by token.
+
+The three ids share one index, since a `.ts` file imports from `.tsx` and `.js`. `languages/typescript/http.py` is over
+the module target, so the new code goes into modules of its own. The probe reads the three ids together
+(`answers.py typescript,tsx,javascript`), with `this`, the node that binds it at the use, and `closures`.
 
 ## Decisions made (2026-10-18, by the author)
 

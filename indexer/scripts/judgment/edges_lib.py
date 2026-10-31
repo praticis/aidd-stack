@@ -40,15 +40,16 @@ class Strategies(typing.NamedTuple):
 
 
 def strategies(run, language=None) -> Strategies:
-    """The CALLS edges of a dry-run by strategy, and its call sites; with `language`, only the calls made in that
-    language's files. A line with two calls is one site, ambiguous when either call is."""
+    """The CALLS edges of a dry-run by strategy, and its call sites; with `language`, a language's id or several
+    separated by commas, only the calls made in their files. A line with two calls is one site, ambiguous when either
+    call is."""
     files = {f["id"]: f for f in run["files"]}
     sym = {s["id"]: s for s in run["symbols"]}
     by_strategy, sites = collections.Counter(), {}
     for c in run["calls"]:
         caller = sym.get(c["caller_id"])
         f = files.get(caller["file_id"] if caller else c["caller_id"])
-        if language is not None and (f is None or f.get("language") != language):
+        if language is not None and (f is None or f.get("language") not in language.split(",")):
             continue
         by_strategy[c["strategy"]] += 1
         site = (f["path"] if f else "?", c["line"])

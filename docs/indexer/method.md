@@ -296,12 +296,14 @@ hooks); where they do not, the probe fails.
    each side by kind (`package -> by name`, `by name -> type`, `type -> type`). The rule that explains a difference is
    a case of the change: write it before the change, in a `--cases` file whose `case_of(d)` reads the types, the
    resolver's answers (`old_resolved`, `new_resolved`), the source line and the facts the probe gives (`closures`, the
-   function literals around the use: Go's func literals, Python's lambdas and functions defined in another), and
-   returns the case, or None for the answer's own.
+   function literals around the use: Go's func literals, Python's lambdas and functions defined in another, TS's and
+   JS's functions inside the outermost one; `this`, in TS and JS, the node that binds `this` at the use), and returns
+   the case, or None for the answer's own. `LANG` may name several languages, separated by commas, whose files import
+   one another and are read together: `typescript,tsx,javascript`.
 4. Read how the language's `CALLS` are found, at the end of the report: each repo's edges by strategy on both sides,
    and the share the resolver found among several homonyms (`-ambiguous`), of the edges and of the sites (a file and a
    line). A site emits up to three ambiguous edges, so the two shares differ; a line with two calls is one site,
-   ambiguous when either call is. `attribution.sh` passes the language, so only the calls made in its files count.
+   ambiguous when either call is. `attribution.sh` passes the languages, so only the calls made in their files count.
    Last, the receivers each side leaves untyped, by the reason the language gives.
 
 The probe sees what the receiver is, not what the resolver then finds on it: a changed edge whose receiver has the same

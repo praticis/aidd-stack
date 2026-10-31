@@ -9,12 +9,14 @@ the indexer's image.
 
     answers.py LANG REPOS_DIR REPO... > ANSWERS.jsonl
 
-LANG is a language's id (go, python, ...). `resolved` is, in the resolver's order: `builtin`, a runtime builtin;
-`package`, a name an import binds to a package; `type <name>`, the repo's type `LanguageSupport.resolve_receiver`
-gives; `outside <name>`, what `external_receiver` names outside the repo; or null, a receiver the resolver goes by name
-on. The fact a case table reads, `closures`, counts the function literals around the use: Go's func literals; Python's
-lambdas and the functions defined in another function. A file the tree cannot extract is left out, as the dry-run
-leaves it, and its warning goes to stderr."""
+LANG is a language's id (go, python, ...), or several separated by commas, surveyed together when their files import one
+another (typescript,tsx,javascript). `resolved` is, in the resolver's order: `builtin`, a runtime builtin; `package`, a
+name an import binds to a package; `type <name>`, the repo's type `LanguageSupport.resolve_receiver` gives; `outside
+<name>`, what `external_receiver` names outside the repo; or null, a receiver the resolver goes by name on. The facts a
+case table reads: `closures` counts the function literals around the use, Go's func literals, Python's lambdas and the
+functions defined in another function, and TS's and JS's functions inside the outermost one; `this`, in TS and JS, is
+the node that binds `this` at the use, which an arrow function takes from the one around it. A file the tree cannot
+extract is left out, as the dry-run leaves it, and its warning goes to stderr."""
 from __future__ import annotations
 
 import collections
@@ -54,7 +56,23 @@ def _python_closures(node) -> int:
     return len(functions) - (bool(functions) and functions[-1].type == "function_definition")
 
 
-FACTS = {"go": {"closures": _go_closures}, "python": {"closures": _python_closures}}
+_TS_FUNCTIONS = ("arrow_function", "function_expression", "function_declaration", "generator_function",
+                 "generator_function_declaration", "method_definition")
+_TS_THIS = ("method_definition", "public_field_definition", "field_definition", "class_static_block",
+            "function_expression", "function_declaration", "generator_function", "generator_function_declaration")
+
+
+def _ts_closures(node) -> int:
+    return max(sum(a.type in _TS_FUNCTIONS for a in _ancestors(node)) - 1, 0)
+
+
+def _ts_this(node) -> str:
+    return next((a.type for a in _ancestors(node) if a.type in _TS_THIS), "program")
+
+
+_TS = {"closures": _ts_closures, "this": _ts_this}
+FACTS = {"go": {"closures": _go_closures}, "python": {"closures": _python_closures},
+         "typescript": _TS, "tsx": _TS, "javascript": _TS}
 
 
 def call_nodes(fx) -> list:
@@ -115,22 +133,23 @@ def resolver(repo: RepoInfo, modules: list, files: list, extractors: list) -> Re
 
 def survey(root, name: str, lang: str) -> tuple:
     """(the rows of the calls on a receiver the tree answers about, the number of method calls on a receiver) in one
-    repo."""
+    repo, over the files of `lang`'s languages."""
     repo = RepoInfo(tenant="probe", name=name, ref="probe", commit_sha="probe", root=str(Path(root) / name))
     rel = list_files(Path(repo.root))
     modules = discover_modules(repo, rel)[0]
     files = build_files(repo, rel, modules)
     extractors = []
-    for file in (f for f in files if f.language == lang):
+    for file in (f for f in files if f.language in lang.split(",")):
         fx, warnings = extract_file(repo, file)
         for warning in warnings:
             print(f"{name}: {warning}", file=sys.stderr)
         if fx is not None:
             extractors.append(fx)
-    rv, language, rows, calls = resolver(repo, modules, files, extractors), languages.by_id(lang), [], 0
+    rv, rows, calls = resolver(repo, modules, files, extractors), [], 0
     for fx in extractors:
+        language = languages.by_id(fx.file.language)
         calls += sum(c.receiver is not None for c in fx.calls)
-        rows += rows_of(name, fx, FACTS.get(lang, {}), lambda c, f=fx.file: resolved(rv, language, f, c))
+        rows += rows_of(name, fx, FACTS.get(language.id, {}), lambda c, f=fx.file, lg=language: resolved(rv, lg, f, c))
     return rows, calls
 
 
@@ -148,8 +167,9 @@ def main(argv: list) -> int:
         print(__doc__, file=sys.stderr)
         return 2
     lang, root, repos = argv[0], argv[1], argv[2:]
-    if languages.by_id(lang) is None:
-        print(f"answers: no language {lang}", file=sys.stderr)
+    unknown = [x for x in lang.split(",") if languages.by_id(x) is None]
+    if unknown:
+        print(f"answers: no language {', '.join(unknown)}", file=sys.stderr)
         return 2
     print(f"aidd_indexer from {Path(aidd_indexer.__file__).parent}", file=sys.stderr)
     try:
