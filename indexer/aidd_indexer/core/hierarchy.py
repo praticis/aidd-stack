@@ -1,11 +1,14 @@
-"""`EXTENDS` and `IMPLEMENTS` inside one repo: the types of the repo a type names as its direct bases, as its language
-reads them (`LanguageSupport.bases`). A type that is not an interface implements an interface it names, and extends
-any other base. A base declared in parts (a C# partial type) is each of its declarations. Two types of one qualified
-name (C#'s `IFoo` and `IFoo<T>` in one file) are told apart by no name a base writes: neither has an edge."""
+"""`EXTENDS`, `IMPLEMENTS` and `OVERRIDES` inside one repo. A type's edges go to the types of the repo it names as its
+direct bases, as its language reads them (`LanguageSupport.bases`): a type that is not an interface implements an
+interface it names, and extends any other base. A base declared in parts (a C# partial type) is each of its
+declarations. A method's edges go to the methods a dispatching call to which may run it, on an instance of some type of
+the repo at or below theirs, as the instance's language says (`LanguageSupport.dispatched`). Two types of one qualified
+name (C#'s `IFoo` and `IFoo<T>` in one file) are told apart by no name a base writes: neither has an edge, nor do their
+methods."""
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 
 from .. import languages
@@ -14,18 +17,28 @@ from .model import FileInfo, SymbolInfo
 
 
 @dataclass(frozen=True, order=True)
-class TypeEdge:
+class HierarchyEdge:
     source_id: str
     target_id: str
-    kind: str                       # EXTENDS | IMPLEMENTS
+    kind: str                       # EXTENDS | IMPLEMENTS | OVERRIDES
 
 
-def type_edges(types: list[SymbolInfo], files_by_id: dict[str, FileInfo], ctx: ResolveContext) -> list[TypeEdge]:
+@dataclass(frozen=True)
+class Declared:
+    """The repo's types a dispatch is read from, by qualified name and by id, each type's methods, and its direct bases
+    of the repo by qualified name."""
+    types: dict[str, SymbolInfo]
+    by_id: dict[str, SymbolInfo]
+    methods: dict[str, list[SymbolInfo]]
+    bases: dict[str, list[str]]
+
+
+def type_edges(types: list[SymbolInfo], files_by_id: dict[str, FileInfo], ctx: ResolveContext) -> list[HierarchyEdge]:
     """The edges from each of `types` to the declarations of its bases, sorted."""
     declared: dict[str, list[SymbolInfo]] = defaultdict(list)
     for t in types:
         declared[t.qualified_name].append(t)
-    shared = {q for q, found in declared.items() if len({t.id for t in found}) > 1}
+    shared = _shared(types)
     read: dict[tuple[str, str], list[str]] = {}     # a partial type's parts ask once
     edges = set()
     for t in (t for t in types if t.qualified_name not in shared):
@@ -33,9 +46,58 @@ def type_edges(types: list[SymbolInfo], files_by_id: dict[str, FileInfo], ctx: R
         if (language, t.qualified_name) not in read:
             support = languages.by_id(language)
             read[language, t.qualified_name] = support.bases(ctx, t.qualified_name) if support is not None else []
-        edges |= {TypeEdge(t.id, b.id, _kind(t, b)) for q in read[language, t.qualified_name] if q not in shared
+        edges |= {HierarchyEdge(t.id, b.id, _kind(t, b)) for q in read[language, t.qualified_name] if q not in shared
                   for b in declared.get(q, ()) if b.id != t.id}
     return sorted(edges)
+
+
+def override_edges(types: list[SymbolInfo], methods: list[SymbolInfo], edges: list[HierarchyEdge],
+                   files_by_id: dict[str, FileInfo], ctx: ResolveContext) -> list[HierarchyEdge]:
+    """`OVERRIDES` from each method a dispatching call may run instead of another, sorted. Only a method whose name a
+    type of the instance's ancestry declares again is asked about."""
+    up: dict[str, set[str]] = defaultdict(set)
+    for e in edges:
+        up[e.source_id].add(e.target_id)
+    declared = _declared(types, methods, up)
+    out = set()
+    for d in declared.by_id.values():
+        support = languages.by_id(files_by_id[d.file_id].language)
+        above = _ancestors(up, d.id) & declared.by_id.keys()
+        again = Counter(m.name for t in above | {d.id} for m in declared.methods.get(declared.by_id[t].qualified_name, ()))
+        asked = [o for t in above for o in declared.methods.get(declared.by_id[t].qualified_name, ()) if again[o.name] > 1]
+        for o in asked if support is not None else ():
+            out |= {HierarchyEdge(m.id, o.id, "OVERRIDES") for m in support.dispatched(ctx, declared, d.qualified_name, o)
+                    if m.id != o.id}
+    return sorted(out)
+
+
+def _declared(types: list[SymbolInfo], methods: list[SymbolInfo], up: dict[str, set[str]]) -> Declared:
+    shared = _shared(types)
+    by_id = {t.id: t for t in types if t.qualified_name not in shared}
+    owned: dict[str, list[SymbolInfo]] = defaultdict(list)
+    for m in methods:
+        if m.parent_id in by_id:
+            owned[by_id[m.parent_id].qualified_name].append(m)
+    bases = {t.qualified_name: sorted(by_id[b].qualified_name for b in up.get(i, ()) if b in by_id)
+             for i, t in by_id.items()}
+    return Declared({t.qualified_name: t for t in by_id.values()}, by_id, dict(owned), bases)
+
+
+def _shared(types: list[SymbolInfo]) -> set[str]:
+    ids: dict[str, set[str]] = defaultdict(set)
+    for t in types:
+        ids[t.qualified_name].add(t.id)
+    return {q for q, found in ids.items() if len(found) > 1}
+
+
+def _ancestors(up: dict[str, set[str]], type_id: str) -> set[str]:
+    seen, todo = set(), list(up.get(type_id, ()))
+    while todo:
+        t = todo.pop()
+        if t not in seen:
+            seen.add(t)
+            todo += up.get(t, ())
+    return seen
 
 
 def _kind(source: SymbolInfo, target: SymbolInfo) -> str:

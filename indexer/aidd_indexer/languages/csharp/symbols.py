@@ -10,14 +10,15 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tree_sitter import Node
 
 from ...core.dispatch import DispatchRule
-from ...core.model import CallInfo, FileInfo
+from ...core.model import CallInfo, FileInfo, SymbolInfo
 from ...core.types import RepoTypes, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
+from . import overrides
 from .http import CsScanner
 from .locals import local_type, new_type, read_name, receiver_type as declared_receiver
 from .type_facts import NAMESPACE_NODES, CsTypes, namespaces, type_facts
@@ -25,6 +26,9 @@ from .type_index import CsTypeIndex, qualified, ref as type_ref
 from .type_syntax import bare
 from .wiring import di_chain, handlers
 from .written import arguments, follow, named, start
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ...core.hierarchy import Declared
 
 HERE = Path(__file__).parent
 
@@ -211,6 +215,9 @@ class CSharpSupport(LanguageSupport):
 
     def dispatches(self, call: CallInfo) -> bool:
         return call.receiver not in self.parent_receivers
+
+    def dispatched(self, ctx: ResolveContext, declared: Declared, instance: str, method: SymbolInfo) -> list[SymbolInfo]:
+        return overrides.dispatched(declared, instance, method)
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return self._types(ctx).ancestry(qualified_type)[0][1:]

@@ -9,7 +9,7 @@ import re
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tree_sitter import Node
 
@@ -24,6 +24,9 @@ from .receivers import receiver_of
 from .scopes import PyScopes
 from .type_facts import PyTypes, type_facts
 from .type_index import Outside, PythonTypeIndex, qualified, ref, typed
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ...core.hierarchy import Declared
 
 HERE = Path(__file__).parent
 
@@ -165,6 +168,22 @@ class PythonSupport(LanguageSupport):
         return sorted(qualified(t) for t in types.declaring_after(cls, call.callee_name)) \
             if isinstance(cls, TypeRef) else []
 
+    def dispatched(self, ctx: ResolveContext, declared: Declared, instance: str, method: SymbolInfo) -> list[SymbolInfo]:
+        """The first class of the instance's MRO that binds the name, as CPython looks a method up, and its last
+        definition of it; none past a base outside the repo, which may bind it, or with no MRO, and none for a
+        definition a later one of its class replaces."""
+        if _last(declared, declared.by_id[method.parent_id].qualified_name, method.name) is not method:
+            return []
+        types = self._types(ctx)
+        found = types.mro(ref(instance))
+        for t in found if not isinstance(found, Unknown) else ():
+            if not isinstance(t, TypeRef):
+                return []
+            if types.binds(t, method.name):
+                found = _last(declared, qualified(t), method.name)
+                return [found] if found is not None else []
+        return []
+
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
 
@@ -182,6 +201,12 @@ class PythonSupport(LanguageSupport):
 
     def member_name(self, owner: str, name: str) -> str:
         return f"{owner}.{name}" if ":" in owner else f"{owner}:{name}"
+
+
+
+def _last(declared: Declared, cls: str, name: str) -> SymbolInfo | None:
+    """The class's definition of the name that CPython keeps: the last."""
+    return max((m for m in declared.methods.get(cls, ()) if m.name == name), key=lambda m: m.line_start, default=None)
 
 
 LANGUAGES = [
