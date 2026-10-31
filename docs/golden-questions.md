@@ -767,3 +767,37 @@ same field by field, and the other 5 differ only in their time, build and refres
 answers from it. A first reinstall did not reach the install, and the `after` refused it, since the installed code was
 still `main`'s; a second one did. The `after` accepts an `ok` run of each snapshot since the `before`, which a refresh
 before the reinstall would also give: here every run came after it.
+
+## Twenty-first round: validating PR #59 on a live install (2026-10-31, build `0.2.15+98ca8774b8e7` to `0.2.15+48b1542d7ce8`)
+
+What changed since the twentieth round: PR #59 is merged. The types' bases of the repo are `EXTENDS` and `IMPLEMENTS`,
+and a `CALLS` edge says whether it may dispatch (`virtual`): a change of the graph. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`e30c118`). The dry-runs of `main`
+  and of the PR's head (`247b4de`) on each snapshot, at its sha, are identical section by section in 8. The two C#
+  snapshots gain only their types' edges, 23 and 20 (18 and 14 of them `IMPLEMENTS`); their `CALLS` are the same, and
+  none is a call on `base` or `super`, so every one may dispatch. The live graph holds `main`'s dry-run on every
+  snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 351 modules, 0 violations, no type edge.
+- **After the author's reinstall from `main` (`7884cbb`, whose package is the PR head's):** the refresher re-indexed
+  the 10 snapshots with the new build, `ok` and with no error. The `after` now waits for it: it refuses until every
+  snapshot holds a build other than the `before`'s, and here none held the old one.
+
+**The picture of the graph** is identical in 12 of its 16 lists. `CALLS` are the same 23,682 edges, whose `virtual`
+goes from unset to true; the types' edges go from 0 to 43 (32 `IMPLEMENTS`, 11 `EXTENDS`), on the two C# snapshots;
+the snapshots and the labels differ only in the build and the `IndexRun` counts. The graph after holds the branch's
+dry-run on every snapshot (0 mismatching), strategies, `virtual` and the types' edges included.
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** The writer writes the types' edges and `virtual` as the dry-runs give them, and the MCP's
+answers do not change, since no tool reads them before F1.16's `feat(mcp)`. The live snapshots make no call on `base`
+or `super`, so the calls that do not dispatch are proven on the micro set.

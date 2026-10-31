@@ -124,10 +124,12 @@ aidd_indexer/
     build.py                which indexer wrote a snapshot: the version plus a fingerprint of the code
     discovery.py            file list (git ls-files), languages via the registry, modules (manifests + language hooks)
     extract.py              tree-sitter parsing; symbols, call sites, imports — hooks into LanguageSupport
-    resolve.py dispatch.py  CALLS (mediator dispatch, the receiver's type, then by name), IMPORTS, external Packages
+    resolve.py dispatch.py  CALLS (mediator dispatch, the receiver's type, then by name; a call that does not dispatch
+                            never by name), IMPORTS, external Packages
     edges.py                the resolver's records: a CALLS edge, its evidence and whether it may dispatch, one per
                             key; IMPORTS; Package
-    hierarchy.py            EXTENDS and IMPLEMENTS: the bases of the repo a type names, as its language reads them
+    hierarchy.py            EXTENDS and IMPLEMENTS: the bases of the repo a type names, as its language reads them;
+                            none for two types of one qualified name
     types.py                the type service (ADR-005): TypeRef, Unknown with its reason, the TypeIndex questions
     integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner → compose)
     http_base.py            BaseScanner: where a route lives, handler-vs-data, method detection
