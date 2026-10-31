@@ -338,3 +338,15 @@
   TD-031, and the change creates TD-032, two C# types of one name in one file taking each other's bases; all three are
   due in a `fix(resolve)` before F1.16's `feat(mcp)` (H5-D31). Go's interface calls are TD-029. The probe that measures
   them is versioned (`judgment/hierarchy.py`), and the live `after` now waits for the new build.
+- 2026-10-31: PR #59 is validated on a live install (the twenty-first golden round). The two C# snapshots gain their
+  types' edges, 23 and 20, the other 8 are identical, every `CALLS` edge is the same with `virtual` true, the graph
+  holds the branch's dry-runs, and the 27 calls give the same answers; the `after` waited for the new build.
+- 2026-10-31: a call that does not dispatch reaches no implementation and no homonym found by name, PR #60
+  (`fix(resolve)`, H5-D32). A Python `super()` its receiver does not decide reaches the first class after the caller's
+  that binds the name in each MRO of the repo's classes, as CPython looks it up: on netbox, 490 of 841 sites get an
+  edge, 466 to one method, and `main`'s 1,754 edges found by name go; the other 351 sites have a base outside the repo
+  ahead of the method, or an MRO the index cannot compute. C#'s 18 edges from `base.M()` to the caller's own override
+  go, and two types of one qualified name in one file get no `EXTENDS` or `IMPLEMENTS`: 703 edges of the micro set,
+  each touching such a name. TD-030 to TD-032 are closed; the judgment at the source registers TD-033, two C# types of
+  one name in one file in a call, and TD-034, a type written with a namespace outside the repo read by its simple name,
+  both `main`'s and due in `fix(csharp)` PRs. The corpus and the hold-out are the same.

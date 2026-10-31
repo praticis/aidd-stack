@@ -156,6 +156,15 @@ class PythonSupport(LanguageSupport):
             return bool(call.receiver_path)
         return call.receiver_unknown != SUPER.reason or not _SUPER_CALL.fullmatch(call.receiver or "")
 
+    def declaring_after(self, ctx: ResolveContext, file: FileInfo, call: CallInfo) -> list[str]:
+        """`super().m()` in a method of a class runs the first class after it in the instance's MRO that binds `m`, as
+        CPython looks it up. `super()` given arguments names a class its receiver does not resolve."""
+        written = call.receiver_type or ""
+        types = self._types(ctx)
+        cls = types.value(written.removeprefix("super:"), file.path) if written.startswith("super:") else None
+        return sorted(qualified(t) for t in types.declaring_after(cls, call.callee_name)) \
+            if isinstance(cls, TypeRef) else []
+
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
 

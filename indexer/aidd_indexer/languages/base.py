@@ -226,6 +226,12 @@ class LanguageSupport:
         sends the call to a base's method by name (C# `base.M()`, Python `super().m()`)."""
         return True
 
+    def declaring_after(self, ctx: ResolveContext, file: "FileInfo", call: "CallInfo") -> list[str]:
+        """For a call that does not dispatch, whose receiver's type does not tell which method it runs (Python
+        `super()` in a class of several bases): the qualified names of the classes whose method it may run. None by
+        default: C#'s `base` is typed by the class's base, or that base is outside the repo."""
+        return []
+
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         """Qualified names of the in-repo base types of a type (nearest first), so a method inherited
         from a base class declared in this repo still resolves by receiver type."""

@@ -1,8 +1,9 @@
 """`CALLS` and `IMPORTS` inside one repo. A mediator's call goes to the message's handlers; another, to the method of
 its receiver's static type or where that type leads (its implementation, a base outside the repo, a C# extension
-method); with no type, to the callee's homonyms, narrowed same-file → same-module → repo-unique. An import goes where
-the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or an external `Package`. A type's bases of
-the repo are `EXTENDS` and `IMPLEMENTS` (core/hierarchy.py)."""
+method); with no type, to the callee's homonyms, narrowed same-file → same-module → repo-unique. A call the language
+sends to one method by name (`base.M()`, `super().m()`) reaches no implementation, and with no type only the classes
+the language names. An import goes where the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or
+an external `Package`. A type's bases of the repo are `EXTENDS` and `IMPLEMENTS` (core/hierarchy.py)."""
 
 from __future__ import annotations
 
@@ -123,8 +124,10 @@ class Resolver:
                 unresolved += 1
                 continue
             lang = languages.by_id(caller_file.language) if caller_file is not None else None
-            if c.receiver and lang is not None and c.receiver in lang.parent_receivers:
-                unresolved += 1              # `base.X()` with the base type outside the repo (or implicit): the name fallback would only find the override itself
+            if lang is not None and not lang.dispatches(c):   # a homonym found by name may be the override itself
+                sent = self._named_after(c, caller_file, cands, lang)
+                edges.extend(sent)
+                unresolved += not sent
                 continue
             mod = caller_file.module_id if caller_file else None
             picked = nearest(c, cands, self.files_by_id, mod) if fit is None \
@@ -138,6 +141,14 @@ class Resolver:
         f = self.files_by_id.get(c.file_id)
         lang = languages.by_id(f.language) if f is not None else None
         return CallEdge(c.caller_id, callee_id, c.line, strategy, method, lang is None or lang.dispatches(c))
+
+    def _named_after(self, c, file: FileInfo, cands: list[SymbolInfo], lang) -> list[CallEdge]:
+        """A call the language sends to one method by name, its receiver's type not telling which: the methods of the
+        classes the language names (`LanguageSupport.declaring_after`)."""
+        hits = [s for t in lang.declaring_after(self.ctx, file, c) for s in cands
+                if s.qualified_name == lang.member_name(t, c.callee_name)]
+        strategy = "receiver-type" + ("-ambiguous" if len(hits) > 1 else "")
+        return [self._edge(c, s.id, strategy) for s in hits]
 
     def _typed(self, c, cands: list[SymbolInfo], qtype: str, lang) -> tuple[list[CallEdge], int] | None:
         """The edges the receiver's type gives a call, and 1 when it gives none; None when the call goes by name, its
@@ -159,7 +170,8 @@ class Resolver:
         """The methods of the receiver's type and of the implementation it reaches; when none takes the arguments, the
         repo's methods the language calls on the receiver (C# extension methods)."""
         typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
-        impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
+        impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id)) \
+            if lang.dispatches(c) else None
         impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
         found = [(typed, "receiver-type"), (impl_typed, "receiver-type-impl")]
         if any(fits(s, c.arg_count) for s in typed + impl_typed):
@@ -178,7 +190,8 @@ class Resolver:
             return []                    # declared in the repo (overloads: no single target) — not a package method
         caller_test = self.test_file.get(c.file_id, False)
         out = []
-        impl = None if impl_found else lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
+        impl = None if impl_found or not lang.dispatches(c) \
+            else lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id))
         for target, strategy in ((qtype, "inherited"), (impl, "inherited-impl")):
             t = self.type_by_q.get(target) if target else None
             if t is None or self._inside(c.caller_id, t.id) or (not caller_test and self.test_file.get(t.file_id, False)):

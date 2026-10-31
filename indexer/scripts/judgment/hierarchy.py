@@ -3,10 +3,14 @@
 
 - `edges`: the `EXTENDS` and `IMPLEMENTS` edges, by language, kind and the kinds of their ends;
 - `consistency`: whether each type's ancestors through them are the ancestry the resolver walks for a call: in C#, the
-  same names; in Python, the resolver's supertypes among them, and why the others are not;
+  same names; in Python, the resolver's supertypes among them, and why the others are not. A name two types share has
+  no edge, and the types past it say so;
 - `one name`: the qualified names several type symbols of one file share, and the edges that touch them;
 - `not dispatching`: the `CALLS` that do not dispatch, by strategy and by what they reach from the caller: itself, its
-  own class, an ancestor of its class or none, and their sites;
+  own class, a class of a name two types share, an ancestor of its class, a class after it in an MRO of the repo
+  (Python) or none, and their sites;
+- `super`: Python's `super()` calls whose receiver's type the type index does not decide: how many edges each has, or
+  why it has none;
 - `overrides`: the methods a type's method of the same name overrides through the edges, and the calls that reach one;
 - `go interfaces`: Go's calls on an interface of the repo with no edge of the method's name, and how many of them are
   on an interface of two implementers or more;
@@ -29,10 +33,11 @@ import time
 from aidd_indexer import languages
 from aidd_indexer.cli import extract_tree
 from aidd_indexer.core.hierarchy import type_edges
-from aidd_indexer.core.model import RepoInfo
+from aidd_indexer.core.model import RepoInfo, SymbolInfo
 from aidd_indexer.core.resolve import TYPE_KINDS, Resolver
 from aidd_indexer.core.types import TypeRef, Unknown
 from aidd_indexer.languages.go.symbols import _ref as go_ref
+from aidd_indexer.languages.python.type_index import qualified as python_qualified
 from aidd_indexer.languages.python.type_index import ref as python_ref
 
 SAMPLES = 3
@@ -59,6 +64,17 @@ class Repo:
         self.up: dict[str, set[str]] = collections.defaultdict(set)
         for e in self.edges:
             self.up[e.source_id].add(e.target_id)
+        names: dict[str, set[str]] = collections.defaultdict(set)
+        for t in self.types:
+            names[t.qualified_name].add(t.id)
+        self.shared = {q for q, found in names.items() if len(found) > 1}
+        self.rests: dict[str, set[tuple]] = collections.defaultdict(set)    # Python: what follows a class in an MRO
+        index = self.rv.ctx.types.of("python")
+        for d in index.classes():
+            found = index.mro(d)
+            for i, t in enumerate(found if not isinstance(found, Unknown) else ()):
+                if isinstance(t, TypeRef):
+                    self.rests[python_qualified(t)].add(tuple(found[i + 1:]))
 
     def language(self, symbol_id: str) -> str:
         return self.rv.files_by_id[self.sym[symbol_id].file_id].language
@@ -71,6 +87,14 @@ class Repo:
                 seen.add(t)
                 todo += self.up.get(t, ())
         return seen
+
+    def ancestry(self, t: SymbolInfo) -> set[str]:
+        """A type's ancestors by name: through the edges, or as the resolver walks them."""
+        walked = languages.by_id(self.language(t.id)).supertypes(self.rv.ctx, t.qualified_name)
+        return {self.sym[a].qualified_name for a in self.ancestors(t.id)} | set(walked)
+
+    def after(self, q: str) -> set[str]:
+        return {python_qualified(t) for rest in self.rests.get(q, ()) for t in rest if isinstance(t, TypeRef)}
 
     def where(self, caller_id: str, line: int) -> str:
         caller = self.sym.get(caller_id)
@@ -99,10 +123,11 @@ def consistency(r: Repo, samples: dict) -> collections.Counter:
 
 
 def _verdict(r: Repo, lang: str, q: str, walked: set[str], closure: set[str]) -> str:
+    shared = bool(({q} | walked) & r.shared)                # a name two types share has no edge
     if lang == "csharp":
-        return "closure = ancestry" if closure == walked else "closure != ancestry"
+        return _csharp_verdict(walked, closure, shared)
     if not walked <= closure:
-        return "supertypes outside the closure"
+        return "supertypes outside the closure" + (": through a name two types share" if shared else "")
     if closure == walked:
         return "closure = supertypes"
     mro = r.rv.ctx.types.of("python").mro(python_ref(q))
@@ -113,11 +138,14 @@ def _verdict(r: Repo, lang: str, q: str, walked: set[str], closure: set[str]) ->
     return "closure > supertypes: unexplained"
 
 
+def _csharp_verdict(walked: set[str], closure: set[str], shared: bool) -> str:
+    if closure == walked:
+        return "closure = ancestry"
+    return "closure < ancestry: through a name two types share" if closure < walked and shared else "closure != ancestry"
+
+
 def one_name(r: Repo, samples: dict) -> collections.Counter:
-    ids: dict[str, set[str]] = collections.defaultdict(set)
-    for t in r.types:
-        ids[t.qualified_name].add(t.id)
-    shared = {q for q, v in ids.items() if len(v) > 1}
+    shared = r.shared
     out = collections.Counter({"names": len(shared)})
     for e in r.edges:
         source, target = r.sym[e.source_id].qualified_name, r.sym[e.target_id].qualified_name
@@ -146,15 +174,50 @@ def not_dispatching(r: Repo, samples: dict) -> collections.Counter:
 
 def _reach(r: Repo, c) -> str:
     caller, callee = r.sym.get(c.caller_id), r.sym[c.callee_id]
-    owner = caller.parent_id if caller else None
-    target = callee.parent_id or callee.id
     if caller is None:
         return "from a file"
+    owner = r.sym.get(caller.parent_id) if caller.parent_id else None
+    target = r.sym[callee.parent_id] if callee.parent_id else callee
     if callee.id == caller.id:
         return "the caller itself"
-    if target == owner:
+    if owner is None:
+        return "no ancestor"
+    if target.id == owner.id:
         return "the caller's class"
-    return "an ancestor" if owner and target in r.ancestors(owner) else "no ancestor"
+    if {owner.qualified_name, target.qualified_name} & r.shared:
+        return "a name two types share"
+    if target.qualified_name in r.ancestry(owner):
+        return "an ancestor"
+    return "after it in an MRO" if target.qualified_name in r.after(owner.qualified_name) else "no ancestor"
+
+
+def super_calls(r: Repo, samples: dict) -> collections.Counter:
+    py, out = languages.by_id("python"), collections.Counter()
+    reached = collections.Counter((c.caller_id, c.line) for c in r.calls if not c.virtual)
+    for c in r.res.calls:
+        f = r.rv.files_by_id.get(c.file_id)
+        if f is None or f.language != "python" or py.dispatches(c) \
+                or c.receiver_type and py.resolve_receiver(r.rv.ctx, f, c.receiver_type, c.receiver_path):
+            continue
+        n = reached[(c.caller_id, c.line)]
+        why = f"{min(n, 3)}{'+' if n > 2 else ''} edge(s)" if n else _no_edge(r, f.path, c)
+        out[why] += 1
+        _sample(samples, f"super: {why}", r.where(c.caller_id, c.line))
+    return out
+
+
+def _no_edge(r: Repo, path: str, c) -> str:
+    if not (c.receiver_type or "").startswith("super:"):
+        return "none: super() given arguments"
+    found = r.rv.ctx.types.of("python").value(c.receiver_type.removeprefix("super:"), path)
+    rests = r.rests.get(python_qualified(found), ()) if isinstance(found, TypeRef) else ()
+    if not rests:
+        return "none: no MRO the index computes holds its class"
+    binds = r.rv.ctx.types.of("python").binds
+    firsts = [next((t for t in rest if not isinstance(t, TypeRef) or binds(t, c.callee_name)), None) for rest in rests]
+    if any(isinstance(t, TypeRef) for t in firsts):
+        return "none: what binds the name is no method the call may reach"
+    return "none: a base outside the repo comes first" if any(firsts) else "none: no class after it binds the name"
 
 
 def overrides(r: Repo) -> collections.Counter:
@@ -204,6 +267,7 @@ def report(root: str, name: str) -> dict:
     r, samples = Repo(root, name), collections.defaultdict(list)
     return {"repo": name, "seconds": r.seconds, "edges": edges(r), "consistency": consistency(r, samples),
             "one name": one_name(r, samples), "not dispatching": not_dispatching(r, samples),
+            "super": super_calls(r, samples),
             "overrides": overrides(r), "go interfaces": go_interfaces(r), "samples": samples}
 
 
