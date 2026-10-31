@@ -129,6 +129,7 @@ aidd_indexer/
     edges.py                the resolver's records: a CALLS edge, its evidence and whether it may dispatch, one per
                             key; IMPORTS; Package
     hierarchy.py            EXTENDS and IMPLEMENTS: the bases of the repo a type names, as its language reads them;
+                            OVERRIDES: what a dispatching call may run instead, as the instance's language says;
                             none for two types of one qualified name
     types.py                the type service (ADR-005): TypeRef, Unknown with its reason, the TypeIndex questions
     integrations.py         HTTP candidates orchestrator (per-dir context → language http scanner → compose)
@@ -162,6 +163,7 @@ aidd_indexer/
       type_syntax.py        how C# writes a type: its simple name, its type arguments, a declaration's type parameters
       written.py            the receiver's written start read through the TypeIndex, then the members after it
       wiring.py             what the DI container builds for an interface; who handles a mediator's message
+      overrides.py          what a dispatching call runs on an instance: `override`, `new`, `static`, interfaces
   conventions/              pluggable rules of *your* development pattern (layers, allowed deps, targets)
     base.py                 Convention contract + ConventionContext
     declarative.py          convention.yaml → Convention (no Python needed)
