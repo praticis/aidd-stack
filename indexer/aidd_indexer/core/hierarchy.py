@@ -2,9 +2,9 @@
 direct bases, as its language reads them (`LanguageSupport.bases`): a type that is not an interface implements an
 interface it names, and extends any other base. A base declared in parts (a C# partial type) is each of its
 declarations. A method's edges go to the methods a dispatching call to which may run it, on an instance of some type of
-the repo at or below theirs, as the instance's language says (`LanguageSupport.dispatched`). Two types of one qualified
-name (C#'s `IFoo` and `IFoo<T>` in one file) are told apart by no name a base writes: neither has an edge, nor do their
-methods."""
+the repo at or below theirs, as the instance's language says (`LanguageSupport.dispatched`), with the types below the
+target's a receiver of which may hold such an instance. Two types of one qualified name (C#'s `IFoo` and `IFoo<T>` in
+one file) are told apart by no name a base writes: neither has an edge, nor do their methods."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ class HierarchyEdge:
     source_id: str
     target_id: str
     kind: str                       # EXTENDS | IMPLEMENTS | OVERRIDES
+    receivers: tuple[str, ...] = ()     # OVERRIDES: the types below the target's a call on which may run the source
 
 
 @dataclass(frozen=True)
@@ -59,16 +60,20 @@ def override_edges(types: list[SymbolInfo], methods: list[SymbolInfo], edges: li
     for e in edges:
         up[e.source_id].add(e.target_id)
     declared = _declared(types, methods, up)
-    out = set()
+    above = {t: _ancestors(up, t) & declared.by_id.keys() for t in declared.by_id}
+    on: dict[tuple[str, str, str], set[str]] = defaultdict(set)     # where a call to the target runs the source
     for d in declared.by_id.values():
         support = languages.by_id(files_by_id[d.file_id].language)
-        above = _ancestors(up, d.id) & declared.by_id.keys()
-        again = Counter(m.name for t in above | {d.id} for m in declared.methods.get(declared.by_id[t].qualified_name, ()))
-        asked = [o for t in above for o in declared.methods.get(declared.by_id[t].qualified_name, ()) if again[o.name] > 1]
+        again = Counter(m.name for t in above[d.id] | {d.id}
+                        for m in declared.methods.get(declared.by_id[t].qualified_name, ()))
+        asked = [o for t in above[d.id] for o in declared.methods.get(declared.by_id[t].qualified_name, ())
+                 if again[o.name] > 1]
         for o in asked if support is not None else ():
-            out |= {HierarchyEdge(m.id, o.id, "OVERRIDES") for m in support.dispatched(ctx, declared, d.qualified_name, o)
-                    if m.id != o.id}
-    return sorted(out)
+            for m in support.dispatched(ctx, declared, d.qualified_name, o):
+                if m.id != o.id:
+                    on[m.id, o.id, o.parent_id].add(d.id)
+    return sorted(HierarchyEdge(m, o, "OVERRIDES", _receivers(declared, above, ds, owner))
+                  for (m, o, owner), ds in on.items())
 
 
 def _declared(types: list[SymbolInfo], methods: list[SymbolInfo], up: dict[str, set[str]]) -> Declared:
@@ -81,6 +86,12 @@ def _declared(types: list[SymbolInfo], methods: list[SymbolInfo], up: dict[str, 
     bases = {t.qualified_name: sorted(by_id[b].qualified_name for b in up.get(i, ()) if b in by_id)
              for i, t in by_id.items()}
     return Declared({t.qualified_name: t for t in by_id.values()}, by_id, dict(owned), bases)
+
+
+def _receivers(declared: Declared, above: dict[str, set[str]], instances: set[str], owner: str) -> tuple[str, ...]:
+    """The types below `owner` that are one of `instances` or above one: a receiver of such a type may hold it."""
+    return tuple(sorted({declared.by_id[t].qualified_name for d in instances for t in above[d] | {d}
+                         if owner in above[t]}))
 
 
 def _shared(types: list[SymbolInfo]) -> set[str]:

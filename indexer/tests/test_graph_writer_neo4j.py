@@ -38,11 +38,12 @@ SECTIONS = {
     "calls": (f"""
         MATCH (a:Symbol|File {AT})-[e:CALLS]->(b)
         RETURN a.id AS caller_id, b.id AS callee_id, e.line AS line, e.strategy AS strategy, e.method AS method,
-               e.virtual AS virtual""",
+               e.virtual AS virtual, coalesce(e.receivers, []) AS receivers""",
               ("caller_id", "callee_id", "line", "method")),
     "hierarchy": (f"""
         MATCH (a:Symbol {AT})-[e:EXTENDS|IMPLEMENTS|OVERRIDES]->(b:Symbol)
-        RETURN a.id AS source_id, b.id AS target_id, type(e) AS kind""", ("source_id", "target_id", "kind")),
+        RETURN a.id AS source_id, b.id AS target_id, type(e) AS kind, coalesce(e.receivers, []) AS receivers""",
+                  ("source_id", "target_id", "kind")),
     "imports": (f"""
         MATCH (f:File {AT})-[e:IMPORTS]->(t)
         RETURN f.id AS file_id, t.id AS target_id, e.spec AS spec, e.line AS line,
@@ -116,9 +117,11 @@ def test_a_call_is_one_edge(store, run):
 
 def test_the_dry_runs_hold_every_kind_of_record_but_violations():
     """A section empty in every run would pass while checking nothing, and so would calls of which no two of one line
-    reach one target, for two methods."""
+    reach one target, for two methods, or receivers no call or override holds."""
     payloads = [json.loads(p.read_text()) for p in RUNS]
     assert {s for s in SECTIONS if any(p[s] for p in payloads)} == set(SECTIONS) - {"violations"}
     assert max(Counter((c["caller_id"], c["callee_id"], c["line"]) for p in payloads for c in p["calls"]).values()) > 1
+    assert any(c["receivers"] for p in payloads for c in p["calls"])
+    assert any(e["receivers"] for p in payloads for e in p["hierarchy"])
     assert {(p["repo"]["tenant"], p["repo"]["ref"]) for p in payloads} == \
         {("it", "main"), ("it", "feature/items"), ("it-writer", "main")}

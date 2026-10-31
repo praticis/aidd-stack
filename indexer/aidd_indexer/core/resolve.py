@@ -4,7 +4,8 @@ method); with no type, to the callee's homonyms, narrowed same-file → same-mod
 sends to one method by name (`base.M()`, `super().m()`) reaches no implementation, and with no type only the classes
 the language names. An import goes where the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or
 an external `Package`. A type's bases of the repo are `EXTENDS` and `IMPLEMENTS`, and a method a dispatching call
-may run instead of another `OVERRIDES` it (core/hierarchy.py)."""
+may run instead of another `OVERRIDES` it (core/hierarchy.py); a call to such a method that a supertype of its
+receiver declares keeps the receiver's type, which tells the overrides it may run."""
 
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ from ..languages.base import ResolveContext
 from . import ids
 from .config import is_test_path
 from .dispatch import DispatchRule
-from .edges import CallEdge, ImportEdge, PackageNode, one_per_edge
+from .edges import CallEdge, ImportEdge, PackageNode, on_receivers, one_per_edge
 from .extract import CALLABLE_KINDS, FileExtractor
 from .hierarchy import HierarchyEdge, override_edges, type_edges
 from .model import ExtractionResult, FileInfo, SymbolInfo
@@ -138,10 +139,11 @@ class Resolver:
             edges.extend(self._edge(c, s.id, strat) for s, strat in picked)
         return one_per_edge(edges), unresolved
 
-    def _edge(self, c, callee_id: str, strategy: str, method: str | None = None) -> CallEdge:
+    def _edge(self, c, callee_id: str, strategy: str, method: str | None = None,
+              receivers: tuple[str, ...] = ()) -> CallEdge:
         f = self.files_by_id.get(c.file_id)
         lang = languages.by_id(f.language) if f is not None else None
-        return CallEdge(c.caller_id, callee_id, c.line, strategy, method, lang is None or lang.dispatches(c))
+        return CallEdge(c.caller_id, callee_id, c.line, strategy, method, lang is None or lang.dispatches(c), receivers)
 
     def _named_after(self, c, file: FileInfo, cands: list[SymbolInfo], lang) -> list[CallEdge]:
         """A call the language sends to one method by name, its receiver's type not telling which: the methods of the
@@ -156,8 +158,9 @@ class Resolver:
         type declaring no such method that the language lets another class give (`LanguageSupport.member_by_name`)."""
         found = self._on_type(c, cands, qtype, lang)
         # overloads the argument count cannot tell apart: all of them, marked ambiguous
-        edges = [self._edge(c, s.id, strategy + ("-ambiguous" if len(hits) > 1 else ""))
-                 for hits, strategy in found for s in hits[:3]]
+        edges = [self._edge(c, s.id, strategy + ("-ambiguous" if len(hits) > 1 else ""),
+                            receivers=(t,) if t and s.qualified_name != lang.member_name(t, c.callee_name) else ())
+                 for hits, strategy, t in found for s in hits[:3]]
         if found[0][0]:
             return edges, 0
         # the receiver's type does not declare the method: never guess a homonym. When the type has a base outside the
@@ -167,18 +170,19 @@ class Resolver:
             return edges + inherited, 0
         return None if lang.member_by_name(self.ctx, qtype, c.callee_name) else (edges, 1)
 
-    def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str]]:
-        """The methods of the receiver's type and of the implementation it reaches; when none takes the arguments, the
-        repo's methods the language calls on the receiver (C# extension methods)."""
+    def _on_type(self, c, cands: list[SymbolInfo], qtype: str, lang) -> list[tuple[list[SymbolInfo], str, str | None]]:
+        """The methods of the receiver's type and of the implementation it reaches, with that type; when none takes the
+        arguments, the repo's methods the language calls on the receiver (C# extension methods)."""
         typed = self._methods_on(cands, c.callee_name, qtype, lang, c.arg_count)
         impl = lang.implementation_target(self.ctx, qtype, c.callee_name, self._owner(c.caller_id)) \
             if lang.dispatches(c) else None
         impl_typed = self._methods_on(cands, c.callee_name, impl, lang, c.arg_count) if impl else []
-        found = [(typed, "receiver-type"), (impl_typed, "receiver-type-impl")]
+        found = [(typed, "receiver-type", qtype), (impl_typed, "receiver-type-impl", impl)]
         if any(fits(s, c.arg_count) for s in typed + impl_typed):
             return found
-        return lang.extension_methods(self.ctx, [s for s in cands if fits(s, c.arg_count)], qtype,
-                                      "" if c.receiver_path else c.receiver_type) or found
+        return [(hits, strategy, None) for hits, strategy in lang.extension_methods(
+            self.ctx, [s for s in cands if fits(s, c.arg_count)], qtype,
+            "" if c.receiver_path else c.receiver_type)] or found
 
     def _inherited(self, c, qtype: str, lang, impl_found: bool = False) -> list[CallEdge]:
         """`repo.CreateAsync(x)` where `repo: ITodoRepository : IBaseRepository<T>` (a package): CALLS to the
@@ -278,5 +282,6 @@ class Resolver:
         types = [s for s in self.r.symbols if s.kind in TYPE_KINDS]
         bases = type_edges(types, self.files_by_id, self.ctx)
         methods = [s for s in self.r.symbols if s.kind == "method"]
-        return Resolved(calls, imports, self.packages, uc, ui, self.ctx.namespaces,
-                        sorted(bases + override_edges(types, methods, bases, self.files_by_id, self.ctx)))
+        overrides = override_edges(types, methods, bases, self.files_by_id, self.ctx)
+        return Resolved(on_receivers(calls, {e.target_id for e in overrides}), imports, self.packages, uc, ui,
+                        self.ctx.namespaces, sorted(bases + overrides))

@@ -104,15 +104,15 @@ class GraphWriter(TenantLinks, Snapshots):
             UNWIND $rows AS c
             MATCH (a:Symbol|File {id: c.caller_id}), (b:Symbol {id: c.callee_id})
             CREATE (a)-[:CALLS {line: c.line, resolved: false, strategy: c.strategy, method: c.method,
-                                virtual: c.virtual}]->(b)
-        """, [c.__dict__ for c in rv.calls])
+                                virtual: c.virtual, receivers: c.receivers}]->(b)
+        """, [c.__dict__ | {"receivers": list(c.receivers) or None} for c in rv.calls])
 
         for kind in ("EXTENDS", "IMPLEMENTS", "OVERRIDES"):
             counts[kind.lower()] = self._batched(f"""
                 UNWIND $rows AS e
                 MATCH (a:Symbol {{id: e.source_id}}), (b:Symbol {{id: e.target_id}})
-                CREATE (a)-[:{kind}]->(b)
-            """, [e.__dict__ for e in rv.hierarchy if e.kind == kind])
+                CREATE (a)-[:{kind} {{receivers: e.receivers}}]->(b)
+            """, [e.__dict__ | {"receivers": list(e.receivers) or None} for e in rv.hierarchy if e.kind == kind])
 
         counts["packages"] = self._batched("""
             UNWIND $rows AS p
