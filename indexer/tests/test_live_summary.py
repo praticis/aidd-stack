@@ -56,6 +56,22 @@ def test_a_snapshot_that_still_holds_the_befores_build_is_stale(inflight):
     assert S.stale_builds(inflight) == 1
 
 
+def test_a_change_the_build_cannot_tell_needs_no_run_but_counts_a_failed_one(inflight):
+    assert S.failed_runs(inflight) == 0
+    write(inflight / "indexruns-after-before-picture.txt",
+          RUNS + '"t", "a", "main", "ok", 0, "sha1", 1\n"t", "a", "main", "failed", 1, "sha1", 2\n'
+                 '"t", "z", "main", "failed", 1, "sha9", 1\n')
+    assert S.failed_runs(inflight) == 1
+
+
+def test_a_snapshot_that_holds_another_build_than_the_befores_moved(inflight):
+    builds = "tenant, repo, ref, build\n"
+    write(inflight / "builds-after.txt", builds + '"t", "a", "main", "0.2.15+old"\n"t", "b", "main", "0.2.15+old"\n')
+    assert S.moved_builds(inflight) == 0
+    write(inflight / "builds-after.txt", builds + '"t", "a", "main", "0.2.15+new"\n"t", "b", "main", "0.2.15+old"\n')
+    assert S.moved_builds(inflight) == 1
+
+
 def test_the_build_and_the_index_run_counts_are_the_only_moves_allowed(inflight):
     write(inflight / "after" / "snapshots.txt", SNAPSHOTS.replace("+old", "+new"))
     write(inflight / "after" / "labels.txt", LABELS.replace("IndexRun\", 10", "IndexRun\", 12"))
