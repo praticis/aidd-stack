@@ -1,12 +1,13 @@
 """The dispatch yardsticks of `hierarchy.py`, over its `Repo`: the calls that do not dispatch by what they reach,
-Python's `super()` calls its receiver does not decide, the `OVERRIDES` edges against the pairs of one name, and Go's
-interface calls with no edge."""
+Python's `super()` calls its receiver does not decide, the `OVERRIDES` edges against the pairs of one name, the pairs a
+call's receivers leave out against what the language runs on them, and Go's interface calls with no edge."""
 from __future__ import annotations
 
 import collections
 from typing import TYPE_CHECKING
 
 from aidd_indexer import languages
+from aidd_indexer.core.hierarchy import _declared
 from aidd_indexer.core.types import TypeRef, Unknown
 from aidd_indexer.languages.csharp.overrides import modifiers as csharp_modifiers
 from aidd_indexer.languages.go.symbols import _ref as go_ref
@@ -97,6 +98,40 @@ def overrides(r: Repo, samples: dict) -> collections.Counter:
             callers[c.callee_id].add((c.caller_id, c.line))
     out["who_calls adds: (override, caller site)"] = sum(len(callers[o]) for _, o in edges)
     return out
+
+
+def receivers(r: Repo, samples: dict) -> collections.Counter:
+    """Each dispatching call to a method others override: the overrides its `receivers` keep, against those the
+    language runs on an instance at or below a receiver's type (`LanguageSupport.dispatched`)."""
+    targets = collections.defaultdict(list)
+    for e in r.overrides:
+        targets[e.target_id].append(e)
+    declared = _declared(r.types, [s for s in r.res.symbols if s.kind == "method"], r.up)
+    below = collections.defaultdict(set)
+    for e in r.edges:
+        below[r.sym[e.target_id].qualified_name].add(r.sym[e.source_id].qualified_name)
+    out = collections.Counter()
+    for c in (c for c in r.calls if c.virtual and c.callee_id in targets):
+        kept = {e.source_id for e in targets[c.callee_id] if not c.receivers or set(c.receivers) & set(e.receivers)}
+        runs = _runs(r, declared, below, c) if c.receivers else kept
+        lang = r.language(c.callee_id)
+        out.update({f"{lang} | pairs": len(targets[c.callee_id]), f"{lang} | kept": len(kept),
+                    f"{lang} | kept, not run": len(kept - runs), f"{lang} | run, not kept": len(runs - kept)})
+        if len(kept) < len(targets[c.callee_id]):
+            sample(samples, "receivers leave out", f"{r.where(c.caller_id, c.line)} on {', '.join(c.receivers)} -> "
+                   f"{r.sym[c.callee_id].qualified_name}")
+    return out
+
+
+def _runs(r: Repo, declared, below: dict[str, set[str]], c) -> set[str]:
+    support, o = languages.by_id(r.language(c.callee_id)), r.sym[c.callee_id]
+    instances, todo = set(c.receivers), list(c.receivers)
+    while todo:
+        new = below[todo.pop()] - instances
+        instances |= new
+        todo += new
+    return {m.id for d in instances if d in declared.types
+            for m in support.dispatched(r.rv.ctx, declared, d, o)} - {o.id}
 
 
 def _pairs_by_name(r: Repo) -> set[tuple[str, str]]:
