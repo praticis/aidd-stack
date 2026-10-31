@@ -1,6 +1,6 @@
 """The graph the writer leaves holds what a dry-run of the same checkout computes, field by field, with the records
 counted by their keys in the graph: a call by its caller, callee, line and method, an import by its file, target and
-spec, a type's base by the type, the base and the edge's kind. The corpus and the micro set compare dry-runs only, so a writer that drops a record or a field passes them; this
+spec, a type's base or a method's override by its two ends and the edge's kind. The corpus and the micro set compare dry-runs only, so a writer that drops a record or a field passes them; this
 reads the graph back. Run by `scripts/mcp-it.sh`, which indexes the repositories under tests/mcp_it, writes one of them
 again without a file and once more at the same commit, as the refresher does after an upgrade, and leaves a dry-run of
 each snapshot in AIDD_IT_DRY; skipped without them."""
@@ -41,7 +41,7 @@ SECTIONS = {
                e.virtual AS virtual""",
               ("caller_id", "callee_id", "line", "method")),
     "hierarchy": (f"""
-        MATCH (a:Symbol {AT})-[e:EXTENDS|IMPLEMENTS]->(b:Symbol)
+        MATCH (a:Symbol {AT})-[e:EXTENDS|IMPLEMENTS|OVERRIDES]->(b:Symbol)
         RETURN a.id AS source_id, b.id AS target_id, type(e) AS kind""", ("source_id", "target_id", "kind")),
     "imports": (f"""
         MATCH (f:File {AT})-[e:IMPORTS]->(t)

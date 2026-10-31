@@ -30,6 +30,7 @@ from ..core.dispatch import DispatchRule
 from ..tree import node_text, walk  # noqa: F401  the language modules import them from here
 
 if TYPE_CHECKING:  # pragma: no cover
+    from ..core.hierarchy import Declared
     from ..core.http_base import BaseScanner
     from ..core.model import CallInfo, FileInfo, ModuleInfo, RepoInfo, SymbolInfo
     from ..core.types import Unknown
@@ -230,6 +231,13 @@ class LanguageSupport:
         """For a call that does not dispatch, whose receiver's type does not tell which method it runs (Python
         `super()` in a class of several bases): the qualified names of the classes whose method it may run. None by
         default: C#'s `base` is typed by the class's base, or that base is outside the repo."""
+        return []
+
+    def dispatched(self, ctx: ResolveContext, declared: "Declared", instance: str,
+                   method: "SymbolInfo") -> list["SymbolInfo"]:
+        """The methods a dispatching call to `method` may run on an instance of the type `instance`, at or below the
+        method's type: the method itself, the one that overrides or implements it, or each of several the language cannot
+        tell apart. None where the language cannot tell, and by default."""
         return []
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:

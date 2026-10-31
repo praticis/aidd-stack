@@ -1,4 +1,4 @@
-"""The live graph's CALLS, EXTENDS and IMPLEMENTS against the dry-runs, per snapshot: a CALLS edge by its key in the
+"""The live graph's CALLS, EXTENDS, IMPLEMENTS and OVERRIDES against the dry-runs, per snapshot: a CALLS edge by its key in the
 graph (caller, callee, line, method), its strategy and `virtual` compared too. Before the reinstall, the graph against
 main's dry-run; after it, the graph after against head's, and what changed against what the dry-runs change. Prints
 counts only, with the snapshot as a number, never its name.
@@ -55,15 +55,15 @@ for i, mf in enumerate(sorted(dry.glob("*__main.json")), 1):
     tenant, repo, ref, _ = mf.stem.split("__")
     snap = f"{tenant}/{repo}@{ref}"
     (m, mt), b = dryrun(mf), gb.get(snap, {})
-    counts, checks = f"graph {len(b)}; dry {len(m)}; types {len(tb.get(snap, ()))}", {}
+    counts, checks = f"graph {len(b)}; dry {len(m)}; hierarchy {len(tb.get(snap, ()))}", {}
     if after:
         h, ht = dryrun(mf.with_name(mf.name.replace("__main.json", "__head.json")))
         counts, checks = changes(b, ga.get(snap, {}), m, h)
-        counts += f"; types {len(tb.get(snap, ()))} -> {len(ta.get(snap, ()))}, dry {len(mt)} -> {len(ht)}"
-        checks["types after = head"] = ta.get(snap, set()) == ht
+        counts += f"; hierarchy {len(tb.get(snap, ()))} -> {len(ta.get(snap, ()))}, dry {len(mt)} -> {len(ht)}"
+        checks["hierarchy after = head"] = ta.get(snap, set()) == ht
     checks = {"before = main": set(b) == set(m),
               "strategies and virtual before = main": all(b[k] == m[k] for k in b if k in m),
-              "types before = main": tb.get(snap, set()) == mt, **checks}
+              "hierarchy before = main": tb.get(snap, set()) == mt, **checks}
     ok = all(checks.values())
     bad += not ok
     print(f"snapshot {i}: {counts}; "
