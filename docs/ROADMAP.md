@@ -32,8 +32,9 @@
     the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
     #60 (H5-D32). Two
     debts of the core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and
-    client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, are due in
-    an H5 step: 6 and 12 for TD-023, 6 for TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
+    client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, and a C# call on an
+    interface that reaches its single implementer twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for
+    TD-024, TD-026 and TD-036. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
     with TD-025 due in F1.2 (H5-D26). F1.16 is closed (#57 to #63). Next, TS (H5-D29), judged with the per-site
     attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56), before the `fix(csharp)` PRs (H5-D19);
     then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape

@@ -390,4 +390,6 @@
   method gain their dispatching callers, Q4's callers gain `via_dispatch: false`, and the rest are the same.
 - 2026-10-31: the live check's `after` takes a change the build does not fingerprint, PR #64 (`chore(scripts)`). The
   refresh then re-indexes nothing, so `after` no longer waits for runs: it refuses a last run since the before that is
-  not ok, or a build that moved. F1.16 is closed in the ROADMAP and in H5's Next, whose first step is now TS's.
+  not ok, or a build that moved. F1.16 is closed in the ROADMAP and in H5's Next, whose first step is now TS's. TD-036
+  registers a C# call on an interface that reaches its single implementer twice, by its own edge and by the dispatch,
+  due in H5's step 6.

@@ -933,7 +933,8 @@ same field by field, `atlas_status` differs only in its time fields, and 5 diffe
 
 - **`who_calls` on Q4a's method**, which implements an interface's method, gains one dispatching caller and the
   interface's method in `overrides`. The dispatching call is its one caller's: a call on the interface, which also
-  reaches the method directly, since it is the interface's only implementer (`receiver-type-impl`).
+  reaches the method directly, since it is the interface's only implementer (`receiver-type-impl`): the site is listed
+  twice, which TD-036 registers.
 - **`who_calls` on the C# method with no caller of its own** gains 3 dispatching callers and the interface's method in
   `overrides`. One of them is the method itself: a call in its body on the interface may run it again.
 - **`impact_of` on that method** goes from 0 internal callers to 3, each `via_dispatch: true`: the other two
