@@ -205,6 +205,7 @@ def test_a_language_keeps_only_the_calls_made_in_its_files():
     run_ = made_in(("py", 3, "same-file"), ("vue", 3, "same-module-ambiguous"), ("vue", 9, "unique-name"))
     assert L.strategies(run_, "python") == ({"same-file": 1}, 1, 0)
     assert L.strategies(run_) == ({"same-file": 1, "same-module-ambiguous": 1, "unique-name": 1}, 3, 1)
+    assert L.strategies(run_, "python,vue") == L.strategies(run_)
 
 
 def strategy_section(out: str, title: str) -> list:

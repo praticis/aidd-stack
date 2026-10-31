@@ -50,6 +50,23 @@ other.call()
 print(later)
 '''
 
+TS = '''class Repo {
+  find() {
+    return this.db.get();
+  }
+  load = () => this.db.all();
+  save() {
+    const run = () => this.db.put();
+    const old = function () { return this.db.del(); };
+  }
+}
+
+export const handler = async (repo) => {
+  repo.find();
+  const later = () => repo.find();
+};
+other.call();
+'''
 
 RESOLVED = {
     "app/__init__.py": "",
@@ -96,6 +113,11 @@ def py(tmp_path):
 
 
 @pytest.fixture
+def ts(tmp_path):
+    return make(tmp_path, {"a.ts": TS, "b.tsx": TS, "c.js": TS, "node_modules/m/i.js": TS, "d.py": PY})
+
+
+@pytest.fixture
 def resolving(tmp_path):
     return make(tmp_path, RESOLVED)
 
@@ -107,6 +129,12 @@ def answered(root: Path) -> dict:
 @pytest.fixture
 def typed_python(monkeypatch):
     monkeypatch.setattr(languages.by_id("python"), "call_receiver", every_receiver_but_other)
+
+
+@pytest.fixture
+def typed_ts(monkeypatch):
+    for lang in ("typescript", "tsx", "javascript"):
+        monkeypatch.setattr(languages.by_id(lang), "call_receiver", every_receiver_but_other)
 
 
 def test_a_method_called_on_a_typed_name_gets_the_type_its_declaration_gives(go):
@@ -140,6 +168,20 @@ def test_the_type_is_the_trees_own(go, monkeypatch):
 def test_a_python_closure_is_a_lambda_or_a_function_defined_in_another(py, typed_python):
     got = {(r["line"], r["receiver"]): r["closures"] for r in rows(py, "python")}
     assert got == {(3, "self.db"): 0, (7, "repo"): 0, (10, "repo"): 1, (11, "repo"): 2, (15, "r"): 1}
+
+
+def test_ts_says_what_binds_this_and_counts_the_functions_inside_the_outermost(ts, typed_ts):
+    got = {(r["line"], r["receiver"]): (r["this"], r["closures"]) for r in rows(ts, "typescript")}
+    assert got == {(3, "this.db"): ("method_definition", 0), (5, "this.db"): ("public_field_definition", 0),
+                   (7, "this.db"): ("method_definition", 1), (8, "this.db"): ("function_expression", 1),
+                   (13, "repo"): ("program", 0), (14, "repo"): ("program", 1)}
+
+
+def test_a_family_of_languages_is_surveyed_together_and_each_alone(ts, typed_ts):
+    assert {r["file"] for r in rows(ts, "typescript,tsx,javascript")} == {"a.ts", "b.tsx", "c.js"}
+    assert {r["file"] for r in rows(ts, "javascript")} == {"c.js"}
+    js = {r["line"]: r["this"] for r in rows(ts, "javascript")}
+    assert (js[5], js[8]) == ("field_definition", "function_expression")      # each grammar's own node names
 
 
 def test_only_the_languages_files_are_surveyed(py, typed_python):
@@ -197,6 +239,8 @@ def test_calls_the_query_finds_on_other_lines_than_the_extractor_recorded_are_an
 
 def test_an_unknown_language_is_an_error(go, capsys):
     assert A.main(["cobol", str(go), "r"]) == 2
+    assert "cobol" in capsys.readouterr().err
+    assert A.main(["go,cobol", str(go), "r"]) == 2
     assert "cobol" in capsys.readouterr().err
 
 

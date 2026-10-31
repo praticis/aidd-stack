@@ -6,7 +6,8 @@
 #
 #   indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
 #
-#   LANG                the language's id: go, python, ...
+#   LANG                the language's id: go, python, ...; or several separated by commas, read together when their
+#                       files import one another: typescript,tsx,javascript
 #   OLD_TREE, NEW_TREE  repository checkouts (their `indexer/` is mounted)
 #   BEFORE, AFTER       the micro dry-run directories of those trees (micro.sh leaves them in $C/micro)
 #   N                   seeded samples per case and kind
@@ -15,7 +16,7 @@
 # The repos are read from $AIDD_CORPUS_HOME/repos (default ~/.cache/aidd-corpus). The answers are kept in
 # $AIDD_ATTRIBUTION_OUT (default a new temporary folder, printed first).
 set -euo pipefail
-[ $# -ge 7 ] || { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+[ $# -ge 7 ] || { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 here="$(cd "$(dirname "$0")" && pwd)"
 home="${AIDD_CORPUS_HOME:-$HOME/.cache/aidd-corpus}"
