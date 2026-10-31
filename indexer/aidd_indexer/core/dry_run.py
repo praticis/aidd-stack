@@ -13,12 +13,14 @@ from .resolve import Resolved
 def payload(res: ExtractionResult, rv: Resolved) -> dict[str, Any]:
     return {
         "repo": asdict(res.repo),
-        "counts": res.counts() | {"calls_edges": len(rv.calls), "imports_edges": len(rv.imports), "packages": len(rv.packages)},
+        "counts": res.counts() | {"calls_edges": len(rv.calls), "imports_edges": len(rv.imports), "packages": len(rv.packages),
+                                  "hierarchy_edges": len(rv.hierarchy)},
         "modules": [asdict(m) for m in res.modules],
         "files": [asdict(f) for f in res.files],
         "symbols": [asdict(s) for s in res.symbols],
         "calls": [asdict(c) for c in rv.calls],
         "imports": [asdict(i) for i in rv.imports],
+        "hierarchy": [asdict(e) for e in rv.hierarchy],
         "packages": [asdict(p) for p in rv.packages.values()],
         "endpoints": [asdict(e) for e in res.endpoints],
         "http_calls": [asdict(c) for c in res.http_calls],

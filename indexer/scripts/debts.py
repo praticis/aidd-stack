@@ -3,10 +3,12 @@
 
 - each case a debt names is a case of the debts' tests (indexer/tests/test_*_debts.py), and each case there is named
   by a debt; each of those files marks its cases as strict xfails;
-- a debt's due is `F1.2`, a `fix(csharp)` PR before F1.2, a step of H5 (`H5 step 6`), or `closed`;
-- the ROADMAP's list of the debts due in F1.2 ("Debts due here:"), of those due in `fix(csharp)` PRs before F1.2
-  ("are due in `fix(csharp)` PRs before F1.2") and of those due in a step of H5 ("due in an H5 step") are the open
-  debts of that due, and no document names a debt the register lacks.
+- a debt's due is `F1.2`, a `fix(<scope>)` PR before F1.2 (`fix(csharp)`, `fix(go)`, ...), a step of H5 (`H5 step 6`),
+  or `closed`;
+- the ROADMAP's list of the debts due in F1.2 ("Debts due here:"), of those due in a step of H5 ("due in an H5 step")
+  and of those due in each scope's `fix` PRs ("due in a `fix(go)` PR before F1.2", "are due in `fix(csharp)` PRs
+  before F1.2") are the open debts of that due, and no document names a debt the register lacks. A scope's list is
+  required while a debt is due there.
 
 Prints Markdown for the job summary; exits 1 when it finds anything. It reads files only: no Docker, no network.
 
@@ -24,9 +26,9 @@ ROOT = Path(__file__).resolve().parents[2]
 CASE_ID = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`")
 DEBT = re.compile(r"TD-(\d+)(?: to TD-(\d+))?")
 HERE_MARK = "Debts due here:"
-BEFORE_MARKS = {"fix": "are due in `fix(csharp)` PRs before F1.2", "H5": "due in an H5 step"}
-MARKS = {"F1.2": HERE_MARK, **BEFORE_MARKS}
-DUE = {"F1.2": "F1.2", "fix": "a `fix(csharp)` PR before F1.2", "H5": "an H5 step"}
+H5_MARK = "due in an H5 step"
+FIX = re.compile(r"`(fix\([a-z]+\))`")
+FIX_LIST = re.compile(r"due in (?:a )?`(fix\([a-z]+\))` PRs? before F1\.2")
 
 
 def register(text: str) -> tuple[list[dict], list[str]]:
@@ -52,7 +54,16 @@ def phase(due: str) -> str:
         return "F1.2"
     if due.startswith("H5 step"):
         return "H5"
-    return "fix" if "`fix(csharp)`" in due else "?"
+    fix = FIX.search(due)
+    return fix.group(1) if fix else "?"
+
+
+def due_in(name: str) -> str:
+    return {"F1.2": "F1.2", "H5": "an H5 step"}.get(name, f"a `{name}` PR before F1.2")
+
+
+def mark(name: str) -> str:
+    return {"F1.2": HERE_MARK, "H5": H5_MARK}.get(name, f"due in a `{name}` PR before F1.2")
 
 
 def case_ids(text: str) -> list[str]:
@@ -84,20 +95,30 @@ def listed(segment: str) -> set[str]:
     return ids
 
 
-def _ending_at(flat: str, marker: str) -> set[str] | None:
-    """The debts named in the clause that `marker` ends."""
-    at = flat.find(marker)
-    if at < 0:
-        return None
+def _ending_at(flat: str, at: int) -> set[str]:
+    """The debts named in the clause that a mark starting at `at` ends."""
     head = flat[:at]
     return listed(head[max(head.rfind(c) for c in ";.)") + 1:])
 
 
 def roadmap_lists(text: str) -> dict[str, set[str] | None]:
+    """The debts each due's list names: F1.2's after its mark, an H5 step's and each scope's `fix` PRs' in the clause
+    their mark ends. F1.2's and the H5 step's are None when the ROADMAP has no such list."""
     flat = " ".join(text.split())
-    here = flat.find(HERE_MARK)
-    return {"F1.2": listed(flat[here + len(HERE_MARK):].split("(")[0]) if here >= 0 else None,
-            **{name: _ending_at(flat, marker) for name, marker in BEFORE_MARKS.items()}}
+    here, h5 = flat.find(HERE_MARK), flat.find(H5_MARK)
+    lists = {"F1.2": listed(flat[here + len(HERE_MARK):].split("(")[0]) if here >= 0 else None,
+             "H5": _ending_at(flat, h5) if h5 >= 0 else None}
+    for m in FIX_LIST.finditer(flat):
+        lists.setdefault(m.group(1), _ending_at(flat, m.start()))
+    return lists
+
+
+def _check_list(name: str, want: set[str], got: set[str] | None) -> list[str]:
+    if got is None:
+        return [f"the ROADMAP has no `{mark(name)}` list of the debts due in {due_in(name)}"]
+    return ([f"the ROADMAP's list of the debts due in {due_in(name)} lacks {i}" for i in sorted(want - got)]
+            + [f"the ROADMAP's list of the debts due in {due_in(name)} names {i}, which is not open and due there"
+               for i in sorted(got - want)])
 
 
 def check_cases(rows: list[dict], cases: dict[str, str]) -> list[str]:
@@ -109,17 +130,12 @@ def check_cases(rows: list[dict], cases: dict[str, str]) -> list[str]:
 
 
 def check_roadmap(rows: list[dict], text: str, docs: dict[str, str]) -> list[str]:
-    found = [f"{r['id']}: a due the check does not know ({r['due']!r}): F1.2, a `fix(csharp)` PR, an H5 step, or "
+    found = [f"{r['id']}: a due the check does not know ({r['due']!r}): F1.2, a `fix(<scope>)` PR, an H5 step, or "
              "closed" for r in rows if phase(r["due"]) == "?"]
     lists = roadmap_lists(text)
-    for name, marker in MARKS.items():
-        want = {r["id"] for r in rows if phase(r["due"]) == name}
-        got = lists[name]
-        if got is None:
-            found.append(f"the ROADMAP has no `{marker}` list of the debts due in {DUE[name]}")
-            continue
-        found += [f"the ROADMAP's list of the debts due in {DUE[name]} lacks {i}" for i in sorted(want - got)]
-        found += [f"the ROADMAP's list of the debts due in {DUE[name]} names {i}, which is not open and due there" for i in sorted(got - want)]
+    fixes = sorted(({phase(r["due"]) for r in rows} | set(lists)) - {"F1.2", "H5", "closed", "?"})
+    for name in ["F1.2", *fixes, "H5"]:
+        found += _check_list(name, {r["id"] for r in rows if phase(r["due"]) == name}, lists.get(name))
     known = {r["id"] for r in rows}
     for doc, body in sorted(docs.items()):
         found += [f"{doc} names {i}, which the register lacks" for i in sorted(listed(body) - known)]

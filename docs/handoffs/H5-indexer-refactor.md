@@ -20,7 +20,7 @@ package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPyth
 one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index;
 `chore(scripts)` #56 has the per-site attribution read what the resolver makes of a receiver too (G2), and
 `refactor(graph)` #57 and `refactor(resolve)` #58 make room in the graph writer and the resolver before F1.16 grows
-them. Each merge
+them, and `feat(graph)` #59 writes the types' bases and marks the calls that do not dispatch. Each merge
 and its live validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
 **Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
@@ -48,11 +48,13 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Before TS (H5-D29), F1.16 (H5-D27), in four PRs (H5-D30):
+1. Before TS (H5-D29), F1.16 (H5-D27), in five PRs (H5-D30, H5-D31):
    - `refactor(graph)` #57: the graph writer's session, links and snapshots' bookkeeping, and the dry-run's payload,
      in modules of their own; then `refactor(resolve)` #58: the resolver's edge records, in `core/edges.py`;
-   - `feat(graph)`: `EXTENDS` and `IMPLEMENTS` from C#'s and Python's type indexes, and the calls that do not
+   - `feat(graph)` #59: `EXTENDS` and `IMPLEMENTS` from C#'s and Python's type indexes, and the calls that do not
      dispatch;
+   - `fix(resolve)`: a call that does not dispatch reaches an ancestor's method only, and two types of one name in one
+     file get no base (TD-030 to TD-032), measured with `judgment/hierarchy.py`;
    - `feat(mcp)`: `who_calls` and `impact_of` through the overrides.
 2. Step 5 for TS (H5-D19): a refactor, then a change of behavior, both judged with the per-site attribution
    (`attribution.sh LANG`, H5-D21). A fact the language's cases need goes into the probe first, in a `chore(scripts)`

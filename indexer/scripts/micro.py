@@ -4,10 +4,11 @@ repositories by two versions of the indexer, compared record by record. The HTTP
 a change to the files, symbols, `CALLS`, `IMPORTS` or violations shows only here.
 
     python scripts/micro.py --dir ~/.cache/aidd-corpus/repos --prepare [repo ...]   # clone the pins, largest first
-    python scripts/micro.py --compare BASE_DIR HEAD_DIR [--show N] [repo ...]       # the report
+    python scripts/micro.py --compare BASE_DIR HEAD_DIR [--show N] [--ignore LIST.FIELD]... [repo ...]   # the report
 
 `micro.sh` runs the dry-runs in between, one container each, and keeps them as `<repo>.json.gz`. With no repo named,
-the whole set. `--compare` exits 1 when a repository differs or was not compared.
+the whole set. `--compare` exits 1 when a repository differs or was not compared. `--ignore calls.virtual` leaves a
+field out of a list's records: a change that adds a field shows whether anything else changed.
 """
 from __future__ import annotations
 
@@ -44,16 +45,20 @@ def load(d: Path, name: str) -> dict | None:
         return json.load(fh)
 
 
-def records(payload: dict) -> dict[str, Counter]:
+def records(payload: dict, ignore: frozenset[str] = frozenset()) -> dict[str, Counter]:
     """Each list of a dry-run as a multiset of whole records: a field that changes anywhere shows, and so does a
-    record that appears once more."""
-    return {k: Counter(json.dumps(x, sort_keys=True, default=str) for x in v)
+    record that appears once more. A field `ignore` names as `list.field` is left out of that list's records."""
+    return {k: Counter(json.dumps(_without(x, k, ignore), sort_keys=True, default=str) for x in v)
             for k, v in payload.items() if k not in SKIP and isinstance(v, list)}
 
 
-def diff(base: dict, head: dict) -> dict[str, tuple[Counter, Counter]]:
+def _without(record, section: str, ignore: frozenset[str]):
+    return {f: v for f, v in record.items() if f"{section}.{f}" not in ignore} if isinstance(record, dict) else record
+
+
+def diff(base: dict, head: dict, ignore: frozenset[str] = frozenset()) -> dict[str, tuple[Counter, Counter]]:
     """The lists that differ: (records gone, records new) for each."""
-    a, b = records(base), records(head)
+    a, b = records(base, ignore), records(head, ignore)
     out = {}
     for k in sorted(set(a) | set(b)):
         x, y = a.get(k, Counter()), b.get(k, Counter())
@@ -70,22 +75,22 @@ def _print_diff(d: dict[str, tuple[Counter, Counter]], show: int) -> None:
                 print(f"    {sign} {r[:WIDTH]}")
 
 
-def report_repo(name: str, base: Path, head: Path, show: int) -> bool | None:
+def report_repo(name: str, base: Path, head: Path, show: int, ignore: frozenset[str] = frozenset()) -> bool | None:
     """Prints one repository's comparison: True when it differs, None when a dry-run is missing."""
     a, b = load(base, name), load(head, name)
     if a is None or b is None:
         missing = [side for side, run in (("base", a), ("head", b)) if run is None]
         print(f"{name}: no {' or '.join(missing)} dry-run")
         return None
-    d = diff(a, b)
+    d = diff(a, b, ignore)
     sizes = " ".join(f"{k}={len(a.get(k, []))}" for k in ("files", "symbols", "calls", "imports"))
     print(f"{name}: {'DIFFERS' if d else 'identical'} ({sizes})")
     _print_diff(d, show)
     return bool(d)
 
 
-def compare(base: Path, head: Path, names: list[str], show: int) -> int:
-    results = {n: report_repo(n, base, head, show) for n in names}
+def compare(base: Path, head: Path, names: list[str], show: int, ignore: frozenset[str] = frozenset()) -> int:
+    results = {n: report_repo(n, base, head, show, ignore) for n in names}
     differ = [n for n, r in results.items() if r]
     missing = [n for n, r in results.items() if r is None]
     print(f"\n{len(differ)} repo(s) differ" + (f": {', '.join(differ)}" if differ else ""))
@@ -108,6 +113,8 @@ def main() -> int:
                     help="clone the pinned commits that are missing, then print the repositories, the largest first")
     ap.add_argument("--compare", nargs=2, type=Path, metavar=("BASE", "HEAD"), help="two directories of dry-runs")
     ap.add_argument("--show", type=int, default=5, help="records listed per side of each list that differs")
+    ap.add_argument("--ignore", action="append", default=[], metavar="LIST.FIELD",
+                    help="a field left out of a list's records, as `calls.virtual`; repeatable")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
     names = args.repos or list(MICRO)
@@ -116,7 +123,7 @@ def main() -> int:
         print(f"not pinned: {', '.join(unknown)}", file=sys.stderr)
         return 2
     if args.compare:
-        return compare(*args.compare, names, args.show)
+        return compare(*args.compare, names, args.show, frozenset(args.ignore))
     if args.prepare:
         return prepare(Path(args.dir), names)
     ap.error("--prepare or --compare")

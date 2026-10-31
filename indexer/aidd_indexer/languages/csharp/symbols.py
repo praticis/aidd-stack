@@ -15,7 +15,7 @@ from typing import Any
 from tree_sitter import Node
 
 from ...core.dispatch import DispatchRule
-from ...core.model import FileInfo
+from ...core.model import CallInfo, FileInfo
 from ...core.types import RepoTypes, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext, node_text
 from .http import CsScanner
@@ -204,6 +204,13 @@ class CSharpSupport(LanguageSupport):
             if inc:
                 deps.append((inc, attrs.get("Version", "")))
         return [name], deps
+
+    def bases(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        found = self._types(ctx).bases(type_ref(qualified_type))
+        return [] if isinstance(found, Unknown) else [qualified(b) for b in found if not isinstance(b, Unknown)]
+
+    def dispatches(self, call: CallInfo) -> bool:
+        return call.receiver not in self.parent_receivers
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return self._types(ctx).ancestry(qualified_type)[0][1:]

@@ -1,7 +1,8 @@
 """`CALLS` and `IMPORTS` inside one repo. A mediator's call goes to the message's handlers; another, to the method of
 its receiver's static type or where that type leads (its implementation, a base outside the repo, a C# extension
 method); with no type, to the callee's homonyms, narrowed same-file → same-module → repo-unique. An import goes where
-the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or an external `Package`."""
+the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or an external `Package`. A type's bases of
+the repo are `EXTENDS` and `IMPLEMENTS` (core/hierarchy.py)."""
 
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from .config import is_test_path
 from .dispatch import DispatchRule
 from .edges import CallEdge, ImportEdge, PackageNode, one_per_edge
 from .extract import CALLABLE_KINDS, FileExtractor
+from .hierarchy import TypeEdge, type_edges
 from .model import ExtractionResult, FileInfo, SymbolInfo
 from .nearest import fits, fitting, nearest, pruned
 
@@ -36,6 +38,7 @@ class Resolved:
     # declared namespace -> declaring file ids (C#). Not written to the graph: an import of a namespace
     # targets its Module, and conventions use this to see which files (hence which layer) it reaches.
     namespace_files: dict[str, list[str]] = field(default_factory=dict)
+    hierarchy: list[TypeEdge] = field(default_factory=list)
 
 
 class Resolver:
@@ -128,15 +131,20 @@ class Resolver:
                 else pruned(lambda found: nearest(c, found, self.files_by_id, mod), cands, fit)
             if not picked:
                 unresolved += 1
-            edges.extend(CallEdge(c.caller_id, s.id, c.line, strat) for s, strat in picked)
+            edges.extend(self._edge(c, s.id, strat) for s, strat in picked)
         return one_per_edge(edges), unresolved
+
+    def _edge(self, c, callee_id: str, strategy: str, method: str | None = None) -> CallEdge:
+        f = self.files_by_id.get(c.file_id)
+        lang = languages.by_id(f.language) if f is not None else None
+        return CallEdge(c.caller_id, callee_id, c.line, strategy, method, lang is None or lang.dispatches(c))
 
     def _typed(self, c, cands: list[SymbolInfo], qtype: str, lang) -> tuple[list[CallEdge], int] | None:
         """The edges the receiver's type gives a call, and 1 when it gives none; None when the call goes by name, its
         type declaring no such method that the language lets another class give (`LanguageSupport.member_by_name`)."""
         found = self._on_type(c, cands, qtype, lang)
         # overloads the argument count cannot tell apart: all of them, marked ambiguous
-        edges = [CallEdge(c.caller_id, s.id, c.line, strategy + ("-ambiguous" if len(hits) > 1 else ""))
+        edges = [self._edge(c, s.id, strategy + ("-ambiguous" if len(hits) > 1 else ""))
                  for hits, strategy in found for s in hits[:3]]
         if found[0][0]:
             return edges, 0
@@ -175,7 +183,7 @@ class Resolver:
             t = self.type_by_q.get(target) if target else None
             if t is None or self._inside(c.caller_id, t.id) or (not caller_test and self.test_file.get(t.file_id, False)):
                 continue                 # its own type (`this.ResponseAsync()` in a controller) says nothing new
-            out.append(CallEdge(c.caller_id, t.id, c.line, strategy, c.callee_name))
+            out.append(self._edge(c, t.id, strategy, c.callee_name))
         return out
 
     def _owner(self, symbol_id: str) -> str | None:
@@ -207,7 +215,7 @@ class Resolver:
                 hit = self._methods_on(self.by_name.get(rule.method, []), rule.method, handler, lang)
                 target = hit[0] if len(hit) == 1 else None
                 if target is not None and (self.test_file.get(c.file_id, False) or not self.test_file.get(target.file_id, False)):
-                    out.setdefault(target.id, CallEdge(c.caller_id, target.id, c.line, "dispatch"))
+                    out.setdefault(target.id, self._edge(c, target.id, "dispatch"))
         return list(out.values())
 
     def _methods_on(self, cands: list[SymbolInfo], name: str, qtype: str, lang, argc: int | None = None) -> list[SymbolInfo]:
@@ -253,4 +261,6 @@ class Resolver:
             lang.link_symbols(self.r.symbols, self.files_by_id)
         imports, ui = self.resolve_imports()      # first: populates external_bindings
         calls, uc = self.resolve_calls()
-        return Resolved(calls, imports, self.packages, uc, ui, self.ctx.namespaces)
+        types = [s for s in self.r.symbols if s.kind in TYPE_KINDS]
+        return Resolved(calls, imports, self.packages, uc, ui, self.ctx.namespaces,
+                        type_edges(types, self.files_by_id, self.ctx))

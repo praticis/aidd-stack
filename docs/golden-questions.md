@@ -735,3 +735,35 @@ same field by field, and the other 5 differ only in their time, build and refres
 
 **What the round shows.** The moved writer writes the same graph: every node and edge it writes, read back against
 the dry-runs, and the answers the MCP gives from them.
+
+## Twentieth round: validating PR #58 on a live install (2026-10-31, build `0.2.15+3940c91fecfd` to `0.2.15+98ca8774b8e7`)
+
+What changed since the nineteenth round: PR #58 is merged. The resolver's edge records move to a module of their own:
+a refactor, so the graph may not change. The same 3 tenants and 10 snapshots.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`93a4de1`). The dry-runs of `main`
+  and of the PR's head (`fae0687`) on each snapshot, at its sha, are identical section by section in all 10. The live
+  graph holds `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`,
+  351 modules, 0 violations.
+- **After the author's reinstall from `main` (`e30c118`, whose package is the PR head's):** the refresher re-indexed
+  the 10 snapshots with the moved records, `ok` and with no error, all of them after the reinstall.
+
+**The picture of the graph** is identical in 13 of its 15 lists. The other two differ only in the build, on all 10
+snapshots, and in the `IndexRun` counts. The graph after holds the branch's dry-run on every snapshot (0 mismatching),
+strategies included.
+
+**The 27 calls** all reached the MCP. 26 gave no error and `cypher_readonly` still refuses a write. 22 answers are the
+same field by field, and the other 5 differ only in their time, build and refresh fields.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same, but for the snapshots' `indexed_at` |
+
+**What the round shows.** The resolver with its records moved writes the same graph, and the MCP gives the same
+answers from it. A first reinstall did not reach the install, and the `after` refused it, since the installed code was
+still `main`'s; a second one did. The `after` accepts an `ok` run of each snapshot since the `before`, which a refresh
+before the reinstall would also give: here every run came after it.

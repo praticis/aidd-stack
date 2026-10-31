@@ -95,7 +95,7 @@ class GraphWriter(TenantLinks, Snapshots):
 
         # Edges are rebuilt from scratch for this snapshot: drop, then recreate.
         self._run_autocommit("""
-            MATCH (a:Symbol|File {tenant: $tenant, repo: $repo, ref: $ref})-[e:CALLS|IMPORTS]->()
+            MATCH (a:Symbol|File {tenant: $tenant, repo: $repo, ref: $ref})-[e:CALLS|IMPORTS|EXTENDS|IMPLEMENTS]->()
             CALL (e) { DELETE e } IN TRANSACTIONS OF 5000 ROWS
         """, **common)
 
@@ -103,8 +103,16 @@ class GraphWriter(TenantLinks, Snapshots):
         counts["calls"] = self._batched("""
             UNWIND $rows AS c
             MATCH (a:Symbol|File {id: c.caller_id}), (b:Symbol {id: c.callee_id})
-            CREATE (a)-[:CALLS {line: c.line, resolved: false, strategy: c.strategy, method: c.method}]->(b)
+            CREATE (a)-[:CALLS {line: c.line, resolved: false, strategy: c.strategy, method: c.method,
+                                virtual: c.virtual}]->(b)
         """, [c.__dict__ for c in rv.calls])
+
+        for kind in ("EXTENDS", "IMPLEMENTS"):
+            counts[kind.lower()] = self._batched(f"""
+                UNWIND $rows AS e
+                MATCH (a:Symbol {{id: e.source_id}}), (b:Symbol {{id: e.target_id}})
+                CREATE (a)-[:{kind}]->(b)
+            """, [e.__dict__ for e in rv.hierarchy if e.kind == kind])
 
         counts["packages"] = self._batched("""
             UNWIND $rows AS p

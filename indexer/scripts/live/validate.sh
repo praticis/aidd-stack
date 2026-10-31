@@ -8,7 +8,9 @@
 #   validate.sh rotate --yes                        the PR is validated: inflight/ becomes merged/, the old merged/ goes
 # BEFORE_COMMIT is main before the merge and AFTER_COMMIT the merge. `before` refuses when the installed code is not
 # BEFORE_COMMIT's, or when inflight/ exists: the "before" is taken once and never rewritten. `after` refuses until the
-# installed code is AFTER_COMMIT's and every snapshot has an ok run since the before (the refresh runs every 15 min).
+# installed code is AFTER_COMMIT's, every snapshot's last run since the before is ok and, when the code that shapes the
+# graph changed, every snapshot holds a build other than the before's: a refresh before the reinstall ran the old code
+# (the refresh runs every 15 min). A refusal writes no picture, so `after` runs again.
 # It prints counts only; the judgment of the numbers is the author's or the agent's.
 set -euo pipefail
 
@@ -50,6 +52,17 @@ runs_since() {  # runs_since ISO_TIME: the index runs after it, one row each
     size(r.errors) AS n_errors, r.commit_sha AS sha, r.started_at AS started ORDER BY tenant, repo, ref, started;"
 }
 
+builds() {  # each snapshot's build in the graph, one row each
+  docker exec -i aidd-core-neo4j sh -c 'cypher-shell -u neo4j -p "${NEO4J_AUTH#*/}" --format plain' <<<"MATCH (s:Snapshot) \
+    RETURN s.tenant AS tenant, s.repo AS repo, s.ref AS ref, s.indexer_build AS build ORDER BY tenant, repo, ref;"
+}
+
+# the parts of the code the build fingerprints (core/build.py): when none changed, the build cannot tell the codes apart
+shapes_changed() {  # shapes_changed OLD NEW
+  ! git -C "$repo" diff --quiet "$1" "$2" -- indexer/aidd_indexer/__init__.py indexer/aidd_indexer/cli.py \
+    indexer/aidd_indexer/core indexer/aidd_indexer/languages indexer/aidd_indexer/conventions indexer/conventions
+}
+
 recorded() { sed -n "s/^$1 //p" "$inflight/commits.txt"; }
 
 before() {
@@ -89,9 +102,14 @@ after() {
   same_tree "$new" indexer/aidd_indexer "$home/indexer/aidd_indexer" \
     || die "the installed code is not ${new:0:7}'s: the author reinstalls from main first"
   runs_since "$(recorded before_done_at)" > "$inflight/indexruns-after-before-picture.txt"
-  local pending
+  local pending stale
   pending=$(summary not-reindexed "$inflight")
-  [ "$pending" = 0 ] || die "$pending snapshot(s) have no ok run since the before: wait for the refresh, then run again"
+  [ "$pending" = 0 ] || die "$pending snapshot(s) have no ok last run since the before: wait for the refresh, then run again"
+  if shapes_changed "$(recorded before_commit)" "$new"; then
+    builds > "$inflight/builds-after.txt"
+    stale=$(summary stale-builds "$inflight")
+    [ "$stale" = 0 ] || die "$stale snapshot(s) still hold the before's build: wait for the refresh, then run again"
+  fi
   "$V/graph-picture.sh" "$inflight/after" > "$inflight/picture_after.txt"
   python3 -I "$V/golden.py" "$calls" "$inflight/after/golden" > "$inflight/golden_after.txt"
   python3 -I "$V/graph_vs_dry.py" "$inflight/before" "$inflight/after" "$inflight/dry" > "$inflight/graph_vs_dry.before-after.txt"
@@ -101,7 +119,7 @@ after() {
   done > "$inflight/golden-before-after.paths.txt"
   (cd "$inflight" && { find after -type f | sort | xargs shasum -a 256
     shasum -a 256 picture_after.txt golden_after.txt graph_vs_dry.before-after.txt golden-before-after.paths.txt \
-      indexruns-after-before-picture.txt; } > SHA256SUMS.after)
+      indexruns-after-before-picture.txt $([ -f builds-after.txt ] && echo builds-after.txt); } > SHA256SUMS.after)
   echo "sealed: $inflight/SHA256SUMS.after"
   summary after "$inflight"
 }
@@ -121,5 +139,5 @@ case "$mode" in
   before) before "$@" ;;
   after) after ;;
   rotate) rotate "$@" ;;
-  *) sed -n '2,12p' "$0" >&2; exit 2 ;;
+  *) sed -n '2,14p' "$0" >&2; exit 2 ;;
 esac
