@@ -151,17 +151,19 @@ runs `pre-merge.sh`: the graph's picture (`graph-picture.sh`), the golden calls 
 `.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `golden-calls.example.json`
 shows its shape), the dry-runs of every live snapshot with both codes (`dryrun-live.sh`, with `-w` on the mounted code,
 each snapshot copied at its sha to a folder no earlier run used and checked against it) and their comparison by section
-(`dry_sections.py`) and against the graph, which must hold `main`'s dry-run, the strategies included (`graph_vs_dry.py`
-with the before only). It seals the folder in `SHA256SUMS` and prints counts.
+(`dry_sections.py`) and against the graph, which must hold `main`'s dry-run, the strategies, `virtual` and the types'
+edges included (`graph_vs_dry.py` with the before only). It seals the folder in `SHA256SUMS` and prints counts.
 
 ### 4.8 Live, after the merge (class 5)
 
 After the author's reinstall: `indexer/scripts/live/validate.sh after`. It refuses until the installed code is
-AFTER_COMMIT's and every snapshot has an ok run since the before (the refresh runs every 15 min). It takes the picture
-and the golden answers again, compares the graph with the dry-runs (`graph_vs_dry.py`) and each pair of answers
-(`json_paths_diff.py`), seals `SHA256SUMS.after` and prints counts. Pass criteria: the picture is identical but for the
-build and `IndexRun`; the graph holds the branch's dry-run on every snapshot; the answers are the same or differ only in
-time and build fields. When the PR is validated, `validate.sh rotate --yes` makes `inflight/` the new `merged/` and
+AFTER_COMMIT's, every snapshot's last run since the before is ok and, when the code that shapes the graph changed (the
+parts the build fingerprints), every snapshot holds a build other than the before's: an ok run of a refresh before the
+reinstall is the old code's (the refresh runs every 15 min). A refusal writes no picture, so it runs again. It takes
+the picture and the golden answers again, compares the graph with the dry-runs (`graph_vs_dry.py`) and each pair of
+answers (`json_paths_diff.py`), seals `SHA256SUMS.after` and prints counts. Pass criteria: the picture is identical but
+for the build and `IndexRun`; the graph holds the branch's dry-run on every snapshot; the answers are the same or differ
+only in time and build fields. When the PR is validated, `validate.sh rotate --yes` makes `inflight/` the new `merged/` and
 deletes the old one.
 
 ### 4.9 Running the live validation

@@ -26,10 +26,14 @@
     and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
     H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014,
-    TD-016 to TD-022 and TD-027 are due in `fix(csharp)` PRs before F1.2. Two debts of the core's architecture, the
-    syntax of each language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a
-    gap of Python's, Django's model managers found by name, TD-026, are due in an H5 step: 6 and 12 for TD-023, 6 for
-    TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
+    TD-016 to TD-022 and TD-027 are due in `fix(csharp)` PRs before F1.2. Go's calls on an interface, which reach no
+    method of the repo unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before F1.2. The
+    calls on `base` and on `super` that reach the caller's own method or no ancestor, TD-030 and TD-031, and the bases
+    two C# types of one name in one file take from each other, TD-032, are due in a `fix(resolve)` PR before F1.2,
+    right after F1.16's `feat(graph)`. Two
+    debts of the core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and
+    client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, are due in
+    an H5 step: 6 and 12 for TD-023, 6 for TD-024 and TD-026. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47),
     with TD-025 due in F1.2 (H5-D26). Next, F1.16, then TS (H5-D29), judged with the per-site attribution every
     language now has (H5-D21), which reads the resolver's stage too (G2, #56), before the `fix(csharp)` PRs (H5-D19);
     then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape
@@ -370,7 +374,9 @@ Open:
   gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
-  embedding promotes and never dispatches; its interface calls are a debt. Four PRs (H5-D30). Proven on netbox's 67
+  embedding promotes and never dispatches; its interface calls are a debt. Five PRs (H5-D30, H5-D31): `refactor(graph)`
+  #57, `refactor(resolve)` #58, `feat(graph)` #59, a `fix(resolve)` for the calls that do not dispatch and the bases of
+  two types of one name, then `feat(mcp)`. Proven on netbox's 67
   sites that lose an override, 46 of them `_get_queryset`. It comes before TS's step 5 (H5-D29). SCIP (F1.2) may then
   confirm the `EXTENDS` read from tree-sitter, or replace it
 

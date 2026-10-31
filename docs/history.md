@@ -325,3 +325,16 @@
   answers.
 - 2026-10-30: the resolver's edge records move to `core/edges.py`, PR #58 (`refactor(resolve)`), before F1.16's
   `feat(graph)` grows `core/resolve.py`, which was at 300 lines; it goes to 256.
+- 2026-10-31: PR #58 is validated on a live install (the twentieth golden round). The dry-runs of `main` and of the
+  PR's head are identical on the 10 snapshots, the resolver with its records moved writes the same graph, and the 27
+  calls give the same answers.
+- 2026-10-31: the types' bases of the repo are `EXTENDS` and `IMPLEMENTS`, and a `CALLS` edge says whether it may
+  dispatch, PR #59 (`feat(graph)`): C# and Python read the bases from their type indexes, Go embeds and writes none, and
+  a call on `base` or on `super()` has `virtual: false`. On the micro set, `CALLS` are the same once `virtual` is left
+  out, and the six C# and Python repos gain 159 to 5,888 edges each; each type's ancestors through them are the ancestry
+  the resolver walks in C#, and hold its supertypes in Python, the rest explained. The hierarchy costs 0.06 s of
+  umbraco's 5.8 s of calls. The corpus and the hold-out are the same. Judged at the source, the calls that do not
+  dispatch show `main`'s targets of a `base` call on its own override and of a `super()` found by name, TD-030 and
+  TD-031, and the change creates TD-032, two C# types of one name in one file taking each other's bases; all three are
+  due in a `fix(resolve)` before F1.16's `feat(mcp)` (H5-D31). Go's interface calls are TD-029. The probe that measures
+  them is versioned (`judgment/hierarchy.py`), and the live `after` now waits for the new build.
