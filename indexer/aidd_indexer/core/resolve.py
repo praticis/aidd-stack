@@ -3,7 +3,8 @@ its receiver's static type or where that type leads (its implementation, a base 
 method); with no type, to the callee's homonyms, narrowed same-file → same-module → repo-unique. A call the language
 sends to one method by name (`base.M()`, `super().m()`) reaches no implementation, and with no type only the classes
 the language names. An import goes where the file's `LanguageSupport.resolve_import` maps the spec: a File, a Module or
-an external `Package`. A type's bases of the repo are `EXTENDS` and `IMPLEMENTS` (core/hierarchy.py)."""
+an external `Package`. A type's bases of the repo are `EXTENDS` and `IMPLEMENTS`, and a method a dispatching call
+may run instead of another `OVERRIDES` it (core/hierarchy.py)."""
 
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ from .config import is_test_path
 from .dispatch import DispatchRule
 from .edges import CallEdge, ImportEdge, PackageNode, one_per_edge
 from .extract import CALLABLE_KINDS, FileExtractor
-from .hierarchy import TypeEdge, type_edges
+from .hierarchy import HierarchyEdge, override_edges, type_edges
 from .model import ExtractionResult, FileInfo, SymbolInfo
 from .nearest import fits, fitting, nearest, pruned
 
@@ -39,7 +40,7 @@ class Resolved:
     # declared namespace -> declaring file ids (C#). Not written to the graph: an import of a namespace
     # targets its Module, and conventions use this to see which files (hence which layer) it reaches.
     namespace_files: dict[str, list[str]] = field(default_factory=dict)
-    hierarchy: list[TypeEdge] = field(default_factory=list)
+    hierarchy: list[HierarchyEdge] = field(default_factory=list)
 
 
 class Resolver:
@@ -275,5 +276,7 @@ class Resolver:
         imports, ui = self.resolve_imports()      # first: populates external_bindings
         calls, uc = self.resolve_calls()
         types = [s for s in self.r.symbols if s.kind in TYPE_KINDS]
+        bases = type_edges(types, self.files_by_id, self.ctx)
+        methods = [s for s in self.r.symbols if s.kind == "method"]
         return Resolved(calls, imports, self.packages, uc, ui, self.ctx.namespaces,
-                        type_edges(types, self.files_by_id, self.ctx))
+                        sorted(bases + override_edges(types, methods, bases, self.files_by_id, self.ctx)))

@@ -1,5 +1,5 @@
 """The live graph against the dry-runs (scripts/live/graph_vs_dry.py) over synthetic pictures: a graph that holds each
-dry-run's CALLS, with their strategy and `virtual`, and its EXTENDS and IMPLEMENTS matches, and one that misses any of
+dry-run's CALLS, with their strategy and `virtual`, and its EXTENDS, IMPLEMENTS and OVERRIDES matches, and one that misses any of
 them is a mismatch. No Docker, no live install."""
 import json
 import subprocess
@@ -42,6 +42,6 @@ def test_a_call_whose_virtual_differs_is_a_mismatch(tmp_path):
     assert rc == 1 and "MISMATCH: strategies and virtual after = head" in out
 
 
-def test_a_missing_type_edge_is_a_mismatch(tmp_path):
+def test_a_missing_hierarchy_edge_is_a_mismatch(tmp_path):
     rc, out = _run(tmp_path, "FALSE", "")
-    assert rc == 1 and "MISMATCH: types after = head" in out
+    assert rc == 1 and "MISMATCH: hierarchy after = head" in out

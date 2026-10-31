@@ -131,7 +131,7 @@ def _resolved(root: Path):
 
 def _edges(res, rv) -> set[tuple[str, str, str]]:
     q = {s.id: s.qualified_name for s in res.symbols}
-    return {(q[e.source_id], e.kind, q[e.target_id]) for e in rv.hierarchy}
+    return {(q[e.source_id], e.kind, q[e.target_id]) for e in rv.hierarchy if e.kind != "OVERRIDES"}
 
 
 def _calls(res, rv, line: int) -> set[tuple[str, bool]]:

@@ -95,7 +95,7 @@ class GraphWriter(TenantLinks, Snapshots):
 
         # Edges are rebuilt from scratch for this snapshot: drop, then recreate.
         self._run_autocommit("""
-            MATCH (a:Symbol|File {tenant: $tenant, repo: $repo, ref: $ref})-[e:CALLS|IMPORTS|EXTENDS|IMPLEMENTS]->()
+            MATCH (a:Symbol|File {tenant: $tenant, repo: $repo, ref: $ref})-[e:CALLS|IMPORTS|EXTENDS|IMPLEMENTS|OVERRIDES]->()
             CALL (e) { DELETE e } IN TRANSACTIONS OF 5000 ROWS
         """, **common)
 
@@ -107,7 +107,7 @@ class GraphWriter(TenantLinks, Snapshots):
                                 virtual: c.virtual}]->(b)
         """, [c.__dict__ for c in rv.calls])
 
-        for kind in ("EXTENDS", "IMPLEMENTS"):
+        for kind in ("EXTENDS", "IMPLEMENTS", "OVERRIDES"):
             counts[kind.lower()] = self._batched(f"""
                 UNWIND $rows AS e
                 MATCH (a:Symbol {{id: e.source_id}}), (b:Symbol {{id: e.target_id}})

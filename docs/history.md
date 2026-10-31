@@ -350,3 +350,14 @@
   each touching such a name. TD-030 to TD-032 are closed; the judgment at the source registers TD-033, two C# types of
   one name in one file in a call, and TD-034, a type written with a namespace outside the repo read by its simple name,
   both `main`'s and due in `fix(csharp)` PRs. The corpus and the hold-out are the same.
+- 2026-10-31: PR #60 is validated on a live install (the twenty-second round). No live snapshot holds what it touches:
+  the dry-runs of `main` and of the PR's head are identical on the 10 snapshots, the graph holds them, and the 27 calls
+  give the same answers.
+- 2026-10-31: a method a dispatching call may run instead of another `OVERRIDES` it, as the instance's language says,
+  PR #61 (`feat(graph)`, H5-D33). C# follows `override`, `new`, `static` and interface implementation, by name and
+  number of parameters; Python, what each class's MRO finds first, a mixin's method included, and the last definition
+  of a name in a class. On the micro set, `CALLS` are the same and the six C# and Python repos gain 126 to 8,000 edges,
+  every one method to method; the pairs of one name the edges leave out are other numbers of parameters, methods that
+  do not say `override`, static methods, past a `new`, or classes with no MRO, and the edges no such pair gives are a
+  mixin's or a base class's that implements a subclass's interface. CPython's `__mro__` gives the Python fixture's edges
+  exactly. The overrides cost 0.2 s of umbraco's 5.9 s of calls. The corpus and the hold-out are the same.

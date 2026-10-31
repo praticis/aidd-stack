@@ -38,7 +38,7 @@ q called_from 'MATCH (e:HttpEndpoint)-[c:CALLED_FROM]->(t) RETURN e.tenant, e.se
 q depends_on 'MATCH (a:Service)-[d:DEPENDS_ON]->(b:Service) RETURN a.tenant, a.name, d.ref, b.name, d.packages;'
 q symbols 'MATCH (s:Symbol) RETURN s.id, s.kind, s.line_start, s.line_end, s.role, s.is_entry_point;'
 q calls_edges 'MATCH (a)-[c:CALLS]->(b) RETURN a.id, b.id, c.line, c.strategy, c.resolved, c.method, c.virtual;'
-q hierarchy_edges 'MATCH (a:Symbol)-[e:EXTENDS|IMPLEMENTS]->(b:Symbol) RETURN a.id, type(e), b.id;'
+q hierarchy_edges 'MATCH (a:Symbol)-[e:EXTENDS|IMPLEMENTS|OVERRIDES]->(b:Symbol) RETURN a.id, type(e), b.id;'
 q imports_edges 'MATCH (a:File)-[i:IMPORTS]->(b) RETURN a.id, b.id, i.spec, i.line;'
 q violations 'MATCH (v:Violation) RETURN v.id, v.severity, v.message;'
 q modules 'MATCH (m:Module) RETURN m.id, m.kind, m.layer;'
