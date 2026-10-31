@@ -97,8 +97,8 @@ Not yet decided (H7-D2); recommended. One row per item judged, one per item left
 
 - A count of added typed edges does not say how many are right. "0 differ" says nothing changed, not that anything
   is right.
-- `graph_vs_dry.py` covers `CALLS`, with their strategy and `virtual`, and `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`,
-  and checks the writer. The other 14 lists of a picture have no script.
+- `graph_vs_dry.py` covers `CALLS`, with their strategy, `virtual` and `receivers`, and `EXTENDS`, `IMPLEMENTS` and
+  `OVERRIDES`, with an override's `receivers`, and checks the writer. The other 14 lists of a picture have no script.
 - `dry_sections.py` compares seven sections (`files`, `symbols`, `calls`, `imports`, `hierarchy`, `endpoints`,
   `http_calls`) by a few keys each, and counts the calls that do not dispatch: "identical" means identical in those, by
   those keys. Modules, packages and violations are not compared.

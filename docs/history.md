@@ -361,3 +361,13 @@
   do not say `override`, static methods, past a `new`, or classes with no MRO, and the edges no such pair gives are a
   mixin's or a base class's that implements a subclass's interface. CPython's `__mro__` gives the Python fixture's edges
   exactly. The overrides cost 0.2 s of umbraco's 5.9 s of calls. The corpus and the hold-out are the same.
+- 2026-10-31: PR #61 is validated on a live install (the twenty-third round). The two C# snapshots gain 15 and 17
+  `OVERRIDES`, every one method to method, the other 8 are identical, `CALLS` are the same, the graph holds the
+  branch's dry-runs, and the 27 calls give the same answers, since no tool reads the edges yet.
+- 2026-10-31: a dispatching call keeps its receiver's type, and an override the receivers on which it may run, PR #62
+  (`feat(graph)`, H5-D34). A `CALLS` edge to a method others override, which a supertype of the receiver's type
+  declares, records that type; an `OVERRIDES` edge records the types below its target's a receiver of which may hold an
+  instance that runs it. Of the (call, override) pairs `who_calls` would add, the receivers leave out 5,361 of 11,301 in
+  netbox, 9,316 of 51,567 in umbraco and 19 of 9,883 in jellyfin, and none in dispatch, btcpayserver or eshop; what
+  they keep is, in each, what the language runs on an instance at or below the receiver's type, and CPython runs the
+  Python fixture's. F1.16 goes in seven PRs. The corpus and the hold-out are the same.
