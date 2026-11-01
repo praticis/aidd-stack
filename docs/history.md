@@ -441,3 +441,7 @@
   (`Promise<void>` read `Promise<void`), and dropped nothing before a CRLF. On the micro set, 9,906 signatures change
   and nothing else: 9,904 gain their `>` (8,001 TS, 1,905 C#, 15 Go raw strings, a Python `->`), and 2 Python ones
   in CRLF files lose their `:`. Corpus and hold-out: 0 repo(s) differ.
+- 2026-11-01: PR #70 is validated on a live install (the twenty-ninth round). The build changes and the 10 snapshots
+  are re-indexed, all ok; 345 signatures gain their `>`, which the graph holds as the dry-runs give them, read apart
+  since the live tools compare no symbol property; of the 29 calls, 5 differ only in their time, build and refresh
+  fields, and `find_symbol`'s scores move with its full-text index.

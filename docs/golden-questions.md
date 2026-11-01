@@ -1053,3 +1053,40 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 declaration TypeScript's checker resolves its clause to. It also found TD-040: a symbol's signature loses the `>` that
 closes a type at its end (`Promise<void>` reads `Promise<void`), on 296 TS and 49 C# symbols of the live graph,
 which `main` has.
+
+## Twenty-ninth round: validating PR #70 on a live install (2026-11-01, build `0.2.15+474c5668f80c` to `0.2.15+62c09d19cab5`)
+
+What changed since the twenty-eighth round: PR #70 is merged, a symbol's signature that keeps the `>` it ends with and
+drops what leads into its body whatever ends the line (TD-040): a change of the graph's symbols' properties. The same 3
+tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`4c57394`). The dry-runs of `main`
+  and of the PR's head (`4dcbcb4`) on each snapshot, at its sha, have the same records in all 10, and differ in 345
+  signatures, each `main`'s plus the `>` its line ends with: 296 TS ones in the three TS snapshots, 49 C# ones in the
+  two C# snapshots. The live graph holds `main`'s dry-run on every snapshot (0 mismatching): 10,609 symbols, 23,681
+  `CALLS`, 15,890 `IMPORTS`, 360 types' and overrides' edges, 351 modules, 0 violations.
+- **The signatures, apart:** the live tools compare a symbol by its id only, so the graph's signatures were read and
+  compared with the dry-runs on their own. Before, the graph holds `main`'s on all 10,609 symbols; after, the head's on
+  all 10,609.
+- **After the author's reinstall from `main` (`92fe049`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph:** 14 of its 16 lists are identical, and the other 2 differ only in the build and the index
+runs' counts. The graph holds the dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 23 answers are the
+same field by field, 5 differ only in their time, build and refresh fields, and `find_symbol` gives the same 8 symbols
+in the same order with the same signatures, each score 0.3 to 0.5 % higher: its full-text index holds the signature,
+and the 345 documents written again move Lucene's statistics.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The writer writes the signatures as the dry-runs give them. It also found that the live
+tools see no change of a symbol's property: `dry_sections.py` keys a symbol by its id, the picture lists no signature
+and `graph_vs_dry.py` compares edges only.
