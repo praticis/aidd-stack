@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in five PRs (H5-D36); the probe in #65 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in five PRs (H5-D36); the probe in #65, the case table in #66 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -55,10 +55,10 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 **Next.**
 1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS has no type service, so it goes in five PRs, as
    Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
-   TypeScript compiler as its reference; a refactor, TS's typed facts and `TypeIndex` with the graph identical; a
-   `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with `attribution.sh
-   typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). The `fix(csharp)`
-   PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
+   TypeScript compiler as its reference (#66); a refactor, TS's typed facts and `TypeIndex` with the graph identical;
+   a `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
+   `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below).
+   The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -1099,13 +1099,33 @@ every TS or JS call by name; `bases` gives nothing, so TS has no `EXTENDS`, `IMP
 scanner keeps answers of its own: a module's clients (`axios.create`, `new ApiClient(..)`), a class with a base field,
 the class around `this.m()`, `const c = new Client()`, each by a class's simple name. It never reads a type annotation.
 
-The case table covers what the code declares: `this.m()` in a method, in a field's initializer and in an arrow function
-inside a method, but not in a `function` there; a method a repo base gives by `extends`; `const c = new C()`; a typed
-parameter; a parameter property (`constructor(private readonly s: S)`, then `this.s.m()`); a typed field and a field
-assigned `new C()`; a function's declared result; `x as C`; an instance a module exports. Each case's answer is the
-checker's, from a pinned `typescript` in the test image. Its guards hold what stays `Unknown`: `any`, a JS parameter, a
-union or an intersection, a type parameter, a conditional or mapped type, a type a package declares, a `let` given two
-types (the checker narrows by control flow; one declaration's answer does not), DI by token.
+The case table is `indexer/tests/test_ts_types.py` (#66). Each case names the declarations TypeScript's own checker
+resolves its call to, and the test checks every case against that checker on each run: `typescript@6.0.3`, the last
+line with the compiler's JavaScript API, with Node, in the test image only (`indexer/scripts/checks/ts_checker.js`; it
+reads and types the files and runs nothing). Every typed case has homonyms of its method in other classes, so a call
+found by name cannot reach the right one by luck.
+
+| Case | The checker | Today | Test |
+|---|---|---|---|
+| `this.m()` in a method, in a field's initializer, in an arrow function in a method; in JS too | the class's method | the file's homonym, by name | xfail, one per form |
+| `this.m()` that a repo base gives by `extends` | the base's method | by name | xfail `a-method-of-a-repo-base` |
+| `new C().m()`, a local of it, through an aliased or a namespace import, in JS | `C.m` | by name | xfail, one per form |
+| a typed parameter (also in a `.tsx`), a parameter property, a typed field, a field assigned `new C()`, `x as C`, `x?.m()`, an instance a module exports | the declared type's method | by name | xfail, one per form |
+| a typed local (`const x: Base = new B()`) | the declared type's, `Base.m` | by name | xfail `a-typed-local` |
+| a function's declared result, called or kept in a local | its type's method | by name | xfail, one per form |
+| a call on an interface; on a type parameter with a constraint | the interface's method; the constraint's | by name | xfail, one each |
+| `any`, a JS parameter, a type parameter with no constraint, `this` in a `function` in a method | none | by name | guard: no typed edge |
+| a union, an intersection | each type's method | by name | guard: no typed edge |
+| a union the checker narrows by control flow, a result the function does not declare, a callback's parameter a generic infers | one method | by name | guard: no typed edge, since a declaration's answer does not give it |
+| a value of a package's class | none (the test image holds no package) | the repo's homonym, by name | xfail `a-value-of-a-package-class`: no edge |
+| scanner: a module's client, a client named for its role (`http`), a repo client constructed in a module constant or a local | — | found | guards |
+| scanner: a parameter, a parameter property, a field and a declared result of a repo client's type; a parameter and a parameter property of a client library's type (`AxiosInstance`) | the client's method, for the repo's | not found | xfail, one per form |
+
+The table corrects two items H5-D36 listed as `Unknown`. A `let` takes its initializer's type in TS, so a second
+assignment does not make it two types; what the checker does and a declaration does not is narrowing a union by
+control flow. A parameter injected by token declares its type in its annotation; the token only decides which
+implementation runs, which is a dispatch. A client library the scanner does not know (Angular's `HttpClient` under
+another name than `http`) is the catalog's, step 6's (TD-024), not a type's.
 
 The three ids share one index, since a `.ts` file imports from `.tsx` and `.js`. `languages/typescript/http.py` is over
 the module target, so the new code goes into modules of its own. The probe reads the three ids together

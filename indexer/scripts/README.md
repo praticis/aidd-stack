@@ -11,7 +11,7 @@ live install uses.
 
 | Script | What it checks | Locally | CI job |
 |---|---|---|---|
-| `test.sh` | the tests, in the test image | `indexer/scripts/test.sh [pytest args]` | `tests` |
+| `test.sh` | the tests, in the test image: the indexer image, pytest, and Node with a pinned `typescript`, which TS's type cases are checked against (rebuilt when its recipe changes) | `indexer/scripts/test.sh [pytest args]` | `tests` |
 | `corpus.sh`, with `http_corpus.py` and `corpus_metrics.py` | the HTTP extractor on the public corpus and the hold-out: the diff against a baseline, and precision and recall against the expected lists | `corpus.sh --baseline <run>`; `corpus.sh --holdout --baseline <run>` | `corpus` |
 | `micro.sh`, with `micro.py` | the micro graph (files, symbols, `CALLS`, `IMPORTS`, `hierarchy`, violations): full dry-runs of 12 repos by `main` and by the tree, compared record by record; `--ignore calls.virtual` leaves a field out, to show what else a change that adds it changed | `indexer/scripts/micro.sh` | `micro` |
 | `gates.sh`, with `gates.py` | the method's gates over two corpus runs: the precision ratchet, no win lost, the hold-out untouched, a refactor that changes nothing, and the micro graph's verdict. It also decides whether the pull request is a refactor, from its branch and its commits | see below | `gates` |
