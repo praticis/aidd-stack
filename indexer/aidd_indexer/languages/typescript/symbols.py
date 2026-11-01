@@ -8,37 +8,27 @@ extensions and `index.*`); everything else is an npm package (`node:` = stdlib).
 from __future__ import annotations
 
 import json
-import posixpath
 import re
-from pathlib import Path, PurePosixPath
+from pathlib import Path
+from typing import Any
 
 from tree_sitter import Node
 
 from ...core.model import FileInfo
+from ...core.types import RepoTypes, TypeRef
 from ..base import LanguageSupport, PackageFactory, ResolveContext
-from .package_facts import package_facts_reader
 from .http import TsScanner
+from .modules import Package, module_target
+from .package_facts import package_facts_reader
+from .type_facts import TsTypes, type_facts
+from .type_index import Outside, TsTypeIndex, qualified, ref, typed
 
 HERE = Path(__file__).parent
-
-TS_EXTS = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".vue", ".d.ts")
 _IMPORT = re.compile(r"import\s+(?:type\s+)?(?:(\w+)\s*,?\s*)?(?:\*\s+as\s+(\w+))?\s*(?:\{([^}]*)\})?")
 _BUILTINS = frozenset({"console", "Math", "JSON", "Object", "Array", "Promise", "Number", "String", "Date",
                        "process", "window", "document"})
 _DECORATOR_ENTRY = re.compile(r"@(Get|Post|Put|Delete|Patch|All|MessagePattern|EventPattern|Cron|Query|Mutation|GrpcMethod"
                               r"|SqsMessageHandler|RabbitSubscribe|Process)\b")
-
-
-def _try_paths(ctx: ResolveContext, base: PurePosixPath) -> FileInfo | None:
-    """The file `base` names: as written, with the usual extensions, as a folder's `index.*` — and a `.js` written for
-    a `.ts` source (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`)."""
-    stem = re.sub(r"\.[mc]?jsx?$", "", str(base))
-    compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts")] if stem != str(base) else []
-    for cand in [str(base)] + compiled + [f"{base}{e}" for e in TS_EXTS] + [f"{base}/index{e}" for e in TS_EXTS]:
-        f = ctx.file_at(cand)
-        if f:
-            return f
-    return None
 
 
 class TypeScriptSupport(LanguageSupport):
@@ -81,29 +71,45 @@ class TypeScriptSupport(LanguageSupport):
         return names, deps
 
     def resolve_import(self, ctx: ResolveContext, file: FileInfo, spec: str, pkg: PackageFactory) -> tuple[str, str] | None:
-        here = PurePosixPath(file.path).parent
-        if spec.startswith("."):
-            t = _try_paths(ctx, PurePosixPath(posixpath.normpath(str(here / spec))))
-            return (t.id, "File") if t else None
-        if spec.startswith(("@/", "~/", "src/", "#", "$lib/")) or spec == "$lib":   # `$lib`: SvelteKit's, src/lib
-            tail = re.sub(r"^\$lib\b", "lib", re.sub(r"^(@/|~/|#)", "", spec))   # path alias — conventional roots,
-            mod = ctx.module_by_id.get(file.module_id)       # in the file's package first (its tsconfig's `paths`),
-            pkg = mod.path if mod is not None and mod.path not in ("", ".") else ""   # then the repo's
-            for base in dict.fromkeys((pkg, "")):
-                for root in ("src", "", "app", "lib"):
-                    t = _try_paths(ctx, PurePosixPath(*[p for p in (base, root, tail) if p]))
-                    if t:
-                        return (t.id, "File")
-            return None
-        if spec.startswith("node:"):
-            return (pkg("npm", spec, True), "Package")
-        name = "/".join(spec.split("/")[:2]) if spec.startswith("@") else spec.split("/")[0]
-        return (pkg("npm", name, False), "Package")
+        found = module_target(ctx, file, spec)
+        if isinstance(found, Package):
+            return (pkg("npm", found.name, found.platform), "Package")
+        return (found.id, "File") if found is not None else None
+
+    # ---- types: one index for TS's three languages, whose files import one another
+    def file_facts(self, root: Node, src: bytes, index: Any = None) -> TsTypes:
+        return type_facts(root)
+
+    def type_index(self, ctx: ResolveContext) -> TsTypeIndex:
+        return TsTypeIndex(ctx)
+
+    def _types(self, ctx: ResolveContext) -> TsTypeIndex:
+        """The repo's TS type index: the one the HTTP pass shares, or one over this context."""
+        if ctx.types is None:
+            ctx.types = RepoTypes(ctx)
+        return ctx.types.of(self.id)
+
+    def resolve_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
+                         path: tuple[str, ...]) -> str | None:
+        found = typed(self._types(ctx), file.path, receiver_type, path)
+        return qualified(found) if isinstance(found, TypeRef) and found.name else None
+
+    def external_receiver(self, ctx: ResolveContext, file: FileInfo, receiver_type: str,
+                          path: tuple[str, ...]) -> tuple[str, bool] | None:
+        """A receiver whose chain ends in a package's type: no method of the repo is its."""
+        found = typed(self._types(ctx), file.path, receiver_type, path)
+        return (found.name, True) if isinstance(found, Outside) else None
+
+    def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
+
+    def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
+        return self._types(ctx).outside_base(ref(qualified_type))
 
 
 def _make(lang_id: str, grammar: str, exts: tuple[str, ...], query: str) -> TypeScriptSupport:
     return TypeScriptSupport(
-        id=lang_id, grammar=grammar, extensions=exts, query_file=HERE / query, stack="ts",
+        id=lang_id, grammar=grammar, extensions=exts, query_file=HERE / query, stack="ts", type_family="typescript",
         manifests={"package.json": "npm-package"}, builtin_receivers=_BUILTINS, ecosystem="npm",
         http_scanner=TsScanner, decorator_entry=_DECORATOR_ENTRY,
     )

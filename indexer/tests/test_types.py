@@ -1,5 +1,5 @@
-"""The repo's type service: a language that answers no question leaves every answer `Unknown`; each language's index
-is built once, on its first question; and the HTTP pass and the resolver ask the same instance."""
+"""The repo's type service: a language that answers no question leaves every answer `Unknown`; each language's index,
+or each family's, is built once, on its first question; and the HTTP pass and the resolver ask the same instance."""
 
 import contextlib
 import io
@@ -30,8 +30,8 @@ def test_each_language_builds_its_index_once(monkeypatch):
     types = RepoTypes.of_files("/repo", [], [], {})
     assert types.of("go").bases(T) == [TypeRef("internal.app", "Base")]
     assert types.of("go") is types.of("go") and len(built) == 1
-    assert types.of("typescript").bases(T) == UNANSWERED      # a language that answers none
-    assert types.of("cobol").bases(T) == UNANSWERED           # nor one the indexer does not know
+    assert types.of("typescript") is types.of("tsx") is types.of("javascript")   # a family's languages share one
+    assert types.of("cobol").bases(T) == UNANSWERED           # a language the indexer does not know answers none
 
 
 def test_the_http_pass_and_the_resolver_ask_the_same_instance(tmp_path, monkeypatch):

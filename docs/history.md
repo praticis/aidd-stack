@@ -412,3 +412,12 @@
   `let[`) and 16 JS `require`s the binder binds in the function around them; 560 files where tree-sitter finds an
   error and 13 the compiler does not parse are counted apart. The case table gains eight scope cases, six of them
   typed.
+- 2026-11-01: PR #67 is validated on a live install (the twenty-sixth round). The build changes and the 10 snapshots
+  are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
+  refresh fields.
+- 2026-11-01: TS's types, PR #68 (`refactor(typescript)`), the second of TS's refactor's two PRs (H5-D37, H5-D38), with
+  the graph identical: TS's `call_receiver` answers nothing yet. TS's facts and one `TypeIndex` for its three ids
+  (`LanguageSupport.type_family`); the HTTP scanner takes its class of a `this` from the scope index and its class of a
+  `new C()` from the type index, and no site changes on the corpus, the hold-out or the micro set. Read by the types,
+  the case table's 30 typed cases reach the declaration the checker names and its 11 `unknown` cases give their
+  reason, with 45 rules past it; each of 91 mutants fails a test. `B | null` is `B`, with a new case.

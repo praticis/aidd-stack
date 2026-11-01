@@ -68,7 +68,8 @@ class TypeIndex:
 
 
 class RepoTypes:
-    """Each language's `TypeIndex`, built on its first question from every file's type facts."""
+    """Each language's `TypeIndex`, built on its first question from every file's type facts; languages of one type
+    family, whose files import one another, share one."""
 
     def __init__(self, ctx: ResolveContext) -> None:
         self._ctx = ctx
@@ -83,8 +84,9 @@ class RepoTypes:
         return cls(ctx)
 
     def of(self, language: str) -> TypeIndex:
-        if language not in self._by_language:
-            lang = languages.by_id(language)
+        lang = languages.by_id(language)
+        key = (lang.type_family or lang.id) if lang is not None else language
+        if key not in self._by_language:
             found = lang.type_index(self._ctx) if lang is not None else None
-            self._by_language[language] = found if found is not None else TypeIndex()
-        return self._by_language[language]
+            self._by_language[key] = found if found is not None else TypeIndex()
+        return self._by_language[key]

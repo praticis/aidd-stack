@@ -129,9 +129,9 @@ other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ra
 
 ### 4.6 Equivalence of a representation
 
-`checks/dump.py LANGUAGE OUT` (`csharp`, `go` or `python`) dumps every file's type facts under `/corpus`, read as the
-extractor reads them, through the language's per-file index. The same dump from two codes, compared with `cmp`, shows
-whether a refactor changed a fact.
+`checks/dump.py LANGUAGE OUT` (`csharp`, `go`, `python`, `typescript`, `tsx` or `javascript`) dumps every file's type
+facts under `/corpus`, read as the extractor reads them, through the language's per-file index. The same dump from two
+codes, compared with `cmp`, shows whether a refactor changed a fact; from one code twice, that the facts are values.
 
 `checks/python_scopes.py [N]` compares Python's scope index with CPython's `symtable` over every Python file under
 `/corpus`: each scope paired with symtable's, each name classified the same (local, global or free). It prints the

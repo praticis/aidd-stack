@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in six PRs (H5-D36, H5-D37); the probe in #65, the case table in #66, the scope index in #67 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in six PRs (H5-D36, H5-D37); the probe in #65, the case table in #66, the scope index in #67, the types in #68 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -53,11 +53,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS has no type service, so it goes in six PRs, as
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in six PRs, as
    Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
    TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
-   TypeScript's binder (#67), then TS's typed facts and `TypeIndex`, each with the graph identical; a `feat(graph)` for
-   TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
+   TypeScript's binder (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a
+   `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
    `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below).
    The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
@@ -1094,11 +1094,12 @@ The proof:
 
 ### TS's step 5 (H5-D36)
 
-TS has no type service. `TypeScriptSupport` (`languages/typescript/symbols.py`), which serves `typescript`, `tsx` and
-`javascript`, overrides none of the type hooks, so the extraction records no receiver's type and the resolver finds
-every TS or JS call by name; `bases` gives nothing, so TS has no `EXTENDS`, `IMPLEMENTS` or `OVERRIDES`. The HTTP
-scanner keeps answers of its own: a module's clients (`axios.create`, `new ApiClient(..)`), a class with a base field,
-the class around `this.m()`, `const c = new Client()`, each by a class's simple name. It never reads a type annotation.
+Before its step 5, TS had no type service. `TypeScriptSupport` (`languages/typescript/symbols.py`), which serves
+`typescript`, `tsx` and `javascript`, overrode none of the type hooks, so the extraction records no receiver's type and
+the resolver finds every TS or JS call by name; `bases` gives nothing, so TS has no `EXTENDS`, `IMPLEMENTS` or
+`OVERRIDES`. The HTTP scanner kept answers of its own: a module's clients (`axios.create`, `new ApiClient(..)`), a class
+with a base field, the class around `this.m()`, `const c = new Client()`, each by a class's simple name. It never reads
+a type annotation.
 
 The case table is `indexer/tests/test_ts_types.py` (#66). Each case names the declarations TypeScript's own checker
 resolves its call to, and the test checks every case against that checker on each run: `typescript@6.0.3`, the last
@@ -1176,8 +1177,67 @@ identical.
 - **The tests.** `test_ts_scopes.py` compares 34 rules and the case table's files with the binder on every run, and
   the table gains its scope cases (above). Each rule was broken once, and a test failed.
 
-Next, the types: TS's facts and one `TypeIndex` for the three ids, which the scanner reads its answers through, with
-the graph identical.
+#### TS's types (#68, H5-D38)
+
+The second PR is the types: TS's facts, one `TypeIndex` for the three ids, and the scanner's answers read through them.
+TS's `call_receiver` still answers nothing, so the resolver asks none of the type hooks and the graph is identical.
+- **Where it lives.** In `languages/typescript/`:
+  - `forms.py`: how a type is written for the index to read across files, in the terms of the file's module: a type's
+    name (`B`, `m.B`), `call:f` (what a call of `f` returns) and `value:x` (what the module's name `x` holds). A type
+    parameter reads as its constraint, and `B | null` and `B | undefined` as `B` (H5-D38);
+  - `type_facts.py`: a file's facts as values with no tree node (`TsTypes`): what each name of the module denotes; each
+    class's and interface's bases, fields and methods, where a class's fields are its instance's (its fields, its
+    parameter properties and its getters) and a static member is the class's own; and what the file exports,
+    re-exports and exports all of;
+  - `type_index.py`: the `TsTypeIndex`, which looks a name up among its module's names, then through what the module
+    imports and exports, and a member among a class's or an interface's own, then its bases', in order. What a package
+    declares is `Outside`, and none of the repo's methods is its;
+  - `modules.py`: the file of the repo, or the package, an import names, moved out of `symbols.py` so that the import
+    resolver and the index give one answer;
+  - `receivers.py`: the type a call's receiver's base declares, read through the scope index's binding, with the
+    members that follow it, and the class whose members a `this` reaches.
+
+  The core gains `LanguageSupport.type_family`: `RepoTypes` builds one index per family, and TS's three ids are one.
+- **The scanner.** Its class of a `this` (`this.m()`, and a client class's own request, `this.fetch("/batch")`) is the
+  class around the method, the field or the static block that binds the `this`, as the scope index says. Its class of a
+  `new C()` is the type index's, through imports, re-exports and default exports. No site changed on the corpus, the
+  hold-out or the micro set. The first corpus run showed one difference, the PR's own: the grammar reads `await
+  this.fetch<T>(..)` with the `await` in the callee, which the walk to the `this` did not step through.
+  `route-patterns-ts` now holds that form.
+- **The proof.**
+  - `test_ts_type_index.py` reads the case table by the types, with `call_receiver` set as the change of behavior will
+    set it. The 30 typed cases reach the declaration the checker names, with `receiver-type`; each of the 11 `unknown`
+    cases gives the reason it names; a value of a package's class reaches no method.
+  - `ts_type_rules.py` holds 45 rules past the table, which the test reads the same way:
+    - the forms: a generic class, a type alias, `B | undefined`, a module namespace's type (`m.B`), a type parameter's
+      constraint, and a module's value written `as`, a call's result, another name's value or a function;
+    - across files: a re-export and a renamed one; `export *`, which leaves the default out, and `export * as`; a
+      default export of a class and of a name; a `declare`d value and an exported `declare`d class; `import m =
+      require(..)`; and in JS a `require`, a destructured one, and one in a function, which no module's names hold;
+    - members: an interface's field and its base's, a getter, a destructured parameter and local, a static field (the
+      class's own), and a member of a package's value;
+    - what stays `Unknown`: a package's type, a global type, a type a function or a static block declares, the `this`
+      of a static member, of a class expression, of a class a function declares, of an object literal's method,
+      outside a class and in a namespace, a catch clause's variable, an element of a destructured array, a function a
+      local holds, and a method's result.
+  - Besides: the shared index, the implementers and supertypes (each once, through a diamond and a cycle), the type
+    service's questions across files, and a base outside the repo.
+  - Each of the forms', the facts', the index's, the receivers' and the scanner's rules was broken once, 91 mutants,
+    and a test failed each time. A first round left 29 alive. They found three gaps of the facts: an `export declare`d
+    class or value, `import m = require(..)`, whose module its clause holds, and a JS destructured `require`, which the
+    receiver did not read through the facts. They also found two branches the code could not reach, now gone: a name
+    an `infer` or a mapped type binds, which no annotation the forms read holds, and a class body's holder that is no
+    class.
+  - The facts are values: `checks/dump.py` twice for each id over the corpus gives the same facts, for 35,250 TS,
+    12,013 TSX and 8,543 JS files.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, goes from 39.8 s to 41.6 s, and its
+    peak memory from 1,616 MiB to 1,642 MiB.
+- **What differs from the plan.** The facts tell a type parameter by the declarations around the name, without the
+  scope index, which is built for a file only where a question needs it. `member_by_name` keeps the core's answer,
+  since TS checks a call against its receiver's type; whether a method a JS prototype assignment adds needs it is the
+  change of behavior's question.
+
+Next, the `feat(graph)` for TS's `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 
