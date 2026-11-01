@@ -432,3 +432,7 @@
   2,888 clauses where both name one of the repo. The proof found TD-038 and TD-039, due before the change of
   behavior, so TS's step 5 is eight PRs. Micro: the TS and JS repos gain 4,087 hierarchy edges (1,803 `EXTENDS`, 299
   `IMPLEMENTS`, 1,985 `OVERRIDES`), and calls found by name reach the abstract methods.
+- 2026-11-01: PR #69 is validated on a live install (the twenty-eighth round). The build changes and the 10
+  snapshots are re-indexed, all ok; the TS and JS snapshots gain 285 hierarchy edges and 2 abstract methods, their
+  `CALLS` change at 2 sites, and of the 29 calls, 5 differ only in their time, build and refresh fields. The round
+  found TD-040, a signature that loses the `>` closing its type.
