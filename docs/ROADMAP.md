@@ -30,7 +30,8 @@
     which reach no method of the repo unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before
     F1.2. The calls on `base` and on `super` that reached the caller's own method or no ancestor, TD-030 and TD-031, and
     the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
-    #60 (H5-D32). Two
+    #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is
+    closed by `fix(graph)` #70. Two
     debts of the core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and
     client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, and a C#
     call on an interface that reaches its single implementer twice, TD-036, and three of TS's, a function a class field

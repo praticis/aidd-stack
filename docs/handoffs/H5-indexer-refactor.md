@@ -61,7 +61,9 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    proof found, the module resolution, TD-038, and a CommonJS export, TD-039; and the change of behavior, judged per
    site with `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5"
    below).
-   The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
+   Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
+   validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
+   not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
@@ -1286,7 +1288,8 @@ methods among their candidates now, since an abstract method is a symbol.
   usual aliases, which is TD-038; and the proof found TD-038 and TD-039, which the author placed before the change of
   behavior, so TS's step 5 is eight PRs.
 
-Next, the `fix(typescript)` PRs of TD-038 and TD-039, then the change of behavior.
+Next, `fix(graph)` #70 for TD-040, which #69's live validation found, then the `fix(typescript)` PRs of TD-038 and
+TD-039, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

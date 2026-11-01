@@ -436,3 +436,8 @@
   snapshots are re-indexed, all ok; the TS and JS snapshots gain 285 hierarchy edges and 2 abstract methods, their
   `CALLS` change at 2 sites, and of the 29 calls, 5 differ only in their time, build and refresh fields. The round
   found TD-040, a signature that loses the `>` closing its type.
+- 2026-11-01: a symbol's signature, PR #70 (`fix(graph)`), which closes TD-040: the cut that drops what leads into a
+  declaration's body, a `=>`, `=` or `:`, dropped any `>` its first line ended with, mostly the one closing a type
+  (`Promise<void>` read `Promise<void`), and dropped nothing before a CRLF. On the micro set, 9,906 signatures change
+  and nothing else: 9,904 gain their `>` (8,001 TS, 1,905 C#, 15 Go raw strings, a Python `->`), and 2 Python ones
+  in CRLF files lose their `:`. Corpus and hold-out: 0 repo(s) differ.
