@@ -181,7 +181,7 @@ def _first_line(node: Node, src: bytes, limit: int = 200) -> str:
         i = t.find(stop)
         if i > 0:
             t = t[:i]
-    t = t.rstrip(" :=>")
+    t = re.sub(r"(?:\s|:|=>?)+$", "", t)
     return " ".join(t.split())[:limit]
 
 

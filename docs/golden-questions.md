@@ -1005,3 +1005,51 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 
 **What the round shows.** The HTTP scanner's answers read through TS's scope and type indexes keep every live site, as
 they keep the corpus's, the hold-out's and the micro set's.
+
+## Twenty-eighth round: validating PR #69 on a live install (2026-11-01, build `0.2.15+ccfcfcc426f3` to `0.2.15+474c5668f80c`)
+
+What changed since the twenty-seventh round: PR #69 is merged, TS's `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`, and an
+abstract method as a method symbol: a change of the graph. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`b06cbfb`). The dry-runs of `main`
+  and of the PR's head (`e7e24b1`) on each snapshot, at its sha, are identical section by section in 7, the ones with
+  no TS or JS. The two refs of a JS and TS repo gain only hierarchy edges, 131 and 130: 102 `IMPLEMENTS` from a class
+  to an interface, and 29 and 28 `EXTENDS` from a class to a class. The TS repo gains its 2 abstract methods, 24
+  hierarchy edges (9 `EXTENDS`, 4 `IMPLEMENTS`, 11 `OVERRIDES`, one of them to an abstract method), and its `CALLS`
+  change at 2 sites:
+  - a call on `this` in a base class, which reached a subclass's method as the only one of its name, reaches the base's
+    abstract method, the declaration TypeScript's checker names;
+  - a call on `this`, which reached the only method of its name, the checker's, reaches none: the abstract method it
+    implements is a second one, and the caller's class extends it through a name the repo's `tsconfig.json` `paths`
+    map, which the type index does not read (TD-038). It comes back with TD-038 and TS's change of behavior.
+
+  The live graph holds `main`'s dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890
+  `IMPORTS`, 75 types' and overrides' edges, 351 modules, 0 violations.
+- **Against TypeScript's checker** (`checks/ts_heritage.py` on the 3 TS snapshots, read and typed, nothing run): of
+  their 510 heritage clauses, the index names the checker's declaration at 274, every new type edge, and another at
+  none; neither names one of the repo at 217. Of the checker's 19 the index does not reach, 7 come through
+  `tsconfig.json` `paths` (TD-038), and 12 name a type a hand-written `.d.ts` declares, which discovery skips as
+  generated: TD-038's text puts that file after a `.js`, where it is not read at all.
+- **After the author's reinstall from `main` (`4c57394`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph** is identical in 10 of its 16 lists. The symbols go from 10,607 to 10,609, the 2 abstract
+methods; `CALLS` from 23,682 to 23,681, the TS repo's 2 sites; the hierarchy from 75 edges to 360, the 285 the dry-runs
+gave. The counts per snapshot change with them, the labels with them and the `IndexRun` counts, and the snapshots
+only in the build. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The writer writes TS's hierarchy as the dry-runs give it, and each type edge is the
+declaration TypeScript's checker resolves its clause to. It also found TD-040: a symbol's signature loses the `>` that
+closes a type at its end (`Promise<void>` reads `Promise<void`), on 296 TS and 49 C# symbols of the live graph,
+which `main` has.
