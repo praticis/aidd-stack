@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in five PRs (H5-D36); the probe in #65, the case table in #66 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in six PRs (H5-D36, H5-D37); the probe in #65, the case table in #66, the scope index in #67 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -53,10 +53,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS has no type service, so it goes in five PRs, as
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS has no type service, so it goes in six PRs, as
    Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
-   TypeScript compiler as its reference (#66); a refactor, TS's typed facts and `TypeIndex` with the graph identical;
-   a `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
+   TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
+   TypeScript's binder (#67), then TS's typed facts and `TypeIndex`, each with the graph identical; a `feat(graph)` for
+   TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
    `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below).
    The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
@@ -1118,6 +1119,8 @@ found by name cannot reach the right one by luck.
 | a union, an intersection | each type's method | by name | guard: no typed edge |
 | a union the checker narrows by control flow, a result the function does not declare, a callback's parameter a generic infers | one method | by name | guard: no typed edge, since a declaration's answer does not give it |
 | a value of a package's class | none (the test image holds no package) | the repo's homonym, by name | xfail `a-value-of-a-package-class`: no edge |
+| scope: a block that shadows a name, a `var` used before its declaration, a `let` reassigned from `any`, a function declared after its use, a closure, a destructured parameter (#67) | the declared type's method | by name | xfail, one per form |
+| scope: a type parameter that shadows an import; a `for…of` variable (#67) | none; one a generic infers | by name | guard: no typed edge |
 | scanner: a module's client, a client named for its role (`http`), a repo client constructed in a module constant or a local | — | found | guards |
 | scanner: a parameter, a parameter property, a field and a declared result of a repo client's type; a parameter and a parameter property of a client library's type (`AxiosInstance`) | the client's method, for the repo's | not found | xfail, one per form |
 
@@ -1130,6 +1133,51 @@ another name than `http`) is the catalog's, step 6's (TD-024), not a type's.
 The three ids share one index, since a `.ts` file imports from `.tsx` and `.js`. `languages/typescript/http.py` is over
 the module target, so the new code goes into modules of its own. The probe reads the three ids together
 (`answers.py typescript,tsx,javascript`), with `this`, the node that binds it at the use, and `closures`.
+
+#### TS's scope index (#67, H5-D37)
+
+The refactor goes in two PRs, as Python's did. The first is the scope index: which declaration of the file each name
+binds to, and which node binds each `this`. The core's scopes, which the scanner reads, look a name up in the function
+around it and take the last assignment before the use, so a block that shadows a name, a `var` read before its
+declaration and a `let` reassigned bind elsewhere in TS. Nothing in the extraction reads the index yet, so the graph is
+identical.
+- **Where it lives.** `languages/typescript/scope_model.py` holds a scope and what it binds, in which of TypeScript's
+  meanings (a value, a type, a namespace); `scope_enter.py` the scope each node opens; `scope_build.py` what each
+  declaration binds and where each name read is looked up; `scopes.py` the lookup (`TsScopes`).
+- **The rules, each the binder's:**
+  - a `var`, a function declaration outside strict code, a namespace and an import belong to the function, static
+    block, namespace or file around them; a `let`, a `const`, a class, an enum, an interface, a type alias and a
+    function declaration in strict code, to their block;
+  - a function's parameters and type parameters are seen from its signature, what its body declares from the body
+    only;
+  - a class's, an interface's and a type alias's type parameters are theirs; a named function or class expression sees
+    its own name; an `infer` type is its conditional type's, seen in its `extends` and in the branch that holds; a
+    mapped type's key is its own;
+  - a decorator is read outside what it decorates; a namespace that declares only types is no value; code is strict in
+    a module, under a "use strict" prologue and in a class.
+- **The proof.** `checks/ts_scopes.py` compares the index with the binder (`checks/ts_scopes.js`) over every TS and JS
+  file the indexer extracts from the corpus, in 6 minutes: of 51,598 files, 51,025 are compared, 4,702,668 names and
+  202,297 `this`. Every one binds as the binder binds it, but for two kinds of difference counted apart, each with a
+  test:
+  - `misread`, 61 names in code tree-sitter reads as other code: 48 in a generic tag of a template (`styled.div<Props>`
+    before a template, which it reads as two comparisons, or `sql<T>` before one in an arrow function, which it closes
+    early), 9 a `using` declaration declares, which it reads as an assignment, and 4 a minified `let[a, b]` declares,
+    which it reads as an index into a variable `let`;
+  - `require`, 16 names: a JS `const` a `require` initializes, which the binder binds as an import in the function
+    around it, where JS binds it in its block (two `catch` blocks that each require one module).
+
+  Counted apart too: 560 files where tree-sitter finds an error, mostly syntax its grammar does not parse yet (`export
+  type * from`, `typeof import(..)` in a type argument), and 13 the compiler does not parse.
+- **What the oracle sets aside**, where the binder's answer is not a scope's: an assignment to a property, which the
+  binder records as a declaration in JS and on a function (`f.priority = 1`), and the file itself (a CommonJS module's
+  `exports`) declare no name; a name is looked up with the checker's `resolveName`, since `getSymbolAtLocation` answers
+  `exports` in `exports.x = ..` with the member it declares; a script is bound alone, since the scripts of one program
+  share a global scope where two of them may declare one name.
+- **The tests.** `test_ts_scopes.py` compares 34 rules and the case table's files with the binder on every run, and
+  the table gains its scope cases (above). Each rule was broken once, and a test failed.
+
+Next, the types: TS's facts and one `TypeIndex` for the three ids, which the scanner reads its answers through, with
+the graph identical.
 
 ## Decisions made (2026-10-18, by the author)
 

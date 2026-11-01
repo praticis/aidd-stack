@@ -138,6 +138,14 @@ whether a refactor changed a fact.
 counts, the files it compared and those CPython 3.12 does not compile, and N samples of each difference. symtable only
 compiles a file's symbols; no repository's code runs.
 
+`checks/ts_scopes.py [N]` compares TS's scope index with TypeScript's own binder over every TS and JS file the indexer
+extracts from `/corpus`: each name a file reads binds to the declarations of the file the checker's lookup through the
+scopes finds, for what its place means (a value, a type or a namespace), and each `this` to the node that binds it.
+`checks/ts_scopes.js` gives the binder's answers, a script bound alone. It prints the counts, the files tree-sitter
+finds an error in and those the compiler does not parse, and N samples of each difference; code tree-sitter reads as
+other code (`misread`) and a JS `require` the binder binds as an import in the function around it (`require`) are
+counted apart. The compiler reads and binds the files; no repository's code runs.
+
 ### 4.7 Live, before the merge (class 5)
 
 ```sh

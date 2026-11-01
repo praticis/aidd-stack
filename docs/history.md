@@ -405,3 +405,10 @@
   change of behavior; 9 stay `Unknown`, guards; a value of a package's class reaches no method. Of the scanner's 10, 4
   are found today, guards, and 6 a type gives, strict xfails. The table corrects H5-D36's list of what stays
   `Unknown`: a `let` takes its initializer's type, and a parameter injected by token declares its type.
+- 2026-10-31: TS's scope index, proven against TypeScript's own binder, PR #67 (`refactor(typescript)`), the first of
+  TS's refactor's two PRs (H5-D37), with the graph identical: nothing in the extraction reads it yet. Over every TS and
+  JS file the indexer extracts from the corpus, 51,025 of 51,598, its 4,702,668 names and 202,297 `this` bind as the
+  binder binds them, but for 61 names in code tree-sitter reads as other code (a generic tag of a template, `using`,
+  `let[`) and 16 JS `require`s the binder binds in the function around them; 560 files where tree-sitter finds an
+  error and 13 the compiler does not parse are counted apart. The case table gains eight scope cases, six of them
+  typed.
