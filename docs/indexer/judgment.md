@@ -97,11 +97,12 @@ Not yet decided (H7-D2); recommended. One row per item judged, one per item left
 
 - A count of added typed edges does not say how many are right. "0 differ" says nothing changed, not that anything
   is right.
-- `graph_vs_dry.py` covers `CALLS`, with their strategy, `virtual` and `receivers`, and `EXTENDS`, `IMPLEMENTS` and
-  `OVERRIDES`, with an override's `receivers`, and checks the writer. The other 14 lists of a picture have no script.
+- `graph_vs_dry.py` covers the symbols, with every property the writer gives them, `CALLS`, with their strategy,
+  `virtual` and `receivers`, and `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`, with an override's `receivers`, and checks
+  the writer. The other 13 lists of a picture have no script.
 - `dry_sections.py` compares seven sections (`files`, `symbols`, `calls`, `imports`, `hierarchy`, `endpoints`,
-  `http_calls`) by a few keys each, and counts the calls that do not dispatch: "identical" means identical in those, by
-  those keys. Modules, packages and violations are not compared.
+  `http_calls`) by a few keys each, then every field of a key both sides keep, and counts the calls that do not
+  dispatch: "identical" means identical in those. Modules, packages and violations are not compared.
 - A historical result whose inputs are missing is evidence that it was reported, not that it would reproduce.
 - The per-site attribution (method.md §4.12) sees what a receiver is, its type and what the resolver makes of it, not
   what the resolver then finds on it: an edge that changed because a type's bases or members changed is
