@@ -11,7 +11,7 @@ live install uses.
 
 | Script | What it checks | Locally | CI job |
 |---|---|---|---|
-| `test.sh` | the tests, in the test image: the indexer image, pytest, and Node with a pinned `typescript`, which TS's type cases are checked against (rebuilt when its recipe changes) | `indexer/scripts/test.sh [pytest args]` | `tests` |
+| `test.sh` | the tests, in the test image: the indexer image, pytest, and Node with a pinned `typescript`, which TS's type cases and scope index are checked against (rebuilt when its recipe changes) | `indexer/scripts/test.sh [pytest args]` | `tests` |
 | `corpus.sh`, with `http_corpus.py` and `corpus_metrics.py` | the HTTP extractor on the public corpus and the hold-out: the diff against a baseline, and precision and recall against the expected lists | `corpus.sh --baseline <run>`; `corpus.sh --holdout --baseline <run>` | `corpus` |
 | `micro.sh`, with `micro.py` | the micro graph (files, symbols, `CALLS`, `IMPORTS`, `hierarchy`, violations): full dry-runs of 12 repos by `main` and by the tree, compared record by record; `--ignore calls.virtual` leaves a field out, to show what else a change that adds it changed | `indexer/scripts/micro.sh` | `micro` |
 | `gates.sh`, with `gates.py` | the method's gates over two corpus runs: the precision ratchet, no win lost, the hold-out untouched, a refactor that changes nothing, and the micro graph's verdict. It also decides whether the pull request is a refactor, from its branch and its commits | see below | `gates` |
@@ -52,6 +52,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | `checks/` | `expected_lists_diff.py`, `expected_lists_chain.py` | what changed between two sets of expected lists; no win reverted across the saved runs | the image, `PYTHONPATH=/src:/src/scripts` |
 | | `dump.py` | every file's type facts (`csharp`, `go`, `python`), to compare two codes | the image, as root |
 | | `python_scopes.py` | whether Python's scope index classifies every name of every Python file as CPython's `symtable` does | the image, `PYTHONPATH=/src`, the repos at `/corpus` |
+| | `ts_scopes.py`, `ts_scopes.js` | whether TS's scope index binds every name and `this` of every TS and JS file as TypeScript's binder does | the test image, `PYTHONPATH=/src`, the repos at `/corpus` |
 | | `mutate.sh` | the writer's mutation test, through `mcp-it.sh` | Docker |
 | `lists/` | `expected_lists.py` | edits the expected lists (`new`, `add`, `cat`, `set`, `judge`), draws a list's first sample (`sample`) and keeps its checked samples true to a corpus run (`sync`, `resample`, `found`, `pending`); a list is written back in the order it was read. `--holdout` works on the hold-out's lists: `new` needs a pin, and a measured one is not opened | `python3 -I`; it writes the repository's lists |
 | `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
