@@ -169,8 +169,9 @@ runs `pre-merge.sh`: the graph's picture (`graph-picture.sh`), the golden calls 
 `.local/indexer/live/golden-calls.json`, the same file before and after and across PRs; `golden-calls.example.json`
 shows its shape), the dry-runs of every live snapshot with both codes (`dryrun-live.sh`, with `-w` on the mounted code,
 each snapshot copied at its sha to a folder no earlier run used and checked against it) and their comparison by section
-(`dry_sections.py`) and against the graph, which must hold `main`'s dry-run, the strategies, `virtual`, the
-`receivers` and the hierarchy's edges included (`graph_vs_dry.py` with the before only). It seals the folder in `SHA256SUMS` and prints counts.
+(`dry_sections.py`, a record by its key and then the fields of a key both keep) and against the graph, which must
+hold `main`'s dry-run: each symbol with every property the writer gives it, the calls' strategies, `virtual` and
+`receivers`, and the hierarchy's edges (`graph_vs_dry.py` with the before only). It seals the folder in `SHA256SUMS` and prints counts.
 
 ### 4.8 Live, after the merge (class 5)
 

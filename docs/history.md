@@ -445,3 +445,8 @@
   are re-indexed, all ok; 345 signatures gain their `>`, which the graph holds as the dry-runs give them, read apart
   since the live tools compare no symbol property; of the 29 calls, 5 differ only in their time, build and refresh
   fields, and `find_symbol`'s scores move with its full-text index.
+- 2026-11-01: the live validation compares a symbol's properties, PR #71 (`chore(scripts)`), which #70's live
+  validation found it did not: `dry_sections.py` counts the fields that differ on a key both dry-runs keep, the
+  graph's picture lists each symbol's properties, its signature and doc percent-encoded, and `graph_vs_dry.py` checks
+  that the graph holds each symbol of the dry-run with every property the writer gives it. On #70's pair, the 345
+  signatures show where the tools said `identical`.
