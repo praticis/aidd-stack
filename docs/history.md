@@ -421,3 +421,14 @@
   `new C()` from the type index, and no site changes on the corpus, the hold-out or the micro set. Read by the types,
   the case table's 30 typed cases reach the declaration the checker names and its 11 `unknown` cases give their
   reason, with 45 rules past it; each of 91 mutants fails a test. `B | null` is `B`, with a new case.
+- 2026-11-01: PR #68 is validated on a live install (the twenty-seventh round). The build changes and the 10 snapshots
+  are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
+  refresh fields.
+- 2026-11-01: TS's hierarchy, PR #69 (`feat(graph)`), the fifth of TS's step 5 (H5-D39): TS's `EXTENDS`, `IMPLEMENTS`
+  and `OVERRIDES`. A type's bases are the declarations TS's type index resolves its clauses to, and the language says
+  which it implements (`LanguageSupport.implemented`); an override is what JS looks the name up to on an instance, a
+  field the instance holds before any prototype's method. An abstract method is a method symbol. The case's edges are
+  the checker's and its overrides what Node runs; over the corpus the index names the checker's declaration at all
+  2,888 clauses where both name one of the repo. The proof found TD-038 and TD-039, due before the change of
+  behavior, so TS's step 5 is eight PRs. Micro: the TS and JS repos gain 4,087 hierarchy edges (1,803 `EXTENDS`, 299
+  `IMPLEMENTS`, 1,985 `OVERRIDES`), and calls found by name reach the abstract methods.

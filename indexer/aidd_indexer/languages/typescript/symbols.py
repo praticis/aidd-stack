@@ -10,18 +10,22 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tree_sitter import Node
 
-from ...core.model import FileInfo
-from ...core.types import RepoTypes, TypeRef
+from ...core.model import FileInfo, SymbolInfo
+from ...core.types import RepoTypes, TypeRef, Unknown
 from ..base import LanguageSupport, PackageFactory, ResolveContext
+from . import dispatch
 from .http import TsScanner
 from .modules import Package, module_target
 from .package_facts import package_facts_reader
 from .type_facts import TsTypes, type_facts
 from .type_index import Outside, TsTypeIndex, qualified, ref, typed
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ...core.hierarchy import Declared
 
 HERE = Path(__file__).parent
 _IMPORT = re.compile(r"import\s+(?:type\s+)?(?:(\w+)\s*,?\s*)?(?:\*\s+as\s+(\w+))?\s*(?:\{([^}]*)\})?")
@@ -99,6 +103,16 @@ class TypeScriptSupport(LanguageSupport):
         """A receiver whose chain ends in a package's type: no method of the repo is its."""
         found = typed(self._types(ctx), file.path, receiver_type, path)
         return (found.name, True) if isinstance(found, Outside) else None
+
+    def bases(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        found = self._types(ctx).bases(ref(qualified_type))
+        return [] if isinstance(found, Unknown) else [qualified(b) for b in found if isinstance(b, TypeRef) and b.name]
+
+    def implemented(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
+        return [qualified(t) for t in self._types(ctx).implemented(ref(qualified_type))]
+
+    def dispatched(self, ctx: ResolveContext, declared: Declared, instance: str, method: SymbolInfo) -> list[SymbolInfo]:
+        return dispatch.dispatched(self._types(ctx), declared, instance, method)
 
     def supertypes(self, ctx: ResolveContext, qualified_type: str) -> list[str]:
         return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]

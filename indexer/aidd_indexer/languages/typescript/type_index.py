@@ -111,10 +111,8 @@ class TsTypeIndex(TypeIndex):
         return found if isinstance(found, Unknown) else found[0]
 
     def bases(self, of: TypeRef) -> list[TypeRef | Unknown] | Unknown:
-        owner, file = self._owner(of), self._files.get(of.package)
-        if owner is None or file is None:
-            return NOT_A_TYPE
-        return [b if isinstance(b, Unknown) else self.type_named(b, file) for b in owner.bases]
+        owner = self._owner(of)
+        return NOT_A_TYPE if owner is None else [self._base(of, b) for b in owner.bases]
 
     def implementers(self, interface: TypeRef) -> list[TypeRef] | Unknown:
         return [t for t in self.classes() if interface in self.supertypes(t)]
@@ -145,6 +143,21 @@ class TsTypeIndex(TypeIndex):
                     out.append(b)
                     queue.append(b)
         return out
+
+    def extended(self, t: TypeRef) -> TypeRef | Unknown | None:
+        """What `t`'s `extends` clause names first: a class's base class; None where it names none."""
+        owner = self._owner(t)
+        return self._base(t, owner.extends[0]) if owner is not None and owner.extends else None
+
+    def implemented(self, t: TypeRef) -> list[TypeRef]:
+        """The types of the repo a class's `implements` clause names."""
+        owner = self._owner(t)
+        return [b for w in owner.implements if isinstance(b := self._base(t, w), TypeRef)] if owner is not None else []
+
+    def holds(self, t: TypeRef, name: str) -> bool:
+        """Whether the class or interface `t` declares `name` as a field: a property, a parameter property, a getter."""
+        owner = self._owner(t)
+        return owner is not None and name in owner.fields
 
     def outside_base(self, t: TypeRef) -> bool:
         """Whether a base of `t`, or of one of its bases, is one the index cannot see, which may give a member."""
@@ -265,6 +278,9 @@ class TsTypeIndex(TypeIndex):
                 return found
             outside = outside or found == BASE_OUTSIDE
         return BASE_OUTSIDE if outside else missing
+
+    def _base(self, t: TypeRef, written: str | Unknown) -> TypeRef | Unknown:
+        return written if isinstance(written, Unknown) else self.type_named(written, self._files[t.package])
 
     def _declared(self, t: TypeRef, m: Member) -> Denoted:
         return Denoted(self._files[t.package], "", m)

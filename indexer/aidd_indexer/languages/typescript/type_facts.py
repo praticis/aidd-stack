@@ -25,9 +25,14 @@ class Member(NamedTuple):
 
 class Owner(NamedTuple):
     """A class or an interface."""
-    bases: tuple[str | Unknown, ...]        # what it extends, then implements
+    extends: tuple[str | Unknown, ...]      # a class's base class; an interface's bases
+    implements: tuple[str | Unknown, ...]
     fields: dict[str, Member]
     methods: dict[str, Member]
+
+    @property
+    def bases(self) -> tuple[str | Unknown, ...]:
+        return self.extends + self.implements
 
 
 class TsTypes(NamedTuple):
@@ -130,21 +135,22 @@ def _function(node: Node) -> Member:
 
 
 def _class(node: Node) -> Owner:
-    bases: list[str | Unknown] = []
+    extends: list[str | Unknown] = []
+    implements: list[str | Unknown] = []
     for heritage in (c for c in node.named_children if c.type == "class_heritage"):
         for clause in heritage.named_children:
             if clause.type == "extends_clause":
-                bases.append(written(clause.child_by_field_name("value")))
+                extends.append(written(clause.child_by_field_name("value")))
             elif clause.type == "implements_clause":
-                bases += [of_type(t, _type_parameter) for t in clause.named_children]
+                implements += [of_type(t, _type_parameter) for t in clause.named_children]
             else:
-                bases.append(written(clause))
+                extends.append(written(clause))
     fields: dict[str, Member] = {}
     methods: dict[str, Member] = {}
     body = node.child_by_field_name("body")
     for m in body.named_children if body is not None else ():
         _class_member(m, fields, methods)
-    return Owner(tuple(bases), fields, methods)
+    return Owner(tuple(extends), tuple(implements), fields, methods)
 
 
 def _class_member(m: Node, fields: dict[str, Member], methods: dict[str, Member]) -> None:
@@ -189,7 +195,7 @@ def _interface(node: Node) -> Owner:
             fields[_text(name)] = _member("value", of_type(m.child_by_field_name("type"), _type_parameter))
         elif m.type == "method_signature":
             methods.setdefault(_text(name), _function(m))
-    return Owner(tuple(bases), fields, methods)
+    return Owner(tuple(bases), (), fields, methods)
 
 
 def _import(facts: TsTypes, node: Node) -> None:

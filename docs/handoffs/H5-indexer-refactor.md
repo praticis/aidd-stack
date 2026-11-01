@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in six PRs (H5-D36, H5-D37); the probe in #65, the case table in #66, the scope index in #67, the types in #68 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in eight PRs (H5-D36, H5-D37, H5-D39); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -53,12 +53,14 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in six PRs, as
-   Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in eight PRs,
+   as Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
    TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
    TypeScript's binder (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a
-   `feat(graph)` for TS's hierarchy and `OVERRIDES`; and the change of behavior, judged per site with
-   `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below).
+   `feat(graph)` for TS's hierarchy and `OVERRIDES` (#69, H5-D39); a `fix(typescript)` for each of the two gaps its
+   proof found, the module resolution, TD-038, and a CommonJS export, TD-039; and the change of behavior, judged per
+   site with `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5"
+   below).
    The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do not hold it.
 2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
    step 11 (docs).
@@ -1237,7 +1239,54 @@ TS's `call_receiver` still answers nothing, so the resolver asks none of the typ
   since TS checks a call against its receiver's type; whether a method a JS prototype assignment adds needs it is the
   change of behavior's question.
 
-Next, the `feat(graph)` for TS's `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`, then the change of behavior.
+#### TS's hierarchy (#69, H5-D39)
+
+The fifth PR writes TS's `EXTENDS`, `IMPLEMENTS` and `OVERRIDES`. Calls are still found by name, with the abstract
+methods among their candidates now, since an abstract method is a symbol.
+- **Where it lives.** `languages/typescript/dispatch.py` holds what a dispatching call runs on an instance. The facts
+  tell a class's `extends` from its `implements`, and the index answers `extended`, `implemented` and `holds`;
+  `symbols.py` has the hooks `bases`, `implemented` and `dispatched`. The core asks the language which bases a type
+  implements (`LanguageSupport.implemented`, by default the kinds' rule), since TS's `implements` may name a class. TS's
+  query captures `abstract_method_signature` as a method.
+- **The rules.** A type's bases are the declarations TS's type index resolves its clauses' names to; one it cannot see
+  gives no edge. On an instance of a class, a dispatching call runs what JS finds for the name: nothing of the graph
+  where a class of the `extends` chain declares the name a field or a parameter property, which the instance holds as
+  its own; else the nearest class whose prototype holds it, nothing where that is an accessor, and else its last
+  declaration of the method with a body, after its overload signatures; an abstract method holds nothing there. An
+  interface's method runs what the instance's lookup finds. A static method, an accessor and a constructor dispatch
+  nothing, and an instance of an interface runs nothing.
+- **The proof:**
+  - `test_ts_hierarchy.py`: the case's edges are the declarations TypeScript's checker resolves its heritage clauses to
+    (`checks/ts_heritage.js`), and its overrides what Node runs on an instance of each class of the case
+    (`checks/ts_runs.js`, which compiles the case's own files and runs them, never a repository's), both on each run;
+    the closure of the edges is `supertypes`. The case spans `.ts`, `.tsx` and `.js` files, re-exports, a default and a
+    namespace import, a generic base, a class implemented, a mixin and a package's base; and each guard of the rule has
+    a case that tells it apart: a static and an instance method of one name, a method under a getter and under a field,
+    an abstract method over a concrete one, overloads, a method named `get`, constructors.
+  - Each rule broken once, 23 mutants: a test failed each time.
+  - `checks/ts_heritage.py` compares the index's bases with the checker's over every TS and JS file the indexer extracts
+    from the corpus, each file read with its `tsconfig.json`'s `paths` and `baseUrl`: of the 10,542 heritage clauses of
+    a module's class or interface, the index names the checker's declaration at all 2,888 where both name one of the
+    repo, and another at none, and neither names one at 3,462. Where the checker names one and the index gives
+    `Unknown`, 3,284, two gaps `main` has, registered, give 3,277: 3,225 are a name the repo's `tsconfig.json` maps to
+    its own file (TD-038), and 52 a CommonJS export (TD-039); the other 7 are a class another browser script declares,
+    which scripts share in one global scope and the index, which reads a module's names, does not see. 16 are the
+    index's alone: an alias the clone's configuration does not map (SvelteKit's `$lib` and Nuxt's `~`, which a generated
+    `tsconfig.json` maps), and a `.js` the index takes where TS takes the `.d.ts` beside it. Counted apart: 886 declared
+    in a function or a namespace, and 6 names a module declares twice, which TS merges.
+  - Corpus and hold-out: 0 repo(s) differ. Micro: the five repos with no TS or JS are identical; the seven with them
+    gain 4,087 hierarchy edges (1,803 `EXTENDS`, 299 `IMPLEMENTS`, 1,985 `OVERRIDES`) and 148 abstract methods, and
+    change CALLS at 417 sites, each one where an abstract method joins the homonyms a call by name reaches. Against the
+    checker's resolution of outline's and ghost's calls, of their 249 such sites the callees hold more of its
+    declarations at 57, as many at 61 and fewer at 20, where the abstract method, nearer, pushes one of three homonyms
+    out; the checker names none at 111, mostly mocks in tests.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, goes from 42.1 s to 42.7 s, and its peak
+    memory from 1,641 MiB to 1,649 MiB.
+- **What differs from the plan:** the corpus oracle reads each file's `tsconfig.json`, where the index reads only the
+  usual aliases, which is TD-038; and the proof found TD-038 and TD-039, which the author placed before the change of
+  behavior, so TS's step 5 is eight PRs.
+
+Next, the `fix(typescript)` PRs of TD-038 and TD-039, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

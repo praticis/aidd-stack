@@ -45,7 +45,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
 | 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `checks/python_scopes.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -145,6 +145,16 @@ scopes finds, for what its place means (a value, a type or a namespace), and eac
 finds an error in and those the compiler does not parse, and N samples of each difference; code tree-sitter reads as
 other code (`misread`) and a JS `require` the binder binds as an import in the function around it (`require`) are
 counted apart. The compiler reads and binds the files; no repository's code runs.
+
+`checks/ts_heritage.py [N]` compares TS's bases with TypeScript's own checker over every TS and JS file the indexer
+extracts from `/corpus`: each type a heritage clause of a module's class or interface names is, in the type index, the
+declaration the checker resolves it to, each file read with its `tsconfig.json`'s `baseUrl` and `paths`
+(`checks/ts_heritage.js`). It prints the count of each kind and N samples of each: the same declaration, none of the
+repo's on either side, the index's `Unknown` by its reason, with a package's name the repo's `tsconfig.json` maps to
+its own file apart, a declaration the index alone gives, and another one; a declaration in a function or a namespace,
+and a name a module declares twice, are counted apart. The compiler reads and types the files; no repository's code
+runs. `checks/ts_runs.js` tells what JS runs on an instance of each class of a test's own case, which it compiles and
+runs: it is for the tests only.
 
 ### 4.7 Live, before the merge (class 5)
 
