@@ -3,7 +3,9 @@
 checker resolves its call to: every case is checked against the checker of the compiler the test image pins
 (scripts/checks/ts_checker.js), which reads and types the files and runs nothing. A case the declarations in sight
 decide is typed; one where the checker narrows a union by control flow, infers through a generic or reads a result the
-function does not declare stays unknown, since a declaration's answer does not give it."""
+function does not declare stays unknown, since a declaration's answer does not give it. The scope cases are where a
+name bound to the wrong declaration would give a wrong type; every name of them binds as the compiler's binder binds it
+(test_ts_scopes.py)."""
 
 import contextlib
 import io
@@ -118,7 +120,32 @@ UNDECIDED = {
         "  return c.send();\n}\n", (), "external", method="send", reason="a type a package declares"),
 }
 
-CASES = DECLARED | UNDECIDED
+# -- which declaration a name binds to, as the language scopes it -------------------------------------------------
+SCOPES = {
+    "a-block-that-shadows": Case(
+        'import { A, B } from "./models";\nexport function main(flag: boolean) {\n  const x = new A();\n'
+        "  if (flag) {\n    const x = new B();\n    void x;\n  }\n  return x.run();\n}\n", ("app/models:A.run",),
+        "typed"),
+    "a-var-used-before-its-declaration": Case(
+        IMPORT_B + "export function main() {\n  x.run();\n  var x = new B();\n}\n", (B_RUN,), "typed"),
+    "a-let-reassigned-from-any": Case(
+        IMPORT_B + "export function main(s: string) {\n  let x = new B();\n  x = JSON.parse(s);\n"
+        "  return x.run();\n}\n", (B_RUN,), "typed"),
+    "a-function-declared-after-its-use": Case(
+        IMPORT_B + "export function main() {\n  return made().run();\n  function made(): B { return new B(); }\n}\n",
+        (B_RUN,), "typed"),
+    "a-closure": Case(IMPORT_B + "export function main() {\n  const x = new B();\n  const f = () => x.run();\n"
+                      "  return f();\n}\n", (B_RUN,), "typed"),
+    "a-destructured-parameter": Case(IMPORT_B + "export function main({ x }: { x: B }) { return x.run(); }\n",
+                                     (B_RUN,), "typed"),
+    "a-type-parameter-that-shadows-an-import": Case(
+        IMPORT_B + "export function main<B>(x: B) { return x.run(); }\n", (), "unknown",
+        reason="a type parameter with no constraint"),
+    "a-for-of-variable": Case(IMPORT_B + "export function main(xs: B[]) {\n  for (const x of xs) x.run();\n}\n",
+                              (B_RUN,), "unknown", reason="a type the checker infers through a generic"),
+}
+
+CASES = DECLARED | UNDECIDED | SCOPES
 
 # -- the scanner: a client's calls, found through the type its receiver declares -----------------------------------
 CLIENT = ('export class ApiClient {\n  baseUrl = "/api";\n'
