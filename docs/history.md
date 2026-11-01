@@ -421,3 +421,6 @@
   `new C()` from the type index, and no site changes on the corpus, the hold-out or the micro set. Read by the types,
   the case table's 30 typed cases reach the declaration the checker names and its 11 `unknown` cases give their
   reason, with 45 rules past it; each of 91 mutants fails a test. `B | null` is `B`, with a new case.
+- 2026-11-01: PR #68 is validated on a live install (the twenty-seventh round). The build changes and the 10 snapshots
+  are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
+  refresh fields.

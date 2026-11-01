@@ -973,3 +973,35 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 
 **What the round shows.** A refactor that adds code the build fingerprints changes the build and every snapshot's
 time, and nothing of the graph.
+
+## Twenty-seventh round: validating PR #68 on a live install (2026-11-01, build `0.2.15+87152c41d4e2` to `0.2.15+ccfcfcc426f3`)
+
+What changed since the twenty-sixth round: PR #68 is merged, TS's type facts and one `TypeIndex` for its three ids.
+TS's `call_receiver` answers nothing yet, so the resolver asks none of the type hooks; the HTTP scanner asks the scope
+and type indexes what it answered alone, and no site changes. Its modules are under `languages/`, which the build
+fingerprints, so the build changes and the refresher re-indexes every snapshot. The same 3 tenants and 10 snapshots,
+and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`f7208c5`). The dry-runs of `main`
+  and of the PR's head (`05e9bb5`) on each snapshot, at its sha, are identical in all 10. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 75 types' and
+  overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`b06cbfb`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph:** 14 of its 16 lists are identical, and the other 2 differ only in the build and the index
+runs' counts. The graph holds the dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The HTTP scanner's answers read through TS's scope and type indexes keep every live site, as
+they keep the corpus's, the hold-out's and the micro set's.
