@@ -72,6 +72,7 @@ DECLARED = {
     "an-as-expression": Case(IMPORT_B + "export function main(x: unknown) { return (x as B).run(); }\n", (B_RUN,),
                              "typed"),
     "an-optional-chain": Case(IMPORT_B + "export function main(x?: B) { return x?.run(); }\n", (B_RUN,), "typed"),
+    "a-type-or-null": Case(IMPORT_B + "export function main(x: B | null) { return x?.run(); }\n", (B_RUN,), "typed"),
     "an-exported-instance": Case(
         'import { shared } from "./models";\nexport function main() { return shared.run(); }\n', (B_RUN,), "typed"),
     "an-aliased-import": Case(
@@ -109,7 +110,7 @@ UNDECIDED = {
         ("app/models:A.run", BASE_RUN), "unknown", reason="an intersection of several types"),
     "a-union-narrowed-by-control-flow": Case(
         'import { A, B } from "./models";\nexport function main() {\n  let x: A | B = new B();\n  return x.run();\n}\n',
-        (B_RUN,), "unknown", reason="a union the checker narrows by control flow"),
+        (B_RUN,), "unknown", reason="a union of several types"),
     "a-result-the-function-does-not-declare": Case(
         'import { build } from "./models";\nexport function main() { return build().run(); }\n', (B_RUN,), "unknown",
         reason="a result the function does not declare"),

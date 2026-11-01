@@ -504,6 +504,11 @@
   },
   {
    "method": "POST",
+   "path": "/api/batch",
+   "line": 17
+  },
+  {
+   "method": "POST",
    "path": "/api/pages/duplicate",
    "line": 9
   },
