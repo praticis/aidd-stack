@@ -120,7 +120,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
     def _own_base(self, node: Node, via: str) -> str | None:
         """`this.fetch("/batch", "POST")` inside a client class with a base: the class's request methods put it
         before the path, as its other callers' requests get it."""
-        cls = self._class_around(node) if via.startswith("this.") else None
+        cls = self.class_of_this(node.child_by_field_name("function")) if via.startswith("this.") else None
         found = TsFacts.read(self.ctx).client_classes.get(cls) if cls else None
         raw = self.ctx.joined(found[1]) if found and found[1] else None
         return raw if raw is not None and raw.startswith("/") else None

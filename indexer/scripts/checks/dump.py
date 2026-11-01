@@ -1,6 +1,7 @@
 """Every file's type facts under /corpus, as JSON in field order, one line per file: `repo/path<TAB>json`. The same
-dump from two codes shows whether a refactor changed a fact. Only languages with type facts: csharp, go, python.
-The code is the indexer mounted at /src; the repos are only parsed.   dump.py LANGUAGE OUT_FILE"""
+dump from two codes shows whether a refactor changed a fact. Only languages with type facts: csharp, go, python,
+typescript, tsx, javascript. The code is the indexer mounted at /src; the repos are only parsed.
+  dump.py LANGUAGE OUT_FILE"""
 import json
 import sys
 from pathlib import Path

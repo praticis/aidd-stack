@@ -11,11 +11,14 @@ from __future__ import annotations
 from tree_sitter import Node
 
 from ...core.http_base import HttpResult, Pending, text, unwrap_arg, walk
-from ...core.http_nodes import CLASS_NODES, FUNCTION_SCOPES, member
+from ...core.http_nodes import FUNCTION_SCOPES, member
 from ...core.http_scope import END
 from ...core.http_wrappers import (FIELDS, PARAM, UNKNOWN, ClassBases, WrappedCall, WrapperShape,
                                    compose_wrapped_calls, continues_path, param_shape, verb_of)
 from ...core.paths import has_literal_segment, normalize_path, unquote
+from ...core.types import TypeRef, Unknown
+from .receivers import this_owner
+from .scopes import TsScopes
 
 SCOPE = "ts"                       # the scope of the wrapper facts the core's machinery composes for TS/JS
 CLASS_FIELDS = ("public_field_definition", "field_definition")
@@ -26,6 +29,7 @@ CLIENT_LIBRARIES = frozenset({"axios", "superagent", "ky", "got", "node-fetch", 
 class TsClientWrappers:
     """Mixin of the TS scanner: publishes wrappers and class bases, and keeps the calls that may go to a wrapper
     pending."""
+    ts_scopes: TsScopes | None = None          # the file's scope index, built on its first question
 
     def publish_bases(self, cls: Node) -> None:
         name = cls.child_by_field_name("name")
@@ -215,7 +219,7 @@ class TsClientWrappers:
             return None
         method = text(prop, self.src)
         if obj.type == "this":
-            cls = self._class_around(at)
+            cls = self.class_of_this(obj)
             return ("class", cls, method) if cls else None
         if obj.type != "identifier":
             return None
@@ -237,24 +241,28 @@ class TsClientWrappers:
         unit = self.resolve_import(spec) if spec is not None and orig is not None else None
         return ("func", f"{unit}:{orig}") if unit else None
 
-    def _class_around(self, at: Node) -> str | None:
-        p = at.parent
-        while p is not None and p.type not in CLASS_NODES:
-            p = p.parent
-        name = p.child_by_field_name("name") if p is not None else None
+    def class_of_this(self, at: Node | None) -> str | None:
+        """The class whose members the `this` that `at` starts with reaches (`this.http.get`, and `await this.fetch<T>`,
+        where the grammar puts the `await` in the callee), as TS's scope index binds the `this`."""
+        while at is not None and at.named_child_count:
+            at = at.named_children[0]
+        if at is None or at.type != "this":
+            return None
+        if self.ts_scopes is None:
+            self.ts_scopes = TsScopes(self.fx.tree.root_node, self.src)
+        found = this_owner(at, self.ts_scopes)
+        name = found.child_by_field_name("name") if not isinstance(found, Unknown) else None
         return text(name, self.src) if name is not None else None
 
     def _constructed(self, val: Node | None) -> str | None:
-        """`new Client(..)` of a class the repo defines (here, or imported from a file of the repo): its name. A
-        library's client is not one."""
+        """`new Client(..)` of a class the repo declares, here or where an import leads: its name, as the type index
+        reads it. A library's client is not one."""
         ctor = val.child_by_field_name("constructor") if val is not None and val.type == "new_expression" else None
-        name = text(ctor, self.src) if ctor is not None and ctor.type == "identifier" else ""
-        if any(s.kind == "class" for s in self.symbols_by_name.get(name, ())):
-            return name
-        spec, orig = self.imports.get(name) or (None, None)
-        if spec is None or self.resolve_import(spec) is None:
+        view = self.ctx.view
+        if ctor is None or ctor.type != "identifier" or view is None or view.types is None:
             return None
-        return orig if orig and orig != "default" else name
+        found = view.types.of(self.fx.file.language).type_named(text(ctor, self.src), self.fx.file.path)
+        return found.name if isinstance(found, TypeRef) and found.name else None
 
 
 def compose_wrapped_calls_ts(out: HttpResult) -> None:

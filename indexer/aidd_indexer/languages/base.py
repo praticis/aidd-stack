@@ -66,6 +66,7 @@ class LanguageSupport:
     extensions: tuple[str, ...]                    # ".go"
     query_file: Path                               # languages/<lang>/queries.scm
     stack: str = ""                                # what Repo.stack shows when a manifest is found: go | ts | dotnet | python
+    type_family: str = ""                          # languages whose files share one `TypeIndex` (TS's three); "" for its own
     manifests: dict[str, str] = field(default_factory=dict)          # "go.mod" -> "go-module"
     manifest_suffixes: dict[str, str] = field(default_factory=dict)  # ".csproj" -> "csproj"
     builtin_receivers: frozenset[str] = frozenset()  # `console.log`, `Task.Run` — calls into the runtime, never resolved
