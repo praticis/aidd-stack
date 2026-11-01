@@ -412,3 +412,6 @@
   `let[`) and 16 JS `require`s the binder binds in the function around them; 560 files where tree-sitter finds an
   error and 13 the compiler does not parse are counted apart. The case table gains eight scope cases, six of them
   typed.
+- 2026-11-01: PR #67 is validated on a live install (the twenty-sixth round). The build changes and the 10 snapshots
+  are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
+  refresh fields.

@@ -943,3 +943,33 @@ same field by field, `atlas_status` differs only in its time fields, and 5 diffe
 
 **What the round shows.** The MCP reads the dispatch the graph has held since #61 and #62, and the graph does not
 change. A change the build does not fingerprint leaves no run to wait for, which the live check now knows.
+
+## Twenty-sixth round: validating PR #67 on a live install (2026-11-01, build `0.2.15+27df2af8e1ef` to `0.2.15+87152c41d4e2`)
+
+What changed since the twenty-fifth round: PR #67 is merged, TS's scope index. Nothing in the extraction reads it yet,
+so the graph does not change; its modules are under `languages/`, which the build fingerprints, so the build changes
+and the refresher re-indexes every snapshot. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`2279bd0`). The dry-runs of `main`
+  and of the PR's head (`c031257`) on each snapshot, at its sha, are identical in all 10. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,607 symbols, 23,682 `CALLS`, 15,890 `IMPORTS`, 75 types' and
+  overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`f7208c5`, whose package is the PR head's):** the 10 snapshots ran since
+  the before, all ok, and each holds the new build.
+
+**The picture of the graph:** 14 of its 16 lists are identical, and the other 2 differ only in the build and the index
+runs' counts. The graph holds the dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** A refactor that adds code the build fingerprints changes the build and every snapshot's
+time, and nothing of the graph.
