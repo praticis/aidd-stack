@@ -223,6 +223,11 @@ class LanguageSupport:
         left out. Go embeds a type, which promotes its methods and dispatches none: no base."""
         return []
 
+    def implemented(self, ctx: ResolveContext, qualified_type: str) -> list[str] | None:
+        """Which of `bases` the type implements, where its clause tells (TS's `implements` may name a class); None where
+        the kinds do: a type that is not an interface implements an interface it names and extends any other base."""
+        return None
+
     def dispatches(self, call: "CallInfo") -> bool:
         """Whether the class of the object the call is made on may choose the method it runs: not where the language
         sends the call to a base's method by name (C# `base.M()`, Python `super().m()`)."""

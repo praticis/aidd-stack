@@ -9,6 +9,8 @@
 
 (method_signature name: (property_identifier) @name) @def.method
 
+(abstract_method_signature name: (property_identifier) @name) @def.method
+
 (class_declaration name: (type_identifier) @name) @def.class
 
 (abstract_class_declaration name: (type_identifier) @name) @def.class

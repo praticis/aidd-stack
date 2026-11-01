@@ -1,6 +1,7 @@
 """`EXTENDS`, `IMPLEMENTS` and `OVERRIDES` inside one repo. A type's edges go to the types of the repo it names as its
-direct bases, as its language reads them (`LanguageSupport.bases`): a type that is not an interface implements an
-interface it names, and extends any other base. A base declared in parts (a C# partial type) is each of its
+direct bases, as its language reads them (`LanguageSupport.bases`): it implements those its language says
+(`LanguageSupport.implemented`), or else, when it is no interface, an interface it names, and extends any other base. A
+base declared in parts (a C# partial type) is each of its
 declarations. A method's edges go to the methods a dispatching call to which may run it, on an instance of some type of
 the repo at or below theirs, as the instance's language says (`LanguageSupport.dispatched`), with the types below the
 target's a receiver of which may hold such an instance. Two types of one qualified name (C#'s `IFoo` and `IFoo<T>` in
@@ -40,14 +41,17 @@ def type_edges(types: list[SymbolInfo], files_by_id: dict[str, FileInfo], ctx: R
     for t in types:
         declared[t.qualified_name].append(t)
     shared = _shared(types)
-    read: dict[tuple[str, str], list[str]] = {}     # a partial type's parts ask once
+    read: dict[tuple[str, str], tuple[list[str], list[str] | None]] = {}     # a partial type's parts ask once
     edges = set()
     for t in (t for t in types if t.qualified_name not in shared):
         language = files_by_id[t.file_id].language
         if (language, t.qualified_name) not in read:
             support = languages.by_id(language)
-            read[language, t.qualified_name] = support.bases(ctx, t.qualified_name) if support is not None else []
-        edges |= {HierarchyEdge(t.id, b.id, _kind(t, b)) for q in read[language, t.qualified_name] if q not in shared
+            read[language, t.qualified_name] = (support.bases(ctx, t.qualified_name),
+                                                support.implemented(ctx, t.qualified_name)) \
+                if support is not None else ([], None)
+        bases, implemented = read[language, t.qualified_name]
+        edges |= {HierarchyEdge(t.id, b.id, _kind(t, b, implemented)) for q in bases if q not in shared
                   for b in declared.get(q, ()) if b.id != t.id}
     return sorted(edges)
 
@@ -111,5 +115,7 @@ def _ancestors(up: dict[str, set[str]], type_id: str) -> set[str]:
     return seen
 
 
-def _kind(source: SymbolInfo, target: SymbolInfo) -> str:
+def _kind(source: SymbolInfo, target: SymbolInfo, implemented: list[str] | None) -> str:
+    if implemented is not None:
+        return "IMPLEMENTS" if target.qualified_name in implemented else "EXTENDS"
     return "IMPLEMENTS" if target.kind == "interface" and source.kind != "interface" else "EXTENDS"
