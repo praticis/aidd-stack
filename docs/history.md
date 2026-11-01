@@ -450,3 +450,6 @@
   graph's picture lists each symbol's properties, its signature and doc percent-encoded, and `graph_vs_dry.py` checks
   that the graph holds each symbol of the dry-run with every property the writer gives it. On #70's pair, the 345
   signatures show where the tools said `identical`.
+- 2026-11-01: PR #71 is validated on a live install (the thirtieth round), with its own tools. The graph is the same
+  on the 10 snapshots, each symbol's properties compared, and the build too, so no snapshot ran; of the 29 calls, 28
+  are the same and `atlas_status` differs only in its time fields.

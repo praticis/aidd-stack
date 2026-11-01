@@ -1090,3 +1090,34 @@ and the 345 documents written again move Lucene's statistics.
 **What the round shows.** The writer writes the signatures as the dry-runs give them. It also found that the live
 tools see no change of a symbol's property: `dry_sections.py` keys a symbol by its id, the picture lists no signature
 and `graph_vs_dry.py` compares edges only.
+
+## Thirtieth round: validating PR #71 on a live install (2026-11-01, build `0.2.15+62c09d19cab5`, unchanged)
+
+What changed since the twenty-ninth round: PR #71 is merged, the live validation that compares each symbol's
+properties, in the dry-runs and in the graph. Only `scripts/live/` changes, which the build does not fingerprint, and
+the round ran with its tools: the first whose picture lists each symbol's properties. The same 3 tenants and 10
+snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`92fe049`). The dry-runs of `main`
+  and of the PR's head (`0ba3651`) on each snapshot, at its sha, are identical in all 10, now field by field too. The
+  live graph holds `main`'s dry-run on every snapshot (0 mismatching), each of its 10,609 symbols with every property
+  the writer gives it: 23,681 `CALLS`, 15,890 `IMPORTS`, 360 types' and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`ad15d76`, whose tree is the PR head's):** the build is the same, so no
+  snapshot ran since the before, and the 10 hold the before's build.
+
+**The picture of the graph** is identical in all 16 of its lists, the symbols' properties included, and the graph holds
+the branch's dry-run on every snapshot (0 mismatching), with no symbol changed in the graph or in the dry-runs.
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 28 answers are the
+same field by field, and `atlas_status` differs only in its time fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The new tools take the graph as it is: a validation where nothing changes passes with each
+symbol's properties compared, where the twenty-ninth round had to read them apart.
