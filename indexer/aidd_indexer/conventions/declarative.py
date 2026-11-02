@@ -139,7 +139,10 @@ class DeclarativeConvention(Convention):
     # ---- whole-repo view: layout and roles
     def prepare(self, ctx: ConventionContext) -> None:
         self.architecture, self._arch_layers = layout.select(self.architectures, self.forced, ctx.res.modules)
-        self._role, self._file_roles, self._path_layer = {}, {}, {}
+        self._role, self._file_roles = {}, {}
+        # every file, so a rule of this layout reads it whichever convention answers its layer first
+        self._path_layer = {f.id: layer for f in ctx.files_by_id.values()
+                            if (layer := layout.place(f.path, self._arch_layers + self.layers)) is not None}
         if not self.roles:
             return
         types = [s for s in ctx.res.symbols if s.kind in TYPE_KINDS]
@@ -151,10 +154,9 @@ class DeclarativeConvention(Convention):
         return self._role.get(symbol.id)
 
     def layer_of(self, file: FileInfo, module: ModuleInfo | None) -> str | None:
-        for layer, rx in self._arch_layers + self.layers:
-            if rx.match(file.path):
-                self._path_layer[file.id] = layer
-                return layer
+        layer = layout.place(file.path, self._arch_layers + self.layers)
+        if layer is not None:
+            return layer
         by_role = {self.role_layer.get(r) for r in self._file_roles.get(file.id, ())}
         if len(by_role) == 1:                   # unplaced by the layout: the roles it declares agree on one layer
             return next(iter(by_role))

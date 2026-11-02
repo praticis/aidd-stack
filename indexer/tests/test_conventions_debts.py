@@ -84,32 +84,3 @@ def test_a_partial_class_has_the_bases_of_all_its_declarations(tmp_path, base):
         res, _ = extract_and_resolve(_write(tmp_path / base_in / "shop", _partial(base_in)), convs=convs)
         roles[base_in] = {s.role for s in res.symbols if s.name == "Order"}
     assert roles == {"A": {"entity"}, "B": {"entity"}}
-
-HANDLER = {
-    "src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
-    "src/Shop/Infra/PlaceOrderHandler.cs": (
-        "namespace Shop.Infra;\n\npublic class PlaceOrderHandler : ICommandHandler<PlaceOrder> { }\n"),
-}
-
-# Both place the handler's file in `infra`; only the second has a rule on where a handler lives.
-LAYOUT = {"id": "layout", "layers": {"infra": ["src/*/Infra/**"]}}
-HANDLERS = {"id": "handlers", "layers": {"infra": ["src/*/Infra/**"]},
-            "roles": {"command-handler": {"extends": ["ICommandHandler"]}},
-            "rules": [{"id": "handlers-in-core", "roles_in": {"command-handler": ["core"]}}]}
-
-
-@pytest.mark.parametrize("first,second", [
-    case("roles-in-gives-the-same-violations-in-either-order", LAYOUT, HANDLERS,
-         why="`roles_in` reads only the files its convention was asked the layer of, so a convention that answers "
-             "first hides them"),
-])
-def test_a_conventions_rules_do_not_depend_on_the_order_of_the_conventions(tmp_path, first, second):
-    from aidd_indexer.cli import extract_and_resolve
-    repo = _write(tmp_path / "shop", HANDLER)
-    a, b = _load(tmp_path, "first", first), _load(tmp_path, "second", second)
-
-    def violations(convs):
-        res, _ = extract_and_resolve(repo, convs=convs)
-        return sorted((v.convention, v.rule, v.line) for v in res.violations)
-
-    assert violations(a + b) == violations(b + a)

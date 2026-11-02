@@ -74,3 +74,44 @@ def test_a_rule_that_names_two_kinds_is_refused(tmp_path: Path, rule, message):
     with pytest.raises(ConfigError) as e:
         conventions.load([{"path": str(spec)}], "shop")
     assert message in str(e.value)
+
+
+HANDLER = "src/Shop/Infra/PlaceOrderHandler.cs"
+LAYOUT = {"id": "layout", "layers": {"infra": ["src/*/Infra/**"]}}
+HANDLERS = {"id": "handlers", "layers": {"infra": ["src/*/Infra/**"]},
+            "roles": {"command-handler": {"extends": ["ICommandHandler"]}},
+            "rules": [{"id": "handlers-in-core", "roles_in": {"command-handler": ["core"]}}]}
+ROLES_ONLY = {"id": "roles", "roles": {"command-handler": {"extends": ["ICommandHandler"]}}}
+RULE_ONLY = {"id": "rule", "layers": {"infra": ["src/*/Infra/**"]},
+             "rules": [{"id": "handlers-in-core", "roles_in": {"command-handler": ["core"]}}]}
+
+
+def _load(tmp_path: Path, *specs: dict) -> list:
+    from aidd_indexer import conventions
+    for spec in specs:
+        (tmp_path / f"{spec['id']}.yaml").write_text(yaml.safe_dump(spec))
+    return conventions.load([{"path": str(tmp_path / f"{s['id']}.yaml")} for s in specs], "shop")
+
+
+def _roles_in(tmp_path: Path, *specs: dict) -> list:
+    from aidd_indexer import conventions
+    (tmp_path / HANDLER).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / HANDLER).write_text("namespace Shop.Infra;\n\n"
+                                    "public class PlaceOrderHandler : ICommandHandler<PlaceOrder> { }\n")
+    res = R.result(str(tmp_path), files=[R.file(HANDLER)], symbols=[R.symbol("PlaceOrderHandler", HANDLER, line=3)])
+    conventions.apply(_load(tmp_path, *specs), res, R.resolved())
+    return sorted((v.convention, v.rule, v.line) for v in res.violations)
+
+
+@pytest.mark.parametrize("first,second", [(LAYOUT, HANDLERS), (ROLES_ONLY, RULE_ONLY)])
+def test_roles_in_reads_its_own_layout_whichever_convention_answers_first(tmp_path: Path, first, second):
+    """Two conventions that place a file in one layer, in either order; a convention with no roles reads the role
+    another one gives."""
+    expected = [(second["id"], "handlers-in-core", 3)]
+    assert _roles_in(tmp_path, first, second) == _roles_in(tmp_path, second, first) == expected
+
+
+def test_a_file_outside_the_extraction_is_placed_by_the_layout(tmp_path: Path):
+    conv = _load(tmp_path, LAYOUT)[0]
+    conv.prepare(R.context(R.result(str(tmp_path))))
+    assert conv.layer_of(R.file("src/Shop/Infra/Late.cs"), None) == "infra"

@@ -31,6 +31,11 @@ def layers(spec: dict | None) -> Layers:
     return [(layer, glob_re(g)) for layer, globs in (spec or {}).items() for g in (globs or [])]
 
 
+def place(path: str, layers: Layers) -> str | None:
+    """The layer of the first glob the path matches."""
+    return next((layer for layer, rx in layers if rx.match(path)), None)
+
+
 def detected(detect: dict[str, Any], modules: list[str]) -> bool:
     """`modules`: any module path matches one of the globs. `together`: module names (last path
     segment) that must all exist for the same `{placeholder}` value — `["{svc}.Api", "{svc}.Core"]`
