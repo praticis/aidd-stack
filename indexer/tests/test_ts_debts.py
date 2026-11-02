@@ -21,11 +21,6 @@ WORKSPACE = {
     "packages/web/package.json": '{"name": "@app/web", "dependencies": {"@app/core": "*"}}\n',
     "packages/web/src/use.ts": 'import { Base } from "@app/core";\nexport class Use extends Base { run() {} }\n',
 }
-COMMONJS = {
-    "package.json": PACKAGE,
-    "lib/base.js": "class Base { run() {} }\nmodule.exports = Base;\n",
-    "app/use.js": 'const Base = require("../lib/base");\nclass Use extends Base { run() {} }\nmodule.exports = Use;\n',
-}
 CLASS_EXPRESSION = {
     "package.json": PACKAGE,
     "lib/base.js": "class Base { run() {} }\nmodule.exports = Base;\n",
@@ -47,8 +42,6 @@ CASES = [
     case("an-import-of-a-package-of-the-repos-workspace-reaches-its-class", WORKSPACE,
          ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
          "a package the repo's workspace declares is read as an npm package"),
-    case("a-require-of-a-commonjs-export-reaches-its-class", COMMONJS,
-         ("app/use:Use", "EXTENDS", "lib/base:Base"), "`module.exports = Base` exports nothing the index reads"),
     case("a-class-a-class-expression-declares-extends-its-base", CLASS_EXPRESSION,
          ("app/use:Use", "EXTENDS", "lib/base:Base"), "a class expression is no symbol"),
     case("a-function-a-class-field-holds-is-a-method-of-its-class", FIELD,

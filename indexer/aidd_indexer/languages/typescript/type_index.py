@@ -10,6 +10,7 @@ from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
+from .commonjs import OWN
 from .modules import Package, module_target
 from .type_facts import Member, Owner, TsTypes
 
@@ -200,6 +201,9 @@ class TsTypeIndex(TypeIndex):
         target = self._target(file, spec)
         if not isinstance(target, str):
             return target
+        facts = self._facts[target]
+        if remote in ("*", "default") and (OWN in facts.exports or OWN in facts.reexports):
+            return self._export(target, OWN, depth + 1)
         return Denoted(target, "", None) if remote == "*" else self._export(target, remote, depth + 1)
 
     def _export(self, file: str, name: str, depth: int) -> Found:

@@ -10,6 +10,7 @@ from typing import Any, NamedTuple
 from tree_sitter import Node
 
 from ...core.types import Unknown
+from .commonjs import OWN, assignments, required, required_name, string
 from .forms import NOT_A_REFERENCE, of_type, of_value, written
 
 NO_RESULT = Unknown("a result the function does not declare")
@@ -38,7 +39,8 @@ class Owner(NamedTuple):
 class TsTypes(NamedTuple):
     members: dict[str, Member]
     owners: dict[str, Owner]
-    exports: dict[str, str]         # an exported name -> the module's own name; `export default x` under `default`
+    exports: dict[str, str]         # an exported name -> the module's own name; `export default x` under `default`,
+                                    # the module's own value under `OWN`
     reexports: dict[str, str]       # an exported name -> the module and its name there
     stars: tuple[str, ...]          # the modules `export * from` names
 
@@ -51,11 +53,16 @@ class TsTypes(NamedTuple):
 NONE = TsTypes({}, {}, {}, {}, ())
 
 
-def type_facts(root: Node) -> TsTypes:
+def type_facts(root: Node, js: bool = False) -> TsTypes:
+    """`js`: a JS file, which exports what it assigns as CommonJS where it has no ES module syntax."""
     facts = TsTypes({}, {}, {}, {}, ())
     stars: list[str] = []
     for statement in root.named_children:
         _statement(facts, stars, statement)
+    values, names = assignments(root, js)
+    for name, value in values:
+        _assigned(facts, name, value)
+    facts.exports.update(names)
     return facts._replace(stars=tuple(stars))
 
 
@@ -85,8 +92,10 @@ def _declaration(facts: TsTypes, node: Node) -> list[str]:
         facts.members[_text(name)] = _member("alias", of_type(node.child_by_field_name("value"), _type_parameter))
     elif t in ("function_declaration", "function_signature", "generator_function_declaration") and name is not None:
         facts.members.setdefault(_text(name), _function(node))
-    elif t in ("enum_declaration", "internal_module", "module") and name is not None and name.type == "identifier":
-        facts.members[_text(name)] = Member("enum" if t == "enum_declaration" else "namespace", _text(name))
+    elif t == "enum_declaration" and name is not None:
+        facts.members[_text(name)] = Member("enum", _text(name))
+    elif t in ("internal_module", "module") and name is not None and name.type == "identifier":
+        facts.members.setdefault(_text(name), Member("namespace", _text(name)))     # merged into what it names
     elif t in ("lexical_declaration", "variable_declaration"):
         return [n for d in node.named_children if d.type == "variable_declarator" for n in _variable(facts, d)]
     else:
@@ -96,19 +105,19 @@ def _declaration(facts: TsTypes, node: Node) -> list[str]:
 
 def _variable(facts: TsTypes, declarator: Node) -> list[str]:
     name, value = declarator.child_by_field_name("name"), declarator.child_by_field_name("value")
-    required = _required(value)
-    if name is not None and name.type == "object_pattern" and required is not None:
+    module = required(value)
+    if name is not None and name.type == "object_pattern" and module is not None:
         names = [c.child_by_field_name("value") or c if c.type == "pair_pattern" else c for c in name.named_children]
         for c, n in zip(name.named_children, names):
             remote = c.child_by_field_name("key") if c.type == "pair_pattern" else c
             if n.type in ("identifier", "shorthand_property_identifier_pattern") and remote is not None:
-                facts.members[_text(n)] = Member("import", f"{required}:{_text(remote)}")
+                facts.members[_text(n)] = Member("import", f"{module}:{_text(remote)}")
         return [_text(n) for n in names if n.type in ("identifier", "shorthand_property_identifier_pattern")]
     if name is None or name.type != "identifier":
         return []
     annotation = declarator.child_by_field_name("type")
-    if required is not None:
-        found = Member("import", f"{required}:*")
+    if (imported := required_name(value)) is not None:
+        found = Member("import", imported)
     elif annotation is not None:
         found = _member("value", of_type(annotation, _type_parameter))
     elif value is not None and value.type in FUNCTIONS:
@@ -117,15 +126,6 @@ def _variable(facts: TsTypes, declarator: Node) -> list[str]:
         found = _member("value", of_value(value, _type_parameter))
     facts.members[_text(name)] = found
     return [_text(name)]
-
-
-def _required(value: Node | None) -> str | None:
-    """The module a `require("./m")` names."""
-    if value is None or value.type != "call_expression" or _text(value.child_by_field_name("function")) != "require":
-        return None
-    args = value.child_by_field_name("arguments")
-    first = args.named_children[0] if args is not None and args.named_child_count else None
-    return _string(first)
 
 
 def _function(node: Node) -> Member:
@@ -201,10 +201,10 @@ def _interface(node: Node) -> Owner:
 def _import(facts: TsTypes, node: Node) -> None:
     for clause in node.named_children:
         if clause.type == "import_require_clause":
-            spec = _string(clause.child_by_field_name("source"))
+            spec = string(clause.child_by_field_name("source"))
             names = [(c, "*") for c in clause.named_children if c.type == "identifier"]
         elif clause.type == "import_clause":
-            spec = _string(node.child_by_field_name("source"))
+            spec = string(node.child_by_field_name("source"))
             names = _imported(clause)
         else:
             continue
@@ -227,7 +227,7 @@ def _imported(clause: Node) -> list[tuple[Node, str]]:
 
 
 def _export(facts: TsTypes, stars: list[str], node: Node) -> None:
-    spec = _string(node.child_by_field_name("source"))
+    spec = string(node.child_by_field_name("source"))
     declaration = node.child_by_field_name("declaration")
     value = node.child_by_field_name("value")
     default = any(c.type == "default" for c in node.children)
@@ -247,6 +247,20 @@ def _export(facts: TsTypes, stars: list[str], node: Node) -> None:
                 facts.reexports[exported] = f"{spec}:{name}"
             else:
                 facts.exports[exported] = name
+
+
+def _assigned(facts: TsTypes, name: str, value: Node) -> None:
+    """A name a module exports by assigning it: a name of the module, a module a `require` names or a name of one, or a
+    value no name of the module holds, which the module then holds under the name its exports give it."""
+    if (imported := required_name(value)) is not None:
+        facts.reexports[name] = imported
+    elif value.type in ("identifier", "shorthand_property_identifier"):
+        facts.exports[name] = _text(value)
+    else:
+        local = "module.exports" if name == OWN else f"module.exports.{name}"
+        facts.members[local] = _function(value) if value.type in FUNCTIONS else \
+            _member("value", of_value(value, _type_parameter))
+        facts.exports[name] = local
 
 
 def _star(facts: TsTypes, stars: list[str], node: Node, spec: str) -> None:
@@ -274,13 +288,6 @@ def _type_parameter(name: Node) -> Node | None:
 
 def _member(kind: str, form: str | Unknown) -> Member:
     return Member(kind, "", form.reason) if isinstance(form, Unknown) else Member(kind, form)
-
-
-def _string(node: Node | None) -> str | None:
-    if node is None or node.type != "string":
-        return None
-    fragment = next((c for c in node.named_children if c.type == "string_fragment"), None)
-    return _text(fragment) if fragment is not None else ""
 
 
 def _text(node: Node | None) -> str:
