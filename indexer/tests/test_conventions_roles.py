@@ -80,11 +80,11 @@ def test_roles_and_architectures(tmp_path: Path):
     with pytest.raises(ConfigError):
         run({"architecture": "huge"})
 
-    from aidd_indexer.conventions.declarative import _detected
+    from aidd_indexer.conventions.layout import detected
     mods = ["src/Shop.Api", "src/shared/Org.Bus.Core"]                          # a `.Core` library is not a split service
-    assert not _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods)
-    assert _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods + ["src/Shop.Core"])
-    assert _detected({"modules": ["**/*.Core"]}, mods)
+    assert not detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods)
+    assert detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods + ["src/Shop.Core"])
+    assert detected({"modules": ["**/*.Core"]}, mods)
 
 
 @pytest.mark.parametrize("header,bases", [
@@ -102,7 +102,7 @@ def test_roles_and_architectures(tmp_path: Path):
     ("class Order:", []),
 ])
 def test_the_simple_names_of_a_declarations_bases(header, bases):
-    from aidd_indexer.conventions.declarative import base_names
+    from aidd_indexer.conventions.declarations import base_names
     assert base_names(header) == bases
 
 
