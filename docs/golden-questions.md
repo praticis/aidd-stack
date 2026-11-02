@@ -1226,3 +1226,40 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 
 **What the round shows.** The live graph exercises the convention the refactor moves, and its 104 roles and its layer
 are the same symbol by symbol and module by module.
+
+## Thirty-fourth round: validating PR #76 on a live install (2026-11-02, build `0.2.15+bb9ddffd7988` to `0.2.15+521ede71cef9`)
+
+What changed since the thirty-third round: PR #76 is merged, a `fix(conventions)` that closes the declarative
+conventions' four debts: a rule that names two kinds is refused when its convention loads, `roles_in` reads its
+convention's own layout on every file, a type's bases are read from the line that declares it, as its language writes
+them, and an id declared more than once has the bases of every declaration. The same 3 tenants and 10 snapshots, and
+29 calls.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`3e1f6e8`). The dry-runs of `main` and of the PR's
+  head (`0d1f74b`) on each snapshot, at its sha, are identical in all 10, field by field. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,609 symbols, 104 of them with a convention's role, 23,681 `CALLS`,
+  15,890 `IMPORTS`, 381 types' and overrides' edges, 351 modules, 1 of them with a layer, 0 violations. The convention
+  runs on 2 of the 10 snapshots, both C#: its 104 roles are 47 and 57, and its entry points 10 and 19.
+- **After the author's reinstall from `main` (`3c3fa8c`):** the first reinstall failed on the image build, a grammar
+  download that timed out, and the stack kept the old images until the second. The 10 snapshots ran since the before,
+  all ok, and each holds the new build; the refresh had re-indexed them when the first `after` ran.
+
+**The picture of the graph** is identical in 14 of its 16 lists, the symbols' roles and the modules' layers included;
+the labels differ only in the `IndexRun` counts, and the snapshots only in the build. The graph after holds the
+branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The live graph exercises the convention on 2 C# snapshots, and the PR moves none of their
+roles, layers or entry points. What the PR corrects, a partial class, a C# attribute with a `{`, a Python or a Go
+declaration, is not in the live repos: the parity of the 12 micro repos holds it, where every changed role has its
+cause.

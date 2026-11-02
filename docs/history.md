@@ -509,3 +509,8 @@
   with the reference convention and a probe in both orders, every changed role has its cause. Alone on the machine, the
   12 dry-runs take 499 s against `main`'s 495 s; umbraco's conventions, where most of each declaration is now read, take
   7.1 s against 3.4 s.
+- 2026-11-02: PR #76 is validated on a live install (the thirty-fourth round). The dry-runs of `main` and of the PR's
+  head are identical on the 10 snapshots: the convention runs on 2 of them, both C#, and its 104 roles, its layer and
+  its entry points are the same. The graph holds them with the new build on each; of the 29 calls, 24 are the same and
+  5 differ only in their time, build and refresh fields. What the PR corrects is not in the live repos: the parity of
+  the micro set holds it.
