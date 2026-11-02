@@ -488,3 +488,8 @@
 - 2026-11-02: PR #74 is validated on a live install (the thirty-third round). The dry-runs of `main` and of the merge
   are identical on the 10 snapshots, the convention's 104 roles and its layer included, and the graph holds them with
   the new build on each; of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh fields.
+- 2026-11-02: the corpus runner measures a repo and sums its totals outside `main`, PR #75 (`refactor(scripts)`): `main`
+  goes from complexity 20 to 6 and `report_expected` from 12 to 6, and the totals across repos leave three global
+  variables for an accumulator of their own (`corpus_totals.py`). Every path of the runner prints what `main`'s does,
+  byte for byte, and the corpus's and the hold-out's dumps are identical. `http_corpus.py` stays at 346 lines, split
+  when it must grow (H5-D43). No live validation: nothing in `aidd_indexer/` changes.
