@@ -537,3 +537,8 @@
   answer the same byte for byte, the 109 errors among them, and seven rounds alternating the two take the same time
   within ±4 %. Step 12's remaining code goes with the step that changes it (H5-D44): the core's HTTP modules with step
   6, and `extract` and `resolve` with step 12's last PR, after TS's step 5.
+- 2026-11-02: PR #78 is validated on a live install (the thirty-sixth round). The dry-runs of `main` and of the PR's
+  head are identical on the 10 snapshots, and the graph holds them with the new build on each; the picture is identical
+  in its 16 lists but for the build and the `IndexRun` counts, and of the 29 calls, 24 are the same and 5 differ only
+  in their time, build and refresh fields. What `aidd plan` and `aidd policy` print for each of the 7 tenants is the
+  same, byte for byte, before and after.
