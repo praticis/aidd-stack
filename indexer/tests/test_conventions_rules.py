@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 import convention_records as R
@@ -56,3 +57,20 @@ def test_each_kind_of_rule_reports_its_violations(tmp_path: Path):
         _violation("rule4", API, 8, "outbound POST /v1/pay from layer api, allowed: infra", f"{API}#Pay"),
         _violation("rule4", SHARED, 3, "outbound GET /v1/where from layer (none), allowed: infra", SHARED),
     ]
+
+
+@pytest.mark.parametrize("rule,message", [
+    ({"id": "two", "endpoints_only_in": ["api"], "http_calls_only_in": ["infra"]},
+     "rule #1 'two' names 2 kinds (endpoints_only_in, http_calls_only_in): a rule has one"),
+    ({"endpoints_only_in": ["api"], "roles_in": {"handler": ["core"]}},
+     "rule #1 names 2 kinds (endpoints_only_in, roles_in): a rule has one"),
+])
+def test_a_rule_that_names_two_kinds_is_refused(tmp_path: Path, rule, message):
+    """The check would run only one of them, so loading refuses the rule, by its id when it has one."""
+    from aidd_indexer import conventions
+    from aidd_indexer.core.config import ConfigError
+    spec = tmp_path / "convention.yaml"
+    spec.write_text(yaml.safe_dump({"id": "x", "rules": [rule]}))
+    with pytest.raises(ConfigError) as e:
+        conventions.load([{"path": str(spec)}], "shop")
+    assert message in str(e.value)

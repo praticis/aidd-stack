@@ -65,6 +65,20 @@ from .declarations import Declarations
 RULE_KINDS = ("forbid_import", "endpoints_only_in", "http_calls_only_in", "roles_in")
 
 
+def _checked_rules(path: Path, raw: list | None) -> list[dict[str, Any]]:
+    rules = list(raw or [])
+    for i, r in enumerate(rules):
+        kinds = [k for k in RULE_KINDS if isinstance(r, dict) and k in r]
+        if not kinds:
+            raise ConfigError(f"{path}: rule #{i + 1} must have one of {' / '.join(RULE_KINDS)}")
+        if len(kinds) > 1:
+            name = f"rule #{i + 1}" + (f" '{r['id']}'" if r.get("id") else "")
+            raise ConfigError(f"{path}: {name} names {len(kinds)} kinds ({', '.join(kinds)}): a rule has one")
+        r.setdefault("id", f"rule{i + 1}")
+        r.setdefault("severity", "warning")
+    return rules
+
+
 class DeclarativeConvention(Convention):
     def __init__(self, path: Path):
         self.path = path
@@ -97,12 +111,7 @@ class DeclarativeConvention(Convention):
         self.owner_sig: tuple[str, ...] = tuple(members.get("signature_contains") or [])
         self.owner_methods: frozenset[str] = frozenset(members.get("names") or [])
         self.entry_roles: dict[str, frozenset[str]] = {str(k): frozenset(v or []) for k, v in (ep.get("roles") or {}).items()}
-        self.rules: list[dict[str, Any]] = list(raw.get("rules") or [])
-        for i, r in enumerate(self.rules):
-            if not isinstance(r, dict) or not any(k in r for k in RULE_KINDS):
-                raise ConfigError(f"{path}: rule #{i + 1} must have one of {' / '.join(RULE_KINDS)}")
-            r.setdefault("id", f"rule{i + 1}")
-            r.setdefault("severity", "warning")
+        self.rules = _checked_rules(path, raw.get("rules"))
         names = [a[0] for a in self.architectures]
         self.forced: str | None = None
         self.architecture: str | None = None

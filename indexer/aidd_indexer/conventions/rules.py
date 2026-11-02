@@ -68,7 +68,6 @@ def _http_calls_only_in(rule: dict, ctx: ConventionContext, path_layer: dict[str
                               f"allowed: {', '.join(sorted(allowed))}"), c.caller_id
 
 
-# A rule that names two kinds runs only the first in this order, which is not the order of the kinds' list.
 KINDS = {"forbid_import": _forbid_import, "endpoints_only_in": _endpoints_only_in, "roles_in": _roles_in,
          "http_calls_only_in": _http_calls_only_in}
 

@@ -7,8 +7,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-import convention_records as R
-
 
 def case(id, *values, why):
     return pytest.param(*values, id=id, marks=pytest.mark.xfail(strict=True, reason=why))
@@ -27,26 +25,6 @@ def _load(tmp_path: Path, name: str, spec: dict) -> list:
     path = tmp_path / f"{name}.yaml"
     path.write_text(yaml.safe_dump(spec))
     return conventions.load([{"path": str(path)}], "shop")
-
-
-@pytest.mark.parametrize("rule", [
-    case("a-rule-with-two-kinds-drops-none",
-         {"id": "two", "endpoints_only_in": ["api"], "http_calls_only_in": ["infra"]},
-         why="a rule's first kind in the order the check reads them runs, and the others are ignored"),
-])
-def test_a_rule_with_two_kinds_drops_none(tmp_path, rule):
-    """Either loading refuses the rule, naming it, or the check reports each of its kinds."""
-    from aidd_indexer import conventions
-    from aidd_indexer.core.config import ConfigError
-    try:
-        convs = _load(tmp_path, "convention", {"id": "x", "rules": [rule]})
-    except ConfigError as e:
-        assert "rule #1" in str(e) or "two" in str(e)
-        return
-    res = R.result(files=[R.file("src/Orders.cs")], endpoints=[R.endpoint("GET", "/orders", "src/Orders.cs", 3)],
-                   http_calls=[R.http_call("POST", "/pay", "src/Orders.cs", 5, caller_id="src/Orders.cs")])
-    conventions.apply(convs, res, R.resolved())
-    assert sorted(v.line for v in res.violations) == [3, 5]
 
 
 PYTHON = {
