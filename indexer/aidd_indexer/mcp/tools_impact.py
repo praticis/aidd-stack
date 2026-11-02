@@ -40,6 +40,101 @@ def _callers(s: Store, reach: dict[str, Reach], sy: dict[str, Any]) -> list[dict
     return sorted(out, key=lambda c: (c["hops"], c["qualified_name"], c["file"], c["id"]))[:MAX_ROWS]
 
 
+def _impact_of(s: Store, *, symbol: str, repo: str | None, ref: str | None, max_depth: int) -> dict[str, Any]:
+    sy = _symbol(s, symbol, repo, ref)
+    depth = max(1, min(max_depth, 10))
+    members = [r["id"] for r in s.read(
+        "MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id", id=sy["id"])]
+    targets = [sy["id"]] + members
+    callers = _callers(s, walk(lambda ids: [Hop(**r) for r in s.read(_HOP, ids=ids)], targets, depth), sy)
+    for c in callers:
+        c["test"] = is_test_path(c["file"])
+    production = [c for c in callers if not c["test"]]
+    reach_ids = targets + [c["id"] for c in callers]
+    exposed = s.read("""
+            MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+            WHERE h.id IN $ids
+            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
+            WITH e, h, cf, caller ORDER BY caller.repo, cf.ref, cf.line
+            RETURN e.id AS endpoint_id, e.service AS service, e.method AS method, e.path AS path,
+                   h.qualified_name AS handler,
+                   [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
+                        {repo: caller.repo, ref: cf.ref, caller: coalesce(caller.qualified_name, caller.path),
+                         evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
+            ORDER BY path, method
+        """, ref=sy["ref"], ids=reach_ids)
+    consumers = []
+    for e in exposed:
+        for c in _collapse_refs(e.pop("consumers")):
+            consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
+    return {"symbol": sy, "members_included": len(members), "internal_callers": callers, "internal_caller_count": len(callers),
+            "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
+            "exposed_through": exposed, "consumers": consumers,
+            "consumer_repos": sorted({c["repo"] for c in consumers})}
+
+
+def _ref_surface(s: Store, repo: str, ref: str) -> dict[str, Any]:
+    eps = s.read("""
+                MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
+                OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
+                RETURN e.method + ' ' + e.path AS key, e.method AS method, e.path AS path, h.qualified_name AS handler, x.evidence AS evidence
+            """, repo=repo, ref=ref)
+    syms = s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref, is_entry_point: true})
+                MATCH (f:File)-[:CONTAINS]->(sy)
+                RETURN sy.qualified_name AS key, sy.kind AS kind, f.path AS file, sy.line_start AS line
+            """, repo=repo, ref=ref)
+    calls = s.read("""
+                MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
+                RETURN DISTINCT c.method + ' ' + c.path AS key, c.method AS method, c.path AS path, c.target_hint AS target_hint
+            """, repo=repo, ref=ref)
+    return {"endpoints": {r["key"]: r for r in eps}, "entry_points": {r["key"]: r for r in syms},
+            "http_calls": {r["key"]: r for r in calls}}
+
+
+def _ref_symbols(s: Store, repo: str, ref: str) -> dict[tuple[str, str], dict[str, Any]]:
+    by: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in s.read("""
+                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref}) WHERE sy.kind <> 'field'
+                RETURN sy.qualified_name AS qualified_name, sy.kind AS kind, sy.path AS file, sy.line_start AS line,
+                       sy.content_hash AS hash
+            """, repo=repo, ref=ref):
+        digest = row.pop("hash")
+        key = (row["qualified_name"], row["kind"])
+        by.setdefault(key, {"row": row, "hashes": set()})["hashes"].add(digest)   # overloads share a name
+    return by
+
+
+def _ref_diff(s: Store, *, repo: str, ref: str, base: str | None, limit: int) -> dict[str, Any]:
+    ref = s.resolve_ref(repo, ref)
+    base = s.resolve_ref(repo, base)
+    if ref == base:
+        raise AtlasError(f"ref and base are the same ({ref}) — pass a different `base`")
+
+    a, b = _ref_surface(s, repo, ref), _ref_surface(s, repo, base)
+    snaps = {r["ref"]: r for r in s.read("""
+            MATCH (sn:Snapshot {tenant: $tenant, repo: $repo}) WHERE sn.ref IN [$ref, $base]
+            RETURN sn.ref AS ref, left(sn.commit_sha, 10) AS sha, toString(sn.indexed_at) AS indexed_at
+        """, repo=repo, ref=ref, base=base)}
+    out: dict[str, Any] = {"repo": repo, "ref": ref, "base": base,
+                           "snapshots": snaps,
+                           "note": "compares the INDEXED commits above (remote-tracking refs). A local merge or "
+                                   "unpushed commits are not in the graph until they are pushed and refreshed."}
+    for kind in ("endpoints", "entry_points", "http_calls"):
+        out[f"{kind}_added"] = [a[kind][k] for k in sorted(set(a[kind]) - set(b[kind]))]
+        out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
+    out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
+
+    sa, sb = _ref_symbols(s, repo, ref), _ref_symbols(s, repo, base)
+    changes = {"symbols_added": [sa[k]["row"] for k in sorted(set(sa) - set(sb))],
+               "symbols_removed": [sb[k]["row"] for k in sorted(set(sb) - set(sa))],
+               "symbols_changed": [sa[k]["row"] for k in sorted(set(sa) & set(sb)) if sa[k]["hashes"] != sb[k]["hashes"]]}
+    for k, v in changes.items():
+        out["summary"][k] = len(v)
+        out[k] = v[:limit]
+    return out
+
+
 def register(mcp, st) -> None:
     @mcp.tool()
     def impact_of(symbol: str, repo: str | None = None, ref: str | None = None, max_depth: int = 6,
@@ -61,37 +156,7 @@ def register(mcp, st) -> None:
         symbol goes through such a call). On a type
         (class/interface/struct) the calls to its members count too (`members_included`): changing the
         class affects whoever calls its methods."""
-        s = st(tenant)
-        sy = _symbol(s, symbol, repo, ref)
-        depth = max(1, min(max_depth, 10))
-        members = [r["id"] for r in s.read(
-            "MATCH (:Symbol {id: $id})-[:CONTAINS]->(m:Symbol) RETURN m.id AS id", id=sy["id"])]
-        targets = [sy["id"]] + members
-        callers = _callers(s, walk(lambda ids: [Hop(**r) for r in s.read(_HOP, ids=ids)], targets, depth), sy)
-        for c in callers:
-            c["test"] = is_test_path(c["file"])
-        production = [c for c in callers if not c["test"]]
-        reach_ids = targets + [c["id"] for c in callers]
-        exposed = s.read("""
-            MATCH (e:HttpEndpoint)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
-            WHERE h.id IN $ids
-            OPTIONAL MATCH (e)-[cf:CALLED_FROM]->(caller)
-            WITH e, h, cf, caller ORDER BY caller.repo, cf.ref, cf.line
-            RETURN e.id AS endpoint_id, e.service AS service, e.method AS method, e.path AS path,
-                   h.qualified_name AS handler,
-                   [x IN collect(CASE WHEN cf IS NULL THEN null ELSE
-                        {repo: caller.repo, ref: cf.ref, caller: coalesce(caller.qualified_name, caller.path),
-                         evidence: cf.evidence, confidence: cf.confidence, hint: cf.hint} END) WHERE x IS NOT NULL] AS consumers
-            ORDER BY path, method
-        """, ref=sy["ref"], ids=reach_ids)
-        consumers = []
-        for e in exposed:
-            for c in _collapse_refs(e.pop("consumers")):
-                consumers.append({"service": e["service"], "method": e["method"], "path": e["path"], **c})
-        return {"symbol": sy, "members_included": len(members), "internal_callers": callers, "internal_caller_count": len(callers),
-                "production_caller_count": len(production), "test_caller_count": len(callers) - len(production),
-                "exposed_through": exposed, "consumers": consumers,
-                "consumer_repos": sorted({c["repo"] for c in consumers})}
+        return _impact_of(st(tenant), symbol=symbol, repo=repo, ref=ref, max_depth=max_depth)
 
     @mcp.tool()
     def ref_diff(repo: str, ref: str, base: str | None = None, limit: int = 100,
@@ -106,61 +171,4 @@ def register(mcp, st) -> None:
         Useful to review a feature branch's surface before it merges, or to explain why
         `who_consumes` shows a route only in some refs. `snapshots` gives the indexed sha of each
         ref — compare with `git rev-parse` before trusting a diff on a branch you just merged into."""
-        s = st(tenant)
-        ref = s.resolve_ref(repo, ref)
-        base = s.resolve_ref(repo, base)
-        if ref == base:
-            raise AtlasError(f"ref and base are the same ({ref}) — pass a different `base`")
-
-        def surface(r: str) -> dict[str, Any]:
-            eps = s.read("""
-                MATCH (:Service {tenant: $tenant, name: $repo})-[x:EXPOSES {ref: $ref}]->(e:HttpEndpoint)
-                OPTIONAL MATCH (e)-[:HANDLED_BY {ref: $ref}]->(h:Symbol)
-                RETURN e.method + ' ' + e.path AS key, e.method AS method, e.path AS path, h.qualified_name AS handler, x.evidence AS evidence
-            """, repo=repo, ref=r)
-            syms = s.read("""
-                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref, is_entry_point: true})
-                MATCH (f:File)-[:CONTAINS]->(sy)
-                RETURN sy.qualified_name AS key, sy.kind AS kind, f.path AS file, sy.line_start AS line
-            """, repo=repo, ref=r)
-            calls = s.read("""
-                MATCH (c:HttpCall {tenant: $tenant, repo: $repo, ref: $ref})
-                RETURN DISTINCT c.method + ' ' + c.path AS key, c.method AS method, c.path AS path, c.target_hint AS target_hint
-            """, repo=repo, ref=r)
-            return {"endpoints": {r["key"]: r for r in eps}, "entry_points": {r["key"]: r for r in syms},
-                    "http_calls": {r["key"]: r for r in calls}}
-
-        a, b = surface(ref), surface(base)
-        snaps = {r["ref"]: r for r in s.read("""
-            MATCH (sn:Snapshot {tenant: $tenant, repo: $repo}) WHERE sn.ref IN [$ref, $base]
-            RETURN sn.ref AS ref, left(sn.commit_sha, 10) AS sha, toString(sn.indexed_at) AS indexed_at
-        """, repo=repo, ref=ref, base=base)}
-        out: dict[str, Any] = {"repo": repo, "ref": ref, "base": base,
-                               "snapshots": snaps,
-                               "note": "compares the INDEXED commits above (remote-tracking refs). A local merge or "
-                                       "unpushed commits are not in the graph until they are pushed and refreshed."}
-        for kind in ("endpoints", "entry_points", "http_calls"):
-            out[f"{kind}_added"] = [a[kind][k] for k in sorted(set(a[kind]) - set(b[kind]))]
-            out[f"{kind}_removed"] = [b[kind][k] for k in sorted(set(b[kind]) - set(a[kind]))]
-        out["summary"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
-
-        def symbols(r: str) -> dict[tuple[str, str], dict[str, Any]]:
-            by: dict[tuple[str, str], dict[str, Any]] = {}
-            for row in s.read("""
-                MATCH (sy:Symbol {tenant: $tenant, repo: $repo, ref: $ref}) WHERE sy.kind <> 'field'
-                RETURN sy.qualified_name AS qualified_name, sy.kind AS kind, sy.path AS file, sy.line_start AS line,
-                       sy.content_hash AS hash
-            """, repo=repo, ref=r):
-                digest = row.pop("hash")
-                key = (row["qualified_name"], row["kind"])
-                by.setdefault(key, {"row": row, "hashes": set()})["hashes"].add(digest)   # overloads share a name
-            return by
-
-        sa, sb = symbols(ref), symbols(base)
-        changes = {"symbols_added": [sa[k]["row"] for k in sorted(set(sa) - set(sb))],
-                   "symbols_removed": [sb[k]["row"] for k in sorted(set(sb) - set(sa))],
-                   "symbols_changed": [sa[k]["row"] for k in sorted(set(sa) & set(sb)) if sa[k]["hashes"] != sb[k]["hashes"]]}
-        for k, v in changes.items():
-            out["summary"][k] = len(v)
-            out[k] = v[:limit]
-        return out
+        return _ref_diff(st(tenant), repo=repo, ref=ref, base=base, limit=limit)

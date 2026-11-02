@@ -9,65 +9,11 @@ import os
 import pytest
 
 from aidd_indexer.core.linker import CASE_INSENSITIVE
-from aidd_indexer.mcp.server import Store, _collapse_refs, build_server
+from aidd_indexer.mcp.server import _collapse_refs, build_server
+from mcp_fake_store import FakeStore
 
 EXPECTED_TOOLS = {"atlas_status", "repo_map", "find_symbol", "who_calls", "symbol_context", "http_map",
                   "who_consumes", "impact_of", "ref_diff", "violations", "cypher_readonly"}
-
-
-class FakeStore(Store):
-    def __init__(self):
-        self.cfg, self.tenant, self.driver = None, "t", None
-        self.queries: list[str] = []
-
-    def ping(self):
-        return True
-
-    def resolve_ref(self, repo, ref):
-        return ref or "main"
-
-    def read(self, query, **params):
-        self.queries.append(query)
-        if "sy.name =~ $pattern" in query or "sy.name = $text OR" in query:   # find_symbol precise modes
-            return [{"id": "x", "name": params["text"], "pattern": params["pattern"]}]
-        if "MATCH (sy:Symbol {tenant: $tenant, role: $role})" in query:   # find_symbol role listing
-            return [{"id": "x", "repo": "a", "role": params["role"], "name": "CreateTodoCommandHandler"}]
-        if "RETURN sy.id AS id" in query:                       # _symbol
-            return [{"id": "t/a@main/sym/pkg.Svc.Do#method", "repo": "a", "ref": "main", "kind": "method", "name": "Do",
-                     "qualified_name": "pkg.Svc.Do", "file": "svc.go", "line_start": 1, "line_end": 2, "signature": "func Do()",
-                     "doc": "", "visibility": "public", "entry_point": False}]
-        if "UNWIND $ids AS id" in query:                        # impact_of: a hop of callers, then the callers found
-            return _impact(query, params["ids"])
-        if "HANDLED_BY {ref: $ref}]->(h:Symbol)" in query and "WHERE h.id IN $ids" in query:
-            return [{"endpoint_id": "e1", "service": "a", "method": "GET", "path": "/v1/x", "handler": "pkg.Handler",
-                     "consumers": [{"repo": "b", "ref": "main", "caller": "B.Call", "evidence": "b:c.go:1", "confidence": "exact", "hint": None},
-                                   {"repo": "b", "ref": "feature/y", "caller": "B.Call", "evidence": "b:c.go:1", "confidence": "exact", "hint": None}]}]
-        if "EXPOSES {ref: $ref}]->(e:HttpEndpoint)" in query and "AS key" in query:   # ref_diff endpoints
-            return [{"key": "GET /v1/x", "method": "GET", "path": "/v1/x", "handler": "h", "evidence": "a:r.go:1"}] if params["ref"] == "main" \
-                else [{"key": "GET /v1/x", "method": "GET", "path": "/v1/x", "handler": "h", "evidence": "a:r.go:1"},
-                      {"key": "POST /v1/y", "method": "POST", "path": "/v1/y", "handler": "h2", "evidence": "a:r.go:9"}]
-        if "sy.role AS role, count(*) AS count" in query:          # repo_map roles
-            return [{"role": "command-handler", "count": 3, "examples": ["CreateTodoCommandHandler"]}]
-        if "snap.architecture AS architecture" in query:          # repo_map head
-            return [{"stack": ["dotnet"], "architecture": "split", "conventions": ["dotnet-praticis[split]"]}]
-        if "RETURN sn.conventions AS c" in query:                 # violations: conventions applied
-            return [{"c": ["dotnet-praticis[split]"] if params["repo"] == "a" else None}]
-        if "sy.content_hash AS hash" in query:                    # ref_diff symbols
-            base = [{"qualified_name": "pkg.Keep", "kind": "function", "file": "k.go", "line": 1, "hash": "1"},
-                    {"qualified_name": "pkg.Edit", "kind": "function", "file": "e.go", "line": 1, "hash": "2"},
-                    {"qualified_name": "pkg.Gone", "kind": "const", "file": "g.go", "line": 1, "hash": "3"}]
-            if params["ref"] == "main":
-                return base
-            return [base[0], dict(base[1], hash="2b"), {"qualified_name": "pkg.New", "kind": "var", "file": "n.go", "line": 4, "hash": "4"}]
-        return []
-
-
-def _impact(query, ids):
-    if "AS dispatch" in query:
-        return [{"caller": "t/a@main/sym/pkg.Handler#function", "callee": i, "strategy": "receiver-type",
-                 "dispatch": False} for i in ids if i == "t/a@main/sym/pkg.Svc.Do#method"]
-    return [{"id": i, "qualified_name": i.split("/sym/")[1].split("#")[0], "kind": "function", "file": "h.go",
-             "entry_point": True} for i in ids]
 
 
 def _call(srv, name, args):

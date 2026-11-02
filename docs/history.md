@@ -509,3 +509,17 @@
   with the reference convention and a probe in both orders, every changed role has its cause. Alone on the machine, the
   12 dry-runs take 499 s against `main`'s 495 s; umbraco's conventions, where most of each declaration is now read, take
   7.1 s against 3.4 s.
+- 2026-11-02: PR #76 is validated on a live install (the thirty-fourth round). The dry-runs of `main` and of the PR's
+  head are identical on the 10 snapshots: the convention runs on 2 of them, both C#, and its 104 roles, its layer and
+  its entry points are the same. The graph holds them with the new build on each; of the 29 calls, 24 are the same and
+  5 differ only in their time, build and refresh fields. What the PR corrects is not in the live repos: the parity of
+  the micro set holds it.
+- 2026-11-02: the MCP's tools in the shape targets, PR #77 (`refactor(mcp)`): each of `find_symbol`, `who_calls`,
+  `symbol_context`, `impact_of` and `ref_diff` keeps in `register` the wrapper its schema comes from (its name,
+  parameters, return type and docstring) and calls a function of its module with the tenant's store and every argument
+  by name, so both `register` go from complexity 12 to 4 and 3. The protocol test's fake store answers from an ordered
+  table of matchers and answers, in a module of its own, and its `read` goes from 12 to 1. `tools/list` is the same
+  byte for byte in the fixed, the multi-tenant and the no-raw-Cypher modes, and over a throwaway graph the five tools
+  answer 100 calls the same byte for byte, the 45 errors among them (a symbol not found or ambiguous, a repo, a ref or
+  a tenant not indexed, a bad `match` or regex, `ref` equal to `base`). The fake store gives the same answers to the
+  same calls, and the queries the moved bodies send are the same byte for byte.
