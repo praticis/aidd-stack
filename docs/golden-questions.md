@@ -1163,3 +1163,66 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 
 **What the round shows.** The writer writes the imports and the hierarchy TS's module resolution gives, as the dry-runs
 give them, and each new type edge is a declaration TypeScript's checker resolves its clause to through `paths`.
+
+## Thirty-second round: validating PR #73 on a live install (2026-11-02, build `0.2.15+81abc2d700a6` to `0.2.15+96bf784daf65`)
+
+What changed since the thirty-first round: PR #73 is merged, a module's CommonJS exports and a TS module's `export =`
+read as TypeScript binds them (TD-039): a change of the graph where a class extends a class a module assigns. The same
+3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`877652e`). The dry-runs of `main`
+  and of the PR's head (`4644a4a`) on each snapshot, at its sha, are identical in all 10, field by field: no class of
+  the live repos extends one a module assigns. The live graph holds `main`'s dry-run on every snapshot (0
+  mismatching): 10,609 symbols, 23,681 `CALLS`, 15,890 `IMPORTS`, 381 types' and overrides' edges, 351 modules, 0
+  violations.
+- **After the author's reinstall from `main` (`b55d943`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build. The first `after` refused until the refresh had re-indexed them.
+
+**The picture of the graph** is identical in 14 of its 16 lists, the symbols' properties included; the labels differ
+only in the `IndexRun` counts, and the snapshots only in the build. The graph after holds the branch's dry-run on every
+snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** A change the live repos do not exercise leaves their graph as it was, with the new build on
+each snapshot; the micro set's ghost holds what it changes.
+
+## Thirty-third round: validating PR #74 on a live install (2026-11-02, build `0.2.15+96bf784daf65` to `0.2.15+bb9ddffd7988`)
+
+What changed since the thirty-second round: PR #74 is merged, a refactor that puts each declarative convention's
+question in a module of its own: the roles, the layers and the violations a convention gives must not change. The same
+3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`b55d943`). The dry-runs of `main` and of the
+  merge (`391976f`) on each snapshot, at its sha, are identical in all 10, field by field. The live graph holds
+  `main`'s dry-run on every snapshot (0 mismatching): 10,609 symbols, 104 of them with a convention's role, 23,681
+  `CALLS`, 15,890 `IMPORTS`, 381 types' and overrides' edges, 351 modules, 1 of them with a layer, 0 violations.
+- **After the author's reinstall from `main` (`391976f`):** the 10 snapshots ran since the before, all ok, and each
+  holds the new build; the refresh had re-indexed them when the first `after` ran.
+
+**The picture of the graph** is identical in 14 of its 16 lists, the symbols' roles and the modules' layers included;
+the labels differ only in the `IndexRun` counts, and the snapshots only in the build. The graph after holds the
+branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The live graph exercises the convention the refactor moves, and its 104 roles and its layer
+are the same symbol by symbol and module by module.

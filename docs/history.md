@@ -475,3 +475,21 @@
   found TD-043, a class a class expression declares that is no symbol, due in TS's step 5 with TD-037; TD-039's
   `export =` of a namespace in a declaration file goes with TD-041. Micro: ghost gains 42 `EXTENDS` and 48
   `OVERRIDES`; the corpus and the hold-out as on `main`.
+- 2026-11-02: PR #73 is validated on a live install (the thirty-second round). No class of the live repos extends one a
+  module assigns, so the dry-runs of `main` and of the PR are identical on the 10 snapshots, and the graph holds them
+  with the new build on each; of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh
+  fields.
+- 2026-11-02: the declarative conventions in the shape targets, PR #74 (`refactor(conventions)`), H5 step 12's first
+  PR: `declarative.py` keeps the YAML's parsing and asks four modules, the layout, a type's declaration, its role and
+  one function per kind of rule, and `apply` asks each hook in a step of its own. The graph is identical, and so are
+  the micro set's 12 repos with the reference convention and a probe that uses every key of the format, in both
+  orders. Its plan found four defects `main` has, TD-044 to TD-047, due in a `fix(conventions)` PR before F1.2
+  (H5-D42).
+- 2026-11-02: PR #74 is validated on a live install (the thirty-third round). The dry-runs of `main` and of the merge
+  are identical on the 10 snapshots, the convention's 104 roles and its layer included, and the graph holds them with
+  the new build on each; of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh fields.
+- 2026-11-02: the corpus runner measures a repo and sums its totals outside `main`, PR #75 (`refactor(scripts)`): `main`
+  goes from complexity 20 to 6 and `report_expected` from 12 to 6, and the totals across repos leave three global
+  variables for an accumulator of their own (`corpus_totals.py`). Every path of the runner prints what `main`'s does,
+  byte for byte, and the corpus's and the hold-out's dumps are identical. `http_corpus.py` stays at 346 lines, split
+  when it must grow (H5-D43). No live validation: nothing in `aidd_indexer/` changes.
