@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import fnmatch
 import importlib
+from operator import methodcaller
 from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, Callable
@@ -99,7 +100,7 @@ def _roles(convs: list[Convention], res: ExtractionResult, files_by_id: dict[str
         f = files_by_id.get(s.file_id)
         if f is None or s.kind not in TYPE_KINDS:
             continue
-        role = _first(convs, lambda c: c.role_of(s, f))
+        role = _first(convs, methodcaller("role_of", s, f))
         if role is not None:
             s.role = role
 
@@ -107,7 +108,7 @@ def _roles(convs: list[Convention], res: ExtractionResult, files_by_id: dict[str
 def _layers(convs: list[Convention], res: ExtractionResult, ctx: ConventionContext,
             modules: dict[str, ModuleInfo]) -> None:
     for f in res.files:
-        layer = _first(convs, lambda c: c.layer_of(f, modules.get(f.module_id)))
+        layer = _first(convs, methodcaller("layer_of", f, modules.get(f.module_id)))
         if layer is not None:
             f.layer = layer
             ctx.file_layer[f.id] = layer
@@ -130,7 +131,7 @@ def _targets(convs: list[Convention], res: ExtractionResult, files_by_id: dict[s
         f = files_by_id.get(call.file_id)
         if f is None:
             continue
-        target = _first(convs, lambda c: c.target_of(call, f))
+        target = _first(convs, methodcaller("target_of", call, f))
         if target is not None:
             call.target_hint = target
 
@@ -143,7 +144,7 @@ def _entry_points(convs: list[Convention], res: ExtractionResult, files_by_id: d
             continue
         owner = syms.get(s.parent_id) if s.parent_id else None
         # False is an answer: a convention may deny what the language's heuristic says
-        v = _first(convs, lambda c: c.is_entry_point(s, f, owner), lambda v: v is not None)
+        v = _first(convs, methodcaller("is_entry_point", s, f, owner), lambda v: v is not None)
         if v is not None:
             s.is_entry_point = v
 
