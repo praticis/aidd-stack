@@ -1121,3 +1121,45 @@ same field by field, and `atlas_status` differs only in its time fields:
 
 **What the round shows.** The new tools take the graph as it is: a validation where nothing changes passes with each
 symbol's properties compared, where the twenty-ninth round had to read them apart.
+
+## Thirty-first round: validating PR #72 on a live install (2026-11-01, build `0.2.15+62c09d19cab5` to `0.2.15+81abc2d700a6`)
+
+What changed since the thirtieth round: PR #72 is merged, TS's module resolution as TypeScript's, with the config that
+holds the importing file (TD-038): a change of the graph. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`ad15d76`). The dry-runs of `main`
+  and of the PR's head (`579226f`) on each snapshot, at its sha, are identical field by field in 9. The TS repo
+  changes only in its `IMPORTS` and its hierarchy:
+  - 18 `IMPORTS` go from a package to a file, each by a name the repo's `tsconfig.json` `paths` map;
+  - 21 hierarchy edges come and none goes: 3 `EXTENDS`, 4 `IMPLEMENTS` and 14 `OVERRIDES`; and 5 `OVERRIDES` edges
+    gain the new subclasses among the receivers on which they may run;
+  - its `CALLS` are the same: the call on `this` that reached none in the twenty-eighth round still does, and comes
+    back with TS's change of behavior.
+
+  The two refs of the JS and TS repo are identical: the conventional roots already found their `~/` alias, and their
+  12 heritage clauses that name a type a hand-written `.d.ts` declares stay TD-041. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,609 symbols, 23,681 `CALLS`, 15,890 `IMPORTS`, 360 types' and
+  overrides' edges, 351 modules, 0 violations.
+- **Against TypeScript's checker:** the 7 new type edges are the 7 heritage clauses the twenty-eighth round found the
+  checker resolving through `paths`, and the index reached none of.
+- **After the author's reinstall from `main` (`877652e`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph** is identical in 12 of its 16 lists, the symbols and `CALLS` among them. The hierarchy goes
+from 360 edges to 381, and 5 of them change their receivers; `IMPORTS` keep 15,890, 18 of them to a file where they
+named a package; the labels change only in the `IndexRun` counts, and the snapshots only in the build. The graph after
+holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The writer writes the imports and the hierarchy TS's module resolution gives, as the dry-runs
+give them, and each new type edge is a declaration TypeScript's checker resolves its clause to through `paths`.

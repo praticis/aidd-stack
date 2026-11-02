@@ -462,3 +462,8 @@
   both due in TS's step 5, which goes in ten PRs; and the call checker, the change of behavior's reference, reads each
   file's config now. Micro: 39,441 `IMPORTS` go from a package to a file, `CALLS` gain 17,778 and the hierarchy
   4,684; the corpus gains outline's 2 calls to Microsoft Graph.
+- 2026-11-01: PR #72 is validated on a live install (the thirty-first round). The TS repo gains 21 hierarchy edges,
+  the 7 heritage clauses TypeScript's checker resolves through `paths` and 14 `OVERRIDES`, 5 overrides gain the new
+  subclasses among their receivers, and 18 `IMPORTS` go from a package to a file; its `CALLS` and the other 9
+  snapshots are the same, and the graph holds the dry-runs on all 10. Of the 29 calls, 24 are the same and 5 differ
+  only in their time, build and refresh fields.
