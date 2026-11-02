@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // The declarations TypeScript's own checker resolves each method call `x.m(..)` to, in the .ts, .tsx and .js files of
 // each project: one JSON line per call, with the project, the file, the line, the method and the declarations, each as
-// `path:Owner.name` (its file relative to the project, without the extension), or `outside` for one the project does
-// not hold. A union or an intersection gives several; a receiver the checker cannot type, none. Each file is read with
-// its config (`ts_configs.js`). The checker reads and types the files; nothing runs.
+// `path:Owner.name` (its file relative to the project, without its last extension), or `outside` for one the project
+// does not hold. A union or an intersection gives several; a receiver the checker cannot type, none. Each file is read
+// with its config (`ts_configs.js`). The checker reads and types the files; nothing runs.
 //
 //   AIDD_TYPESCRIPT=/opt/typescript node ts_checker.js PROJECT_DIR...
 "use strict";
@@ -39,7 +39,7 @@ function owners(decl) {
 function where(project, decl) {
   const file = path.relative(project, decl.getSourceFile().fileName);
   if (file.startsWith("..") || file.split(path.sep).includes("node_modules")) return "outside";
-  return `${file.replace(/\.(d\.ts|ts|tsx|js)$/, "")}:${owners(decl)}`;
+  return `${file.replace(/\.(ts|tsx|js)$/, "")}:${owners(decl)}`;
 }
 
 function declarations(checker, project, name) {
