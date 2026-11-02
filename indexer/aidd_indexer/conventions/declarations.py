@@ -132,16 +132,20 @@ class Declarations:
         self._root = root
         self._files = files_by_id
         self._sources: dict[str, list[str]] = {}
-        self._headers: dict[str, str] = {}
+        self._headers: dict[str, list[str]] = {}
+        self._bases: dict[str, list[str]] = {}
         self._by_name: dict[str, list[SymbolInfo]] = {}
         for s in types:
             self._by_name.setdefault(s.name, []).append(s)
-        self._bases = {s.id: base_names(self._read(s), self._language(s), s.name) for s in types}
+        # an id declared more than once (a C# partial type) has the bases of every declaration
+        for s in types:
+            header = self._read(s)
+            self._headers.setdefault(s.id, []).append(header)
+            names = self._bases.setdefault(s.id, [])
+            names += [n for n in base_names(header, self._language(s), s.name) if n not in names]
 
-    def header(self, s: SymbolInfo) -> str:
-        if s.id not in self._headers:
-            self._headers[s.id] = self._read(s)
-        return self._headers[s.id]
+    def headers(self, s: SymbolInfo) -> list[str]:
+        return self._headers.get(s.id, [])
 
     def ancestors(self, s: SymbolInfo, seen: set[str]) -> set[str]:
         out: set[str] = set()

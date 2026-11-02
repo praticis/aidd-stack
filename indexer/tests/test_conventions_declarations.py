@@ -10,7 +10,7 @@ import yaml
 import convention_records as R
 
 ROLES = {"id": "x", "roles": {"entity": {"extends": ["Base"]}, "repository": {"extends": ["BaseRepo"]},
-                              "controller": {"extends": ["ControllerBase"]}}}
+                              "controller": {"extends": ["ControllerBase"]}, "client": {"declares": ["(HttpClient "]}}}
 PYPROJECT = {"pyproject.toml": "[project]\nname = 'shop'\n", "shop/__init__.py": ""}
 PACKAGE = {"package.json": '{"name": "shop"}\n'}
 CSPROJ = {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n'}
@@ -97,3 +97,16 @@ def test_a_type_no_line_declares_by_its_name_is_read_from_its_first_line(tmp_pat
     split.line_end = 2
     conv = _prepared(tmp_path, "public class\n    Order : Base1 { }\n\npublic class Order : Base2 { }\n", [split])
     assert conv.role_of(split, None) == "first"
+
+
+@pytest.mark.parametrize("partial", ["partial ", ""], ids=["partial", "one id, no partial"])
+@pytest.mark.parametrize("named_in", ["A", "B"])
+@pytest.mark.parametrize("named,role", [(" : Base", "entity"), ("(HttpClient http)", "client")], ids=["base", "declares"])
+def test_every_declaration_of_an_id_counts_whichever_file_comes_first(tmp_path, partial, named_in, named, role):
+    """A C# partial class, or one class two projects declare in one namespace: one id, the bases of all its
+    declarations and the text of each."""
+    other = "B" if named_in == "A" else "A"
+    files = CSPROJ | {
+        f"src/Shop/{named_in}/Order.cs": f"namespace Shop;\n\npublic {partial}class Order{named} {{ }}\n",
+        f"src/Shop/{other}/Order.cs": f"namespace Shop;\n\npublic {partial}class Order {{ }}\n"}
+    assert _roles(tmp_path, files)["Order"] == role
