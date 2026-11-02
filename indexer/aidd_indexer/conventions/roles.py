@@ -17,7 +17,7 @@ def role_of(s: SymbolInfo, roles: Roles, declarations: Declarations) -> str | No
         if spec.get("name") and any(fnmatch.fnmatchcase(s.name, g) for g in spec["name"]):
             return role
         if spec.get("extends"):
-            ancestors = ancestors if ancestors is not None else declarations.ancestors(s, {s.id})
+            ancestors = ancestors if ancestors is not None else declarations.ancestors(s)
             if any(n in ancestors for n in spec["extends"]):
                 return role
         if spec.get("declares") and any(d in h for h in declarations.headers(s) for d in spec["declares"]):

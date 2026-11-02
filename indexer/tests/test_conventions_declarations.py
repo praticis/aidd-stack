@@ -165,3 +165,26 @@ def test_a_lattice_of_bases_is_walked_once_per_type(tmp_path: Path):
     conv = DeclarativeConvention(tmp_path / "convention.yaml")
     conv.prepare(R.context(R.result(str(tmp_path), files=[R.file("models.py", language="python")], symbols=types)))
     assert {t.name for t in types if conv.role_of(t, None) == "entity"} == {t.name for t in types} - {"L0"}
+
+
+def _cycle(a_file: str, b_file: str) -> dict[str, str]:
+    """A and B name each other, B names Base above them, and C extends A."""
+    return PYPROJECT | {f"shop/{a_file}.py": "class A(B):\n    pass\n",
+                        f"shop/{b_file}.py": "class B(A, Base):\n    pass\n", "shop/c.py": "class C(A):\n    pass\n"}
+
+
+HOMONYMS = PYPROJECT | {f"shop/migrations/m{i}.py": "from django.db import migrations\n\n\n"
+                        f"class Migration(migrations.Migration{', Base' if i == 2 else ''}):\n    pass\n"
+                        for i in range(3)} | {"shop/other.py": "class Other(Migration):\n    pass\n"}
+
+
+@pytest.mark.parametrize("files,name", [
+    pytest.param(_cycle("a", "b"), "C", id="a cycle of names, its first file first"),
+    pytest.param(_cycle("z", "b"), "C", id="a cycle of names, its first file last"),
+    pytest.param(HOMONYMS, "Other", id="a group of homonyms"),
+])
+def test_the_names_above_a_cycle_or_a_group_of_homonyms(tmp_path, files, name):
+    """A guard of the names above a type worked out once a name, against walking each type: around a cycle of names,
+    and through a group of homonyms (Django's `Migration`). It passes before that change and after it: it proves the
+    two the same, not a fix."""
+    assert _roles(tmp_path, files)[name] == "entity"

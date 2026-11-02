@@ -99,19 +99,19 @@ def _simple_name(part: str) -> str | None:
     return name if re.fullmatch(r"[A-Za-z_]\w*", name) and "=" not in written else None
 
 
-def base_names(header: str, language: str | None = None, name: str | None = None) -> list[str]:
+def base_names(header: str, language: str | None = None, name: str | None = None,
+               declaring: re.Pattern | None = None) -> list[str]:
     """Simple names in a type declaration's base list: C# `class X(..) : A<T>, B where T : C`,
-    TS/Java `class X extends A implements B, C`, Python `class X(A, B):`. Read from the words that declare the type,
-    past its attributes and decorators."""
-    m = _declaring(name).search(header)
+    TS/Java `class X extends A implements B, C`, Python `class X(A, B):`. Read from the words that declare the type
+    (`declaring`, else made from `name`), past its attributes and decorators."""
+    m = (declaring or _declaring(name)).search(header)
     h = header[m.start():] if m else header
     text = _python_bases(h) if language == "python" else _base_list(strip_attributes(h[:_body_at(h)]))
     return [n for n in map(_simple_name, _split_top(text)) if n is not None]
 
 
-def _declaring_line(source: list[str], s: SymbolInfo) -> int:
-    """The line that declares the type by its name, within the symbol's lines; else its first line."""
-    rx = _declaring(s.name)
+def _declaring_line(source: list[str], s: SymbolInfo, rx: re.Pattern) -> int:
+    """The line that declares the type by its name (`rx`), within the symbol's lines; else its first line."""
     return next((i for i in range(s.line_start - 1, min(s.line_end, len(source))) if rx.search(source[i])),
                 s.line_start - 1)
 
@@ -184,6 +184,8 @@ class Declarations:
         self._headers: dict[str, list[str]] = {}
         self._bases: dict[str, list[str]] = {}
         self._by_name: dict[str, list[SymbolInfo]] = {}
+        self._patterns: dict[str, re.Pattern] = {}       # compiled once a name: one per type overruns re's cache
+        self._above: dict[str, frozenset[str]] = {}
         for s in types:
             self._by_name.setdefault(s.name, []).append(s)
         # an id declared more than once (a C# partial type) has the bases of every declaration
@@ -191,24 +193,41 @@ class Declarations:
             header = self._read(s)
             self._headers.setdefault(s.id, []).append(header)
             names = self._bases.setdefault(s.id, [])
-            names += [n for n in base_names(header, self._language(s), s.name) if n not in names]
+            names += [n for n in base_names(header, self._language(s), s.name, self._pattern(s.name))
+                      if n not in names]
 
     def headers(self, s: SymbolInfo) -> list[str]:
         return self._headers.get(s.id, [])
 
-    def ancestors(self, s: SymbolInfo, seen: set[str]) -> set[str]:
-        """The names above the type, each type of the repo walked once: by path, a lattice of mixins takes
-        exponential time."""
+    def ancestors(self, s: SymbolInfo) -> set[str]:
+        """The names above the type: its bases, and the names above each."""
         out: set[str] = set()
-        todo, seen = [s], set(seen)
-        while todo:
-            for b in self._bases.get(todo.pop().id, []):
-                out.add(b)
-                for t in self._by_name.get(b, []):     # an in-repo base passes its own bases on
-                    if t.id not in seen:
-                        seen.add(t.id)
-                        todo.append(t)
+        for b in self._bases.get(s.id, []):
+            out.add(b)
+            out |= self._names_above(b)
         return out
+
+    def _names_above(self, name: str) -> frozenset[str]:
+        """The bases of the repo's types of that name, and theirs in turn, worked out once a name: by path a lattice
+        of mixins takes exponential time, and by type a group of homonyms (Django's `Migration`) is walked again for
+        each type that reaches it."""
+        if name not in self._above:
+            out: set[str] = set()
+            todo, walked = [name], {name}
+            while todo:
+                for t in self._by_name.get(todo.pop(), []):     # an in-repo base passes its own bases on
+                    for b in self._bases.get(t.id, []):
+                        out.add(b)
+                        if b not in walked:
+                            walked.add(b)
+                            todo.append(b)
+            self._above[name] = frozenset(out)
+        return self._above[name]
+
+    def _pattern(self, name: str) -> re.Pattern:
+        if name not in self._patterns:
+            self._patterns[name] = _declaring(name)
+        return self._patterns[name]
 
     def _language(self, s: SymbolInfo) -> str | None:
         f = self._files.get(s.file_id)
@@ -220,7 +239,7 @@ class Declarations:
         if f is None:
             return s.signature
         source = self._lines(f)
-        at = _declaring_line(source, s)
+        at = _declaring_line(source, s, self._pattern(s.name))
         lines = source[s.line_start - 1: at] + _to_body(source[at: at + 15], f.language)
         return " ".join(" ".join(lines or [s.signature]).split())
 
