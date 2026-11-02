@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 import yaml
+
+import convention_records as R
+from aidd_indexer.conventions.base import Convention
 
 FIX = Path(__file__).parent / "fixtures" / "go-http-mix"
 
@@ -170,169 +172,91 @@ def test_dotnet_praticis_extension_is_registered():
     assert conv.id == "dotnet-praticis" and [a[0] for a in conv.architectures] == ["layered", "split", "flat"]
 
 
-ROLE_REPO = {
-    "src/Shop.Api/Shop.Api.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
-    "src/Shop.Api/Controllers/OrdersController.cs": (
-        "namespace Shop.Api.Controllers;\n\n[ApiController]\n[Route(\"api/[controller]\")]\n"
-        "public class OrdersController : ControllerBase { }\n"),
-    "src/Shop.Core/Shop.Core.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
-    "src/Shop.Core/Handlers/HandlerBase.cs": "namespace Shop.Core.Handlers;\n\npublic abstract class HandlerBase<T> : ICommandHandler<T> { }\n",
-    "src/Shop.Core/Handlers/PlaceOrderHandler.cs": (
-        "namespace Shop.Core.Handlers;\n\npublic class PlaceOrderHandler\n    : HandlerBase<PlaceOrder>,\n      IDisposable\n{\n"
-        "    public Task Handle(PlaceOrder c) => Task.CompletedTask;\n}\n"),
-    "src/Shop.Core/Queries/IOrderQuery.cs": "namespace Shop.Core.Queries;\n\npublic interface IOrderQuery { }\n",
-    "src/Shop.Core/Http/BillingClient.cs": "namespace Shop.Core.Http;\n\npublic class BillingClient(HttpClient http) { }\n",
-    "src/Shop.Api/Misc/RefundHandler.cs": "namespace Shop.Api.Misc;\n\npublic class RefundHandler : ICommandHandler<Refund> { }\n",
-}
+class Stub(Convention):
+    """Answers each hook from a table, by the element's name or path, and records what it was asked."""
 
-ROLE_SPEC = {
-    "id": "layouts",
-    "roles": {"controller": {"extends": ["ControllerBase"], "layer": "api"},
-              "command-handler": {"extends": ["ICommandHandler"], "layer": "core"},
-              "query": {"name": ["I*Query"], "layer": "application"},
-              "client": {"declares": ["(HttpClient "], "layer": "outbound"}},
-    "architectures": {
-        "split": {"detect": {"together": ["{svc}.Api", "{svc}.Core"]},
-                  "layers": {"api": ["**/*.Api/Controllers/**"], "core": ["**/*.Core/Handlers/**"]}},
-        "flat": {"layers": {"api": ["**/*.Api/**"]}}},
-    "entry_points": {"roles": {"command-handler": ["Handle"]}},
-    "rules": [{"id": "handlers-in-core", "roles_in": {"command-handler": ["core"]}}],
-}
+    def __init__(self, id: str, answers: dict, architecture: str | None = None, violations=()):
+        self.id, self.architecture, self.answers, self.violations = id, architecture, answers, list(violations)
+        self.asked: list[tuple[str, str]] = []
+        self.owners: dict[str, str | None] = {}
+        self.seen: tuple[dict, dict] | None = None
+
+    def _answer(self, hook: str, key: str):
+        self.asked.append((hook, key))
+        return self.answers.get((hook, key))
+
+    def role_of(self, symbol, file):
+        return self._answer("role", symbol.name)
+
+    def layer_of(self, file, module):
+        return self._answer("layer", file.path)
+
+    def target_of(self, call, file):
+        return self._answer("target", call.path)
+
+    def is_entry_point(self, symbol, file, owner=None):
+        self.owners[symbol.name] = owner.role if owner else None
+        return self._answer("entry", symbol.name)
+
+    def check(self, ctx):
+        self.seen = (dict(ctx.file_layer), dict(ctx.module_layer))
+        return self.violations
 
 
-def test_roles_and_architectures(tmp_path: Path):
-    """Roles come from the declaration (base list across lines and through in-repo bases, type name,
-    header text) wherever the type lives; the layout is detected from the modules (or forced); a file
-    the layout does not place takes its roles' layer; `roles_in` flags a role the layout puts elsewhere."""
+def _combined():
+    """Two stubs over one repo: `a` is asked first, `b` where `a` gives no answer."""
+    files = [R.file(p, m) for p, m in (("a.cs", "m1"), ("b.cs", "m1"), ("c.cs", "m2"), ("d.cs", "m2"),
+                                        ("e.cs", "m3"), ("f.cs", "m4"), ("g.cs", "m4"))]
+    handler = R.symbol("Handler", "a.cs")
+    symbols = [handler, R.symbol("Blank", "a.cs"), R.symbol("Nobody", "a.cs", kind="interface"),
+               R.symbol("handle", "a.cs", kind="method", parent_id=handler.id),
+               R.symbol("run", "b.cs", kind="function"), R.symbol("go", "b.cs", kind="function"),
+               R.symbol("keep", "b.cs", kind="function", is_entry_point=True), R.symbol("LIMIT", "b.cs", kind="const"),
+               R.symbol("Orphan", "gone.cs"), R.symbol("lost", "gone.cs", kind="function")]
+    calls = [R.http_call("POST", "/a", "a.cs"), R.http_call("POST", "/b", "gone.cs", target_hint="hint")]
+    res = R.result(modules=[R.module(m) for m in ("m1", "m2", "m3", "m4")], files=files, symbols=symbols,
+                   http_calls=calls)
+    a = Stub("a", {("role", "Handler"): "handler", ("role", "Blank"): "", ("layer", "a.cs"): "core",
+                   ("layer", "b.cs"): "", ("layer", "c.cs"): "core", ("layer", "f.cs"): "core",
+                   ("target", "/a"): "", ("entry", "run"): False}, violations=["va"])
+    b = Stub("b", {("role", "Handler"): "other", ("role", "Blank"): "blank", ("layer", "a.cs"): "edge",
+                   ("layer", "b.cs"): "core", ("layer", "d.cs"): "edge", ("target", "/a"): "billing",
+                   ("entry", "run"): True, ("entry", "go"): True, ("entry", "handle"): True},
+             architecture="split", violations=["vb"])
+    return res, a, b
+
+
+def test_the_first_answer_wins_and_the_conventions_after_it_are_not_asked():
+    """An empty answer is no answer; for an entry point, False is one. Roles are asked of types only, entry points of
+    functions and methods, and an element whose file the extraction lacks is not asked."""
     from aidd_indexer import conventions
-    from aidd_indexer.cli import extract_and_resolve
-    from aidd_indexer.core.config import ConfigError
-    from aidd_indexer.core.model import RepoInfo
-
-    root = tmp_path / "shop"
-    for rel, text in ROLE_REPO.items():
-        (root / rel).parent.mkdir(parents=True, exist_ok=True)
-        (root / rel).write_text(text)
-    f = tmp_path / "convention.yaml"
-    f.write_text(yaml.safe_dump(ROLE_SPEC))
-    repo = RepoInfo(tenant="t", name="shop", ref="main", commit_sha="x", root=str(root))
-
-    def run(options=None):
-        convs = conventions.load([{"path": str(f), "options": options or {}}], "shop")
-        res, _ = extract_and_resolve(repo, convs=convs)
-        return convs[0], res, {x.path: x.layer for x in res.files}
-
-    conv, res, layers = run()
-    assert conv.architecture == "split" and conv.describe() == "layouts[split]"
-    assert res.architecture == "split" and res.conventions == ["layouts[split]"]      # what the snapshot records
-    assert {s.name: s.role for s in res.symbols if s.role} == {
-        "OrdersController": "controller", "HandlerBase": "command-handler", "PlaceOrderHandler": "command-handler",
-        "RefundHandler": "command-handler", "IOrderQuery": "query", "BillingClient": "client"}
-    assert layers["src/Shop.Core/Queries/IOrderQuery.cs"] == "application"       # unplaced: the role's layer
-    assert layers["src/Shop.Core/Http/BillingClient.cs"] == "outbound"
-    assert layers["src/Shop.Api/Misc/RefundHandler.cs"] == "core"                 # unplaced: inferred, not a violation
-    assert [(v.rule, v.line) for v in res.violations] == []
-    assert {s.name for s in res.symbols if s.is_entry_point} == {"Handle"}
-
-    conv, res, layers = run({"architecture": "flat"})                             # forced: everything in .Api is `api`
-    assert conv.architecture == "flat" and layers["src/Shop.Api/Misc/RefundHandler.cs"] == "api"
-    assert [(v.rule, v.line) for v in res.violations] == [("handlers-in-core", 3)]
-    with pytest.raises(ConfigError):
-        run({"architecture": "huge"})
-
-    from aidd_indexer.conventions.declarative import _detected
-    mods = ["src/Shop.Api", "src/shared/Org.Bus.Core"]                          # a `.Core` library is not a split service
-    assert not _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods)
-    assert _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods + ["src/Shop.Core"])
-    assert _detected({"modules": ["**/*.Core"]}, mods)
+    res, a, b = _combined()
+    conventions.apply([a, b], res, R.resolved())
+    sym = {s.name: s for s in res.symbols}
+    assert {n: sym[n].role for n in ("Handler", "Blank", "Nobody", "Orphan")} == {
+        "Handler": "handler", "Blank": "blank", "Nobody": None, "Orphan": None}
+    assert {f.path: f.layer for f in res.files} == {
+        "a.cs": "core", "b.cs": "core", "c.cs": "core", "d.cs": "edge", "e.cs": None, "f.cs": "core", "g.cs": None}
+    assert [c.target_hint for c in res.http_calls] == ["billing", "hint"]
+    assert {n: sym[n].is_entry_point for n in ("handle", "run", "go", "keep", "LIMIT", "lost")} == {
+        "handle": True, "run": False, "go": True, "keep": True, "LIMIT": False, "lost": False}
+    eligible = [("role", "Handler"), ("role", "Blank"), ("role", "Nobody"),
+                *(("layer", f.path) for f in res.files), ("target", "/a"),
+                ("entry", "handle"), ("entry", "run"), ("entry", "go"), ("entry", "keep")]
+    assert a.asked == eligible
+    assert b.asked == [("role", "Blank"), ("role", "Nobody"), ("layer", "b.cs"), ("layer", "d.cs"), ("layer", "e.cs"),
+                       ("layer", "g.cs"), ("target", "/a"), ("entry", "handle"), ("entry", "go"), ("entry", "keep")]
 
 
-MEDIATR_REPO = {
-    "src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
-    "src/Shop/Orders/CreateOrder.cs": "namespace Shop.Orders;\n\npublic record CreateOrder(string Name) : IRequest<Guid>;\n",
-    "src/Shop/Orders/OrderCreator.cs": (                # the handler's name says nothing about the request
-        "namespace Shop.Orders;\n\npublic class OrderCreator : IRequestHandler<CreateOrder, Guid>\n{\n"
-        "    public Task<Guid> Handle(CreateOrder request, CancellationToken ct) => Task.FromResult(Guid.NewGuid());\n}\n"),
-    "src/Shop/Orders/OrderPlaced.cs": "namespace Shop.Orders;\n\npublic record OrderPlaced(Guid Id) : INotification;\n",
-    "src/Shop/Orders/EmailOnOrderPlaced.cs": (
-        "namespace Shop.Orders;\n\npublic class EmailOnOrderPlaced : INotificationHandler<OrderPlaced>\n{\n"
-        "    public Task Handle(OrderPlaced n, CancellationToken ct) => Task.CompletedTask;\n}\n"),
-    "src/Shop/Orders/AuditOnOrderPlaced.cs": (
-        "namespace Shop.Orders;\n\npublic class AuditOnOrderPlaced : INotificationHandler<OrderPlaced>\n{\n"
-        "    public Task Handle(OrderPlaced n, CancellationToken ct) => Task.CompletedTask;\n}\n"),
-    "src/Shop/Orders/OrdersController.cs": (
-        "namespace Shop.Orders;\n\npublic class OrdersController(IMediator mediator) : ControllerBase\n{\n"
-        "    public async Task<Guid> Create(string name)\n    {\n"
-        "        var id = await mediator.Send(new CreateOrder(name));\n"
-        "        INotification placed = Placed(id);\n"
-        "        await mediator.Publish(placed);\n"
-        "        await mediator.Send(new Unknown());\n"
-        "        return id;\n    }\n\n"
-        "    private static OrderPlaced Placed(Guid id) => new OrderPlaced(id);\n}\n"),
-    "tests/Shop.Tests/FakeCreator.cs": (               # a test double never receives production calls
-        "namespace Shop.Tests;\n\nusing Shop.Orders;\n\npublic class FakeCreator : IRequestHandler<CreateOrder, Guid>\n{\n"
-        "    public Task<Guid> Handle(CreateOrder request, CancellationToken ct) => Task.FromResult(Guid.Empty);\n}\n"),
-}
-
-BUS_REPO = {
-    "src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
-    "src/Shop/Orders/ShipOrder.cs": "namespace Shop.Orders;\n\npublic record ShipOrder(Guid Id);\n",
-    "src/Shop/Orders/Shipping.cs": (
-        "namespace Shop.Orders;\n\npublic class Shipping : IHandles<ShipOrder>\n{\n"
-        "    public Task Execute(ShipOrder message) => Task.CompletedTask;\n}\n"),
-    "src/Shop/Orders/ShipController.cs": (
-        "namespace Shop.Orders;\n\npublic class ShipController(IBus bus)\n{\n"
-        "    public Task Ship(Guid id) => bus.Dispatch(new ShipOrder(id));\n}\n"),
-}
-
-
-def _write_repo(root: Path, files: dict[str, str]):
-    from aidd_indexer.core.model import RepoInfo
-    for rel, text in files.items():
-        (root / rel).parent.mkdir(parents=True, exist_ok=True)
-        (root / rel).write_text(text)
-    return RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
-
-
-def _dispatched(repo, convs):
-    from aidd_indexer.cli import extract_and_resolve
-    res, rv = extract_and_resolve(repo, convs=convs)
-    q = {s.id: s.qualified_name for s in res.symbols}
-    return sorted((q[e.caller_id], q[e.callee_id]) for e in rv.calls if e.strategy == "dispatch")
-
-
-def test_mediatr_is_built_in(tmp_path: Path):
-    """`mediator.Send(new X())` reaches the Handle of whoever implements IRequestHandler<X, ..> — by the
-    generic argument, never by name — and a published notification each of its handlers, with no
-    convention configured: MediatR is a public library, like the HTTP frameworks."""
-    repo = _write_repo(tmp_path / "shop", MEDIATR_REPO)
-    assert _dispatched(repo, []) == [
-        ("Shop.Orders.OrdersController.Create", "Shop.Orders.AuditOnOrderPlaced.Handle"),   # declared INotification,
-        ("Shop.Orders.OrdersController.Create", "Shop.Orders.EmailOnOrderPlaced.Handle"),   # created as OrderPlaced
-        ("Shop.Orders.OrdersController.Create", "Shop.Orders.OrderCreator.Handle"),
-    ]                                                # `Send(new Unknown())`: no handler, no edge; FakeCreator is a test
-
-
-def test_an_organizations_own_bus_is_declared_by_its_convention(tmp_path: Path):
+def test_the_rules_run_last_and_see_each_files_and_modules_layer():
+    """A module takes the layer its layered files agree on. Entry points are asked after roles, so a method's owner
+    has its role."""
     from aidd_indexer import conventions
-    repo = _write_repo(tmp_path / "shop", BUS_REPO)
-    assert _dispatched(repo, []) == []               # an in-house bus is invisible until declared
-    f = tmp_path / "convention.yaml"
-    f.write_text(yaml.safe_dump({"id": "bus", "dispatch": [{"calls": ["Dispatch"], "handlers": ["IHandles"], "method": "Execute"}]}))
-    assert _dispatched(repo, conventions.load([{"path": str(f)}], "shop")) == [
-        ("Shop.Orders.ShipController.Ship", "Shop.Orders.Shipping.Execute")]
-
-
-@pytest.mark.parametrize("dispatch,message", [
-    ({"calls": ["Send"]}, "`calls` (bus methods) and `handlers` (generic handler bases) are required"),
-    ({"calls": ["Send"], "handlers": ["IRequestHandler"], "methods": "Handle"}, "unknown key(s) methods"),
-    ("Send", "each entry is a mapping"),
-])
-def test_dispatch_config_errors(tmp_path: Path, dispatch, message):
-    from aidd_indexer import conventions
-    from aidd_indexer.core.config import ConfigError
-    f = tmp_path / "convention.yaml"
-    f.write_text(yaml.safe_dump({"id": "x", "dispatch": [dispatch]}))
-    with pytest.raises(ConfigError, match="dispatch #1") as e:
-        conventions.load([{"path": str(f)}], "shop")
-    assert message in str(e.value)
+    res, a, b = _combined()
+    conventions.apply([a, b], res, R.resolved())
+    layers = {"a.cs": "core", "b.cs": "core", "c.cs": "core", "d.cs": "edge", "f.cs": "core"}
+    assert a.seen == b.seen == (layers, {"m1": "core", "m4": "core"})
+    assert {m.id: m.layer for m in res.modules} == {"m1": "core", "m2": None, "m3": None, "m4": "core"}
+    assert b.owners["handle"] == "handler"
+    assert res.violations == ["va", "vb"]
+    assert res.conventions == ["a", "b"] and res.architecture == "split"

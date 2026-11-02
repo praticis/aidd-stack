@@ -28,7 +28,11 @@
     left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014,
     TD-016 to TD-022, TD-027, TD-033 and TD-034 are due in `fix(csharp)` PRs before F1.2. Go's calls on an interface,
     which reach no method of the repo unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before
-    F1.2. The calls on `base` and on `super` that reached the caller's own method or no ancestor, TD-030 and TD-031, and
+    F1.2. Four defects of the declarative conventions, a rule that names two kinds, TD-044, a role's `extends` read
+    from the source's text, TD-045, a `roles_in` that depends on the conventions' order, TD-046, and a partial
+    class's bases read from one of its declarations, TD-047, are due in a `fix(conventions)` PR before F1.2
+    (H5-D42). The calls on `base` and on `super` that reached the caller's own method
+    or no ancestor, TD-030 and TD-031, and
     the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
     #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is
     closed by `fix(graph)` #70; TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)` #72
