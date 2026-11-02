@@ -2,14 +2,15 @@
 // The declarations TypeScript's own checker resolves each method call `x.m(..)` to, in the .ts, .tsx and .js files of
 // each project: one JSON line per call, with the project, the file, the line, the method and the declarations, each as
 // `path:Owner.name` (its file relative to the project, without the extension), or `outside` for one the project does
-// not hold. A union or an intersection gives several; a receiver the checker cannot type, none. The checker reads and
-// types the files; nothing runs.
+// not hold. A union or an intersection gives several; a receiver the checker cannot type, none. Each file is read with
+// its config (`ts_configs.js`). The checker reads and types the files; nothing runs.
 //
 //   AIDD_TYPESCRIPT=/opt/typescript node ts_checker.js PROJECT_DIR...
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
+const { configOf, optionsOf } = require("./ts_configs.js");
 
 const OPTIONS = {
   allowJs: true, checkJs: true, noEmit: true, strict: true, skipLibCheck: true, experimentalDecorators: true,
@@ -47,13 +48,9 @@ function declarations(checker, project, name) {
   return [...new Set((symbol && symbol.declarations || []).map((d) => where(project, d)))].sort();
 }
 
-let previous;
-for (const arg of process.argv.slice(2)) {
-  const project = path.resolve(arg);
-  const program = ts.createProgram({ rootNames: sources(project), options: OPTIONS, oldProgram: previous });
+function report(program, project, arg, files) {
   const checker = program.getTypeChecker();
-  for (const file of program.getSourceFiles()) {
-    if (path.relative(project, file.fileName).startsWith("..") || file.isDeclarationFile) continue;
+  for (const file of files.map((f) => program.getSourceFile(f)).filter(Boolean)) {
     const visit = (node) => {
       if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
         const name = node.expression.name;
@@ -67,5 +64,20 @@ for (const arg of process.argv.slice(2)) {
     };
     visit(file);
   }
-  previous = program;
+}
+
+let previous;
+for (const arg of process.argv.slice(2)) {
+  const project = path.resolve(arg);
+  const groups = new Map();
+  for (const file of sources(project)) {
+    const config = configOf(project, file);
+    if (!groups.has(config)) groups.set(config, []);
+    groups.get(config).push(file);
+  }
+  for (const [config, files] of groups) {
+    const program = ts.createProgram({ rootNames: files, options: optionsOf(config, OPTIONS), oldProgram: previous });
+    report(program, project, arg, files);
+    previous = program;
+  }
 }

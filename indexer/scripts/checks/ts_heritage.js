@@ -4,7 +4,7 @@
 // line, whether it is a statement of its file (`top`), the clause (`extends` or `implements`) and the declarations,
 // each as `path:Name` (its file relative to the project, without its last extension), or `outside` for one the project
 // does not hold; `other` where the name is no class or interface, and none where the checker gives the expression no
-// symbol (a mixin's call). Each file is read with the `baseUrl` and `paths` of its `tsconfig.json`. With `--members`, also
+// symbol (a mixin's call). Each file is read with the `baseUrl` and `paths` of its config (`ts_configs.js`). With `--members`, also
 // each member of each class and interface, with its form; with `--files`, only the files of the one project whose
 // paths, relative to it, come one per line on stdin. The checker reads and types the files; nothing runs.
 //
@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
+const { configOf, optionsOf } = require("./ts_configs.js");
 
 const OPTIONS = {
   allowJs: true, noEmit: true, strict: true, skipLibCheck: true, experimentalDecorators: true,
@@ -27,48 +28,6 @@ function sources(dir) {
     if (e.isDirectory()) return e.name === "node_modules" || e.name === ".git" ? [] : sources(full);
     return e.isFile() && SOURCE.test(e.name) ? [full] : [];
   });
-}
-
-function nearestConfig(project, file) {
-  for (let d = path.dirname(file); ; d = path.dirname(d)) {
-    if (fs.existsSync(path.join(d, "tsconfig.json"))) return path.join(d, "tsconfig.json");
-    if (d === project || path.dirname(d) === d) return null;
-  }
-}
-
-const parsed = new Map();
-
-function parse(config) {
-  if (!parsed.has(config)) {
-    let found = null;
-    try {
-      const host = { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => {} };
-      found = ts.getParsedCommandLineOfConfigFile(config, {}, host);
-    } catch (e) {
-      found = null;
-    }
-    parsed.set(config, found || null);
-  }
-  return parsed.get(config);
-}
-
-// A `tsconfig.json` that only refers to others (`tsconfig.app.json`) maps a file's paths in the one that holds it.
-function configOf(project, file) {
-  const nearest = nearestConfig(project, file);
-  const found = nearest && parse(nearest);
-  if (!found || found.options.paths || !found.projectReferences) return nearest;
-  for (const ref of found.projectReferences) {
-    const config = ts.resolveProjectReferencePath(ref);
-    const sub = fs.existsSync(config) ? parse(config) : null;
-    if (sub && sub.fileNames.includes(file)) return config;
-  }
-  return nearest;
-}
-
-function optionsOf(config) {
-  const o = (config && parse(config) && parse(config).options) || {};
-  return { ...OPTIONS, ...(o.baseUrl ? { baseUrl: o.baseUrl } : {}),
-           ...(o.paths ? { paths: o.paths, pathsBasePath: o.pathsBasePath || path.dirname(config) } : {}) };
 }
 
 function owners(decl) {
@@ -170,7 +129,7 @@ for (const arg of process.argv.slice(2).filter((a) => !a.startsWith("--"))) {
     groups.get(config).push(file);
   }
   for (const [config, files] of groups) {
-    const program = ts.createProgram({ rootNames: files, options: optionsOf(config), oldProgram: previous });
+    const program = ts.createProgram({ rootNames: files, options: optionsOf(config, OPTIONS), oldProgram: previous });
     report(program, project, arg, files, flags.has("--members"));
     previous = program;
   }

@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in eight PRs (H5-D36, H5-D37, H5-D39); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -53,12 +53,13 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in eight PRs,
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in ten PRs,
    as Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
    TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
    TypeScript's binder (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a
-   `feat(graph)` for TS's hierarchy and `OVERRIDES` (#69, H5-D39); a `fix(typescript)` for each of the two gaps its
-   proof found, the module resolution, TD-038, and a CommonJS export, TD-039; and the change of behavior, judged per
+   `feat(graph)` for TS's hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs
+   found, the module resolution, TD-038 (#72, H5-D40), a CommonJS export, TD-039, a hand-written declaration file,
+   TD-041, and a package of the repo's own workspace, TD-042; and the change of behavior, judged per
    site with `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5"
    below).
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
@@ -1288,8 +1289,43 @@ methods among their candidates now, since an abstract method is a symbol.
   usual aliases, which is TD-038; and the proof found TD-038 and TD-039, which the author placed before the change of
   behavior, so TS's step 5 is eight PRs.
 
-Next, `fix(graph)` #70 for TD-040, which #69's live validation found, then the `fix(typescript)` PRs of TD-038 and
-TD-039, then the change of behavior.
+#### TS's module resolution (#72, H5-D40)
+
+- **Where it lives.** `languages/typescript/tsconfig.py` reads the repo's `tsconfig.json` and `jsconfig.json` files,
+  with the comments and trailing commas TypeScript allows, once for each context that resolves an import: the resolver,
+  the type index and the HTTP scanner's view each hold their own files, so a config is read from the repo's tree, as
+  Go reads its `go.mod`. `modules.py` asks it first.
+- **The rules, each TypeScript's:** the nearest config above the file, its `extends` followed within the repo, a
+  config another package publishes adding nothing; where it maps no path and only refers to other projects, the one
+  whose `files` or `include` holds the file. Then a relative path; the `paths` pattern that matches, the exact one
+  first, else the longest prefix, each target in turn, relative to `baseUrl` or to the config that writes them, and
+  nothing below `baseUrl` after a pattern that matches and names no file; a name below `baseUrl`. Where no config maps
+  it, a conventional alias still names a file below the usual roots, as a bundler's config the clone does not hold
+  declares it. A path written with a trailing `/` names a folder, and `..` may name the repo's root.
+- **The proof:**
+  - The case (`test_ts_modules.py`), checked on each run: each import resolves to the file TypeScript's module
+    resolution gives it (`checks/ts_modules.js`), and the case resolves as it states; it spans exact and wildcard
+    patterns, several targets, `baseUrl`, an array `extends`, a config that only refers to others, a `jsconfig.json`, a
+    pattern that matches and names no file, the root and a trailing `/`. 20 mutants, each killed.
+  - Over the corpus (`checks/ts_modules.py`): of the imports of the TS and JS files the indexer extracts, TypeScript
+    gave 48,017 a file of the repo the index read as a package or none, 37,856 by `paths` and 9,429 by `baseUrl`; the
+    index now names TypeScript's file at all of them, and 230,490 imports resolve the same. What differs is the two
+    gaps the proof found, TD-041 (1,199 `.d.ts` and 2 `.d.cts`) and TD-042 (25,497, and 2 a package's import of
+    itself); 27 in the folders discovery skips as build output or vendored (`build`, `target`, `vendor`); and 1,773 where the index's conventional alias, a `.vue` or a JSON file gives a file
+    TypeScript does not resolve with the clone's configs. `checks/ts_heritage.py` now gives the checker's declaration
+    at 6,111 heritage clauses, where it gave it at 2,888; the 2 left are declaration files.
+  - The graph: the hold-out, 0 repo(s) differ; the corpus differs at outline alone, by 2 calls to Microsoft Graph
+    through the app's own `request` wrapper, which an import by `@server/*` now reaches, outside its list's scope. Micro: grafana, umbraco, mattermost, ghost and
+    outline move 39,441 `IMPORTS` from a package to a file and gain 720 they had none for; their `CALLS` only gain,
+    17,778, each where a name an alias imports is now found by name as a relative import's is; and their hierarchy
+    gains 4,684 edges, 4,503 in umbraco. Against TypeScript's checker, which now reads each file's config too, outline's
+    3,071 sites that gain callees hold its declaration at 47 %, where its other sites do at 36 %.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 54.5 s, from 54.8 s, and peaks at
+    1,447 MiB, from 1,459 MiB; umbraco's and mattermost's micro runs take as long or less.
+- **What differs from the plan:** `checks/ts_checker.js`, the change of behavior's reference for calls, read no config,
+  so a receiver an alias imports had no declaration; it reads each file's config now.
+
+Next, the `fix(typescript)` PR of TD-039, then the `fix` PRs of TD-041 and TD-042, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

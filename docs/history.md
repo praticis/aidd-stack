@@ -450,3 +450,15 @@
   graph's picture lists each symbol's properties, its signature and doc percent-encoded, and `graph_vs_dry.py` checks
   that the graph holds each symbol of the dry-run with every property the writer gives it. On #70's pair, the 345
   signatures show where the tools said `identical`.
+- 2026-11-01: PR #71 is validated on a live install (the thirtieth round), with its own tools. The graph is the same
+  on the 10 snapshots, each symbol's properties compared, and the build too, so no snapshot ran; of the 29 calls, 28
+  are the same and `atlas_status` differs only in its time fields.
+- 2026-11-01: TS's module resolution, PR #72 (`fix(typescript)`), which closes TD-038 (H5-D40): an import goes to the
+  file TypeScript resolves it to with the nearest `tsconfig.json` or `jsconfig.json`, its `extends` and the project a
+  config refers to, by `paths` and `baseUrl`, and a conventional alias names a file only where no config maps it. Of
+  the corpus's imports, TypeScript gave 48,017 a file of the repo the index read as a package or none, and the index
+  now names it at all of them; its heritage clauses reach the checker's declaration at 6,111, from 2,888. The proof
+  found TD-041, a hand-written declaration file discovery skips, and TD-042, a package of the repo's own workspace,
+  both due in TS's step 5, which goes in ten PRs; and the call checker, the change of behavior's reference, reads each
+  file's config now. Micro: 39,441 `IMPORTS` go from a package to a file, `CALLS` gain 17,778 and the hierarchy
+  4,684; the corpus gains outline's 2 calls to Microsoft Graph.
