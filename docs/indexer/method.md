@@ -148,13 +148,15 @@ counted apart. The compiler reads and binds the files; no repository's code runs
 
 `checks/ts_heritage.py [N]` compares TS's bases with TypeScript's own checker over every TS and JS file the indexer
 extracts from `/corpus`: each type a heritage clause of a module's class or interface names is, in the type index, the
-declaration the checker resolves it to, each file read with its config's `baseUrl` and `paths` (`checks/ts_heritage.js`;
-`checks/ts_configs.js` chooses a file's `tsconfig.json` or `jsconfig.json` for every TS oracle). It prints the count of each kind and N samples of each: the same declaration, none of the
-repo's on either side, the index's `Unknown` by its reason, with a package's name the repo's `tsconfig.json` maps to
-its own file apart, a declaration the index alone gives, and another one; a declaration in a function or a namespace,
-and a name a module declares twice, are counted apart. The compiler reads and types the files; no repository's code
-runs. `checks/ts_runs.js` tells what JS runs on an instance of each class of a test's own case, which it compiles and
-runs: it is for the tests only.
+declaration the checker resolves it to, each file read with its config's `baseUrl` and `paths`, and where a class's
+`extends` names a value, as a class a CommonJS module exports in an object literal, the checker's base type's
+(`checks/ts_heritage.js`; `checks/ts_configs.js` chooses a file's `tsconfig.json` or `jsconfig.json` for every TS
+oracle). It prints the count of each kind and N samples of each: the same declaration, none of the repo's on either
+side, the index's `Unknown` by its reason, with a package's name the repo's `tsconfig.json` maps to its own file apart,
+a declaration the index alone gives, and another one; a declaration in a function or a namespace, a name a module
+declares twice, and a base a class expression declares, are counted apart. The compiler reads and types the files; no
+repository's code runs. `checks/ts_runs.js` tells what JS runs on an instance of each class of a test's own case, which
+it compiles and runs: it is for the tests only.
 
 `checks/ts_modules.py [N]` compares TS's module resolution with TypeScript's own over every TS and JS file the indexer
 extracts from `/corpus`: each import names, in the index, the file TypeScript resolves it to with the file's config

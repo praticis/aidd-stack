@@ -53,7 +53,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | | `dump.py` | every file's type facts (`csharp`, `go`, `python`, `typescript`, `tsx`, `javascript`), to compare two codes | the image, as root |
 | | `python_scopes.py` | whether Python's scope index classifies every name of every Python file as CPython's `symtable` does | the image, `PYTHONPATH=/src`, the repos at `/corpus` |
 | | `ts_scopes.py`, `ts_scopes.js` | whether TS's scope index binds every name and `this` of every TS and JS file as TypeScript's binder does | the test image, `PYTHONPATH=/src`, the repos at `/corpus` |
-| | `ts_heritage.py`, `ts_heritage.js` | whether TS's type index resolves every heritage clause of every TS and JS file to the declaration TypeScript's checker does, each file with its config's `paths` | the test image, `PYTHONPATH=/src`, the repos at `/corpus` |
+| | `ts_heritage.py`, `ts_heritage.js` | whether TS's type index resolves every heritage clause of every TS and JS file to the declaration TypeScript's checker does, each file with its config's `paths`, and a value a class extends by the checker's base type | the test image, `PYTHONPATH=/src`, the repos at `/corpus` |
 | | `ts_modules.py`, `ts_modules.js` | whether TS's module resolution gives every import of every TS and JS file the file TypeScript's does, with the file's config | the test image, `PYTHONPATH=/src`, the repos at `/corpus` |
 | | `ts_configs.js`, `ts_checker.js` | the config TypeScript reads a file with, for every TS oracle; the declarations the checker resolves each method call to | the test image |
 | | `ts_runs.js` | what JS runs on an instance of each class of a test's own case, which it compiles and runs: for the tests only | the test image |

@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
 (step 12).
@@ -58,10 +58,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
    TypeScript's binder (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a
    `feat(graph)` for TS's hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs
-   found, the module resolution, TD-038 (#72, H5-D40), a CommonJS export, TD-039, a hand-written declaration file,
-   TD-041, and a package of the repo's own workspace, TD-042; and the change of behavior, judged per
+   found, the module resolution, TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written
+   declaration file, TD-041, and a package of the repo's own workspace, TD-042; and the change of behavior, judged per
    site with `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5"
-   below).
+   below). A function a class field holds, TD-037, and a class a class expression declares, TD-043, are due in the
+   step too (H5-D41).
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
@@ -1325,7 +1326,48 @@ methods among their candidates now, since an abstract method is a symbol.
 - **What differs from the plan:** `checks/ts_checker.js`, the change of behavior's reference for calls, read no config,
   so a receiver an alias imports had no declaration; it reads each file's config now.
 
-Next, the `fix(typescript)` PR of TD-039, then the `fix` PRs of TD-041 and TD-042, then the change of behavior.
+#### TS's CommonJS exports (#73, H5-D41)
+
+- **Where it lives.** `languages/typescript/commonjs.py` reads what a module exports by assigning it, and the TS facts
+  (`type_facts.py`) hold it: the module's own value under a name no name of a module can be, and each name it assigns
+  beside the ones its `export` statements give. A value no name of the module holds, as `new S()` or an object
+  literal's `d: new D()`, is held under the name its exports give it. The type index takes the own value for a whole
+  module's import and for a default import; the receivers read `require("./m").a` as the facts do.
+- **The rules, each TypeScript's:** a JS file with no `import` or `export` is a CommonJS module, whose last
+  `module.exports = x` at the top level is its own value; an object literal it assigns gives a name for each property
+  instead, and `exports.a = x` and `module.exports.a = x` export `a` beside it; a value that is a `require` re-exports
+  that module, or its name. A TS module's `export = x` is its own value; where `x` is a namespace, its export clauses
+  give the module's names, and the class or function it merges with is the own value, since a namespace merges into
+  the class, the function or the enum it names. A `require`, `import x = require(..)`, a namespace import and a default
+  import take the own value, even beside a `default` the module assigns; a named import, a destructured `require` and
+  `require("./m").a`, a name of it.
+- **The proof:**
+  - The case (`test_ts_commonjs.py`), checked on each run: each base its classes extend and each method its calls
+    reach is the declaration TypeScript's checker resolves it to (`checks/ts_heritage.js`, `checks/ts_checker.js`). It
+    spans `module.exports` of a name, a `new`, an object literal, a `require` and two assignments; `exports.a` and
+    `module.exports.a`, also beside an own value; `require("./m").a` and a TS module's `.default`; a file with ES module
+    syntax, which assigns nothing; a class expression, `export =` of a class, of a namespace and of a class a namespace
+    merges with; and each import form. 24 mutants, each killed.
+  - The heritage oracle reads a value a class extends by the checker's base type: an object literal's class is a
+    property to the symbol. Over the corpus (`checks/ts_heritage.py`), the index names the checker's declaration at
+    6,153 heritage clauses, where it gave it at 6,111, among them the 42 TD-039 counted, all in ghost, and another at
+    none; 3 name a class expression, TD-043.
+  - Against the checker's calls on ghost, read by the types as the change of behavior will read them: of 223,704
+    method call sites, the method the type index gives changes at 7,577; it is the checker's at 1,275, and no site
+    loses the checker's. At 223 it is the class whose instance `module.exports` holds, where TypeScript reads the
+    hand-written `index.d.ts` beside it, TD-041; at 100 the checker names none, 59 a `require` in a TS file, which
+    TypeScript does not bind and Node runs, and 41 a module a hand-written declaration file describes. Outline: 2 sites
+    change, from one `Unknown` to another.
+  - The graph: the corpus and the hold-out as on `main`; micro: ghost gains 42 `EXTENDS` and 48 `OVERRIDES`, and
+    nothing else changes in the twelve repos.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 60.5 s, where it took 59.4 s,
+    each side's runs spread over 5 s, and peaks at 1,446 MiB, where it peaked at 1,447 MiB.
+- **What differs from the plan:** the corpus had one clause the plan's forms left out, a name a `require` reads
+  (`require("./m").default`), which 464 bindings of the corpus write; it is read as a destructured `require` is. A
+  namespace no longer replaces the class it merges with, and `import * as` of an `export =` module takes its own value,
+  as the checker does.
+
+Next, the `fix` PRs of TD-041 and TD-042, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

@@ -467,3 +467,11 @@
   subclasses among their receivers, and 18 `IMPORTS` go from a package to a file; its `CALLS` and the other 9
   snapshots are the same, and the graph holds the dry-runs on all 10. Of the 29 calls, 24 are the same and 5 differ
   only in their time, build and refresh fields.
+- 2026-11-01: TS's CommonJS exports, PR #73 (`fix(typescript)`), which closes TD-039 (H5-D41): a module's CommonJS
+  exports and a TS module's `export =` are read as TypeScript binds them, and a `require`, a whole module's import and a
+  default import take the module's own value. Its heritage clauses reach the checker's declaration at 6,153, from
+  6,111, the 42 TD-039 counted among them; on ghost, the type index gives the checker's method at 1,275 more call
+  sites and loses it at none. The heritage oracle reads a value a class extends by the checker's base type. The proof
+  found TD-043, a class a class expression declares that is no symbol, due in TS's step 5 with TD-037; TD-039's
+  `export =` of a namespace in a declaration file goes with TD-041. Micro: ghost gains 42 `EXTENDS` and 48
+  `OVERRIDES`; the corpus and the hold-out as on `main`.

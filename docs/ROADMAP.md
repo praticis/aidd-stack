@@ -31,17 +31,18 @@
     F1.2. The calls on `base` and on `super` that reached the caller's own method or no ancestor, TD-030 and TD-031, and
     the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
     #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is
-    closed by `fix(graph)` #70, and TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)`
-    #72 (H5-D40). Two debts of the core's architecture, the syntax of each language it holds, TD-023, and the names of
-    frameworks and client libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name,
-    TD-026, and a C# call on an interface that reaches its single implementer twice, TD-036, and four of TS's, a
-    function a class field holds, TD-037, a CommonJS export the type index does not read, TD-039, a hand-written
-    declaration file discovery skips, TD-041, and a package of the repo's own workspace read as an npm package, TD-042,
-    are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036, 5 for TD-037, TD-039, TD-041 and
-    TD-042. Python's step 5 is merged and validated on a live install too (H5-D22's PRs: #42,
-    #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is closed (#57 to #63). Next, TS (H5-D29), in ten PRs
-    (H5-D36, H5-D37, H5-D39, H5-D40), judged with the per-site attribution every language now has (H5-D21), which reads the
-    resolver's stage too (G2, #56), before the `fix(csharp)` PRs (H5-D19);
+    closed by `fix(graph)` #70; TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)` #72
+    (H5-D40), and a CommonJS export its type index did not read, TD-039, by `fix(typescript)` #73 (H5-D41). Two debts of
+    the core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and client
+    libraries it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, and a C# call on
+    an interface that reaches its single implementer twice, TD-036, and four of TS's, a function a class field holds,
+    TD-037, a hand-written declaration file discovery skips, TD-041, a package of the repo's own workspace read as an
+    npm package, TD-042, and a class a class expression declares that is no symbol, TD-043, are due in an H5 step: 6
+    and 12 for TD-023, 6 for TD-024, TD-026 and TD-036, 5 for TD-037, TD-041, TD-042 and TD-043. Python's step 5 is
+    merged and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26).
+    F1.16 is closed (#57 to #63). Next, TS (H5-D29), in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41), judged
+    with the per-site attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56),
+    before the `fix(csharp)` PRs (H5-D19);
     then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest of the code to the shape
     targets), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
