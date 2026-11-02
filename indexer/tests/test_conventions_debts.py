@@ -65,6 +65,28 @@ def test_a_type_takes_the_role_of_a_base_its_declaration_names(tmp_path, files, 
     assert {s.name: s.role for s in res.symbols}[name] == role
 
 
+
+def _partial(base_in: str) -> dict[str, str]:
+    """A partial class declared in two files, one of which names its base."""
+    other = "B" if base_in == "A" else "A"
+    return {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
+            f"src/Shop/{base_in}/Order.cs": "namespace Shop;\n\npublic partial class Order : IEntity { }\n",
+            f"src/Shop/{other}/Order.cs": "namespace Shop;\n\npublic partial class Order { }\n"}
+
+
+@pytest.mark.parametrize("base", [
+    case("a-partial-class-takes-the-role-of-a-base-any-of-its-declarations-names", "IEntity",
+         why="a partial class's declarations share one id, and the bases read are the last one's in path order"),
+])
+def test_a_partial_class_has_the_bases_of_all_its_declarations(tmp_path, base):
+    from aidd_indexer.cli import extract_and_resolve
+    convs = _load(tmp_path, "convention", {"id": "x", "roles": {"entity": {"extends": [base]}}})
+    roles = {}
+    for base_in in ("A", "B"):
+        res, _ = extract_and_resolve(_write(tmp_path / base_in / "shop", _partial(base_in)), convs=convs)
+        roles[base_in] = {s.role for s in res.symbols if s.name == "Order"}
+    assert roles == {"A": {"entity"}, "B": {"entity"}}
+
 HANDLER = {
     "src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
     "src/Shop/Infra/PlaceOrderHandler.cs": (
