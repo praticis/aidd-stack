@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+import convention_records as R
+
 
 ROLE_REPO = {
     "src/Shop.Api/Shop.Api.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n',
@@ -83,3 +85,61 @@ def test_roles_and_architectures(tmp_path: Path):
     assert not _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods)
     assert _detected({"together": ["{svc}.Api", "{svc}.Core"]}, mods + ["src/Shop.Core"])
     assert _detected({"modules": ["**/*.Core"]}, mods)
+
+
+@pytest.mark.parametrize("header,bases", [
+    ("public class PlaceOrderHandler(IServiceProvider provider) : ICommandHandler<PlaceOrder>", ["ICommandHandler"]),
+    ("public class Repo<T> : Base<Dictionary<string, T>>, IRepo<T> where T : class, new()", ["Base", "IRepo"]),
+    ('[Route("api/[controller]")] public class OrdersController : ControllerBase', ["ControllerBase"]),
+    ("public class Maybe : IComparer<Order?>, IEquatable?", ["IComparer", "IEquatable"]),
+    ("public class Handler : Shop.Core.HandlerBase<PlaceOrder>", ["HandlerBase"]),
+    ("public record CreateOrder(string Name) : IRequest<Guid>;", ["IRequest"]),
+    ("public class Plain", []),
+    ("export class Store extends Base<Order> implements Reader, Writer<Order> {", ["Base", "Reader", "Writer"]),
+    ("public interface Repo extends Reader, Writer {", ["Reader", "Writer"]),
+    ("class Order(Base, mixins.Audited):", ["Base", "Audited"]),
+    ("class Order(Base, metaclass=ABCMeta):", ["Base"]),
+    ("class Order:", []),
+])
+def test_the_simple_names_of_a_declarations_bases(header, bases):
+    from aidd_indexer.conventions.declarative import base_names
+    assert base_names(header) == bases
+
+
+DECLARATIONS = {
+    "Multi.cs": "namespace Shop;\n\npublic class PlaceOrderHandler\n    : HandlerBase<PlaceOrder>,\n      IAudited\n{\n}\n",
+    "Records.cs": "public record PlaceOrder(string Id) : IRequest;\npublic class Gateway(HttpClient http) { }\n",
+    "Late.cs": "public class Late\n" + "\n" * 14 + "    : IAudited\n{\n}\n",
+    "Cycle.cs": "public class Left : Right { }\npublic class Right : Left, IAudited { }\n",
+}
+
+# (name, file, line, signature); Missing.cs is in the extraction but not on disk, Elsewhere.cs is in neither
+DECLARED = [
+    ("PlaceOrderHandler", "Multi.cs", 3, "public class PlaceOrderHandler"),
+    ("PlaceOrder", "Records.cs", 1, "public record PlaceOrder(string Id) : IRequest"),
+    ("Gateway", "Records.cs", 2, "public class Gateway(HttpClient http)"),
+    ("Late", "Late.cs", 1, "public class Late : IAudited"),
+    ("Left", "Cycle.cs", 1, "public class Left : Right"),
+    ("Right", "Cycle.cs", 2, "public class Right : Left, IAudited"),
+    ("GhostA", "Missing.cs", 1, "class  GhostA  (HttpClient  http)"),
+    ("GhostB", "Elsewhere.cs", 1, "class  GhostB  (HttpClient  http)"),
+    ("GhostC", "Records.cs", 9, "class  GhostC  (HttpClient  http)"),
+]
+
+
+def test_a_types_declaration_is_read_from_its_source(tmp_path: Path):
+    """From its line to the first that opens its body or ends with `;`, at most 15 lines, whitespace collapsed. With no
+    such line, the signature, collapsed too; as written when the extraction lacks its file. A cycle of bases ends."""
+    from aidd_indexer.conventions.declarative import DeclarativeConvention
+    for rel, text in DECLARATIONS.items():
+        (tmp_path / rel).write_text(text)
+    symbols = [R.symbol(name, f, line, sig) for name, f, line, sig in DECLARED]
+    res = R.result(str(tmp_path), files=[R.file(p) for p in (*DECLARATIONS, "Missing.cs")], symbols=symbols)
+    spec = tmp_path / "convention.yaml"
+    spec.write_text(yaml.safe_dump({"id": "decl", "roles": {"audited": {"extends": ["IAudited"]},
+                                                             "client": {"declares": ["(HttpClient http)"]}}}))
+    conv = DeclarativeConvention(spec)
+    conv.prepare(R.context(res))
+    assert {s.name: conv.role_of(s, None) for s in symbols} == {
+        "PlaceOrderHandler": "audited", "PlaceOrder": None, "Gateway": "client", "Late": None,
+        "Left": "audited", "Right": "audited", "GhostA": "client", "GhostB": None, "GhostC": "client"}
