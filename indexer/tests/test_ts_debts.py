@@ -1,6 +1,7 @@
 """TS's and JS's declarations the graph still misses: a base the type index does not reach, in a declaration file or in
-a package of the repo's workspace, and a method that is no symbol. Each case states the right answer and is a strict xfail with the reason: when the indexer learns it, the case
-passes, the xfail fails the suite, and the mark has to go."""
+a package of the repo's workspace, and a method or a class that is no symbol. Each case states the right answer and is
+a strict xfail with the reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has
+to go."""
 
 import contextlib
 import io
@@ -25,6 +26,11 @@ COMMONJS = {
     "lib/base.js": "class Base { run() {} }\nmodule.exports = Base;\n",
     "app/use.js": 'const Base = require("../lib/base");\nclass Use extends Base { run() {} }\nmodule.exports = Use;\n',
 }
+CLASS_EXPRESSION = {
+    "package.json": PACKAGE,
+    "lib/base.js": "class Base { run() {} }\nmodule.exports = Base;\n",
+    "app/use.js": 'const Base = require("../lib/base");\nmodule.exports = class Use extends Base { run() {} };\n',
+}
 FIELD = {
     "package.json": PACKAGE,
     "app/use.ts": "export class Base { run = () => 1; }\nexport class Use extends Base { run = () => 2; }\n",
@@ -43,6 +49,8 @@ CASES = [
          "a package the repo's workspace declares is read as an npm package"),
     case("a-require-of-a-commonjs-export-reaches-its-class", COMMONJS,
          ("app/use:Use", "EXTENDS", "lib/base:Base"), "`module.exports = Base` exports nothing the index reads"),
+    case("a-class-a-class-expression-declares-extends-its-base", CLASS_EXPRESSION,
+         ("app/use:Use", "EXTENDS", "lib/base:Base"), "a class expression is no symbol"),
     case("a-function-a-class-field-holds-is-a-method-of-its-class", FIELD,
          ("app/use:Use.run", "OVERRIDES", "app/use:Base.run"), "a class field that holds a function is no symbol"),
 ]
