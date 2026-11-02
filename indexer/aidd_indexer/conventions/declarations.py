@@ -148,12 +148,17 @@ class Declarations:
         return self._headers.get(s.id, [])
 
     def ancestors(self, s: SymbolInfo, seen: set[str]) -> set[str]:
+        """The names above the type, each type of the repo walked once: by path, a lattice of mixins takes
+        exponential time."""
         out: set[str] = set()
-        for b in self._bases.get(s.id, []):
-            out.add(b)
-            for t in self._by_name.get(b, []):     # an in-repo base passes its own bases on
-                if t.id not in seen:
-                    out |= self.ancestors(t, seen | {t.id})
+        todo, seen = [s], set(seen)
+        while todo:
+            for b in self._bases.get(todo.pop().id, []):
+                out.add(b)
+                for t in self._by_name.get(b, []):     # an in-repo base passes its own bases on
+                    if t.id not in seen:
+                        seen.add(t.id)
+                        todo.append(t)
         return out
 
     def _language(self, s: SymbolInfo) -> str | None:

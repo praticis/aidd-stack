@@ -101,7 +101,8 @@ def test_a_type_no_line_declares_by_its_name_is_read_from_its_first_line(tmp_pat
 
 @pytest.mark.parametrize("partial", ["partial ", ""], ids=["partial", "one id, no partial"])
 @pytest.mark.parametrize("named_in", ["A", "B"])
-@pytest.mark.parametrize("named,role", [(" : Base", "entity"), ("(HttpClient http)", "client")], ids=["base", "declares"])
+@pytest.mark.parametrize("named,role", [(" : Base", "entity"), ("(HttpClient http)", "client")],
+                         ids=["base", "declares"])
 def test_every_declaration_of_an_id_counts_whichever_file_comes_first(tmp_path, partial, named_in, named, role):
     """A C# partial class, or one class two projects declare in one namespace: one id, the bases of all its
     declarations and the text of each."""
@@ -110,3 +111,17 @@ def test_every_declaration_of_an_id_counts_whichever_file_comes_first(tmp_path, 
         f"src/Shop/{named_in}/Order.cs": f"namespace Shop;\n\npublic {partial}class Order{named} {{ }}\n",
         f"src/Shop/{other}/Order.cs": f"namespace Shop;\n\npublic {partial}class Order {{ }}\n"}
     assert _roles(tmp_path, files)["Order"] == role
+
+
+def test_a_lattice_of_bases_is_walked_once_per_type(tmp_path: Path):
+    """Thirty diamonds deep, a walk by path would take hours."""
+    from aidd_indexer.conventions.declarative import DeclarativeConvention
+    types = [R.symbol("L0", "models.py", signature="class L0")]
+    for i in range(1, 31):
+        types += [R.symbol(f"A{i}", "models.py", signature=f"class A{i}(L{i - 1})"),
+                  R.symbol(f"B{i}", "models.py", signature=f"class B{i}(L{i - 1})"),
+                  R.symbol(f"L{i}", "models.py", signature=f"class L{i}(A{i}, B{i})")]
+    (tmp_path / "convention.yaml").write_text(yaml.safe_dump({"id": "x", "roles": {"entity": {"extends": ["L0"]}}}))
+    conv = DeclarativeConvention(tmp_path / "convention.yaml")
+    conv.prepare(R.context(R.result(str(tmp_path), files=[R.file("models.py", language="python")], symbols=types)))
+    assert {t.name for t in types if conv.role_of(t, None) == "entity"} == {t.name for t in types} - {"L0"}
