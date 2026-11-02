@@ -1263,3 +1263,34 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 roles, layers or entry points. What the PR corrects, a partial class, a C# attribute with a `{`, a Python or a Go
 declaration, is not in the live repos: the parity of the 12 micro repos holds it, where every changed role has its
 cause.
+
+## Thirty-fifth round: validating PR #77 on a live install (2026-11-02, build `0.2.15+521ede71cef9`, unchanged)
+
+What changed since the thirty-fourth round: PR #77 is merged, a refactor that puts each symbol and impact tool's
+behavior in a function of its module and keeps in `register` the wrapper its schema comes from: the answers of the
+five tools must not change. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`3c3fa8c`). The dry-runs of `main` and of the PR's
+  head (`9d59619`) on each snapshot, at its sha, are identical in all 10, field by field. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,609 symbols, 104 of them with a convention's role, 23,681 `CALLS`,
+  15,890 `IMPORTS`, 381 types' and overrides' edges, 351 modules, 1 of them with a layer, 0 violations.
+- **After the author's reinstall from `main` (`6bdaeb8`):** the containers of the MCP, the knowledge service and the
+  refresher run the new images. The tools' code is not in the build's fingerprint, so the build stays and no snapshot
+  was re-indexed since the before, none with a last run that was not ok.
+
+**The picture of the graph** is identical in all 16 of its lists. The graph after holds the branch's dry-run on every
+snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP, now served by the new code. 28 gave no error and `cypher_readonly` still refuses
+a write. 28 answers are the same field by field, and the status differs only in its time, age and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The live MCP answers the calls of the five tools as before, which the probe over a throwaway
+graph could not cover: the HTTP envelope of the SDK, with the reorganized tools behind it.

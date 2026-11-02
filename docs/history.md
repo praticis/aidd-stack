@@ -523,3 +523,7 @@
   answer 100 calls the same byte for byte, the 45 errors among them (a symbol not found or ambiguous, a repo, a ref or
   a tenant not indexed, a bad `match` or regex, `ref` equal to `base`). The fake store gives the same answers to the
   same calls, and the queries the moved bodies send are the same byte for byte.
+- 2026-11-02: PR #77 is validated on a live install (the thirty-fifth round). The dry-runs of `main` and of the PR's
+  head are identical on the 10 snapshots, and the graph holds them, with the build unchanged: the tools' code is not in
+  its fingerprint. The picture is identical in its 16 lists, and of the 29 calls, 28 are the same field by field and 1,
+  the status, differs only in its time, age and refresh fields; the five tools answer as before.
