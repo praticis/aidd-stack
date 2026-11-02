@@ -167,6 +167,10 @@ aidd_indexer/
   conventions/              pluggable rules of *your* development pattern (layers, allowed deps, targets)
     base.py                 Convention contract + ConventionContext
     declarative.py          convention.yaml → Convention (no Python needed)
+    layout.py               the layers' globs, and which of its layouts a repo uses
+    declarations.py         what a type's declaration says: its header, its bases, its ancestors in the repo
+    roles.py                a type's role: the first whose names, bases or declaration text it matches
+    rules.py                each kind of rule, as the violations it finds
     __init__.py             registry: path | entry point `aidd.conventions` | `module:Class`; apply()
   mcp/                      MCP `atlas` (read-only tools over the graph)
     server.py store.py      assembles the tools; the Neo4j accessor per tenant
