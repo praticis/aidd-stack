@@ -527,3 +527,13 @@
   head are identical on the 10 snapshots, and the graph holds them, with the build unchanged: the tools' code is not in
   its fingerprint. The picture is identical in its 16 lists, and of the 29 calls, 28 are the same field by field and 1,
   the status, differs only in its time, age and refresh fields; the five tools answer as before.
+- 2026-11-02: the refresher's modules in the shape targets, PR #78 (`refactor(refresher)`): `load_manifest`,
+  `discover_repos`, `plan_refs`, `load_policy`, `sync` and `record_insight` go from complexity 13 or 14 to between 2
+  and 7, and the policy's `_validate_layer` from 10 to 6, each split along the seams it already had: a tenant's
+  sources, ref policy and conventions; discovery's mirror and fetch loops; the ref policy's three passes; a mirror's
+  creation, its copy from the workspace and its fetch from origin; an insight's checks and its repeat. The largest new
+  function is at 8. A characterization commit adds 97 cases that pass on `main`'s code and do not change after it.
+  Over 177 inputs (manifests, policies, plans over a synthetic workspace, syncs and insights), `main` and the branch
+  answer the same byte for byte, the 109 errors among them, and seven rounds alternating the two take the same time
+  within ±4 %. Step 12's remaining code goes with the step that changes it (H5-D44): the core's HTTP modules with step
+  6, and `extract` and `resolve` with step 12's last PR, after TS's step 5.

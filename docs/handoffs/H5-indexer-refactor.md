@@ -41,8 +41,9 @@ names of frameworks and client libraries it holds:
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
 | TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
-The counts are `shape.py`'s on 2026-10-29. The core, the conventions and the scripts have modules over 300 lines too
-(step 12).
+The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
+go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
+conventions, the corpus runner, the MCP's tool groups and the refresher to the targets, but for what H5-D43 accepts.
 
 **Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
 `docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 to 8, 2026-10-27 and 2026-10-28). The `live/`
@@ -66,8 +67,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
-2. Step 6 (recognizers and the catalog), step 12 (the rest of the code to the shape targets), the rest of step 10,
-   step 11 (docs).
+2. Step 6 (recognizers and the catalog, with the core's HTTP modules), step 12's last PR (the pipeline's `extract` and
+   `resolve`, after TS's step 5: H5-D44), the rest of step 10, step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
    cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
@@ -335,13 +336,13 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 3 | `FileIndex` (designed in H6, as the per-file index inside a worker): one pass per file; `_declared_type` (Go), `_local_type` (C#), `Scopes`, `function_of`, `_idents` consult the index | no scope walk per call; vikunja's profile: `walk` < 20 % |
 | 4 | Package facts per language: the language code leaves `core/http_expr.py` and `PackageContext`; typed facts | a test proves `core/` names no language or framework (`test_core_neutral.py` checks that no core module imports a language's module or names a language's id; the syntax of each language the core holds is TD-023, and its framework names are TD-024) |
 | 5 | `TypeIndex` (ADR-005), first its API in the core, then one language at a time: Go, C#, Python, TS (H5-D7), each a refactor and then a change of behavior (H5-D10, "Step 5" below). Each language's `file_facts` become typed facts; the per-file answers (a local's, a receiver's, a parameter's type) are one code for the resolver and the scanner, which is what step 3 left; the resolver's indexes (`resolve_setup`) move into the `TypeIndex`. Go's `_declared_type` against `_value_type`/`_field_type`/`_local_type`, C#'s `_local_type` against `_declared_type` and `_reaches_fast`, Python's `_router_class` and its classes by `RepoView.defining`, TS's `_client_of` start consulting it | a single implementation per language of "declared type"; an answer is a value or `Unknown` with its reason, and `Unknown` is what `needs-resolver` was |
-| 6 | Recognizers + the YAML catalog, **one language per commit**, in the portfolio's order (H5-D20): C# (`_controller`, `_invocation`), Go (`_call`), Python, TS (`_read_call`) | no function > 9 and no module > 300 lines in those packages; each line of the guide's table points to a recognizer |
+| 6 | Recognizers + the YAML catalog, **one language per commit**, in the portfolio's order (H5-D20): C# (`_controller`, `_invocation`), Go (`_call`), Python, TS (`_read_call`) | no function > 9 and no module > 300 lines in those packages and in the core's HTTP modules (`http_expr`, `http_base`, `integrations`, `http_mounts`: H5-D44); each line of the guide's table points to a recognizer |
 | 7 | A typed `compose` per language; a typed `Pending` | no positional tuple between the scanner and `compose` |
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
 | 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until P2 (H5-D5, H5-D6) and what H5-D43 accepts; blocking turns on when the author decides (H5-D3) |
-| 12 | The rest of the code to the shape targets (H5-D6): the core (`http_base`, `http_expr`, `extract`, `graph`, `resolve`, `mirror`), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target but `cli.py` and what H5-D43 accepts |
+| 12 | The rest of the code to the shape targets (H5-D6): the core (`extract`, `graph`, `resolve`, `mirror`; `http_base` and `http_expr` go with step 6, H5-D44), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target outside what H5-D44 gives to step 6, but `cli.py` and what H5-D43 accepts |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's
 first slice). H5's code commits are `refactor:`, so its PRs are read as refactors, where any difference fails. Step 5's

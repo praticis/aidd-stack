@@ -44,8 +44,9 @@
     and validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
     closed (#57 to #63). Next, TS (H5-D29), in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41), judged with the
     per-site attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56), before the
-    `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20), step 12 (the rest
-    of the code to the shape targets), then 10 and 11;
+    `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20, with the core's
+    HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`, after TS's step 5), then 10
+    and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
