@@ -40,6 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import corpus_metrics as M  # noqa: E402
+import corpus_totals as T  # noqa: E402
 
 EXPECTED_DIR = Path(__file__).resolve().parents[1] / "tests" / "corpus_expected"
 
@@ -164,10 +165,6 @@ def checkout(dest: Path, slug: str, sha: str) -> None:
     git("-c", "advice.detachedHead=false", "checkout", "-q", "-f", "FETCH_HEAD")
 
 
-def _pct(v: float | None) -> str:
-    return "  —  " if v is None else f"{v:5.1%}"
-
-
 def _items(label: str, rows: list, show: int) -> None:
     for r in rows[:show]:
         print(f"      {label} {' '.join(map(str, r)) if isinstance(r, tuple) else r}")
@@ -195,12 +192,33 @@ def report_baseline(name: str, run: dict, baseline: Path, show: int) -> bool:
     return True
 
 
-CATEGORIES: dict[tuple[str, str], collections.Counter] = collections.defaultdict(collections.Counter)
-CATEGORY_REPOS: dict[tuple[str, str], set[str]] = collections.defaultdict(set)   # breadth, so one big repo does not rank alone
-POOLED: dict[str, dict[str, collections.Counter]] = collections.defaultdict(lambda: {k: collections.Counter() for k in M.KINDS})
+def _report_score(name: str, k: str, sc, expected_list: dict, show: int, totals: T.Totals) -> None:
+    src = expected_list.get("source", "?")
+    print(f"  expected {k:9} ({src.get(k, '?') if isinstance(src, dict) else src}): P {T.pct(sc.precision)} R {T.pct(sc.recall)} "
+          f"| extracted {sc.extracted} expected {sc.expected} fp {len(sc.false_positives)} fn {len(sc.false_negatives)}")
+    _items("fp", sc.false_positives, show)
+    misses = M.miss_categories(expected_list, k, sc)
+    _items("fn", [f"{m} {p}" + (f" [{c}]" if c else "") for (m, p), c in misses.items()], show)
+    for c in misses.values():
+        totals.gap(k, c, "fn", name)
+    language = (expected_list.get("language") or {}).get(k) or LANGUAGE.get(name, "?")   # a kind in another language
+    totals.pool(language, k, extracted=sc.extracted, tp_x=sc.extracted - len(sc.false_positives),
+                expected=sc.expected, tp_e=sc.expected - len(sc.false_negatives))
 
 
-def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | None:
+def _report_checked(name: str, k: str, ck, expected_list: dict, show: int, totals: T.Totals) -> None:
+    print(f"  checked  {k:9}: P {T.pct(ck.precision)} ({ck.ok}/{ck.judged}, {ck.pending} pending, {len(ck.stale)} stale)")
+    _items("wrong", [f"{i['evidence']} {i['method']} {i['path']} [{i.get('category')}]" for i in ck.wrong], show)
+    for i in ck.wrong:
+        totals.gap(k, i.get("category"), "wrong", name)
+    _items("stale", [f"{i['evidence']} {i['method']} {i['path']}" for i in ck.stale], show)
+    for i in (expected_list.get("checked") or {}).get(k, []):       # each sampled item counts for its own file's language
+        if i.get("ok") is not None:
+            language = EXT_LANGUAGE.get(Path(M.evidence_file(i["evidence"])).suffix, LANGUAGE.get(name, "?"))
+            totals.pool(language, k, judged=1, ok=int(i["ok"]))
+
+
+def report_expected(name: str, run: dict, expected: Path, show: int, totals: T.Totals) -> dict | None:
     f = expected / f"{name}.json"
     if not f.exists():
         return None
@@ -208,35 +226,12 @@ def report_expected(name: str, run: dict, expected: Path, show: int) -> dict | N
     if expected_list.get("sha") and expected_list["sha"] != run["sha"]:
         print(f"  expected list: read at {expected_list['sha'][:10]}, run at {run['sha'][:10]} — re-check before trusting P/R")
     out = {}
-    langs = expected_list.get("language") or {}              # a kind in another language than the repo's
     for k in M.KINDS:
         sc, ck = M.score(run, expected_list, k), M.checked_precision(run, expected_list, k)
         if sc is not None:
-            src = expected_list.get("source", "?")
-            print(f"  expected {k:9} ({src.get(k, '?') if isinstance(src, dict) else src}): P {_pct(sc.precision)} R {_pct(sc.recall)} "
-                  f"| extracted {sc.extracted} expected {sc.expected} fp {len(sc.false_positives)} fn {len(sc.false_negatives)}")
-            _items("fp", sc.false_positives, show)
-            misses = M.miss_categories(expected_list, k, sc)
-            _items("fn", [f"{m} {p}" + (f" [{c}]" if c else "") for (m, p), c in misses.items()], show)
-            for c in misses.values():
-                CATEGORIES[(k, c or "uncategorized")]["fn"] += 1
-                CATEGORY_REPOS[(k, c or "uncategorized")].add(name)
+            _report_score(name, k, sc, expected_list, show, totals)
         if ck is not None:
-            print(f"  checked  {k:9}: P {_pct(ck.precision)} ({ck.ok}/{ck.judged}, {ck.pending} pending, {len(ck.stale)} stale)")
-            _items("wrong", [f"{i['evidence']} {i['method']} {i['path']} [{i.get('category')}]" for i in ck.wrong], show)
-            for i in ck.wrong:
-                CATEGORIES[(k, i.get("category") or "uncategorized")]["wrong"] += 1
-                CATEGORY_REPOS[(k, i.get("category") or "uncategorized")].add(name)
-            _items("stale", [f"{i['evidence']} {i['method']} {i['path']}" for i in ck.stale], show)
-        if sc is not None:
-            POOLED[langs.get(k) or LANGUAGE.get(name, "?")][k].update(
-                extracted=sc.extracted, tp_x=sc.extracted - len(sc.false_positives),
-                expected=sc.expected, tp_e=sc.expected - len(sc.false_negatives))
-        if ck is not None:                          # each sampled item counts for the language of its own file
-            for i in (expected_list.get("checked") or {}).get(k, []):
-                if i.get("ok") is not None:
-                    lang = EXT_LANGUAGE.get(Path(M.evidence_file(i["evidence"])).suffix, LANGUAGE.get(name, "?"))
-                    POOLED[lang][k].update(judged=1, ok=int(i["ok"]))
+            _report_checked(name, k, ck, expected_list, show, totals)
         out[k] = (sc, ck)
     return out
 
@@ -254,7 +249,7 @@ def list_repos(names: list[str], pinned: dict, base: Path) -> int:
     return 0
 
 
-def main() -> int:
+def _args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("AIDD_CORPUS_DIR", str(Path.home() / ".cache/aidd-corpus/repos")))
     ap.add_argument("--json", default=None, help="directory to dump per-repo candidates as JSON")
@@ -270,77 +265,82 @@ def main() -> int:
     ap.add_argument("--holdout", action="store_true", help="measure HOLDOUT instead of CORPUS, with its own lists")
     ap.add_argument("--list", action="store_true", help="print the selected repositories, the largest clone first, and exit")
     ap.add_argument("repos", nargs="*")
-    args = ap.parse_args()
+    return ap.parse_args()
+
+
+def _extract(name: str, slug: str, sha: str, base: Path) -> dict:
+    from aidd_indexer.cli import extract_tree
+    from aidd_indexer.core.integrations import extract_http
+    from aidd_indexer.core.model import RepoInfo
+
+    dest = base / name
+    checkout(dest, slug, sha)
+    repo = RepoInfo(tenant="corpus", name=name, ref="main", commit_sha=sha, root=str(dest))
+    t0 = time.time()
+    with contextlib.redirect_stderr(io.StringIO()):
+        res, extractors = extract_tree(repo)
+        t1 = time.time()
+        hr = extract_http(repo, extractors, modules=res.modules)
+    fw = collections.Counter(e.framework for e in hr.endpoints)
+    via = collections.Counter(c.via.split(".")[-1] for c in hr.calls)
+    with_handler = sum(1 for e in hr.endpoints if e.handler_id)
+    print(f"{name:20} {len(res.files):5} files | routes {len(hr.endpoints):4} (handler {with_handler:4}) {dict(fw)} "
+          f"| calls {len(hr.calls):4} {dict(via.most_common(5))} | warn {len(hr.warnings)} | {time.time()-t0:.1f}s"
+          f" (http {time.time()-t1:.1f}s)")
+    return {"repo": slug, "sha": sha, "endpoints": [e.__dict__ for e in hr.endpoints], "calls": [c.__dict__ for c in hr.calls],
+            "warnings": hr.warnings}
+
+
+def _measure(name: str, slug: str, sha: str, base: Path, reuse: Path | None) -> dict:
+    saved = reuse / f"{name}.json" if reuse else None
+    if saved and saved.exists() and json.loads(saved.read_text()).get("sha") == sha:
+        run = json.loads(saved.read_text())
+        print(f"{name:20} reused {reuse} | routes {len(run['endpoints']):4} | calls {len(run['calls']):4}")
+        return run
+    return _extract(name, slug, sha, base)
+
+
+def _print_sample(name: str, run: dict, n: int, seed: str) -> None:
+    for k in M.KINDS:
+        picked = M.sample(run, k, n, seed, name)
+        if picked:
+            print(f"  sample {k} (seed {seed}):")
+            for item in picked:
+                print("    " + json.dumps(item, ensure_ascii=False) + ",")
+
+
+def _report(name: str, run: dict, args: argparse.Namespace, totals: T.Totals, changed: list, measured: dict) -> None:
+    if args.json:
+        Path(args.json).mkdir(parents=True, exist_ok=True)
+        (Path(args.json) / f"{name}.json").write_text(json.dumps(run, indent=1, default=str))
+    if args.baseline and report_baseline(name, run, args.baseline, args.show):
+        changed.append(name)
+    if args.expected and (m := report_expected(name, run, args.expected, args.show, totals)):
+        measured[name] = m
+    if args.sample:
+        _print_sample(name, run, args.sample, args.seed)
+
+
+def main() -> int:
+    args = _args()
     pinned = HOLDOUT if args.holdout else CORPUS
     if args.list:
         return list_repos(args.repos or sorted(pinned), pinned, Path(args.dir))
     if args.holdout and args.expected == EXPECTED_DIR:
         args.expected = HOLDOUT_EXPECTED_DIR
     os.environ.setdefault("AIDD_TENANT", "corpus")
-    from aidd_indexer.cli import extract_tree
-    from aidd_indexer.core.integrations import extract_http
-    from aidd_indexer.core.model import RepoInfo
-
     base = Path(args.dir)
     base.mkdir(parents=True, exist_ok=True)
-    changed, measured = [], {}
+    totals, changed, measured = T.Totals(), [], {}
     for name in args.repos or sorted(pinned):
-        slug, sha = pinned[name]
-        saved = args.reuse / f"{name}.json" if args.reuse else None
-        if saved and saved.exists() and json.loads(saved.read_text()).get("sha") == sha:
-            run = json.loads(saved.read_text())
-            print(f"{name:20} reused {args.reuse} | routes {len(run['endpoints']):4} | calls {len(run['calls']):4}")
-        else:
-            dest = base / name
-            checkout(dest, slug, sha)
-            repo = RepoInfo(tenant="corpus", name=name, ref="main", commit_sha=sha, root=str(dest))
-            t0 = time.time()
-            with contextlib.redirect_stderr(io.StringIO()):
-                res, extractors = extract_tree(repo)
-                t1 = time.time()
-                hr = extract_http(repo, extractors, modules=res.modules)
-            fw = collections.Counter(e.framework for e in hr.endpoints)
-            via = collections.Counter(c.via.split(".")[-1] for c in hr.calls)
-            with_handler = sum(1 for e in hr.endpoints if e.handler_id)
-            print(f"{name:20} {len(res.files):5} files | routes {len(hr.endpoints):4} (handler {with_handler:4}) {dict(fw)} "
-                  f"| calls {len(hr.calls):4} {dict(via.most_common(5))} | warn {len(hr.warnings)} | {time.time()-t0:.1f}s"
-                  f" (http {time.time()-t1:.1f}s)")
-            run = {"repo": slug, "sha": sha, "endpoints": [e.__dict__ for e in hr.endpoints], "calls": [c.__dict__ for c in hr.calls],
-                   "warnings": hr.warnings}
-        if args.json:
-            Path(args.json).mkdir(parents=True, exist_ok=True)
-            (Path(args.json) / f"{name}.json").write_text(json.dumps(run, indent=1, default=str))
-        if args.baseline and report_baseline(name, run, args.baseline, args.show):
-            changed.append(name)
-        if args.expected and (m := report_expected(name, run, args.expected, args.show)):
-            measured[name] = m
-        if args.sample:
-            for k in M.KINDS:
-                picked = M.sample(run, k, args.sample, args.seed, name)
-                if picked:
-                    print(f"  sample {k} (seed {args.seed}):")
-                    for item in picked:
-                        print("    " + json.dumps(item, ensure_ascii=False) + ",")
+        run = _measure(name, *pinned[name], base, args.reuse)
+        _report(name, run, args, totals, changed, measured)
     if args.baseline:
         print(f"\nbaseline {args.baseline}: {len(changed)} repo(s) differ" + (f" — {', '.join(changed)}" if changed else ""))
     if args.expected:
         print(f"\nexpected {args.expected}: {len(measured)} repo(s) with an expected list" + (f" — {', '.join(measured)}" if measured else ""))
-        if POOLED:
-            ratio = lambda a, b: _pct(a / b if b else None)
-            print(f"\n{'language':8} {'kind':10} {'P checked':>16} {'P expected':>16} {'R expected':>16}")
-            for lang, kinds in sorted(POOLED.items()):
-                for k, c in kinds.items():
-                    if c:
-                        print(f"{lang:8} {k:10} {ratio(c['ok'], c['judged'])} {c['ok']:>4}/{c['judged']:<4} "
-                              f"{ratio(c['tp_x'], c['extracted'])} {c['tp_x']:>4}/{c['extracted']:<4} "
-                              f"{ratio(c['tp_e'], c['expected'])} {c['tp_e']:>4}/{c['expected']:<4}")
-        if CATEGORIES:
-            print(f"\n{'kind':10} {'category':28} {'wrong':>5} {'fn':>4} {'repos':>5}   (wrong: checked items judged wrong · "
-                  "fn: distinct expected pairs missed · repos: where it shows up)")
-            for (k, c), n in sorted(CATEGORIES.items(), key=lambda kv: (kv[0][0], -(kv[1]["wrong"] + kv[1]["fn"]), kv[0][1])):
-                print(f"{k:10} {c:28} {n['wrong']:5} {n['fn']:4} {len(CATEGORY_REPOS[(k, c)]):5}")
+        totals.print_tables()
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
