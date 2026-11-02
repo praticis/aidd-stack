@@ -10,9 +10,12 @@ import yaml
 import convention_records as R
 
 ROLES = {"id": "x", "roles": {"entity": {"extends": ["Base"]}, "repository": {"extends": ["BaseRepo"]},
-                              "controller": {"extends": ["ControllerBase"]}, "client": {"declares": ["(HttpClient "]}}}
+                              "controller": {"extends": ["ControllerBase"]}, "client": {"declares": ["(HttpClient "]},
+                              "go-struct": {"declares": [" struct {"]}}}
 PYPROJECT = {"pyproject.toml": "[project]\nname = 'shop'\n", "shop/__init__.py": ""}
 PACKAGE = {"package.json": '{"name": "shop"}\n'}
+GO = "module example.com/shop\n\ngo 1.22\n"
+NEIGHBOUR = "\ntype Neighbour struct {\n\tID string\n}\n"
 CSPROJ = {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n'}
 LONG_DECORATOR = "@Component({\n" + "".join(f"  option{i}: {i},\n" for i in range(18)) + "})\n"
 
@@ -71,6 +74,20 @@ CASES = [
         "src/Shop/Order.cs": "namespace Shop;\n\n#pragma warning disable CS0618\n"
                              "public class Order : Base // a comment\n#pragma warning restore CS0618\n{\n}\n"},
      "Order", "entity"),
+    ("a Go type with no body", {"go.mod": GO, "shop.go": "package shop\n\ntype Members []Member\n" + NEIGHBOUR},
+     "Members", None),
+    ("a Go function type", {"go.mod": GO, "shop.go": "package shop\n\ntype F = func(id string) error\n" + NEIGHBOUR},
+     "F", None),
+    ("a Go function type over lines", {"go.mod": GO, "shop.go": "package shop\n\ntype G func(\n\tid string,\n"
+                                                                 "\tn int,\n) error\n" + NEIGHBOUR},
+     "G", None),
+    ("a Go channel type", {"go.mod": GO, "shop.go": "package shop\n\ntype C <-chan Message\n" + NEIGHBOUR},
+     "C", None),
+    ("a Go generic struct", {"go.mod": GO, "shop.go": "package shop\n\ntype Box[T any] struct {\n\tv T\n}\n"},
+     "Box", "go-struct"),
+    ("a Go type in a group", {"go.mod": GO, "shop.go": "package shop\n\ntype (\n\tIDs []string\n\tPair struct {\n"
+                                                       "\t\ta, b int\n\t}\n)\n"},
+     "IDs", None),
     ("a brace in a C# attribute", CSPROJ | {
         "src/Shop/Api/OrdersController.cs": 'namespace Shop.Api;\n\n[ApiController]\n'
                                             '[Route("api/v{version:apiVersion}/[controller]")]\n'

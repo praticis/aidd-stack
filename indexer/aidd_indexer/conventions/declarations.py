@@ -138,14 +138,37 @@ def _code(line: str, language: str | None) -> str:
     return re.sub(r"(?:^|\s)//.*$", "", re.sub(r"/\*.*?\*/", " ", line))
 
 
+def _braced(text: str, line: str) -> bool:
+    """Complete at its body's `{` or at the `;` that ends it."""
+    return _body_at(text) < len(text) or line.rstrip().endswith(";")
+
+
+def _python_header(text: str, line: str) -> bool:
+    """Complete at the header's colon."""
+    return _top_level_colon(text) is not None
+
+
+def _go_declaration(text: str, line: str) -> bool:
+    """Complete at the first `{` outside `()` and `[]`, or, these balanced, at the end of its line, where Go inserts a
+    semicolon (`type X []Y`). Only `()` and `[]` count: a channel's `<-` leaves no `<` to close."""
+    depth = 0
+    for ch in text:
+        depth += (ch in "([") - (ch in ")]")
+        if ch == "{" and depth == 0:
+            return True
+    return depth == 0
+
+
+_COMPLETE = {"python": _python_header, "go": _go_declaration}
+
+
 def _to_body(lines: list[str], language: str | None) -> list[str]:
-    """A declaration's lines up to its body: its `{` or the `;` that ends it, or a Python header's colon."""
+    """A declaration's lines, up to the one that completes it in its language."""
+    complete = _COMPLETE.get(language or "", _braced)
     out: list[str] = []
     for ln in lines:
         out.append(_code(ln, language))
-        text = " ".join(out)
-        if _top_level_colon(text) is not None if language == "python" else \
-                _body_at(text) < len(text) or out[-1].rstrip().endswith(";"):
+        if complete(" ".join(out), out[-1]):
             break
     return out
 
