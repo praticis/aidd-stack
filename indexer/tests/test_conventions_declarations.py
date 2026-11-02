@@ -52,6 +52,25 @@ CASES = [
         "src/models.ts": 'export class Base {}\nconst s = "a\u2028b\u0085c";\nconst r = 1;\rconst q = 2;\n'
                          "export class Order extends Base {}\n"},
      "Order", "entity"),
+    ("a brace in a type parameter's default", PACKAGE | {
+        "src/repo.ts": "export class BaseRepo<T> {}\n\nexport class Panel<\n  T = any,\n  U extends object = {},\n"
+                       "> extends BaseRepo<T> {\n}\n"},
+     "Panel", "repository"),
+    ("an arrow in a base's type argument", PACKAGE | {
+        "src/sidebar.tsx": "export class Base<P> {}\n\n"
+                           "class Pin extends Base<{ pinned: boolean; onCommit: () => void }> {\n}\n"},
+     "Pin", "entity"),
+    ("a comment in a Python base list", PYPROJECT | {
+        "shop/models.py": "class Base:\n    pass\n\n\n"
+                          "class Order(\n    # the base (no other) comes next\n    Base,\n):\n    pass\n"},
+     "Order", "entity"),
+    ("a C# record that ends with a semicolon", CSPROJ | {
+        "src/Shop/Order.cs": "namespace Shop;\n\npublic record Order(string Id) : Base;\n"},
+     "Order", "entity"),
+    ("a C# directive and a comment before the body", CSPROJ | {
+        "src/Shop/Order.cs": "namespace Shop;\n\n#pragma warning disable CS0618\n"
+                             "public class Order : Base // a comment\n#pragma warning restore CS0618\n{\n}\n"},
+     "Order", "entity"),
     ("a brace in a C# attribute", CSPROJ | {
         "src/Shop/Api/OrdersController.cs": 'namespace Shop.Api;\n\n[ApiController]\n'
                                             '[Route("api/v{version:apiVersion}/[controller]")]\n'

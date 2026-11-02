@@ -93,8 +93,10 @@ def _base_list(h: str) -> str:
 
 
 def _simple_name(part: str) -> str | None:
-    name = re.sub(r"[<(].*$", "", part.strip()).strip().rstrip("?").split(".")[-1]
-    return name if re.fullmatch(r"[A-Za-z_]\w*", name) and "=" not in part else None
+    """A keyword argument (`metaclass=Meta`) is no base; an arrow in a type argument (`Base<{ f: () => void }>`) is."""
+    written = re.sub(r"[<(].*$", "", part.strip().rstrip(";"))
+    name = written.strip().rstrip("?").split(".")[-1]
+    return name if re.fullmatch(r"[A-Za-z_]\w*", name) and "=" not in written else None
 
 
 def base_names(header: str, language: str | None = None, name: str | None = None) -> list[str]:
@@ -103,7 +105,7 @@ def base_names(header: str, language: str | None = None, name: str | None = None
     past its attributes and decorators."""
     m = _declaring(name).search(header)
     h = header[m.start():] if m else header
-    text = _python_bases(h) if language == "python" else _base_list(strip_attributes(h.split("{", 1)[0]))
+    text = _python_bases(h) if language == "python" else _base_list(strip_attributes(h[:_body_at(h)]))
     return [n for n in map(_simple_name, _split_top(text)) if n is not None]
 
 
@@ -114,12 +116,36 @@ def _declaring_line(source: list[str], s: SymbolInfo) -> int:
                 s.line_start - 1)
 
 
-def _to_body(lines: list[str], python: bool) -> list[str]:
+def _body_at(h: str) -> int:
+    """The index of the `{` that opens the body: the first outside the type parameters' `<>` (a `= {}` default)."""
+    depth = 0
+    for i, ch in enumerate(h):
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and h[i - 1] != "=" and depth:
+            depth -= 1
+        elif ch == "{" and depth == 0:
+            return i
+    return len(h)
+
+
+def _code(line: str, language: str | None) -> str:
+    """The line without its comment, nor a C# directive (`#pragma`) between the base list and the body."""
+    if language == "python":
+        return re.sub(r"#.*$", "", line)
+    if language == "csharp" and line.lstrip().startswith("#"):
+        return ""
+    return re.sub(r"(?:^|\s)//.*$", "", re.sub(r"/\*.*?\*/", " ", line))
+
+
+def _to_body(lines: list[str], language: str | None) -> list[str]:
     """A declaration's lines up to its body: its `{` or the `;` that ends it, or a Python header's colon."""
     out: list[str] = []
     for ln in lines:
-        out.append(ln)
-        if _top_level_colon(" ".join(out)) is not None if python else "{" in ln or ln.rstrip().endswith(";"):
+        out.append(_code(ln, language))
+        text = " ".join(out)
+        if _top_level_colon(text) is not None if language == "python" else \
+                _body_at(text) < len(text) or out[-1].rstrip().endswith(";"):
             break
     return out
 
@@ -172,7 +198,7 @@ class Declarations:
             return s.signature
         source = self._lines(f)
         at = _declaring_line(source, s)
-        lines = source[s.line_start - 1: at] + _to_body(source[at: at + 15], f.language == "python")
+        lines = source[s.line_start - 1: at] + _to_body(source[at: at + 15], f.language)
         return " ".join(" ".join(lines or [s.signature]).split())
 
     def _lines(self, f: FileInfo) -> list[str]:
