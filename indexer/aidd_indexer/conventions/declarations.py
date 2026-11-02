@@ -9,6 +9,8 @@ from pathlib import Path
 from ..core.extract import strip_attributes
 from ..core.model import FileInfo, SymbolInfo
 
+_KEYWORD = r"\b(?:class|interface|struct|record|type)\s+"
+
 
 def _split_top(text: str) -> list[str]:
     """Split on commas outside (), <>, []."""
@@ -38,9 +40,46 @@ def _top_level_colon(h: str) -> int | None:
     return None
 
 
+def _declaring(name: str | None) -> re.Pattern:
+    """The words that declare a type: by its whole name when it is known."""
+    return re.compile(_KEYWORD + (re.escape(name) + r"\b" if name else r"\w"))
+
+
+def _after_angles(h: str, i: int) -> int:
+    """The index past the `>` that closes the `<` at `i`; an arrow's `>` closes nothing."""
+    depth = 0
+    for j in range(i, len(h)):
+        if h[j] == "<":
+            depth += 1
+        elif h[j] == ">" and h[j - 1] != "=":
+            depth -= 1
+            if depth == 0:
+                return j + 1
+    return len(h)
+
+
+def _without_type_parameters(h: str) -> str:
+    """A constraint's `extends` (`class R<T extends X>`) is no base."""
+    m = re.search(r"\b(?:class|interface)\s+\w+\s*<", h)
+    return h if m is None else h[:m.end() - 1] + h[_after_angles(h, m.end() - 1):]
+
+
+def _python_bases(h: str) -> str:
+    """The text between the parentheses after `class X`, whatever follows them on its line."""
+    m = re.search(r"\bclass\s+\w+\s*(?:\[[^\]]*\])?\s*\(", h)
+    if m is None:
+        return ""
+    depth = 0
+    for j in range(m.end() - 1, len(h)):
+        depth += (h[j] in "([{") - (h[j] in ")]}")
+        if depth == 0:
+            return h[m.end():j]
+    return h[m.end():]
+
+
 def _base_list(h: str) -> str:
     """The text of the base list: after `extends`/`implements`, or after the top-level `:` and before `where`."""
-    m = re.search(r"\b(?:extends|implements)\b(.*)", h)
+    m = re.search(r"\b(?:extends|implements)\b(.*)", _without_type_parameters(h))
     if m:
         return re.sub(r"\b(?:extends|implements)\b", ",", m.group(1))
     idx = _top_level_colon(h)
@@ -58,11 +97,31 @@ def _simple_name(part: str) -> str | None:
     return name if re.fullmatch(r"[A-Za-z_]\w*", name) and "=" not in part else None
 
 
-def base_names(header: str) -> list[str]:
+def base_names(header: str, language: str | None = None, name: str | None = None) -> list[str]:
     """Simple names in a type declaration's base list: C# `class X(..) : A<T>, B where T : C`,
-    TS/Java `class X extends A implements B, C`, Python `class X(A, B):`."""
-    parts = _split_top(_base_list(strip_attributes(header.split("{", 1)[0])))
-    return [name for name in map(_simple_name, parts) if name is not None]
+    TS/Java `class X extends A implements B, C`, Python `class X(A, B):`. Read from the words that declare the type,
+    past its attributes and decorators."""
+    m = _declaring(name).search(header)
+    h = header[m.start():] if m else header
+    text = _python_bases(h) if language == "python" else _base_list(strip_attributes(h.split("{", 1)[0]))
+    return [n for n in map(_simple_name, _split_top(text)) if n is not None]
+
+
+def _declaring_line(source: list[str], s: SymbolInfo) -> int:
+    """The line that declares the type by its name, within the symbol's lines; else its first line."""
+    rx = _declaring(s.name)
+    return next((i for i in range(s.line_start - 1, min(s.line_end, len(source))) if rx.search(source[i])),
+                s.line_start - 1)
+
+
+def _to_body(lines: list[str], python: bool) -> list[str]:
+    """A declaration's lines up to its body: its `{` or the `;` that ends it, or a Python header's colon."""
+    out: list[str] = []
+    for ln in lines:
+        out.append(ln)
+        if _top_level_colon(" ".join(out)) is not None if python else "{" in ln or ln.rstrip().endswith(";"):
+            break
+    return out
 
 
 class Declarations:
@@ -77,7 +136,7 @@ class Declarations:
         self._by_name: dict[str, list[SymbolInfo]] = {}
         for s in types:
             self._by_name.setdefault(s.name, []).append(s)
-        self._bases = {s.id: base_names(self._read(s)) for s in types}
+        self._bases = {s.id: base_names(self._read(s), self._language(s), s.name) for s in types}
 
     def header(self, s: SymbolInfo) -> str:
         if s.id not in self._headers:
@@ -93,17 +152,19 @@ class Declarations:
                     out |= self.ancestors(t, seen | {t.id})
         return out
 
+    def _language(self, s: SymbolInfo) -> str | None:
+        f = self._files.get(s.file_id)
+        return f.language if f is not None else None
+
     def _read(self, s: SymbolInfo) -> str:
+        """The attributes and decorators above the declaration, then up to 15 of its lines, to its body."""
         f = self._files.get(s.file_id)
         if f is None:
             return s.signature
-        lines = self._lines(f)[s.line_start - 1: s.line_start + 14] or [s.signature]
-        text = ""
-        for ln in lines:                     # the declaration up to its body (base lists may span lines)
-            text += " " + ln
-            if "{" in ln or ln.rstrip().endswith(";"):
-                break
-        return " ".join(text.split())
+        source = self._lines(f)
+        at = _declaring_line(source, s)
+        lines = source[s.line_start - 1: at] + _to_body(source[at: at + 15], f.language == "python")
+        return " ".join(" ".join(lines or [s.signature]).split())
 
     def _lines(self, f: FileInfo) -> list[str]:
         if f.id not in self._sources:

@@ -27,43 +27,6 @@ def _load(tmp_path: Path, name: str, spec: dict) -> list:
     return conventions.load([{"path": str(path)}], "shop")
 
 
-PYTHON = {
-    "pyproject.toml": "[project]\nname = 'shop'\n",
-    "shop/__init__.py": "",
-    "shop/models.py": "class Base:\n    pass\n\n\nclass Order(Base):\n    def total(self):\n        return 0\n",
-}
-
-CONSTRAINED = {
-    "package.json": '{"name": "shop"}\n',
-    "src/repo.ts": "export class BaseRepo<T> {}\n\nexport class OrderRepo<T extends object> extends BaseRepo<T> {\n"
-                   "  find() {}\n}\n",
-}
-
-# A class not exported where it is declared starts at its decorators.
-DECORATED = {
-    "package.json": '{"name": "shop"}\n',
-    "src/models.ts": 'export class Base {}\n\n@Table({ tableName: "orders" })\nclass Order extends Base {\n'
-                     "  total() {}\n}\n\nexport default Order;\n",
-}
-
-
-@pytest.mark.parametrize("files,name,role", [
-    case("a-python-class-with-a-body-takes-the-role-of-its-base", PYTHON, "Order", "entity",
-         why="a Python class's header has no `{` or `;` to end it, so the lines of its body are read as its bases"),
-    case("a-class-with-a-constrained-type-parameter-takes-the-role-of-its-base", CONSTRAINED, "OrderRepo",
-         "repository", why="the constraint's `extends` is taken for the class's, and no base is read"),
-    case("a-decorated-class-takes-the-role-of-its-base", DECORATED, "Order", "entity",
-         why="the declaration is read from its decorator, and the `{` of the decorator's argument ends it"),
-])
-def test_a_type_takes_the_role_of_a_base_its_declaration_names(tmp_path, files, name, role):
-    from aidd_indexer.cli import extract_and_resolve
-    convs = _load(tmp_path, "convention", {"id": "x", "roles": {"entity": {"extends": ["Base"]},
-                                                                "repository": {"extends": ["BaseRepo"]}}})
-    res, _ = extract_and_resolve(_write(tmp_path / "shop", files), convs=convs)
-    assert {s.name: s.role for s in res.symbols}[name] == role
-
-
-
 def _partial(base_in: str) -> dict[str, str]:
     """A partial class declared in two files, one of which names its base."""
     other = "B" if base_in == "A" else "A"

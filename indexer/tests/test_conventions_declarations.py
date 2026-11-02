@@ -1,0 +1,99 @@
+"""What a type's declaration gives its roles: the line that declares the type by its name, past its attributes and
+decorators; the bases each language writes there; and every declaration of an id."""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+import yaml
+
+import convention_records as R
+
+ROLES = {"id": "x", "roles": {"entity": {"extends": ["Base"]}, "repository": {"extends": ["BaseRepo"]},
+                              "controller": {"extends": ["ControllerBase"]}}}
+PYPROJECT = {"pyproject.toml": "[project]\nname = 'shop'\n", "shop/__init__.py": ""}
+PACKAGE = {"package.json": '{"name": "shop"}\n'}
+CSPROJ = {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>\n'}
+LONG_DECORATOR = "@Component({\n" + "".join(f"  option{i}: {i},\n" for i in range(18)) + "})\n"
+
+CASES = [
+    ("a Python class with a body", PYPROJECT | {
+        "shop/models.py": "class Base:\n    pass\n\n\nclass Order(Base):\n    def total(self):\n        return 0\n"},
+     "Order", "entity"),
+    ("a Python class of one line", PYPROJECT | {"shop/models.py": "class Base: pass\nclass One(Base): pass\n"},
+     "One", "entity"),
+    ("a Python decorator with a brace", PYPROJECT | {
+        "shop/models.py": 'class Base:\n    pass\n\n\n@register({"kind": 1})\nclass Order(Base):\n    x = 1\n'},
+     "Order", "entity"),
+    ("a constrained type parameter", PACKAGE | {
+        "src/repo.ts": "export class BaseRepo<T> {}\n\nexport class OrderRepo<T extends object> extends BaseRepo<T> {\n"
+                       "  find() {}\n}\n"},
+     "OrderRepo", "repository"),
+    ("an arrow in a constraint", PACKAGE | {
+        "src/repo.ts": "export class BaseRepo<T> {}\n\n"
+                       "export class Mapper<T extends (a: string) => number> extends BaseRepo<T> {\n}\n"},
+     "Mapper", "repository"),
+    ("a type parameter with no constraint", PACKAGE | {
+        "src/repo.ts": "export class BaseRepo<T> {}\n\nexport class Plain<T> extends BaseRepo<T> {\n}\n"},
+     "Plain", "repository"),
+    ("a decorator with a brace", PACKAGE | {
+        "src/models.ts": 'export class Base {}\n\n@Table({ tableName: "orders" })\nclass Order extends Base {\n'
+                         "  total() {}\n}\n\nexport default Order;\n"},
+     "Order", "entity"),
+    ("a decorator longer than the window", PACKAGE | {
+        "src/models.ts": "export class Base {}\n\n" + LONG_DECORATOR
+                         + "class Big extends Base {\n}\n\nexport default Big;\n"},
+     "Big", "entity"),
+    ("a name another declares as its prefix", PACKAGE | {
+        "src/models.ts": 'export class Base {}\n\n@Doc({ text: "class OrderLine" })\nclass Order extends Base {\n}\n\n'
+                         "export default Order;\n"},
+     "Order", "entity"),
+    ("a brace in a C# attribute", CSPROJ | {
+        "src/Shop/Api/OrdersController.cs": 'namespace Shop.Api;\n\n[ApiController]\n'
+                                            '[Route("api/v{version:apiVersion}/[controller]")]\n'
+                                            "public class OrdersController : ControllerBase\n{\n}\n"},
+     "OrdersController", "controller"),
+    ("a C# line that ends with the colon", CSPROJ | {
+        "src/Shop/Spread.cs": "namespace Shop;\n\npublic class Spread :\n    Base\n{\n}\n"},
+     "Spread", "entity"),
+]
+
+
+def _roles(tmp_path: Path, files: dict[str, str]) -> dict[str, str | None]:
+    """Each type's role after a real extraction of `files`."""
+    from aidd_indexer import conventions
+    from aidd_indexer.cli import extract_and_resolve
+    from aidd_indexer.core.model import RepoInfo
+    root = tmp_path / "shop"
+    for rel, text in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text)
+    (tmp_path / "convention.yaml").write_text(yaml.safe_dump(ROLES))
+    convs = conventions.load([{"path": str(tmp_path / "convention.yaml")}], "shop")
+    repo = RepoInfo(tenant="t", name="shop", ref="main", commit_sha="x", root=str(root))
+    res, _ = extract_and_resolve(repo, convs=convs)
+    return {s.name: s.role for s in res.symbols}
+
+
+@pytest.mark.parametrize("files,name,role", [pytest.param(*c[1:], id=c[0]) for c in CASES])
+def test_a_type_takes_the_role_of_a_base_its_declaration_names(tmp_path, files, name, role):
+    assert _roles(tmp_path, files)[name] == role
+
+
+def _prepared(tmp_path: Path, text: str, symbols: list) -> object:
+    from aidd_indexer.conventions.declarative import DeclarativeConvention
+    (tmp_path / "Types.cs").write_text(text)
+    (tmp_path / "convention.yaml").write_text(yaml.safe_dump(
+        {"id": "x", "roles": {"first": {"extends": ["Base1"]}, "second": {"extends": ["Base2"]}}}))
+    conv = DeclarativeConvention(tmp_path / "convention.yaml")
+    conv.prepare(R.context(R.result(str(tmp_path), files=[R.file("Types.cs")], symbols=symbols)))
+    return conv
+
+
+def test_a_type_no_line_declares_by_its_name_is_read_from_its_first_line(tmp_path: Path):
+    """Its name on the line after the keyword: the declaration is read from the symbol's first line, and the search
+    stays within the symbol's lines, so another type of that name further down is not taken for it."""
+    split = R.symbol("Order", "Types.cs", line=1)
+    split.line_end = 2
+    conv = _prepared(tmp_path, "public class\n    Order : Base1 { }\n\npublic class Order : Base2 { }\n", [split])
+    assert conv.role_of(split, None) == "first"
