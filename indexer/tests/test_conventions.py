@@ -13,7 +13,6 @@ FIX = Path(__file__).parent / "fixtures" / "go-http-mix"
 
 
 def _run(convs):
-    from aidd_indexer import conventions
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
 
