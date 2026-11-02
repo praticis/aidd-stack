@@ -5,8 +5,8 @@ declaration the checker resolves it to (`ts_heritage.js`, each file read with it
 declaration of the repo, the reason is counted, and a package's apart: the checker has no package, so the repo's
 `tsconfig.json` maps that name to its own file. A global type the repo augments (`declare global { interface Window }`)
 is the platform's. `index only` is a declaration the checker does not give, and `different` another one. A declaration
-in a function or a namespace, and a name a module declares twice, which TS merges, are counted apart. The compiler
-reads and types the files; nothing runs.
+in a function or a namespace, a name a module declares twice, which TS merges, and a base a class expression declares,
+which is no symbol, are counted apart. The compiler reads and types the files; nothing runs.
 
     ts_heritage.py [N]    N samples of each kind of difference (default 5)
 
@@ -57,11 +57,12 @@ def oracle(root: Path, rels: list[str]) -> list[dict]:
 
 
 def kind_of(mine: TypeRef | Unknown, declared: list[str]) -> str:
-    repo = [d for d in declared if d not in ("outside", "other") and not d.partition(":")[2].startswith("global.")]
+    repo = [d for d in declared if d not in ("outside", "other", "expression")
+            and not d.partition(":")[2].startswith("global.")]
     if isinstance(mine, TypeRef):
         return "same" if qualified(mine) in repo else "different" if repo else "index only"
     if not repo:
-        return "none of the repo's"
+        return "a class expression's" if "expression" in declared else "none of the repo's"
     return "a package's, which the repo's tsconfig.json maps to its file" if mine == OUTSIDE \
         else f"index unknown: {mine.reason}"
 

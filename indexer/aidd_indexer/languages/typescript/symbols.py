@@ -82,7 +82,7 @@ class TypeScriptSupport(LanguageSupport):
 
     # ---- types: one index for TS's three languages, whose files import one another
     def file_facts(self, root: Node, src: bytes, index: Any = None) -> TsTypes:
-        return type_facts(root)
+        return type_facts(root, js=self.id == "javascript")
 
     def type_index(self, ctx: ResolveContext) -> TsTypeIndex:
         return TsTypeIndex(ctx)

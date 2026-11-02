@@ -4,7 +4,9 @@
 // line, whether it is a statement of its file (`top`), the clause (`extends` or `implements`) and the declarations,
 // each as `path:Name` (its file relative to the project, without its last extension), or `outside` for one the project
 // does not hold; `other` where the name is no class or interface, and none where the checker gives the expression no
-// symbol (a mixin's call). Each file is read with the `baseUrl` and `paths` of its config (`ts_configs.js`). With `--members`, also
+// symbol (a mixin's call). Where a class's `extends` names a value, the declaration is that of the class's base type as
+// the checker types it, or `expression` for a class expression's. Each file is read with the `baseUrl` and `paths` of
+// its config (`ts_configs.js`). With `--members`, also
 // each member of each class and interface, with its form; with `--files`, only the files of the one project whose
 // paths, relative to it, come one per line on stdin. The checker reads and types the files; nothing runs.
 //
@@ -61,6 +63,16 @@ function declarations(checker, project, expr) {
   return all.length && !types.length ? ["other"] : [...new Set(types.map((d) => where(project, d)))].sort();
 }
 
+// A value a class extends, as a class a CommonJS module exports in an object literal (`module.exports = { A }`), is a
+// property to the symbol and the class to the type.
+function baseTypes(checker, project, node) {
+  const type = checker.getDeclaredTypeOfSymbol(checker.getSymbolAtLocation(node.name));
+  const found = checker.getBaseTypes(type).flatMap((b) => (b.symbol && b.symbol.declarations) || [])
+    .filter((d) => ts.isClassDeclaration(d) || ts.isClassExpression(d))
+    .map((d) => (ts.isClassExpression(d) ? "expression" : where(project, d)));
+  return found.length ? [...new Set(found)].sort() : ["other"];
+}
+
 const has = (node, kind) => (ts.getModifiers(node) || []).some((m) => m.kind === kind);
 
 function form(member) {
@@ -105,7 +117,10 @@ function report(program, project, arg, files, withMembers) {
         for (const clause of node.heritageClauses || []) {
           const which = clause.token === ts.SyntaxKind.ExtendsKeyword ? "extends" : "implements";
           for (const t of clause.types) {
-            const declared = declarations(checker, project, t.expression);
+            let declared = declarations(checker, project, t.expression);
+            if (which === "extends" && ts.isClassDeclaration(node) && declared[0] === "other") {
+              declared = baseTypes(checker, project, node);
+            }
             console.log(JSON.stringify({ ...base, clause: which, declared }));
           }
         }

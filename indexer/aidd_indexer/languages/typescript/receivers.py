@@ -8,6 +8,7 @@ from __future__ import annotations
 from tree_sitter import Node
 
 from ...core.types import Unknown
+from .commonjs import required_name
 from .forms import LOCAL_TYPE, METHOD_RESULT, VALUE, WRAPPERS, in_function, of_type, written
 from .scope_model import CLASSES, FIELDS, PARAMETERS
 from .scopes import TsScopes
@@ -209,9 +210,8 @@ def _called(function: Node | None, scopes: TsScopes) -> Held:
 
 
 def _required(value: Node) -> bool:
-    """A `require("./m")`, whose module the type index reads from the module's facts."""
-    function = value.child_by_field_name("function") if value.type == "call_expression" else None
-    return function is not None and _text(function) == "require"
+    """A `require("./m")`, or a name of one (`require("./m").a`), which the type index reads from the module's facts."""
+    return required_name(value) is not None
 
 
 def _required_name(name: Node, declarator: Node) -> Held:
