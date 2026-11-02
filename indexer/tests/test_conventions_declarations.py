@@ -48,6 +48,10 @@ CASES = [
         "src/models.ts": 'export class Base {}\n\n@Doc({ text: "class OrderLine" })\nclass Order extends Base {\n}\n\n'
                          "export default Order;\n"},
      "Order", "entity"),
+    ("a line separator in a string above", PACKAGE | {
+        "src/models.ts": 'export class Base {}\nconst s = "a\u2028b\u0085c";\nconst r = 1;\rconst q = 2;\n'
+                         "export class Order extends Base {}\n"},
+     "Order", "entity"),
     ("a brace in a C# attribute", CSPROJ | {
         "src/Shop/Api/OrdersController.cs": 'namespace Shop.Api;\n\n[ApiController]\n'
                                             '[Route("api/v{version:apiVersion}/[controller]")]\n'

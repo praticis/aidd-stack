@@ -178,7 +178,9 @@ class Declarations:
     def _lines(self, f: FileInfo) -> list[str]:
         if f.id not in self._sources:
             try:
-                self._sources[f.id] = (self._root / f.path).read_text(encoding="utf-8", errors="replace").splitlines()
+                # bytes split by "\n" alone, as the extraction reads and numbers them: read_text() turns a lone "\r"
+                # into a line, and splitlines() also breaks at "\x85" or "\u2028"
+                self._sources[f.id] = (self._root / f.path).read_bytes().decode("utf-8", errors="replace").split("\n")
             except OSError:
                 self._sources[f.id] = []
         return self._sources[f.id]
