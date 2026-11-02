@@ -65,6 +65,20 @@ from .declarations import Declarations
 RULE_KINDS = ("forbid_import", "endpoints_only_in", "http_calls_only_in", "roles_in")
 
 
+def _checked_rules(path: Path, raw: list | None) -> list[dict[str, Any]]:
+    rules = list(raw or [])
+    for i, r in enumerate(rules):
+        kinds = [k for k in RULE_KINDS if isinstance(r, dict) and k in r]
+        if not kinds:
+            raise ConfigError(f"{path}: rule #{i + 1} must have one of {' / '.join(RULE_KINDS)}")
+        if len(kinds) > 1:
+            name = f"rule #{i + 1}" + (f" '{r['id']}'" if r.get("id") else "")
+            raise ConfigError(f"{path}: {name} names {len(kinds)} kinds ({', '.join(kinds)}): a rule has one")
+        r.setdefault("id", f"rule{i + 1}")
+        r.setdefault("severity", "warning")
+    return rules
+
+
 class DeclarativeConvention(Convention):
     def __init__(self, path: Path):
         self.path = path
@@ -97,12 +111,7 @@ class DeclarativeConvention(Convention):
         self.owner_sig: tuple[str, ...] = tuple(members.get("signature_contains") or [])
         self.owner_methods: frozenset[str] = frozenset(members.get("names") or [])
         self.entry_roles: dict[str, frozenset[str]] = {str(k): frozenset(v or []) for k, v in (ep.get("roles") or {}).items()}
-        self.rules: list[dict[str, Any]] = list(raw.get("rules") or [])
-        for i, r in enumerate(self.rules):
-            if not isinstance(r, dict) or not any(k in r for k in RULE_KINDS):
-                raise ConfigError(f"{path}: rule #{i + 1} must have one of {' / '.join(RULE_KINDS)}")
-            r.setdefault("id", f"rule{i + 1}")
-            r.setdefault("severity", "warning")
+        self.rules = _checked_rules(path, raw.get("rules"))
         names = [a[0] for a in self.architectures]
         self.forced: str | None = None
         self.architecture: str | None = None
@@ -130,7 +139,10 @@ class DeclarativeConvention(Convention):
     # ---- whole-repo view: layout and roles
     def prepare(self, ctx: ConventionContext) -> None:
         self.architecture, self._arch_layers = layout.select(self.architectures, self.forced, ctx.res.modules)
-        self._role, self._file_roles, self._path_layer = {}, {}, {}
+        self._role, self._file_roles = {}, {}
+        # every file, so a rule of this layout reads it whichever convention answers its layer first
+        self._path_layer = {f.id: layer for f in ctx.files_by_id.values()
+                            if (layer := layout.place(f.path, self._arch_layers + self.layers)) is not None}
         if not self.roles:
             return
         types = [s for s in ctx.res.symbols if s.kind in TYPE_KINDS]
@@ -142,10 +154,9 @@ class DeclarativeConvention(Convention):
         return self._role.get(symbol.id)
 
     def layer_of(self, file: FileInfo, module: ModuleInfo | None) -> str | None:
-        for layer, rx in self._arch_layers + self.layers:
-            if rx.match(file.path):
-                self._path_layer[file.id] = layer
-                return layer
+        layer = layout.place(file.path, self._arch_layers + self.layers)
+        if layer is not None:
+            return layer
         by_role = {self.role_layer.get(r) for r in self._file_roles.get(file.id, ())}
         if len(by_role) == 1:                   # unplaced by the layout: the roles it declares agree on one layer
             return next(iter(by_role))

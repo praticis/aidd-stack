@@ -7,131 +7,39 @@ from pathlib import Path
 import pytest
 import yaml
 
-import convention_records as R
-
 
 def case(id, *values, why):
     return pytest.param(*values, id=id, marks=pytest.mark.xfail(strict=True, reason=why))
 
 
-def _write(root: Path, files: dict[str, str]):
+LONG = {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
+        "src/Shop/Builder.cs": "namespace Shop;\n\npublic class Builder\n    : BuilderBase,\n"
+                               + "".join(f"        IWith{i},\n" for i in range(16)) + "        Base\n{\n}\n"}
+SUBSCRIPT = {"pyproject.toml": "[project]\nname = 'shop'\n", "shop/__init__.py": "",
+             "shop/lookups.py": "class Base:\n    pass\n\n\nclass IntLookup(Base[int]):\n    pass\n"}
+CALL = {"package.json": '{"name": "shop"}\n',
+        "src/options.ts": "export class Base {}\n\nclass Options\n  extends Record({\n    a: 1,\n  })\n"
+                          "  implements Base\n{\n}\n\nexport default Options;\n"}
+
+
+@pytest.mark.parametrize("files,name", [
+    case("a-declaration-longer-than-the-window-gives-its-last-bases", LONG, "Builder",
+         why="the reading takes 15 lines from the line that declares the type, and the base list goes on past them"),
+    case("a-python-base-with-a-subscript-gives-its-name", SUBSCRIPT, "IntLookup",
+         why="the subscript stays on the name, which is then no identifier"),
+    case("a-brace-in-a-call-in-a-base-list-hides-no-base", CALL, "Options",
+         why="the `{` of the call's argument ends the declaration before its `implements`"),
+])
+def test_a_type_takes_the_role_of_a_base_its_declaration_writes(tmp_path: Path, files, name):
+    from aidd_indexer import conventions
+    from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
+    root = tmp_path / "shop"
     for rel, text in files.items():
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         (root / rel).write_text(text)
-    return RepoInfo(tenant="t", name=root.name, ref="main", commit_sha="x", root=str(root))
-
-
-def _load(tmp_path: Path, name: str, spec: dict) -> list:
-    from aidd_indexer import conventions
-    path = tmp_path / f"{name}.yaml"
-    path.write_text(yaml.safe_dump(spec))
-    return conventions.load([{"path": str(path)}], "shop")
-
-
-@pytest.mark.parametrize("rule", [
-    case("a-rule-with-two-kinds-drops-none",
-         {"id": "two", "endpoints_only_in": ["api"], "http_calls_only_in": ["infra"]},
-         why="a rule's first kind in the order the check reads them runs, and the others are ignored"),
-])
-def test_a_rule_with_two_kinds_drops_none(tmp_path, rule):
-    """Either loading refuses the rule, naming it, or the check reports each of its kinds."""
-    from aidd_indexer import conventions
-    from aidd_indexer.core.config import ConfigError
-    try:
-        convs = _load(tmp_path, "convention", {"id": "x", "rules": [rule]})
-    except ConfigError as e:
-        assert "rule #1" in str(e) or "two" in str(e)
-        return
-    res = R.result(files=[R.file("src/Orders.cs")], endpoints=[R.endpoint("GET", "/orders", "src/Orders.cs", 3)],
-                   http_calls=[R.http_call("POST", "/pay", "src/Orders.cs", 5, caller_id="src/Orders.cs")])
-    conventions.apply(convs, res, R.resolved())
-    assert sorted(v.line for v in res.violations) == [3, 5]
-
-
-PYTHON = {
-    "pyproject.toml": "[project]\nname = 'shop'\n",
-    "shop/__init__.py": "",
-    "shop/models.py": "class Base:\n    pass\n\n\nclass Order(Base):\n    def total(self):\n        return 0\n",
-}
-
-CONSTRAINED = {
-    "package.json": '{"name": "shop"}\n',
-    "src/repo.ts": "export class BaseRepo<T> {}\n\nexport class OrderRepo<T extends object> extends BaseRepo<T> {\n"
-                   "  find() {}\n}\n",
-}
-
-# A class not exported where it is declared starts at its decorators.
-DECORATED = {
-    "package.json": '{"name": "shop"}\n',
-    "src/models.ts": 'export class Base {}\n\n@Table({ tableName: "orders" })\nclass Order extends Base {\n'
-                     "  total() {}\n}\n\nexport default Order;\n",
-}
-
-
-@pytest.mark.parametrize("files,name,role", [
-    case("a-python-class-with-a-body-takes-the-role-of-its-base", PYTHON, "Order", "entity",
-         why="a Python class's header has no `{` or `;` to end it, so the lines of its body are read as its bases"),
-    case("a-class-with-a-constrained-type-parameter-takes-the-role-of-its-base", CONSTRAINED, "OrderRepo",
-         "repository", why="the constraint's `extends` is taken for the class's, and no base is read"),
-    case("a-decorated-class-takes-the-role-of-its-base", DECORATED, "Order", "entity",
-         why="the declaration is read from its decorator, and the `{` of the decorator's argument ends it"),
-])
-def test_a_type_takes_the_role_of_a_base_its_declaration_names(tmp_path, files, name, role):
-    from aidd_indexer.cli import extract_and_resolve
-    convs = _load(tmp_path, "convention", {"id": "x", "roles": {"entity": {"extends": ["Base"]},
-                                                                "repository": {"extends": ["BaseRepo"]}}})
-    res, _ = extract_and_resolve(_write(tmp_path / "shop", files), convs=convs)
-    assert {s.name: s.role for s in res.symbols}[name] == role
-
-
-
-def _partial(base_in: str) -> dict[str, str]:
-    """A partial class declared in two files, one of which names its base."""
-    other = "B" if base_in == "A" else "A"
-    return {"src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
-            f"src/Shop/{base_in}/Order.cs": "namespace Shop;\n\npublic partial class Order : IEntity { }\n",
-            f"src/Shop/{other}/Order.cs": "namespace Shop;\n\npublic partial class Order { }\n"}
-
-
-@pytest.mark.parametrize("base", [
-    case("a-partial-class-takes-the-role-of-a-base-any-of-its-declarations-names", "IEntity",
-         why="a partial class's declarations share one id, and the bases read are the last one's in path order"),
-])
-def test_a_partial_class_has_the_bases_of_all_its_declarations(tmp_path, base):
-    from aidd_indexer.cli import extract_and_resolve
-    convs = _load(tmp_path, "convention", {"id": "x", "roles": {"entity": {"extends": [base]}}})
-    roles = {}
-    for base_in in ("A", "B"):
-        res, _ = extract_and_resolve(_write(tmp_path / base_in / "shop", _partial(base_in)), convs=convs)
-        roles[base_in] = {s.role for s in res.symbols if s.name == "Order"}
-    assert roles == {"A": {"entity"}, "B": {"entity"}}
-
-HANDLER = {
-    "src/Shop/Shop.csproj": '<Project Sdk="Microsoft.NET.Sdk"></Project>\n',
-    "src/Shop/Infra/PlaceOrderHandler.cs": (
-        "namespace Shop.Infra;\n\npublic class PlaceOrderHandler : ICommandHandler<PlaceOrder> { }\n"),
-}
-
-# Both place the handler's file in `infra`; only the second has a rule on where a handler lives.
-LAYOUT = {"id": "layout", "layers": {"infra": ["src/*/Infra/**"]}}
-HANDLERS = {"id": "handlers", "layers": {"infra": ["src/*/Infra/**"]},
-            "roles": {"command-handler": {"extends": ["ICommandHandler"]}},
-            "rules": [{"id": "handlers-in-core", "roles_in": {"command-handler": ["core"]}}]}
-
-
-@pytest.mark.parametrize("first,second", [
-    case("roles-in-gives-the-same-violations-in-either-order", LAYOUT, HANDLERS,
-         why="`roles_in` reads only the files its convention was asked the layer of, so a convention that answers "
-             "first hides them"),
-])
-def test_a_conventions_rules_do_not_depend_on_the_order_of_the_conventions(tmp_path, first, second):
-    from aidd_indexer.cli import extract_and_resolve
-    repo = _write(tmp_path / "shop", HANDLER)
-    a, b = _load(tmp_path, "first", first), _load(tmp_path, "second", second)
-
-    def violations(convs):
-        res, _ = extract_and_resolve(repo, convs=convs)
-        return sorted((v.convention, v.rule, v.line) for v in res.violations)
-
-    assert violations(a + b) == violations(b + a)
+    (tmp_path / "convention.yaml").write_text(yaml.safe_dump({"id": "x", "roles": {"entity": {"extends": ["Base"]}}}))
+    convs = conventions.load([{"path": str(tmp_path / "convention.yaml")}], "shop")
+    repo = RepoInfo(tenant="t", name="shop", ref="main", commit_sha="x", root=str(root))
+    res, _ = extract_and_resolve(repo, convs=convs)
+    assert {s.name: s.role for s in res.symbols}[name] == "entity"

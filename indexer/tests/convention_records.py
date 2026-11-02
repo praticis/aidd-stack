@@ -13,8 +13,8 @@ def module(id: str) -> ModuleInfo:
     return ModuleInfo(id=id, name=id, path=id, kind="csproj")
 
 
-def file(path: str, module_id: str = "m") -> FileInfo:
-    return FileInfo(id=path, path=path, language="csharp", loc=1, content_hash="", module_id=module_id)
+def file(path: str, module_id: str = "m", language: str = "csharp") -> FileInfo:
+    return FileInfo(id=path, path=path, language=language, loc=1, content_hash="", module_id=module_id)
 
 
 def symbol(name: str, file_id: str, line: int = 1, signature: str = "", kind: str = "class",
