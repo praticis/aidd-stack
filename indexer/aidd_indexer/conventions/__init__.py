@@ -23,17 +23,16 @@ import fnmatch
 import importlib
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from ..core.config import ConfigError
 from ..core.dispatch import DispatchRule
 from ..core.scan_patterns import ScanPatterns
-from ..core.model import ExtractionResult
-from ..core.resolve import Resolved
+from ..core.model import ExtractionResult, FileInfo, ModuleInfo
+from ..core.resolve import TYPE_KINDS, Resolved
 from .base import Convention, ConventionContext
 
 ENTRY_POINT_GROUP = "aidd.conventions"
-TYPE_KINDS = frozenset({"class", "interface", "struct", "record", "type"})
 
 
 def _resolve_class(ref: str) -> type[Convention]:
@@ -85,6 +84,70 @@ def dispatch_rules(convs: list[Convention]) -> list[DispatchRule]:
     return [r for c in convs or [] for r in c.dispatch()]
 
 
+def _first(convs: list[Convention], ask: Callable[[Convention], Any],
+           answered: Callable[[Any], bool] = bool) -> Any:
+    """The first answer, in the conventions' order; those after it are not asked."""
+    for c in convs:
+        v = ask(c)
+        if answered(v):
+            return v
+    return None
+
+
+def _roles(convs: list[Convention], res: ExtractionResult, files_by_id: dict[str, FileInfo]) -> None:
+    for s in res.symbols:
+        f = files_by_id.get(s.file_id)
+        if f is None or s.kind not in TYPE_KINDS:
+            continue
+        role = _first(convs, lambda c: c.role_of(s, f))
+        if role is not None:
+            s.role = role
+
+
+def _layers(convs: list[Convention], res: ExtractionResult, ctx: ConventionContext,
+            modules: dict[str, ModuleInfo]) -> None:
+    for f in res.files:
+        layer = _first(convs, lambda c: c.layer_of(f, modules.get(f.module_id)))
+        if layer is not None:
+            f.layer = layer
+            ctx.file_layer[f.id] = layer
+
+
+def _module_layers(res: ExtractionResult, ctx: ConventionContext, modules: dict[str, ModuleInfo]) -> None:
+    """A module's layer is the layer of its files when they agree."""
+    by_mod: dict[str, set[str]] = {}
+    for f in res.files:
+        if f.layer:
+            by_mod.setdefault(f.module_id, set()).add(f.layer)
+    for mid, layers in by_mod.items():
+        if len(layers) == 1 and mid in modules:
+            modules[mid].layer = next(iter(layers))
+            ctx.module_layer[mid] = modules[mid].layer  # type: ignore[assignment]
+
+
+def _targets(convs: list[Convention], res: ExtractionResult, files_by_id: dict[str, FileInfo]) -> None:
+    for call in res.http_calls:
+        f = files_by_id.get(call.file_id)
+        if f is None:
+            continue
+        target = _first(convs, lambda c: c.target_of(call, f))
+        if target is not None:
+            call.target_hint = target
+
+
+def _entry_points(convs: list[Convention], res: ExtractionResult, files_by_id: dict[str, FileInfo]) -> None:
+    syms = {s.id: s for s in res.symbols}
+    for s in res.symbols:
+        f = files_by_id.get(s.file_id)
+        if f is None or s.kind not in ("function", "method"):
+            continue
+        owner = syms.get(s.parent_id) if s.parent_id else None
+        # False is an answer: a convention may deny what the language's heuristic says
+        v = _first(convs, lambda c: c.is_entry_point(s, f, owner), lambda v: v is not None)
+        if v is not None:
+            s.is_entry_point = v
+
+
 def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:
     if not convs:
         return
@@ -95,50 +158,10 @@ def apply(convs: list[Convention], res: ExtractionResult, rv: Resolved) -> None:
         c.prepare(ctx)
     res.conventions = [c.describe() for c in convs]
     res.architecture = next((c.architecture for c in convs if c.architecture), None)
-    for s in res.symbols:
-        f = files_by_id.get(s.file_id)
-        if f is None or s.kind not in TYPE_KINDS:
-            continue
-        for c in convs:
-            role = c.role_of(s, f)
-            if role:
-                s.role = role
-                break
-    for f in res.files:
-        for c in convs:
-            layer = c.layer_of(f, modules.get(f.module_id))
-            if layer:
-                f.layer = layer
-                ctx.file_layer[f.id] = layer
-                break
-    # a module's layer = the layer of its files when they agree
-    by_mod: dict[str, set[str]] = {}
-    for f in res.files:
-        if f.layer:
-            by_mod.setdefault(f.module_id, set()).add(f.layer)
-    for mid, layers in by_mod.items():
-        if len(layers) == 1 and mid in modules:
-            modules[mid].layer = next(iter(layers))
-            ctx.module_layer[mid] = modules[mid].layer  # type: ignore[assignment]
-    for call in res.http_calls:
-        f = files_by_id.get(call.file_id)
-        if f is None:
-            continue
-        for c in convs:
-            t = c.target_of(call, f)
-            if t:
-                call.target_hint = t
-                break
-    syms = {s.id: s for s in res.symbols}
-    for s in res.symbols:
-        f = files_by_id.get(s.file_id)
-        if f is None or s.kind not in ("function", "method"):
-            continue
-        owner = syms.get(s.parent_id) if s.parent_id else None
-        for c in convs:
-            v = c.is_entry_point(s, f, owner)
-            if v is not None:
-                s.is_entry_point = v
-                break
+    _roles(convs, res, files_by_id)            # before entry points, which may read an owner's role
+    _layers(convs, res, ctx, modules)
+    _module_layers(res, ctx, modules)
+    _targets(convs, res, files_by_id)
+    _entry_points(convs, res, files_by_id)
     for c in convs:
         res.violations.extend(c.check(ctx))
