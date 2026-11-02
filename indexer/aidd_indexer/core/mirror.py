@@ -73,21 +73,15 @@ def _git(args: list[str], timeout: int) -> tuple[int, str]:
     return out.returncode, (msg[-1] if msg else "")
 
 
-def sync(workspace_repo: Path, mirror: Path, remote: bool = True, timeout: int = 300) -> tuple[bool, str]:
-    """Bring `mirror` up to date. Returns (remote_ok, message); the local sync never fails silently —
-    it raises, because without it there is nothing to index."""
+def _create(mirror: Path) -> None:
     if not (mirror / "HEAD").exists():
         mirror.mkdir(parents=True, exist_ok=True)
         rc, msg = _git(["init", "--bare", "--quiet", str(mirror)], 60)
         if rc != 0:
             raise RuntimeError(f"cannot create mirror {mirror}: {msg}")
-    m = ["-C", str(mirror)]
-    url = remote_url(workspace_repo)
-    if url:
-        _git([*m, "config", "remote.origin.url", url], 30)
-    else:
-        _git([*m, "config", "--unset", "remote.origin.url"], 30)
 
+
+def _local_sync(m: list[str], workspace_repo: Path, timeout: int) -> None:
     # 1. local: whatever the developer has (their branches + their view of origin). The first copy
     #    of a large repo over Docker Desktop's file sharing can fail its connectivity check ("did not
     #    send all necessary objects") although the pack arrived; a second pass completes it.
@@ -104,6 +98,8 @@ def sync(workspace_repo: Path, mirror: Path, remote: bool = True, timeout: int =
     if head:
         _git([*m, "symbolic-ref", "refs/remotes/origin/HEAD", head], 30)
 
+
+def _remote_fetch(m: list[str], url: str, remote: bool, timeout: int) -> tuple[bool, str]:
     # 2. remote: what the team pushed (service credential only)
     if not remote:
         return False, "local only (--no-fetch)"
@@ -119,3 +115,17 @@ def sync(workspace_repo: Path, mirror: Path, remote: bool = True, timeout: int =
     if rc != 0:
         return False, f"remote fetch failed ({msg}) — indexed on local refs"
     return True, "ok"
+
+
+def sync(workspace_repo: Path, mirror: Path, remote: bool = True, timeout: int = 300) -> tuple[bool, str]:
+    """Bring `mirror` up to date. Returns (remote_ok, message); the local sync never fails silently —
+    it raises, because without it there is nothing to index."""
+    _create(mirror)
+    m = ["-C", str(mirror)]
+    url = remote_url(workspace_repo)
+    if url:
+        _git([*m, "config", "remote.origin.url", url], 30)
+    else:
+        _git([*m, "config", "--unset", "remote.origin.url"], 30)
+    _local_sync(m, workspace_repo, timeout)
+    return _remote_fetch(m, url, remote, timeout)

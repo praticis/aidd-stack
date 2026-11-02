@@ -16,7 +16,7 @@ from pathlib import Path
 
 from .config import ConfigError
 from .gitinfo import default_ref, fetch, has_git, is_merged_into, list_branches, remote_url
-from .manifest import Source, TenantConfig
+from .manifest import ActivePolicy, Source, TenantConfig
 from .mirror import mirror_path, mirror_root, sync
 
 
@@ -78,6 +78,39 @@ def discover_local(source: Source, tenant: TenantConfig) -> list[RepoCandidate]:
     return repos
 
 
+def _mirrored(found: list[RepoCandidate], tenant: str, mroot: Path, remote: bool, progress,
+              errors: list[str] | None, notes: list[str]) -> list[RepoCandidate]:
+    """The repos whose mirror synced, each now read from its mirror; a sync that raises skips the repo."""
+    kept = []
+    for r in found:
+        if progress:
+            progress(f"[mirror] {r.name}")
+        mp = mirror_path(mroot, tenant, r.name)
+        try:
+            ok, msg = sync(r.path, mp, remote=remote)
+        except RuntimeError as e:
+            (errors if errors is not None else notes).append(f"{r.name}: {e} — skipped")
+            continue
+        if remote:
+            r.remote = "ok" if ok else msg
+            if not ok:
+                notes.append(f"{r.name}: {msg}")
+        r.url = remote_url(r.path)
+        r.path = mp
+        kept.append(r)
+    return kept
+
+
+def _fetched(found: list[RepoCandidate], progress, notes: list[str]) -> None:
+    for r in found:
+        if progress:
+            progress(f"[fetch] {r.name}")
+        ok, msg = fetch(r.path)
+        r.remote = "ok" if ok else f"git fetch failed ({msg}) — planned on local refs"
+        if not ok:
+            notes.append(f"{r.name}: {r.remote}")
+
+
 def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
                    errors: list[str] | None = None,
                    only: set[str] | None = None) -> tuple[list[RepoCandidate], list[str]]:
@@ -95,32 +128,9 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
         if s.type == "local":
             found = [r for r in discover_local(s, tenant) if not only or r.name in only]   # before any sync/fetch
             if mroot is not None:
-                kept = []
-                for r in found:
-                    if progress:
-                        progress(f"[mirror] {r.name}")
-                    mp = mirror_path(mroot, tenant.name, r.name)
-                    try:
-                        ok, msg = sync(r.path, mp, remote=do_fetch and s.fetch)
-                    except RuntimeError as e:
-                        (errors if errors is not None else notes).append(f"{r.name}: {e} — skipped")
-                        continue
-                    if do_fetch and s.fetch:
-                        r.remote = "ok" if ok else msg
-                        if not ok:
-                            notes.append(f"{r.name}: {msg}")
-                    r.url = remote_url(r.path)
-                    r.path = mp
-                    kept.append(r)
-                found = kept
+                found = _mirrored(found, tenant.name, mroot, do_fetch and s.fetch, progress, errors, notes)
             elif do_fetch and s.fetch:
-                for r in found:
-                    if progress:
-                        progress(f"[fetch] {r.name}")
-                    ok, msg = fetch(r.path)
-                    r.remote = "ok" if ok else f"git fetch failed ({msg}) — planned on local refs"
-                    if not ok:
-                        notes.append(f"{r.name}: {r.remote}")
+                _fetched(found, progress, notes)
             for r in found:
                 repos.setdefault(r.name, r)
         else:
@@ -130,39 +140,34 @@ def discover_repos(tenant: TenantConfig, do_fetch: bool = True, progress=None,
 
 # -- ref policy ----------------------------------------------------------------------------
 
-def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = None) -> tuple[list[PlanItem], str | None]:
-    now = now or datetime.now(timezone.utc)
-    if not has_git(repo.path):
-        return [], f"{repo.name}: not a git repository"
-    branches = list_branches(repo.path)
-    if not branches:
-        return [], f"{repo.name}: no branches found"
-    repo.url = repo.url or remote_url(repo.path)
-    repo.default_ref = repo.default_ref or default_ref(repo.path)
-    by_name = {b["name"]: b for b in branches}
-    pol = tenant.refs.for_repo(repo.name)
-    items: list[PlanItem] = []
-    taken: set[str] = set()
-
-    for name in pol.always:
+def _always(repo: RepoCandidate, names: list[str], by_name: dict[str, dict], taken: set[str]) -> list[PlanItem]:
+    items = []
+    for name in names:
         b = by_name.get(name)
         if b and name not in taken:
             items.append(PlanItem(repo, name, b["sha"], "always", False))
             taken.add(name)
+    return items
 
-    for glob in pol.patterns:
+
+def _patterns(repo: RepoCandidate, globs: list[str], branches: list[dict], taken: set[str]) -> list[PlanItem]:
+    items = []
+    for glob in globs:
         for b in branches:
             if b["name"] not in taken and fnmatch.fnmatch(b["name"], glob):
                 items.append(PlanItem(repo, b["name"], b["sha"], f"pattern:{glob}", False))
                 taken.add(b["name"])
+    return items
 
-    base = by_name.get(repo.default_ref) or (by_name.get(pol.always[0]) if pol.always else None)
-    cutoff = now - timedelta(days=pol.active.max_age_days)
-    active = 0
+
+def _active(repo: RepoCandidate, active: ActivePolicy, branches: list[dict], taken: set[str], base: dict | None,
+            now: datetime) -> list[PlanItem]:
+    items = []
+    cutoff = now - timedelta(days=active.max_age_days)
     for b in branches:  # already sorted by committerdate desc
-        if active >= pol.active.max_per_repo:
+        if len(items) >= active.max_per_repo:
             break
-        if b["name"] in taken or any(fnmatch.fnmatch(b["name"], g) for g in pol.active.exclude):
+        if b["name"] in taken or any(fnmatch.fnmatch(b["name"], g) for g in active.exclude):
             continue
         try:
             committed = datetime.fromisoformat(b["committed_at"])
@@ -175,8 +180,24 @@ def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = 
         age = (now - committed).days
         items.append(PlanItem(repo, b["name"], b["sha"], f"active:{age}d", True))
         taken.add(b["name"])
-        active += 1
+    return items
 
+
+def plan_refs(repo: RepoCandidate, tenant: TenantConfig, now: datetime | None = None) -> tuple[list[PlanItem], str | None]:
+    now = now or datetime.now(timezone.utc)
+    if not has_git(repo.path):
+        return [], f"{repo.name}: not a git repository"
+    branches = list_branches(repo.path)
+    if not branches:
+        return [], f"{repo.name}: no branches found"
+    repo.url = repo.url or remote_url(repo.path)
+    repo.default_ref = repo.default_ref or default_ref(repo.path)
+    by_name = {b["name"]: b for b in branches}
+    pol = tenant.refs.for_repo(repo.name)
+    taken: set[str] = set()
+    items = _always(repo, pol.always, by_name, taken) + _patterns(repo, pol.patterns, branches, taken)
+    base = by_name.get(repo.default_ref) or (by_name.get(pol.always[0]) if pol.always else None)
+    items += _active(repo, pol.active, branches, taken, base, now)
     return items, (None if items else f"{repo.name}: no ref matched the policy")
 
 

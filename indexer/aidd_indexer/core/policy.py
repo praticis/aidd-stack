@@ -98,6 +98,17 @@ def _unknown(where: str, key: str, known: list[str]) -> ConfigError:
     return ConfigError(f"{where}: unknown key '{key}'{hint}")
 
 
+def _validate_section(where: str, section: str, values: Any) -> None:
+    if not isinstance(values, dict):
+        raise ConfigError(f"{where}.{section}: must be a mapping")
+    for key, value in values.items():
+        if key not in SPEC[section]:
+            raise _unknown(f"{where}.{section}", key, list(SPEC[section]))
+        problem = SPEC[section][key](value)
+        if problem:
+            raise ConfigError(f"{where}.{section}.{key}: must be {problem} (got {value!r})")
+
+
 def _validate_layer(where: str, layer: Any, extra: tuple[str, ...] = ()) -> dict[str, Any]:
     """Check one layer against SPEC; `extra` are structural keys allowed at that level (areas, overrides)."""
     if layer is None:
@@ -109,14 +120,7 @@ def _validate_layer(where: str, layer: Any, extra: tuple[str, ...] = ()) -> dict
             continue
         if section not in SPEC:
             raise _unknown(where, section, list(SPEC) + list(extra))
-        if not isinstance(values, dict):
-            raise ConfigError(f"{where}.{section}: must be a mapping")
-        for key, value in values.items():
-            if key not in SPEC[section]:
-                raise _unknown(f"{where}.{section}", key, list(SPEC[section]))
-            problem = SPEC[section][key](value)
-            if problem:
-                raise ConfigError(f"{where}.{section}.{key}: must be {problem} (got {value!r})")
+        _validate_section(where, section, values)
     return layer
 
 
@@ -173,15 +177,15 @@ class Effective:
                 "source": str(self.path) if self.path else None, "policy": self.values, "origin": self.origin}
 
 
-def load_policy(path: str | None = None) -> Policy:
-    p = Path(path or os.getenv("AIDD_POLICY", DEFAULT_POLICY))
+def _read(p: Path) -> dict[str, Any] | None:
+    """The file's top level, checked; None when there is no file."""
     if p.is_dir():
         raise ConfigError(
             f"{p} is a directory, not a file. Docker creates a directory when a bind-mounted file is missing: "
             "~/.aidd/policy.yaml did not exist when the container was created. "
             "Fix on the host: cd ~/.aidd && docker compose down && rmdir policy.yaml && ./setup/install.sh")
     if not p.exists():
-        return Policy(path=None)
+        return None
     try:
         raw = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError as e:
@@ -193,24 +197,34 @@ def load_policy(path: str | None = None) -> Policy:
             raise _unknown(str(p), key, ["version", "defaults", "tenants"])
     if raw.get("version", 1) != 1:
         raise ConfigError(f"{p}: version {raw['version']!r} is not supported by this indexer (expected 1)")
+    return raw
 
+
+def _tenant_policy(where: str, t: Any) -> TenantPolicy:
+    t = _validate_layer(where, t, extra=("areas", "overrides"))
+    tp = TenantPolicy(base={k: v for k, v in t.items() if k not in ("areas", "overrides")})
+    for kind in ("areas", "overrides"):
+        group = t.get(kind) or {}
+        if not isinstance(group, dict):
+            raise ConfigError(f"{where}.{kind}: must be a mapping of {'area' if kind == 'areas' else 'repo name/glob'} -> policy")
+        for key, layer in group.items():
+            layer = _validate_layer(f"{where}.{kind}.{key}", layer)
+            if kind == "areas":
+                tp.areas[str(key)] = layer
+            else:
+                tp.overrides.append((str(key), layer))
+    return tp
+
+
+def load_policy(path: str | None = None) -> Policy:
+    p = Path(path or os.getenv("AIDD_POLICY", DEFAULT_POLICY))
+    raw = _read(p)
+    if raw is None:
+        return Policy(path=None)
     policy = Policy(path=p, defaults=_validate_layer(f"{p}: defaults", raw.get("defaults")))
     tenants = raw.get("tenants") or {}
     if not isinstance(tenants, dict):
         raise ConfigError(f"{p}: 'tenants' must be a mapping of tenant -> policy")
     for name, t in tenants.items():
-        where = f"{p}: tenants.{name}"
-        t = _validate_layer(where, t, extra=("areas", "overrides"))
-        tp = TenantPolicy(base={k: v for k, v in t.items() if k not in ("areas", "overrides")})
-        for kind in ("areas", "overrides"):
-            group = t.get(kind) or {}
-            if not isinstance(group, dict):
-                raise ConfigError(f"{where}.{kind}: must be a mapping of {'area' if kind == 'areas' else 'repo name/glob'} -> policy")
-            for key, layer in group.items():
-                layer = _validate_layer(f"{where}.{kind}.{key}", layer)
-                if kind == "areas":
-                    tp.areas[str(key)] = layer
-                else:
-                    tp.overrides.append((str(key), layer))
-        policy.tenants[str(name)] = tp
+        policy.tenants[str(name)] = _tenant_policy(f"{p}: tenants.{name}", t)
     return policy

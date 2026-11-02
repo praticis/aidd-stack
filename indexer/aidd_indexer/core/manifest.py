@@ -108,8 +108,7 @@ def _expand(value: str) -> str:
     return os.path.expandvars(value) if isinstance(value, str) else value
 
 
-def load_manifest(path: str | None = None) -> Manifest:
-    p = Path(path or os.getenv("AIDD_CONFIG", DEFAULT_CONFIG))
+def _read(p: Path) -> dict:
     if p.is_dir():
         raise ConfigError(
             f"{p} is a directory, not a file. Docker creates a directory when a bind-mounted file is missing: "
@@ -118,55 +117,71 @@ def load_manifest(path: str | None = None) -> Manifest:
     if not p.exists():
         raise ConfigError(f"manifest not found at {p} — setup/install.sh writes it; or pass --config")
     try:
-        raw = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError as e:
         raise ConfigError(f"invalid YAML in {p}: {e}")
 
+
+def _source(p: Path, name: str, s: dict) -> Source:
+    if "type" not in s:
+        raise ConfigError(f"{p}: tenant '{name}': every source needs a 'type'")
+    return Source(
+        type=s["type"], path=_expand(s.get("path", "")), org=s.get("org", ""),
+        token_env=s.get("token_env", ""), include=s.get("include") or ["*"],
+        exclude=s.get("exclude") or [], skip_archived=bool(s.get("skip_archived", True)),
+        fetch=bool(s.get("fetch", True)),
+    )
+
+
+def _sources(p: Path, name: str, t: dict) -> list[Source]:
+    sources = [_source(p, name, s) for s in t.get("sources") or []]
+    if not sources:
+        raise ConfigError(f"{p}: tenant '{name}' has no sources")
+    for s in sources:
+        if s.type == "local" and not s.path:
+            raise ConfigError(f"{p}: tenant '{name}': local source needs 'path'")
+        if s.type != "local" and (not s.org or not s.token_env):
+            raise ConfigError(f"{p}: tenant '{name}': {s.type} source needs 'org' and 'token_env'")
+    return sources
+
+
+def _ref_policy(p: Path, name: str, r: dict) -> RefPolicy:
+    a = r.get("active") or {}
+    if r.get("overrides") and not isinstance(r["overrides"], dict):
+        raise ConfigError(f"{p}: tenant '{name}': 'refs.overrides' must be a map of repo name/glob -> policy")
+    return RefPolicy(
+        always=r.get("always", RefPolicy().always),
+        patterns=r.get("patterns") or [],
+        active=ActivePolicy(
+            max_age_days=int(a.get("max_age_days", 14)),
+            max_per_repo=int(a.get("max_per_repo", 5)),
+            exclude=a.get("exclude", ActivePolicy().exclude),
+        ),
+        gc_ephemeral_after_days=int(r.get("gc_ephemeral_after_days", 30)),
+        overrides={str(k): v for k, v in (r.get("overrides") or {}).items() if isinstance(v, dict)},
+    )
+
+
+def _conventions(p: Path, name: str, t: dict) -> list:
+    convs = t.get("conventions") or []
+    if not isinstance(convs, list):
+        raise ConfigError(f"{p}: tenant '{name}': 'conventions' must be a list")
+    return [{k: (_expand(v) if k == "path" else v) for k, v in c.items()} if isinstance(c, dict) else _expand(c) for c in convs]
+
+
+def _tenant(p: Path, name: str, t: dict) -> TenantConfig:
+    sources = _sources(p, name, t)
+    refs = _ref_policy(p, name, t.get("refs") or {})
+    areas = {k: list(v or []) for k, v in (t.get("areas") or {}).items()}
+    convs = _conventions(p, name, t)
+    return TenantConfig(name=name, sources=sources, refs=refs, areas=areas, schedule=t.get("schedule", "") or "",
+                        conventions=convs)
+
+
+def load_manifest(path: str | None = None) -> Manifest:
+    p = Path(path or os.getenv("AIDD_CONFIG", DEFAULT_CONFIG))
+    raw = _read(p)
     tenants_raw = raw.get("tenants")
     if not isinstance(tenants_raw, dict) or not tenants_raw:
         raise ConfigError(f"{p}: 'tenants' must be a non-empty mapping")
-
-    tenants: dict[str, TenantConfig] = {}
-    for name, t in tenants_raw.items():
-        t = t or {}
-        sources = []
-        for s in t.get("sources") or []:
-            if "type" not in s:
-                raise ConfigError(f"{p}: tenant '{name}': every source needs a 'type'")
-            sources.append(Source(
-                type=s["type"], path=_expand(s.get("path", "")), org=s.get("org", ""),
-                token_env=s.get("token_env", ""), include=s.get("include") or ["*"],
-                exclude=s.get("exclude") or [], skip_archived=bool(s.get("skip_archived", True)),
-                fetch=bool(s.get("fetch", True)),
-            ))
-        if not sources:
-            raise ConfigError(f"{p}: tenant '{name}' has no sources")
-        for s in sources:
-            if s.type == "local" and not s.path:
-                raise ConfigError(f"{p}: tenant '{name}': local source needs 'path'")
-            if s.type != "local" and (not s.org or not s.token_env):
-                raise ConfigError(f"{p}: tenant '{name}': {s.type} source needs 'org' and 'token_env'")
-
-        r = t.get("refs") or {}
-        a = r.get("active") or {}
-        if r.get("overrides") and not isinstance(r["overrides"], dict):
-            raise ConfigError(f"{p}: tenant '{name}': 'refs.overrides' must be a map of repo name/glob -> policy")
-        refs = RefPolicy(
-            always=r.get("always", RefPolicy().always),
-            patterns=r.get("patterns") or [],
-            active=ActivePolicy(
-                max_age_days=int(a.get("max_age_days", 14)),
-                max_per_repo=int(a.get("max_per_repo", 5)),
-                exclude=a.get("exclude", ActivePolicy().exclude),
-            ),
-            gc_ephemeral_after_days=int(r.get("gc_ephemeral_after_days", 30)),
-            overrides={str(k): v for k, v in (r.get("overrides") or {}).items() if isinstance(v, dict)},
-        )
-        areas = {k: list(v or []) for k, v in (t.get("areas") or {}).items()}
-        convs = t.get("conventions") or []
-        if not isinstance(convs, list):
-            raise ConfigError(f"{p}: tenant '{name}': 'conventions' must be a list")
-        convs = [{k: (_expand(v) if k == "path" else v) for k, v in c.items()} if isinstance(c, dict) else _expand(c) for c in convs]
-        tenants[name] = TenantConfig(name=name, sources=sources, refs=refs, areas=areas, schedule=t.get("schedule", "") or "",
-                                     conventions=convs)
-    return Manifest(path=p, tenants=tenants)
+    return Manifest(path=p, tenants={name: _tenant(p, name, t or {}) for name, t in tenants_raw.items()})

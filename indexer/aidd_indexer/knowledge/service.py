@@ -32,6 +32,25 @@ def _norm(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
+def _checked_summary(topics: list[str], topic: str, summary: str, severity: str, what_happened: str,
+                     what_to_do: str, scope: str) -> str:
+    """The summary on one line, once every field record_insight takes as text is valid."""
+    if topic not in topics:
+        near = difflib.get_close_matches(str(topic), topics, n=1)
+        raise KnowledgeError(f"unknown topic {topic!r}" + (f" — did you mean '{near[0]}'?" if near else "")
+                             + f" (topics: {', '.join(topics)}; extend them in policy.yaml knowledge.topics)")
+    summary = re.sub(r"\s+", " ", str(summary or "")).strip()
+    if not summary or len(summary) > 200:
+        raise KnowledgeError("summary is one sentence of 1–200 characters: the problem and what to do instead")
+    if severity not in SEVERITIES:
+        raise KnowledgeError(f"severity must be one of {', '.join(SEVERITIES)}")
+    if not str(what_happened or "").strip() or not str(what_to_do or "").strip():
+        raise KnowledgeError("what_happened and what_to_do are required (the case that triggered it, and the rule)")
+    if scope not in ("repo", SHARED):
+        raise KnowledgeError("scope is 'repo' or 'shared'")
+    return summary
+
+
 class KnowledgeService:
     def __init__(self, vault: Path, mirror: Any, fixed_tenant: str | None,
                  policy_path: str | None = None, manifest_path: str | None = None,
@@ -120,40 +139,16 @@ class KnowledgeService:
                        tenant: str | None = None) -> dict[str, Any]:
         t, r = self.tenant(tenant), self.repo(repo)
         eff = self.effective(t, r)
-        topics = eff.get("knowledge.topics")
-        if topic not in topics:
-            near = difflib.get_close_matches(str(topic), topics, n=1)
-            raise KnowledgeError(f"unknown topic {topic!r}" + (f" — did you mean '{near[0]}'?" if near else "")
-                                 + f" (topics: {', '.join(topics)}; extend them in policy.yaml knowledge.topics)")
-        summary = re.sub(r"\s+", " ", str(summary or "")).strip()
-        if not summary or len(summary) > 200:
-            raise KnowledgeError("summary is one sentence of 1–200 characters: the problem and what to do instead")
-        if severity not in SEVERITIES:
-            raise KnowledgeError(f"severity must be one of {', '.join(SEVERITIES)}")
-        if not str(what_happened or "").strip() or not str(what_to_do or "").strip():
-            raise KnowledgeError("what_happened and what_to_do are required (the case that triggered it, and the rule)")
-        if scope not in ("repo", SHARED):
-            raise KnowledgeError("scope is 'repo' or 'shared'")
+        summary = _checked_summary(eff.get("knowledge.topics"), topic, summary, severity, what_happened, what_to_do, scope)
         ev = check_evidence(evidence, r)
         applies = check_applies_to(applies_to)
         if self.mirror is None:
             raise KnowledgeError("Qdrant is not configured for the knowledge service — nothing recorded")
 
         with self._lock:
-            if same_as:
-                match, score = self._by_id(t, r, same_as), None
-                if match is None:
-                    raise KnowledgeError(f"no insight {same_as!r} applies to {r} — pass the `id` of one of the "
-                                         "candidates record_insight returned")
-            else:
-                match, score, near = self._match(t, r, topic, summary, f"{summary}\n\n{what_to_do.strip()}", applies)
-                if match is None and near and not new:
-                    return {"result": "needs_decision", "recorded": False,
-                            "candidates": [dict(i.view(), score=sc, why=why) for sc, why, i in near],
-                            "next": "Nothing was written. Read the candidates: if one is the same insight (said in other "
-                                    "words or another language), call record_insight again with the same arguments and "
-                                    "same_as=<its id> — it counts one more occurrence. If it is a different insight, "
-                                    "call again with new=true."}
+            match, score, decision = self._repeat_of(t, r, topic, summary, what_to_do, applies, same_as, new)
+            if decision is not None:
+                return decision
             if match is not None:
                 self._update(match, r, ev, applies, severity, eff)
                 result = "updated"
@@ -173,6 +168,26 @@ class KnowledgeService:
         if same_as:
             out["matched"] = "same_as"
         return out
+
+    def _repeat_of(self, tenant: str, repo: str, topic: str, summary: str, what_to_do: str,
+                   applies: dict[str, list[str]], same_as: str | None,
+                   new: bool) -> tuple[Insight | None, float | None, dict[str, Any] | None]:
+        """(the insight this repeats, its score, the answer that sends the decision back to the agent)."""
+        if same_as:
+            match = self._by_id(tenant, repo, same_as)
+            if match is None:
+                raise KnowledgeError(f"no insight {same_as!r} applies to {repo} — pass the `id` of one of the "
+                                     "candidates record_insight returned")
+            return match, None, None
+        match, score, near = self._match(tenant, repo, topic, summary, f"{summary}\n\n{what_to_do.strip()}", applies)
+        if match is None and near and not new:
+            return None, None, {"result": "needs_decision", "recorded": False,
+                                "candidates": [dict(i.view(), score=sc, why=why) for sc, why, i in near],
+                                "next": "Nothing was written. Read the candidates: if one is the same insight (said in other "
+                                        "words or another language), call record_insight again with the same arguments and "
+                                        "same_as=<its id> — it counts one more occurrence. If it is a different insight, "
+                                        "call again with new=true."}
+        return match, score, None
 
     def _by_id(self, tenant: str, repo: str, ref: str) -> Insight | None:
         """An insight that applies to the repo, by `id` (or note path)."""
