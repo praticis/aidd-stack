@@ -32,7 +32,9 @@
     the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
     #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is closed
     by `fix(graph)` #70; TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)` #72 (H5-D40),
-    and a CommonJS export its type index did not read, TD-039, by `fix(typescript)` #73 (H5-D41). Two debts of the
+    and a CommonJS export its type index did not read, TD-039, by `fix(typescript)` #73 (H5-D41), and the declarative
+    conventions' four, TD-044 to TD-047, by `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading
+    still misses, TD-048, found by that PR's proof, are due in a `fix(conventions)` PR before F1.2. Two debts of the
     core's architecture, the syntax of each language it holds, TD-023, and the names of frameworks and client libraries
     it holds, TD-024, and a gap of Python's, Django's model managers found by name, TD-026, and a C# call on an
     interface that reaches its single implementer twice, TD-036, and four of TS's, a function a class field holds,

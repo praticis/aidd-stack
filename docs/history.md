@@ -493,3 +493,19 @@
   variables for an accumulator of their own (`corpus_totals.py`). Every path of the runner prints what `main`'s does,
   byte for byte, and the corpus's and the hold-out's dumps are identical. `http_corpus.py` stays at 346 lines, split
   when it must grow (H5-D43). No live validation: nothing in `aidd_indexer/` changes.
+- 2026-11-02: the declarative conventions' four debts closed, PR #76 (`fix(conventions)`): a rule that names two kinds
+  is refused when its convention loads (TD-044); `roles_in` reads its convention's own layout on every file (TD-046); a
+  type's bases are read from the line that declares it, as its language writes them (TD-045); and an id declared more
+  than once has the bases of every declaration (TD-047). Its proof found defects `main` had, which the new reading
+  exposed or made worse, and the PR fixes each in a commit of its own: the walk of a type's ancestors took every path,
+  and stalled for hours on a lattice of Python mixins once their bases were read; walking each type once still took
+  netbox's conventions from 0.9 s to 4.9 s, until the names above each name were worked out once (a `perf` commit, 1.0
+  s); a declaration's lines were counted otherwise than the extraction counts them (a lone `\r`, `\x85`, `\u2028`);
+  forms of the text still hid bases (a C# record's `;`, a type parameter's `{`, a comment in the base list); and a Go
+  declaration with no body was read into the next one, which the new reading made worse at two of mattermost's types.
+  The parity also found a regression of the PR's own, an arrow in a base's type argument (`Base<{ f: () => void }>`)
+  that lost the base, fixed in its base-list commit. Three forms the reading still misses (a declaration longer than its
+  15 lines, a Python base with a subscript, a `{` in a call in a TS base list) are a debt, TD-048. Over the micro set,
+  with the reference convention and a probe in both orders, every changed role has its cause. Alone on the machine, the
+  12 dry-runs take 499 s against `main`'s 495 s; umbraco's conventions, where most of each declaration is now read, take
+  7.1 s against 3.4 s.
