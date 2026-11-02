@@ -53,7 +53,7 @@ DEFAULT_EXCLUDES = {
 }
 
 # Generated code is noise for the graph; extend via .aidd/index.yaml later.
-GENERATED_SUFFIXES = (".pb.go", "_pb2.py", "_pb2_grpc.py", ".min.js", ".d.ts", ".g.cs", ".Designer.cs")
+GENERATED_SUFFIXES = (".pb.go", "_pb2.py", "_pb2_grpc.py", ".min.js", ".g.cs", ".Designer.cs")
 
 # Test code: skipped by the HTTP extractor, and never a call target for production code (resolve.py).
 TEST_FILE = re.compile(r"(_test\.go$|\.spec\.[tj]sx?$|\.test\.[tj]sx?$|(^|/)test_[^/]*\.py$|_test\.py$|conftest\.py$|"

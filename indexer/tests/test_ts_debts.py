@@ -1,7 +1,6 @@
-"""TS's and JS's declarations the graph still misses: a base the type index does not reach, in a declaration file or in
-a package of the repo's workspace, and a method or a class that is no symbol. Each case states the right answer and is
-a strict xfail with the reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has
-to go."""
+"""TS's and JS's declarations the graph still misses: a base the type index does not reach, in a package of the repo's
+workspace, and a method or a class that is no symbol. Each case states the right answer and is a strict xfail with the
+reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has to go."""
 
 import contextlib
 import io
@@ -9,11 +8,6 @@ import io
 import pytest
 
 PACKAGE = '{"name": "app"}\n'
-DECLARATION = {
-    "package.json": PACKAGE,
-    "types/base.d.ts": "export interface Base { run(): void; }\n",
-    "app/use.ts": 'import { Base } from "../types/base";\nexport class Use implements Base { run() {} }\n',
-}
 WORKSPACE = {
     "package.json": '{"name": "app", "workspaces": ["packages/*"]}\n',
     "packages/core/package.json": '{"name": "@app/core", "types": "src/index.ts"}\n',
@@ -37,8 +31,6 @@ def case(id, files, edge, why):
 
 
 CASES = [
-    case("a-type-a-hand-written-declaration-file-declares-is-a-base", DECLARATION,
-         ("app/use:Use", "IMPLEMENTS", "types/base.d:Base"), "discovery skips every `.d.ts` as generated"),
     case("an-import-of-a-package-of-the-repos-workspace-reaches-its-class", WORKSPACE,
          ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
          "a package the repo's workspace declares is read as an npm package"),
