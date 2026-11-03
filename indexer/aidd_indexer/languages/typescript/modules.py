@@ -1,7 +1,9 @@
 """What a TS or JS import names: a file of the repo, as TypeScript resolves it with the config that holds the importing
 file (`tsconfig.py`), a relative path, a pattern of its `paths` or a name below its `baseUrl`, each by the usual
 extensions and a folder's `index.*`; else a conventional path alias (`@/`, `~/`, `src/`, `#`, `$lib`), which a
-bundler's config declares where no config of the repo maps it; or else an npm package (`node:` is the platform's)."""
+bundler's config declares where no config of the repo maps it; else the entry of a package the repo's own workspace
+declares (`workspaces.py`), which its `package.json` names as TypeScript reads it (`exports.py`); or else an npm package
+(`node:` is the platform's)."""
 
 from __future__ import annotations
 
@@ -11,8 +13,11 @@ from typing import NamedTuple
 
 from ...core.model import FileInfo
 from ..base import ResolveContext
+from .exports import entry
 from .tsconfig import Config, configs, within
+from .workspaces import package_name, workspaces
 
+CONDITIONS = frozenset({"types", "import"})
 TS_EXTS = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".vue", ".d.ts")
 
 
@@ -33,7 +38,21 @@ def module_target(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | 
         return _aliased(ctx, file, spec)
     if spec.startswith("node:"):
         return Package(spec, True)
+    found = _workspace(ctx, file, spec, config)
+    if found is not None:
+        return found
     return Package("/".join(spec.split("/")[:2]) if spec.startswith("@") else spec.split("/")[0], False)
+
+
+def _workspace(ctx: ResolveContext, file: FileInfo, spec: str, config: Config | None) -> FileInfo | None:
+    """The file a package the repo's workspace declares gives an import of `spec`; None where it names none."""
+    name, subpath = package_name(spec)
+    spaces = workspaces(ctx)
+    folder = spaces.member(file.path, name)
+    if folder is None:
+        return None
+    return entry(spaces.packages[folder], subpath, CONDITIONS | frozenset(config.conditions if config else ()),
+                 lambda written, whole: _try_paths(ctx, within(folder, written), whole))
 
 
 def _configured(ctx: ResolveContext, config: Config, spec: str) -> FileInfo | None:
@@ -78,8 +97,8 @@ def _aliased(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:
 
 def _try_paths(ctx: ResolveContext, base: str, folder: bool = False) -> FileInfo | None:
     """The file `base` names: as written, with the usual extensions, as a folder's `index.*` — and a `.js` written for
-    a `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A path written with a
-    trailing `/` names a folder only."""
+    a `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A
+    path written with a trailing `/` names a folder only."""
     index = [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS]
     if folder:
         return next(filter(None, map(ctx.file_at, index)), None)
