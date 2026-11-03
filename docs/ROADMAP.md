@@ -40,7 +40,8 @@
     part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
     `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
     proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
-    the repo enables names, TD-052, is due in a `fix(typescript)` PR before F1.2. Two debts of the core's architecture, the syntax of each
+    the repo enables names, TD-052, and a member of an interface whose function type a name or `typeof` gives, TD-053,
+    are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
@@ -327,10 +328,11 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050 and TD-051
-    (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050, TD-051 and
+    TD-054 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
     function holds), an override of a package's method no call meets, a workspace package whose entry is a build
-    no project the config references emits, and an HTTP path that reads a field of an instance as a constant, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    no project the config references emits, an HTTP path that reads a field of an instance as a constant, and a
+    function an object literal holds, which needs a symbol the schema does not have, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot

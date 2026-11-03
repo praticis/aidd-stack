@@ -1571,7 +1571,70 @@ the compiler's rule and the configs that declare it, and moved the PR ahead of t
   common folder of the sources is not computed; and the condition `source` a bundler enables, which the plan left as a
   debt, TD-052, has the number: ghost's 32 members.
 
-Next, the change of behavior, in the three PRs that end the step (H5-D49 to H5-D51).
+#### TS's function members (#83, H5-D49)
+
+With the resolver reading the receiver's type, a call `api.push(1)` on an `api: Api` goes to the member TypeScript
+declares, and a member that is no symbol leaves the call with no edge. The prototype of the change of behavior found
+that 47 % of the declarations the checker leads a call to in ghost, 39 % in grafana and 25 % in mattermost are no
+symbol. A first reading took about 70 % of grafana's gap for interface members; measured by the form of the member's
+type, the function types written in place are 36 % of it, 11 % of ghost's and 8 % of mattermost's, and the rest has a
+number and a debt.
+
+- **Where it lives.** `queries.scm` only: a `property_signature` named by a `property_identifier` whose type is a
+  `function_type`, in an `interface_body` or in the `object_type` a `type_alias_declaration` names, is a `method`. No
+  `.py` changes: its owner and qualified name come from the syntactic scope, as a method signature's (`Api.push`,
+  `Handlers.run`); `dispatch.py` gives the `OVERRIDES` of a class that implements the interface with a method or with a
+  field that holds a function; the type facts already read the property as a value field.
+- **The rule.** H5-D49's. An optional, a `readonly` and a generic function type are in. A type name, `typeof`, a union,
+  an intersection, a generic or a lookup is TD-053, a function an object literal holds TD-054, and a data property, a
+  constructor type, a name written as a string or computed, a member of an object type no declaration names (a
+  parameter's, a union's or an intersection's literal) and a JS file stay out.
+- **The proof:**
+  - `test_ts_signatures.py`: the checker resolves 9 calls to the member the case names (a property, an optional, a
+    `readonly` and a generic one, two of type literals, one through an interface that extends its owner), and each is a
+    `method` of the index with that qualified name and its first line as its signature; a class that implements the
+    interface with methods, and one with fields that hold functions, override the members as they override the method
+    signature beside them; 8 forms have no symbol. On `main` the index fails the symbols and the overrides. TD-053's 3
+    cases and TD-054's are the checker's declaration, each a strict xfail of `test_ts_debts.py`.
+  - 10 mutants, each rule broken once, all die: the 4 the plan named (no function type, no interface branch, no type
+    literal branch, no direct parent) and 6 more (any name, a constructor type, a function type at any depth, an
+    alias's object type below a union or an intersection or anywhere in its value, a `function` for a `method`).
+  - Against the checker's calls on grafana, ghost and mattermost (`ts_checker.js`, read with `forms.py`), the call
+    sites whose declaration is no symbol go from 10,416 to 6,659 in grafana, 15,898 to 14,130 in ghost and 3,492 to
+    3,201 in mattermost: the members of function type, 3,596 and 162 in grafana, 1,639 and 128 in ghost, 90 and 202 in
+    mattermost (interface and type literal), go to none, and nothing else moves but two counted apart. A name the
+    checker qualifies by its namespace (`global.Window.dispose`, where the index has `Window.dispose`, since TS qualifies
+    no name by a namespace) is the same difference for every symbol: 25 sites of grafana and 1 of mattermost, one more
+    each. And ghost's `ModelClass.count`, a method signature in the object type a member returns, now sits under that
+    member and carries the checker's name, `ModelClass.getFilteredCollection.count`.
+  - The corpus and the hold-out: `0 repo(s) differ`.
+  - Micro: umbraco, grafana, mattermost, gitea, ghost, outline, vikunja and dispatch differ, the other four are
+    identical. 6,693 `method` symbols come, 4,200 of an interface and 2,493 of a type alias (grafana 3,177, mattermost
+    1,689, ghost 1,221, outline 359, umbraco 201, vikunja 30, gitea 15, dispatch 1), 1 changes its scope (ghost's
+    `count`) and none goes; 265 `OVERRIDES` come (umbraco 145, grafana 120), each a class that implements the member's
+    interface, or one whose subclass does, and none goes. `CALLS` found by name: 49,056 edges come and 33,281 go, as the
+    new members join every call of their name. The checker confirms 1,449 of the 12,181 edges to a new member it knows
+    in ghost, 1,563 of 10,959 in grafana and 286 of 4,264 in mattermost: callbacks of props (`onChange`, `filter`)
+    that share their name with many. The edges that go and leave their site with none are a homonym the name no longer
+    makes unique (a global `setTimeout` that reached `BrowserService.setTimeout`, C# code that reached a TS method): the
+    checker confirms 0 of 106 in ghost, 2 of 1,300 in grafana and 0 of 501 in mattermost. Per site, the callees hold the
+    checker's declaration at 1,451 more and 49 fewer in ghost, 1,643 and 115 in grafana, 286 and 130 in mattermost; a
+    site that loses it reached it by a name a new member makes no longer unique, or is a function a member call reaches
+    by name, which a new method of its name now takes (`UserActions.patchUser()` on a namespace import, to a props'
+    `Actions.patchUser`), until the change of behavior types the receiver.
+  - With the reference convention and the probe of #82, the violations and the roles of ghost, mattermost, umbraco and
+    grafana are the same, record by record: a role a `declares` gives is its type's, and the new methods take none.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 53.4 s, where it took 52.7 s (the
+    runs interleave, the fastest of the six is the branch's), and peaks at 1,458 MiB, where it peaked at 1,457 MiB.
+- **What differs from the plan:** a member's signature has no `;`, which is a token beside it, as a method signature's;
+  a class that implements a type alias has no `IMPLEMENTS` edge (the heritage oracle names such a clause `other`), so a
+  type literal's member has no `OVERRIDES`, as its method signature has none, and the case's overrides are an
+  interface's. The measure found one form the plan did not count apart: a member of the type literal of an alias's
+  intersection (`type Props = Base & { onX: () => void }`), which the checker names by the alias (`Props.onX`) and a
+  method signature in its place already makes `Props.m`. The rule leaves it out with the anonymous object types, as the
+  plan does: 240 sites, 193 of grafana, 41 of mattermost and 6 of ghost, for the author to decide.
+
+Next, the change of behavior, in the two PRs that end the step (H5-D50 and H5-D51).
 
 ## Decisions made (2026-10-18, by the author)
 
