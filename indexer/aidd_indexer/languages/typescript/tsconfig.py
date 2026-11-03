@@ -1,15 +1,19 @@
 """The `tsconfig.json` and `jsconfig.json` of a repo, read as TypeScript reads them to resolve a file's imports: the
 nearest one above the file, its `extends` followed within the repo, and, where it maps no path and only refers to other
 projects, the referenced one whose `files` or `include` holds the file. What an import takes from it is `paths`, with
-the folder its targets are relative to, `baseUrl` and `customConditions`. A config another package publishes is not in
-the repo, so an `extends` of one adds nothing."""
+the folder its targets are relative to, `baseUrl` and `customConditions`, and the output of each project it references,
+directly or through another, which a program reads the source of. A config another package publishes is not in the
+repo, so an `extends` of one adds nothing."""
 
 from __future__ import annotations
 
 import json
 import posixpath
 import re
+from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 
 from ..base import ResolveContext
@@ -20,11 +24,21 @@ _TRAILING_COMMA = re.compile(r",(\s*[}\]])")
 
 
 @dataclass(frozen=True)
+class Project:
+    """A project a config references: where it emits its declaration files, the folder their paths mirror, and whether
+    it holds a source file."""
+    out: str                                              # `declarationDir`, else `outDir`
+    root: str                                             # `rootDir`, else the folder of its config
+    holds: Callable[[str], bool]
+
+
+@dataclass(frozen=True)
 class Config:
     paths: tuple[tuple[str, tuple[str, ...]], ...] = ()   # pattern -> targets, as written
     paths_base: str = ""                                  # the folder the targets are relative to
     base_url: str | None = None
     conditions: tuple[str, ...] = ()                      # `customConditions`, which a package's `exports` may match
+    projects: tuple[Project, ...] = ()                    # the projects it references, which emit declaration files
 
 
 @dataclass
@@ -35,6 +49,9 @@ class _Parsed:
     paths_folder: str = ""
     base_url: str | None = None
     conditions: list[str] | None = None
+    out_dir: str | None = None
+    declaration_dir: str | None = None
+    root_dir: str | None = None
     files: list[str] | None = None
     include: list[str] | None = None
     patterns_folder: str = ""
@@ -71,7 +88,23 @@ class TsConfigs:
             parsed = next((sub for sub in map(self._read, parsed.references) if sub and _holds(sub, file)), parsed)
         base = parsed.base_url if parsed.base_url is not None else parsed.paths_folder
         return Config(tuple((k, tuple(v)) for k, v in (parsed.paths or {}).items() if isinstance(v, list)), base,
-                      parsed.base_url, tuple(parsed.conditions or ()))
+                      parsed.base_url, tuple(parsed.conditions or ()), self._projects(parsed))
+
+    def _projects(self, parsed: _Parsed) -> tuple[Project, ...]:
+        """The projects that emit declaration files, among those `parsed` references and those they reference."""
+        found, todo, seen = [], deque(parsed.references), set()
+        while todo:
+            rel = todo.popleft()
+            sub = self._read(rel) if rel not in seen else None
+            seen.add(rel)
+            if sub is None:
+                continue
+            todo.extend(sub.references)
+            out = sub.declaration_dir if sub.declaration_dir is not None else sub.out_dir
+            if out is not None:
+                found.append(Project(out, sub.root_dir if sub.root_dir is not None else sub.folder,
+                                     partial(_holds, sub)))
+        return tuple(found)
 
     def _near(self, folder: str) -> str | None:
         if folder not in self._nearest:
@@ -124,6 +157,9 @@ def _inherit(out: _Parsed, base: _Parsed) -> _Parsed:
         out.base_url = base.base_url
     if base.conditions is not None:
         out.conditions = base.conditions
+    for key in ("out_dir", "declaration_dir", "root_dir"):
+        if getattr(base, key) is not None:
+            setattr(out, key, getattr(base, key))
     if base.files is not None or base.include is not None:
         out.files, out.include, out.patterns_folder = base.files, base.include, base.patterns_folder
     return out
@@ -137,6 +173,9 @@ def _own(out: _Parsed, data: dict, folder: str, references: list[str]) -> _Parse
         out.base_url = within(folder, options["baseUrl"])
     if isinstance(options.get("customConditions"), list):
         out.conditions = _strings(options["customConditions"])
+    for key, option in (("out_dir", "outDir"), ("declaration_dir", "declarationDir"), ("root_dir", "rootDir")):
+        if isinstance(options.get(option), str):
+            setattr(out, key, within(folder, options[option]))
     if isinstance(data.get("files"), list) or isinstance(data.get("include"), list):
         out.files, out.include, out.patterns_folder = _strings(data.get("files")), _strings(data.get("include")), folder
     out.references = references

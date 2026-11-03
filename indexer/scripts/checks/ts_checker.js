@@ -3,15 +3,16 @@
 // each project: one JSON line per call, with the project, the file, the line, the method and the declarations, each as
 // `path:Owner.name` (its file relative to the project, without its last extension), or `outside` for one the project
 // does not hold. A union or an intersection gives several; a receiver the checker cannot type, none. Each file is read
-// with its config (`ts_configs.js`); with `--link`, a workspace package resolves through the link a package manager
-// makes (`ts_link.js`). The checker reads and types the files; nothing runs.
+// with its config (`ts_configs.js`), as an editor reads it: the output of a project the config references is its
+// source; with `--link`, a workspace package resolves through the link a package manager makes (`ts_link.js`). The
+// checker reads and types the files; nothing runs.
 //
 //   AIDD_TYPESCRIPT=/opt/typescript node ts_checker.js [--link] PROJECT_DIR...
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
-const { configOf, optionsOf } = require("./ts_configs.js");
+const { configOf, optionsOf, programOf } = require("./ts_configs.js");
 const { programHost } = require("./ts_link.js");
 
 const OPTIONS = {
@@ -81,7 +82,7 @@ for (const arg of process.argv.slice(2).filter((a) => !a.startsWith("--"))) {
   for (const [config, files] of groups) {
     const options = optionsOf(config, OPTIONS);
     const host = linked ? programHost(project, options) : undefined;
-    const program = ts.createProgram({ rootNames: files, options, host, oldProgram: previous });
+    const program = programOf(config, options, files, host, previous);
     report(program, project, arg, files);
     previous = program;
   }

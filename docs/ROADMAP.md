@@ -36,16 +36,17 @@
     declaration file discovery skipped, TD-041, by `fix(typescript)` #79 (H5-D45), a package of the repo's own
     workspace read as an npm package, TD-042, by `fix(typescript)` #80 (H5-D46), a function a class field holds,
     TD-037, a class a class expression declares, TD-043, and a folder import that ignored the entry its manifest names,
-    TD-049, by `fix(typescript)` #81 (H5-D47), and the declarative conventions' four, TD-044 to TD-047, by
+    TD-049, by `fix(typescript)` #81 (H5-D47), an import of the output of a project the config references, TD-050 in
+    part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
     `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
-    proof, are due in a `fix(conventions)` PR before F1.2. Two debts of the core's architecture, the syntax of each
+    proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
+    the repo enables names, TD-052, is due in a `fix(typescript)` PR before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
-    twice, TD-036, and one of TS's, a workspace package whose entry is a build the clone lacks, TD-050, are due in an
-    H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036, 5 for TD-050. Python's step 5 is merged and
+    twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
     validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
     closed (#57 to #63). Next, TS (H5-D29), in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46,
-    H5-D47), judged
+    H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51), judged
     with the per-site attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56),
     before the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20, with
     the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`, after TS's step 5),
@@ -326,9 +327,10 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035 and TD-051
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050 and TD-051
     (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
-    function holds), an override of a package's method no call meets, and an HTTP path that reads a field of an instance as a constant, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    function holds), an override of a package's method no call meets, a workspace package whose entry is a build
+    no project the config references emits, and an HTTP path that reads a field of an instance as a constant, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot

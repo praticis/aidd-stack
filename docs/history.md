@@ -579,3 +579,16 @@
   `method` and 93 `class` symbols, 171 hierarchy edges (168 `OVERRIDES`, 3 `EXTENDS`) and `CALLS` found by name that
   reach the new symbols; the corpus differs only by the caller of 583 HTTP calls, a class before and a method now, and
   the hold-out as on `main`.
+- 2026-11-03: PR #81 is validated on a live install (the thirty-ninth round). The dry-runs of `main` and of the PR's
+  head are identical in 7 of the 10 snapshots and differ in the 3 TS and JS ones, by 29 symbols, 140 `CALLS` found by
+  name and 11 hierarchy edges. The graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 23
+  are the same and 6 differ, in their time, build and refresh fields and in 4 scores of `find_symbol`.
+- 2026-11-03: TS's referenced projects, PR #82 (`fix(typescript)`), which narrows TD-050 and opens TD-052 (H5-D48): an import
+  that names the output of a project the importing file's config references, directly or through another, resolves to the
+  source that project builds it from, as TypeScript reads it with `useSourceOfProjectReferenceRedirect` and where the build
+  is there too, by `declarationDir` or `outDir` and `rootDir`. It followed a search for what the ecosystem does about a
+  package with no build, which the author asked for before taking the change of behavior's trade-off, and changed the
+  plan of the end of step 5 from two PRs to four (H5-D48 to H5-D51). Over the corpus the index names the checker's file at
+  4,761 more imports (mattermost 3,362, ghost 1,399) and no other import changes; the heritage, the corpus and the hold-out
+  are as on `main`. Micro: mattermost and ghost differ, by 3,359 and 1,352 `IMPORTS` that go from a package to a file and
+  6 `CALLS` found by name.

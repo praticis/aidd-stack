@@ -1401,3 +1401,42 @@ snapshot and the `repo_map` of the TS, the Go and the accrual snapshots.
 **What the round shows.** The live repos hold no workspace whose packages their code imports, so the PR changes none of
 their graph: the dry-runs, the graph and every answer are the same, and the corpus's 14,907 imports that now reach a
 file are proven in the PR, not here.
+
+## Thirty-ninth round: validating PR #81 on a live install (2026-11-03, build `0.2.15+847c97aae1ae` to `0.2.15+e8eb3b56bc91`)
+
+What changed since the thirty-eighth round: PR #81 is merged, a `fix(typescript)` that gives a symbol to a class field
+that holds a function and to a class a module declares by an expression, and has an import of a folder read its
+`package.json` entry, a change of the graph where a TS or JS repo writes those. The same 3 tenants and 10 snapshots, and
+29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`a2075ed`). The dry-runs of `main`
+  and of the PR's head (`dec8e94`) on each snapshot, at its sha, are identical in 7 of the 10 and differ in the 3 TS and
+  JS ones: the two snapshots of `maestro-backend` gain 11 and 7 symbols and 90 and 55 `CALLS` found by name, and `sonata`
+  gains 11 symbols and 11 hierarchy edges and loses 5 `CALLS` (it gains 4 by the same module and loses 9 by a name that
+  stopped being unique). The live graph held `main`'s dry-run on every snapshot (0 mismatching): 10,656 symbols, 23,682
+  `CALLS`, 15,961 `IMPORTS`, 393 types' and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`ce88d70`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build; the refresh had re-indexed them when the first `after` ran.
+
+**The picture of the graph** differs in 6 of its 16 lists, and in 5 by more than the build and the `IndexRun` counts: the
+symbols go from 10,656 to 10,685 (+29), the `CALLS` from 23,682 to 23,822 (+140) and the hierarchy edges from 393 to 404
+(+11), which are the three dry-runs' sums, and the counts per snapshot and per label follow; the 10 others are the same.
+The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 23 answers are the
+same field by field. 6 differ: `atlas_status` (the build, the refresh and the times), the `ref_diff` of the TS snapshot
+and the `repo_map` of the TS, the Go and the accrual snapshots (the time they were indexed), and the `find_symbol`, whose
+scores of 4 results go from 7.44 to 7.45 as the symbols of the TS snapshots grow; no result enters or leaves.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The live TS and JS repos that write a field holding a function or a class by an expression gain
+them as symbols, with the hierarchy edges of the classes that extend them; nothing changes in the C# and Go snapshots or
+in the macro graph, and what the golden calls ask of them is the same.
+

@@ -6,7 +6,8 @@
 // does not hold; `other` where the name is no class or interface, and none where the checker gives the expression no
 // symbol (a mixin's call). Where a class's `extends` names a value, the declaration is that of the class's base type as
 // the checker types it, or `expression` for a class expression's. Each file is read with the `baseUrl` and `paths` of
-// its config (`ts_configs.js`). With `--members`, also
+// its config (`ts_configs.js`), and as an editor reads it: the output of a project the config references is its
+// source. With `--members`, also
 // each member of each class and interface, with its form (`fn` for a field that holds a function literal); with `--files`, only the files of the one project whose
 // paths, relative to it, come one per line on stdin; with `--link`, a workspace package resolves through the link a
 // package manager makes (`ts_link.js`). The checker reads and types the files; nothing runs.
@@ -16,7 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
-const { configOf, optionsOf } = require("./ts_configs.js");
+const { configOf, optionsOf, programOf } = require("./ts_configs.js");
 const { programHost } = require("./ts_link.js");
 
 const OPTIONS = {
@@ -173,7 +174,7 @@ for (const arg of process.argv.slice(2).filter((a) => !a.startsWith("--"))) {
   for (const [config, files] of groups) {
     const options = optionsOf(config, OPTIONS);
     const host = flags.has("--link") ? programHost(project, options) : undefined;
-    const program = ts.createProgram({ rootNames: files, options, host, oldProgram: previous });
+    const program = programOf(config, options, files, host, previous);
     report(program, project, arg, files, flags.has("--members"));
     previous = program;
   }

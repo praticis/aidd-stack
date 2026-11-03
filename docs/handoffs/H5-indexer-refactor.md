@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -61,9 +61,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs found, the module resolution,
    TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written declaration file, TD-041 (#79, H5-D45),
    a package of the repo's own workspace, TD-042 (#80, H5-D46), and what a class declares and what a folder names,
-   TD-037, TD-043 and TD-049 (#81, H5-D47); and the change of behavior, judged per site with `attribution.sh
-   typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). A function a class
-   A workspace package whose entry is a build the clone lacks, TD-050 (H5-D46), is due in the step too.
+   TD-037, TD-043 and TD-049 (#81, H5-D47), and the output of a project the config references, TD-050 in part (#82,
+   H5-D48); then three that end it, as the measure of a prototype of the change of behavior asked (60,824 sites judged,
+   and the checker confirming 95 to 100 % of the typed edges and 0.1 % or less of the by-name edges they replace): a member of an
+   interface or a type literal written as a function (H5-D49), the resolver's change of behavior (H5-D50), and
+   the scanner's (H5-D51), judged per site with `attribution.sh typescript,tsx,javascript` and against the compiler on
+   ghost and outline ("TS's step 5" below). TD-050, narrowed, and TD-052 are due after the step.
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
@@ -1523,7 +1526,52 @@ methods among their candidates now, since an abstract method is a symbol.
   binding's, not its own (`const X = class Y` is `X`), which is how an import names it; and the CommonJS forms of a
   class expression are in the JS queries only, since a TS module's CommonJS is no export.
 
-Next, the change of behavior, where TD-050 gets its decision.
+
+#### TS's referenced projects (#82, H5-D48)
+
+A prototype of the change of behavior (the resolver reading the receiver's type, in a copy outside the repo) showed what
+it would leave without an edge: 1,241 sites of mattermost, grafana and ghost whose receiver comes from a package of the
+repo's workspace with no build, TD-050. mattermost declares the build's output: `@mattermost/client` is `composite`, its
+`outDir` is `./lib` and its `rootDir` `./src`, and the `tsconfig` of `channels` references it, so TypeScript reads
+`lib/index.d.ts` as `src/index.ts`, built or not. The author asked for a search before taking the trade-off, which found
+the compiler's rule and the configs that declare it, and moved the PR ahead of the change of behavior.
+
+- **Where it lives.** `tsconfig.py` reads, of each project a config references, directly or through another, its
+  `declarationDir`, `outDir` and `rootDir` (with what it inherits by `extends`) and the sources its `files` and `include`
+  hold, as `Config.projects`; `references.py` (30 lines) gives the source of a declaration file; `modules.py` asks it for
+  every path it tries (a relative import, a `paths` target, a name below `baseUrl`, a workspace package's entry, a
+  folder), the declaration file taking the place of the file where both are there.
+- **The oracle.** `ts_configs.js` gives a program of the files of a config with the projects it references and
+  `useSourceOfProjectReferenceRedirect`, and `ts_modules.js`, `ts_heritage.js` and `ts_checker.js` read it, where the
+  config has references; `ts_modules.js` falls back to `resolveModuleName` for a specifier the program does not read as an
+  import, a `require` in a TS file, which a first run showed.
+- **The proof:**
+  - `test_ts_references.py`: the compiler's file for 25 imports (21 resolve, 4 do not) and the 25 heritage clauses on them, each checked against the index:
+    `types`, `main` alone, `exports` with a subpath, a path below the output, a relative one and a folder's, a `paths`
+    target, a name below `baseUrl`, a `declarationDir`, the `rootDir` a config writes, an `extends` writes, or its
+    folder, a `.mts`, `.cts` and `.tsx` source, a project referenced through another, a built output beside its source,
+    a source its `include` does not hold, and a project not referenced. On `main` the index fails the ones that
+    resolve. Two of the table's guesses were wrong and the compiler corrected them: a project with no `rootDir` mirrors
+    from its config's folder, not from the common folder of its sources (TypeScript 6.0's default), and a reference of a
+    reference counts.
+  - 22 mutants, each rule broken once, 21 die, and the one left is equivalent (a project that emits nothing never
+    matches a prefix). The first run left 3 alive: a folder import of a package, and the order of a built output and its
+    source, which the case then got, and which found the index wrong where the build is there too.
+  - Over the corpus (`checks/ts_modules.py`), the imports of a package of the repo's workspace that neither the index nor
+    the checker resolved go from 10,614 to 5,853 and the index names the checker's file at 4,761 more (ghost 3,131 to
+    1,732, mattermost 4,213 to 851); no other category moves. The heritage (`checks/ts_heritage.py`) is as it was, 6,646
+    clauses at the checker's declaration, since no clause of the corpus extends a class the redirect brings.
+  - The corpus and the hold-out: `0 repo(s) differ`. Micro: mattermost and ghost differ, by 3,359 and 1,352 `IMPORTS` that
+    go from a package to a file and 6 `CALLS` found by name in ghost, a call on a value an import brings that reaches a
+    homonym, which the change of behavior types; the other ten repos are identical.
+  - With the reference convention and the probe of #81: ghost's violations are the same, and mattermost's gain 2, a `decl-into-code` of a `.d.ts` that imports the source of `@mattermost/types`, a file of the repo now.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 47.0 s, where it took 47.1 s, and
+    peaks at 1,454 MiB, where it peaked at 1,451 MiB.
+- **What differs from the plan:** a project with no `rootDir` mirrors from its config's folder (TypeScript 6.0), so the
+  common folder of the sources is not computed; and the condition `source` a bundler enables, which the plan left as a
+  debt, TD-052, has the number: ghost's 32 members.
+
+Next, the change of behavior, in the three PRs that end the step (H5-D49 to H5-D51).
 
 ## Decisions made (2026-10-18, by the author)
 
