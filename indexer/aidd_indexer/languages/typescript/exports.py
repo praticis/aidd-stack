@@ -20,8 +20,13 @@ def entry(package: dict, subpath: str, conditions: frozenset[str], find: Find) -
         return next(filter(None, (find(t, False) for t in _targets(value, conditions, wildcard))), None)
     if subpath:
         return find(subpath, False)
+    return manifest(package, lambda written: find(written, False)) or find("", True)
+
+
+def manifest(package: dict, find: Callable[[str], FileInfo | None]) -> FileInfo | None:
+    """The file a folder's `package.json` names by `types`, `typings` or `main`, in that order."""
     named = (package.get(k) for k in ("types", "typings", "main"))
-    return next(filter(None, (find(w, False) for w in named if isinstance(w, str))), None) or find("", True)
+    return next(filter(None, (find(w) for w in named if isinstance(w, str))), None)
 
 
 def _mapped(exports, key: str):

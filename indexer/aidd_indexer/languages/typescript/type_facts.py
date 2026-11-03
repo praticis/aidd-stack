@@ -10,7 +10,8 @@ from typing import Any, NamedTuple
 from tree_sitter import Node
 
 from ...core.types import Unknown
-from .commonjs import OWN, assignments, required, required_name, string
+from . import class_expressions
+from .commonjs import OWN, assignments, required, required_name, string, text as _text
 from .forms import NOT_A_REFERENCE, of_type, of_value, written
 
 NO_RESULT = Unknown("a result the function does not declare")
@@ -118,6 +119,8 @@ def _variable(facts: TsTypes, declarator: Node) -> list[str]:
     annotation = declarator.child_by_field_name("type")
     if (imported := required_name(value)) is not None:
         found = Member("import", imported)
+    elif value is not None and value.type == "class":
+        found = Member("class", class_expressions.bound(facts, _text(name), value, _class))
     elif annotation is not None:
         found = _member("value", of_type(annotation, _type_parameter))
     elif value is not None and value.type in FUNCTIONS:
@@ -252,7 +255,11 @@ def _export(facts: TsTypes, stars: list[str], node: Node) -> None:
 def _assigned(facts: TsTypes, name: str, value: Node) -> None:
     """A name a module exports by assigning it: a name of the module, a module a `require` names or a name of one, or a
     value no name of the module holds, which the module then holds under the name its exports give it."""
-    if (imported := required_name(value)) is not None:
+    local = class_expressions.exported(facts, name, value, _class) if value.type == "class" else None
+    if local is not None:
+        facts.members[local] = Member("class", local)
+        facts.exports[name] = local
+    elif (imported := required_name(value)) is not None:
         facts.reexports[name] = imported
     elif value.type in ("identifier", "shorthand_property_identifier"):
         facts.exports[name] = _text(value)
@@ -288,10 +295,6 @@ def _type_parameter(name: Node) -> Node | None:
 
 def _member(kind: str, form: str | Unknown) -> Member:
     return Member(kind, "", form.reason) if isinstance(form, Unknown) else Member(kind, form)
-
-
-def _text(node: Node | None) -> str:
-    return node.text.decode(errors="replace") if node is not None else ""
 
 
 __all__ = ["Member", "NOT_A_REFERENCE", "NO_RESULT", "Owner", "TsTypes", "type_facts"]
