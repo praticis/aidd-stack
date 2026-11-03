@@ -597,12 +597,12 @@
   holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in their time,
   build and refresh fields.
 - 2026-11-03: TS's function members, PR #83 (`fix(typescript)`), which opens TD-053 and TD-054 (H5-D49): a member of an
-  interface, or of the object type a type alias names, written as a property of a function type
-  (`push: (x: number) => void`) is a `method` of its owner, as a method signature is, and a class that implements the
-  interface overrides it.
-  A first reading of the prototype's measure had taken about 70 % of grafana's members with no symbol for these; by the
-  form of the member's type they are 36 %, 11 % of ghost's and 8 % of mattermost's, and the rest is a type name or
-  `typeof` (TD-053) or a function an object literal holds (TD-054). Against the checker's calls, the sites whose
-  declaration is no symbol go from 10,416 to 6,659 in grafana, 15,898 to 14,130 in ghost and 3,492 to 3,201 in
-  mattermost; the corpus and the hold-out are as on `main`. Micro: eight repos differ, by 6,693 `method` symbols, 265
-  `OVERRIDES` and `CALLS` found by name that reach the new members.
+  interface, of the object type a type alias names, or of an operand of its intersection or union, written as a property
+  of a function type (`push: (x: number) => void`) is a `method` of its owner, as a method signature is, and a class that
+  implements the interface overrides it. A first reading of the prototype's measure had taken about 70 % of grafana's
+  members with no symbol for these; by the form of the member's type they are 36 %, 11 % of ghost's and 8 % of
+  mattermost's, and the rest is a type name or `typeof` (TD-053) or a function an object literal holds, or an object
+  type no declaration names (TD-054). Against the checker's calls, the sites whose declaration is no symbol go from
+  10,416 to 6,466 in grafana, 15,898 to 14,123 in ghost and 3,492 to 3,160 in mattermost; the corpus and the hold-out are
+  as on `main`. Micro: eight repos differ, by 7,019 `method` symbols, 265 `OVERRIDES` and `CALLS` found by name that
+  reach the new members.

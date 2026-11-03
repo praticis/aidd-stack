@@ -1,14 +1,21 @@
 """TS's and JS's declarations the graph still misses: a base in a package whose entry is a build the repo lacks, and one
 whose source a condition a tool of the repo enables names; a member of an interface whose type is a function the code
-does not write in place, and a function an object literal holds, both of them the declaration TypeScript's checker
-resolves a call of the member to (scripts/checks/ts_checker.js). Each case states the right answer and is a strict
+does not write in place, a function an object literal holds, and a member of an object type no declaration names, each
+the declaration TypeScript's checker resolves a call of the member to (scripts/checks/ts_checker.js, which a test of
+the case checks). Each case states the right answer and is a strict
 xfail with the reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has to
 go."""
 
 import contextlib
 import io
+import json
+import os
+import subprocess
+from pathlib import Path
 
 import pytest
+
+CHECKER = Path(__file__).resolve().parents[1] / "scripts" / "checks" / "ts_checker.js"
 
 BUILD_ENTRY = {
     "package.json": '{"name": "app", "workspaces": ["packages/*"]}\n',
@@ -35,7 +42,8 @@ def case(id, files, want, why):
 CASES = [
     case("an-import-of-a-package-whose-entry-is-a-build-the-repo-lacks-reaches-its-source", BUILD_ENTRY,
          ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
-         "the entry of a package is a build the repo lacks, and no project its config references says where its source is"),
+         "the entry of a package is a build the repo lacks, and no project its config references says where its source "
+         "is"),
     case("an-import-of-a-package-whose-source-a-condition-of-a-tool-names-reaches-it", CONDITION_OF_A_TOOL,
          ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
          "the condition that leads to the source is one the bundler's config enables, which TypeScript does not read"),
@@ -64,15 +72,24 @@ MEMBERS = [
           "app/use.ts": 'import { QUERY_KEYS } from "./keys";\nexport function main() { return QUERY_KEYS.list(); }\n'},
          "app/keys:QUERY_KEYS.list",
          "an object literal's member has no symbol: neither the constant that holds it nor a property is one"),
+    case("a-member-of-an-object-type-no-declaration-names-is-the-method-its-call-reaches",
+         {"app/models.ts": "export function take(o: { go(): void }) { return o.go(); }\n"},
+         "app/models:take.o.go",
+         "a method signature in an object type no declaration names sits under the function around it, with no "
+         "name for the parameter that holds the type"),
 ]
+
+
+def _write(root, files):
+    for rel, body in {"package.json": '{"name": "app"}\n', **files}.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(body)
 
 
 def _indexed(root, files):
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
-    for rel, body in {"package.json": '{"name": "app"}\n', **files}.items():
-        (root / rel).parent.mkdir(parents=True, exist_ok=True)
-        (root / rel).write_text(body)
+    _write(root, files)
     with contextlib.redirect_stderr(io.StringIO()):
         return extract_and_resolve(RepoInfo(tenant="t", name="app", ref="main", commit_sha="x", root=str(root)),
                                    convs=[])
@@ -83,6 +100,14 @@ def test_a_base_and_an_override_the_declarations_give_are_edges(tmp_path, files,
     res, rv = _indexed(tmp_path, files)
     q = {s.id: s.qualified_name for s in res.symbols}
     assert edge in {(q[e.source_id], e.kind, q[e.target_id]) for e in rv.hierarchy}
+
+
+@pytest.mark.parametrize("files, member", [pytest.param(p.values[0], p.values[1], id=p.id) for p in MEMBERS])
+def test_the_checker_resolves_the_call_to_the_member_the_case_names(tmp_path, files, member):
+    _write(tmp_path, files)
+    out = subprocess.run(["node", str(CHECKER), str(tmp_path)], capture_output=True, text=True, check=True,
+                         env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")}).stdout
+    assert member in {d for r in map(json.loads, out.splitlines()) for d in r["declared"]}
 
 
 @pytest.mark.parametrize("files, member", MEMBERS)
