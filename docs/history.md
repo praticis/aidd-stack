@@ -569,3 +569,13 @@
   head are identical in all 10 snapshots, since no live repo declares a workspace whose packages its code imports. The
   graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in
   their time, build and refresh fields.
+- 2026-11-03: TS's class members and folder entries, PR #81 (`fix(typescript)`), which closes TD-037, TD-043 and TD-049
+  (H5-D47): a class field that holds an arrow or a function is a `method` of its class, and an instance's call of it
+  runs what the field holds, the nearest class's winning; a class a module's statement declares by an expression is a
+  class, by the binding of a `const`, a `var` or an `export`, or in a JS file by `module.exports =` and `exports.X =`;
+  and an import of a folder reads the `types`, `typings` and `main` of its `package.json` before the `index.*`. Over the
+  corpus the index names the checker's file at 158 more imports, all fastify's, and the checker's method at 374 more
+  call sites of ghost, and loses none. Micro: umbraco, grafana, mattermost, gitea, ghost and outline differ, by 3,776
+  `method` and 93 `class` symbols, 171 hierarchy edges (168 `OVERRIDES`, 3 `EXTENDS`) and `CALLS` found by name that
+  reach the new symbols; the corpus differs only by the caller of 583 HTTP calls, a class before and a method now, and
+  the hold-out as on `main`.
