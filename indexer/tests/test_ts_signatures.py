@@ -1,13 +1,15 @@
 """A member an interface, or the object type a type alias names, declares as a property whose type is a function type
 (`push: (x: number) => void`) is a `method` symbol of its owner, as a method signature is: the declaration TypeScript's
 own checker resolves a call of it to (scripts/checks/ts_checker.js), which reads and types the files and runs nothing,
-with the member's first line as its signature, an optional, a `readonly` and a generic one too, and through an
-interface that extends its owner. A class that implements the interface with a method, or with a field that holds a
-function, overrides it as it overrides the interface's method signature: there the reference is what JS runs on an
-instance, which the hierarchy's overrides follow, not the compiler. A member the syntax does not give as a function has no symbol: a
-data property, a constructor type, a name written as a string or computed, a member of an object type no declaration
-names, and anything of a JS file, which declares types in comments only. A member whose function type a name, `typeof`
-or a union gives, and one of an object literal, are debts (test_ts_debts.py)."""
+with the member's first line as its signature, an optional, a `readonly` and a generic one too, through an interface
+that extends its owner, and in an object type that is an operand of the alias's intersection or union, or of one of the
+same kind nested in it. A class that implements the interface with a method, or with a field that holds a function,
+overrides it as it overrides the interface's method signature: there the reference is what JS runs on an instance,
+which the hierarchy's overrides follow, not the compiler. A member the syntax does not give as a function has no
+symbol: a data property, a constructor type, a name written as a string or computed, a member of an object type no
+declaration names or one below a generic or an array, a mixed wrapper or three wrappers, and anything of a JS file,
+which declares types in comments only. A member whose function type a name, `typeof` or a union gives, and one of an
+object literal, are debts (test_ts_debts.py)."""
 
 import contextlib
 import io
@@ -37,6 +39,12 @@ export type Handlers = {
   done?: (e: Error) => void;
 };
 export type Pair<T> = { take: (t: T) => void };
+export type Props = Api & { onX: (e: Error) => void };
+export type Both = Api & { first: () => void } & { second: () => void };
+export type Chain = { link: () => void } & { next: () => void } & Api;
+export interface Other { pick: () => void }
+export type Choice = { pick: () => void; a: () => void } | { pick: () => void; b: () => void } | Other;
+export type Either = { run: () => void; left: () => void } | { run: () => void; right: () => void };
 const KEY = "key";
 export interface Rest {
   name: string;
@@ -44,8 +52,10 @@ export interface Rest {
   "quoted": () => void;
   [KEY]: () => void;
 }
-export type Either = { left: () => void } | { right: () => void };
-export type Both = { first: () => void } & { second: () => void };
+export type Box = Array<{ unbox: () => void }>;
+export type List = { item: () => void }[];
+export type Deep = { deep: () => void } & Api & Api & Api;
+export type Mixed = Api & ({ mixed: () => void } | Rest);
 export function take(o: { go: () => void }) { return o.go(); }
 """
 IMPL = """import { Api } from "./models";
@@ -66,7 +76,7 @@ PLAIN = """/** @typedef {{ jsRun: () => void }} JsHandlers */
 /** @param {JsHandlers} h */
 export function main(h) { return h.jsRun(); }
 """
-# receiver, method, how it is called, the member the call reaches, its signature
+# receiver, method, how it is called, the member (or the members of a union) the call reaches, its signature
 CALLS = [
     ("api", "push", "(1)", "app/models:Api.push", "push: (x: number) => void"),
     ("api", "stop", "?.()", "app/models:Api.stop", "stop?: () => void"),
@@ -77,11 +87,20 @@ CALLS = [
     ("h", "run", "()", "app/models:Handlers.run", "run: () => void"),
     ("h", "done", '?.(new Error("e"))', "app/models:Handlers.done", "done?: (e: Error) => void"),
     ("p", "take", "(1)", "app/models:Pair.take", "take: (t: T) => void"),
+    ("props", "onX", "(new Error())", "app/models:Props.onX", "onX: (e: Error) => void"),
+    ("props", "push", "(3)", "app/models:Api.push", "push: (x: number) => void"),
+    ("both", "first", "()", "app/models:Both.first", "first: () => void"),
+    ("both", "second", "()", "app/models:Both.second", "second: () => void"),
+    ("chain", "link", "()", "app/models:Chain.link", "link: () => void"),
+    ("chain", "next", "()", "app/models:Chain.next", "next: () => void"),
+    ("either", "run", "()", "app/models:Either.run", "run: () => void"),
+    ("choice", "pick", "()", ("app/models:Choice.pick", "app/models:Other.pick"), "pick: () => void"),
 ]
-USE = ('import { Api, Child, Handlers, Pair } from "./models";\n'
-       "export function main(api: Api, child: Child, h: Handlers, p: Pair<number>) {\n"
+USE = ('import { Api, Both, Chain, Child, Choice, Either, Handlers, Pair, Props } from "./models";\n'
+       "export function main(api: Api, child: Child, h: Handlers, p: Pair<number>, props: Props, both: Both,\n"
+       "                     chain: Chain, either: Either, choice: Choice) {\n"
        + "".join(f"  {receiver}.{method}{args};\n" for receiver, method, args, _, _ in CALLS) + "}\n")
-FIRST_CALL = 3
+FIRST_CALL = 4
 FILES = {"package.json": '{"name": "app"}\n', "app/models.ts": MODELS, "app/impl.ts": IMPL, "app/use.ts": USE,
          "app/plain.js": PLAIN}
 # the file, and what the line of a member that is no symbol writes
@@ -91,10 +110,16 @@ NOT_A_FUNCTION = {
     "a-name-written-as-a-string": ("app/models.ts", '"quoted"'),
     "a-computed-name": ("app/models.ts", "[KEY]"),
     "a-member-of-a-parameters-object-type": ("app/models.ts", "go: ()"),
-    "a-member-of-a-union-of-object-types": ("app/models.ts", "left: ()"),
-    "a-member-of-an-intersection-of-object-types": ("app/models.ts", "first: ()"),
+    "a-member-of-an-object-type-below-a-generic": ("app/models.ts", "unbox: ()"),
+    "a-member-of-an-array-element-type": ("app/models.ts", "item: ()"),
+    "a-member-of-an-object-type-three-wrappers-down": ("app/models.ts", "deep: ()"),
+    "a-member-of-an-object-type-below-a-mixed-wrapper": ("app/models.ts", "mixed: ()"),
     "a-member-a-js-comment-declares": ("app/plain.js", "jsRun: ()"),
 }
+
+
+def _members(member: str | tuple[str, ...]) -> tuple[str, ...]:
+    return (member,) if isinstance(member, str) else member
 
 
 @pytest.fixture(scope="module")
@@ -122,13 +147,13 @@ def indexed(case):
 
 
 def test_the_checker_resolves_each_call_to_the_member_the_case_names(checked):
-    assert checked == {FIRST_CALL + i: (member,) for i, (_, _, _, member, _) in enumerate(CALLS)}
+    assert checked == {FIRST_CALL + i: _members(member) for i, (_, _, _, member, _) in enumerate(CALLS)}
 
 
 def test_a_function_member_is_the_method_the_checker_resolves_its_call_to(checked, indexed):
     res, _ = indexed
     found = {s.qualified_name: (s.kind, s.signature) for s in res.symbols}
-    signatures = {member: signature for _, _, _, member, signature in CALLS}
+    signatures = {m: signature for _, _, _, member, signature in CALLS for m in _members(member)}
     declared = {d for ds in checked.values() for d in ds}
     assert {d: found.get(d) for d in declared} == {d: ("method", signatures[d]) for d in declared}
 
