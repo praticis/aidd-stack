@@ -1,7 +1,7 @@
 // The config TypeScript reads a file of a project with: the nearest `tsconfig.json` or `jsconfig.json` above it, its
 // `extends` followed; where it maps no path and only refers to other projects (`tsconfig.app.json`), the referenced one
 // whose files hold the file. What the oracles take from it is `paths`, with the folder its targets are relative to,
-// `baseUrl` and `customConditions`.
+// `baseUrl` and `customConditions`, and the projects it references, whose output a program reads the source of.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -52,4 +52,19 @@ function optionsOf(config, base) {
            ...(o.paths ? { paths: o.paths, pathsBasePath: o.pathsBasePath || path.dirname(config) } : {}) };
 }
 
-module.exports = { configOf, optionsOf };
+// The projects the config references.
+function referencesOf(config) {
+  const found = config && parse(config);
+  return (found && found.projectReferences) || [];
+}
+
+// A program of `rootNames` as an editor reads a project: where the config references a project, the declaration file
+// it would emit for a source is the source itself (`useSourceOfProjectReferenceRedirect`), built or not.
+function programOf(config, options, rootNames, host, oldProgram) {
+  const projectReferences = referencesOf(config);
+  const compilerHost = host || ts.createCompilerHost(options);
+  if (projectReferences.length) compilerHost.useSourceOfProjectReferenceRedirect = () => true;
+  return ts.createProgram({ rootNames, options, host: compilerHost, projectReferences, oldProgram });
+}
+
+module.exports = { configOf, optionsOf, referencesOf, programOf };
