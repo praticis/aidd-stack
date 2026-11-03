@@ -1,4 +1,5 @@
-"""TS's and JS's declarations the graph still misses: a base in a package whose entry is a build the repo lacks. Each
+"""TS's and JS's declarations the graph still misses: a base in a package whose entry is a build the repo lacks, and one
+whose source a condition a tool of the repo enables names. Each
 case states the right answer and is a strict xfail with the reason: when the indexer learns it, the case passes, the
 xfail fails the suite, and the mark has to go."""
 
@@ -14,6 +15,15 @@ BUILD_ENTRY = {
     "packages/web/package.json": '{"name": "@app/web"}\n',
     "packages/web/src/use.ts": 'import { Base } from "@app/core";\nexport class Use extends Base { run() {} }\n',
 }
+CONDITION_OF_A_TOOL = {
+    "package.json": '{"name": "app", "workspaces": ["packages/*"]}\n',
+    "packages/core/package.json": '{"name": "@app/core", "exports": {".": {"source": "./src/index.ts", '
+                                  '"default": "./dist/index.js"}}}\n',
+    "packages/core/src/index.ts": "export class Base { run() {} }\n",
+    "packages/web/package.json": '{"name": "@app/web"}\n',
+    "packages/web/vite.config.ts": "export default { resolve: { conditions: ['source'] } };\n",
+    "packages/web/src/use.ts": 'import { Base } from "@app/core";\nexport class Use extends Base { run() {} }\n',
+}
 
 
 def case(id, files, edge, why):
@@ -23,7 +33,10 @@ def case(id, files, edge, why):
 CASES = [
     case("an-import-of-a-package-whose-entry-is-a-build-the-repo-lacks-reaches-its-source", BUILD_ENTRY,
          ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
-         "the entry of a package is a build the repo lacks, and nothing in its config says where its source is"),
+         "the entry of a package is a build the repo lacks, and no project its config references says where its source is"),
+    case("an-import-of-a-package-whose-source-a-condition-of-a-tool-names-reaches-it", CONDITION_OF_A_TOOL,
+         ("packages/web/src/use:Use", "EXTENDS", "packages/core/src/index:Base"),
+         "the condition that leads to the source is one the bundler's config enables, which TypeScript does not read"),
 ]
 
 
