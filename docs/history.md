@@ -549,3 +549,19 @@
   match the checker's at 6,205, from 6,153, fastify's 18 among them. The proof found TD-049, a folder import that
   ignores the entry its manifest names. Micro: 157 files, 517 symbols and 96 imports in declaration files, and `CALLS`
   found by name; the corpus and the hold-out as on `main`.
+- 2026-11-03: PR #79 is validated on a live install (the thirty-seventh round). The dry-runs of `main` and of the PR's
+  head are identical in 7 of the 10 snapshots; in the 3 with declaration files the graph gains 47 symbols, 71 `IMPORTS`
+  and 12 `EXTENDS` (classes of the code to types a declaration file declares), all in or to declaration files, and 1
+  `CALLS` found by a unique name becomes ambiguous. The graph holds the dry-runs with the new build on each snapshot; of
+  the 29 calls, 24 are the same, 4 differ only in their time, build and refresh fields, and the TS snapshot's
+  `repo_map` counts the new files and symbols.
+- 2026-11-03: TS's workspace packages, PR #80 (`fix(typescript)`), which closes TD-042 (H5-D46): an import of a package
+  the repo's own workspace declares resolves to the file TypeScript gives it through the link a package manager makes,
+  by the package's `exports` (the conditions `types`, `import`, `default` and the config's `customConditions`), its
+  `types`, `typings` or `main`, or its `index`, and a file sees the members of each workspace root above it. The oracle
+  emulates the link where a clone has none. Over the corpus the index names the checker's file at 14,907 more imports,
+  13,215 of them grafana's, and at 437 more heritage clauses, and none it named changes; 10,614 imports of a package
+  whose entry is a build the clone lacks stay a package, TD-050. Micro: grafana, mattermost and ghost differ, by
+  13,954 `IMPORTS` that go from a package to a file, 471 hierarchy edges, and 4,816 `CALLS` found by name that the
+  compiler confirms at 208, and an endpoint of grafana whose path reads a field an instance fills at run time, TD-051;
+  the corpus and the hold-out as on `main`.

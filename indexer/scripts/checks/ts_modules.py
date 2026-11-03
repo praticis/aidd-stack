@@ -1,11 +1,12 @@
 """TS's module resolution against TypeScript's own, over every TS and JS file the indexer extracts from the repos under
 /corpus: for each import, the file the index's `module_target` names against the one TypeScript resolves it to
-(`ts_modules.js`, each file read with its `tsconfig.json` or `jsconfig.json`). `same` where both name one file of the
+(`ts_modules.js`, each file read with its `tsconfig.json` or `jsconfig.json`, and a workspace package resolved through
+the link a package manager makes, which the clones lack: `ts_link.js`). `same` where both name one file of the
 repo, or the index a package and TypeScript none; else the kind of difference, by how TypeScript read the specifier:
 the checker's file where the index names a package, none or another file; a file the index does not extract; the
 index's file where TypeScript resolves none (an alias a bundler's config declares, a `.vue` file); and, counted apart,
-a package a `package.json` of the repo declares, which neither resolves without `node_modules`. The compiler reads the
-files; nothing runs.
+a package a `package.json` of the repo declares whose entry is a build the clone lacks, which neither resolves. The
+compiler reads the files; nothing runs.
 
     ts_modules.py [N]    N samples of each kind (default 5)
 
@@ -50,7 +51,7 @@ def _workspace(root: Path, rels: list[str]) -> set[str]:
 
 
 def oracle(root: Path, rels: list[str]) -> list[dict]:
-    out = subprocess.run(["node", "--max-old-space-size=8192", str(ORACLE), str(root)], input="\n".join(rels),
+    out = subprocess.run(["node", "--max-old-space-size=8192", str(ORACLE), "--link", str(root)], input="\n".join(rels),
                          capture_output=True, text=True, check=True,
                          env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")})
     return [json.loads(line) for line in out.stdout.splitlines()]

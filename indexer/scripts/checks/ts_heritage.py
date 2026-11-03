@@ -1,7 +1,8 @@
 """TS's bases against TypeScript's own checker, over every TS and JS file the indexer extracts from the repos under
 /corpus. Each type a heritage clause of a module's class or interface names, in order, must be in the type index the
 declaration the checker resolves it to (`ts_heritage.js`, each file read with its `tsconfig.json`'s `baseUrl` and
-`paths`): `same`, or `none of the repo's` where neither gives one. Where the index gives `Unknown` and the checker a
+`paths`, and a workspace package resolved through the link a package manager makes, which the clones lack):
+`same`, or `none of the repo's` where neither gives one. Where the index gives `Unknown` and the checker a
 declaration of the repo, the reason is counted, and a package's apart: the checker has no package, so the repo's
 `tsconfig.json` maps that name to its own file. A global type the repo augments (`declare global { interface Window }`)
 is the platform's. `index only` is a declaration the checker does not give, and `different` another one. A declaration
@@ -50,7 +51,7 @@ def index_of(root: Path) -> tuple[TsTypeIndex, dict[str, TsTypes]]:
 
 
 def oracle(root: Path, rels: list[str]) -> list[dict]:
-    out = subprocess.run(["node", "--max-old-space-size=8192", str(ORACLE), "--files", str(root)],
+    out = subprocess.run(["node", "--max-old-space-size=8192", str(ORACLE), "--files", "--link", str(root)],
                          input="\n".join(rels), capture_output=True, text=True, check=True,
                          env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")})
     return [json.loads(line) for line in out.stdout.splitlines()]

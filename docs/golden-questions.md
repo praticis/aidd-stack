@@ -1330,3 +1330,42 @@ same field by field, and 5 differ only in their time, build and refresh fields:
 **What the round shows.** The refresher reads the manifest and the policy, plans the refs and syncs the mirrors as it
 did: the 7 tenants' plans and policies are the same bytes, and a full refresh re-indexed the 10 snapshots to the same
 graph with the new build. `record_insight` belongs to the knowledge service, and the tests and the probe hold it.
+
+## Thirty-seventh round: validating PR #79 on a live install (2026-11-03, build `0.2.15+e7bc338ec7a4` to `0.2.15+a3bee27461fc`)
+
+What changed since the thirty-sixth round: PR #79 is merged, a `fix(typescript)` that has discovery read a hand-written
+`.d.ts` and an import resolve to it, a change of the graph where the repo holds declaration files. The same 3 tenants
+and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`f6a92ff`). The dry-runs of `main`
+  and of the PR's head (`650b4a8`) on each snapshot, at its sha, are identical in 7 of the 10 and differ in the 3 that
+  hold TS or JS with declaration files: two refs of one repo gain 11 declaration files, 22 symbols (13 interfaces, 5
+  types, 4 methods), 35 `IMPORTS`, 1 `CALLS` and 6 `EXTENDS`, and a third snapshot gains 2 files, 3 symbols and 1
+  `IMPORTS`, and loses 1 `CALLS`. Everything new is in a declaration file, and nothing is removed but the `CALLS`: it
+  was found by the only homonym of its name, which a method a declaration file declares made ambiguous. The live graph
+  held `main`'s dry-run on every snapshot (0 mismatching): 10,609 symbols, 23,681 `CALLS`, 15,890 `IMPORTS`, 381 types'
+  and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`d8b7efb`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build; the refresh had re-indexed them when the first `after` ran.
+
+**The picture of the graph** differs in 7 of its 16 lists, by what the dry-runs gave: 10,656 symbols (+47), 23,682
+`CALLS` (+1), 393 types' and overrides' edges (+12, the `EXTENDS` of classes of the code to types a declaration file
+declares) and 15,961 `IMPORTS` (+71, 12 of them from code to a declaration file); the labels and the snapshots differ in
+the `IndexRun` counts and the build. The graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, 4 differ only in their time, build and refresh fields, and `repo_map` of the TS snapshot differs in
+what it counts:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+| `repo_map` of the TS snapshot | the first module holds 10 files more (1,407), 564 lines of code more and 21 symbols more, the second 1 file and 1 symbol more, and the kinds count 13 interfaces, 4 methods and 5 types more |
+
+**What the round shows.** The live TS and JS repos that hold declaration files gain them as files and symbols, and the
+classes that extend what they declare gain their `EXTENDS`; nothing changes in the C# and Go snapshots or in the macro
+graph, and what the golden calls ask of them is the same.

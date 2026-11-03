@@ -3,14 +3,16 @@
 // module specifier (`import`, `export from`, `require`, `import()`), with the file, the specifier, the file it resolves
 // to relative to the project, `outside` for one in `node_modules` or out of the project, or null; and how the
 // specifier is read: `relative`, by a pattern of `paths`, below `baseUrl`, or `bare`. Each file is read with its config
-// (`ts_configs.js`), and the files come one per line on stdin, relative to the project. Nothing runs.
+// (`ts_configs.js`), and the files come one per line on stdin, relative to the project. With `--link`, a workspace
+// package resolves as it does in an installed project (`ts_link.js`). Nothing runs.
 //
-//   AIDD_TYPESCRIPT=/opt/typescript node ts_modules.js PROJECT_DIR < files
+//   AIDD_TYPESCRIPT=/opt/typescript node ts_modules.js [--link] PROJECT_DIR < files
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
 const { configOf, optionsOf } = require("./ts_configs.js");
+const { linkHost } = require("./ts_link.js");
 
 const OPTIONS = { allowJs: true, resolveJsonModule: true, module: ts.ModuleKind.ESNext,
                   moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.Preserve };
@@ -32,12 +34,14 @@ function where(project, resolved) {
   return rel.startsWith("..") || rel.split(path.sep).includes("node_modules") ? "outside" : rel;
 }
 
-const project = path.resolve(process.argv[2]);
+const args = process.argv.slice(2);
+const project = path.resolve(args.find((a) => !a.startsWith("--")));
+const host = args.includes("--link") ? linkHost(project) : ts.sys;
 for (const rel of fs.readFileSync(0, "utf8").split("\n").filter(Boolean)) {
   const file = path.join(project, rel);
   const options = optionsOf(configOf(project, file), OPTIONS);
   for (const { fileName: spec } of ts.preProcessFile(fs.readFileSync(file, "utf8"), true, true).importedFiles) {
-    const to = where(project, ts.resolveModuleName(spec, file, options, ts.sys).resolvedModule);
+    const to = where(project, ts.resolveModuleName(spec, file, options, host).resolvedModule);
     process.stdout.write(JSON.stringify({ file: rel, spec, to, via: via(spec, options) }) + "\n");
   }
 }

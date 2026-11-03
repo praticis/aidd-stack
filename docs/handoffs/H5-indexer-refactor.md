@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -60,10 +60,11 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a `feat(graph)` for TS's
    hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs found, the module resolution,
    TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written declaration file, TD-041 (#79, H5-D45),
-   and a package of the repo's own workspace, TD-042; and the change of behavior, judged per site with `attribution.sh
+   and a package of the repo's own workspace, TD-042 (#80, H5-D46); and the change of behavior, judged per site with `attribution.sh
    typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). A function a class
    field holds, TD-037, a class a class expression declares, TD-043 (H5-D41), and a folder import that ignores the entry
-   its manifest names, TD-049 (H5-D45), are due in the step too.
+   its manifest names, TD-049 (H5-D45), and a workspace package whose entry is a build the clone lacks, TD-050
+   (H5-D46), are due in the step too.
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
@@ -1412,7 +1413,66 @@ methods among their candidates now, since an abstract method is a symbol.
 - **What differs from the plan:** the proof found TD-049, which the plan did not count; and the `ts_checker.js` naming
   of a declaration file, which the plan placed in the test, is in the case's commit.
 
-Next, the `fix` of TD-042, then the change of behavior.
+#### TS's workspace packages (#80, H5-D46)
+
+- **Where it lives.** `languages/typescript/workspaces.py` (97 lines) reads the workspaces a repo declares, once for
+  each context: every `package.json` above a file of the repo, since a manifest shares its folder's module with the
+  first the folder has (grafana's root is a Go module), their `workspaces` and `pnpm-workspace.yaml` globs, and
+  `member(file, name)`, the folder of the package a file sees under that name. `exports.py` (52 lines) gives the file a
+  package's entry names for a subpath. `modules.py` asks them after the aliases and before the npm package, and
+  `tsconfig.py` reads `customConditions`. `type_index.py` and the core do not change.
+- **The rule.** The members, who sees them and how the entry is read are H5-D46's. Not adopted: a `lerna.json`, which
+  the oracle cannot prove, and a `src/` for a build the clone lacks, which would be a guess: TD-050.
+- **The proof:**
+  - The oracle gained the link a package manager makes (`checks/ts_link.js`, a compiler host that serves
+    `<ancestor>/node_modules/<name>` from the workspaces, with a glob expansion that does not share the index's code),
+    which `ts_modules.js`, `ts_heritage.js` and `ts_checker.js` take with `--link`, and the config's
+    `customConditions`. The case (`test_ts_workspaces.py`) is checked first against real symlinks and then against the
+    emulation, for the imports and for the bases: `exports` by condition and by default, with `require` before `import`,
+    a custom condition and a condition read through `extends`, a target the clone lacks that falls to the next, an
+    exact subpath, two patterns of which the longest wins, a subpath `exports` does not map, `exports` as a string,
+    `types`, `typings`, `main` and `index`, a nested workspace of its own (a list and `{packages}`), a `pnpm-workspace.yaml`,
+    `!` and `./` globs, a package below a member, a sibling folder that shares a prefix with a root, a package with no
+    name, one that is no member and shares its name with a package of the registry, a `paths` pattern that wins over
+    a member, and a root that is a Go module as well. The xfail of TD-042 passes and goes; TD-050's takes its place.
+  - 36 mutants, each rule broken once: 15 died at the first run, and 34 die after the case grew by the rules the
+    others left alive. Two live by design: a workspace that lists `**` taking its own root as a member, and two members of one name, which the
+    package managers refuse.
+  - Over the corpus (`checks/ts_modules.py`, 259,454 imports), the index names the checker's file at 14,907 more, and
+    nothing it named changes. The bucket the oracle counted apart, a package whose entry is a build the clone lacks,
+    holds 10,614: mattermost 4,213, ghost 3,131, directus 2,288, grafana 612, immich 210, docmost 91, umbraco 35 and
+    nest 34 (TD-050). The 12 it names another file for are a JS file beside its `.d.ts`, H5-D45's decision, in directus.
+    A first run found the defect the case now holds: grafana's workspace was not seen, since its root is a Go module.
+  - Over the corpus (`checks/ts_heritage.py`, with the link on both sides), the index names the checker's declaration
+    at 6,642 clauses, where it named it at 6,205: the 437 of a package the repo's `tsconfig.json` maps to its file,
+    grafana's and mattermost's, and no other clause changes.
+  - Against the checker's calls on ghost, mattermost and grafana, read by the types as the change of behavior will
+    read them: the type index gives the checker's method at 1,876 more sites, 1,850 of them grafana's, and loses it at
+    none. In 58 grafana sites it gives the interface's method where the checker, which narrows what an assignment
+    gives (`let echo: EchoSrv; echo = new Echo()`), gives the class's.
+  - The graph: the corpus differs from the baseline by outline's 2 calls only, and the hold-out by none, both as at
+    #79; every repo's output is the same as at #79. Micro: grafana, mattermost and ghost differ, the other nine are
+    identical. 13,178, 494 and 282 `IMPORTS` go from a package to a file, and 8, 1 and 6 packages leave the graph;
+    grafana gains 471 hierarchy edges (323 `EXTENDS`, 36 `IMPLEMENTS`, 112 `OVERRIDES`), and one `OVERRIDES` it had
+    gains a receiver, a class that extends the one it was found on; and `CALLS` found by name come: 4,767 in grafana, 47 in mattermost, 2 in
+    ghost, 0 gone. The checker confirms 181 and 27 of them, 3,832 are ambiguous among homonyms, and 2,571 reach
+    the minified yarn release `.yarn/releases`; they are calls on a receiver the resolver does not type, which went
+    unseen while an import of the package made the receiver an external. A site that reached nothing now reaches a
+    homonym, as an import of a file by its relative path does on `main`; the change of behavior gives them their
+    receivers' types. One grafana endpoint reads `config.namespace`, a field of an instance
+    that `merge(this, options)` fills at run time, and its path goes from `/apis/{param}/namespaces/{param}/datasources`
+    to `.../namespaces/default/datasources`, as it does through a relative import on `main`: TD-051, due in F1.2.
+  - With the reference convention and the probe of #79, the six TS repos of the micro set change by 6 violations in
+    ghost, for the imports of a `.d.mts` file, and 3 in grafana, those of `window.d.ts`, with the one of that endpoint; mattermost does not change.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 42.6 s, where it took 42.6 s,
+    and peaks at 1,448 MiB, where it peaked at 1,446 MiB; grafana's, run once on each side, takes 136.3 s and peaks at 4,198 MiB, where it took 135.6 s and peaked at 4,199 MiB.
+- **What differs from the plan:** a file sees the members of every workspace root above it, not of the deepest alone,
+  which the oracle showed; a `lerna.json` is not read; and the case grew, with the oracle's `--link` in the heritage and
+  checker scripts too, from what the first corpus run and the mutants left out. The plan's count of the imports that
+  stay a package was about 10,100, with 470 of a name that is no member: 10,614 are the former, and the latter are
+  what the rule leaves alone.
+
+Next, the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

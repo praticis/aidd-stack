@@ -1,8 +1,8 @@
 """The `tsconfig.json` and `jsconfig.json` of a repo, read as TypeScript reads them to resolve a file's imports: the
 nearest one above the file, its `extends` followed within the repo, and, where it maps no path and only refers to other
 projects, the referenced one whose `files` or `include` holds the file. What an import takes from it is `paths`, with
-the folder its targets are relative to, and `baseUrl`. A config another package publishes is not in the repo, so an
-`extends` of one adds nothing."""
+the folder its targets are relative to, `baseUrl` and `customConditions`. A config another package publishes is not in
+the repo, so an `extends` of one adds nothing."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ class Config:
     paths: tuple[tuple[str, tuple[str, ...]], ...] = ()   # pattern -> targets, as written
     paths_base: str = ""                                  # the folder the targets are relative to
     base_url: str | None = None
+    conditions: tuple[str, ...] = ()                      # `customConditions`, which a package's `exports` may match
 
 
 @dataclass
@@ -33,6 +34,7 @@ class _Parsed:
     paths: dict | None = None
     paths_folder: str = ""
     base_url: str | None = None
+    conditions: list[str] | None = None
     files: list[str] | None = None
     include: list[str] | None = None
     patterns_folder: str = ""
@@ -69,7 +71,7 @@ class TsConfigs:
             parsed = next((sub for sub in map(self._read, parsed.references) if sub and _holds(sub, file)), parsed)
         base = parsed.base_url if parsed.base_url is not None else parsed.paths_folder
         return Config(tuple((k, tuple(v)) for k, v in (parsed.paths or {}).items() if isinstance(v, list)), base,
-                      parsed.base_url)
+                      parsed.base_url, tuple(parsed.conditions or ()))
 
     def _near(self, folder: str) -> str | None:
         if folder not in self._nearest:
@@ -120,6 +122,8 @@ def _inherit(out: _Parsed, base: _Parsed) -> _Parsed:
         out.paths, out.paths_folder = base.paths, base.paths_folder
     if base.base_url is not None:
         out.base_url = base.base_url
+    if base.conditions is not None:
+        out.conditions = base.conditions
     if base.files is not None or base.include is not None:
         out.files, out.include, out.patterns_folder = base.files, base.include, base.patterns_folder
     return out
@@ -131,6 +135,8 @@ def _own(out: _Parsed, data: dict, folder: str, references: list[str]) -> _Parse
         out.paths, out.paths_folder = options["paths"], folder
     if isinstance(options.get("baseUrl"), str):
         out.base_url = within(folder, options["baseUrl"])
+    if isinstance(options.get("customConditions"), list):
+        out.conditions = _strings(options["customConditions"])
     if isinstance(data.get("files"), list) or isinstance(data.get("include"), list):
         out.files, out.include, out.patterns_folder = _strings(data.get("files")), _strings(data.get("include")), folder
     out.references = references

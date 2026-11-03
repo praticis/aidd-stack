@@ -1,7 +1,7 @@
 // The config TypeScript reads a file of a project with: the nearest `tsconfig.json` or `jsconfig.json` above it, its
 // `extends` followed; where it maps no path and only refers to other projects (`tsconfig.app.json`), the referenced one
 // whose files hold the file. What the oracles take from it is `paths`, with the folder its targets are relative to,
-// and `baseUrl`.
+// `baseUrl` and `customConditions`.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -47,7 +47,8 @@ function configOf(project, file) {
 // `base` with the config's `baseUrl` and `paths`.
 function optionsOf(config, base) {
   const o = (config && parse(config) && parse(config).options) || {};
-  return { ...base, ...(o.baseUrl ? { baseUrl: o.baseUrl } : {}),
+  return { ...base, ...(o.customConditions ? { customConditions: o.customConditions } : {}),
+           ...(o.baseUrl ? { baseUrl: o.baseUrl } : {}),
            ...(o.paths ? { paths: o.paths, pathsBasePath: o.pathsBasePath || path.dirname(config) } : {}) };
 }
 
