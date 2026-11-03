@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -60,11 +60,10 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
    (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a `feat(graph)` for TS's
    hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs found, the module resolution,
    TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written declaration file, TD-041 (#79, H5-D45),
-   and a package of the repo's own workspace, TD-042 (#80, H5-D46); and the change of behavior, judged per site with `attribution.sh
+   a package of the repo's own workspace, TD-042 (#80, H5-D46), and what a class declares and what a folder names,
+   TD-037, TD-043 and TD-049 (#81, H5-D47); and the change of behavior, judged per site with `attribution.sh
    typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). A function a class
-   field holds, TD-037, a class a class expression declares, TD-043 (H5-D41), and a folder import that ignores the entry
-   its manifest names, TD-049 (H5-D45), and a workspace package whose entry is a build the clone lacks, TD-050
-   (H5-D46), are due in the step too.
+   A workspace package whose entry is a build the clone lacks, TD-050 (H5-D46), is due in the step too.
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
@@ -1472,7 +1471,59 @@ methods among their candidates now, since an abstract method is a symbol.
   stay a package was about 10,100, with 470 of a name that is no member: 10,614 are the former, and the latter are
   what the rule leaves alone.
 
-Next, the change of behavior.
+#### TS's class members and folder entries (#81, H5-D47)
+
+- **Where it lives.** `queries.scm` and `queries.javascript.scm` give a symbol to a class field that holds a function
+  (`method`), and to a class a module's statement declares by an expression (`class`: the binding of a `const`, a `var`
+  or an `export`, and in a JS file `module.exports =`, `exports.X =` and `module.exports.X =`). `class_expressions.py`
+  (27 lines) gives the facts of such a class the name that gives it one, which `type_facts.py` asks (300 lines, at the
+  target); `dispatch.py` has an instance's own field run the function it holds; `modules.py` asks a folder's
+  `package.json` for its entry (`manifest` of `exports.py`) before the folder's `index.*`.
+- **The rule.** H5-D47's. A field of the nearest class of the chain wins, since a base initializes its fields first;
+  what stays out is a field that holds a function by reference, a parameter property, a static field, a class
+  expression with no name and one a function holds.
+- **The proof:**
+  - The case of the fields (`test_ts_hierarchy.py`) is what JS runs (`ts_runs.js`, which compiles the case and runs
+    it): a field that implements an abstract method, overrides a method or a field, is shadowed by a base's field, holds a
+    function by reference, is static, and a JS class's field. The case of the class expressions
+    (`test_ts_class_expressions.py`) is what the checker resolves (`ts_heritage.js` names a class expression as the index
+    does and visits it), in each form and in a JS and a TS module, with the unnamed and the nested apart. The case of the
+    folders (`test_ts_modules.py`) is what TypeScript resolves: `types`, `typings`, `main` without its extension or as a
+    folder, a `main` that names nothing, an `exports` that does not count, and a file beside the folder. Each xfail
+    (TD-037, TD-043, TD-049) passes and goes.
+  - 32 mutants, each rule or query broken once: all die, after the first run left 13 alive that added the JS forms, the
+    `var` form and the nested one, and took out what no case could reach: the CommonJS queries of the TS grammar and
+    two conditions of the dispatch.
+  - Over the corpus (`checks/ts_modules.py`), the 158 imports of a folder TypeScript resolves through a `package.json`,
+    all fastify's, go to none, and the index names the checker's file at 158 more; no other import changes.
+  - Over the corpus (`checks/ts_heritage.py`), the checker's declaration at 6,646 clauses, from 6,642; the clauses that
+    name a class expression, counted apart, go from 3 to 1, a minified bundle's of ctfd; 7 clauses of class expressions
+    that extend a package's, as umbraco's bundles, join those neither names.
+  - Against the checker's calls on ghost, mattermost and grafana, read by the types as the change of behavior will read
+    them: the type index gives the checker's method at 374 more sites, all ghost's, and loses it at none. At 55 sites
+    of ghost it gives a method where the checker, which reads a JS file with no JSDoc, gives none of the repo's, and at 3
+    the method of a JS file where the checker gives its `.d.ts` beside, H5-D45's decision.
+  - The graph: the corpus differs from the baseline by outline's 2 calls (#72's) and by the caller of 583 calls, in
+    mattermost, outline and gotify, a class before and the method now; every endpoint and call is the same but for it.
+    The hold-out does not change. Micro: umbraco, grafana, mattermost, gitea, ghost and outline differ, the other six
+    are identical: 3,776 `method` and 93 `class` symbols gain, 664 change their scope, 171 hierarchy edges come (168
+    `OVERRIDES`, 3 `EXTENDS`) and none goes. `CALLS` found by name: the calls to a symbol this
+    change creates are 10,875 in mattermost, 3,635 in ghost and 5,309 in grafana, and the checker confirms 2,196 of the
+    4,104 member calls it knows in mattermost, 320 of 1,078 in ghost and 521 of 1,960 in grafana; the others are a
+    homonym the resolver chose by name, which the change of behavior replaces with the receiver's method. The edges that go
+    are a call whose name stopped being unique, as a TS call of `searchUsers` that reached a Go function of mattermost's
+    server.
+  - With the reference convention and the probe of #80, the violations are equal in count on ghost, mattermost, umbraco,
+    outline, gitea and grafana, and 564 of `clients-live-in-outbound` change symbol from the class to the method
+    (mattermost 502, outline 54, grafana 8); ghost, umbraco and gitea do not change.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 46.3 s, where it took 41.0 s
+    (13 % more, every branch run above every `main` run), and peaks at 1,453 MiB, where it peaked at 1,450 MiB.
+- **What differs from the plan:** the oracle of the folders showed that a relative import reads the manifest from a
+  `.ts` file as from a `.js`, and that its `exports` do not count; the class expression's name for a `const` is its
+  binding's, not its own (`const X = class Y` is `X`), which is how an import names it; and the CommonJS forms of a
+  class expression are in the JS queries only, since a TS module's CommonJS is no export.
+
+Next, the change of behavior, where TD-050 gets its decision.
 
 ## Decisions made (2026-10-18, by the author)
 

@@ -1369,3 +1369,35 @@ what it counts:
 **What the round shows.** The live TS and JS repos that hold declaration files gain them as files and symbols, and the
 classes that extend what they declare gain their `EXTENDS`; nothing changes in the C# and Go snapshots or in the macro
 graph, and what the golden calls ask of them is the same.
+
+## Thirty-eighth round: validating PR #80 on a live install (2026-11-03, build `0.2.15+a3bee27461fc` to `0.2.15+847c97aae1ae`)
+
+What changed since the thirty-seventh round: PR #80 is merged, a `fix(typescript)` that has an import of a package the
+repo's own workspace declares resolve to the file TypeScript gives it, a change of the graph where a TS repo declares a
+workspace. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`d8b7efb`). The dry-runs of `main`
+  and of the PR's head (`b011805`) on each snapshot, at its sha, are identical in all 10: no live snapshot declares a
+  workspace whose packages its code imports. The live graph held `main`'s dry-run on every snapshot (0 mismatching):
+  10,656 symbols, 23,682 `CALLS`, 15,961 `IMPORTS`, 393 types' and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`a2075ed`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build; the refresh had re-indexed them when the first `after` ran.
+
+**The picture of the graph** differs in 2 of its 16 lists, the labels and the snapshots, by the `IndexRun` counts and
+the build; the 14 others are the same, and the graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields: `atlas_status`, the `ref_diff` of the TS
+snapshot and the `repo_map` of the TS, the Go and the accrual snapshots.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The live repos hold no workspace whose packages their code imports, so the PR changes none of
+their graph: the dry-runs, the graph and every answer are the same, and the corpus's 14,907 imports that now reach a
+file are proven in the PR, not here.

@@ -34,3 +34,15 @@
 (import_statement source: (string) @import)
 
 (call_expression function: (identifier) @_req arguments: (arguments (string) @import) (#eq? @_req "require"))
+
+;; A class a module declares by an expression: the name its binding gives it.
+(program (lexical_declaration (variable_declarator name: (identifier) @name value: (class))) @def.class)
+
+(program (variable_declaration (variable_declarator name: (identifier) @name value: (class))) @def.class)
+
+(program (export_statement declaration: (lexical_declaration (variable_declarator name: (identifier) @name value: (class))) @def.class))
+
+(program (export_statement declaration: (variable_declaration (variable_declarator name: (identifier) @name value: (class))) @def.class))
+
+;; A class field that holds a function is the method its instances run.
+(public_field_definition name: (property_identifier) @name value: [(arrow_function) (function_expression)]) @def.method

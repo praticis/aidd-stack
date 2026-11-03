@@ -13,7 +13,7 @@ from typing import NamedTuple
 
 from ...core.model import FileInfo
 from ..base import ResolveContext
-from .exports import entry
+from .exports import entry, manifest
 from .tsconfig import Config, configs, within
 from .workspaces import package_name, workspaces
 
@@ -96,15 +96,29 @@ def _aliased(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:
 
 
 def _try_paths(ctx: ResolveContext, base: str, folder: bool = False) -> FileInfo | None:
-    """The file `base` names: as written, with the usual extensions, as a folder's `index.*` — and a `.js` written for
-    a `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A
-    path written with a trailing `/` names a folder only."""
-    index = [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS]
-    if folder:
-        return next(filter(None, map(ctx.file_at, index)), None)
+    """The file `base` names: as written, with the usual extensions, as a folder's entry — and a `.js` written for a
+    `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A path
+    written with a trailing `/` names a folder only."""
+    return _folder(ctx, base) if folder else _file(ctx, base) or _folder(ctx, base)
+
+
+def _file(ctx: ResolveContext, base: str) -> FileInfo | None:
     stem = re.sub(r"\.[mc]?jsx?$", "", base)
     compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts", ".d.ts", ".d.mts", ".d.cts")] \
         if stem != base else []
     named = [base] + compiled + [f"{base}{e}" for e in TS_EXTS] if base else []
-    return next(filter(None, map(ctx.file_at, named + index)), None)
+    return next(filter(None, map(ctx.file_at, named)), None)
 
+
+def _folder(ctx: ResolveContext, base: str) -> FileInfo | None:
+    """The file a folder gives an import: what its `package.json` names by `types`, `typings` or `main`, as a file or as
+    a folder's `index`, else its own `index`."""
+    package = workspaces(ctx).packages.get(base)
+    named = manifest(package, lambda written: _file(ctx, within(base, written)) or _index(ctx, within(base, written))) \
+        if package is not None else None
+    return named or _index(ctx, base)
+
+
+def _index(ctx: ResolveContext, base: str) -> FileInfo | None:
+    index = [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS]
+    return next(filter(None, map(ctx.file_at, index)), None)

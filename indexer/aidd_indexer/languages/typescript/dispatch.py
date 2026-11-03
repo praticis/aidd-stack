@@ -1,6 +1,7 @@
 """What a TS or JS call that dispatches runs on an instance of a class, as JS looks a property up. A field the instance
-holds, which a class of its chain declares, is found first, and no method of the graph runs; then the nearest class of
-its `extends` chain whose prototype holds the name: an accessor runs no method either, and a method runs its last
+holds, which a class of its chain declares, is found first, the nearest class's winning since a base initializes its
+fields first: what runs is the function the field holds, none where it holds no function of the repo; then the nearest
+class of its `extends` chain whose prototype holds the name: an accessor runs no method, and a method runs its last
 declaration with a body there, since the implementation follows its overload signatures. An abstract method puts
 nothing on the prototype. A static method, an accessor and a constructor dispatch nothing; past a base the index cannot
 see, the method may be the base's."""
@@ -25,8 +26,9 @@ def dispatched(types: TsTypeIndex, declared: Declared, instance: str, method: Sy
     if method.name == "constructor" or modifiers(method) & (ACCESSOR | {"static"}):
         return []
     chain = _chain(types, declared, instance)
-    if any(_holds(types, declared, t, method.name) for t in chain):
-        return []
+    holder = next((t for t in chain if _holds(types, declared, t, method.name)), None)
+    if holder is not None:
+        return _held(declared, holder, method.name)
     for t in chain:
         found = _runs(declared, t, method.name)
         if found is not None:
@@ -60,6 +62,12 @@ def _holds(types: TsTypeIndex, declared: Declared, t: TypeRef, name: str) -> boo
     """Whether instances of the class `t` hold `name` as their own: a field or a parameter property, not a getter."""
     return types.holds(t, name) and not any(m.name == name and modifiers(m) & ACCESSOR
                                             for m in declared.methods.get(qualified(t), ()))
+
+
+def _held(declared: Declared, t: TypeRef, name: str) -> list[SymbolInfo]:
+    """The function a field of the class `t` holds under `name`: the symbol the field is, none for a field that holds no
+    function written in its place."""
+    return [m for m in declared.methods.get(qualified(t), ()) if m.name == name]
 
 
 def _runs(declared: Declared, t: TypeRef, name: str) -> list[SymbolInfo] | None:

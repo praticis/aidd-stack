@@ -114,7 +114,7 @@ BASES = {
     "app/use:U1": "lib/base:Base", "app/use:U2": "lib/models:A", "app/use:U3": "lib/models:B",
     "app/use:U4": "lib/models:A", "app/use:U5": "lib/base:Base", "app/use:U6": "lib/named:N",
     "app/use:U7": "lib/more:M", "app/use:U8": "lib/mixed:X", "app/use:U9": "lib/mixed:Y",
-    "app/use:U10": "lib/twice:Second", "app/use:U11": "other", "app/use:U12": "expression",
+    "app/use:U10": "lib/twice:Second", "app/use:U11": "other", "app/use:U12": "lib/expr:Expr",
     "app/use:U13": "lib/base:Base", "app/use:U14": "lib/named:N", "app/use:U15": "lib/esdefault:Ed",
     "app/main:V1": "lib/eq:T", "app/main:V2": "lib/eq:T", "app/main:V3": "lib/eq:T", "app/main:V4": "lib/base:Base",
     "app/main:V5": "lib/models:A", "app/main:V6": "lib/inner:L", "app/main:V7": "lib/inner:L",
@@ -130,7 +130,7 @@ CALLS = {
     ("app/main.ts", 21): "lib/eq:T.run",
     ("app/main.ts", 22): "lib/merged:Mg.run",
 }
-NONE = ("other", "expression")
+NONE = ("other",)
 
 
 @pytest.fixture(scope="module")

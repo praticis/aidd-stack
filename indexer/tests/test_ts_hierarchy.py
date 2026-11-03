@@ -74,13 +74,24 @@ export class Copy implements P { save() { return "Copy"; } }
 export class Names extends Holder<string> { put(x: string) {} }
 export class Field0 { run = () => "Field0"; }
 export class Field1 extends Field0 { run() { return "Field1"; } }
+export abstract class Req { abstract request(): string; }
+export class ReqImpl extends Req { request = () => "ReqImpl"; }
+const other = () => "other";
+export class Keeps { run() { return "Keeps"; } }
+export class Refs extends Keeps { run = other; }
+export class Statics { static make = () => 1; }
+export class Statics2 extends Statics { static make = () => 2; }
+export class Shadow0 { run = function () { return "Shadow0"; }; }
+export class Shadow1 extends Shadow0 { run() { return "Shadow1"; } }
+export class Shadow2 extends Shadow1 { run = () => "Shadow2"; }
 function mixin<T extends new (...a: any[]) => object>(B: T) { return class extends B {}; }
 export class Mixed extends mixin(P) { save() { return "Mixed"; } }
 """,
     "app/widget.tsx": 'import { Doc } from "./use";\nexport class Widget extends Doc { save() { return "Widget"; } }\n',
     "app/legacy.js": """const { Base } = require("./models");
 class Old extends Base { save() { return "Old"; } }
-module.exports = { Old };
+class Fld extends Base { save() { return "Fld"; } load = () => "Fld"; }
+module.exports = { Old, Fld };
 """,
     "app/view.ts": 'import { Component } from "some-package";\nexport class View extends Component { render() {} }\n',
 }
@@ -145,20 +156,40 @@ def _overrides(rows: list[dict], ran: list[dict]) -> set:
     members = defaultdict(list)
     for r in (r for r in rows if "member" in r):
         members[f"{_module(r['file'])}:{r['name']}"].append(r)
+    extends = {source: target for source, kind, target in _checker_edges(rows) if kind == "EXTENDS"}
     found = defaultdict(set)
-    for r in (r for r in ran if r["runs"] not in (None, "own", "accessor", "outside")):
+    for r in ran:
+        runs, impl = _implementation(members, extends, r)
+        if runs is None:
+            continue
         for owner in _above(up, r["class"]):
-            for o in (o for o in members[owner] if o["member"] == r["name"] and o["form"] in METHODS):
-                impl = max((m for m in members[r["runs"]] if m["member"] == r["name"] and m["form"] == "method"),
-                           key=lambda m: m["line"])
-                if r["runs"] != owner:
-                    key = (f"{r['runs']}.{r['name']}", impl["line"]), (f"{owner}.{r['name']}", o["line"]), owner
+            for o in (o for o in members[owner] if o["member"] == r["name"] and (o["form"] in METHODS or o.get("fn"))):
+                if runs != owner:
+                    key = (f"{runs}.{r['name']}", impl), (f"{owner}.{r['name']}", o["line"]), owner
                     found[key].add(r["class"])
     return {(source, target, tuple(sorted({t for d in ds for t in _above(up, d) | {d} if owner in _above(up, t)})))
             for (source, target, owner), ds in found.items()}
 
 
 METHODS = ("method", "signature", "abstract")
+
+
+def _implementation(members: dict, extends: dict[str, str], r: dict) -> tuple[str | None, int]:
+    """The class that runs the name on an instance of `r`'s class and the line of what it declares: its method, or the
+    function the field of the nearest class that holds the name holds, which an instance holds as its own."""
+    if r["runs"] in (None, "accessor", "outside"):
+        return None, 0
+    if r["runs"] != "own":
+        impl = max((m for m in members[r["runs"]] if m["member"] == r["name"] and m["form"] == "method"),
+                   key=lambda m: m["line"])
+        return r["runs"], impl["line"]
+    holder: str | None = r["class"]
+    while holder is not None:
+        fields = [m for m in members[holder] if m["member"] == r["name"] and m["form"] == "field"]
+        if fields:
+            return (holder, fields[-1]["line"]) if fields[-1].get("fn") else (None, 0)
+        holder = extends.get(holder)
+    return None, 0
 
 
 def _above(up: dict[str, set[str]], t: str) -> set[str]:

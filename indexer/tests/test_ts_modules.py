@@ -76,6 +76,32 @@ import React from "react";
     "nuxt/pages/p.ts": 'import { c } from "~/components/c";\n',
     "nuxt/components/c.ts": "export const c = 1;\n",
     "examples/demo/run.js": 'const app = require("../..");\n',
+    "fold/package.json": '{"name": "fold", "types": "./types/api.d.ts", "main": "./lib/entry.js"}\n',
+    "fold/types/api.d.ts": "export declare class Api {}\n",
+    "fold/lib/entry.js": "module.exports = {};\n",
+    "fold/index.ts": "export const fold = 1;\n",
+    "tfold/package.json": '{"name": "tfold", "typings": "./t.d.ts"}\n',
+    "tfold/t.d.ts": "export declare const t: number;\n",
+    "mfold/package.json": '{"name": "mfold", "main": "./lib/m"}\n',
+    "mfold/lib/m.js": "module.exports = {};\n",
+    "dfold/package.json": '{"name": "dfold", "main": "lib"}\n',
+    "dfold/lib/index.js": "module.exports = {};\n",
+    "nfold/package.json": '{"name": "nfold", "main": "./gone.js"}\n',
+    "nfold/index.ts": "export const nfold = 1;\n",
+    "xfold/package.json": '{"name": "xfold", "exports": {".": "./src/x.ts"}, "main": "./lib/x.js"}\n',
+    "xfold/src/x.ts": "export const x = 1;\n",
+    "xfold/lib/x.js": "module.exports = {};\n",
+    "ffold.ts": "export const ffold = 1;\n",
+    "ffold/package.json": '{"name": "ffold", "main": "./lib/f.js"}\n',
+    "ffold/lib/f.js": "module.exports = {};\n",
+    "consumers/use.ts": """import { Api } from "../fold";
+import { t } from "../tfold";
+import m from "../mfold";
+import d from "../dfold";
+import { nfold } from "../nfold";
+import x from "../xfold";
+import { ffold } from "../ffold";
+""",
 }
 CHECKER = {
     ("app/use.ts", "@core/base"): "lib/core/base.ts",
@@ -93,6 +119,13 @@ CHECKER = {
     ("js/app.js", "~/z"): "js/web/z.js",
     ("nuxt/pages/p.ts", "~/components/c"): None,
     ("examples/demo/run.js", "../.."): "index.js",
+    ("consumers/use.ts", "../fold"): "fold/types/api.d.ts",
+    ("consumers/use.ts", "../tfold"): "tfold/t.d.ts",
+    ("consumers/use.ts", "../mfold"): "mfold/lib/m.js",
+    ("consumers/use.ts", "../dfold"): "dfold/lib/index.js",
+    ("consumers/use.ts", "../nfold"): "nfold/index.ts",
+    ("consumers/use.ts", "../xfold"): "xfold/lib/x.js",
+    ("consumers/use.ts", "../ffold"): "ffold.ts",
 }
 ALIASED = {("nuxt/pages/p.ts", "~/components/c"): "nuxt/components/c.ts"}
 PACKAGES = {("app/use.ts", "react"): "react", ("app/use.ts", "@gone/x"): "@gone/x"}
@@ -108,7 +141,7 @@ def case(tmp_path_factory) -> Path:
 
 
 def _checker(root: Path) -> dict[tuple[str, str], str | None]:
-    files = sorted(rel for rel in FILES if rel.endswith((".ts", ".js")))
+    files = sorted(rel for rel in FILES if rel.endswith((".ts", ".js")) and not rel.endswith(".d.ts"))
     out = subprocess.run(["node", str(CHECKS / "ts_modules.js"), str(root)], input="\n".join(files),
                          capture_output=True, text=True, check=True,
                          env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")}).stdout
