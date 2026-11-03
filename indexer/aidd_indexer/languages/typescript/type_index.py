@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.types import Field, TypeIndex, TypeRef, Unknown
 from .commonjs import OWN
+from .declarations import beside
 from .modules import Package, module_target
 from .type_facts import Member, Owner, TsTypes
 
@@ -84,6 +85,7 @@ class TsTypeIndex(TypeIndex):
         self._facts = {f.path: TsTypes.of(ctx.facts.get(f.id)) for f in ctx.files_by_path.values()
                        if f.language in FAMILY}
         self._files = {module_of(path): path for path in self._facts}
+        self._beside = beside(self._facts)
         self._targets: dict[tuple[str, str], str | Outside | Unknown] = {}
 
     # -- the type service's questions ------------------------------------------------------------------------------
@@ -219,7 +221,8 @@ class TsTypeIndex(TypeIndex):
             found = self._export(target, name, depth + 1) if isinstance(target, str) else target
             if isinstance(found, (Denoted, Outside)):
                 return found
-        return NO_MEMBER
+        declared = self._beside.get(file)
+        return NO_MEMBER if declared is None else self._export(declared, name, depth + 1)
 
     def _target(self, file: str, spec: str) -> str | Outside | Unknown:
         """The file of the repo, or the package, an import in the file at `file` names."""

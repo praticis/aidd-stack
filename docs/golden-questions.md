@@ -1294,3 +1294,39 @@ a write. 28 answers are the same field by field, and the status differs only in 
 
 **What the round shows.** The live MCP answers the calls of the five tools as before, which the probe over a throwaway
 graph could not cover: the HTTP envelope of the SDK, with the reorganized tools behind it.
+
+## Thirty-sixth round: validating PR #78 on a live install (2026-11-02, build `0.2.15+521ede71cef9` to `0.2.15+e7bc338ec7a4`)
+
+What changed since the thirty-fifth round: PR #78 is merged, a refactor that splits the refresher's modules along the
+seams they already have: the manifest's tenants, the planner's discovery and ref policy, the policy's layers, the
+mirror's sync and the knowledge service's `record_insight`. What they read, plan and refuse must not change. The same 3
+tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall, read-only:** the install ran `main`'s code (`6bdaeb8`). The dry-runs of `main` and of the PR's
+  head (`a80fafd`) on each snapshot, at its sha, are identical in all 10, field by field. The live graph holds `main`'s
+  dry-run on every snapshot (0 mismatching): 10,609 symbols, 104 of them with a convention's role, 23,681 `CALLS`,
+  15,890 `IMPORTS`, 381 types' and overrides' edges, 351 modules, 1 of them with a layer, 0 violations. `aidd plan`
+  (without fetch and without the database) and `aidd policy show` of each of the 7 tenants, and `aidd policy check`,
+  were kept.
+- **After the author's reinstall from `main` (`f6a92ff`):** the core's modules are in the build's fingerprint, so the
+  10 snapshots ran since the before, all ok, and each holds the new build; the refresh had re-indexed them when the
+  first `after` ran. The plan and the policy of the 7 tenants and the policy check are the same, byte for byte.
+
+**The picture of the graph** is identical in 14 of its 16 lists, the symbols' roles and the modules' layers included;
+the labels differ only in the `IndexRun` counts, and the snapshots only in the build. The graph after holds the
+branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields:
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same |
+
+**What the round shows.** The refresher reads the manifest and the policy, plans the refs and syncs the mirrors as it
+did: the 7 tenants' plans and policies are the same bytes, and a full refresh re-indexed the 10 snapshots to the same
+graph with the new build. `record_insight` belongs to the knowledge service, and the tests and the probe hold it.

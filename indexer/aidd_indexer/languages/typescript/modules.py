@@ -78,13 +78,14 @@ def _aliased(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:
 
 def _try_paths(ctx: ResolveContext, base: str, folder: bool = False) -> FileInfo | None:
     """The file `base` names: as written, with the usual extensions, as a folder's `index.*` — and a `.js` written for
-    a `.ts` source (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A path written with a
+    a `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A path written with a
     trailing `/` names a folder only."""
     index = [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS]
     if folder:
         return next(filter(None, map(ctx.file_at, index)), None)
     stem = re.sub(r"\.[mc]?jsx?$", "", base)
-    compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts")] if stem != base else []
+    compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts", ".d.ts", ".d.mts", ".d.cts")] \
+        if stem != base else []
     named = [base] + compiled + [f"{base}{e}" for e in TS_EXTS] if base else []
     return next(filter(None, map(ctx.file_at, named + index)), None)
 

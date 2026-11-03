@@ -537,3 +537,15 @@
   answer the same byte for byte, the 109 errors among them, and seven rounds alternating the two take the same time
   within ±4 %. Step 12's remaining code goes with the step that changes it (H5-D44): the core's HTTP modules with step
   6, and `extract` and `resolve` with step 12's last PR, after TS's step 5.
+- 2026-11-02: PR #78 is validated on a live install (the thirty-sixth round). The dry-runs of `main` and of the PR's
+  head are identical on the 10 snapshots, and the graph holds them with the new build on each; the picture is identical
+  in its 16 lists but for the build and the `IndexRun` counts, and of the 29 calls, 24 are the same and 5 differ only
+  in their time, build and refresh fields. What `aidd plan` and `aidd policy` print for each of the 7 tenants is the
+  same, byte for byte, before and after.
+- 2026-11-02: TS's declaration files, PR #79 (`fix(typescript)`), which closes TD-041 (H5-D45): discovery reads a
+  hand-written `.d.ts`, an import resolves to one by TypeScript's order where no implementation file exists, and beside
+  a JS file the import keeps the file Node loads while a name the JS cannot declare is the declaration file's. The
+  imports TypeScript resolves to a `.d.ts` that the index did not extract go from 1,199 to 1, and its heritage clauses
+  match the checker's at 6,205, from 6,153, fastify's 18 among them. The proof found TD-049, a folder import that
+  ignores the entry its manifest names. Micro: 157 files, 517 symbols and 96 imports in declaration files, and `CALLS`
+  found by name; the corpus and the hold-out as on `main`.
