@@ -3,7 +3,8 @@ file (`tsconfig.py`), a relative path, a pattern of its `paths` or a name below 
 extensions and a folder's `index.*`; else a conventional path alias (`@/`, `~/`, `src/`, `#`, `$lib`), which a
 bundler's config declares where no config of the repo maps it; else the entry of a package the repo's own workspace
 declares (`workspaces.py`), which its `package.json` names as TypeScript reads it (`exports.py`); or else an npm package
-(`node:` is the platform's)."""
+(`node:` is the platform's). A file a project the config references emits as a declaration is that project's source
+(`references.py`), wherever the path comes from."""
 
 from __future__ import annotations
 
@@ -14,7 +15,8 @@ from typing import NamedTuple
 from ...core.model import FileInfo
 from ..base import ResolveContext
 from .exports import entry, manifest
-from .tsconfig import Config, configs, within
+from .references import source
+from .tsconfig import Config, Project, configs, within
 from .workspaces import package_name, workspaces
 
 CONDITIONS = frozenset({"types", "import"})
@@ -28,9 +30,10 @@ class Package(NamedTuple):
 
 def module_target(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | Package | None:
     """The file of the repo, or the package, an import of `spec` in `file` names; None for a path that names no file."""
-    if spec.startswith("."):
-        return _try_paths(ctx, within(posixpath.dirname(file.path), spec), folder=spec.endswith("/"))
     config = configs(ctx).of(file.path)
+    projects = config.projects if config is not None else ()
+    if spec.startswith("."):
+        return _try_paths(ctx, within(posixpath.dirname(file.path), spec), spec.endswith("/"), projects)
     found = _configured(ctx, config, spec) if config is not None else None
     if found is not None:
         return found
@@ -52,7 +55,8 @@ def _workspace(ctx: ResolveContext, file: FileInfo, spec: str, config: Config | 
     if folder is None:
         return None
     return entry(spaces.packages[folder], subpath, CONDITIONS | frozenset(config.conditions if config else ()),
-                 lambda written, whole: _try_paths(ctx, within(folder, written), whole))
+                 lambda written, whole: _try_paths(ctx, within(folder, written), whole,
+                                                   config.projects if config else ()))
 
 
 def _configured(ctx: ResolveContext, config: Config, spec: str) -> FileInfo | None:
@@ -60,8 +64,10 @@ def _configured(ctx: ResolveContext, config: Config, spec: str) -> FileInfo | No
     names below `baseUrl`. A pattern that matches and names no file leaves `baseUrl` untried, as TypeScript does."""
     targets = _mapped(config.paths, spec)
     if targets is None:
-        return _try_paths(ctx, within(config.base_url, spec)) if config.base_url is not None else None
-    return next((f for f in (_try_paths(ctx, within(config.paths_base, t)) for t in targets) if f), None)
+        return _try_paths(ctx, within(config.base_url, spec), False, config.projects) \
+            if config.base_url is not None else None
+    return next((f for f in (_try_paths(ctx, within(config.paths_base, t), False, config.projects)
+                             for t in targets) if f), None)
 
 
 def _mapped(paths: tuple[tuple[str, tuple[str, ...]], ...], spec: str) -> list[str] | None:
@@ -95,30 +101,36 @@ def _aliased(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | None:
     return None
 
 
-def _try_paths(ctx: ResolveContext, base: str, folder: bool = False) -> FileInfo | None:
+def _try_paths(ctx: ResolveContext, base: str, folder: bool = False,
+               projects: tuple[Project, ...] = ()) -> FileInfo | None:
     """The file `base` names: as written, with the usual extensions, as a folder's entry — and a `.js` written for a
     `.ts` source or its declaration file (`import { x } from './enum.js'`, TS with `moduleResolution: nodenext`). A path
     written with a trailing `/` names a folder only."""
-    return _folder(ctx, base) if folder else _file(ctx, base) or _folder(ctx, base)
+    return _folder(ctx, base, projects) if folder else _file(ctx, base, projects) or _folder(ctx, base, projects)
 
 
-def _file(ctx: ResolveContext, base: str) -> FileInfo | None:
+def _file(ctx: ResolveContext, base: str, projects: tuple[Project, ...]) -> FileInfo | None:
     stem = re.sub(r"\.[mc]?jsx?$", "", base)
     compiled = [f"{stem}{e}" for e in (".ts", ".tsx", ".mts", ".cts", ".d.ts", ".d.mts", ".d.cts")] \
         if stem != base else []
     named = [base] + compiled + [f"{base}{e}" for e in TS_EXTS] if base else []
-    return next(filter(None, map(ctx.file_at, named)), None)
+    return _first(ctx, named, projects)
 
 
-def _folder(ctx: ResolveContext, base: str) -> FileInfo | None:
+def _first(ctx: ResolveContext, names: list[str], projects: tuple[Project, ...]) -> FileInfo | None:
+    """The first of `names` that is a file of the repo, where the declaration file a project the config references
+    emits is its source, though the build is there too."""
+    return next(filter(None, (source(ctx, projects, n) or ctx.file_at(n) for n in names)), None)
+
+
+def _folder(ctx: ResolveContext, base: str, projects: tuple[Project, ...]) -> FileInfo | None:
     """The file a folder gives an import: what its `package.json` names by `types`, `typings` or `main`, as a file or as
     a folder's `index`, else its own `index`."""
     package = workspaces(ctx).packages.get(base)
-    named = manifest(package, lambda written: _file(ctx, within(base, written)) or _index(ctx, within(base, written))) \
-        if package is not None else None
-    return named or _index(ctx, base)
+    named = manifest(package, lambda written: _file(ctx, within(base, written), projects)
+                     or _index(ctx, within(base, written), projects)) if package is not None else None
+    return named or _index(ctx, base, projects)
 
 
-def _index(ctx: ResolveContext, base: str) -> FileInfo | None:
-    index = [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS]
-    return next(filter(None, map(ctx.file_at, index)), None)
+def _index(ctx: ResolveContext, base: str, projects: tuple[Project, ...]) -> FileInfo | None:
+    return _first(ctx, [f"{base}/index{e}" if base else f"index{e}" for e in TS_EXTS], projects)
