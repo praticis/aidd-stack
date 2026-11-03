@@ -579,3 +579,7 @@
   `method` and 93 `class` symbols, 171 hierarchy edges (168 `OVERRIDES`, 3 `EXTENDS`) and `CALLS` found by name that
   reach the new symbols; the corpus differs only by the caller of 583 HTTP calls, a class before and a method now, and
   the hold-out as on `main`.
+- 2026-11-03: PR #81 is validated on a live install (the thirty-ninth round). The dry-runs of `main` and of the PR's
+  head are identical in 7 of the 10 snapshots and differ in the 3 TS and JS ones, by 29 symbols, 140 `CALLS` found by
+  name and 11 hierarchy edges. The graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 23
+  are the same and 6 differ, in their time, build and refresh fields and in 4 scores of `find_symbol`.
