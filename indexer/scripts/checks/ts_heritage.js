@@ -7,7 +7,7 @@
 // symbol (a mixin's call). Where a class's `extends` names a value, the declaration is that of the class's base type as
 // the checker types it, or `expression` for a class expression's. Each file is read with the `baseUrl` and `paths` of
 // its config (`ts_configs.js`). With `--members`, also
-// each member of each class and interface, with its form; with `--files`, only the files of the one project whose
+// each member of each class and interface, with its form (`fn` for a field that holds a function literal); with `--files`, only the files of the one project whose
 // paths, relative to it, come one per line on stdin; with `--link`, a workspace package resolves through the link a
 // package manager makes (`ts_link.js`). The checker reads and types the files; nothing runs.
 //
@@ -44,10 +44,30 @@ function owners(decl) {
   return names.join(".");
 }
 
+const isModuleExports = (n) => ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression)
+  && n.expression.text === "module" && n.name.text === "exports";
+
+// The name of a class a statement of the module declares by an expression: the binding of `const X = class {}`, the
+// class's own name in `module.exports = class X {}`, the property of `exports.X = class {}`; none for any other.
+function expressionName(node) {
+  const p = node.parent;
+  if (ts.isVariableDeclaration(p) && ts.isIdentifier(p.name)) {
+    const statement = p.parent.parent;
+    return ts.isVariableStatement(statement) && ts.isSourceFile(statement.parent) ? p.name.text : null;
+  }
+  const assigns = ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.EqualsToken && p.right === node
+    && ts.isExpressionStatement(p.parent) && ts.isSourceFile(p.parent.parent) && ts.isPropertyAccessExpression(p.left);
+  if (!assigns) return null;
+  if (isModuleExports(p.left)) return node.name ? node.name.text : null;
+  const owner = p.left.expression;
+  return (ts.isIdentifier(owner) && owner.text === "exports") || isModuleExports(owner) ? p.left.name.text : null;
+}
+
 function where(project, decl) {
   const file = path.relative(project, decl.getSourceFile().fileName);
   if (file.startsWith("..") || file.split(path.sep).includes("node_modules")) return "outside";
-  return `${file.replace(/\.[mc]?[jt]sx?$/, "")}:${owners(decl)}`;
+  const name = ts.isClassExpression(decl) ? expressionName(decl) : owners(decl);
+  return `${file.replace(/\.[mc]?[jt]sx?$/, "")}:${name}`;
 }
 
 // A type alias stands for the class or interface it names; what is no class or interface (a value, an object type) is
@@ -68,10 +88,11 @@ function declarations(checker, project, expr) {
 // A value a class extends, as a class a CommonJS module exports in an object literal (`module.exports = { A }`), is a
 // property to the symbol and the class to the type.
 function baseTypes(checker, project, node) {
-  const type = checker.getDeclaredTypeOfSymbol(checker.getSymbolAtLocation(node.name));
+  const symbol = node.name ? checker.getSymbolAtLocation(node.name) : checker.getTypeAtLocation(node).symbol;
+  const type = checker.getDeclaredTypeOfSymbol(symbol);
   const found = checker.getBaseTypes(type).flatMap((b) => (b.symbol && b.symbol.declarations) || [])
     .filter((d) => ts.isClassDeclaration(d) || ts.isClassExpression(d))
-    .map((d) => (ts.isClassExpression(d) ? "expression" : where(project, d)));
+    .map((d) => (ts.isClassExpression(d) && !expressionName(d) ? "expression" : where(project, d)));
   return found.length ? [...new Set(found)].sort() : ["other"];
 }
 
@@ -95,7 +116,9 @@ function members(file, node, row) {
   const line = (n) => file.getLineAndCharacterOfPosition(n.getStart(file)).line + 1;
   for (const m of node.members) {
     const f = form(m);
-    if (f && m.name && ts.isIdentifier(m.name)) row({ member: m.name.text, form: f, line: line(m.name) });
+    const fn = ts.isPropertyDeclaration(m) && m.initializer
+      && (ts.isArrowFunction(m.initializer) || ts.isFunctionExpression(m.initializer));
+    if (f && m.name && ts.isIdentifier(m.name)) row({ member: m.name.text, form: f, line: line(m.name), ...(fn && { fn }) });
     if (ts.isConstructorDeclaration(m)) {
       for (const p of m.parameters.filter((p) => ts.isParameterPropertyDeclaration(p, m) && ts.isIdentifier(p.name))) {
         row({ member: p.name.text, form: "field", line: line(p.name) });
@@ -111,16 +134,18 @@ function report(program, project, arg, files, withMembers) {
     if (!file) continue;
     const rel = path.relative(project, fileName);
     const visit = (node) => {
-      if ((ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.name) {
+      const expression = ts.isClassExpression(node) ? expressionName(node) : null;
+      if ((ts.isClassDeclaration(node) && node.name) || ts.isInterfaceDeclaration(node) || expression) {
         const base = {
-          project: arg, file: rel, name: owners(node), kind: ts.isClassDeclaration(node) ? "class" : "interface",
-          at: file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1, top: ts.isSourceFile(node.parent),
+          project: arg, file: rel, name: expression || owners(node), kind: ts.isInterfaceDeclaration(node) ? "interface" : "class",
+          at: file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1,
+          top: expression ? true : ts.isSourceFile(node.parent),
         };
         for (const clause of node.heritageClauses || []) {
           const which = clause.token === ts.SyntaxKind.ExtendsKeyword ? "extends" : "implements";
           for (const t of clause.types) {
             let declared = declarations(checker, project, t.expression);
-            if (which === "extends" && ts.isClassDeclaration(node) && declared[0] === "other") {
+            if (which === "extends" && !ts.isInterfaceDeclaration(node) && declared[0] === "other") {
               declared = baseTypes(checker, project, node);
             }
             console.log(JSON.stringify({ ...base, clause: which, declared }));
