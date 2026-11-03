@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -54,16 +54,16 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in ten PRs,
-   as Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the
-   TypeScript compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against
-   TypeScript's binder (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a
-   `feat(graph)` for TS's hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs
-   found, the module resolution, TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written
-   declaration file, TD-041, and a package of the repo's own workspace, TD-042; and the change of behavior, judged per
-   site with `attribution.sh typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5"
-   below). A function a class field holds, TD-037, and a class a class expression declares, TD-043, are due in the
-   step too (H5-D41).
+1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in ten PRs, as
+   Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the TypeScript
+   compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against TypeScript's binder
+   (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a `feat(graph)` for TS's
+   hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs found, the module resolution,
+   TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written declaration file, TD-041 (#79, H5-D45),
+   and a package of the repo's own workspace, TD-042; and the change of behavior, judged per site with `attribution.sh
+   typescript,tsx,javascript` and against the compiler on ghost and outline ("TS's step 5" below). A function a class
+   field holds, TD-037, a class a class expression declares, TD-043 (H5-D41), and a folder import that ignores the entry
+   its manifest names, TD-049 (H5-D45), are due in the step too.
    Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
    validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
    not hold it.
@@ -1368,7 +1368,51 @@ methods among their candidates now, since an abstract method is a symbol.
   namespace no longer replaces the class it merges with, and `import * as` of an `export =` module takes its own value,
   as the checker does.
 
-Next, the `fix` PRs of TD-041 and TD-042, then the change of behavior.
+#### TS's declaration files (#79, H5-D45)
+
+- **Where it lives.** `core/config.py` no longer lists `.d.ts` among the generated suffixes, so discovery reads a
+  hand-written declaration file. `languages/typescript/modules.py` resolves an import to one by TypeScript's order,
+  `.ts`, `.tsx`, the declaration file, then the JS, in each of its extensions, and `declarations.py` pairs a JS file
+  with the declaration file that describes it (`a.d.ts` beside `a.js` or `a.jsx`, `a.d.mts` beside `a.mjs`, `a.d.cts`
+  beside `a.cjs`). The type index asks that file for a name the JS does not give.
+- **The rule, option B of the plan:** beside a JS file, an import names the JS file, whose values are the JS's, as an
+  override is what the JS runs (H5-D39) and a `require` in a TS file is what Node runs (H5-D41); a name the JS cannot
+  declare is the declaration file's, asked after the JS's own names and its `export *`. It diverges from the checker on
+  purpose at the import of such a pair and at what its instance is. An ambient `declare module 'pkg'` stays a package's,
+  and a global declaration names no module.
+- **The proof:**
+  - The case (`test_ts_declarations.py`), checked on each run against TypeScript's resolution and checker
+    (`checks/ts_modules.js`, `ts_heritage.js`, `ts_checker.js`): a types-only module, a folder's `index.d.ts`, a
+    `.d.mts` and a `.d.cts`, a `.js` written for its `.d.ts`, a pair in each extension, the JS's names before the
+    declaration file's, an ambient module and a global script. The checker names a declaration file `x.d` now, as the
+    index does. 14 mutants, each killed after a case was added for the one that survived.
+  - Over the corpus (`checks/ts_modules.py`), the imports TypeScript resolves to a `.d.ts` that the index did not
+    extract go from 1,199 to 1; the index names the checker's file at 904 more. 495 are a JS file beside its `.d.ts`,
+    by decision: ghost 312, fastify and directus; and 158, all fastify's, are a folder's `package.json` entry,
+    which the index did not read before either, TD-049. The 73 new imports of a file the index names and the checker
+    does not are `.vue` components a declaration file imports, as in the others.
+  - Over the corpus (`checks/ts_heritage.py`), the index names the checker's declaration at 6,205 heritage clauses,
+    where it gave it at 6,153, fastify's 18 among them. The 35 new "index only" are the Cloudflare runtime's types that
+    two generated `worker-configuration.d.ts` declare: the repo's config sets no DOM `lib`, which the oracle does not
+    read.
+  - Against the checker's calls on ghost, read by the types as the change of behavior will read them: the type
+    index gives the checker's method at 204 more of 223,704 sites and loses it at none; the 223 of the settings cache
+    stay `CacheManager`'s. Outline and mattermost: no site changes.
+  - The graph: the corpus differs from the baseline by outline's 2 calls only (#72's), the hold-out by none; micro:
+    9 of 12 repos differ, by 157 files, 517 symbols and 96 imports, all in declaration files, with none removed, and
+    by `CALLS` found by name: 7,303 edges come and 3,018 go. A site that reached an unrelated homonym of another package
+    now reaches the command or the method its declaration file declares (mattermost's `cy.visit()`, 3,407 sites);
+    112 are a site that reaches both a JS class and the `declare class` beside it. The ambiguous ones, as outline's
+    koa-passport typings, go when the resolver reads the receivers' types, in the change of behavior.
+  - With the reference convention and a probe that uses every key of the format, the six TS repos of the micro set
+    gain 153 files, all in the probe's layer for declarations, 498 symbols, 11 entry points and 42 violations, all of
+    them in or about a declaration file; nothing else in their output changes.
+  - The cost: ghost's dry-run, the median of three alternated with `main`'s, takes 44.9 s, where it took 45.0 s, and
+    peaks at 1,450 MiB, where it peaked at 1,447 MiB.
+- **What differs from the plan:** the proof found TD-049, which the plan did not count; and the `ts_checker.js` naming
+  of a declaration file, which the plan placed in the test, is in the case's commit.
+
+Next, the `fix` of TD-042, then the change of behavior.
 
 ## Decisions made (2026-10-18, by the author)
 

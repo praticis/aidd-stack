@@ -542,3 +542,10 @@
   in its 16 lists but for the build and the `IndexRun` counts, and of the 29 calls, 24 are the same and 5 differ only
   in their time, build and refresh fields. What `aidd plan` and `aidd policy` print for each of the 7 tenants is the
   same, byte for byte, before and after.
+- 2026-11-02: TS's declaration files, PR #79 (`fix(typescript)`), which closes TD-041 (H5-D45): discovery reads a
+  hand-written `.d.ts`, an import resolves to one by TypeScript's order where no implementation file exists, and beside
+  a JS file the import keeps the file Node loads while a name the JS cannot declare is the declaration file's. The
+  imports TypeScript resolves to a `.d.ts` that the index did not extract go from 1,199 to 1, and its heritage clauses
+  match the checker's at 6,205, from 6,153, fastify's 18 among them. The proof found TD-049, a folder import that
+  ignores the entry its manifest names. Micro: 157 files, 517 symbols and 96 imports in declaration files, and `CALLS`
+  found by name; the corpus and the hold-out as on `main`.
