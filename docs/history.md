@@ -592,3 +592,7 @@
   4,761 more imports (mattermost 3,362, ghost 1,399) and no other import changes; the heritage, the corpus and the hold-out
   are as on `main`. Micro: mattermost and ghost differ, by 3,359 and 1,352 `IMPORTS` that go from a package to a file and
   6 `CALLS` found by name.
+- 2026-11-03: PR #82 is validated on a live install (the fortieth round). The dry-runs of `main` and of the PR's head are
+  identical in all 10 snapshots, since no live repo references a project whose output its code imports. The graph after
+  holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in their time,
+  build and refresh fields.

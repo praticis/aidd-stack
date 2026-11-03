@@ -1440,3 +1440,36 @@ scores of 4 results go from 7.44 to 7.45 as the symbols of the TS snapshots grow
 them as symbols, with the hierarchy edges of the classes that extend them; nothing changes in the C# and Go snapshots or
 in the macro graph, and what the golden calls ask of them is the same.
 
+## Fortieth round: validating PR #82 on a live install (2026-11-03, build `0.2.15+e8eb3b56bc91` to `0.2.15+631fcf176e28`)
+
+What changed since the thirty-ninth round: PR #82 is merged, a `fix(typescript)` that has an import that names the output
+of a project the importing file's config references resolve to the source that project builds it from, a change of the
+graph where a TS or JS repo references a project whose output its code imports. The same 3 tenants and 10 snapshots, and
+29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`ce88d70`). The dry-runs of `main`
+  and of the PR's head (`9ae6dce`) on each snapshot, at its sha, are identical in all 10: no live snapshot references a
+  project whose output its code imports. The live graph held `main`'s dry-run on every snapshot (0 mismatching): 10,685
+  symbols, 23,822 `CALLS`, 15,961 `IMPORTS`, 404 types' and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`566a00c`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph** differs in 2 of its 16 lists, the labels and the snapshots, by the `IndexRun` counts and the
+build; the 14 others are the same, and the graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field, and 5 differ only in their time, build and refresh fields: `atlas_status`, the `ref_diff` of the TS
+snapshot and the `repo_map` of the TS, the Go and the accrual snapshots.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The live repos reference no project whose output their code imports, so the PR changes none of
+their graph: the dry-runs, the graph and every answer are the same, and the corpus's 4,761 imports that now reach a source
+are proven in the PR, not here.
+
