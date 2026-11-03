@@ -3,14 +3,16 @@
 // each project: one JSON line per call, with the project, the file, the line, the method and the declarations, each as
 // `path:Owner.name` (its file relative to the project, without its last extension), or `outside` for one the project
 // does not hold. A union or an intersection gives several; a receiver the checker cannot type, none. Each file is read
-// with its config (`ts_configs.js`). The checker reads and types the files; nothing runs.
+// with its config (`ts_configs.js`); with `--link`, a workspace package resolves through the link a package manager
+// makes (`ts_link.js`). The checker reads and types the files; nothing runs.
 //
-//   AIDD_TYPESCRIPT=/opt/typescript node ts_checker.js PROJECT_DIR...
+//   AIDD_TYPESCRIPT=/opt/typescript node ts_checker.js [--link] PROJECT_DIR...
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
 const { configOf, optionsOf } = require("./ts_configs.js");
+const { programHost } = require("./ts_link.js");
 
 const OPTIONS = {
   allowJs: true, checkJs: true, noEmit: true, strict: true, skipLibCheck: true, experimentalDecorators: true,
@@ -67,7 +69,8 @@ function report(program, project, arg, files) {
 }
 
 let previous;
-for (const arg of process.argv.slice(2)) {
+const linked = process.argv.includes("--link");
+for (const arg of process.argv.slice(2).filter((a) => !a.startsWith("--"))) {
   const project = path.resolve(arg);
   const groups = new Map();
   for (const file of sources(project)) {
@@ -76,7 +79,9 @@ for (const arg of process.argv.slice(2)) {
     groups.get(config).push(file);
   }
   for (const [config, files] of groups) {
-    const program = ts.createProgram({ rootNames: files, options: optionsOf(config, OPTIONS), oldProgram: previous });
+    const options = optionsOf(config, OPTIONS);
+    const host = linked ? programHost(project, options) : undefined;
+    const program = ts.createProgram({ rootNames: files, options, host, oldProgram: previous });
     report(program, project, arg, files);
     previous = program;
   }

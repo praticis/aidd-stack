@@ -8,14 +8,16 @@
 // the checker types it, or `expression` for a class expression's. Each file is read with the `baseUrl` and `paths` of
 // its config (`ts_configs.js`). With `--members`, also
 // each member of each class and interface, with its form; with `--files`, only the files of the one project whose
-// paths, relative to it, come one per line on stdin. The checker reads and types the files; nothing runs.
+// paths, relative to it, come one per line on stdin; with `--link`, a workspace package resolves through the link a
+// package manager makes (`ts_link.js`). The checker reads and types the files; nothing runs.
 //
-//   AIDD_TYPESCRIPT=/opt/typescript node ts_heritage.js [--members] [--files] PROJECT_DIR...
+//   AIDD_TYPESCRIPT=/opt/typescript node ts_heritage.js [--members] [--files] [--link] PROJECT_DIR...
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
 const { configOf, optionsOf } = require("./ts_configs.js");
+const { programHost } = require("./ts_link.js");
 
 const OPTIONS = {
   allowJs: true, noEmit: true, strict: true, skipLibCheck: true, experimentalDecorators: true,
@@ -144,7 +146,9 @@ for (const arg of process.argv.slice(2).filter((a) => !a.startsWith("--"))) {
     groups.get(config).push(file);
   }
   for (const [config, files] of groups) {
-    const program = ts.createProgram({ rootNames: files, options: optionsOf(config, OPTIONS), oldProgram: previous });
+    const options = optionsOf(config, OPTIONS);
+    const host = flags.has("--link") ? programHost(project, options) : undefined;
+    const program = ts.createProgram({ rootNames: files, options, host, oldProgram: previous });
     report(program, project, arg, files, flags.has("--members"));
     previous = program;
   }
