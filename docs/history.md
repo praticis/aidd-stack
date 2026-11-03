@@ -565,3 +565,7 @@
   13,954 `IMPORTS` that go from a package to a file, 471 hierarchy edges, and 4,816 `CALLS` found by name that the
   compiler confirms at 208, and an endpoint of grafana whose path reads a field an instance fills at run time, TD-051;
   the corpus and the hold-out as on `main`.
+- 2026-11-03: PR #80 is validated on a live install (the thirty-eighth round). The dry-runs of `main` and of the PR's
+  head are identical in all 10 snapshots, since no live repo declares a workspace whose packages its code imports. The
+  graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in
+  their time, build and refresh fields.
