@@ -1,9 +1,9 @@
 """A declaration file the repo writes is read as TypeScript reads it (scripts/checks/ts_heritage.js, ts_checker.js and
 ts_modules.js): its interfaces and classes are symbols, an import resolves to it where no implementation file of the
-module exists, and a base it declares is an edge. Beside a JS file, the import stays on the file Node loads and its
-values are the JS's; a name the JS cannot declare (an interface, a name of an export assignment's namespace) is the
-declaration file's. A module an ambient `declare module` describes is a package's, and a global declaration names no
-module."""
+module exists, in each of its extensions, and a base it declares is an edge. Beside a JS file, the import stays on the
+file Node loads and its values are the JS's, a name it re-exports included; a name the JS cannot declare (an interface,
+a name of an export assignment's namespace) is the declaration file's. A module an ambient `declare module` describes
+is a package's, and a global declaration names no module."""
 
 import contextlib
 import io
@@ -44,6 +44,19 @@ export class W8 extends Window {}
 new Dual().run();
 shape.area();
 """
+MORE = """import { Mi } from "../lib/m.mjs";
+import { Ci } from "../lib/c.cjs";
+import { Ji } from "../lib/j";
+import { Shape as ViaJs } from "../types/shape.js";
+import { Cy } from "../types/cy.cjs";
+import { L } from "../lib/s";
+export class X1 implements Mi {}
+export class X2 implements Ci {}
+export class X3 implements Ji {}
+export class X4 implements ViaJs {}
+export class X5 implements Cy {}
+export class X6 implements L {}
+"""
 FILES = {
     "package.json": '{"name": "app"}\n',
     "types/shape.d.ts": "export interface Shape { area(): number; }\n",
@@ -53,20 +66,34 @@ FILES = {
     "types/style.css.d.ts": "declare const classes: { box: string };\nexport default classes;\n",
     "types/ambient.d.ts": 'declare module "some-pkg" { export interface Remote { go(): void; } }\n',
     "types/globals.d.ts": "interface Window { app: string; }\n",
+    "types/cy.d.cts": "export interface Cy { go(): void; }\n",
+    "lib/m.mjs": "export class Mc { go() {} }\n",
+    "lib/m.d.mts": "export interface Mi { go(): void; }\nexport declare class Mc { go(): void; }\n",
+    "lib/c.cjs": "class Cc { go() {} }\nmodule.exports = { Cc };\n",
+    "lib/c.d.cts": "export interface Ci { go(): void; }\nexport declare class Cc { go(): void; }\n",
+    "lib/inner.ts": "export class L { run() {} }\n",
+    "lib/s.js": 'export * from "./inner";\n',
+    "lib/s.d.ts": "export interface L { z(): void; }\n",
+    "lib/j.jsx": "export class Jc { go() {} }\n",
+    "lib/j.d.ts": "export interface Ji { go(): void; }\n",
     "lib/dual.js": "class Dual { run() {} }\nmodule.exports = Dual;\n",
     "lib/dual.d.ts": 'import { Shape } from "../types/shape";\ndeclare class Dual { run(): void; }\n'
                      "declare namespace Dual { export { Shape as DualShape }; }\nexport = Dual;\n",
     "app/use.ts": USE,
+    "app/more.ts": MORE,
 }
 EDGES = {
     ("app/use:W1", "EXTENDS"): "lib/dual.d:Dual", ("app/use:W2", "IMPLEMENTS"): "types/shape.d:Shape",
     ("app/use:W3", "IMPLEMENTS"): "types/shape.d:Shape", ("app/use:W4", "IMPLEMENTS"): "types/index.d:Idx",
     ("app/use:W5", "IMPLEMENTS"): "types/mod.d:Mod", ("app/use:W6", "IMPLEMENTS"): "types/child.d:Child",
-    ("types/child.d:Child", "EXTENDS"): "types/shape.d:Shape",
+    ("types/child.d:Child", "EXTENDS"): "types/shape.d:Shape", ("app/more:X1", "IMPLEMENTS"): "lib/m.d:Mi",
+    ("app/more:X2", "IMPLEMENTS"): "lib/c.d:Ci", ("app/more:X3", "IMPLEMENTS"): "lib/j.d:Ji",
+    ("app/more:X4", "IMPLEMENTS"): "types/shape.d:Shape", ("app/more:X5", "IMPLEMENTS"): "types/cy.d:Cy",
+    ("app/more:X6", "IMPLEMENTS"): "lib/s.d:L",
 }
 AMBIENT = {("app/use:W7", "IMPLEMENTS"): "types/ambient.d:some-pkg.Remote"}
 GLOBAL = {("app/use:W8", "EXTENDS"): "types/globals.d:Window"}
-DIVERGES = {("app/use:W1", "EXTENDS"): "lib/dual:Dual"}
+DIVERGES = {("app/use:W1", "EXTENDS"): "lib/dual:Dual", ("app/more:X6", "IMPLEMENTS"): "lib/inner:L"}
 CALLS = {("app/use.ts", 18): "lib/dual.d:Dual.run", ("app/use.ts", 19): "types/shape.d:Shape.area"}
 INDEX_CALLS = {**CALLS, ("app/use.ts", 18): "lib/dual:Dual.run"}
 IMPORTS = {
