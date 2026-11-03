@@ -549,3 +549,9 @@
   match the checker's at 6,205, from 6,153, fastify's 18 among them. The proof found TD-049, a folder import that
   ignores the entry its manifest names. Micro: 157 files, 517 symbols and 96 imports in declaration files, and `CALLS`
   found by name; the corpus and the hold-out as on `main`.
+- 2026-11-03: PR #79 is validated on a live install (the thirty-seventh round). The dry-runs of `main` and of the PR's
+  head are identical in 7 of the 10 snapshots; in the 3 with declaration files the graph gains 47 symbols, 71 `IMPORTS`
+  and 12 `EXTENDS` (classes of the code to types a declaration file declares), all in or to declaration files, and 1
+  `CALLS` found by a unique name becomes ambiguous. The graph holds the dry-runs with the new build on each snapshot; of
+  the 29 calls, 24 are the same, 4 differ only in their time, build and refresh fields, and the TS snapshot's
+  `repo_map` counts the new files and symbols.
