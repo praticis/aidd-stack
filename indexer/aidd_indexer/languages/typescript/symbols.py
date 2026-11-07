@@ -21,8 +21,10 @@ from . import dispatch
 from .http import TsScanner
 from .modules import Package, module_target
 from .package_facts import package_facts_reader
+from .receivers import receiver_of
+from .scopes import TsScopes
 from .type_facts import TsTypes, type_facts
-from .type_index import Outside, TsTypeIndex, qualified, ref, typed
+from .type_index import LOCAL_ABSENT, Outside, TsTypeIndex, qualified, ref, typed
 
 if TYPE_CHECKING:  # pragma: no cover
     from ...core.hierarchy import Declared
@@ -81,6 +83,12 @@ class TypeScriptSupport(LanguageSupport):
         return (found.id, "File") if found is not None else None
 
     # ---- types: one index for TS's three languages, whose files import one another
+    def file_index(self, root: Node, src: bytes) -> TsScopes:
+        return TsScopes(root, src)
+
+    def call_receiver(self, call: Node, receiver: Node, src: bytes, index: Any = None):
+        return receiver_of(receiver, index, self.id == "javascript")
+
     def file_facts(self, root: Node, src: bytes, index: Any = None) -> TsTypes:
         return type_facts(root, js=self.id == "javascript")
 
@@ -118,7 +126,20 @@ class TypeScriptSupport(LanguageSupport):
         return [qualified(t) for t in self._types(ctx).supertypes(ref(qualified_type))]
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
-        return self._types(ctx).outside_base(ref(qualified_type))
+        """A class with a base the index cannot read keeps its dependency on the class, unless one of those bases is a
+        package of the repo with no entry: the member may be its, whatever the other bases are."""
+        types, t = self._types(ctx), ref(qualified_type)
+        return types.outside_base(t) and not _reaches_absent(types, t)
+
+    def member_by_name(self, ctx: ResolveContext, qualified_type: str, name: str) -> bool:
+        """A class that extends a package of the repo with no entry may take the method from it: its source is in the
+        repo, and a call by name is the way that reaches it."""
+        return _reaches_absent(self._types(ctx), ref(qualified_type))
+
+
+def _reaches_absent(types: TsTypeIndex, t: TypeRef) -> bool:
+    bases = (types.bases(x) for x in (t, *types.supertypes(t)))
+    return any(LOCAL_ABSENT in found for found in bases if not isinstance(found, Unknown))
 
 
 def _make(lang_id: str, grammar: str, exts: tuple[str, ...], query: str) -> TypeScriptSupport:

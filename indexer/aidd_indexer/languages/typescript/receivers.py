@@ -11,7 +11,7 @@ from ...core.types import Unknown
 from .commonjs import required_name
 from .forms import LOCAL_TYPE, METHOD_RESULT, VALUE, WRAPPERS, in_function, of_type, written
 from .scope_model import CLASSES, FIELDS, PARAMETERS
-from .scopes import TsScopes
+from .scopes import TsScopes, spelled
 from .type_facts import NO_RESULT
 
 JS_PARAMETER = Unknown("a JS parameter, which declares no type")
@@ -24,6 +24,7 @@ EXPRESSION_THIS = Unknown("the this of a class expression")
 STATIC_THIS = Unknown("a static member's this, the class itself")
 UNDECLARED = Unknown("a name the file does not declare")
 LOCAL_REQUIRE = Unknown("a module a function requires, which no module's names hold")
+NARROWED = Unknown("a value the function tests with instanceof, which the flow may narrow to another class")
 CATCH = Unknown("a catch clause's variable")
 ARRAY_ELEMENT = Unknown("an element of a destructured array")
 NO_VALUE = Unknown("a variable with no type and no value")
@@ -51,7 +52,11 @@ def receiver_of(receiver: Node, scopes: TsScopes, js: bool = False) -> Held:
         members.append(_text(prop))
         node = _unwrapped(node.child_by_field_name("object"))
     found = this_class(node, scopes) if node.type == "this" else _value(node, scopes, js, 0)
-    return found if isinstance(found, Unknown) else (found[0], found[1] + tuple(reversed(members)))
+    if isinstance(found, Unknown):
+        return found
+    if scopes.narrowed(spelled(_unwrapped(receiver)), receiver.start_byte):
+        return NARROWED
+    return found[0], found[1] + tuple(reversed(members))
 
 
 def this_owner(this: Node, scopes: TsScopes) -> Node | Unknown:

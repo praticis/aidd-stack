@@ -1,7 +1,9 @@
-"""The packages the repo's own workspaces declare: a `package.json`'s `workspaces` (a list, or `{packages}`) and a
-`pnpm-workspace.yaml`'s `packages`, with their globs, at any depth. A package is the folder of a `package.json` that
-one of them matches and that names itself. A file sees the packages of each workspace that holds it, the deepest first,
-as the walk up the `node_modules` of its folders does, since a package manager links a workspace's packages there."""
+"""The packages the repo holds that its own manifests link: a `package.json`'s `workspaces` (a list, or `{packages}`) and a
+`pnpm-workspace.yaml`'s `packages`, with their globs, at any depth, and the folders of the repo a `file:`, `link:` or
+`portal:` dependency of a `package.json` names, which a manager links under the dependency's own name. A workspace's
+package is the folder of a `package.json` that one of them matches and that names itself. A file sees the packages of
+each manifest that holds it, the deepest first, as the walk up the `node_modules` of its folders does, since a package
+manager links them there."""
 
 from __future__ import annotations
 
@@ -15,6 +17,8 @@ import yaml
 from ..base import ResolveContext
 
 _KEY = "ts_workspaces"
+_LOCAL = ("file:", "link:", "portal:")
+_SECTIONS = ("dependencies", "devDependencies", "peerDependencies", "optionalDependencies")
 
 
 def workspaces(ctx: ResolveContext) -> Workspaces:
@@ -49,7 +53,8 @@ def package_name(spec: str) -> tuple[str, str]:
 class Workspaces:
     def __init__(self, root: Path, folders: set[str]):
         self.packages = {f: p for f in sorted(folders) if isinstance(p := _json(root / f / "package.json"), dict)}
-        roots = [(f, _members(f, self.packages, _globs(root, f, p))) for f, p in self.packages.items()]
+        roots = [(f, {**_local(f, p, self.packages), **_members(f, self.packages, _globs(root, f, p))})
+                 for f, p in self.packages.items()]
         self._roots = sorted((r for r in roots if r[1]), key=lambda r: -len(r[0]))
 
     def member(self, file: str, name: str) -> str | None:
@@ -81,6 +86,21 @@ def _members(root: str, packages: dict[str, dict], globs: list[str]) -> dict[str
         if folder and folder != root and folder.startswith(prefix) and isinstance(package.get("name"), str) \
                 and any(g.fullmatch(below) for g in include) and not any(g.fullmatch(below) for g in exclude):
             found.setdefault(package["name"], folder)
+    return found
+
+
+def _local(folder: str, package: dict, packages: dict[str, dict]) -> dict[str, str]:
+    """`name -> folder` of the packages of the repo that the local dependencies of the manifest at `folder` link. The
+    dependency's own name is the link's, as a package manager makes it; a spec that names no package of the repo (a
+    tarball, a folder with no manifest, a path out of the repo) links none."""
+    found: dict[str, str] = {}
+    for section in _SECTIONS:
+        deps = package.get(section)
+        for name, spec in deps.items() if isinstance(deps, dict) else ():
+            target = posixpath.normpath(posixpath.join(folder, spec.split(":", 1)[1])) \
+                if isinstance(spec, str) and spec.startswith(_LOCAL) else None
+            if target in packages:
+                found.setdefault(name, target)
     return found
 
 

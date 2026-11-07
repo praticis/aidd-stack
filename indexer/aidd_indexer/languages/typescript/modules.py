@@ -2,7 +2,8 @@
 file (`tsconfig.py`), a relative path, a pattern of its `paths` or a name below its `baseUrl`, each by the usual
 extensions and a folder's `index.*`; else a conventional path alias (`@/`, `~/`, `src/`, `#`, `$lib`), which a
 bundler's config declares where no config of the repo maps it; else the entry of a package the repo's own workspace
-declares (`workspaces.py`), which its `package.json` names as TypeScript reads it (`exports.py`); or else an npm package
+declares or a local dependency links (`workspaces.py`), which its `package.json` names as TypeScript reads it
+(`exports.py`), and that package alone, marked local, where its entry is a build the clone lacks; or else an npm package
 (`node:` is the platform's). A file a project the config references emits as a declaration is that project's source
 (`references.py`), wherever the path comes from."""
 
@@ -26,6 +27,7 @@ TS_EXTS = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".vue", ".d.ts")
 class Package(NamedTuple):
     name: str
     platform: bool
+    local: bool = False             # a package the repo holds, whose entry is a build the clone lacks
 
 
 def module_target(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | Package | None:
@@ -47,16 +49,18 @@ def module_target(ctx: ResolveContext, file: FileInfo, spec: str) -> FileInfo | 
     return Package("/".join(spec.split("/")[:2]) if spec.startswith("@") else spec.split("/")[0], False)
 
 
-def _workspace(ctx: ResolveContext, file: FileInfo, spec: str, config: Config | None) -> FileInfo | None:
-    """The file a package the repo's workspace declares gives an import of `spec`; None where it names none."""
+def _workspace(ctx: ResolveContext, file: FileInfo, spec: str, config: Config | None) -> FileInfo | Package | None:
+    """The file a package the repo holds gives an import of `spec`, or that package where its entry is a build the repo
+    lacks; None where the repo holds no package by that name."""
     name, subpath = package_name(spec)
     spaces = workspaces(ctx)
     folder = spaces.member(file.path, name)
     if folder is None:
         return None
-    return entry(spaces.packages[folder], subpath, CONDITIONS | frozenset(config.conditions if config else ()),
-                 lambda written, whole: _try_paths(ctx, within(folder, written), whole,
-                                                   config.projects if config else ()))
+    found = entry(spaces.packages[folder], subpath, CONDITIONS | frozenset(config.conditions if config else ()),
+                  lambda written, whole: _try_paths(ctx, within(folder, written), whole,
+                                                    config.projects if config else ()))
+    return found or Package(name, False, True)
 
 
 def _configured(ctx: ResolveContext, config: Config, spec: str) -> FileInfo | None:
