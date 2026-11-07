@@ -1411,8 +1411,8 @@ that holds a function and to a class a module declares by an expression, and has
 
 - **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`a2075ed`). The dry-runs of `main`
   and of the PR's head (`dec8e94`) on each snapshot, at its sha, are identical in 7 of the 10 and differ in the 3 TS and
-  JS ones: the two snapshots of `maestro-backend` gain 11 and 7 symbols and 90 and 55 `CALLS` found by name, and `sonata`
-  gains 11 symbols and 11 hierarchy edges and loses 5 `CALLS` (it gains 4 by the same module and loses 9 by a name that
+  JS ones: the two snapshots of one repo of the live install gain 11 and 7 symbols and 90 and 55 `CALLS` found by name,
+  and the snapshot of another gains 11 symbols and 11 hierarchy edges and loses 5 `CALLS` (it gains 4 by the same module and loses 9 by a name that
   stopped being unique). The live graph held `main`'s dry-run on every snapshot (0 mismatching): 10,656 symbols, 23,682
   `CALLS`, 15,961 `IMPORTS`, 393 types' and overrides' edges, 351 modules, 0 violations.
 - **After the author's reinstall from `main` (`ce88d70`, whose tree is the PR head's):** the 10 snapshots ran since the
@@ -1472,4 +1472,46 @@ snapshot and the `repo_map` of the TS, the Go and the accrual snapshots.
 **What the round shows.** The live repos reference no project whose output their code imports, so the PR changes none of
 their graph: the dry-runs, the graph and every answer are the same, and the corpus's 4,761 imports that now reach a source
 are proven in the PR, not here.
+
+## Forty-first round: validating PR #83 on a live install (2026-11-07, build `0.2.15+631fcf176e28` to `0.2.15+eb419b15ffff`)
+
+What changed since the fortieth round: PR #83 is merged, a `fix(typescript)` that makes a member an interface or a type
+literal declares as a function (`push: (x: number) => void`) a `method` symbol of its owner, a change of the graph where
+a TS or JS repo writes those. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`566a00c`). The dry-runs of `main`
+  and of the PR's head (`5eebf93`) on each snapshot, at its sha, are identical in 8 of the 10 and differ in the two
+  snapshots of the live install's TS repo: each gains 13 symbols, and 103 and 97 `CALLS` found by name while it loses 6 and 7
+  (net, by strategy: the same file 6 in each, the same module 73 and 64, and the same module with the name shared 18
+  and 20). The live graph held `main`'s dry-run on every
+  snapshot (0 mismatching): 10,685 symbols, 23,822 `CALLS`, 15,961 `IMPORTS`, 404 types' and overrides' edges, 351
+  modules, 0 violations.
+- **After the author's reinstall from `main` (`2ae30f0`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph** differs in 5 of its 16 lists, and in 4 by more than the build and the `IndexRun` counts:
+the symbols go from 10,685 to 10,711 (+26) and the `CALLS` from 23,822 to 24,009 (+187), which are the two dry-runs'
+sums (+13 and +13 symbols, +97 and +90 net `CALLS`), and the counts per snapshot of those two follow; the 11 others,
+the hierarchy edges (404), the `IMPORTS` (15,961), the modules (351) and the 0 violations among them, are the same. The
+graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field. 5 differ: `atlas_status`, the `ref_diff` of the TS snapshot and the `repo_map` of the Go and the
+accrual snapshots only in their time, build and refresh fields (the before was taken 84 minutes after a refresh, so the
+tenants went from stale to fresh), and the `repo_map` of the TS snapshot also in its module's symbols (2,539 to 2,552),
+the `method` symbols (436 to 449) and the module's `loc` (731,592 to 734,345). That `loc` is the sum of each file's
+lines taken once per symbol the file declares, so it grows with the symbols although no file changed: the query counts
+a file once for each of its symbols.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The live TS and JS repos that write a member of an interface or of a type literal as a
+function gain it as a symbol, and the calls by name that reach those members gain their edges; the C# and Go snapshots,
+the macro graph and what the golden calls ask are the same.
 

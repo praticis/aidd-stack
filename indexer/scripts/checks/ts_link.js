@@ -2,14 +2,17 @@
 // the workspace package `<name>`, as the manager would link it, so the clones of a corpus, which hold no
 // `node_modules`, resolve a workspace package as TypeScript does in a project that was installed. The workspaces are
 // the `workspaces` of a `package.json` (a list or `{packages}`) and the `packages` of a `pnpm-workspace.yaml`, with
-// their globs, at any depth; a file sees the packages of each workspace that holds it, the deepest first, as the walk
-// up the `node_modules` of its folders does. TypeScript's own `package.json` logic picks the entry.
+// their globs, at any depth, and the folders a `file:`, `link:` or `portal:` dependency of a `package.json` names, which
+// a manager links under the dependency's own name; a file sees the packages of each manifest that holds it, the deepest
+// first, as the walk up the `node_modules` of its folders does. TypeScript's own `package.json` logic picks the entry.
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ts = require(process.env.AIDD_TYPESCRIPT || "typescript");
 
 const SKIP = new Set(["node_modules", ".git"]);
+const LOCAL = /^(file|link|portal):/;
+const SECTIONS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 const NM = path.sep + "node_modules" + path.sep;
 const isDir = (p) => { try { return fs.statSync(p).isDirectory(); } catch (e) { return false; } };
 const isFile = (p) => { try { return fs.statSync(p).isFile(); } catch (e) { return false; } };
@@ -52,8 +55,22 @@ function expand(dir, segments, found) {
   for (const sub of subdirs(dir)) if (re.test(sub)) expand(path.join(dir, sub), rest, found);
 }
 
+// The packages of the repo a manifest's local dependencies link, by the name the dependency gives them.
+function localOf(dir) {
+  const json = readJson(path.join(dir, "package.json")) || {};
+  const found = new Map();
+  for (const section of SECTIONS) {
+    for (const [name, spec] of Object.entries(json[section] || {})) {
+      if (typeof spec !== "string" || !LOCAL.test(spec)) continue;
+      const target = path.resolve(dir, spec.replace(LOCAL, ""));
+      if (!found.has(name) && fs.existsSync(path.join(target, "package.json"))) found.set(name, target);
+    }
+  }
+  return found;
+}
+
 function findRoots(dir, roots) {
-  if (patternsOf(dir).length) roots.push(dir);
+  if (patternsOf(dir).length || localOf(dir).size) roots.push(dir);
   for (const sub of subdirs(dir)) findRoots(path.join(dir, sub), roots);
 }
 
@@ -69,6 +86,7 @@ function membersOf(root) {
     const named = json && typeof json.name === "string" && !members.has(json.name);
     if (named && !excluded.has(dir)) members.set(json.name, dir);
   }
+  for (const [name, dir] of localOf(root)) if (!members.has(name)) members.set(name, dir);
   return members;
 }
 

@@ -22,6 +22,7 @@ FAMILY = frozenset({"typescript", "tsx", "javascript"})
 DEPTH = 16                          # names followed through imports, exports and aliases, at most
 
 OUTSIDE = Unknown("a type a package declares")
+LOCAL_ABSENT = Unknown("a package of the repo whose entry is a build the clone lacks")
 NO_FILE = Unknown("an import of no file of the repo")
 NOT_A_FILE = Unknown("not a TS or JS file of the repo")
 NO_MEMBER = Unknown("its module declares or exports no such name")
@@ -163,10 +164,11 @@ class TsTypeIndex(TypeIndex):
         return owner is not None and name in owner.fields
 
     def outside_base(self, t: TypeRef) -> bool:
-        """Whether a base of `t`, or of one of its bases, is one the index cannot see, which may give a member."""
+        """Whether a base of `t`, or of one of its bases, is one the index cannot see, which may give a member. A package
+        of the repo with no entry is not: its source is there, and only the path to it is missing."""
         for x in (t, *self.supertypes(t)):
             found = self.bases(x)
-            if isinstance(found, Unknown) or any(not isinstance(b, TypeRef) for b in found):
+            if isinstance(found, Unknown) or any(not isinstance(b, TypeRef) and b != LOCAL_ABSENT for b in found):
                 return True
         return False
 
@@ -219,7 +221,7 @@ class TsTypeIndex(TypeIndex):
         for spec in facts.stars if name != "default" else ():
             target = self._target(file, spec)
             found = self._export(target, name, depth + 1) if isinstance(target, str) else target
-            if isinstance(found, (Denoted, Outside)):
+            if isinstance(found, (Denoted, Outside)) or found == LOCAL_ABSENT:
                 return found
         declared = self._beside.get(file)
         return NO_MEMBER if declared is None else self._export(declared, name, depth + 1)
@@ -229,8 +231,8 @@ class TsTypeIndex(TypeIndex):
         key = (file, spec)
         if key not in self._targets:
             found = module_target(self._ctx, self._ctx.files_by_path[file], spec)
-            self._targets[key] = NO_FILE if found is None else Outside(found.name) if isinstance(found, Package) \
-                else found.path if found.path in self._facts else NOT_A_FILE
+            self._targets[key] = NO_FILE if found is None else (LOCAL_ABSENT if found.local else Outside(found.name)) \
+                if isinstance(found, Package) else found.path if found.path in self._facts else NOT_A_FILE
         return self._targets[key]
 
     # -- what a name denotes, read as a type, as a call or as a value --------------------------------------------------

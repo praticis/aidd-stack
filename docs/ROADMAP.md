@@ -40,9 +40,11 @@
     part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
     `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
     proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
-    the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053, and
-    a member of an alias's object type below more wrappers than the query reaches, TD-055, are due in `fix(typescript)`
-    PRs before F1.2. Two debts of the core's architecture, the syntax of each
+    the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053,
+    a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
+    property typed as a function, TD-056, a value typed by a type parameter whose argument an alias gives, TD-057,
+    a class a factory call makes, TD-058, a receiver a type guard narrows, TD-059, an overloaded function's result, TD-060,
+    and a module with a declaration file beside its JS, TD-061, are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and

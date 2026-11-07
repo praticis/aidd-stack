@@ -2,14 +2,17 @@
 from the innermost scope around it outward, and the first scope that binds it in what its place means (a value, a type
 or a namespace) gives its declarations; a function's signature sees only its parameters and type parameters, and a
 named function or class expression sees its own name after what it binds. What no scope of the file binds may be a
-global its `declare global` declares. The scopes and what each binds are `scope_build`'s."""
+global its `declare global` declares. The scopes and what each binds are `scope_build`'s. A value a function tests with
+`instanceof` may be narrowed by the flow, to a class its declaration does not name: the index does not follow the flow,
+and tells where it may."""
 
 from __future__ import annotations
 
 from tree_sitter import Node
 
+from ..base import walk
 from .scope_build import Builder
-from .scope_model import PARAM, TYPE_PARAM, Declared, Frame, Scope
+from .scope_model import FUNCTIONS, PARAM, TYPE_PARAM, Declared, Frame, Scope
 
 __all__ = ["TsScopes"]
 
@@ -23,6 +26,7 @@ class TsScopes:
         built = Builder(root, src)
         self.src = src
         self._reads, self._thises, self._globals = built.reads, built.thises, built.globals
+        self._root, self._tests = root, None
 
     def names(self) -> list[Node]:
         """The names the file reads through its scopes, as opposed to a declaration's own name or a member's."""
@@ -43,6 +47,13 @@ class TsScopes:
             frame = frame.parent
         return _find(Frame(self._globals, "all", None), text, space)
 
+    def narrowed(self, written: str, at: int) -> bool:
+        """Whether the function around the byte `at` tests the value `written`, or a value that holds it, with
+        `instanceof`: the flow may narrow it there. `written` is `spelled`."""
+        if self._tests is None:
+            self._tests = _tests(self._root, self.src)
+        return any(start <= at < end and (written == t or written.startswith(f"{t}.")) for start, end, t in self._tests)
+
     def thises(self) -> list[Node]:
         return [n for n, _ in self._thises.values()]
 
@@ -51,6 +62,25 @@ class TsScopes:
         enum, or the file."""
         found = self._thises.get(this.id)
         return found[1] if found is not None else None
+
+
+def spelled(node: Node | None) -> str:
+    """The value an expression writes, without the spaces, the `?.` and the `!` that do not change which it is."""
+    text = node.text.decode(errors="replace") if node is not None else ""
+    return "".join(text.split()).replace("?", "").replace("!", "")
+
+
+def _tests(root: Node, src: bytes) -> list[tuple[int, int, str]]:
+    """(the span of the function around it, the value written) of each `value instanceof C` of the file."""
+    out = []
+    for n in walk(root) if b"instanceof" in src else ():
+        op = n.child_by_field_name("operator") if n.type == "binary_expression" else None
+        if op is not None and op.type == "instanceof":
+            around = n.parent
+            while around.parent is not None and around.type not in FUNCTIONS:
+                around = around.parent
+            out.append((around.start_byte, around.end_byte, spelled(n.child_by_field_name("left"))))
+    return out
 
 
 def _find(frame: Frame, name: str, space: str | None) -> list[Node]:

@@ -1,10 +1,12 @@
 """TS's and JS's declarations the graph still misses: a base in a package whose entry is a build the repo lacks, and one
 whose source a condition a tool of the repo enables names; a member of an interface whose type is a function the code
-does not write in place, a function an object literal holds, a member of an object type no declaration names, and one
-of an alias's wrappers the query does not reach, each the declaration TypeScript's checker resolves a call of the member
-to (scripts/checks/ts_checker.js, which a test of the case checks). Each case states the right answer and is a strict
-xfail with the reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has to
-go."""
+does not write in place, a function an object literal holds, a member of an object type no declaration names, and one of
+an alias's wrappers the query does not reach, a class field or a parameter property typed as a function, a type
+parameter whose argument an alias gives, a class a factory call makes, a receiver a type guard narrows, the result an
+overloaded function's arguments select, and a module with a declaration file beside its JS, each the declaration
+TypeScript's checker resolves a call of the member to (scripts/checks/ts_checker.js, which a test of the case checks).
+Each case states the right answer and is a strict xfail with the reason: when the indexer learns it, the case passes,
+the xfail fails the suite, and the mark has to go."""
 
 import contextlib
 import io
@@ -111,6 +113,68 @@ WRAPPED = [
 ]
 MEMBERS += WRAPPED
 
+NOT_A_FUNCTION_FIELD = ("a class field or a parameter property whose type is a function and whose value is none is no "
+                        "symbol, so the call reaches the interface's member, or no edge")
+MEMBERS += [
+    case("a-class-field-whose-type-is-a-function-is-the-method-its-call-reaches",
+         {"app/models.ts": "export interface Fmt { onlyIn?: (n: number) => boolean; }\n"
+                           "export class Opts implements Fmt { declare readonly onlyIn: (n: number) => boolean; }\n",
+          "app/use.ts": 'import { Opts } from "./models";\nexport function main(o: Opts) { return o.onlyIn(1); }\n'},
+         "app/models:Opts.onlyIn", NOT_A_FUNCTION_FIELD),
+    case("a-parameter-property-whose-type-is-a-function-is-the-method-its-call-reaches",
+         {"app/models.ts": "export class Keeper {\n  constructor(private readonly onDone: (n: number) => void) {}\n"
+                           "  fire() { this.onDone(1); }\n}\n"},
+         "app/models:Keeper.onDone", NOT_A_FUNCTION_FIELD),
+]
+
+REACHED = [
+    case("a-receiver-typed-by-a-type-parameter-an-alias-gives-an-argument-reaches-the-argument-method",
+         {"app/models.ts": "export interface Source { query(): void }\nexport class Sql implements Source { query() {} }\n"
+                           "export interface EditorProps<S extends Source> { ds: S }\n"
+                           "export type SqlProps = EditorProps<Sql>;\n",
+          "app/use.ts": 'import { SqlProps } from "./models";\nexport function main(p: SqlProps) { return p.ds.query(); }\n'},
+         "app/models:Sql.query",
+         "the facts keep a generic's written name and drop its arguments, so the type parameter's constraint is the "
+         "receiver's type"),
+    case("a-class-a-factory-call-makes-reaches-the-method-the-factory-declares",
+         {"app/models.ts": "export function make() {\n  class Gen { run() {} }\n  return Gen;\n}\n"
+                           "export class Card extends make() {}\n",
+          "app/use.ts": 'import { Card } from "./models";\nexport function main(c: Card) { return c.run(); }\n'},
+         "app/models:make.Gen.run",
+         "a base written as a call of a function names no type the index reads, so the call reaches the class as if a "
+         "base outside the repo gave the method"),
+]
+
+NARROWED = ("a function narrows the value to a class by a type predicate (`t is Grid`), which the index does not read: "
+            "the call reaches the method of the declared type, or no edge where it declares none")
+REACHED += [
+    case("a-receiver-narrowed-by-a-type-guard-reaches-the-method-of-the-class-it-narrows-to",
+         {"app/models.ts": "export interface Target { id: string }\n"
+                           "export class Grid implements Target { id = ''; stop() {} }\n"
+                           "export function isGrid(t: Target): t is Grid { return t instanceof Grid; }\n",
+          "app/use.ts": 'import { Target, isGrid } from "./models";\n'
+                        "export function main(t: Target) {\n  if (isGrid(t)) t.stop();\n}\n"},
+         "app/models:Grid.stop", NARROWED),
+    case("a-call-of-an-overloaded-function-reaches-the-method-of-the-result-its-arguments-select",
+         {"app/models.ts": "export class Base { m() {} }\nexport class Fast extends Base {}\n"
+                           "export class Wide extends Base { m() {} }\n"
+                           "export function get(): Wide;\nexport function get(kind: 'fast'): Fast;\n"
+                           "export function get(kind?: string) { return kind ? new Fast() : new Wide(); }\n",
+          "app/use.ts": 'import { get } from "./models";\nexport function main() { return get("fast").m(); }\n'},
+         "app/models:Base.m",
+         "an overloaded function's result depends on the arguments, and the index takes the first signature's"),
+    case("a-module-with-a-declaration-file-beside-it-reaches-the-member-the-declaration-file-names",
+         {"app/cache/cache-manager.js": "class CacheManager { get(key) { return key; } }\nmodule.exports = CacheManager;\n",
+          "app/cache/index.js": "const CacheManager = require('./cache-manager');\nmodule.exports = new CacheManager();\n",
+          "app/cache/index.d.ts": "interface SettingsCache { get(key: string): unknown }\n"
+                                  "declare const settingsCache: SettingsCache;\nexport = settingsCache;\n",
+          "app/use.js": "const settingsCache = require('./cache');\n"
+                        "function main() { return settingsCache.get('x'); }\nmodule.exports = main;\n"},
+         "app/cache/index.d:SettingsCache.get",
+         "the importer takes the type of the value the JS module exports, the class that runs, where the checker "
+         "reads the declaration file beside it, which TypeScript resolves the module to first"),
+]
+
 
 def _write(root, files):
     for rel, body in {"package.json": '{"name": "app"}\n', **files}.items():
@@ -134,7 +198,7 @@ def test_a_base_and_an_override_the_declarations_give_are_edges(tmp_path, files,
     assert edge in {(q[e.source_id], e.kind, q[e.target_id]) for e in rv.hierarchy}
 
 
-@pytest.mark.parametrize("files, member", [pytest.param(p.values[0], p.values[1], id=p.id) for p in MEMBERS])
+@pytest.mark.parametrize("files, member", [pytest.param(p.values[0], p.values[1], id=p.id) for p in MEMBERS + REACHED])
 def test_the_checker_resolves_the_call_to_the_member_the_case_names(tmp_path, files, member):
     _write(tmp_path, files)
     out = subprocess.run(["node", str(CHECKER), str(tmp_path)], capture_output=True, text=True, check=True,
@@ -146,3 +210,11 @@ def test_the_checker_resolves_the_call_to_the_member_the_case_names(tmp_path, fi
 def test_the_member_a_call_reaches_is_a_symbol(tmp_path, files, member):
     res, _ = _indexed(tmp_path, files)
     assert member in {s.qualified_name for s in res.symbols}
+
+
+@pytest.mark.parametrize("files, member", REACHED)
+def test_the_call_reaches_the_member_the_checker_names(tmp_path, files, member):
+    res, rv = _indexed(tmp_path, files)
+    q = {s.id: s.qualified_name for s in res.symbols}
+    callers = {s.id for s in res.symbols if s.qualified_name == "app/use:main"}
+    assert member in {q[e.callee_id] for e in rv.calls if e.caller_id in callers}

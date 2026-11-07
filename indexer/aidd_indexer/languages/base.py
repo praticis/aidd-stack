@@ -258,8 +258,8 @@ class LanguageSupport:
 
     def member_by_name(self, ctx: ResolveContext, qualified_type: str, name: str) -> bool:
         """Whether a call of a method the type declares nowhere, and no base outside the repo may give, still reaches
-        one of the repo's at run time, so it goes by name: where another class may give it. Never in a language that
-        checks a call against its receiver's type."""
+        one of the repo's at run time, so it goes by name. The language says where: another class of the hierarchy may
+        give it (Python), or a base cannot be read though its source is in the repo (TS)."""
         return False
 
     def has_external_base(self, ctx: ResolveContext, qualified_type: str) -> bool:
