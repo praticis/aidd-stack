@@ -3,8 +3,9 @@ link a package manager makes (scripts/checks/ts_modules.js and ts_heritage.js, w
 that emulates them where a clone has none): the entry its `exports` names by the conditions TypeScript matches and the
 config's `customConditions`, its `types` or `main`, a subpath its `exports` maps, or its folder. A member is one a
 `workspaces` or a `pnpm-workspace.yaml` declares, and a file sees those of each workspace that holds it, the deepest
-first, as the walk up the `node_modules` of its folders does. An entry that is a build the clone lacks leaves a
-package."""
+first, as the walk up the `node_modules` of its folders does. So is a package a `file:`, `link:` or `portal:`
+dependency of a `package.json` names, under the dependency's own name, for the files below that manifest. An entry that
+is a build the clone lacks leaves a package."""
 
 import contextlib
 import io
@@ -19,6 +20,7 @@ from aidd_indexer.cli import extract_and_resolve
 from aidd_indexer.core.model import RepoInfo
 from aidd_indexer.languages.typescript.modules import Package, module_target
 from aidd_indexer.languages.typescript.type_index import module_of
+from aidd_indexer.languages.typescript.workspaces import Workspaces
 
 CHECKS = Path(__file__).resolve().parents[1] / "scripts" / "checks"
 CLASS = "export class {name} {{ run() {{}} }}\n"
@@ -53,6 +55,17 @@ PACKAGES = {
     "web/lib/core": ('{"name": "@app/core", "types": "./index.ts"}', ["index", "WebCore"]),
     "pn/libs/one": ('{"name": "@pn/one", "types": "./index.ts"}', ["index", "One"]),
     "sample": ('{"name": "fastify"}', ["index", "Sample"]),
+    "libs/linked": ('{"name": "@lib/linked", "types": "./src/index.ts"}', ["src/index", "Linked"]),
+    "libs/built": ('{"name": "@lib/built", "main": "./dist/index.js", "types": "./dist/index.d.ts"}',
+                   ["src/index", "LinkBuilt"]),
+    "libs/looked": ('{"name": "@lib/looked", "types": "./index.ts"}', ["index", "Looked"]),
+    "libs/ported": ('{"name": "@lib/ported", "types": "./index.ts"}', ["index", "Ported"]),
+    "libs/origin": ('{"name": "@lib/origin", "types": "./index.ts"}', ["index", "Origin"]),
+    "tools": ('{"name": "tools", "dependencies": {"@lib/linked": "file:../libs/linked", "@lib/built": '
+              '"file:../libs/built", "@lib/alias": "file:../libs/origin", "@lib/tarball": "file:../vendor/x.tgz", '
+              '"@lib/gone": "file:../libs/gone"}, "devDependencies": {"@lib/looked": "link:../libs/looked"}, '
+              '"optionalDependencies": {"@lib/ported": "portal:../libs/ported"}}',),
+    "tools/inner": ('{"name": "inner-tool", "dependencies": {"@lib/linked": "file:../../libs/looked"}}',),
 }
 FILES = {
     "go.mod": "module app\n",
@@ -73,7 +86,9 @@ LINKS = {f"{root}node_modules/{name}": folder for root, name, folder in (
     ("", "@app/gated", "packages/gated"), ("", "@app/esm", "packages/esm"), ("", "@app/dflt", "packages/dflt"),
     ("", "@app/fall", "packages/fall"), ("", "@app/str", "packages/str"), ("", "@app/typ", "packages/typ"),
     ("", "@app/over", "packages/over"), ("web/", "@web/ui", "web/lib/ui"), ("web/", "@app/core", "web/lib/core"),
-    ("pn/", "@pn/one", "pn/libs/one"))}
+    ("pn/", "@pn/one", "pn/libs/one"), ("tools/", "@lib/linked", "libs/linked"), ("tools/", "@lib/built", "libs/built"),
+    ("tools/", "@lib/alias", "libs/origin"), ("tools/", "@lib/looked", "libs/looked"),
+    ("tools/", "@lib/ported", "libs/ported"), ("tools/inner/", "@lib/linked", "libs/looked"))}
 IMPORTS = {
     "app/use.ts": [
         ("@app/core", "Core", "packages/core/src/index"), ("@app/core/util", "Util", "packages/core/src/util"),
@@ -87,11 +102,17 @@ IMPORTS = {
         ("@app/fall", "Fall", "packages/fall/src/index"), ("@app/str", "Str", "packages/str/src/index"),
         ("@app/str/other", "Other", None), ("@app/typ", "Typ", "packages/typ/src/index"),
         ("@app/over", "OverAlt", "packages/over/alt"), ("@app/excluded", "Excluded", None),
-        ("@app/inner", "Inner", None), ("@web/ui", "Ui", None), ("fastify", "Sample", None)],
+        ("@app/inner", "Inner", None), ("@web/ui", "Ui", None), ("fastify", "Sample", None),
+        ("@lib/linked", "Linked", None)],
     "web/app/page.ts": [("@web/ui", "Ui", "web/lib/ui/index"), ("@app/core", "WebCore", "web/lib/core/index"),
                         ("@app/typed", "Typed", "packages/typed/src/index")],
     "web2/use.ts": [("@web/ui", "Ui", None)],
     "pn/app/x.ts": [("@pn/one", "One", "pn/libs/one/index")],
+    "tools/use.ts": [("@lib/linked", "Linked", "libs/linked/src/index"), ("@lib/built", "LinkBuilt", None),
+                     ("@lib/looked", "Looked", "libs/looked/index"), ("@lib/ported", "Ported", "libs/ported/index"),
+                     ("@lib/alias", "Origin", "libs/origin/index"), ("@lib/tarball", "Tarball", None),
+                     ("@lib/gone", "Gone", None)],
+    "tools/inner/use.ts": [("@lib/linked", "Looked", "libs/looked/index")],
 }
 for file, rows in IMPORTS.items():
     FILES[file] = "".join(f'import {{ {name} as B{i} }} from "{spec}";\nexport class K{i} extends B{i} {{}}\n'
@@ -187,3 +208,14 @@ def test_an_import_is_an_edge_to_the_file_or_to_the_package_where_none_resolves(
     got = {(paths[e.file_id], e.spec): (e.target_label, paths.get(e.target_id)) for e in rv.imports
            if (paths.get(e.file_id), e.spec) in WANT}
     assert got == {k: ("File", v) if v else ("Package", None) for k, v in WANT.items()}
+
+
+def test_a_member_of_the_workspace_outranks_a_dependency_of_its_name_in_the_same_manifest(tmp_path):
+    """The package managers leave this undefined, so no checker decides it: the member the manifest's own `workspaces`
+    declares is the choice."""
+    manifests = {"package.json": '{"name": "a", "workspaces": ["pkgs/*"], "dependencies": {"dup": "file:libs/dup"}}',
+                 "pkgs/dup/package.json": '{"name": "dup"}', "libs/dup/package.json": '{"name": "dup"}'}
+    for rel, body in manifests.items():
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text(body)
+    assert Workspaces(tmp_path, {"", "pkgs/dup", "libs/dup"}).member("app/x.ts", "dup") == "pkgs/dup"

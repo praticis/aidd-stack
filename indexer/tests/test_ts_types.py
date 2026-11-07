@@ -147,6 +147,7 @@ SCOPES = {
 }
 
 CASES = DECLARED | UNDECIDED | SCOPES
+DECIDED_BY_THE_INDEX = {"a-result-the-function-does-not-declare"}
 
 # -- the scanner: a client's calls, found through the type its receiver declares -----------------------------------
 CLIENT = ('export class ApiClient {\n  baseUrl = "/api";\n'
@@ -254,9 +255,8 @@ def _typed(edges: set[tuple[str, str]]) -> set[str]:
     return {target for target, strategy in edges if strategy.removesuffix("-ambiguous") not in NAMED}
 
 
-def _cases(answer: str, why: str | None = None) -> list:
-    marks = [pytest.mark.xfail(strict=True, reason=why)] if why else []
-    return [pytest.param(name, id=name, marks=marks) for name, c in CASES.items() if c.answer == answer]
+def _cases(answer: str) -> list:
+    return [pytest.param(name, id=name) for name, c in CASES.items() if c.answer == answer]
 
 
 @pytest.mark.parametrize("name", [*CASES, *(n for n, scan in SCANS.items() if scan.declared is not None)])
@@ -264,7 +264,7 @@ def test_the_checker_resolves_the_call_to_the_declarations_the_case_names(checke
     assert checked[name] == (CASES[name].declared if name in CASES else SCANS[name].declared)
 
 
-@pytest.mark.parametrize("name", _cases("typed", "TS's receivers have no type yet"))
+@pytest.mark.parametrize("name", _cases("typed"))
 def test_a_declared_receiver_reaches_the_declaration_the_checker_names(tmp_path, name):
     assert _edges(tmp_path, name) == {(CASES[name].declared[0], "receiver-type")}
 
@@ -274,7 +274,16 @@ def test_no_type_where_the_declarations_in_sight_do_not_decide(tmp_path, name):
     assert _typed(_edges(tmp_path, name)) == set()
 
 
-@pytest.mark.parametrize("name", _cases("external", "a value of a package's type reaches the repo's homonym by name"))
+@pytest.mark.parametrize("name", [pytest.param(n, id=n) for n, c in CASES.items() if c.answer == "unknown" and c.reason])
+def test_the_extraction_records_why_the_declarations_in_sight_give_no_type(tmp_path, name):
+    res, _ = _extract(tmp_path, name)
+    use = next(f.id for f in res.files if f.path.startswith("app/use."))
+    later = name in DECIDED_BY_THE_INDEX      # the extraction writes the call's name, and the index says why it has no type
+    assert {c.receiver_unknown for c in res.calls if c.file_id == use and c.callee_name == CASES[name].method} \
+        == {None if later else CASES[name].reason}
+
+
+@pytest.mark.parametrize("name", _cases("external"))
 def test_a_method_of_a_package_type_reaches_no_homonym_of_the_repo(tmp_path, name):
     assert _edges(tmp_path, name) == set()
 
