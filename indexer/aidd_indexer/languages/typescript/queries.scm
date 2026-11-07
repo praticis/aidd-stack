@@ -46,3 +46,17 @@
 
 ;; A class field that holds a function is the method its instances run.
 (public_field_definition name: (property_identifier) @name value: [(arrow_function) (function_expression)]) @def.method
+
+;; A member an interface or a type alias's object type declares as a function is the method a call of it reaches, as a
+;; method signature is; one whose type is a name, a union or the like is not decided by the syntax alone. The alias's
+;; object type may be an operand of its intersection or union, or of one of the same kind nested in it (`A & { x } &
+;; { y }` nests the first), where a method signature already belongs to the alias.
+(interface_body (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method)
+
+(type_alias_declaration value: (object_type (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method))
+
+(type_alias_declaration value: [
+  (intersection_type (object_type (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method))
+  (union_type (object_type (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method))
+  (intersection_type (intersection_type (object_type (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method)))
+  (union_type (union_type (object_type (property_signature name: (property_identifier) @name type: (type_annotation (function_type))) @def.method)))])
