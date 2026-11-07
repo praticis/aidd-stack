@@ -1,8 +1,8 @@
 """TS's and JS's declarations the graph still misses: a base in a package whose entry is a build the repo lacks, and one
 whose source a condition a tool of the repo enables names; a member of an interface whose type is a function the code
-does not write in place, a function an object literal holds, and a member of an object type no declaration names, each
-the declaration TypeScript's checker resolves a call of the member to (scripts/checks/ts_checker.js, which a test of
-the case checks). Each case states the right answer and is a strict
+does not write in place, a function an object literal holds, a member of an object type no declaration names, and one
+of an alias's wrappers the query does not reach, each the declaration TypeScript's checker resolves a call of the member
+to (scripts/checks/ts_checker.js, which a test of the case checks). Each case states the right answer and is a strict
 xfail with the reason: when the indexer learns it, the case passes, the xfail fails the suite, and the mark has to
 go."""
 
@@ -52,6 +52,8 @@ CASES = [
 NOT_WRITTEN_IN_PLACE = ("a member's type is a function only a name, `typeof` or a union gives, which the syntax does "
                         "not decide")
 THEME = 'import {{ Theme }} from "./models";\nexport function main(t: Theme) {{ return t.{}(1); }}\n'
+NOT_IN_REACH = ("the alias's object type is below more wrappers than the query reaches, or a mix of them or a pair of "
+                "parentheses, where a method signature is a member of the alias")
 MEMBERS = [
     case("a-member-whose-type-an-alias-of-a-function-type-gives-is-the-method-its-call-reaches",
          {"app/models.ts": "export type Spacing = (n: number) => string;\n"
@@ -78,6 +80,36 @@ MEMBERS = [
          "a method signature in an object type no declaration names sits under the function around it, with no "
          "name for the parameter that holds the type"),
 ]
+
+
+WRAPPED = [
+    case("a-member-of-a-union-of-four-object-types-is-the-method-its-call-reaches",
+         {"app/models.ts": "export type Four =\n"
+                           "  { a: () => void } | { b: () => void } | { c: () => void } | { d: () => void };\n"
+                           'export function main(f: Four) { if ("a" in f) { f.a(); } }\n'},
+         "app/models:Four.a", NOT_IN_REACH),
+    case("a-member-of-an-object-type-three-intersections-down-is-the-method-its-call-reaches",
+         {"app/models.ts": "export interface Api { push(): void }\n"
+                           "export type Deep = { deep: () => void } & Api & Api & Api;\n"
+                           "export function main(d: Deep) { d.deep(); }\n"},
+         "app/models:Deep.deep", NOT_IN_REACH),
+    case("a-member-of-a-parenthesized-object-type-is-the-method-its-call-reaches",
+         {"app/models.ts": "export interface Api { push(): void }\n"
+                           "export type Paren = Api & ({ pm: () => void });\n"
+                           "export function main(p: Paren) { p.pm(); }\n"},
+         "app/models:Paren.pm", NOT_IN_REACH),
+    case("a-member-of-a-parenthesized-union-in-an-intersection-is-the-method-its-call-reaches",
+         {"app/models.ts": "export interface Api { push(): void }\n"
+                           "export type Mixed = Api & ({ mixed: () => void } | { other: () => void });\n"
+                           'export function main(m: Mixed) { if ("mixed" in m) { m.mixed(); } }\n'},
+         "app/models:Mixed.mixed", NOT_IN_REACH),
+    case("a-member-of-a-union-of-an-intersection-is-the-method-its-call-reaches",
+         {"app/models.ts": "export interface Api { push(): void }\n"
+                           "export type Mix = { um: () => void } & Api | Api;\n"
+                           'export function main(m: Mix) { if ("um" in m) { m.um(); } }\n'},
+         "app/models:Mix.um", NOT_IN_REACH),
+]
+MEMBERS += WRAPPED
 
 
 def _write(root, files):

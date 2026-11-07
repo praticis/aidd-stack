@@ -40,8 +40,9 @@
     part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
     `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
     proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
-    the repo enables names, TD-052, and a member of an interface whose function type a name or `typeof` gives, TD-053,
-    are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
+    the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053, and
+    a member of an alias's object type below more wrappers than the query reaches, TD-055, are due in `fix(typescript)`
+    PRs before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
@@ -332,7 +333,8 @@ Open:
     TD-054 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
     function holds), an override of a package's method no call meets, a workspace package whose entry is a build
     no project the config references emits, an HTTP path that reads a field of an instance as a constant, and a
-    function an object literal holds, which needs a symbol the schema does not have, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    function an object literal holds or a member of an object type no declaration names, which need a symbol the
+    schema does not have, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot

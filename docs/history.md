@@ -604,5 +604,5 @@
   mattermost's, and the rest is a type name or `typeof` (TD-053) or a function an object literal holds, or an object
   type no declaration names (TD-054). Against the checker's calls, the sites whose declaration is no symbol go from
   10,416 to 6,466 in grafana, 15,898 to 14,123 in ghost and 3,492 to 3,160 in mattermost; the corpus and the hold-out are
-  as on `main`. Micro: eight repos differ, by 7,019 `method` symbols, 265 `OVERRIDES` and `CALLS` found by name that
-  reach the new members.
+  as on `main`. Micro: eight repos differ, by 7,018 `method` symbols, 1 that changes its scope, 265 `OVERRIDES` and `CALLS` found by
+  name that reach the new members.
