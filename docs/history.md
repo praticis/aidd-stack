@@ -611,3 +611,14 @@
   and 97 `CALLS` found by name, and lose 6 and 7. The graph after holds the dry-runs on each snapshot (0 mismatching):
   10,711 symbols and 24,009 `CALLS`, the others as before; of the 29 calls, 24 are the same and 5 differ, 4 only in their
   time, build and refresh fields and the `repo_map` of the TS also in its module's symbols and the `method` count.
+- 2026-11-07: TS's resolver reads a receiver's type, PR #84 (`fix(typescript)`), the first PR of the change of behavior
+  (H5-D50), which narrows TD-050 and opens TD-056 to TD-061: a call on a receiver whose type the code declares reaches the
+  methods of that type and of its bases and no homonym found by name; where the type is not decided, it goes by name as
+  before. A package the repo holds whose entry is a build the clone lacks (a workspace member, or one a `file:`, `link:` or
+  `portal:` dependency links) is not a package that declares types, and a class whose bases reach one goes by name too. A
+  round of research, with a challenger that tried to refute its conclusion, changed the plan before the code: the `file:`
+  dependencies were the largest population of by-name edges the first design lost, and the base of an unknown package gave
+  a class an `inherited` edge. Against the checker: it confirms 97.3 / 99.9 / 100 % of the typed edges in ghost, grafana and
+  mattermost for which it names a declaration of the repo, and 0.34 / 0.05 / 0 % of the by-name edges they replace, the sites that gain its declaration outnumber those
+  that lose it 22 to 1, 345 to 1 and 527 to 0, and none loses the edge to the source of a package with no entry. `CALLS`
+  fall 4.9, 3.6 and 1.6 %. The micro set differs in ten repos, in `CALLS`, and in mattermost in two `IMPORTS` of a package that become a file's. The corpus and the hold-out do not change, and ghost's dry-run takes 22 % longer (2 % more memory), inside what the author accepted.

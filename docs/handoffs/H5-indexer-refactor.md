@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82, the function members in #83, the receiver's type in #84 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -1655,7 +1655,100 @@ number and a debt.
   before they measure. A string-named member is no debt: no call of the corpus the checker resolves reaches one. A
   method or a field with a `#private` name has no symbol either, ghost's 190 sites, which this PR does not touch.
 
-Next, the change of behavior, in the two PRs that end the step (H5-D50 and H5-D51).
+#### TS's resolver reads the receiver's type (#84, H5-D50)
+
+The first of the two PRs of the change of behavior: a call on a receiver whose type the code declares reaches the
+methods of that type and its bases, and no homonym. The prototype measured before #81 found the checker confirming 95 to
+100 % of the typed edges and 0.1 % or less of the by-name edges they replace; this PR declared its acceptance criterion
+before it measured, and a round of research (six investigations, a synthesis and a challenger that tried to refute it)
+changed the criterion and the rule before the code was written.
+
+- **Where it lives.** `symbols.py`: `file_index` builds the file's `TsScopes` and `call_receiver` answers with
+  `receiver_of`, with the flag of a JS file; `modules.py`: a `Package` is `local` where the repo holds the package and
+  its entry is a build the clone lacks; `workspaces.py`: a `file:`, `link:` or `portal:` dependency of a `package.json`
+  links a package of the repo under the dependency's own name, for the files below that manifest, with the
+  `workspaces` members, the deepest manifest first; `scopes.py` and `receivers.py`: a value a function tests with
+  `instanceof` has no type (`narrowed`); `type_index.py`: a local package with no entry is
+  `Unknown`, not what a package declares, also through an `export *` (299 lines of 300). The core does not change. `languages/base.py` changes one
+  docstring, `member_by_name`'s. `scripts/checks/ts_link.js`, the host the checker's oracle resolves links through,
+  learns the same dependencies, so the emulated link equals the one a manager makes.
+- **The rule.** Where the type is known the call reaches its hierarchy, as in Go, C# and Python (`receiver-type`,
+  `receiver-type-impl`, `inherited`, the `-ambiguous` variants); where it is not (`any`, a parameter of JS, a union, an
+  unconstrained type parameter, a result the function does not declare, a value a function tests with `instanceof`), the call
+  goes by name as before. A package of
+  the repo with no entry, and a class or an interface whose bases reach one, whatever its other bases are, go by name
+  too, since the method may be the package's and its source is in the repo; a package of npm declares no method of the repo. Two things the first
+  design got wrong, found by the challenger and measured: the `file:` dependencies, the largest population of by-name
+  edges it lost (mattermost's end-to-end tests link `@mattermost/client` that way, 357 sites), and the base of an unknown
+  package, which gave a class `inherited` and a `this.m()` in it no edge.
+- **The criterion, declared before the measure, and what it gave:**
+
+| | The criterion | The measure |
+|---|---|---|
+| A1 | typed edges the change adds that the checker confirms, ≥ 95 % | of those it names a declaration of the repo for: ghost 97.3 %, grafana 99.9 %, mattermost 100 %. A `receiver-type` edge is judged by its method (ghost 97.1 % when a declaration file and its implementation are two, grafana 99.9 %) and an `inherited` edge, which goes to a class, by the owner of the declaration the checker names (ghost 888 of 916, the 28 being TD-058's factory classes; grafana 1 of 3, the two being TD-053's; mattermost none contradicted). The edges it names none for, or no site, are 5.5, 3.9 and 0.5 % of those added |
+| A2 | by-name edges it takes away that the checker confirms, ≤ 1 % | 0.34 %, 0.05 %, 0 % |
+| A3 | sites that gain the checker's declaration against those that lose it, ≥ 20 to 1 | ghost 1,140 to 51 (38 to 1 with the pairs), grafana 4,481 to 13, mattermost 527 to 0 |
+| A4 | changed sites no change in the type answered explains, ≤ 0.1 % | ghost 0 of 12,021, mattermost 0 of 8,575, grafana 10 of 20,367: a chain over lines whose edge keeps its target and gains `receiver-type`. It detects changes with no type behind them; the type's correctness is A1 to A3 and the sample |
+| A5 | `CALLS` of the repo, -15 to +2 % | -4.9 % (240,635), -3.6 % (570,261), -1.6 % (297,862) |
+| A6 | sites that lose the edge to the source of a package with no entry, 0 | 0 in the three (the prototype lost 6 in mattermost, 2 in ghost, 1 in grafana) |
+| A7 | cost, up to +25 % of time and +5 % of memory | Ghost's dry-run, the median of five alternated with `main`'s, takes 62.2 s where `main` takes 50.8 s (+22.4 %; the rounds give +21.7 to +25.0 %, every run of the branch above every run of `main`) and peaks at 1,488 MiB where `main` peaks at 1,463 (+1.7 %); mattermost, the median of three, 98.6 s against 89.4 (+10.3 %) and 2,322 MiB against 2,302 (+0.9 %); grafana, the mean of two, 180.0 s against 165.9 (+8.5 %) and 4,251 MiB against 4,237 (+0.3 %): inside the +25 % of time and +5 % of memory the author accepted, nearly all of it the scope index's construction, which the per-file cache of H6 pays once per file that changes |
+| A8 | the corpus and the hold-out | `0 repo(s) differ` in both |
+| A9 | the table of cases, the mutants, the gates | green; 25 mutants, all die |
+
+- **The proof:**
+  - `test_ts_types.py`: the 30 typed cases and the package's class leave the strict xfail, and a test now checks that the
+    extraction records why each of the unknown ones has no type. `test_ts_local_packages.py` (13 cases, 26 tests): a package with
+    and without an entry, in a workspace and in a `file:` dependency, a package of npm, and a class whose base is one,
+    inside it, outside it, two levels down, with its own method and with a package's, with another base beside it and
+    through an `export *`, each checked against the checker. `test_ts_narrowing.py` (8 cases, 20 tests): a value a function
+    tests with `instanceof`, as a parameter, a member, a field and a member of the one narrowed, and a value it does not
+    test, one it tests under another name or in another function.
+    `test_ts_workspaces.py`: the `file:`, `link:` and `portal:` dependencies, an alias's name, a tarball and a folder
+    with no manifest (which link nothing), a manifest below another, with the links a manager makes and with the host that
+    emulates them.
+  - 25 mutants, each rule broken once: `call_receiver` answers none, no index, the flag of JS loose (which only the
+    recorded reason shows), an absent package as one of npm, a present one as absent, the flag dropped, any package absent,
+    an absent package given no edge by name, each of the three prefixes and the dev and optional sections, the shallowest
+    manifest first, a spec that names no package of the repo, an absent base counted as external, none by name, only a
+    class's own bases read, an absent base that gives way to another base, a star export that does not carry the
+    absent package, and the dependency that outranks the member, a test that reaches beyond its function, one that matches a longer name, one
+    that matches no member of the value, and none at all. All die: the last by a test of the choice, since the
+    managers leave it undefined and the checker cannot judge it.
+  - Against the checker, ghost, grafana and mattermost: the sample of 30 sites of the two classes the plan names,
+    with the cause of each read at the source. The 30 by-name edges taken where the checker is silent are, in mattermost, a
+    receiver typed to a package (`react`, `@testing-library/user-event`, `node:fs`, `@playwright/test`: 30 of 30); in
+    ghost, 25 a package, 3 a class that extends one (`EventEmitter`, `lexical`'s `TextNode`), 1 an interface whose bases
+    are a package of npm and an alias, and 1 a class a factory makes (TD-058); in grafana, 22 a package, 7 a class that
+    extends `SceneObjectBase` (`this.setState`) and 1 a cast to a package's class. The homonyms dropped are right in 29
+    of ghost's 30 and in all the others; the one that is not is the factory's class, where the method the factory
+    declares was one of the candidates by name and is now reached by none. The typed edges the checker places elsewhere are, in ghost, 30 of 30 one thing (TD-061): the checker names the
+    interface of a `.d.ts` beside the JS (`SettingsCache.get`) and the index the class that implements it
+    (`CacheManager.get`, what runs); in grafana, 12 before the `instanceof` rule and 7 after it: 2 a class field typed as a function (TD-056), 3 a type
+    parameter whose argument an alias gives (TD-057) and 2 an overloaded function's result (TD-060), and the 5 that were
+    a receiver the function tests with `instanceof` go by name now; mattermost has none.
+  - The corpus and the hold-out, the gates and the shape: the corpus and the hold-out give `0 repo(s) differ` against #83's runs, the gates pass (precision, no win lost, the hold-out untouched, the micro graph judged under `graph-change`), and the shape against `main` finds nothing new or worse over a target. The conventions and the module resolution: with the reference convention and the probe of #82, the violations, the modules, what they provide and require, and the packages of ghost, umbraco and grafana are the same, record by record, and so are mattermost's but for the package its `file:` dependency links, which the micro set shows removed. Over mattermost and grafana (94,493 imports) `checks/ts_modules.py` gives `same` 92,965 where `main` gives 92,963, the packages of the repo's workspace that neither resolves 1,461 where `main` gives 1,463, and no other kind changes.
+  - Micro: ten repos differ, in `CALLS`. 22,247 edges go and 9,854 come in ghost, 34,825 and 13,536 in grafana,
+    18,001 and 13,878 in umbraco, 10,841 and 5,901 in mattermost, 8,216 and 3,461 in outline, 391 and 12 in vikunja, 290
+    and 27 in dispatch, 165 and 101 in gitea, 125 and 89 in netbox, 11 and 11 in btcpayserver; jellyfin and eshop are
+    identical. Mattermost also has two `IMPORTS` that change from a package to a file (the end-to-end configs'
+    `@mattermost/eslint-plugin`, a `file:` dependency) and loses that package.
+- **What differs from the plan and from the measure before it.** The criterion's A1 was written with `.d.ts` pairs as
+  one declaration, after the research found a ghost figure of 88 % by the strict count; on the head the strict count is
+  97.1 % and the pair changes it by 0.2 points. The checker script that anchored A2 hid 11,145 of ghost's 15,092 edges as
+  "no site" by comparing a path with its extension to one without. The "1,241 sites" the plan cited for the packages with
+  no entry does not reproduce on the current `main`. A `file:` dependency is linked under its own name, as the managers
+  do, where the plan said a folder whose manifest names the dependency. The by-name layer that is left is the least precise:
+  `-ambiguous` is 12.8 to 20 % of what it gives, and `impact_of` discounts only that. A review by three agents that
+  did not write the change (correctness against the checker, the repo's rules, the losses), with a second reader for
+  each blocking objection, found: the receiver the flow narrows, which goes by name when its function tests it with `instanceof` and is TD-059
+  for a type guard, and the overloaded result and the module beside a declaration file, which the sample had explained
+  away and which have a debt and a case each; a class with
+  another base beside the absent package's, and a star export of it, which lost the by-name edge to its source and are
+  fixed with a case each; A1 counted only the edges the checker names a declaration for, which it now says, with the
+  `inherited` ones judged by their owner; the 19th mutant, now pinned by a test; a docstring of `member_by_name` that
+  was false for Python; and a project name of the live install in two lines of the docs, now left out.
+
+Next, the last PR of the change of behavior (H5-D51: the scanner reads a client by the type its receiver declares).
 
 ## Decisions made (2026-10-18, by the author)
 
