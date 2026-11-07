@@ -606,3 +606,8 @@
   10,416 to 6,466 in grafana, 15,898 to 14,123 in ghost and 3,492 to 3,160 in mattermost; the corpus and the hold-out are
   as on `main`. Micro: eight repos differ, by 7,018 `method` symbols, 1 that changes its scope, 265 `OVERRIDES` and `CALLS` found by
   name that reach the new members.
+- 2026-11-07: PR #83 is validated on a live install (the forty-first round). The dry-runs of `main` and of the PR's head
+  are identical in 8 of the 10 snapshots and differ in the two of the live install's TS repo, which gain 13 symbols each and 103
+  and 97 `CALLS` found by name, and lose 6 and 7. The graph after holds the dry-runs on each snapshot (0 mismatching):
+  10,711 symbols and 24,009 `CALLS`, the others as before; of the 29 calls, 24 are the same and 5 differ, 4 only in their
+  time, build and refresh fields and the `repo_map` of the TS also in its module's symbols and the `method` count.
