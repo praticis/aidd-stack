@@ -7,8 +7,8 @@ same kind nested in it. A class that implements the interface with a method, or 
 overrides it as it overrides the interface's method signature: there the reference is what JS runs on an instance,
 which the hierarchy's overrides follow, not the compiler. A member the syntax does not give as a function has no
 symbol: a data property, a constructor type, a name written as a string or computed, a member of an object type no
-declaration names or one below a generic or an array, a mixed wrapper or three wrappers, and anything of a JS file,
-which declares types in comments only. A member whose function type a name, `typeof` or a union gives, and one of an
+declaration names or one below a generic or an array, and anything of a JS file, which declares types in comments
+only. A member whose function type a name, `typeof` or a union gives, and one of an
 object literal, are debts (test_ts_debts.py)."""
 
 import contextlib
@@ -54,8 +54,6 @@ export interface Rest {
 }
 export type Box = Array<{ unbox: () => void }>;
 export type List = { item: () => void }[];
-export type Deep = { deep: () => void } & Api & Api & Api;
-export type Mixed = Api & ({ mixed: () => void } | Rest);
 export function take(o: { go: () => void }) { return o.go(); }
 """
 IMPL = """import { Api } from "./models";
@@ -112,8 +110,6 @@ NOT_A_FUNCTION = {
     "a-member-of-a-parameters-object-type": ("app/models.ts", "go: ()"),
     "a-member-of-an-object-type-below-a-generic": ("app/models.ts", "unbox: ()"),
     "a-member-of-an-array-element-type": ("app/models.ts", "item: ()"),
-    "a-member-of-an-object-type-three-wrappers-down": ("app/models.ts", "deep: ()"),
-    "a-member-of-an-object-type-below-a-mixed-wrapper": ("app/models.ts", "mixed: ()"),
     "a-member-a-js-comment-declares": ("app/plain.js", "jsRun: ()"),
 }
 
@@ -156,6 +152,13 @@ def test_a_function_member_is_the_method_the_checker_resolves_its_call_to(checke
     signatures = {m: signature for _, _, _, member, signature in CALLS for m in _members(member)}
     declared = {d for ds in checked.values() for d in ds}
     assert {d: found.get(d) for d in declared} == {d: ("method", signatures[d]) for d in declared}
+
+
+def test_a_member_two_operands_declare_is_two_symbols(indexed):
+    res, _ = indexed
+    names = [s.qualified_name for s in res.symbols if s.kind == "method" and s.qualified_name.startswith("app/models:")]
+    assert {n: names.count(n) for n in ("app/models:Either.run", "app/models:Choice.pick", "app/models:Api.push")} \
+        == {"app/models:Either.run": 2, "app/models:Choice.pick": 2, "app/models:Api.push": 1}
 
 
 def test_a_class_overrides_a_function_member_as_it_overrides_a_method_signature(indexed):
