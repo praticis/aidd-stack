@@ -17,20 +17,17 @@ from ...core.http_wrappers import (FIELDS, PARAM, UNKNOWN, ClassBases, WrappedCa
                                    compose_wrapped_calls, continues_path, param_shape, verb_of)
 from ...core.paths import has_literal_segment, normalize_path, unquote
 from ...core.types import TypeRef, Unknown
+from .client_types import CLIENT_LIBRARIES, TsClientTypes
 from .receivers import this_owner
-from .scopes import TsScopes
+from .type_index import module_of, qualified
 
 SCOPE = "ts"                       # the scope of the wrapper facts the core's machinery composes for TS/JS
 CLASS_FIELDS = ("public_field_definition", "field_definition")
-CLIENT_LIBRARIES = frozenset({"axios", "superagent", "ky", "got", "node-fetch", "ofetch", "undici", "cross-fetch",
-                              "isomorphic-fetch", "wretch", "redaxios"})
 
 
-class TsClientWrappers:
+class TsClientWrappers(TsClientTypes):
     """Mixin of the TS scanner: publishes wrappers and class bases, and keeps the calls that may go to a wrapper
     pending."""
-    ts_scopes: TsScopes | None = None          # the file's scope index, built on its first question
-
     def publish_bases(self, cls: Node) -> None:
         name = cls.child_by_field_name("name")
         heritage = next((c for c in cls.named_children if c.type == "class_heritage"), None)
@@ -40,10 +37,10 @@ class TsClientWrappers:
         if name is not None and base is not None and base.type in ("identifier", "member_expression"):
             self.out.publish(text(name, self.src), ClassBases((text(base, self.src).split(".")[-1],)), SCOPE)
 
-    def library_client(self, recv: str) -> bool:
-        """`agent` of `import * as agent from 'superagent'`: a receiver that is an HTTP client library."""
+    def library_client(self, recv: str, call: Node) -> bool:
+        """`agent` of `import * as agent from 'superagent'`, or a receiver typed by a client library: an HTTP client."""
         spec, _ = self.imports.get(recv) or (None, None)
-        return spec in CLIENT_LIBRARIES
+        return spec in CLIENT_LIBRARIES or self.client_typed(call)
 
     def publish_wrapper(self, call: Node, method: str | None, arg_nodes: list[Node], continuing: bool = False,
                         fallback: str | None = None, base: str | None = None) -> bool:
@@ -165,7 +162,8 @@ class TsClientWrappers:
                 return []
             method = unquote(text(name, self.src))
             if holder.type == "class_body" and holder.parent is not None and holder.parent.child_by_field_name("name"):
-                return [f"{text(holder.parent.child_by_field_name('name'), self.src)}.{method}"]
+                cls = text(holder.parent.child_by_field_name("name"), self.src)
+                return [f"{cls}.{method}", f"{qualified(TypeRef(module_of(path), cls))}.{method}"]
             owner = self._owner(holder) if holder.type == "object" else None
             return [f"{path}:{o}.{method}" for o in self._exported_names(owner)] if owner else []
         name = self._fn_name(fn) if _at_module_level(fn) else None
@@ -190,7 +188,7 @@ class TsClientWrappers:
         values = tuple(self._value(unwrap_arg(a), params) for a in arg_nodes)
         if any(v not in (None, UNKNOWN) for v in values):
             item = self.call_info(n, None, "", text(fn, self.src))
-            call = WrappedCall(target, values, (), keys[0] if keys else None, tuple(params))
+            call = WrappedCall(target, values, (), tuple(keys) or None, tuple(params))
             self.out.pending.append(Pending(item, call, SCOPE))
 
     def _value(self, a: Node, params: list[str]) -> str | tuple | None:
@@ -222,7 +220,7 @@ class TsClientWrappers:
             cls = self.class_of_this(obj)
             return ("class", cls, method) if cls else None
         if obj.type != "identifier":
-            return None
+            return self.typed_target(obj, method)
         name = text(obj, self.src)
         spec, orig = self.imports.get(name) or (None, None)
         if spec is not None:
@@ -232,7 +230,7 @@ class TsClientWrappers:
         if val is not None and val.type == "object":
             return ("func", f"{self.fx.file.path}:{name}.{method}")
         cls = self._constructed(val)
-        return ("class", cls, method) if cls else None
+        return ("class", cls, method) if cls else self.typed_target(obj, method)
 
     def _function_target(self, name: str) -> tuple | None:
         if any(s.kind == "function" for s in self.symbols_by_name.get(name, ())):
@@ -248,9 +246,7 @@ class TsClientWrappers:
             at = at.named_children[0]
         if at is None or at.type != "this":
             return None
-        if self.ts_scopes is None:
-            self.ts_scopes = TsScopes(self.fx.tree.root_node, self.src)
-        found = this_owner(at, self.ts_scopes)
+        found = this_owner(at, self.file_scopes())
         name = found.child_by_field_name("name") if not isinstance(found, Unknown) else None
         return text(name, self.src) if name is not None else None
 

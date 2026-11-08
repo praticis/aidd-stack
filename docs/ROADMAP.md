@@ -44,17 +44,17 @@
     a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
     property typed as a function, TD-056, a value typed by a type parameter whose argument an alias gives, TD-057,
     a class a factory call makes, TD-058, a receiver a type guard narrows, TD-059, an overloaded function's result, TD-060,
-    and a module with a declaration file beside its JS, TD-061, are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
+    a module with a declaration file beside its JS, TD-061, and a wrapper behind an interface, TD-062, are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
     validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
-    closed (#57 to #63). Next, TS (H5-D29), in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46,
-    H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51), judged
-    with the per-site attribution every language now has (H5-D21), which reads the resolver's stage too (G2, #56),
-    before the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS: H5-D20, with
-    the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`, after TS's step 5),
-    then 10 and 11;
+    closed (#57 to #63). TS's step 5 (H5-D29) is merged too, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45,
+    H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, the last still to be validated on a
+    live install), judged with the per-site attribution every language now has (H5-D21), which reads the resolver's stage
+    too (G2, #56). Next, the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
+    H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`), then 10
+    and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
     designed now, plugged in after H5.
     - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
@@ -99,8 +99,9 @@
   its evidence, and all but `DEPENDS_ON` also `confidence` + `evidence`.
 - Secrets never enter the index (extract the env var's *name*, never its value).
 - Every phase ends with the **golden questions** passing (recall measured, not felt).
-- A defect that does not block is a **debt** (`docs/tech-debt.md`), not a note: it has a strict xfail test, so the
-  suite fails when it is fixed. Every phase ends with its debts settled, or moved by the author.
+- A defect a change opens or widens is **fixed in that change** when that is viable; what is not, and what `main`
+  already has, is a **debt** (`docs/tech-debt.md`), not a note: it has a strict xfail test, so the suite fails when it
+  is fixed. Every phase ends with its debts settled, or moved by the author.
 - **Code shape** (decided on 2026-10-18; H5 brings the current code up to it): a **single-digit** cyclomatic
   complexity per function (≤ 9, `ruff C901`) and at most **300 lines per module**, counted over the whole file. The CI
   fails what is new or grew over a target (a ratchet, H5-D9), and full blocking comes when the author decides. New

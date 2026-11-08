@@ -41,6 +41,7 @@ TOO_DEEP = Unknown("a chain of names longer than the index follows")
 class Outside(NamedTuple):
     """What a package declares, as the repo imports it (`axios`, `some-package`)."""
     name: str
+    member: str = ""                # the name the import takes from it (`AxiosInstance`; `default`, `*`)
 
 
 class Denoted(NamedTuple):
@@ -191,7 +192,7 @@ class TsTypeIndex(TypeIndex):
         first, _, rest = dotted.partition(".")
         found = self._name(file, first, depth)
         if not rest or not isinstance(found, Denoted):
-            return found
+            return Outside(found.name, rest) if rest and isinstance(found, Outside) else found
         return self._export(found.file, rest, depth + 1) if found.member is None else NO_MEMBER
 
     def _name(self, file: str, name: str, depth: int) -> Found:
@@ -204,7 +205,7 @@ class TsTypeIndex(TypeIndex):
         spec, _, remote = written.rpartition(":")
         target = self._target(file, spec)
         if not isinstance(target, str):
-            return target
+            return Outside(target.name, remote) if isinstance(target, Outside) else target
         facts = self._facts[target]
         if remote in ("*", "default") and (OWN in facts.exports or OWN in facts.reexports):
             return self._export(target, OWN, depth + 1)

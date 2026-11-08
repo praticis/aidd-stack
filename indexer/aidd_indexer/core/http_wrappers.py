@@ -50,7 +50,7 @@ class WrappedCall(NamedTuple):
     target: tuple
     values: tuple
     named: tuple
-    outer: str | None
+    outer: str | tuple[str, ...] | None
     outer_params: tuple
 
 
@@ -177,8 +177,9 @@ def _resolve(p: "Pending", facts: dict[str, set[tuple]], bases: dict, out: "Http
         if call.outer is not None:
             _, i, b, a = path
             kept = shape.default if isinstance(vi_out, tuple) else None
-            facts.setdefault(call.outer, set()).add(
-                WrapperShape(i, shape.before + b, a + shape.after, verb, vi_out, call.outer_params, kept))
+            for key in (call.outer,) if isinstance(call.outer, str) else call.outer:
+                facts.setdefault(key, set()).add(
+                    WrapperShape(i, shape.before + b, a + shape.after, verb, vi_out, call.outer_params, kept))
         return True
     found = wrapped_path(shape.before, path, shape.after) if isinstance(path, str) else None
     if found is not None:

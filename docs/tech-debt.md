@@ -1,16 +1,22 @@
 # Technical debts
 
-A debt is a known defect or gap that does not block a PR, so decided by the author. The `main` branch already has it;
-the change that found it neither creates nor worsens it. Each debt is registered with where it was seen, when it is
-due, and the case that tells when it is gone.
+A debt is a known defect or gap that does not block a PR, so decided by the author. The `main` branch already has it, or
+the change that found it could not fix it in itself (the rule below). Each debt is registered with where it was seen,
+when it is due, and the case that tells when it is gone.
 
 **The case is the reminder.** A debt's case is a strict xfail in `indexer/tests/`: when the resolver learns the right
 answer, the case passes, the strict xfail fails the suite, and the mark has to go. That does not depend on anyone
 remembering.
 
 Rules:
+- A defect the change under way opens or widens is fixed in that change when that is viable, with its case as a plain
+  test. It becomes a debt only when the fix is out of the change's scope, costs more than it returns, is so complex or
+  has effects that mix with the change's that the change becomes hard to judge, or belongs next to a later step it is
+  directly tied to (the catalog, SCIP). The PR says which. A defect `main` already has and the change does not touch is
+  a debt.
 - A debt enters with the author's decision and a case. This is the standing process (AGENTS.md, Principles): what a
-  judgment finds and does not block is registered here with its strict xfail, never left as a note in a handoff.
+  judgment finds, does not block and the change cannot fix in itself is registered here with its strict xfail, never left
+  as a note in a handoff.
 - A phase of the [ROADMAP](ROADMAP.md) lists the debts due in it and closes only when they are settled or the author
   moves them.
 - A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR (its Due reads
@@ -56,6 +62,11 @@ opened, on 2026-11-07, by the `fix(typescript)` that has the resolver read a rec
 of its sample against TypeScript's checker (TD-059 to TD-061 from the review of another agent, which reproduced each in
 a minimal case, and TD-059 narrowed to the type guard once the `instanceof` form went by name): they are gaps in the declarations the resolver reads, which a call found by name reached only by
 sharing a name, and the change keeps its rule, that a call on a typed receiver reaches no homonym.
+TD-062 on 2026-11-07, from the `fix(typescript)` that has the HTTP scanner find a client by the type its receiver
+declares, with H5-D51, from the review of its plan: `main` has it, the scanner finding no client through an interface. That
+change's probes and the review of its diff found three more it opened or widened, a wrapper's key two classes of one name
+share, a type of a client library that is no client and a class that overrides a wrapper, and it fixed the three in itself,
+which is the rule the author set on 2026-11-08.
 SCIP is a possible remedy for some of them, not a proven one. A due of `fix(<scope>)` (`fix(csharp)`, `fix(go)`,
 `fix(resolve)`) is a PR of that kind before F1.2, for a defect whose answer is declared in the repo; F1.2 is for one that needs a type or a model the resolver does not
 have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architecture that the step removes.
@@ -123,3 +134,4 @@ have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architec
 | TD-059 | A receiver a function narrows by a type predicate (`function isGrid(t: Target): t is Grid`, then `if (isGrid(t)) t.stop()` on `t: Target`, where `Target` is an interface or a class and no union) keeps the type it was declared with, so the call reaches `Target.stop`, or no edge where `Target` declares no `stop`, and not `Grid.stop`, which the checker names. TypeScript narrows a declared type that is no union by a type guard, and the index reads the declaration only; a value a function tests with `instanceof` is `Unknown` since H5-D50, and its call goes by name | the corpus has the guards, not a count of the calls they narrow: functions that declare a type predicate are 485 in grafana, 155 in ghost and 107 in mattermost; the `instanceof` form was 5 of the 12 typed edges of grafana the checker placed elsewhere (`public/app/features/dashboard-scene/scene/DashboardLayoutOrchestrator.tsx:406`), which now go by name | `fix(typescript)` | `a-receiver-narrowed-by-a-type-guard-reaches-the-method-of-the-class-it-narrows-to` |
 | TD-060 | A call of an overloaded function is typed by the result of its first signature, where the checker picks the signature the arguments select: `get('fast').m()` with `get(): Wide` and `get(kind: 'fast'): Fast` reaches `Wide.m` where the checker names `Base.m`, which `Fast` inherits | grafana `public/app/features/dashboard/services/DashboardLoaderSrv.ts:170` (`getDashboardScenePageStateManager('v1')`, three overloads at `public/app/features/dashboard-scene/pages/DashboardScenePageStateManager.ts:1624`); 2 of the 12 typed edges of grafana the checker places elsewhere | `fix(typescript)` | `a-call-of-an-overloaded-function-reaches-the-method-of-the-result-its-arguments-select` |
 | TD-061 | A module a JS file implements, with a declaration file beside it (`index.js` and `index.d.ts`), is typed for its importers by the value the JS exports, the class that runs, where the checker reads the declaration file, which TypeScript resolves the module to before the JS: `settingsCache.get(..)` reaches `CacheManager.get` where the checker names the `.d.ts`'s `SettingsCache.get`. The edge goes to what runs, and none goes to the declaration. Following the checker alone would take the callers of `CacheManager.get` out of `who_calls` and `impact_of`, so the answer is both edges, the declaration and the class that runs, which needs the index to say that the JS beside a declaration file implements its interface: a decision of the model, due with its own PR | ghost `ghost/core/server/models/post.js:74` (`settingsCache.get(..)`, `ghost/core/shared/settings-cache/index.d.ts`); 223 typed edges of ghost the checker places on another declaration, 26 of the 30 sampled this and 4 a declaration file and its own implementation | `fix(typescript)` | `a-module-with-a-declaration-file-beside-it-reaches-the-member-the-declaration-file-names` |
+| TD-062 | A TS receiver typed by an interface the repo declares reaches no wrapper: the scanner takes the method of the declared type, the interface's, and the wrapper is published under the class that implements it, where the resolver's `-impl` dispatch reaches it. The answer needs the index to say which class runs behind the interface, and what to do when two do, a decision of the model as for the resolver's `-impl` edges | the case; no call of the corpus changes | `fix(typescript)` | `an-interface-typed-receiver-reaches-the-wrapper-of-the-class-that-implements-it` |

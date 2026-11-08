@@ -39,7 +39,7 @@ names of frameworks and client libraries it holds:
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
 | Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82, the function members in #83, the receiver's type in #84 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82, the function members in #83, the receiver's type in #84, the scanner's client type in #85 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
 
 The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
@@ -1748,7 +1748,65 @@ changed the criterion and the rule before the code was written.
   `inherited` ones judged by their owner; the 19th mutant, now pinned by a test; a docstring of `member_by_name` that
   was false for Python; and a project name of the live install in two lines of the docs, now left out.
 
-Next, the last PR of the change of behavior (H5-D51: the scanner reads a client by the type its receiver declares).
+#### TS's scanner reads a client by the type its receiver declares (#85, H5-D51)
+
+The last PR of the change of behavior and of TS's step 5: the HTTP scanner finds a client by the type the code declares
+for its receiver, as the resolver finds a method by it (H5-D50). A receiver is a client where its name, a `new` of the
+file or an import of a client library says so, as before, or where its declared type does: a class of the repo, whose
+wrappers the call reaches, or a type of a client library that a request is made on (`CLIENT_TYPES`). The scanner asks
+the index the resolver's question (`receiver_of`, then `typed`) in a module of its own, `client_types.py` (the mixin
+`TsClientTypes`, which also builds the file's scope index for the scanner); `http.py` shrinks (1,005 to 1,004 lines),
+`client_wrappers.py` shrinks (295 to 291) and `type_index.py` (300 lines) now says which name an import takes from a
+package (`Outside.member`).
+
+- **The contract.** The type never takes a client away: a receiver the name already gives stays one whatever its type
+  (`http: Cache`), and where the declarations in sight do not decide the type the scanner decides as before. The method
+  a typed call reaches is the one the class or the base that declares it holds (`types.method`), under the class's
+  qualified name, which a wrapper is published under beside the simple one that `new X()` and the bases still use; a
+  qualified name has no bases published, so the lookup does not go on to the bases of the class that declares the method,
+  and an override that is no wrapper reaches none. A client library's type is a client by the name the import takes
+  (`AxiosInstance`, aliased or not), not by the package. Where name and type both give the client and the type is a repo
+  class with a wrapper, the call the wrapper composes, with the client's base, replaces the direct one: `api: ApiClient`
+  with `api.get("/users")` is `GET /api/users`, where `main` gave `GET /users`. That is the one change of an existing call,
+  and the corpus has no site where it happens.
+- **What the measure said.** The prototype's corpus and hold-out gave `0 repo(s) differ`, and a copy that logged where
+  the new rule decides showed the zero was not empty: with the final code the receiver's type is a repo class in about
+  8,600 call sites of 55 repos, the declaring class is found in about 7,300 and 83 of those are on a key a repo publishes, and none
+  changes a call (the 11 of the 83 that have an argument that can carry a path pass an id, a url or a field name). Of the
+  1,142 receivers typed by a package, 4 are a client type (`api.get<T>(url, ..)` on a variable url) and the rest, the 14
+  `MockAgent` of `undici` among them, are none. The corpus, the hold-out and the micro set give `0 repo(s) differ`. The
+  proof of the gain is the table of cases, checked against the checker for the classes of the repo (the test image has no
+  `axios`, so the library cases are the written type), and the corpus proves that nothing is lost. The cost is about +10 % of
+  the scanner's pass in ghost (ghost four pairs from +9.6 to +11.8 %, mattermost three from +3.4 to +4.3 %), and a profile puts it in the scope index the scanner builds for 4,790 files
+  that had none, not in the type's resolution: the lever the plan named, asking the type only of a call that can carry a
+  path, saves questions and not those builds, and was dropped. The cure is the scanner reading the index the extractor
+  already builds for the file, a change of the pipeline (step 12, the per-file cache of H6), or the scope builder's
+  refactor (`.local/plans/h5-d50-research/optimized-builder.diff`: the same output in half the time).
+- **What differs from the plan.** A challenger on the plan (one agent at `medium`, 72k tokens, no blocking objection)
+  found that the prototype was not the shape the PR ships, that the hold-out holds one TS app and says little of TS, that
+  the plan's summary of the cost left out the small repos, where the noise is larger than the effect, and that the case
+  of the package-wide library rule needed a literal path. A probe found what the plan had wrong: the type can replace a
+  call the name found, with the client's base, so "the type only adds" became "the type never takes a client away". A
+  review of the diff by three agents that did not write it (208k tokens, no blocking objection) found the library rule
+  missing `await backend.get<T>(..)` (fixed with one helper, `callee_node`, which `http.py` uses too), the shapes of a
+  receiver no case covered (`?.`, `!`, `as`, now cases the checker confirms), a class that overrides a wrapper and takes
+  its base's, a key two classes of one name share, and a package-wide rule that took `AxiosHeaders.get("/x")` for a
+  request. The first design registered the last three as debts; on 2026-11-08 the author set the rule that a change fixes
+  what it opens when that is viable (AGENTS.md), so the PR fixed all three, each with a plain case: the declaring class by
+  `types.method`, wrapper keys qualified by the class's file, and the name an import takes from a package carried by
+  `Outside.member`. The mutants taught two controls: the import route of a library client had no test of its own, and a
+  guard on a missing index no entry point reaches is removed. A second review of the fixed design (three agents, 228k tokens,
+  no blocking objection) found a chain of wrappers (a method that hands its parameter on to another wrapper, as a service
+  over an HTTP client does) that `new Users(..)` reached and a typed `s: Users` did not, since the chain was registered under
+  the simple key only: `WrappedCall.outer` now takes every key of the function, three lines of the core, and the qualified
+  form `ax.AxiosInstance`, which the import's name did not reach: both fixed with a case each.
+- **Debts.** TD-062, a receiver typed by an interface the repo declares reaches no wrapper (the scanner's lookups are by
+  class, and the resolver's `-impl` dispatch, which needs the index to say which class runs behind the interface and what
+  to do when two do, is a decision of the model), due in a `fix(typescript)` PR. The first design's other three are fixed.
+
+TS's step 5 closes with this PR. Next, the `fix(csharp)` PRs of H5-D19; then step 6 (recognizers and the catalog, with
+TS's `http.py` of 1,004 lines, TD-023 and TD-024), step 12's last PR (the pipeline's `extract` and `resolve`), steps 10
+and 11 and the final deliverables.
 
 ## Decisions made (2026-10-18, by the author)
 
