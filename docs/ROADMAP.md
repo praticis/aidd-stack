@@ -50,7 +50,7 @@
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
     validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
     closed (#57 to #63). TS's step 5 (H5-D29) is merged too, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45,
-    H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, the last still to be validated on a
+    H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, all validated on a
     live install), judged with the per-site attribution every language now has (H5-D21), which reads the resolver's stage
     too (G2, #56). Next, the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
     H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`), then 10
@@ -64,6 +64,8 @@
     - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
       14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
   - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
+  - H8 (`docs/handoffs/H8-independent-review.md`): the independent reviewer, a read-only adversary for plans and diffs,
+    designed and used five times (H5-D50 and H5-D51); its script, its stage hooks and its record are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).

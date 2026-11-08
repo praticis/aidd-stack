@@ -163,7 +163,7 @@ The full text is in the ROADMAP, under "Principles".
 | The graph model | `neo4j/SCHEMA.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
-| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H6, H7; closed: H1, H2, reduced to summaries) |
+| Work in progress | `docs/handoffs/` (active: H3, H4, H4.1, H5, H6, H7, H8; closed: H1, H2, reduced to summaries) |
 
 ## For contributors (people or agents)
 
