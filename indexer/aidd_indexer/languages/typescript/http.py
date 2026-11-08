@@ -20,6 +20,7 @@ from ...core.http_nodes import has_interpolation, member
 from ...core.model import HttpEndpointInfo, RepoInfo
 from ...core.paths import (HTTP_METHODS, PATH_LITERAL, VERB_BY_NAME, is_url_literal, mask_placeholders, normalize_path,
                            path_key, unquote)
+from .client_types import callee_node
 from .client_wrappers import TsClientWrappers, compose_wrapped_calls_ts
 from .file_routes import TsFileRoutes, compose_autoloads
 from .http_facts import (MountWrapper, MountWrapperCall, NestPrefix, NestRoute, RouteWrapper, RouteWrapperCall,
@@ -377,10 +378,8 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
             self.out.pending.append(Pending(ep, WrappedRoute(owner)))
 
     def _read_call(self, n: Node) -> None:
-        fn = n.child_by_field_name("function")
+        fn = callee_node(n)
         args = n.child_by_field_name("arguments")
-        if fn is not None and fn.type == "await_expression" and fn.named_child_count == 1:
-            fn = fn.named_children[0]                # `await api.post<T>(..)`: the grammar puts the `await` in the callee
         if fn is None or args is None:
             return
         callee = self.callee_of(fn)
@@ -434,7 +433,7 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
     def _outbound(self, n: Node, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> None:
         """A request on a client (`axios.get(url)`, `fetch(url, opts)`): the first argument with a path is the call's.
         A path the function around builds around its parameter is the caller's (`publish_wrapper`)."""
-        if not self._client_call(name, recv_last, callee, arg_nodes):
+        if not self._client_call(n, name, recv_last, callee, arg_nodes):
             return
         named = OUTBOUND.get(name) or TS_VERB_ALIASES.get(name) or self.method_from_args(arg_nodes)
         method = named
@@ -453,11 +452,11 @@ class TsScanner(TsClientWrappers, TsReturns, TsMountForms, TsFileRoutes, BaseSca
                 return
         self.publish_wrapper(n, named, arg_nodes, fallback=method, base=base)
 
-    def _client_call(self, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> bool:
+    def _client_call(self, n: Node, name: str, recv_last: str, callee: str, arg_nodes: list[Node]) -> bool:
         """Whether a call named like a request is one: not `cache.get(key)`, `map.delete(k)`, `redis.del(k)`, nor a
         route `x.get('/a', handler)` on something that is no client."""
         verb = name in VERB_BY_NAME or name in TS_VERB_ALIASES
-        client = self._client_of(callee) is not None or self.library_client(recv_last)
+        client = self._client_of(callee) is not None or self.library_client(recv_last, n)
         if verb and len(arg_nodes) >= 2 and self.is_handler_like(arg_nodes[-1]) and not client:
             return False
         if name in GENERIC_OUTBOUND and not CLIENT_RECEIVER.search(recv_last):

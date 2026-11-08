@@ -288,10 +288,7 @@ def test_a_method_of_a_package_type_reaches_no_homonym_of_the_repo(tmp_path, nam
     assert _edges(tmp_path, name) == set()
 
 
-@pytest.mark.parametrize("name", [pytest.param(n, id=n) for n in FOUND] + [
-    pytest.param(n, id=n, marks=pytest.mark.xfail(
-        strict=True, reason="the scanner knows a client by its receiver's name or by a value it constructs only"))
-    for n in TYPED_CLIENTS])
+@pytest.mark.parametrize("name", list(SCANS))
 def test_a_clients_calls_are_found_through_the_type_its_receiver_declares(tmp_path, name):
     res, _ = _extract(tmp_path, name)
     assert {(c.method, c.path) for c in res.http_calls} == SCANS[name].calls
