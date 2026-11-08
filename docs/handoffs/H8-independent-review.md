@@ -11,8 +11,8 @@
 > **State (2026-11-08):** designed and used three times: on the plan of H5-D50 (TS call receivers), on its diff, and
 > on the plan and the diff of H5-D51 (the full Tier 1). It found a gap in D50's acceptance criterion that the author
 > and one agent had both missed, and in D51 a regression the first fix had opened. The reusable script exists
-> (`.local/workflows/independent-review.js`, private). Nothing runs in CI yet, and the reviewer is not yet a step of
-> the process skills.
+> (`indexer/scripts/review/independent-review.js`, called by path from any worktree, with its orchestration tested with
+> simulated agents). Nothing runs in CI yet, and the reviewer is not yet a step of the process skills.
 
 ## Context in one paragraph
 
@@ -215,10 +215,10 @@ question.
 | 3 | The stage hooks: `refine-tech` runs the Tier 1 challenge by its rule; `implement` runs the panel before the PR | a plan that declares a change of behavior cannot reach approval unreviewed |
 | 4 | The record: per PR, the objections, their severity, how many were confirmed, how many changed the plan, the tokens spent | a quarter of data that says whether the review pays |
 
-**Where the slices stand (2026-11-08).** Slice 1's script has run on five reviews (a plan and a diff of H5-D50, a plan
-and two diffs of H5-D51) from `.local/workflows/independent-review.js`, which is private and outside the repo: what is
-missing is moving it, its prompts and schemas, and a test of its orchestration with mocked agents into the repository
-(a PR of its own, with a plan). The runs' records are in `.local/plans/review-records/`, which is the start of slice 4's
+**Where the slices stand (2026-11-08).** Slice 1 is done: the script ran on five reviews (a plan and a diff of H5-D50, a
+plan and two diffs of H5-D51), and it is now in the repository, `indexer/scripts/review/independent-review.js` with its
+prompts and schemas, called by path from any worktree, and its orchestration is tested with simulated agents (`tests/test_independent_review.py`: the merge of one place's
+objections, who gets a second reader, the efforts and the limits in each prompt). The runs' records are in `.local/plans/review-records/`, which is the start of slice 4's
 data: 5 reviews, 508k tokens for D51's three and 902k for D50's, and no objection yet that the author found wrong.
 
 ## Constraints on the CI agent

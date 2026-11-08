@@ -634,3 +634,5 @@
   calls); of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh fields.
 - 2026-11-08: the process's notes go into the repo: the independent reviewer's handoff (H8) with its five uses, and the method's
   notes on mutants, the firing probe, timing a pass over TS files, two agents at once and the recycling of `.local/`.
+- 2026-11-08: the independent reviewer is in the repo (`chore(scripts)`, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
+  by path from any worktree, with each rule of its orchestration pinned by a test with simulated agents.

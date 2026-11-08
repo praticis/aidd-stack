@@ -61,6 +61,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 | `lists/` | `expected_lists.py` | edits the expected lists (`new`, `add`, `cat`, `set`, `judge`), draws a list's first sample (`sample`) and keeps its checked samples true to a corpus run (`sync`, `resample`, `found`, `pending`); a list is written back in the order it was read. `--holdout` works on the hold-out's lists: `new` needs a pin, and a measured one is not opened | `python3 -I`; it writes the repository's lists |
 | `probes/` | `probe.py`, `tree.py` | the `CALLS` edges of a small repo; a snippet's tree | the image, as root |
 | `live/` | `validate.sh` (`before`, `after`, `rotate`) with `validate_summary.py`; what it chains: `pre-merge.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `dry_sections.py`, `graph_vs_dry.py`, `json_paths_diff.py` | the live install before and after a merge, read-only; the numbers as counts | the install, with the author's authorization |
+| `review/` | `independent-review.js` | whether a plan or a diff survives agents that did not write it and are told to refute it; objections by severity, the blocking ones re-checked by a second reader | the Workflow tool: `Workflow({scriptPath, args})`; read-only, advisory, never a gate |
 
 The image's grammar cache belongs to root, so tools that parse run without `--user`. A tool's arguments are in its
 docstring.
