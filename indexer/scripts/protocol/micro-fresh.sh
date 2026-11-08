@@ -5,6 +5,8 @@
 # micro.sh's own (run micro.sh --base-only first for a repo it has none of).   micro-fresh.sh LABEL REPO...
 set -u
 label="$1"; shift
+. "$(dirname "$0")/../lib/heavy-lock.sh"
+heavy_lock "micro-fresh $label"
 repo="${AIDD_REPO:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 indexer=$repo/indexer home=$HOME/.cache/aidd-corpus image=aidd-indexer:local
 img=$(docker image inspect -f '{{.Id}}' "$image" | sed 's/^sha256://' | cut -c1-12)

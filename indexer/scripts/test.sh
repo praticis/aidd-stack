@@ -29,6 +29,15 @@ stamp=$(printf %s "$recipe" | cksum | cut -d' ' -f1)
 
 rebuild=""
 if [ "${1:-}" = "--rebuild" ]; then rebuild=1; shift; fi
+# the whole suite is a heavy job, the image build too; a file, a test or a folder under tests/ is not
+narrow=""
+for arg in "$@"; do
+  case "$arg" in *.py | *::* | tests/*) narrow=1 ;; esac
+done
+if [ -z "$narrow" ]; then
+  . "$indexer/scripts/lib/heavy-lock.sh"
+  heavy_lock test-suite
+fi
 built=$(docker image inspect -f '{{ index .Config.Labels "aidd.recipe" }}' "$image" 2>/dev/null || true)
 if [ -n "$rebuild" ] || [ "$built" != "$stamp" ]; then
   docker image inspect "$base" >/dev/null 2>&1 \

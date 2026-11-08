@@ -17,6 +17,8 @@ image="${AIDD_INDEXER_IMAGE:-aidd-indexer:local}"
 test_image="${AIDD_INDEXER_TEST_IMAGE:-aidd-indexer-test:local}"
 neo4j_image="${AIDD_NEO4J_IMAGE:-neo4j:5.26.30-community}"
 name="aidd-mcp-it-$$"
+. "$(dirname "$0")/lib/heavy-lock.sh"
+heavy_lock mcp-it
 password="it-$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
 
 cleanup() {

@@ -4,6 +4,8 @@
 # snapshot as a number.   dryrun-live.sh SCRATCH HEAD_INDEXER MAIN_INDEXER LIVE_DIR
 set -uo pipefail
 S="$1"; head_code="$2"; main_code="$3"; L="$4"
+. "$(dirname "$0")/../lib/heavy-lock.sh"
+heavy_lock dryrun-live
 out="$L/dry"; mkdir -p "$out"
 # a folder no earlier run used: an IDE that loaded a project of an earlier copy writes its build output back to its path
 snap=$(mktemp -d "$L/snap.XXXXXX")

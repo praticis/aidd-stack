@@ -6,6 +6,8 @@
 set -u
 label="$1"; shift
 here="$(cd "$(dirname "$0")" && pwd)"
+. "$here/../lib/heavy-lock.sh"
+heavy_lock "protocol $label"
 out="${AIDD_PROTOCOL_RUNS:-$HOME/.cache/aidd-corpus/protocol}/$label"
 mkdir -p "$out"
 repo="${AIDD_REPO:-$(cd "$here/../../.." && pwd)}"      # a worktree, to measure a commit

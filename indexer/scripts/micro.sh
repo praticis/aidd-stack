@@ -51,6 +51,8 @@ default_jobs() {
   if [ "$vm" -ge $(( 9 * gib )) ]; then echo 2; else echo 1; fi
 }
 [ -n "$jobs" ] || jobs=$(default_jobs)
+. "$(dirname "$0")/lib/heavy-lock.sh"
+heavy_lock "micro $base"
 
 docker image inspect "$image" >/dev/null 2>&1 \
   || { echo "missing image $image: build the stack's indexer image first (docker compose build at the repo root)" >&2; exit 2; }

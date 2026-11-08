@@ -4,6 +4,8 @@
 #   time-alone.sh MAIN_WORKTREE BRANCH_WORKTREE
 set -u
 home=$HOME/.cache/aidd-corpus
+. "$(dirname "$0")/../lib/heavy-lock.sh"
+heavy_lock time-alone
 for side in "$1" "$2"; do
   name=$(basename "$side")
   (cd "$side" && indexer/scripts/corpus.sh --label "$(date +%F-%H%M%S)-time-$name" --baseline "${AIDD_BASELINE:-2026-10-18-v2-baseline-29}" 2>&1 \
