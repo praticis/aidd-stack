@@ -225,6 +225,7 @@ class 5: ask for it. The reinstall is the author's.
 | 2 | author | `install.sh` from `main`, then `install-check.sh` | the PR merged, `main` checked out and up to date |
 | 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and, when the build changed, every snapshot re-indexed (the refresh runs every 15 min) |
 | 4 | agent | read the counts against §4.8; report numbers only | |
+| 4b | agent | `indexer/scripts/live/round.py INFLIGHT --pr N --number K --date D --what "..." --merge SHA`: the draft of the golden round and of its history line, from the same folder | `after` done; the output is counts, snapshot numbers, list and tool names, never a label or a name; the sentence of what changed and the judgment ("what the round shows") are written by hand |
 | 5 | agent | `indexer/scripts/live/validate.sh rotate --yes` | `after/` taken, the PR's records done |
 | 6 | agent | recycle `.local/` by the closing step of its README: the PR's body, the pending docs that merged, the oldest plans, the tools whose consumer merged | `rotate` done |
 
