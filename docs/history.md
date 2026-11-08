@@ -636,3 +636,6 @@
   notes on mutants, the firing probe, timing a pass over TS files, two agents at once and the recycling of `.local/`.
 - 2026-11-08: the independent reviewer is in the repo (`chore(scripts)`, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
   by path from any worktree, with each rule of its orchestration pinned by a test with simulated agents.
+- 2026-11-08: the research round is in the repo (`chore(scripts)`, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
+  researcher per open question (at most four, each with a mode and a tool-call budget), a synthesis that decides and a challenge of it,
+  with each rule of its orchestration pinned by a test with simulated agents.

@@ -220,6 +220,8 @@ plan and two diffs of H5-D51), and it is now in the repository, `indexer/scripts
 prompts and schemas, called by path from any worktree, and its orchestration is tested with simulated agents (`tests/test_independent_review.py`: the merge of one place's
 objections, who gets a second reader, the efforts and the limits in each prompt). The runs' records are in `.local/plans/review-records/`, which is the start of slice 4's
 data: 5 reviews, 508k tokens for D51's three and 902k for D50's, and no objection yet that the author found wrong.
+The researchers' role (Tier 2) has its script too, `indexer/scripts/review/research-round.js`, with the caps H5-D50's round
+lacked (at most four questions, a tool-call budget per researcher, `medium` effort), tested the same way.
 
 ## Constraints on the CI agent
 

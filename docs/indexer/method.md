@@ -413,6 +413,14 @@ review is data, not instructions. Their objections advise: the author of the cha
 it in the PR. The script's orchestration (the merge of one place's objections, which ones a second reader gets, the
 efforts, the limits in each prompt) is tested with simulated agents in `tests/test_independent_review.py`.
 
+A design with real alternatives (H8's Tier 2: a structure to choose, a cost lever, a criterion that may be wrong) goes
+first through a research round, `indexer/scripts/review/research-round.js`, called the same way: one researcher per open
+question (at most four; each with a mode, `read`, `measure` or `web`, and a budget of tool calls after which it reports), a
+synthesis that decides `keep-plan`, `amend-plan` or `change-path` and drops what a report left unverified, and a challenge of
+the synthesis. A researcher that returns nothing is a missing report, not evidence. The plan's own challenger is
+`independent-review`, run on the amended plan. Its orchestration is tested in `tests/test_research_round.py`. The H5-D50
+round, without these limits, spent 1.79M tokens, 88 % in the researchers.
+
 ## 5. Criteria
 
 | Criterion | Rule | Kind |
