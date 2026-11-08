@@ -62,7 +62,9 @@ indexer's container only), and never reinstall (the author's alone).
 | What cannot be regenerated: the "before" picture of the PR in flight | `.local/indexer/live/inflight/before/` | no. Keep a second copy until the PR is validated: no backup policy exists |
 
 Only two live pairs ever exist: the PR in flight and the last one merged. Extraction is deterministic, so an older
-pair is not kept: a snapshot's sha and the indexer's commit (the build id) give the same dry-run again. Private data
+pair is not kept: a snapshot's sha and the indexer's commit (the build id) give the same dry-run again. The rest of
+`.local/` is recycled the same way: nothing enters it without an end, and each PR's closing step (§4.9, step 6) clears
+what its merge made obsolete, so the folder holds the PR in flight, the last one merged and the plans of the last three. Private data
 reaches the repository only as counts, snapshot numbers and public repos. No tenant, client or private
 repo name appears in code, docs or tests: the repository is public. A read-only tool can still leak: the live
 scripts print snapshots by number, and their raw outputs name tenants.
@@ -126,6 +128,14 @@ same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each comm
 
 `time-alone.sh` runs the corpus's wall time and four full dry-runs on `main`'s worktree, then the branch's, with no
 other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ran one per side. Run three when time matters.
+
+A change to a pass over the TS files (the resolver's or the scanner's) is timed on ghost and mattermost, the two largest
+TS repos of the corpus, with `corpus.sh --label L --jobs 1 --no-expected REPO` on `main`'s tree and on the branch's, one
+job at a time. The two sides alternate within a round and the first side flips from one round to the next, so a drift of
+the machine does not fall on one side. The limit and the reading (the median of the first three pairs, say) are written
+in the plan before the first run, and a fourth pair, if taken, is reported beside it. A repo that runs 12 to 24 s moves
+by a second between runs: the small repos are reported and do not decide. To see where the time goes, profile a dry-run
+in the image with `python -m cProfile -o` and `-w` on the mounted code (§6).
 
 ### 4.6 Equivalence of a representation
 
@@ -210,6 +220,7 @@ class 5: ask for it. The reinstall is the author's.
 | 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and, when the build changed, every snapshot re-indexed (the refresh runs every 15 min) |
 | 4 | agent | read the counts against §4.8; report numbers only | |
 | 5 | agent | `indexer/scripts/live/validate.sh rotate --yes` | `after/` taken, the PR's records done |
+| 6 | agent | recycle `.local/` by the closing step of its README: the PR's body, the pending docs that merged, the oldest plans, the tools whose consumer merged | `rotate` done |
 
 AFTER is the commit that merged the PR on `main` (`git log --oneline -1 main` once it is merged) and BEFORE its first
 parent, `git rev-parse AFTER^1`, which is `main` before the merge, for a merge commit and for a squash alike.
@@ -341,6 +352,55 @@ answers on both sides is `unexplained`, as when a type's bases or members change
 A language whose cases need another fact gets it in `FACTS`, in a `chore(scripts)` PR before the language's refactor
 (H5-D19), so the first judgment already has it.
 
+### 4.13 Mutants: each rule broken once (class 4)
+
+A change of behavior is proved by its cases, and the cases are proved by mutants. For each rule the change adds, a copy
+of the tree gets one edit that breaks that rule (an anchor that must appear exactly once in the file, replaced), and the
+tests run on the copy (`pytest -x` in the test image, with `-w` on the copy). Every mutant must fail a test. A mutant
+that survives is one of three things:
+
+- **equivalent**: it changes no behavior (a lookup the core makes anyway). Say why in the PR, and pin it with a test if
+  it can be, since a mutant called equivalent that no test pins is what a review found in H5-D50;
+- **a case that is missing**: add it, as a control (a library import the flow may narrow, a class that is no client);
+- **a guard no entry point reaches**: the guard goes, since a rule nothing can break is code nothing needs.
+
+The PR reports the count and what the survivors taught (H5-D51: 13 mutants, two survivors, a control added and a guard
+removed). The runs are local and private; the repo's `checks/mutate.sh` covers only the graph writer.
+
+### 4.14 Is a zero vacuous? The firing probe (class 4)
+
+`0 repo(s) differ` on the corpus is the right result for a rule that is meant to change nothing there, and it is also
+the result of a rule the corpus never reaches. To tell them apart, run the corpus once with an instrumented copy of the
+tree, one that appends a line (file, line, the key it decided on) to a file in the corpus mount wherever the rule
+decides, and count the lines by kind. The PR then says "the rule decided in about 8,600 sites and changed none" (H5-D51),
+and reads each site where it would matter (a published key, a library's type) at the source. Three cautions: the copy
+is never committed or measured for time; the log is deleted before each run; parallel repos write to one file and
+interleave a few lines, so the counts are "about". The proof of the gain stays in the cases against the reference
+(the language's checker, `checks/ts_checker.js` for TS): a corpus that does not change shows the rule loses nothing, not that it gains.
+
+### 4.15 Two agents at once
+
+Two agents can work on the indexer at the same time, each on its own PRs, when the author mediates between them and
+they keep to what one machine and one install allow. Each agent has its own worktree (`aidd-stack-<name>` beside the main
+checkout, never under `~/.cache`) and its own `.local/`; neither edits, commits in or switches the other's working tree.
+Both push their branches, open their PRs and push the fixes the CI asks for. The merge and the reinstall are the author's.
+The method's other rules bind both alike: the plan is approved before the branch, a refactor and a change of behavior
+never share a PR, and nothing private leaves `.local/`.
+
+What cannot run twice, and who decides when it starts:
+
+| Resource | Why it is single | How it is held |
+|---|---|---|
+| The live validation (§4.9) | one install, one `before` taken with the install on `main`'s code, one pair in `inflight/` | both agents run `validate.sh` with the same `AIDD_LIVE`, so `inflight/` is the queue and `before` refuses while it exists; each asks the author before **starting** one |
+| A heavy Docker job (corpus, hold-out, micro, the full tests, a dry-run of every snapshot) | one VM of 10.4 GB, of which the live stack uses about 3.5 | `~/.cache/aidd-corpus/heavy.lock`, one line `who label start`, removed at the end, taken by the scripts themselves where they do, by hand where they do not yet |
+| A time or memory measurement (§4.5) | it needs the machine quiet | the author sets the moment |
+| The first `micro.sh` against a new `main` | it writes the base in a cache shared by tree and image | under the lock |
+| The numbers H5-Dnn, TD-nnn and the PR's | the next one is whoever opens first | reserved at the rebase onto `origin/main`, right before the PR opens |
+
+The docs the PRs share (`history.md`, the ROADMAP, `tech-debt.md`, `decisions.md`, a handoff) conflict in text between PRs,
+and the rebase resolves it. A golden round takes the number after the last round on `origin/main` and in the pending
+docs, which the author tells when another agent holds one.
+
 ## 5. Criteria
 
 | Criterion | Rule | Kind |
@@ -375,3 +435,7 @@ A language whose cases need another fact gets it in `FACTS`, in a `chore(scripts
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)
   was never built.
+- **A mutant runner and a firing probe in the repo.** §4.13 and §4.14 are practice: each PR has written its own
+  mutants (H5-D50: 25, H5-D51: 13) and its own instrumented copy in a scratch folder. A generic runner (a list of
+  anchors in, `DIES` or `SURVIVES` out) and a reusable probe that patches a rule's decision point are a
+  `chore(scripts)` PR yet to be planned. The authors' working copies are kept privately in `.local/plans/h5-d51-tools/`.
