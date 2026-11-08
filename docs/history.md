@@ -644,3 +644,6 @@
   status 75 and names the holder, or waits; the lock is the holder's process, so it goes when that process ends, however it ends.
 - 2026-11-08: the mutants runner is in the repo (`chore(scripts)`): `indexer/scripts/checks/mutants.sh` copies the tree, breaks one rule per mutant
   and runs `test.sh` on the copy, printing `DIES` or `SURVIVES`; a survivor ends the run with status 1 unless it is named by `--allow`.
+- 2026-11-08: the comparator of TS's edges against TypeScript's checker is in the repo (`chore(scripts)`): `indexer/scripts/judgment/ts_vs_checker.py` counts, per verdict, the typed
+  edges a change adds and the by-name edges it drops, with a `.d.ts` as the JS beside it, and whether a dropped edge is replaced or lost; on gotify, between the tree before H5-D50
+  and the tree after H5-D51, the checker agrees with the 3 typed edges added and with none of the 83 by-name edges dropped.

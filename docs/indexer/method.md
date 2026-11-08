@@ -115,6 +115,7 @@ commit with the one before (`-copy` against `-copy`) and `main` with the tip (`-
 python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.txt 2> samples.jsonl
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
+python3 -I indexer/scripts/judgment/ts_vs_checker.py REPO BEFORE AFTER CHECKER.jsonl [--sample N [--seed S]]
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
 python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
@@ -122,7 +123,10 @@ indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N RE
 
 `BEFORE` and `AFTER` hold `<repo>.json.gz` dry-runs. `chain_diff` samples with a fixed seed over sorted sites, so the
 same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each commit against the one before, 40 for
-`main` against the tip. `attribution.py` is §4.12.
+`main` against the tip. `attribution.py` is §4.12. `ts_vs_checker.py` is for a change to TS's resolution: it counts, for the typed edges the change adds and
+the by-name edges it drops, what TypeScript's checker says about the callee at that site (`CHECKER.jsonl` is
+`node checks/ts_checker.js --link /corpus/REPO` in the test image), with a `.d.ts` standing for the JS beside it as one
+declaration, and whether a dropped edge is replaced at its site or lost.
 
 ### 4.5 Timing alone
 
