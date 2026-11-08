@@ -1515,3 +1515,42 @@ a file once for each of its symbols.
 function gain it as a symbol, and the calls by name that reach those members gain their edges; the C# and Go snapshots,
 the macro graph and what the golden calls ask are the same.
 
+## Forty-second round: validating PR #84 on a live install (2026-11-07, build `0.2.15+eb419b15ffff` to `0.2.15+c95fd6e984ba`)
+
+What changed since the forty-first round: PR #84 is merged, a `fix(typescript)` that has TS's resolver read the type a
+receiver declares, so a call on a typed receiver reaches the methods of that type and of its bases and no homonym found
+by name, a change of the graph where a TS or JS repo calls methods on declared types. The same 3 tenants and 10
+snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`2ae30f0`). The dry-runs of `main`
+  and of the PR's head (`0b7fcc2`) on each snapshot, at its sha, are identical in 7 of the 10 and differ in the 3 TS
+  and JS ones, in `CALLS` only: the two snapshots of one repo gain 678 and 647 edges by the receiver's type
+  (`receiver-type` 651 and 620, `inherited` 27 and 27) and lose 969 and 934 found by name (the same file 451 and 425,
+  the same module 518 and 509, counting the `-ambiguous` ones), and the third gains 46 by the type and loses 37 (the same
+  file 20, the same module 17). The live graph held `main`'s dry-run on every snapshot (0 mismatching): 10,711 symbols,
+  24,009 `CALLS`, 15,961 `IMPORTS`, 404 types' and overrides' edges, 351 modules, 0 violations.
+- **After the author's reinstall from `main` (`09147a4`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, and each holds the new build.
+
+**The picture of the graph** differs in 4 of its 16 lists, and in 2 by more than the build and the `IndexRun` counts:
+the `CALLS` go from 24,009 to 23,440 (-569) and the counts per snapshot of the 3 that differ follow, which are the three
+dry-runs' net (-291, -287 and +9); the 14 others, the symbols (10,711), the hierarchy edges (404), the `IMPORTS` (15,961),
+the modules (351) and the 0 violations among them, are the same. The graph after holds the branch's dry-run on every
+snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field. 5 differ only in their time, build and refresh fields: `atlas_status`, the `ref_diff` of the TS
+snapshots and the `repo_map` of the TS, Go and accrual snapshots (the before was taken 618 minutes after a refresh, so
+the tenants went from stale to fresh); no `repo_map` changes in its symbols, since the PR adds none.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The live TS and JS repos that call a method on a receiver whose type the code declares reach
+the methods of that type, and the calls by name that were homonyms of them are gone, 569 net; the C# and Go snapshots,
+the symbols, the imports, the hierarchy, the macro graph and what the golden calls ask are the same.

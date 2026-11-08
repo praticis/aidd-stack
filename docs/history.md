@@ -622,3 +622,8 @@
   mattermost for which it names a declaration of the repo, and 0.34 / 0.05 / 0 % of the by-name edges they replace, the sites that gain its declaration outnumber those
   that lose it 22 to 1, 345 to 1 and 527 to 0, and none loses the edge to the source of a package with no entry. `CALLS`
   fall 4.9, 3.6 and 1.6 %. The micro set differs in ten repos, in `CALLS`, and in mattermost in two `IMPORTS` of a package that become a file's. The corpus and the hold-out do not change, and ghost's dry-run takes 22 % longer (2 % more memory), inside what the author accepted.
+- 2026-11-07: PR #84 is validated on a live install (the forty-second round). The dry-runs of `main` and of the PR's head
+  are identical in 7 of the 10 snapshots and differ in the 3 TS and JS ones, in `CALLS` only: they gain 678, 647 and 46
+  edges by the receiver's type and lose 969, 934 and 37 found by name. The graph after holds the dry-runs on each snapshot
+  (0 mismatching): 10,711 symbols and 23,440 `CALLS` (-569), the others as before; of the 29 calls, 24 are the same and 5
+  differ only in their time, build and refresh fields.
