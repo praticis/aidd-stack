@@ -639,3 +639,6 @@
 - 2026-11-08: the research round is in the repo (`chore(scripts)`, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
   researcher per open question (at most four, each with a mode and a tool-call budget), a synthesis that decides and a challenge of it,
   with each rule of its orchestration pinned by a test with simulated agents.
+- 2026-11-08: one heavy Docker job at a time is held by the scripts themselves (`chore(scripts)`): `indexer/scripts/lib/heavy-lock.sh` and a line in
+  `corpus.sh`, `micro.sh`, `test.sh` (the whole suite), `mcp-it.sh`, `protocol/`, `attribution.sh`, `live/validate.sh` and `dryrun-live.sh`. A second job ends with
+  status 75 and names the holder, or waits; the lock is the holder's process, so it goes when that process ends, however it ends.
