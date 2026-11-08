@@ -356,8 +356,14 @@ A language whose cases need another fact gets it in `FACTS`, in a `chore(scripts
 
 A change of behavior is proved by its cases, and the cases are proved by mutants. For each rule the change adds, a copy
 of the tree gets one edit that breaks that rule (an anchor that must appear exactly once in the file, replaced), and the
-tests run on the copy (`pytest -x` in the test image, with `-w` on the copy). Every mutant must fail a test. A mutant
-that survives is one of three things:
+tests run on the copy (`pytest -x` in the test image, with `-w` on the copy). `checks/mutants.sh MUTANTS.py [ID ...]
+[--allow ID]... [--timeout SECONDS] [--no-baseline] [--tests ARG ...]` does it: the file (Python, run as such) lists
+`(name, file, old, new)`; the tool first runs the tests on an unchanged copy, which must pass, then copies `indexer/`, makes
+the edit, runs `test.sh` on the copy and prints `DIES`, `SURVIVES` or `TIMEOUT` (counted as dead) with the first test that
+failed. A run where pytest did not give a result (a bad path, an image that does not build) is `BROKEN`, not a death. It ends
+with 0 when every mutant dies (or survives and is named by `--allow`), 1 when one survives, and 2 when it cannot give a verdict
+(a wrong file, an anchor found twice or not at all, a path outside the tree, a red baseline, a `BROKEN` run): status 1 is only
+ever a survivor. Every mutant must fail a test. A mutant that survives is one of three things:
 
 - **equivalent**: it changes no behavior (a lookup the core makes anyway). Say why in the PR, and pin it with a test if
   it can be, since a mutant called equivalent that no test pins is what a review found in H5-D50;
@@ -365,7 +371,8 @@ that survives is one of three things:
 - **a guard no entry point reaches**: the guard goes, since a rule nothing can break is code nothing needs.
 
 The PR reports the count and what the survivors taught (H5-D51: 13 mutants, two survivors, a control added and a guard
-removed). The runs are local and private; the repo's `checks/mutate.sh` covers only the graph writer.
+removed). The mutants' file is the author's, kept with the PR's working papers; `checks/mutate.sh` is the other tool, for the
+graph writer against a throwaway Neo4j.
 
 ### 4.14 Is a zero vacuous? The firing probe (class 4)
 
@@ -455,7 +462,6 @@ round, without these limits, spent 1.79M tokens, 88 % in the researchers.
 - **A memory tolerance and a time threshold.** None applies today.
 - **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)
   was never built.
-- **A mutant runner and a firing probe in the repo.** §4.13 and §4.14 are practice: each PR has written its own
-  mutants (H5-D50: 25, H5-D51: 13) and its own instrumented copy in a scratch folder. A generic runner (a list of
-  anchors in, `DIES` or `SURVIVES` out) and a reusable probe that patches a rule's decision point are a
-  `chore(scripts)` PR yet to be planned. The authors' working copies are kept privately in `.local/plans/h5-d51-tools/`.
+- **A firing probe in the repo.** §4.14 is practice: each PR has written its own instrumented copy in a scratch folder,
+  since a probe patches the decision point of one rule. A reusable one is a `chore(scripts)` PR yet to be planned. The
+  authors' working copies are kept privately in `.local/plans/h5-d51-tools/`.

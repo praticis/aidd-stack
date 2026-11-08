@@ -642,3 +642,5 @@
 - 2026-11-08: one heavy Docker job at a time is held by the scripts themselves (`chore(scripts)`): `indexer/scripts/lib/heavy-lock.sh` and a line in
   `corpus.sh`, `micro.sh`, `test.sh` (the whole suite), `mcp-it.sh`, `protocol/`, `attribution.sh`, `live/validate.sh` and `dryrun-live.sh`. A second job ends with
   status 75 and names the holder, or waits; the lock is the holder's process, so it goes when that process ends, however it ends.
+- 2026-11-08: the mutants runner is in the repo (`chore(scripts)`): `indexer/scripts/checks/mutants.sh` copies the tree, breaks one rule per mutant
+  and runs `test.sh` on the copy, printing `DIES` or `SURVIVES`; a survivor ends the run with status 1 unless it is named by `--allow`.
