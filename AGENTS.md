@@ -79,8 +79,11 @@ The full text is in the ROADMAP, under "Principles".
   - what stays `Unknown`, and why.
 - **Secrets never enter the index:** only the env var's name.
 - **Every phase closes with the golden questions passing.**
-- **A defect that does not block is a registered debt, with a strict xfail test** (`docs/tech-debt.md`): the suite
-  fails when it is fixed, so nobody has to remember it.
+- **A defect a change opens or widens is fixed in that change when that is viable; one that is not is a registered
+  debt, with a strict xfail test** (`docs/tech-debt.md`): the suite fails when it is fixed, so nobody has to remember it.
+  A fix is not viable when it is out of the change's scope, costs more than it returns, is so complex or has effects
+  that mix with the change's that the change becomes hard to judge, or belongs next to a later step it is tied to
+  (the catalog, SCIP). A defect `main` already has and the change does not touch is a debt.
 - **Code shape:**
   - complexity ≤ 9 per function (`ruff C901`) and modules of at most 300 lines. What is still over a target may not
     grow, and nothing new joins it: CI holds that ratchet (`indexer/scripts/shape.py --against main`);
@@ -118,7 +121,8 @@ The full text is in the ROADMAP, under "Principles".
 - **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
-  3. judgment at the source; what it finds and does not block becomes a debt, with a strict xfail test;
+  3. judgment at the source; what it finds that the change opens is fixed in it when viable, and what is not and does not
+     block becomes a debt, with a strict xfail test;
   4. expected lists (H2-D15);
   5. a new baseline.
 - **Before a merge**, also validate on a live install: a dry-run of `main` against the branch on each snapshot (with

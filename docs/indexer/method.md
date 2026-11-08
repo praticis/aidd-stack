@@ -28,8 +28,8 @@ A change to the extractor adds, before step 4: corpus `--baseline`, judgment at 
 (`lists/expected_lists.py` edits them, `checks/expected_lists_diff.py` shows what changed; §4.10), and a new
 baseline only after its diff was judged item by item.
 
-What judgment finds and does not block is registered as a debt (`docs/tech-debt.md`) with a strict xfail test, never
-as a note.
+What judgment finds that the change opens is fixed in the change when that is viable; what it finds, does not block and
+the change cannot fix is registered as a debt (`docs/tech-debt.md`) with a strict xfail test, never as a note.
 
 A refactor and a change of behavior never share a commit: one `refactor:` commit makes the whole PR strict.
 

@@ -1,16 +1,22 @@
 # Technical debts
 
-A debt is a known defect or gap that does not block a PR, so decided by the author. The `main` branch already has it;
-the change that found it neither creates nor worsens it. Each debt is registered with where it was seen, when it is
-due, and the case that tells when it is gone.
+A debt is a known defect or gap that does not block a PR, so decided by the author. The `main` branch already has it, or
+the change that found it could not fix it in itself (the rule below). Each debt is registered with where it was seen,
+when it is due, and the case that tells when it is gone.
 
 **The case is the reminder.** A debt's case is a strict xfail in `indexer/tests/`: when the resolver learns the right
 answer, the case passes, the strict xfail fails the suite, and the mark has to go. That does not depend on anyone
 remembering.
 
 Rules:
+- A defect the change under way opens or widens is fixed in that change when that is viable, with its case as a plain
+  test. It becomes a debt only when the fix is out of the change's scope, costs more than it returns, is so complex or
+  has effects that mix with the change's that the change becomes hard to judge, or belongs next to a later step it is
+  directly tied to (the catalog, SCIP). The PR says which. A defect `main` already has and the change does not touch is
+  a debt.
 - A debt enters with the author's decision and a case. This is the standing process (AGENTS.md, Principles): what a
-  judgment finds and does not block is registered here with its strict xfail, never left as a note in a handoff.
+  judgment finds, does not block and the change cannot fix in itself is registered here with its strict xfail, never left
+  as a note in a handoff.
 - A phase of the [ROADMAP](ROADMAP.md) lists the debts due in it and closes only when they are settled or the author
   moves them.
 - A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR (its Due reads
