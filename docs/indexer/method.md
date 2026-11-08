@@ -134,10 +134,12 @@ declaration, and whether a dropped edge is replaced at its site or lost.
 other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ran one per side. Run three when time matters.
 
 A change to a pass over the TS files (the resolver's or the scanner's) is timed on ghost and mattermost, the two largest
-TS repos of the corpus, with `corpus.sh --label L --jobs 1 --no-expected REPO` on `main`'s tree and on the branch's, one
-job at a time. The two sides alternate within a round and the first side flips from one round to the next, so a drift of
-the machine does not fall on one side. The limit and the reading (the median of the first three pairs, say) are written
-in the plan before the first run, and a fourth pair, if taken, is reported beside it. A repo that runs 12 to 24 s moves
+TS repos of the corpus, with `protocol/cost-pairs.sh MAIN_TREE BRANCH_TREE [--pairs N] [--prefix NAME] REPO...`: pairs of
+`corpus.sh --jobs 1 --no-expected` on `main`'s tree and on the branch's, one job at a time. The side that goes first flips
+from one pair to the next, so a drift of the machine does not fall on one side. It prints, per repo, the change in time of
+each pair, the median of the first three and of all of them, and the change in the median peak memory (`cost_pairs.py HOME
+--main LABEL... --branch LABEL...` reads the same numbers from runs already made). The limit and the reading (the median of the
+first three pairs, say) are written in the plan before the first run, and a fourth pair, if taken, is reported beside it. A repo that runs 12 to 24 s moves
 by a second between runs: the small repos are reported and do not decide. To see where the time goes, profile a dry-run
 in the image with `python -m cProfile -o` and `-w` on the mounted code (§6).
 

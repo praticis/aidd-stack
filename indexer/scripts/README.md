@@ -42,7 +42,7 @@ Each answers a question of the method (`docs/indexer/`). Their inputs and output
 
 | Folder | Tools | Question | Runs |
 |---|---|---|---|
-| `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; the shape ratchet in the image | Docker |
+| `protocol/` | `protocol.sh`, `micro-fresh.sh`, `time-alone.sh`, `cost-pairs.sh` with `cost_pairs.py`, `shape.sh` | the regression protocol on a commit's worktree; the micro graph through fresh paths; time alone; main against the branch in alternating pairs, the change in time and in peak memory per repo; the shape ratchet in the image | Docker |
 | | `resume-test.sh` | whether a new session can resume from a pushed commit: a headless, read-only `claude` run in a fresh clone, with its report and its tool calls in files | `claude`, network |
 | `judgment/` | `chain_diff.py`, `show.py`, `site_edges.py`, `ts_vs_checker.py` | which `CALLS` edges changed between two dry-runs, by kind; the sampled sites' source lines; one site's edges; for TS, the typed edges a change adds and the by-name ones it drops against what TypeScript's checker declares | `python3 -I` |
 | | `attribution.py` | which changed `CALLS` edges a difference in what two trees answer at the site explains, by case and kind, and which nothing explains; each repo's `CALLS` by strategy on both sides, and the share found among several homonyms, of the edges and of the sites; the receivers each side leaves untyped, by the reason the language gives | `python3 -I` |
