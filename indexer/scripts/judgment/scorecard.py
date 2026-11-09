@@ -1,6 +1,7 @@
 """The graph of one tree against its references: the numbers a pull request may not lower.
 
    scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py --lowered BASE_FLOORS FLOORS
 
 RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). For every repo it
 measures `typed-share`, the percent of its CALLS that a type decided (`receiver-type*` and `inherited*`), which needs no
@@ -17,7 +18,8 @@ change's edges, but over the whole tree:
 --floors FILE (`indexer/scripts/checks/reference_floors.txt`: `repo.metric :: floor :: note`, one per line, `#` a comment)
 is what a number may not fall under. The scorecard ends in 1 when a number is under its floor, has no floor, has a floor
 and was not measured, or is invalid; in 2 when its input is wrong. --write-floors prints the lines of the numbers it
-measured, each rounded down to a hundredth, to review and commit."""
+measured, each rounded down to a hundredth, to review and commit. --lowered prints, one per line, the floors that FLOORS
+holds under the ones in BASE_FLOORS (`name was is`): what a change lowers, which the gates ask the `graph-change` label for."""
 from __future__ import annotations
 
 import argparse
@@ -170,7 +172,29 @@ def report(rows: list[tuple[str, Metric | None, Floor | None]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def lowered(base: list[Floor], floors: list[Floor]) -> list[tuple[str, float, float]]:
+    was = {f.name: f.floor for f in base}
+    return [(f.name, was[f.name], f.floor) for f in floors if f.name in was and f.floor < was[f.name]]
+
+
+def lowered_main(argv: list[str]) -> int:
+    if len(argv) != 2:
+        print(__doc__, file=sys.stderr)
+        return 2
+    try:
+        found = lowered(load_floors(Path(argv[0]).read_text()), load_floors(Path(argv[1]).read_text()))
+    except (OSError, ValueError) as error:
+        print(f"scorecard.py: {error}", file=sys.stderr)
+        return 2
+    print("\n".join(f"{name} {was} {now}" for name, was, now in found))
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    return lowered_main(argv[1:]) if argv[:1] == ["--lowered"] else run(argv)
+
+
+def run(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="scorecard.py", add_help=False, usage=(
         "scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
     ap.add_argument("run_dir", type=Path)

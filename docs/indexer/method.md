@@ -45,7 +45,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
 | 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `judgment/ts_vs_checker.py`, `live/dry_sections.py`, `live/graph_vs_dry.py`, `live/json_paths_diff.py`, `live/round.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/mutants.sh`, `protocol/cost-pairs.sh`, `protocol/micro-fresh.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `checks/ts_checker.js`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/mutants.sh`, `protocol/cost-pairs.sh`, `protocol/micro-fresh.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `checks/ts_checker.js`, `checks/reference.sh`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -144,6 +144,11 @@ its floor, one with no floor and a floor with no number all fail. A floor is low
 the change, under the `graph-change` label (the label alone would free every change of the graph, and the line makes the
 drop a number the author reads); it is raised when a change improves the number, and the scorecard prints the headroom.
 `--write-floors` prints the lines for a tree.
+In CI the `micro` job runs it after the micro graph (`checks/reference.sh`): the checker's rows for the TS repos with a
+floor depend on the clone and the checker, not on the tree, so they are kept by clone commit, checker code and test
+image recipe, and a pull request pays for the checker (about a minute for `ghost`) only when one of them changed.
+`gates.py` fails the PR when a number is under its floor, whatever the labels, and when the PR lowers a floor without
+the `graph-change` label (a refactor lowers none). Locally: `micro.sh`, then `checks/reference.sh`.
 
 ### 4.5 Timing alone
 

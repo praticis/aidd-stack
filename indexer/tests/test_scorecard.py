@@ -225,3 +225,30 @@ def test_the_threshold_given_is_the_one_that_judges_the_keys(tree, tmp_path):
 def test_the_real_list_of_floors_loads_and_names_a_percent_of_a_repo_each():
     floors = S.load_floors((Path(__file__).resolve().parent.parent / "scripts" / "checks" / "reference_floors.txt").read_text())
     assert floors and all(0 <= f.floor <= 100 and f.note for f in floors)
+
+
+def test_the_floors_a_change_lowers_are_the_ones_it_holds_under_the_base_and_nothing_else():
+    base = S.load_floors("a.recall :: 50 :: n\nb.recall :: 60 :: n\nc.recall :: 70 :: n\nd.recall :: 80 :: n")
+    now = S.load_floors("a.recall :: 49.99 :: n\nb.recall :: 60 :: n\nc.recall :: 71 :: n\ne.recall :: 1 :: n")  # d gone, e new
+    assert S.lowered(base, now) == [("a.recall", 50.0, 49.99)]
+
+
+def test_lowered_prints_a_line_per_floor_and_ends_in_0(tmp_path, capsys):
+    base, now = tmp_path / "base.txt", tmp_path / "now.txt"
+    base.write_text("a.recall :: 50 :: n\nb.recall :: 60 :: n\n")
+    now.write_text("a.recall :: 40 :: n\nb.recall :: 60 :: n\n")
+    assert S.main(["--lowered", str(base), str(now)]) == 0
+    assert capsys.readouterr().out.splitlines() == ["a.recall 50.0 40.0"]
+    now.write_text("a.recall :: 50 :: n\n")
+    assert S.main(["--lowered", str(base), str(now)]) == 0 and capsys.readouterr().out.strip() == ""
+
+
+def test_lowered_ends_in_2_for_a_wrong_list_a_missing_file_or_the_wrong_number_of_arguments(tmp_path, capsys):
+    good, bad = tmp_path / "good.txt", tmp_path / "bad.txt"
+    good.write_text("a.recall :: 50 :: n\n")
+    bad.write_text("a.recall 50\n")
+    assert S.main(["--lowered", str(good), str(bad)]) == 2
+    assert S.main(["--lowered", str(good), str(tmp_path / "missing.txt")]) == 2
+    assert S.main(["--lowered", str(good)]) == 2
+    assert "--lowered BASE_FLOORS FLOORS" in capsys.readouterr().err
+

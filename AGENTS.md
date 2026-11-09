@@ -110,6 +110,10 @@ The full text is in the ROADMAP, under "Principles".
     its test cases and the ROADMAP (`indexer/scripts/debts.py`);
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
+  - the scorecard of the graph (`indexer/scripts/checks/reference.sh`, in the `micro` job) measures each micro repo against its
+    references (the share of `CALLS` a type decided; for TS, precision and recall against TypeScript's checker), and a number
+    under its floor in `indexer/scripts/checks/reference_floors.txt` fails the PR: a floor is lowered on its line, in the
+    diff and under the `graph-change` label;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one
     of its commits starts with `refactor:` or `refact:` (with or without a scope, as in `refactor(go):`), or under the
     `refactor` label. One such commit makes the whole PR strict, so a refactor and a change of behavior go in separate
