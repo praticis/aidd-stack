@@ -252,3 +252,25 @@ def test_lowered_ends_in_2_for_a_wrong_list_a_missing_file_or_the_wrong_number_o
     assert S.main(["--lowered", str(good)]) == 2
     assert "--lowered BASE_FLOORS FLOORS" in capsys.readouterr().err
 
+
+def test_a_python_repo_is_measured_by_the_files_whose_scopes_and_names_the_index_classifies_as_symtable_does(tree, tmp_path):
+    runs, _ = tree(rows=None)
+    scopes = tmp_path / "scopes.json"
+    scopes.write_text(json.dumps({"app": {"files": 12, "files compared": 10, "files differing": 1}, "lib": {"files": 0}}))
+    got = numbers(S.measure(runs, None, scopes))
+    assert got["app.scope-agreement"] == (90.0, 9, 10) and got["lib.scope-agreement"] == (0.0, 0, 0)
+
+
+def test_the_scope_agreement_is_judged_against_its_floor_and_a_wrong_scopes_file_ends_in_2(tree, tmp_path, capsys):
+    runs, _ = tree(rows=None)
+    scopes, floors = tmp_path / "scopes.json", tmp_path / "floors.txt"
+    floors.write_text("r.typed-share :: 0 :: n\napp.scope-agreement :: 100 :: n\n")
+    scopes.write_text(json.dumps({"app": {"files compared": 10, "files differing": 0}}))
+    assert S.main([str(runs), "--scopes", str(scopes), "--floors", str(floors)]) == 0
+    scopes.write_text(json.dumps({"app": {"files compared": 10, "files differing": 1}}))
+    assert S.main([str(runs), "--scopes", str(scopes), "--floors", str(floors)]) == 1
+    assert "| `app.scope-agreement` | 90.00 % | 9 of 10 | 100.00 % | -10.00 | below |" in capsys.readouterr().out
+    scopes.write_text("not json")
+    assert S.main([str(runs), "--scopes", str(scopes), "--floors", str(floors)]) == 2
+    assert S.main([str(runs), "--scopes", str(tmp_path / "missing.json")]) == 2
+

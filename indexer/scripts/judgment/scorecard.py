@@ -1,6 +1,6 @@
 """The graph of one tree against its references: the numbers a pull request may not lower.
 
-   scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py RUN_DIR [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]
    scorecard.py --lowered BASE_FLOORS FLOORS
 
 RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). For every repo it
@@ -14,6 +14,10 @@ change's edges, but over the whole tree:
   typed-precision  percent of the typed edges (`receiver-type`, `inherited`) at a site the checker judges that it confirms
   recall           percent of the sites where the checker names a declaration of the repo that have an edge to it
   typed-recall     the same, by a typed edge
+
+With --scopes FILE (what `checks/python_scopes.py --json` writes), each Python repo in it is measured against CPython's
+`symtable` too: `scope-agreement`, the percent of its files that compile whose every scope and name the scope index
+classifies as the compiler does (100 is the only answer: a difference is a defect of the index).
 
 --floors FILE (`indexer/scripts/checks/reference_floors.txt`: `repo.metric :: floor :: note`, one per line, `#` a comment)
 is what a number may not fall under. The scorecard ends in 1 when a number is under its floor, has no floor, has a floor
@@ -122,8 +126,17 @@ def reference(repo: str, run: dict, sites: dict) -> list[Metric]:
             Metric(f"{repo}.typed-recall", pct(typed_hit, len(sites_decided)), typed_hit, len(sites_decided))]
 
 
-def measure(run_dir: Path, rows_dir: Path | None) -> list[Metric]:
-    out: list[Metric] = []
+def scope_metrics(counts: dict) -> list[Metric]:
+    out = []
+    for repo, c in sorted(counts.items()):
+        compared = c.get("files compared", 0)
+        agree = compared - c.get("files differing", 0)
+        out.append(Metric(f"{repo}.scope-agreement", pct(agree, compared), agree, compared))
+    return out
+
+
+def measure(run_dir: Path, rows_dir: Path | None, scopes: Path | None = None) -> list[Metric]:
+    out: list[Metric] = scope_metrics(json.loads(scopes.read_text())) if scopes else []
     for path in sorted(glob.glob(str(run_dir / "*.json.gz"))):
         repo = os.path.basename(path)[: -len(".json.gz")]
         with gzip.open(path, "rt") as handle:
@@ -196,9 +209,10 @@ def main(argv: list[str]) -> int:
 
 def run(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="scorecard.py", add_help=False, usage=(
-        "scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
+        "scorecard.py RUN_DIR [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
     ap.add_argument("run_dir", type=Path)
     ap.add_argument("--rows", type=Path)
+    ap.add_argument("--scopes", type=Path)
     ap.add_argument("--floors", type=Path)
     ap.add_argument("--min-keyed", type=float, default=50.0)
     ap.add_argument("--write-floors", action="store_true")
@@ -209,7 +223,7 @@ def run(argv: list[str]) -> int:
         return exit_.code
     try:
         floors = load_floors(args.floors.read_text()) if args.floors else []
-        metrics = measure(args.run_dir, args.rows)
+        metrics = measure(args.run_dir, args.rows, args.scopes)
     except (OSError, ValueError) as error:
         print(f"scorecard.py: {error}", file=sys.stderr)
         return 2

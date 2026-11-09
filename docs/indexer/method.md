@@ -138,7 +138,8 @@ count what it could not judge, before reading what it judged.
 `scorecard.py` measures a whole tree, not one change. For every repo of the micro set it gives the percent of its
 `CALLS` a type decided (`typed-share`, for every language) and, for a TS repo with the checker's rows, the keys'
 coverage, the precision of its typed edges and the recall of the sites the checker decides (`typed-recall` by a typed
-edge). Each number has a floor in `indexer/scripts/checks/reference_floors.txt` (`repo.metric :: floor :: note`): the
+edge); for a Python repo, the percent of its files whose every scope and name the scope index classifies as CPython's `symtable` does
+(`scope-agreement`, from `checks/python_scopes.py --json`, which must stay at 100). Each number has a floor in `indexer/scripts/checks/reference_floors.txt` (`repo.metric :: floor :: note`): the
 value measured on `main`, rounded down to a hundredth; the graph is deterministic, so there is no tolerance. A number under
 its floor, one with no floor and a floor with no number all fail. A floor is lowered by editing its line in the diff of
 the change, under the `graph-change` label (the label alone would free every change of the graph, and the line makes the
@@ -171,7 +172,7 @@ in the image with `python -m cProfile -o` and `-w` on the mounted code (§6).
 facts under `/corpus`, read as the extractor reads them, through the language's per-file index. The same dump from two
 codes, compared with `cmp`, shows whether a refactor changed a fact; from one code twice, that the facts are values.
 
-`checks/python_scopes.py [N]` compares Python's scope index with CPython's `symtable` over every Python file under
+`checks/python_scopes.py [N] [--repos NAME ...] [--json FILE]` compares Python's scope index with CPython's `symtable` over every Python file under
 `/corpus`: each scope paired with symtable's, each name classified the same (local, global or free). It prints the
 counts, the files it compared and those CPython 3.12 does not compile, and N samples of each difference. symtable only
 compiles a file's symbols; no repository's code runs.

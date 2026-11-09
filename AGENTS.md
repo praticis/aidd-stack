@@ -111,7 +111,8 @@ The full text is in the ROADMAP, under "Principles".
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - the scorecard of the graph (`indexer/scripts/checks/reference.sh`, in the `micro` job) measures each micro repo against its
-    references (the share of `CALLS` a type decided; for TS, precision and recall against TypeScript's checker), and a number
+    references (the share of `CALLS` a type decided; for TS, precision and recall against TypeScript's checker; for Python, the
+    scope index against CPython's `symtable`), and a number
     under its floor in `indexer/scripts/checks/reference_floors.txt` fails the PR: a floor is lowered on its line, in the
     diff and under the `graph-change` label;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one

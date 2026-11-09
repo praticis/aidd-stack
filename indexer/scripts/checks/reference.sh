@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# The graph of a tree against its references: the checker's rows for the TS repos that have a floor, then
-# judgment/scorecard.py over the tree's micro dry-runs, against checks/reference_floors.txt.
+# The graph of a tree against its references: the checker's rows for the TS repos that have a floor and CPython's symtable
+# over the Python repos that have one, then judgment/scorecard.py over the tree's micro dry-runs, against
+# checks/reference_floors.txt.
 #
 #   indexer/scripts/checks/reference.sh [--run DIR] [--floors FILE] [--base-floors FILE] [--out DIR]
 #
@@ -23,7 +24,7 @@ indexer="$(cd "$(dirname "$0")/../.." && pwd)"
 home="${AIDD_CORPUS_HOME:-$HOME/.cache/aidd-corpus}"
 run="" floors="$indexer/scripts/checks/reference_floors.txt" base_floors="" out=""
 
-usage() { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
+usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit "$1"; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --run) run="$2"; shift 2 ;;
@@ -62,9 +63,19 @@ for repo in $(sed -n 's/^\([a-z0-9-]*\)\.typed-precision ::.*/\1/p' "$floors"); 
   ln -s "$file" "$use/checker-$repo.jsonl"
 done
 
+# the Python repos are the ones with a floor of the scope agreement: CPython's symtable, in the indexer image
+scopes=()
+pyrepos=$(sed -n 's/^\([a-z0-9-]*\)\.scope-agreement ::.*/\1/p' "$floors" | tr '\n' ' ')
+if [ -n "$pyrepos" ]; then
+  heavy_lock "reference scopes"
+  docker run --rm --entrypoint python -v "$home/repos":/corpus:ro -v "$indexer":/src:ro -v "$use":/out \
+    -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 "$base" /src/scripts/checks/python_scopes.py 0 --repos $pyrepos --json /out/scopes.json > /dev/null
+  scopes=(--scopes "$use/scopes.json")
+fi
+
 scorecard="$indexer/scripts/judgment/scorecard.py"
 report="$(mktemp)" rc=0
-python3 -I "$scorecard" "$run" --rows "$use" --floors "$floors" > "$report" || rc=$?
+python3 -I "$scorecard" "$run" --rows "$use" ${scopes[@]+"${scopes[@]}"} --floors "$floors" > "$report" || rc=$?
 lowered=""
 [ -z "$base_floors" ] || lowered=$(python3 -I "$scorecard" --lowered "$base_floors" "$floors")
 if [ -n "$lowered" ]; then

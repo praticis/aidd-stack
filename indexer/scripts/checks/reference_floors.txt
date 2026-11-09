@@ -4,7 +4,8 @@
 # the graph is deterministic, so a number under its floor is a change of the graph, never noise. A line that starts with `#`
 # is a comment. `typed-share` is the percent of a repo's CALLS that a type decided, for every language; `keyed`,
 # `typed-precision`, `recall` and `typed-recall` are measured against TypeScript's checker (`checks/ts_checker.js`), for the TS
-# repos of the micro set. The scorecard runs in the `micro` job of every pull request that touches the indexer.
+# repos of the micro set; `scope-agreement` is the percent of a Python repo's files whose scopes and names the scope index classifies as
+# CPython's `symtable` does (`checks/python_scopes.py`). The scorecard runs in the `micro` job of every pull request that touches the indexer.
 #
 # A floor is lowered by editing its line in the diff of the change that lowers it, under the `graph-change` label; it is
 # raised when a change improves the number (the scorecard prints the headroom). A new repo or number gets a line:
@@ -30,3 +31,5 @@ outline.recall :: 88.67 :: measured on main, PR #101's tree
 outline.typed-recall :: 35.81 :: measured on main, PR #101's tree
 umbraco.typed-share :: 37.2 :: measured on main, PR #101's tree
 vikunja.typed-share :: 3.06 :: measured on main, PR #101's tree
+dispatch.scope-agreement :: 100.00 :: measured on main: 717 of 717 files; a difference is a defect of the scope index
+netbox.scope-agreement :: 100.00 :: measured on main: 1290 of 1290 files; a difference is a defect of the scope index

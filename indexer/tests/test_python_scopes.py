@@ -2,6 +2,8 @@
 scope binds or reads is classified as the compiler of the test image classifies it. The same comparison runs over
 every Python file of the corpus (scripts/checks/python_scopes.py)."""
 
+import collections
+import json
 import sys
 from pathlib import Path
 
@@ -9,6 +11,7 @@ import pytest
 from tree_sitter_language_pack import get_parser
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "checks"))
+import python_scopes as PS  # noqa: E402
 from python_scopes import compare  # noqa: E402
 
 from aidd_indexer.languages.python.scopes import PyScopes  # noqa: E402
@@ -104,3 +107,45 @@ def test_a_deferred_annotations_names_read_nothing_but_know_their_scope():
     index, names = index_of("from __future__ import annotations\nclass C:\n    b: Model\n")
     model = names[-1]
     assert "Model" not in index.module.uses and index.scope_at(model).kind == "class"
+
+
+def corpus(tmp_path):
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "x.py").write_text("x = 1\n")
+    (tmp_path / "a" / "old.py").write_text("print 'py2'\n")  # CPython 3.12 does not compile it
+    (tmp_path / "b").mkdir()
+    (tmp_path / "b" / "z.py").write_text("def f():\n    return 1\n")
+    (tmp_path / "b" / "link.py").symlink_to(tmp_path / "a" / "x.py")  # a link is no file of the repo
+    return tmp_path
+
+
+def test_each_repo_is_counted_apart_and_a_link_is_no_file(tmp_path):
+    got = PS.scan(corpus(tmp_path), ["a", "b"], 5, collections.defaultdict(list))
+    assert dict(got["a"]) == {"files": 2, "files compared": 1, "files differing": 0, "files CPython 3.12 does not compile": 1}
+    assert dict(got["b"]) == {"files": 1, "files compared": 1, "files differing": 0}
+
+
+def test_a_file_with_differences_is_one_file_differing_and_each_difference_is_counted(tmp_path, monkeypatch):
+    root = corpus(tmp_path)
+    monkeypatch.setattr(PS, "compare", lambda src: [PS.Difference("classified", 1, "x", "local", "free"), PS.Difference("extra", 2, "y", "local", "")])
+    c = PS.scan(root, ["b"], 5, collections.defaultdict(list))["b"]
+    assert (c["files compared"], c["files differing"], c["classified"], c["extra"]) == (1, 1, 1, 1)
+
+
+def test_main_writes_the_counts_of_the_repos_it_is_given_and_prints_their_total(tmp_path, capsys):
+    out, root = tmp_path / "scopes.json", tmp_path / "c"
+    root.mkdir()
+    assert PS.main(["5", "--root", str(corpus(root)), "--repos", "a", "--json", str(out)]) == 0
+    assert json.loads(out.read_text()) == {"a": {"files": 2, "files compared": 1, "files differing": 0, "files CPython 3.12 does not compile": 1}}
+    printed = capsys.readouterr().out
+    assert "files compared: 1" in printed and "\n  a/old.py: " in printed  # a sample names its file by the path under the root
+
+
+def test_without_repos_every_folder_under_the_root_is_a_repo(tmp_path):
+    out = tmp_path / "scopes.json"
+    root = tmp_path / "c"
+    root.mkdir()
+    corpus(root)
+    PS.main(["--root", str(root), "--json", str(out)])
+    assert sorted(json.loads(out.read_text())) == ["a", "b"]
+
