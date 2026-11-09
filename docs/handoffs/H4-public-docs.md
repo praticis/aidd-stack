@@ -294,8 +294,8 @@ architecture"). A closed handoff becomes a short summary in the same file, and i
   the choice and the why. The ADRs stay as they are.
 - **`docs/corpus-report.md`:** the method, the per-language table of the current baseline, the gap ranking and a
   short table of baselines (date, what changed, totals). The narrative of each increment goes.
-- **`docs/golden-questions.md`:** the questions, the method and the result of the last round; the old rounds become
-  one line each.
+- **`docs/golden-questions.md`:** the questions, how to run a round, the last round and what the rounds found; the old rounds are in
+  git.
 - **`README.md`:** minimal until step 4: what it is, how to install and a link to `AGENTS.md` and the ROADMAP.
 
 **Done when:**
