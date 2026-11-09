@@ -1554,3 +1554,39 @@ the tenants went from stale to fresh); no `repo_map` changes in its symbols, sin
 **What the round shows.** The live TS and JS repos that call a method on a receiver whose type the code declares reach
 the methods of that type, and the calls by name that were homonyms of them are gone, 569 net; the C# and Go snapshots,
 the symbols, the imports, the hierarchy, the macro graph and what the golden calls ask are the same.
+
+## Forty-third round: validating PR #85 on a live install (2026-11-08, build `0.2.15+c95fd6e984ba` to `0.2.15+01040a67fd25`)
+
+What changed since the forty-second round: PR #85 is merged, a `fix(typescript)` that has TS's HTTP scanner find a client
+by the type its receiver declares (a class of the repo, whose wrappers the call reaches, or a type of a client library
+such as `AxiosInstance`), the last PR of TS's step 5. The same 3 tenants and 10 snapshots, and 29 calls.
+
+- **Before the reinstall and the merge, read-only:** the install ran `main`'s code (`09147a4`). The dry-runs of `main`
+  and of the PR's head (`55087a2`) on each snapshot, at its sha, are identical in all 10 (0 failed), and the live graph
+  held `main`'s dry-run on every snapshot (0 mismatching): 10,711 symbols, 23,440 `CALLS`, 15,961 `IMPORTS`, 404 types'
+  and overrides' edges, 351 modules, 0 violations. The corpus, the hold-out and the micro set had given `0 repo(s)
+  differ` in CI.
+- **After the author's reinstall from `main` (`8748bab`, whose tree is the PR head's):** the 10 snapshots ran since the
+  before, all ok, each holds the new build, and `after` passed at the first run.
+
+**The picture of the graph** differs in 2 of its 16 lists, the labels' `IndexRun` counts and the snapshots' build, and in
+nothing else: the 14 others, the symbols (10,711), the `CALLS` (23,440), the hierarchy edges (404), the `IMPORTS`
+(15,961), the modules (351), the 286 endpoints, the 160 HTTP calls and the 0 violations among them, are the same. The
+graph after holds the branch's dry-run on every snapshot (0 mismatching).
+
+**The 29 calls** all reached the MCP. 28 gave no error and `cypher_readonly` still refuses a write. 24 answers are the
+same field by field. 5 differ only in their time, build and refresh fields: `atlas_status`, the `ref_diff` of the TS
+snapshots and the `repo_map` of the TS, Go and accrual snapshots (the before was taken 908 minutes after the snapshots
+were indexed, so the tenants went from stale to fresh); no `repo_map` changes in its symbols, since the PR adds none.
+
+| Q | Result |
+|---|---|
+| Q1 `who_consumes`, in lower case and in the code's case | ✅ the same |
+| Q2 `http_map` | ✅ the same |
+| Q3 map | ✅ the same on the 3 tenants |
+| Q4a and Q4b `impact_of` | ✅ the same |
+| Q5 `ref_diff` | ✅ the same but its time fields |
+
+**What the round shows.** The new rule changes no call and no route of the live repos, as it changed none of the
+corpus's: the graph after is the graph before but for the build, so the PR's gain is in the cases it checks against
+TypeScript's checker, and what it keeps is the macro graph, the micro graph and what the golden calls ask.
