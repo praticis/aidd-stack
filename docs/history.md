@@ -652,3 +652,4 @@
   the numbers that PR reported (ghost +9.6, +9.6, +11.8 and +11.0 %, mattermost +3.4, +4.3 and +4.3 %).
 - 2026-11-08: the draft of a golden round is a script of the repo (`chore(scripts)`): `indexer/scripts/live/round.py` writes the round and its history line from a validated PR's in-flight folder, with counts, snapshot
   numbers, list and tool names and no name the live data holds; on the pair of PR #85 it gives the numbers of the forty-third round, the judgment and the sentence of what changed staying the author's.
+- 2026-11-09: TD-057, TD-059 and TD-060, the three TS debts that ask the reading to answer what a type checker answers (a generic's argument an alias gives, a receiver a type guard narrows, an overloaded function's result), move from `fix(typescript)` PRs to F1.2 (H5-D52, `docs:`): they explain few of the sites the checker places elsewhere and SCIP gives them from the compiler. Seven TS debts stay due before F1.2.
