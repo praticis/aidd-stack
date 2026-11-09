@@ -650,3 +650,5 @@
 - 2026-11-08: the cost of a pass in alternating pairs is a script of the repo (`chore(scripts)`): `indexer/scripts/protocol/cost-pairs.sh` runs `corpus.sh --jobs 1 --no-expected` on main's tree and the
   branch's, the side that goes first flipping each pair, and prints the change in time per pair, the medians and the change in peak memory; on the saved runs of H5-D51 it gives
   the numbers that PR reported (ghost +9.6, +9.6, +11.8 and +11.0 %, mattermost +3.4, +4.3 and +4.3 %).
+- 2026-11-08: the draft of a golden round is a script of the repo (`chore(scripts)`): `indexer/scripts/live/round.py` writes the round and its history line from a validated PR's in-flight folder, with counts, snapshot
+  numbers, list and tool names and no name the live data holds; on the pair of PR #85 it gives the numbers of the forty-third round, the judgment and the sentence of what changed staying the author's.
