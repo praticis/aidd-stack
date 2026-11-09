@@ -165,31 +165,22 @@
 - 2026-10-22: C#'s change of behavior merges as PR #25. The resolver and the scanner get one answer for a name's
   declared type, with C#'s own scoping, and four older gaps of the type service are closed: a `partial` type is one
   type, a method's declared result, the repo's extension methods on a typed receiver, and a type written with its
-  namespace and type arguments (H5-D16). It was judged by case on the corpus (baseline `-29`) and on the micro set;
-  two more gaps of what a name means in C# go in a `fix(csharp)` (H5-D17). On a live install the graph is identical,
-  as the dry-runs said (the tenth golden round).
-- 2026-10-24: what a name means in C# merges as PR #27, a `fix(csharp)` (H5-D17). A type's simple name is looked up
-  as C# does, and a capitalized member, a nested type, a `global using`, a type parameter's constraint and type
-  argument, an array and an extension block are read as C# reads them. It was judged by case on the corpus (baseline
-  `-29`) and on the micro set, and thirteen gaps stay out, registered as debts on 2026-10-27 (`docs/tech-debt.md`).
-  - Its validation after the merge was left open when the session that ran it stopped. Its method was recovered into
-    `docs/indexer/`.
-  - On 2026-10-26 the live install showed the graph identical but for the build, as the dry-runs said, and the 27
-    calls gave the same answers (the eleventh golden round). These snapshots hold none of the calls the change
-    reaches, so that round checks the install, not the change.
-  - A new judgment on the corpus that day found one wrong edge the PR added: elsa's `x.GetInput<string>(item)` went
-    to a method that is not generic. Its cause is older than the PR, and its fix is H5-D18.
+  namespace and type arguments (H5-D16). On a live install the graph is identical, as the dry-runs said (the tenth
+  golden round).
+- 2026-10-24: what a name means in C# merges as PR #27, a `fix(csharp)` (H5-D17). It was judged by case on the corpus
+  (baseline `-29`) and on the micro set, and thirteen gaps stay out, registered as debts on 2026-10-27
+  (`docs/tech-debt.md`).
+  - On 2026-10-26 the live install showed the graph identical but for the build, as the dry-runs said, and the 27 calls
+    gave the same answers (the eleventh golden round). These snapshots hold none of the calls the change reaches, so
+    that round checks the install, not the change.
 - 2026-10-27: the indexer's validation method, rebuilt from a lost session, merges as PR #28: the cycle of a change, how
   a difference becomes a verdict, a test that a new session can resume from the repository alone, and the local tools
   (`indexer/scripts/`) cut to the 23 in use.
 - 2026-10-27: the method's resume test becomes repeatable (`indexer/scripts/protocol/resume-test.sh`, PR #29), and what
   its first three runs found is fixed; a fourth, in a clone, passes all nine criteria.
-- 2026-10-27: the fix for the wrong edge PR #27 exposed (H5-D18) is judged. The corpus and the hold-out are unchanged,
-  the micro graph differs on 6 C# repos (−815 and +97 edges), an independent review of 189 items finds no wrong changed
-  edge, and the live check before the merge is identical, though its snapshots hold none of the calls the change
-  reaches. The author accepts the review as the judgment, registers the defects the fix leaves as debts
-  (`docs/tech-debt.md`), moves the gaps H5-D16 and H5-D17 left out to the same register (TD-007 to TD-022) and decides
-  that the judgment is to be automated (H7-D6).
+- 2026-10-27: the fix for the wrong edge PR #27 exposed (H5-D18) is judged. The author accepts the review as the
+  judgment, registers the defects the fix leaves as debts (`docs/tech-debt.md`), moves the gaps H5-D16 and H5-D17 left
+  out to the same register (TD-007 to TD-022) and decides that the judgment is to be automated (H7-D6).
 - 2026-10-27: the fix merges as PR #30 and is validated on a live install (the thirteenth golden round). The dry-runs
   of `main` and of the merge are identical, the graph holds them before and after the reinstall, the picture differs
   only in the build and the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold none of
@@ -230,36 +221,19 @@
   `symtable` does; the other ten are in Python 3.14's syntax. The case table's test that waited for the index is now
   that check, case by case.
 - 2026-10-28: Python's types merge as PR #45, the second of its refactor's two PRs (H5-D24), with the graph identical.
-  The core builds a language's per-file index once and hands it to the hooks that read the file, a receiver carries
-  why it has no type, and a module's members are named apart from a class's. Python's declaration forms, type facts
-  and `TypeIndex` answer every case of its table, read by them in the tests, while its `call_receiver` still answers
-  nothing; the table's guards count an `inherited` edge as no method's (H5-D25). The facts of the corpus's 7,124
-  Python files are values, the same in two runs. Building them costs netbox's extraction 2.2 s (5.8 to 8.0) and
-  14 MiB of peak memory; the index, kept beside the tree, cost it about 270 MiB more, so it lives only while its file
-  is extracted.
+  The core builds a language's per-file index once and hands it to the hooks that read the file, a receiver carries why
+  it has no type, and a module's members are named apart from a class's. Python's declaration forms, type facts and
+  `TypeIndex` answer every case of its table, read by them in the tests, while its `call_receiver` still answers
+  nothing; the table's guards count an `inherited` edge as no method's (H5-D25).
 - 2026-10-29: an absolute Python import resolves to the same module in every run, PR #46 (`fix(python)`). The roots
   it is looked for under, the root of the importing file's module, the repo's root and `src/`, were a set, ordered by
   the process's hash seed: of eight runs with seeds 0 to 7, two resolved a service's `app.models` to the service's own
   module and six to the repo root's. They are now tried in that order, the module's root first, and the test runs
   those eight seeds. None of the corpus's 42,298 absolute Python imports is found under two roots, so no graph of it
   changes.
-- 2026-10-29: Python's change of behavior merges as PR #47, the third of H5-D22's PRs. A call's receiver takes the
-  type its declarations give the binding CPython's scopes give its name, and the HTTP scanner asks the same scopes and
-  types for its routers. Every xfail of the case table is gained, and the corpus and the hold-out do not change.
-
-  The per-site attribution explains all 4,188 changed sites of the micro set's four Python repos. dispatch's share of
-  edges found among several homonyms falls from 65.6 % to 53.0 %.
-
-  Its judgment found three answers of "outside the repo" the index had not proven: an import under a root it does not
-  try, a module with a star import, and a class attribute a descriptor may read. The review of an agent that did not
-  write the change (H7-D6) found five more:
-  - a mixin's method only a subclass gives;
-  - `super()` that a class of several bases may reorder;
-  - `typing.Any` and a `TypeVar`;
-  - a re-exported function;
-  - a router class a function imports.
-
-  Each became `Unknown`, so the call goes by name as on `main`.
+- 2026-10-29: Python's change of behavior merges as PR #47, the third of H5-D22's PRs. A call's receiver takes the type
+  its declarations give the binding CPython's scopes give its name, and the HTTP scanner asks the same scopes and types
+  for its routers. Every xfail of the case table is gained, and the corpus and the hold-out do not change.
 
   The author keeps a call of a name outside the repo as an instance of it (H5-D26). The edges it loses on a function's
   result are TD-025, due in F1.2.
@@ -271,13 +245,7 @@
   dry-run imports, since an IDE watching the folder built a test fixture's C# project in its copy.
 - 2026-10-30: a Python absolute import is looked for under the directory its file's package runs from, PR #49
   (`fix(python)`, H5-D28). netbox runs from `netbox/`, where its `manage.py` is, and none of its 7,661 absolute imports
-  resolved, so the core took its own classes for a package's. The rule resolves 4,054 more of the corpus's 42,155
-  absolute Python imports and changes none, and CPython's `FileFinder` finds the indexer's file for every one it
-  resolves. The corpus and the hold-out do not change. netbox's edges found by type go from 2,024 to 4,877.
-
-  Its judgment found two more things:
-  - a method a class of the repo declares past a base outside it got no edge; it goes by name again, as an `Unknown`
-    does;
+  resolved, so the core took its own classes for a package's.
   - Django's model managers, `Model.objects.<method>(..)`, are found by name on more sites: 29,474 edges against
     `main`'s 15,961. The author keeps the change, and that growth is TD-026, due in step 6.
 - 2026-10-30: PR #49 is validated on a live install (the fifteenth golden round). The dry-runs of `main` and of the
@@ -285,21 +253,17 @@
   the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
   checks the install, not the change.
 - 2026-10-30: a Python star import is followed as CPython binds it, PR #51 (`fix(python)`). `from m import *` binds
-  `m`'s `__all__`, or its public names, and a later binding holds a name. All 703 star imports of the corpus name a
-  module of the repo whose chain is seen whole. In netbox, 9,108 receivers only a star import could bind are read:
-  edges found by type go from 4,877 to 8,319, and the share found among several homonyms from 64.0 % to 60.2 %. An
-  independent review of 43 seeded rows found none wrong. The module an import names is now found once per file and
-  import, and netbox's dry-run is faster than `main`'s. The author puts F1.16 before TS's step 5 (H5-D29).
+  `m`'s `__all__`, or its public names, and a later binding holds a name. In netbox, 9,108 receivers only a star import
+  could bind are read: edges found by type go from 4,877 to 8,319, and the share found among several homonyms from
+  64.0 % to 60.2 %. The author puts F1.16 before TS's step 5 (H5-D29).
 - 2026-10-30: PR #51 is validated on a live install (the sixteenth golden round). The dry-runs of `main` and of the
   branch are identical, the graph holds them before and after the reinstall, the picture differs only in the build and
   the `IndexRun` counts, and the 27 calls give the same answers. These snapshots hold no Python file, so the round
   checks the install, not the change.
-- 2026-10-30: one `CALLS` edge per caller, callee, line and method, PR #53 (`fix(graph)`). The writer merged the edges of
-  one line to one target, the last row winning: 161 edges of the micro set lost their `method`, and 2,910 showed a
-  weaker strategy than the strongest, mostly an interface's method found again through an implementation that does not
-  declare it. The resolver now gives one edge per key, by the strongest strategy, and the writer creates it. The micro
-  set's dry-runs lose 68,769 repeated records and nothing else. The review registers TD-027: that implementation gets no
-  edge of its own, due in a `fix(csharp)` PR before F1.2.
+- 2026-10-30: one `CALLS` edge per caller, callee, line and method, PR #53 (`fix(graph)`). The resolver now gives one
+  edge per key, by the strongest strategy, and the writer creates it. The micro set's dry-runs lose 68,769 repeated
+  records and nothing else. The review registers TD-027: that implementation gets no edge of its own, due in a
+  `fix(csharp)` PR before F1.2.
 - 2026-10-30: PR #53 is validated on a live install (the seventeenth golden round). The graph holds `main`'s dry-run
   before the reinstall and the branch's after, strategies included: 2 edges of one snapshot take the strongest
   strategy, and the picture differs otherwise only in the build and the `IndexRun` counts. The 27 calls give the same
@@ -312,12 +276,10 @@
 - 2026-10-30: PR #55 is validated on a live install (the eighteenth golden round). The dry-runs of `main` and of the
   branch are identical on the 10 snapshots, the graph holds the branch's after the reinstall, and the 27 calls give the
   same answers. The snapshots hold no Python file, so the round checks the install, not the change.
-- 2026-10-30: the per-site attribution reads what the resolver makes of a receiver too, PR #56 (`chore(scripts)`),
-  which closes H5's gap G2. `answers.py` records, beside the extraction's type, the resolver's answer: a builtin, a
-  name an import binds to a package, the repo's type, a type outside the repo, or none. Replayed on H5-D28's import
-  roots, it explains all 8,726 changed sites, where `main`'s probe explained none, and on the star imports all 4,657,
-  where it explained 792; the `TypeIndex`'s verdict, the reference those judgments used, agrees on every site it
-  explains. #47's table is the same.
+- 2026-10-30: the per-site attribution reads what the resolver makes of a receiver too, PR #56 (`chore(scripts)`), which
+  closes H5's gap G2. Replayed on H5-D28's import roots, it explains all 8,726 changed sites, where `main`'s probe
+  explained none, and on the star imports all 4,657, where it explained 792; the `TypeIndex`'s verdict, the reference
+  those judgments used, agrees on every site it explains. #47's table is the same.
 - 2026-10-30: F1.16 is planned in three PRs (H5-D30), and the first splits the graph writer before F1.16 grows it,
   PR #57 (`refactor(graph)`): its session, the linker's reads and writes and the snapshots' bookkeeping go to modules
   of their own, and the dry-run's payload leaves `cli.py`. `core/graph.py` goes from 462 lines to 235. The corpus,
@@ -332,24 +294,15 @@
   calls give the same answers.
 - 2026-10-31: the types' bases of the repo are `EXTENDS` and `IMPLEMENTS`, and a `CALLS` edge says whether it may
   dispatch, PR #59 (`feat(graph)`): C# and Python read the bases from their type indexes, Go embeds and writes none, and
-  a call on `base` or on `super()` has `virtual: false`. On the micro set, `CALLS` are the same once `virtual` is left
-  out, and the six C# and Python repos gain 159 to 5,888 edges each; each type's ancestors through them are the ancestry
-  the resolver walks in C#, and hold its supertypes in Python, the rest explained. The hierarchy costs 0.06 s of
-  umbraco's 5.8 s of calls. The corpus and the hold-out are the same. Judged at the source, the calls that do not
-  dispatch show `main`'s targets of a `base` call on its own override and of a `super()` found by name, TD-030 and
-  TD-031, and the change creates TD-032, two C# types of one name in one file taking each other's bases; all three are
-  due in a `fix(resolve)` before F1.16's `feat(mcp)` (H5-D31). Go's interface calls are TD-029. The probe that measures
-  them is versioned (`judgment/hierarchy.py`), and the live `after` now waits for the new build.
+  a call on `base` or on `super()` has `virtual: false`. The corpus and the hold-out are the same. Judged at the source,
+  the calls that do not dispatch show `main`'s targets of a `base` call on its own override and of a `super()` found by
+  name, TD-030 and TD-031, and the change creates TD-032, two C# types of one name in one file taking each other's
+  bases; all three are due in a `fix(resolve)` before F1.16's `feat(mcp)` (H5-D31). Go's interface calls are TD-029.
 - 2026-10-31: PR #59 is validated on a live install (the twenty-first golden round). The two C# snapshots gain their
   types' edges, 23 and 20, the other 8 are identical, every `CALLS` edge is the same with `virtual` true, the graph
   holds the branch's dry-runs, and the 27 calls give the same answers; the `after` waited for the new build.
 - 2026-10-31: a call that does not dispatch reaches no implementation and no homonym found by name, PR #60
-  (`fix(resolve)`, H5-D32). A Python `super()` its receiver does not decide reaches the first class after the caller's
-  that binds the name in each MRO of the repo's classes, as CPython looks it up: on netbox, 490 of 841 sites get an
-  edge, 466 to one method, and `main`'s 1,754 edges found by name go; the other 351 sites have a base outside the repo
-  ahead of the method, or an MRO the index cannot compute. C#'s 18 edges from `base.M()` to the caller's own override
-  go, and two types of one qualified name in one file get no `EXTENDS` or `IMPLEMENTS`: 703 edges of the micro set,
-  each touching such a name. TD-030 to TD-032 are closed; the judgment at the source registers TD-033, two C# types of
+  (`fix(resolve)`, H5-D32). TD-030 to TD-032 are closed; the judgment at the source registers TD-033, two C# types of
   one name in one file in a call, and TD-034, a type written with a namespace outside the repo read by its simple name,
   both `main`'s and due in `fix(csharp)` PRs. The corpus and the hold-out are the same.
 - 2026-10-31: PR #60 is validated on a live install (the twenty-second round). No live snapshot holds what it touches:
@@ -357,36 +310,21 @@
   give the same answers.
 - 2026-10-31: a method a dispatching call may run instead of another `OVERRIDES` it, as the instance's language says,
   PR #61 (`feat(graph)`, H5-D33). C# follows `override`, `new`, `static` and interface implementation, by name and
-  number of parameters; Python, what each class's MRO finds first, a mixin's method included, and the last definition
-  of a name in a class. On the micro set, `CALLS` are the same and the six C# and Python repos gain 126 to 8,000 edges,
-  every one method to method; the pairs of one name the edges leave out are other numbers of parameters, methods that
-  do not say `override`, static methods, past a `new`, or classes with no MRO, and the edges no such pair gives are a
-  mixin's or a base class's that implements a subclass's interface. CPython's `__mro__` gives the Python fixture's edges
-  exactly. The overrides cost 0.2 s of umbraco's 5.9 s of calls. The corpus and the hold-out are the same.
+  number of parameters; Python, what each class's MRO finds first, a mixin's method included, and the last definition of
+  a name in a class. CPython's `__mro__` gives the Python fixture's edges exactly. The corpus and the hold-out are the
+  same.
 - 2026-10-31: PR #61 is validated on a live install (the twenty-third round). The two C# snapshots gain 15 and 17
   `OVERRIDES`, every one method to method, the other 8 are identical, `CALLS` are the same, the graph holds the
   branch's dry-runs, and the 27 calls give the same answers, since no tool reads the edges yet.
 - 2026-10-31: a dispatching call keeps its receiver's type, and an override the receivers on which it may run, PR #62
-  (`feat(graph)`, H5-D34). A `CALLS` edge to a method others override, which a supertype of the receiver's type
-  declares, records that type; an `OVERRIDES` edge records the types below its target's a receiver of which may hold an
-  instance that runs it. Of the (call, override) pairs `who_calls` would add, the receivers leave out 5,361 of 11,301 in
-  netbox, 9,316 of 51,567 in umbraco and 19 of 9,883 in jellyfin, and none in dispatch, btcpayserver or eshop; what
-  they keep is, in each, what the language runs on an instance at or below the receiver's type, and CPython runs the
-  Python fixture's. F1.16 goes in seven PRs. TD-035 registers an override of a package's method, which no call meets
-  until SCIP gives the method a symbol (F1.2). The corpus and the hold-out are the same.
+  (`feat(graph)`, H5-D34). F1.16 goes in seven PRs. TD-035 registers an override of a package's method, which no call
+  meets until SCIP gives the method a symbol (F1.2). The corpus and the hold-out are the same.
 - 2026-10-31: PR #62 is validated on a live install (the twenty-fourth round). The two C# snapshots gain only
   `receivers`, on their 15 and 17 `OVERRIDES` (17 and 22 types) and on one call, the other 8 are identical, the graph
   holds the branch's dry-runs, and the 29 calls give the same answers, since no tool reads the receivers yet.
-- 2026-10-31: `who_calls` and `impact_of` follow a dispatch through `OVERRIDES` and the receivers, PR #63
-  (`feat(mcp)`, H5-D34 and H5-D35), which closes F1.16. `who_calls` lists a method's `dispatched_callers`, those that
-  call a method it overrides on a receiver that may hold an instance which runs it, and what it overrides and what
-  overrides it; `impact_of` reads the calls backwards hop by hop, so a dispatch may happen at any hop, and marks a
-  caller `via_dispatch`, and now `via_ambiguous` too, only when every chain from it has one. Of the 82 (site,
-  override) pairs H5-D27 counted on netbox and dispatch, `who_calls` reaches 81, the one left TD-035's. On 20,460
-  symbols of six micro repos, where no dispatch is followed, the walk gives a Cypher path's callers, hops and mark on
-  all but the 3 on which the path passed 30 s, and 71,285 of the 1,524,157 caller rows `main` marked lose the mark,
-  each reached by a chain with no hop resolved by name among several; a dispatch adds 1,384,488 callers to 8,498
-  symbols. The slowest walk takes 1.2 s. The corpus, the hold-out and the micro graph are the same.
+- 2026-10-31: `who_calls` and `impact_of` follow a dispatch through `OVERRIDES` and the receivers, PR #63 (`feat(mcp)`,
+  H5-D34 and H5-D35), which closes F1.16. Of the 82 (site, override) pairs H5-D27 counted on netbox and dispatch,
+  `who_calls` reaches 81, the one left TD-035's. The corpus, the hold-out and the micro graph are the same.
 - 2026-10-31: PR #63 is validated on a live install (the twenty-fifth round). The graph is the same on the 10
   snapshots and the build too, so no snapshot ran; of the 29 calls, the two on a C# override and `who_calls` on Q4a's
   method gain their dispatching callers, Q4's callers gain `via_dispatch: false`, and the rest are the same.
@@ -403,37 +341,24 @@
   `evidence`.
 - 2026-10-31: TS's type cases, each checked against TypeScript's own checker, PR #66 (`test(typescript)`). The test
   image gets Node and `typescript@6.0.3`, the last line with the compiler's JavaScript API, and `ts_checker.js` gives
-  the declarations the checker resolves each call to. Of the 33 resolver cases, 23 are typed, strict xfails until the
-  change of behavior; 9 stay `Unknown`, guards; a value of a package's class reaches no method. Of the scanner's 10, 4
-  are found today, guards, and 6 a type gives, strict xfails. The table corrects H5-D36's list of what stays
-  `Unknown`: a `let` takes its initializer's type, and a parameter injected by token declares its type.
+  the declarations the checker resolves each call to. The table corrects H5-D36's list of what stays `Unknown`: a `let`
+  takes its initializer's type, and a parameter injected by token declares its type.
 - 2026-10-31: TS's scope index, proven against TypeScript's own binder, PR #67 (`refactor(typescript)`), the first of
-  TS's refactor's two PRs (H5-D37), with the graph identical: nothing in the extraction reads it yet. Over every TS and
-  JS file the indexer extracts from the corpus, 51,025 of 51,598, its 4,702,668 names and 202,297 `this` bind as the
-  binder binds them, but for 61 names in code tree-sitter reads as other code (a generic tag of a template, `using`,
-  `let[`) and 16 JS `require`s the binder binds in the function around them; 560 files where tree-sitter finds an
-  error and 13 the compiler does not parse are counted apart. The case table gains eight scope cases, six of them
-  typed.
+  TS's refactor's two PRs (H5-D37), with the graph identical: nothing in the extraction reads it yet. The case table
+  gains eight scope cases, six of them typed.
 - 2026-11-01: PR #67 is validated on a live install (the twenty-sixth round). The build changes and the 10 snapshots
   are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
   refresh fields.
 - 2026-11-01: TS's types, PR #68 (`refactor(typescript)`), the second of TS's refactor's two PRs (H5-D37, H5-D38), with
   the graph identical: TS's `call_receiver` answers nothing yet. TS's facts and one `TypeIndex` for its three ids
   (`LanguageSupport.type_family`); the HTTP scanner takes its class of a `this` from the scope index and its class of a
-  `new C()` from the type index, and no site changes on the corpus, the hold-out or the micro set. Read by the types,
-  the case table's 30 typed cases reach the declaration the checker names and its 11 `unknown` cases give their
-  reason, with 45 rules past it; each of 91 mutants fails a test. `B | null` is `B`, with a new case.
+  `new C()` from the type index, and no site changes on the corpus, the hold-out or the micro set.
 - 2026-11-01: PR #68 is validated on a live install (the twenty-seventh round). The build changes and the 10 snapshots
   are re-indexed, all ok; the graph is the same on each, and of the 29 calls, 5 differ only in their time, build and
   refresh fields.
 - 2026-11-01: TS's hierarchy, PR #69 (`feat(graph)`), the fifth of TS's step 5 (H5-D39): TS's `EXTENDS`, `IMPLEMENTS`
-  and `OVERRIDES`. A type's bases are the declarations TS's type index resolves its clauses to, and the language says
-  which it implements (`LanguageSupport.implemented`); an override is what JS looks the name up to on an instance, a
-  field the instance holds before any prototype's method. An abstract method is a method symbol. The case's edges are
-  the checker's and its overrides what Node runs; over the corpus the index names the checker's declaration at all
-  2,888 clauses where both name one of the repo. The proof found TD-038 and TD-039, due before the change of
-  behavior, so TS's step 5 is eight PRs. Micro: the TS and JS repos gain 4,087 hierarchy edges (1,803 `EXTENDS`, 299
-  `IMPLEMENTS`, 1,985 `OVERRIDES`), and calls found by name reach the abstract methods.
+  and `OVERRIDES`. An abstract method is a method symbol. The proof found TD-038 and TD-039, due before the change of
+  behavior, so TS's step 5 is eight PRs.
 - 2026-11-01: PR #69 is validated on a live install (the twenty-eighth round). The build changes and the 10
   snapshots are re-indexed, all ok; the TS and JS snapshots gain 285 hierarchy edges and 2 abstract methods, their
   `CALLS` change at 2 sites, and of the 29 calls, 5 differ only in their time, build and refresh fields. The round
@@ -457,13 +382,10 @@
   are the same and `atlas_status` differs only in its time fields.
 - 2026-11-01: TS's module resolution, PR #72 (`fix(typescript)`), which closes TD-038 (H5-D40): an import goes to the
   file TypeScript resolves it to with the nearest `tsconfig.json` or `jsconfig.json`, its `extends` and the project a
-  config refers to, by `paths` and `baseUrl`, and a conventional alias names a file only where no config maps it. Of
-  the corpus's imports, TypeScript gave 48,017 a file of the repo the index read as a package or none, and the index
-  now names it at all of them; its heritage clauses reach the checker's declaration at 6,111, from 2,888. The proof
-  found TD-041, a hand-written declaration file discovery skips, and TD-042, a package of the repo's own workspace,
-  both due in TS's step 5, which goes in ten PRs; and the call checker, the change of behavior's reference, reads each
-  file's config now. Micro: 39,441 `IMPORTS` go from a package to a file, `CALLS` gain 17,778 and the hierarchy
-  4,684; the corpus gains outline's 2 calls to Microsoft Graph.
+  config refers to, by `paths` and `baseUrl`, and a conventional alias names a file only where no config maps it. The
+  proof found TD-041, a hand-written declaration file discovery skips, and TD-042, a package of the repo's own
+  workspace, both due in TS's step 5, which goes in ten PRs; and the call checker, the change of behavior's reference,
+  reads each file's config now.
 - 2026-11-01: PR #72 is validated on a live install (the thirty-first round). The TS repo gains 21 hierarchy edges,
   the 7 heritage clauses TypeScript's checker resolves through `paths` and 14 `OVERRIDES`, 5 overrides gain the new
   subclasses among their receivers, and 18 `IMPORTS` go from a package to a file; its `CALLS` and the other 9
@@ -471,12 +393,8 @@
   only in their time, build and refresh fields.
 - 2026-11-01: TS's CommonJS exports, PR #73 (`fix(typescript)`), which closes TD-039 (H5-D41): a module's CommonJS
   exports and a TS module's `export =` are read as TypeScript binds them, and a `require`, a whole module's import and a
-  default import take the module's own value. Its heritage clauses reach the checker's declaration at 6,153, from
-  6,111, the 42 TD-039 counted among them; on ghost, the type index gives the checker's method at 1,275 more call
-  sites and loses it at none. The heritage oracle reads a value a class extends by the checker's base type. The proof
-  found TD-043, a class a class expression declares that is no symbol, due in TS's step 5 with TD-037; TD-039's
-  `export =` of a namespace in a declaration file goes with TD-041. Micro: ghost gains 42 `EXTENDS` and 48
-  `OVERRIDES`; the corpus and the hold-out as on `main`.
+  default import take the module's own value. The proof found TD-043, a class a class expression declares that is no
+  symbol, due in TS's step 5 with TD-037; TD-039's `export =` of a namespace in a declaration file goes with TD-041.
 - 2026-11-02: PR #73 is validated on a live install (the thirty-second round). No class of the live repos extends one a
   module assigns, so the dry-runs of `main` and of the PR are identical on the 10 snapshots, and the graph holds them
   with the new build on each; of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh
@@ -498,19 +416,8 @@
 - 2026-11-02: the declarative conventions' four debts closed, PR #76 (`fix(conventions)`): a rule that names two kinds
   is refused when its convention loads (TD-044); `roles_in` reads its convention's own layout on every file (TD-046); a
   type's bases are read from the line that declares it, as its language writes them (TD-045); and an id declared more
-  than once has the bases of every declaration (TD-047). Its proof found defects `main` had, which the new reading
-  exposed or made worse, and the PR fixes each in a commit of its own: the walk of a type's ancestors took every path,
-  and stalled for hours on a lattice of Python mixins once their bases were read; walking each type once still took
-  netbox's conventions from 0.9 s to 4.9 s, until the names above each name were worked out once (a `perf` commit, 1.0
-  s); a declaration's lines were counted otherwise than the extraction counts them (a lone `\r`, `\x85`, `\u2028`);
-  forms of the text still hid bases (a C# record's `;`, a type parameter's `{`, a comment in the base list); and a Go
-  declaration with no body was read into the next one, which the new reading made worse at two of mattermost's types.
-  The parity also found a regression of the PR's own, an arrow in a base's type argument (`Base<{ f: () => void }>`)
-  that lost the base, fixed in its base-list commit. Three forms the reading still misses (a declaration longer than its
-  15 lines, a Python base with a subscript, a `{` in a call in a TS base list) are a debt, TD-048. Over the micro set,
-  with the reference convention and a probe in both orders, every changed role has its cause. Alone on the machine, the
-  12 dry-runs take 499 s against `main`'s 495 s; umbraco's conventions, where most of each declaration is now read, take
-  7.1 s against 3.4 s.
+  than once has the bases of every declaration (TD-047). Three forms the reading still misses (a declaration longer than
+  its 15 lines, a Python base with a subscript, a `{` in a call in a TS base list) are a debt, TD-048.
 - 2026-11-02: PR #76 is validated on a live install (the thirty-fourth round). The dry-runs of `main` and of the PR's
   head are identical on the 10 snapshots: the convention runs on 2 of them, both C#, and its 104 roles, its layer and
   its entry points are the same. The graph holds them with the new build on each; of the 29 calls, 24 are the same and
@@ -519,26 +426,18 @@
 - 2026-11-02: the MCP's tools in the shape targets, PR #77 (`refactor(mcp)`): each of `find_symbol`, `who_calls`,
   `symbol_context`, `impact_of` and `ref_diff` keeps in `register` the wrapper its schema comes from (its name,
   parameters, return type and docstring) and calls a function of its module with the tenant's store and every argument
-  by name, so both `register` go from complexity 12 to 4 and 3. The protocol test's fake store answers from an ordered
-  table of matchers and answers, in a module of its own, and its `read` goes from 12 to 1. `tools/list` is the same
-  byte for byte in the fixed, the multi-tenant and the no-raw-Cypher modes, and over a throwaway graph the five tools
-  answer 100 calls the same byte for byte, the 45 errors among them (a symbol not found or ambiguous, a repo, a ref or
-  a tenant not indexed, a bad `match` or regex, `ref` equal to `base`). The fake store gives the same answers to the
-  same calls, and the queries the moved bodies send are the same byte for byte.
+  by name, so both `register` go from complexity 12 to 4 and 3.
 - 2026-11-02: PR #77 is validated on a live install (the thirty-fifth round). The dry-runs of `main` and of the PR's
   head are identical on the 10 snapshots, and the graph holds them, with the build unchanged: the tools' code is not in
   its fingerprint. The picture is identical in its 16 lists, and of the 29 calls, 28 are the same field by field and 1,
   the status, differs only in its time, age and refresh fields; the five tools answer as before.
 - 2026-11-02: the refresher's modules in the shape targets, PR #78 (`refactor(refresher)`): `load_manifest`,
-  `discover_repos`, `plan_refs`, `load_policy`, `sync` and `record_insight` go from complexity 13 or 14 to between 2
-  and 7, and the policy's `_validate_layer` from 10 to 6, each split along the seams it already had: a tenant's
-  sources, ref policy and conventions; discovery's mirror and fetch loops; the ref policy's three passes; a mirror's
-  creation, its copy from the workspace and its fetch from origin; an insight's checks and its repeat. The largest new
-  function is at 8. A characterization commit adds 97 cases that pass on `main`'s code and do not change after it.
-  Over 177 inputs (manifests, policies, plans over a synthetic workspace, syncs and insights), `main` and the branch
-  answer the same byte for byte, the 109 errors among them, and seven rounds alternating the two take the same time
-  within ±4 %. Step 12's remaining code goes with the step that changes it (H5-D44): the core's HTTP modules with step
-  6, and `extract` and `resolve` with step 12's last PR, after TS's step 5.
+  `discover_repos`, `plan_refs`, `load_policy`, `sync` and `record_insight` go from complexity 13 or 14 to between 2 and
+  7, and the policy's `_validate_layer` from 10 to 6, each split along the seams it already had: a tenant's sources, ref
+  policy and conventions; discovery's mirror and fetch loops; the ref policy's three passes; a mirror's creation, its
+  copy from the workspace and its fetch from origin; an insight's checks and its repeat. Step 12's remaining code goes
+  with the step that changes it (H5-D44): the core's HTTP modules with step 6, and `extract` and `resolve` with step
+  12's last PR, after TS's step 5.
 - 2026-11-02: PR #78 is validated on a live install (the thirty-sixth round). The dry-runs of `main` and of the PR's
   head are identical on the 10 snapshots, and the graph holds them with the new build on each; the picture is identical
   in its 16 lists but for the build and the `IndexRun` counts, and of the 29 calls, 24 are the same and 5 differ only
@@ -546,11 +445,8 @@
   same, byte for byte, before and after.
 - 2026-11-02: TS's declaration files, PR #79 (`fix(typescript)`), which closes TD-041 (H5-D45): discovery reads a
   hand-written `.d.ts`, an import resolves to one by TypeScript's order where no implementation file exists, and beside
-  a JS file the import keeps the file Node loads while a name the JS cannot declare is the declaration file's. The
-  imports TypeScript resolves to a `.d.ts` that the index did not extract go from 1,199 to 1, and its heritage clauses
-  match the checker's at 6,205, from 6,153, fastify's 18 among them. The proof found TD-049, a folder import that
-  ignores the entry its manifest names. Micro: 157 files, 517 symbols and 96 imports in declaration files, and `CALLS`
-  found by name; the corpus and the hold-out as on `main`.
+  a JS file the import keeps the file Node loads while a name the JS cannot declare is the declaration file's. The proof
+  found TD-049, a folder import that ignores the entry its manifest names.
 - 2026-11-03: PR #79 is validated on a live install (the thirty-seventh round). The dry-runs of `main` and of the PR's
   head are identical in 7 of the 10 snapshots; in the 3 with declaration files the graph gains 47 symbols, 71 `IMPORTS`
   and 12 `EXTENDS` (classes of the code to types a declaration file declares), all in or to declaration files, and 1
@@ -560,13 +456,12 @@
 - 2026-11-03: TS's workspace packages, PR #80 (`fix(typescript)`), which closes TD-042 (H5-D46): an import of a package
   the repo's own workspace declares resolves to the file TypeScript gives it through the link a package manager makes,
   by the package's `exports` (the conditions `types`, `import`, `default` and the config's `customConditions`), its
-  `types`, `typings` or `main`, or its `index`, and a file sees the members of each workspace root above it. The oracle
-  emulates the link where a clone has none. Over the corpus the index names the checker's file at 14,907 more imports,
-  13,215 of them grafana's, and at 437 more heritage clauses, and none it named changes; 10,614 imports of a package
-  whose entry is a build the clone lacks stay a package, TD-050. Micro: grafana, mattermost and ghost differ, by
-  13,954 `IMPORTS` that go from a package to a file, 471 hierarchy edges, and 4,816 `CALLS` found by name that the
-  compiler confirms at 208, and an endpoint of grafana whose path reads a field an instance fills at run time, TD-051;
-  the corpus and the hold-out as on `main`.
+  `types`, `typings` or `main`, or its `index`, and a file sees the members of each workspace root above it. Over the
+  corpus the index names the checker's file at 14,907 more imports, 13,215 of them grafana's, and at 437 more heritage
+  clauses, and none it named changes; 10,614 imports of a package whose entry is a build the clone lacks stay a package,
+  TD-050. Micro: grafana, mattermost and ghost differ, by 13,954 `IMPORTS` that go from a package to a file, 471
+  hierarchy edges, and 4,816 `CALLS` found by name that the compiler confirms at 208, and an endpoint of grafana whose
+  path reads a field an instance fills at run time, TD-051; the corpus and the hold-out as on `main`.
 - 2026-11-03: PR #80 is validated on a live install (the thirty-eighth round). The dry-runs of `main` and of the PR's
   head are identical in all 10 snapshots, since no live repo declares a workspace whose packages its code imports. The
   graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in
@@ -575,61 +470,44 @@
   (H5-D47): a class field that holds an arrow or a function is a `method` of its class, and an instance's call of it
   runs what the field holds, the nearest class's winning; a class a module's statement declares by an expression is a
   class, by the binding of a `const`, a `var` or an `export`, or in a JS file by `module.exports =` and `exports.X =`;
-  and an import of a folder reads the `types`, `typings` and `main` of its `package.json` before the `index.*`. Over the
-  corpus the index names the checker's file at 158 more imports, all fastify's, and the checker's method at 374 more
-  call sites of ghost, and loses none. Micro: umbraco, grafana, mattermost, gitea, ghost and outline differ, by 3,776
-  `method` and 93 `class` symbols, 171 hierarchy edges (168 `OVERRIDES`, 3 `EXTENDS`) and `CALLS` found by name that
-  reach the new symbols; the corpus differs only by the caller of 583 HTTP calls, a class before and a method now, and
-  the hold-out as on `main`.
+  and an import of a folder reads the `types`, `typings` and `main` of its `package.json` before the `index.*`.
 - 2026-11-03: PR #81 is validated on a live install (the thirty-ninth round). The dry-runs of `main` and of the PR's
   head are identical in 7 of the 10 snapshots and differ in the 3 TS and JS ones, by 29 symbols, 140 `CALLS` found by
   name and 11 hierarchy edges. The graph after holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 23
   are the same and 6 differ, in their time, build and refresh fields and in 4 scores of `find_symbol`.
-- 2026-11-03: TS's referenced projects, PR #82 (`fix(typescript)`), which narrows TD-050 and opens TD-052 (H5-D48): an import
-  that names the output of a project the importing file's config references, directly or through another, resolves to the
-  source that project builds it from, as TypeScript reads it with `useSourceOfProjectReferenceRedirect` and where the build
-  is there too, by `declarationDir` or `outDir` and `rootDir`. It followed a search for what the ecosystem does about a
-  package with no build, which the author asked for before taking the change of behavior's trade-off, and changed the
-  plan of the end of step 5 from two PRs to four (H5-D48 to H5-D51). Over the corpus the index names the checker's file at
-  4,761 more imports (mattermost 3,362, ghost 1,399) and no other import changes; the heritage, the corpus and the hold-out
-  are as on `main`. Micro: mattermost and ghost differ, by 3,359 and 1,352 `IMPORTS` that go from a package to a file and
-  6 `CALLS` found by name.
+- 2026-11-03: TS's referenced projects, PR #82 (`fix(typescript)`), which narrows TD-050 and opens TD-052 (H5-D48): an
+  import that names the output of a project the importing file's config references, directly or through another,
+  resolves to the source that project builds it from, as TypeScript reads it with `useSourceOfProjectReferenceRedirect`
+  and where the build is there too, by `declarationDir` or `outDir` and `rootDir`.
 - 2026-11-03: PR #82 is validated on a live install (the fortieth round). The dry-runs of `main` and of the PR's head are
   identical in all 10 snapshots, since no live repo references a project whose output its code imports. The graph after
   holds the dry-runs on each snapshot (0 mismatching); of the 29 calls, 24 are the same and 5 differ only in their time,
   build and refresh fields.
 - 2026-11-03: TS's function members, PR #83 (`fix(typescript)`), which opens TD-053 and TD-054 (H5-D49): a member of an
   interface, of the object type a type alias names, or of an operand of its intersection or union, written as a property
-  of a function type (`push: (x: number) => void`) is a `method` of its owner, as a method signature is, and a class that
-  implements the interface overrides it. A first reading of the prototype's measure had taken about 70 % of grafana's
-  members with no symbol for these; by the form of the member's type they are 36 %, 11 % of ghost's and 8 % of
-  mattermost's, and the rest is a type name or `typeof` (TD-053) or a function an object literal holds, or an object
-  type no declaration names (TD-054). Against the checker's calls, the sites whose declaration is no symbol go from
-  10,416 to 6,466 in grafana, 15,898 to 14,123 in ghost and 3,492 to 3,160 in mattermost; the corpus and the hold-out are
-  as on `main`. Micro: eight repos differ, by 7,018 `method` symbols, 1 that changes its scope, 265 `OVERRIDES` and `CALLS` found by
-  name that reach the new members.
+  of a function type (`push: (x: number) => void`) is a `method` of its owner, as a method signature is, and a class
+  that implements the interface overrides it.
 - 2026-11-07: PR #83 is validated on a live install (the forty-first round). The dry-runs of `main` and of the PR's head
   are identical in 8 of the 10 snapshots and differ in the two of the live install's TS repo, which gain 13 symbols each and 103
   and 97 `CALLS` found by name, and lose 6 and 7. The graph after holds the dry-runs on each snapshot (0 mismatching):
   10,711 symbols and 24,009 `CALLS`, the others as before; of the 29 calls, 24 are the same and 5 differ, 4 only in their
   time, build and refresh fields and the `repo_map` of the TS also in its module's symbols and the `method` count.
 - 2026-11-07: TS's resolver reads a receiver's type, PR #84 (`fix(typescript)`), the first PR of the change of behavior
-  (H5-D50), which narrows TD-050 and opens TD-056 to TD-061: a call on a receiver whose type the code declares reaches the
-  methods of that type and of its bases and no homonym found by name; where the type is not decided, it goes by name as
-  before. A package the repo holds whose entry is a build the clone lacks (a workspace member, or one a `file:`, `link:` or
-  `portal:` dependency links) is not a package that declares types, and a class whose bases reach one goes by name too. A
-  round of research, with a challenger that tried to refute its conclusion, changed the plan before the code: the `file:`
-  dependencies were the largest population of by-name edges the first design lost, and the base of an unknown package gave
-  a class an `inherited` edge. Against the checker: it confirms 97.3 / 99.9 / 100 % of the typed edges in ghost, grafana and
-  mattermost for which it names a declaration of the repo, and 0.34 / 0.05 / 0 % of the by-name edges they replace, the sites that gain its declaration outnumber those
-  that lose it 22 to 1, 345 to 1 and 527 to 0, and none loses the edge to the source of a package with no entry. `CALLS`
-  fall 4.9, 3.6 and 1.6 %. The micro set differs in ten repos, in `CALLS`, and in mattermost in two `IMPORTS` of a package that become a file's. The corpus and the hold-out do not change, and ghost's dry-run takes 22 % longer (2 % more memory), inside what the author accepted.
+  (H5-D50), which narrows TD-050 and opens TD-056 to TD-061: a call on a receiver whose type the code declares reaches
+  the methods of that type and of its bases and no homonym found by name; where the type is not decided, it goes by name
+  as before. The corpus and the hold-out do not change, and ghost's dry-run takes 22 % longer (2 % more memory), inside
+  what the author accepted.
 - 2026-11-07: PR #84 is validated on a live install (the forty-second round). The dry-runs of `main` and of the PR's head
   are identical in 7 of the 10 snapshots and differ in the 3 TS and JS ones, in `CALLS` only: they gain 678, 647 and 46
   edges by the receiver's type and lose 969, 934 and 37 found by name. The graph after holds the dry-runs on each snapshot
   (0 mismatching): 10,711 symbols and 23,440 `CALLS` (-569), the others as before; of the 29 calls, 24 are the same and 5
   differ only in their time, build and refresh fields.
-- 2026-11-08: TS's HTTP scanner finds a client by the type its receiver declares, PR #85 (`fix(typescript)`), the last PR of the change of behavior and of TS's step 5 (H5-D51), which opens TD-062: a receiver that a class of the repo or a client library's type (`AxiosInstance`, not any type of the package) types is a client, like one the name, a `new` or an import gives, and the type never takes one away; the method a typed call reaches is the one the class or base that declares it holds, under a qualified name, and where name and type give the same client the call its wrapper composes, with the client's base, replaces the direct one. A challenger on the plan (one agent, 72k tokens) changed the measures before the code, and a panel of three agents on the diff (208k tokens) found the library rule missing `await x.get<T>(..)` and three gaps the change itself opened (two classes of one name sharing a wrapper, a class that overrides a wrapper, a package-wide library rule): on 2026-11-08 the author set that what a change opens it fixes when viable, so the three are fixed in the PR, and a second panel found a chain of wrappers a typed receiver did not reach, fixed too; only the interface a wrapper hides behind is a debt. The corpus, the hold-out and the micro set give `0 repo(s) differ`, the rule runs in about 7,300 call sites of the corpus and changes none, and the scanner's pass takes about 10 % longer in ghost, the scope index it builds for the files that had none, which the per-file cache of H6 or the scope builder's refactor reduces.
+- 2026-11-08: TS's HTTP scanner finds a client by the type its receiver declares, PR #85 (`fix(typescript)`), the last
+  PR of the change of behavior and of TS's step 5 (H5-D51), which opens TD-062: a receiver that a class of the repo or a
+  client library's type (`AxiosInstance`, not any type of the package) types is a client, like one the name, a `new` or
+  an import gives, and the type never takes one away; the method a typed call reaches is the one the class or base that
+  declares it holds, under a qualified name, and where name and type give the same client the call its wrapper composes,
+  with the client's base, replaces the direct one.
 - 2026-11-08: PR #85 is validated on a live install (the forty-third round). The dry-runs of `main` and of the PR's head
   are identical in all 10 snapshots, and the graph after holds them on each snapshot (0 mismatching): its picture is
   the one before but for the build and the `IndexRun` counts (10,711 symbols, 23,440 `CALLS`, 286 endpoints, 160 HTTP
@@ -660,3 +538,4 @@
 - 2026-11-09: the files of `docs/` that grow have a ceiling in bytes (`chore(scripts)`, PR #97): `indexer/scripts/checks/docs_size.py` and `docs_ceilings.txt`, in the `debts` job, refuse a PR that passes one; a golden round replaces the last one instead of being added (`docs/indexer/method.md` §4.9, §4.17), and `#NN` in the docs is `praticis/aidd-stack#NN`.
 - 2026-11-09: `docs/golden-questions.md` is condensed (`docs:`, PR #98), from 1,592 lines to 287: the five questions, how to run a round, the last round in full and a table of what the rounds found; the text of the 5th to the 43rd round is in git, tag `before-golden-questions-condensation`.
 - 2026-11-09: the H5 handoff and the decisions H5-D36 to H5-D51 are condensed by deletion (`docs:`, PR #99): the handoff goes from 2,055 lines and 185 KB to 744 lines and 60 KB (the State, the Steps, the regression protocol, the target architecture, what stays open in each step 5 and the deliverables stay; the per-PR proof of step 5 is in the PR bodies, and what is past and done, the list of merged PRs and the method's recovery, is cut), the sixteen rows go from 43 KB to 22 KB (the rule and the reason stay, no measurement); every line kept is an old line, in order, checked twice, and the old text is the tag `before-h5-condensation`; the ceilings of the golden questions, the H5 handoff and the decisions are lowered to 10 % above what is left; a PR that edits only the ceilings list or the template no longer runs the corpus, the micro set and the tests; `docs/indexer/method.md` §4.4 gains what #84 learned about the checker comparator (read its `no checker site` count first); TD-063 is registered, a TS call on `super` found by name among every class's methods (H5-D39 had left it to a change that did not take it), due in `fix(typescript)`, with its strict xfail.
+- 2026-11-09: the ROADMAP, the history and the register of debts are condensed by deletion (`docs:`, PR #100): the ROADMAP goes from 49 KB to 34 KB ("In progress" is the state of H5 and the debts by due, with the sentences `debts.py` reads; Phase 0's exit figures, the compose checklist, the continuous-update and security tracks' done items and the knowledge track's layout are in git), the history from 69 KB to 55 KB (the measures of the longer entries are in the PR bodies; the golden rounds' counts stay), and the register's chronology of how each debt was found is a pointer to git; the old text is the tag `before-roadmap-history-condensation`; the ceilings of the ROADMAP and the history fall to 37 and 60 KB, and the register gets one of 48 KB.
