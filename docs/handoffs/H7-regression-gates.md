@@ -9,7 +9,8 @@
 > - `docs/handoffs/H6-extraction-pipeline.md`: the cache, and "How it is measured";
 > - `docs/handoffs/H4.1-contributor-path.md`: the contributors these gates serve. H4.1-D5 (the corpus in CI) is
 >   absorbed here;
-> - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install.
+> - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install (the round's text is in git,
+>   `git show before-golden-questions-condensation:docs/golden-questions.md`; what it found is in the file's "Findings").
 >
 > **State (2026-11-09):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
 > `main` requires `tests`, `gates` and `debts`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3, D5 and D6 (see
