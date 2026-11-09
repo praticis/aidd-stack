@@ -42,9 +42,9 @@
     proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
     the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053,
     a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
-    property typed as a function, TD-056, a value typed by a type parameter whose argument an alias gives, TD-057,
-    a class a factory call makes, TD-058, a receiver a type guard narrows, TD-059, an overloaded function's result, TD-060,
-    a module with a declaration file beside its JS, TD-061, and a wrapper behind an interface, TD-062, are due in `fix(typescript)` PRs before F1.2. Two debts of the core's architecture, the syntax of each
+    property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a declaration file beside
+    its JS, TD-061, and a wrapper behind an interface, TD-062, are due in `fix(typescript)` PRs before F1.2; what a type checker
+    answers and the reading does not, TD-057, TD-059 and TD-060 (H5-D52), are due in F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
     twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
@@ -334,12 +334,13 @@ Open:
   HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
-  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050, TD-051 and
-    TD-054 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
+  - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050, TD-051,
+    TD-054, TD-057, TD-059 and TD-060 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
     function holds), an override of a package's method no call meets, a workspace package whose entry is a build
-    no project the config references emits, an HTTP path that reads a field of an instance as a constant, and a
+    no project the config references emits, an HTTP path that reads a field of an instance as a constant, a
     function an object literal holds or a member of an object type no declaration names, which need a symbol the
-    schema does not have, each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    schema does not have, and three answers of a type checker (a generic's argument an alias gives, a receiver a type guard
+    narrows, an overloaded function's result), each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
