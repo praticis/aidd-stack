@@ -7,6 +7,8 @@
 > - The narrative of each corpus increment is in `git show 1d73bb0:docs/corpus-report.md`.
 >
 > The decisions are in `docs/decisions.md`; the current state, in the ROADMAP.
+>
+> `#NN` in the docs is `praticis/aidd-stack#NN`; a reference to another repository is written in full.
 
 ## Phase 0: the foundation (PR #1, merged on 2026-10-13)
 
@@ -655,3 +657,4 @@
 - 2026-11-09: TD-057, TD-059 and TD-060, the three TS debts that ask the reading to answer what a type checker answers (a generic's argument an alias gives, a receiver a type guard narrows, an overloaded function's result), move from `fix(typescript)` PRs to F1.2 (H5-D52, `docs:`, PR #94): they explain few of the sites the checker places elsewhere and SCIP gives them from the compiler. Seven TS debts stay due before F1.2.
 - 2026-11-09: a review of the docs corrects what had become false, across 24 files (`docs:`, PR #95): the H5 State and Next (TS's step 5 is closed, the debts due before F1.2 by scope), the open questions of H6 (decided in ADR-004), `live-check.sh` (H7, the method; it is `live/validate.sh`), the version-bump rule of the guide (the build is a fingerprint of the code), the commands of `indexing-process.md` (no `aidd sync`), the PR numbers and dates of the process's tools in this log, and the ROADMAP's and `AGENTS.md`'s lists of gates, handoffs and files.
 - 2026-11-09: a pull request has a template and a rule (`chore`, PR #96): `indexer/.github/pull_request_template.md`, the body as the long record and each fact written once (`docs/indexer/method.md` §4.17, `docs/decisions.md`), and a check that refuses an attribution line in a pull request's title, body and commit messages, against a list of regexes (`indexer/scripts/checks/pr_text.py`, in the `debts` job).
+- 2026-11-09: the files of `docs/` that grow have a ceiling in bytes (`chore(scripts)`, PR #97): `indexer/scripts/checks/docs_size.py` and `docs_ceilings.txt`, in the `debts` job, refuse a PR that passes one; a golden round replaces the last one instead of being added (`docs/indexer/method.md` §4.9, §4.17), and `#NN` in the docs is `praticis/aidd-stack#NN`.

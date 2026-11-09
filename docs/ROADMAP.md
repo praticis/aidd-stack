@@ -586,7 +586,7 @@ observed ──► recurring ──► accepted ──────────�
 - [ ] P0 Recycle the working docs (H4 step 0, asked for on 2026-10-18): the current truth separated from history; an
   `AGENTS.md` at the root as the entry point for a contributor and their AI; the ROADMAP log condensed into
   `docs/history.md`; the decisions distilled into `docs/decisions.md`; the corpus report with only the method, the
-  current baseline and the gaps; from ~600 KB to at most ~150 KB. Phase 0a done on 2026-10-19, with every doc in
+  current baseline and the gaps; from ~600 KB to a ceiling per growth file (`indexer/scripts/checks/docs_ceilings.txt`), with no total. Phase 0a done on 2026-10-19, with every doc in
   English (H4-D1); phase 0b (the extractor guide, rewritten in English) after H5
 - [ ] P1 H4's decisions (H4-D1…D12, the name of the indexer's repo, reviewers per language) and a sketch of the docs
   architecture — can run in parallel with H2b
