@@ -1,0 +1,32 @@
+# What a number of the graph may not fall under (docs/indexer/method.md §4.4, indexer/scripts/judgment/scorecard.py).
+#
+# One per line: `repo.metric :: floor :: note`, a percent. The floor is the value measured on `main`, rounded down to a hundredth;
+# the graph is deterministic, so a number under its floor is a change of the graph, never noise. A line that starts with `#`
+# is a comment. `typed-share` is the percent of a repo's CALLS that a type decided, for every language; `keyed`,
+# `typed-precision`, `recall` and `typed-recall` are measured against TypeScript's checker (`checks/ts_checker.js`), for the TS
+# repos of the micro set. The scorecard runs in the `micro` job of every pull request that touches the indexer.
+#
+# A floor is lowered by editing its line in the diff of the change that lowers it, under the `graph-change` label; it is
+# raised when a change improves the number (the scorecard prints the headroom). A new repo or number gets a line:
+# `scorecard.py RUN_DIR --rows DIR --write-floors` prints them.
+
+btcpayserver.typed-share :: 22.87 :: measured on main, PR #101's tree
+dispatch.typed-share :: 14.88 :: measured on main, PR #101's tree
+eshop.typed-share :: 27.24 :: measured on main, PR #101's tree
+ghost.typed-share :: 4.09 :: measured on main, PR #101's tree
+ghost.keyed :: 97.81 :: measured on main, PR #101's tree
+ghost.typed-precision :: 84.82 :: measured on main, PR #101's tree
+ghost.recall :: 49.46 :: measured on main, PR #101's tree
+ghost.typed-recall :: 23.52 :: measured on main, PR #101's tree
+gitea.typed-share :: 26.42 :: measured on main, PR #101's tree
+grafana.typed-share :: 11.68 :: measured on main, PR #101's tree
+jellyfin.typed-share :: 42.0 :: measured on main, PR #101's tree
+mattermost.typed-share :: 16.68 :: measured on main, PR #101's tree
+netbox.typed-share :: 11.86 :: measured on main, PR #101's tree
+outline.typed-share :: 5.63 :: measured on main, PR #101's tree
+outline.keyed :: 98.34 :: measured on main, PR #101's tree
+outline.typed-precision :: 96.12 :: measured on main, PR #101's tree
+outline.recall :: 88.67 :: measured on main, PR #101's tree
+outline.typed-recall :: 35.81 :: measured on main, PR #101's tree
+umbraco.typed-share :: 37.2 :: measured on main, PR #101's tree
+vikunja.typed-share :: 3.06 :: measured on main, PR #101's tree
