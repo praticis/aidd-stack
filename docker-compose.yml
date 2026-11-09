@@ -187,7 +187,7 @@ services:
 
   # ──────────────────────────────────────────────────────
   # NEO4J — code graph (micro: symbols/calls; macro: contracts
-  # between repos). Schema: neo4j/SCHEMA.md · ADR: docs/adr/ADR-001.
+  # between repos). Schema: neo4j/SCHEMA.md · decision: D1 in docs/decisions.md.
   # Browser: http://localhost:7474 · Bolt: bolt://localhost:7687
   #
   # Credentials must be supplied by the environment (see contract above).

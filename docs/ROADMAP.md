@@ -16,8 +16,8 @@
   - the hold-out: `--holdout --baseline 2026-10-18-v2-holdout-26`;
   - the numbers are in `docs/corpus-report.md`.
 - **The gates in CI (H7's first slice, PR #11):** every PR that touches the indexer runs the tests, the corpus, the
-  hold-out and the micro graph against `main`. `tests` and `gates` are required to merge into `main`. Since slice 1c
-  (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
+  hold-out and the micro graph against `main`. `tests`, `gates` and `debts` are required to merge into `main`. Since
+  slice 1c (PR #22), `tests` also runs the MCP and the graph writer against a throwaway Neo4j.
 - **Technical debts:** `docs/tech-debt.md` lists the known defects that do not block, each with the phase it is due in
   and a strict xfail test that fails the suite when it is fixed.
 - **In progress:**
@@ -52,7 +52,7 @@
     closed (#57 to #63). TS's step 5 (H5-D29) is merged too, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45,
     H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, all validated on a
     live install), judged with the per-site attribution every language now has (H5-D21), which reads the resolver's stage
-    too (G2, #56). Next, the `fix(csharp)` PRs (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
+    too (G2, #56). Next, the `fix` PRs of the debts due before F1.2, by scope (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
     H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`), then 10
     and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
@@ -65,12 +65,13 @@
       14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
   - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
   - H8 (`docs/handoffs/H8-independent-review.md`): the independent reviewer, a read-only adversary for plans and diffs,
-    designed and used five times (H5-D50 and H5-D51); its script, its stage hooks and its record are open.
+    designed and used in three rounds, five reviews (H5-D50 and H5-D51); its script is in `indexer/scripts/review/`
+    (slice 1), its stage hooks and its record are open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
   (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
 - **Active handoffs:** H3 (AI dev efficiency), H4 (public docs and the indexer in its own repo), H4.1 (the
-  contributor path), H5, H6 and H7. Closed: H1 and H2.
+  contributor path), H5, H6, H7 and H8. Closed: H1 and H2.
 - **Candidates:**
   - a handoff of its own on code quality gates, which the author asked for on 2026-10-21. Until then the shape ratchet
     holds (H5-D9);
@@ -156,7 +157,7 @@ Shortcut: `~/.aidd/install-check.sh` (copied by `install.sh`) runs items 2–7 b
   *Exited (0)*
 - [x] `docker logs aidd-neo4j-init` with no error (cypher-shell is silent on success — empty is good; a syntax error
   shows here)
-- [x] **Neo4j Browser** at <http://localhost:7474> (log in with `.env`): `SHOW CONSTRAINTS` lists 14 constraints;
+- [x] **Neo4j Browser** at <http://localhost:7474> (log in with `.env`): `SHOW CONSTRAINTS` lists 17 constraints;
   `SHOW INDEXES` includes `symbol_fulltext`; `RETURN apoc.version()` answers
 - [x] `docker logs aidd-mcp-atlas` shows Uvicorn listening on 0.0.0.0:3000; `curl -s http://localhost:3005/healthz`
   returns `{"status":"ok","neo4j":true,...}`
@@ -187,8 +188,8 @@ question answered from the graph.
   - F0.4.5, conventions and `Violation`.
 - [x] F0.5 The linker: `CONSUMES`/`CALLED_FROM` by `path_key` and method, with ties broken by hints. Also F0.5.1
   (validated; `DEPENDS_ON` by manifest)
-- [x] F0.6 The `atlas` MCP, with 11 tools (`indexer/aidd_indexer/mcp/server.py`). Also F0.6.1, validated in Claude
-  Code
+- [x] F0.6 The `atlas` MCP, with 11 tools (`indexer/aidd_indexer/mcp/`, the tools in `tools_*.py`). Also F0.6.1,
+  validated in Claude Code
 - [x] F0.7 The 5 golden questions answered by the graph (`docs/golden-questions.md`). Also:
   - F0.7.1–F0.7.2b, `CALLS` by receiver type in Go and C#;
   - F0.7.3, Go interfaces and mediator dispatch.

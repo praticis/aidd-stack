@@ -13,6 +13,6 @@ The pattern comes in as a **convention** (ADR-003), never in `core/` or `languag
 - **The Go fixtures** (`go-http-mix`, `go-wrapped-http`, `go-receiver-types`, ..) already follow the author's
   hexagonal layout.
 - **Missing:** writing the Go, TS and Python convention when there is a reference app in those languages. Until then,
-  it is an open item of F0.4.2 in the ROADMAP.
+  this is its only record: the ROADMAP's F0.4.2 lists only the .NET convention.
 
 The handoff's original text is in `git show 1d73bb0:docs/handoffs/H1-reference-apps.md` (in Portuguese).

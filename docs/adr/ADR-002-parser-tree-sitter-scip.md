@@ -59,5 +59,5 @@ Two families of technology could produce the micro level:
   `go mod download`).
 - Running SCIP will need the server/CI setting (F3): a dependency cache, registry credentials through `token_env`,
   per-language indexers in the image — and per-repo isolation so that a broken build does not block the queue.
-- The indexer's per-language modularization (ADR-003, proposed) must make SCIP's entry point explicit: a per-language
+- The indexer's per-language modularization (ADR-003, accepted and implemented) must make SCIP's entry point explicit: a per-language
   enricher that receives the already extracted snapshot and returns resolutions, without rewriting the pipeline.

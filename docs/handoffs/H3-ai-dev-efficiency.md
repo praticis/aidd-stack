@@ -3,7 +3,7 @@
 > Paste this file (or ask for `docs/handoffs/H3-ai-dev-efficiency.md` to be read) at the start of a new chat. Before
 > anything else, the chat should read `docs/ROADMAP.md` (the skills and knowledge tracks), `docs/golden-questions.md`
 > (what the atlas answers and how it is checked) and `docs/knowledge-contract.md`. For the measurement discipline —
-> expected list, baseline, judging the diff, the error's category — the model is H2's (`docs/handoffs/H2-roadmap.md`).
+> expected list, baseline, judging the diff, the error's category — the model is the method's (`docs/indexer/method.md` and `docs/indexer/judgment.md`).
 >
 > **State (2026-10-16):** registered, not started. It was born from a question during H2b: does the framework reduce
 > the tokens of AI-driven development, or is the main gain somewhere else? The answer given was an estimate, not a
@@ -70,7 +70,7 @@ without stating the sample size. The expected result is a map of where the atlas
 ## Prerequisites
 
 - Enough extractor recall in the tasks' languages. H2 measures that; see the current numbers in
-  `docs/handoffs/H2-roadmap.md` before choosing the tasks, and prefer the languages already closed.
+  `docs/corpus-report.md` before choosing the tasks, and prefer the languages already closed.
 - The experiment's repos indexed in the atlas, on the right refs, and the linker run.
 - For condition C: insights recorded in the tasks' area; without them, C is the same as B.
 

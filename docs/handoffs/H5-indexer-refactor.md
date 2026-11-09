@@ -4,12 +4,12 @@
 > anything else, the chat should read `docs/indexer/README.md` and the documents of its reading order, in that order:
 > `AGENTS.md`, this file's "State", the method, the judgment and the scripts. Then, for the refactor's context:
 > - `docs/ROADMAP.md`: "Where we are", "Principles", F1.1, F1.2 and F1.13;
-> - ADRs 002 and 003;
+> - ADRs 002 to 006;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
 >   `2026-10-18-v2-baseline-29`).
 
-## State (2026-10-29)
+## State (2026-11-09)
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
 change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
@@ -28,8 +28,9 @@ receivers on which it may run (H5-D34); and `feat(mcp)` #63 has `who_calls` list
 it overrides, and `impact_of` follow a dispatch at any hop (H5-D35), which closes F1.16. Each merge and its live
 validation are in `docs/history.md`; the results are in the sections below and in `corpus-report.md`.
 
-**Step 5 is closed for C# and for Python, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-022), each with a
-strict xfail test; those due before F1.2 are `fix(csharp)` PRs. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
+**Step 5 is closed for Go, C#, Python and TS, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-062), each with a
+strict xfail test; those due before F1.2 are `fix(csharp)` PRs (17), `fix(typescript)` PRs (7: TD-052, TD-053, TD-055, TD-056, TD-058,
+TD-061 and TD-062), `fix(go)` (TD-029) and `fix(conventions)` (TD-048); TD-057, TD-059 and TD-060 are due in F1.2 (H5-D52). Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
 did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
 and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
 names of frameworks and client libraries it holds:
@@ -38,10 +39,10 @@ names of frameworks and client libraries it holds:
 |---|---|---|---|
 | C# | merged (#23, #25, #27, #30) | not started; `_controller` and `_invocation` first | `languages/csharp/http.py`, 1401 |
 | Go | merged (#17, #20) | not started; `_call` | `languages/go/http.py`, 730 |
-| Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 365 |
-| TS | planned in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82, the function members in #83, the receiver's type in #84, the scanner's client type in #85 | not started; `_read_call` | `languages/typescript/http.py`, 1005 |
+| Python | merged (#42, #44, #45, #47) | not started | `languages/python/http.py`, 363 |
+| TS | merged, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45, H5-D46, H5-D47, H5-D48) and three more that end it (H5-D49 to H5-D51); the probe in #65, the case table in #66, the scope index in #67, the types in #68, the hierarchy in #69, the module resolution in #72, the CommonJS exports in #73, the declaration files in #79, the workspace packages in #80, the class members and the folder entries in #81, the output of a referenced project in #82, the function members in #83, the receiver's type in #84, the scanner's client type in #85 | not started; `_read_call` | `languages/typescript/http.py`, 1004 |
 
-The counts are `shape.py`'s on 2026-10-29. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
+The counts are `shape.py`'s on 2026-11-09. The core has modules over 300 lines too: `http_base.py` and `http_expr.py`
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
 conventions, the corpus runner, the MCP's tool groups and the refresher to the targets, but for what H5-D43 accepts.
 
@@ -54,24 +55,12 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
 `docs/indexer/method.md` §4.11 and §4.12.
 
 **Next.**
-1. Step 5 for TS (H5-D19, H5-D36), now that F1.16 is closed (H5-D29). TS had no type service, so it goes in ten PRs, as
-   Python's did: the probe for the files of TS's three ids (`chore(scripts)` #65); the case table, with the TypeScript
-   compiler as its reference (#66); a refactor in two PRs (H5-D37), TS's scope index proven against TypeScript's binder
-   (#67), then TS's typed facts and `TypeIndex` (#68, H5-D38), each with the graph identical; a `feat(graph)` for TS's
-   hierarchy and `OVERRIDES` (#69, H5-D39); a `fix` for each of the four gaps the proofs found, the module resolution,
-   TD-038 (#72, H5-D40), a CommonJS export, TD-039 (#73, H5-D41), a hand-written declaration file, TD-041 (#79, H5-D45),
-   a package of the repo's own workspace, TD-042 (#80, H5-D46), and what a class declares and what a folder names,
-   TD-037, TD-043 and TD-049 (#81, H5-D47), and the output of a project the config references, TD-050 in part (#82,
-   H5-D48); then three that end it, as the measure of a prototype of the change of behavior asked (60,824 sites judged,
-   and the checker confirming 95 to 100 % of the typed edges and 0.1 % or less of the by-name edges they replace): a member of an
-   interface or a type literal written as a function (H5-D49), the resolver's change of behavior (H5-D50), and
-   the scanner's (H5-D51), judged per site with `attribution.sh typescript,tsx,javascript` and against the compiler on
-   ghost and outline ("TS's step 5" below). TD-050, narrowed, and TD-052 are due after the step.
-   Before them, `fix(graph)` #70 closes TD-040, a signature that lost the `>` it ends with, which #69's live
-   validation found. The `fix(csharp)` PRs of the debts due before F1.2 (TD-033 and TD-034 among them, H5-D32) do
-   not hold it.
+1. The `fix(...)` PRs of the debts due before F1.2: `fix(csharp)` (H5-D19; 17 debts), `fix(typescript)` (7 debts, after a
+   refactor of TS's scope builder that returns the cost step 5 added to the scanner), `fix(go)` (TD-029) and `fix(conventions)`
+   (TD-048). TS's step 5 is closed (#65 to #85, H5-D36 to H5-D51; the PR-by-PR record is in "TS's step 5" below and in
+   `docs/history.md`).
 2. Step 6 (recognizers and the catalog, with the core's HTTP modules), step 12's last PR (the pipeline's `extract` and
-   `resolve`, after TS's step 5: H5-D44), the rest of step 10, step 11 (docs).
+   `resolve`, unblocked since TS's step 5 closed: H5-D44), the rest of step 10, step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
    cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
    `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
@@ -101,7 +90,8 @@ expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the p
   17–18 s, and 671 MiB of peak memory against 389 MiB. Its rows are the same as with the pipeline's whole
   `extract_tree`, so the other languages and the HTTP pass are left out.
 - **Judgment is not yet automated (H7-D6).** The verdict record (H7-D2) is to build; until then each change of
-  behavior needs the review of an agent that did not write it.
+  behavior needs the review of an agent that did not write it (H8: `indexer/scripts/review/independent-review.js`, and
+  `research-round.js` for its Tier 2; advisory, never a gate).
 - Live evidence is private, local and has no backup: `.local/indexer/live/` (its README has the layout and the
   integrity checks). Only the PR in flight's "before" picture cannot be regenerated; `merged/` holds the last
   validated PR's pair.
@@ -113,8 +103,9 @@ because SCIP plugs in exactly at that seam.
 
 ## Context in one paragraph
 
-H2 and F1.14 took the HTTP extractor from almost nothing to 99–100 % precision and 89–99 % recall on the 55-repo
-corpus. The method was one rule per increment, each with a fixture and a judged corpus run. The method worked. What
+H2 and F1.14 took the HTTP extractor from almost nothing to 98–100 % precision against the expected lists and, apart from
+Python (28 % of its routes, 98.6 % without Django's, and 2 of 3 calls), 92–99 % recall on the 55-repo corpus
+(`docs/corpus-report.md`). The method was one rule per increment, each with a fixture and a judged corpus run. The method worked. What
 it did not do was reorganize the code between one rule and the next. Each rule went in where it fit: one more `if`
 in the method that already handled calls, one more field in `PackageContext`, one more fact with a text key. The
 result measures well and reads badly. H5 is a refactor **with no behavior change**: the corpus and the hold-out must
@@ -1658,7 +1649,7 @@ number and a debt.
 #### TS's resolver reads the receiver's type (#84, H5-D50)
 
 The first of the two PRs of the change of behavior: a call on a receiver whose type the code declares reaches the
-methods of that type and its bases, and no homonym. The prototype measured before #81 found the checker confirming 95 to
+methods of that type and its bases, and no homonym. The prototype measured before #81 (60,824 sites judged) found the checker confirming 95 to
 100 % of the typed edges and 0.1 % or less of the by-name edges they replace; this PR declared its acceptance criterion
 before it measured, and a round of research (six investigations, a synthesis and a challenger that tried to refute it)
 changed the criterion and the rule before the code was written.

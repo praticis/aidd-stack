@@ -1,7 +1,7 @@
 # ADR-006 — HTTP rules as recognizers, and the framework catalog as data
 
 **Status:** accepted on 2026-10-20, amended on 2026-10-21 (§3: the facts are `NamedTuple`s, as H5 step 7 built
-them) · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the H5 handoff's
+them) and on 2026-10-28 (§6: the order is C#, Go, Python, TS, H5-D20) · **Date:** 2026-10-20 · **Phase:** 1 (H5 step 6, built toward H6) · **Records:** H5-D2; the H5 handoff's
 target architecture, items 5–7; ADR-004 (where the recognizers run)
 
 ## Context

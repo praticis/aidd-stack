@@ -2,7 +2,7 @@
 
 Structural source of truth for the workspace. Two levels live in the same graph: **micro**
 (what exists inside one repo) and **macro** (the contracts that connect repos). Storage:
-Neo4j (see `docs/adr/ADR-001-graph-db.md`). Vectors in Qdrant point to nodes here by `id`.
+Neo4j (decision D1 in `docs/decisions.md`; there is no ADR-001 file). Vectors in Qdrant point to nodes here by `id`.
 Constraints and indexes that enforce this document live in `init/schema.cypher`.
 
 ## 1. General rules

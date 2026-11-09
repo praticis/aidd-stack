@@ -10,7 +10,7 @@
 
 ## Phase 0: the foundation (PR #1, merged on 2026-10-13)
 
-- 2026-09-09: D1, Neo4j Community (ADR-001); Neo4j and `neo4j-init` in the compose file; schema v1 in
+- 2026-09-09: D1, Neo4j Community (no ADR-001 file was written); Neo4j and `neo4j-init` in the compose file; schema v1 in
   `neo4j/SCHEMA.md`.
 - 2026-09-10: the compose stack comes up; credentials centralized in `.env`; `install-check.sh` passes; the MCP
   becomes `atlas` (D6).
@@ -120,7 +120,7 @@
   throwaway Neo4j, and the graph the writer leaves read back against a dry-run of each snapshot, by the writer's merge
   keys (PR #22).
 
-## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #51)
+## H5 and H6 (PR #9; the H6 design, PRs #13–#16; H5's first part, PR #7; step 5 in Go, PRs #17 and #20; C#'s refactor, PR #23; its change of behavior and what a name means, PRs #25 and #27; which extension method a call reaches, PR #30; Python's step 5, PRs #42 to #56; F1.16, PRs #57 to #63; TS's step 5, PRs #65 to #85, with step 12's #74 to #78 among them; the process's tools, PRs #86 to #93)
 
 - 2026-10-19: H5's safe steps (0–2, 3a, 4a/b, 7a, 8, 9, 10 in part), with the corpus identical at each one.
 - 2026-10-19: the H6 handoff is registered: the extraction as a parallel map, a reduce and a per-file cache
@@ -632,24 +632,25 @@
   are identical in all 10 snapshots, and the graph after holds them on each snapshot (0 mismatching): its picture is
   the one before but for the build and the `IndexRun` counts (10,711 symbols, 23,440 `CALLS`, 286 endpoints, 160 HTTP
   calls); of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh fields.
-- 2026-11-08: the process's notes go into the repo: the independent reviewer's handoff (H8) with its five uses, and the method's
+- 2026-11-08: the process's notes go into the repo (PR #86): the independent reviewer's handoff (H8) with its three uses (five reviews), and the method's
   notes on mutants, the firing probe, timing a pass over TS files, two agents at once and the recycling of `.local/`.
-- 2026-11-08: the independent reviewer is in the repo (`chore(scripts)`, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
+- 2026-11-08: the independent reviewer is in the repo (`chore(scripts)`, PR #87, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
   by path from any worktree, with each rule of its orchestration pinned by a test with simulated agents.
-- 2026-11-08: the research round is in the repo (`chore(scripts)`, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
+- 2026-11-08: the research round is in the repo (`chore(scripts)`, PR #88, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
   researcher per open question (at most four, each with a mode and a tool-call budget), a synthesis that decides and a challenge of it,
   with each rule of its orchestration pinned by a test with simulated agents.
-- 2026-11-08: one heavy Docker job at a time is held by the scripts themselves (`chore(scripts)`): `indexer/scripts/lib/heavy-lock.sh` and a line in
+- 2026-11-09: one heavy Docker job at a time is held by the scripts themselves (`chore(scripts)`, PR #89): `indexer/scripts/lib/heavy-lock.sh` and a line in
   `corpus.sh`, `micro.sh`, `test.sh` (the whole suite), `mcp-it.sh`, `protocol/`, `attribution.sh`, `live/validate.sh` and `dryrun-live.sh`. A second job ends with
   status 75 and names the holder, or waits; the lock is the holder's process, so it goes when that process ends, however it ends.
-- 2026-11-08: the mutants runner is in the repo (`chore(scripts)`): `indexer/scripts/checks/mutants.sh` copies the tree, breaks one rule per mutant
+- 2026-11-09: the mutants runner is in the repo (`chore(scripts)`, PR #91, which carried #90's commits): `indexer/scripts/checks/mutants.sh` copies the tree, breaks one rule per mutant
   and runs `test.sh` on the copy, printing `DIES` or `SURVIVES`; a survivor ends the run with status 1 unless it is named by `--allow`.
-- 2026-11-08: the comparator of TS's edges against TypeScript's checker is in the repo (`chore(scripts)`): `indexer/scripts/judgment/ts_vs_checker.py` counts, per verdict, the typed
+- 2026-11-09: the comparator of TS's edges against TypeScript's checker is in the repo (`chore(scripts)`, PR #91): `indexer/scripts/judgment/ts_vs_checker.py` counts, per verdict, the typed
   edges a change adds and the by-name edges it drops, with a `.d.ts` as the JS beside it, and whether a dropped edge is replaced or lost; on gotify, between the tree before H5-D50
   and the tree after H5-D51, the checker agrees with the 3 typed edges added and with none of the 83 by-name edges dropped.
-- 2026-11-08: the cost of a pass in alternating pairs is a script of the repo (`chore(scripts)`): `indexer/scripts/protocol/cost-pairs.sh` runs `corpus.sh --jobs 1 --no-expected` on main's tree and the
+- 2026-11-09: the cost of a pass in alternating pairs is a script of the repo (`chore(scripts)`, PR #92): `indexer/scripts/protocol/cost-pairs.sh` runs `corpus.sh --jobs 1 --no-expected` on main's tree and the
   branch's, the side that goes first flipping each pair, and prints the change in time per pair, the medians and the change in peak memory; on the saved runs of H5-D51 it gives
   the numbers that PR reported (ghost +9.6, +9.6, +11.8 and +11.0 %, mattermost +3.4, +4.3 and +4.3 %).
-- 2026-11-08: the draft of a golden round is a script of the repo (`chore(scripts)`): `indexer/scripts/live/round.py` writes the round and its history line from a validated PR's in-flight folder, with counts, snapshot
+- 2026-11-09: the draft of a golden round is a script of the repo (`chore(scripts)`, PR #93): `indexer/scripts/live/round.py` writes the round and its history line from a validated PR's in-flight folder, with counts, snapshot
   numbers, list and tool names and no name the live data holds; on the pair of PR #85 it gives the numbers of the forty-third round, the judgment and the sentence of what changed staying the author's.
-- 2026-11-09: TD-057, TD-059 and TD-060, the three TS debts that ask the reading to answer what a type checker answers (a generic's argument an alias gives, a receiver a type guard narrows, an overloaded function's result), move from `fix(typescript)` PRs to F1.2 (H5-D52, `docs:`): they explain few of the sites the checker places elsewhere and SCIP gives them from the compiler. Seven TS debts stay due before F1.2.
+- 2026-11-09: TD-057, TD-059 and TD-060, the three TS debts that ask the reading to answer what a type checker answers (a generic's argument an alias gives, a receiver a type guard narrows, an overloaded function's result), move from `fix(typescript)` PRs to F1.2 (H5-D52, `docs:`, PR #94): they explain few of the sites the checker places elsewhere and SCIP gives them from the compiler. Seven TS debts stay due before F1.2.
+- 2026-11-09: a review of the docs corrects what had become false, across 24 files (`docs:`, PR #95): the H5 State and Next (TS's step 5 is closed, the debts due before F1.2 by scope), the open questions of H6 (decided in ADR-004), `live-check.sh` (H7, the method; it is `live/validate.sh`), the version-bump rule of the guide (the build is a fingerprint of the code), the commands of `indexing-process.md` (no `aidd sync`), the PR numbers and dates of the process's tools in this log, and the ROADMAP's and `AGENTS.md`'s lists of gates, handoffs and files.

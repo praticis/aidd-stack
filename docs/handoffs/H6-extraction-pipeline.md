@@ -5,10 +5,10 @@
 > designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
 > `docs/corpus-report.md`.
 >
-> **State (2026-10-22):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
+> **State (2026-11-09):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
 > sections). Step 3, H5's steps built toward the ADRs, is under way: steps 4 and 7 merged with PR #7, and step 5's
-> `TypeIndex` (ADR-005) with Go (PR #17 and PR #20) and C# (PR #23 and PR #25). The rest of 5, Python and TS, then 6,
-> come in new PRs.
+> `TypeIndex` (ADR-005) in Go (PR #17 and PR #20), C# (PR #23 and PR #25), Python (PRs #42 to #47) and TS (ended by PR #85).
+> Step 6 comes next, in new PRs.
 >
 > - **Step 0 found** the resolver the largest phase by far, quadratic in Go and C#. An index built once, merged into
 >   `main` as PR #9, brings it to seconds, with full dry-runs identical on 12 repos.
@@ -88,7 +88,7 @@ broker moves bytes. Whatever carries the work, the worker parses the file and re
 summary is what H6 wants anyway: it is what bounds memory (Goal 1) and what the cache stores (Goal 3). Free-threaded
 Python would let threads share trees, but keeping every tree is the memory problem, so the summaries stay either way.
 
-## Open question 1 — the second read
+## Open question 1 — the second read (decided: H6-D5, ADR-004 §1)
 
 The second HTTP pass needs a file's tree and its package's facts at the same time. Two ways, to be chosen by
 measurement (H6-D3):
@@ -159,7 +159,7 @@ Researched on 2026-10-19: systems that partition code indexing, run it in parall
 No public material on code indexing was found from Spotify or YouTube. Uber's is the Go monorepo on Bazel with a
 remote cache. Spotify's Backstage is a catalog (F2), not an indexer.
 
-## Open question 2 — what runs the map
+## Open question 2 — what runs the map (decided: ADR-004 §4)
 
 | Technology | What it would bring | What it costs in failures | Verdict |
 |---|---|---|---|
@@ -174,7 +174,7 @@ remote cache. Spotify's Backstage is a catalog (F2), not an indexer.
 first index, a bootstrap and the corpus. The corpus already runs 3 repos at once (`corpus.sh --jobs`), so the
 workers per repo times the jobs must fit the machine.
 
-## Open question 3 — batches
+## Open question 3 — batches (decided: H6-D6, ADR-004 §4)
 
 A task per file costs more in sending than it gains. A batch per module (a Go package, a `.csproj`, a `package.json`
 workspace) is the cut F1.13 proposed and the one SCIP indexes by (F1.1), but modules vary from 1 file to thousands.
@@ -198,7 +198,7 @@ files in one batch, and the run waited on it. One file the bundle rule does not 
 
 The numbers are in the corpus report, "Batches by package".
 
-## Open question 4 — where the summaries live
+## Open question 4 — where the summaries live (decided: ADR-004 §3, SQLite)
 
 - **Between a worker and the parent:** pickle, which the pool already uses.
 - **The cache on disk**, two candidates:
@@ -210,7 +210,7 @@ The numbers are in the corpus report, "Batches by package".
 
 Step 1 used content-addressed files, compressed with zlib. On Docker Desktop's bind mount, writing them costs more than
 the extraction: filling the cache took 84 s on mattermost (13 thousand entries), against 53 s cold. Reading 8.5
-thousand entries took 3.9 s, a share of the warm floor. SQLite, or one file per snapshot, is to be measured next.
+thousand entries took 3.9 s, a share of the warm floor. SQLite, or one file per snapshot, was measured next, and ADR-004 §3 chose SQLite.
 
 ## The incremental cache: what guarantees it
 

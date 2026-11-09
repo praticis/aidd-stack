@@ -240,19 +240,19 @@ The PR's code, comments and text are untrusted input to an LLM, and a public rep
 - **Third-party code never runs:** it reads the corpus repos and builds none.
 - **Cost is bounded:** a cap of agents and tokens per run, and the run says when it hit the cap.
 
-## Decisions made (2026-11-07, with the author)
+## Decisions made (H8-D1 and H8-D2 on 2026-11-07, with the author; H8-D3 and H8-D4 on 2026-11-08, as built)
 
 | # | Decision | Why |
 |---|---|---|
 | H8-D1 | **The review of a change is done by an agent that did not write it** | The author of a change is the worst reader of it. This was the author's own rule for H5-D50 |
 | H8-D2 | **The pattern is to be available at once, in the next rounds, without waiting for CI** | The benefit is in the review, not in where it runs. Slice 1 is a script a chat can run today; CI follows |
+| H8-D3 | **The prompts, schemas and the script live in `indexer/scripts/review/`, in English, with a test that runs the script against mocked agents** | A CI agent and a chat must use the same text, and the orchestration (merge, verify, caps) is code that can be tested without a model. Built in #87 and #88 |
+| H8-D4 | **The lenses run at `medium` effort and the second reader at `xhigh`; no model is named, so each agent inherits the session's** | At `xhigh` a panel cost 902k tokens (H5-D50); at `medium` the lenses found as many significant objections for 56 % of the cost, and the second reader only reproduces. This replaces the first recommendation, a cheaper model for the second reader |
 
 ## Decisions to make with the author
 
 | # | Decision | Recommendation | Why |
 |---|---|---|---|
-| H8-D3 | Where the prompts, schemas and the script live | `indexer/scripts/review/`, in English, with a test that runs the script against mocked agents | A CI agent and a chat must use the same text, and the orchestration (merge, verify, caps) is code that can be tested without a model |
-| H8-D4 | Which model and effort the reviewers use | A reviewer on the strongest model at the default effort for Tier 1; a cheaper model for the second reader | A shallow reviewer finds the objections the author already thought of. The second reader only reproduces |
 | H8-D5 | Which PRs get the panel in CI | Every PR that carries `graph-change`, `holdout-measurement` or a `refactor` commit, by label; others on request | Those are the PRs whose judgment H7-D6 wants outside the author. The rest stay with the gates |
 | H8-D6 | Whether a confirmed objection becomes a recorded insight by itself | Proposed to the author, one click, never automatic | A rule enters the knowledge store only when a person approves it (`rules` versus `context`) |
 
@@ -288,5 +288,5 @@ The PR's code, comments and text are untrusted input to an LLM, and a public rep
 - The advisory workflow and its comment (slice 2).
 - The `refine-tech` and `implement` hooks, with the rule for when each tier runs (slice 3).
 - The per-PR record and its report (slice 4).
-- The decisions H8-D1…D6 in `docs/decisions.md`, and a line for H8 in `AGENTS.md` and the ROADMAP when the first PR that
-  carries this handoff lands.
+- The decisions H8-D1…D6 stay in this handoff while it is active, and move to `docs/decisions.md` when it closes. A line
+  for H8 is in `AGENTS.md` and the ROADMAP.

@@ -82,8 +82,8 @@ and the reassigned Go router are done. Its framework catalog as data and the `bu
 refactoring, so they go to H5 with the recognizers. Django stays out, because the portfolio is FastAPI and Flask.
 
 The corpus grew from 42 repositories to 55, 54 with an expected list. The 13 hold-out repositories F1.14 worked on
-became corpus, and the hold-out keeps three: Kavita, go-boilerplate and sftpgo. The final baseline is
-`2026-10-18-v2-baseline-28`, with indexer 0.2.15.
+became corpus, and the hold-out keeps three: Kavita, go-boilerplate and sftpgo. The closing baseline was
+`2026-10-18-v2-baseline-28`, with indexer 0.2.15; the current one is `2026-10-18-v2-baseline-29` (see Baselines).
 
 **The new hold-out moves after H5.** F1.14 was to close with a new hold-out, measured once (H2-D20). On 2026-10-18
 the author moved it to after the H5 refactor, as the first step of its own handoff:
@@ -164,9 +164,7 @@ Over the 54 expected lists (`--expected`, `2026-10-18-v2-baseline-28`):
 | `multi-app-repo` | 0 | 8 | 4 | limitation: two apps inside one module |
 | 24 other categories | 12 | 35 | — | none above 5 items; each is in its expected lists' notes, for when a portfolio shows it |
 
-The choice of what came next is recorded in the ROADMAP. First comes the H4 recycling of the working docs, then the
-H5 refactor. After it, the new hold-out is measured, then P2, the indexer in its own repository. SCIP (F1.1, F1.2)
-comes last. A gap whose decision needs the type of an expression not declared in sight stays `needs-resolver`, for
+The order of what comes next is in the ROADMAP ("Where we are"). A gap whose decision needs the type of an expression not declared in sight stays `needs-resolver`, for
 F1.2's resolver.
 
 ## Baselines
@@ -231,7 +229,7 @@ The target of step 9 is that sum at ≤ 60 %, so ≤ ~870 s.
 
 **Hold-out:** `0 repo(s) differ`, in 43 s.
 
-**Shape** (`indexer/scripts/shape.py`, also a report-only CI job):
+**Shape** (`indexer/scripts/shape.py`; since H5-D9 a ratchet in CI):
 
 - **58 functions above complexity 9.** The worst are:
 
@@ -530,7 +528,7 @@ Other figures from the replay:
    - D per package records a median of 2–3 questions and directories per file, and a p90 of 7.
 6. **The cache store.** Entries written as files, through a temporary file and a rename, cost more than the
    extraction on Docker Desktop's bind mount: filling the cache took 84 s on mattermost (13 thousand entries),
-   against 53 s cold. SQLite, or one file per snapshot, is the next measurement (Open question 4). The summaries,
+   against 53 s cold. SQLite, or one file per snapshot, was the next measurement (Open question 4; ADR-004 §3 chose SQLite). The summaries,
    compressed: 4.6, 19.3 and 37.6 MiB for map 1 (vikunja, mattermost, grafana), plus 0.6, 1.8 and 4.2 MiB for map 2.
 7. **The batches.**
    - Cut by count, the largest files went into one batch, and the run waited on it.

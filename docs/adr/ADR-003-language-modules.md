@@ -22,7 +22,7 @@ Split into a **core** and **language modules**, with an explicit contract:
 ```
 aidd_indexer/
 ├── core/                      # without any `if language ==`
-│   ├── pipeline.py            # extract_tree(): discovery → per-file extract → integrations → resolve
+│   ├── pipeline.py            # extract_tree(): discovery → per-file extract → integrations → resolve (never created: it stayed in `cli.py`)
 │   ├── model.py  ids.py  paths.py (normalize_path, path_key)
 │   ├── discovery.py           # walk + modules, consulting the language registry
 │   ├── extract.py             # a generic FileExtractor: parse, queries, symbols, calls, imports
@@ -160,6 +160,6 @@ aidd_indexer/
   `HAS_VIOLATION` to `File` (and to `Symbol` when attributable); GC by `commit_sha` like the other micro nodes.
   Constraint/indexes in `neo4j/init/schema.cypher`. With no convention configured, nothing changes — that is what the
   test `test_without_conventions_is_untouched` guarantees.
-- Not implemented yet (left to H1, which is who needs it): `route_patterns` / `client_patterns` (HTTP registrars and
-  clients declared by the convention, going into the language's scanner) and rules beyond the three declarative
-  ones. The place is `Convention` + a new hook in `BaseScanner`; no longer another `if` in `integrations.py`.
+- Built since: `route_patterns` / `client_patterns` (HTTP registrars and clients declared by the
+  convention, going into the language's scanner) as `Convention.scan_patterns` (`core/scan_patterns.py`), and a fourth
+  declarative rule (`RULE_KINDS` in `conventions/declarative.py`). The place was `Convention` + a new hook in `BaseScanner`; no longer another `if` in `integrations.py`.

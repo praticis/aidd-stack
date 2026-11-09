@@ -41,16 +41,11 @@
 
     The table is in `docs/corpus-report.md`, "Closing F1.14 and H2".
   - **The new hold-out comes after H5 (H2-D21).**
-  - **Next:**
-    1. H4 phase 0a;
-    2. H5;
-    3. the new hold-out and its handoff;
-    4. P2;
-    5. SCIP.
+  - **Next:** the order up to SCIP is in `AGENTS.md` (H4 phase 0a is done).
 
 ## How to measure today
 
-- The corpus: `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-28`. The hold-out: `--holdout --baseline
+- The corpus: `indexer/scripts/corpus.sh --baseline 2026-10-18-v2-baseline-29`. The hold-out: `--holdout --baseline
   2026-10-18-v2-holdout-26`.
 - The tests: `indexer/scripts/test.sh`.
 - The cycle of a change to the extractor is in the guide, `docs/indexer-evolution.md` §5.

@@ -11,9 +11,9 @@ code into a **graph** (Neo4j, database `atlas`), at two levels:
 - **micro:** files, symbols, `CALLS` and `IMPORTS`;
 - **macro:** the HTTP routes a service exposes, the calls it makes and the links between services.
 
-The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`) through the
-`atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a `knowledge` service holding what the project
-has learned.
+The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`; the first
+two exist, the other two are planned) through the `atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a
+`knowledge` service holding what the project has learned.
 
 Extraction is **deterministic**: tree-sitter today, SCIP as an enrichment later. An LLM is never the parser, for
 three reasons:
@@ -29,7 +29,7 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | Path | What it holds |
 |---|---|
 | `setup/` | `install.sh` (installs and updates `~/.aidd`), `install-check.sh` (install health), the `aidd` wrapper, the skills (`scan`, `refine-business`) and an example convention |
-| `docker-compose.yml`, `gateway/`, `neo4j/`, `qdrant/`, `obsidian/`, `git/` | the infra: Neo4j with its schema (`neo4j/SCHEMA.md`), Qdrant, the MCPs and the nginx gateway, all on localhost only |
+| `docker-compose.yml`, `gateway/`, `neo4j/`, `qdrant/`, `obsidian/`, `git/`, `antigravity/` | the infra: Neo4j with its schema (`neo4j/SCHEMA.md`), Qdrant, the MCPs and the nginx gateway, all on localhost only; `antigravity/` is an MCP client config |
 | `indexer/` | the `aidd-indexer` package: the `aidd` CLI, the refresher (`aidd daemon`), the `atlas` MCP and the `knowledge` service |
 | `indexer/aidd_indexer/core/` | what all languages share: discovery, extraction, `CALLS` resolution, the type service (`types.py`, ADR-005), the HTTP extractor (`http_*`, `integrations.py`), the linker and the graph writer |
 | `indexer/aidd_indexer/languages/<lang>/` | Go, TS/JS, C# and Python: tree-sitter queries, symbols, resolution and each language's HTTP scanner (ADR-003); in Go, C#, Python and TS, also the type facts and the language's `TypeIndex`; in Python and TS, its scope index |
@@ -37,7 +37,7 @@ SCIP comes in per repo, where resolution by name is not enough (ADR-002).
 | `indexer/tests/` | the per-language fixtures (`fixtures/*/expected.json`), the corpus expected lists (`corpus_expected/`) and the tests |
 | `indexer/scripts/` | every check CI runs, each runnable locally (`README.md` lists them): the public corpus (`http_corpus.py`, `corpus_metrics.py`, `corpus.sh`), the micro graph (`micro.sh`), the gates (`gates.sh`), the shape ratchet (`shape.py`), the debts check (`debts.py`) and the tests (`test.sh`) |
 | `.github/workflows/` | `indexer.yml`: the gates on every PR that touches the indexer, and the debts check on every PR |
-| `docs/` | the ROADMAP, the decisions, the history, the indexer guide, the corpus report, the golden questions, the ADRs and the handoffs |
+| `docs/` | the ROADMAP, the decisions, the history, the technical debts, the design guide, the method (`docs/indexer/`), the indexer guide, the corpus report, the golden questions, the indexing process, the knowledge contract, the ADRs and the handoffs |
 
 ## The architecture in one figure
 
@@ -118,7 +118,8 @@ The full text is in the ROADMAP, under "Principles".
     the micro graph. After adding one, re-run the `gates` job;
   - the same gates run locally with `corpus.sh --label` on both sides, `micro.sh`, `gates.sh` and `shape.py --against
     main`, as `indexer/scripts/README.md` shows.
-- **A change to the extractor follows the cycle** in the guide (`docs/indexer-evolution.md` §5):
+- **A change to the extractor follows the cycle** in `docs/indexer/method.md` §1 (the older text is the guide's §5,
+  `docs/indexer-evolution.md`):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
   3. judgment at the source; what it finds that the change opens is fixed in it when viable, and what is not and does not
@@ -127,6 +128,7 @@ The full text is in the ROADMAP, under "Principles".
   5. a new baseline.
 - **Before a merge**, also validate on a live install: a dry-run of `main` against the branch on each snapshot (with
   `-w` on the mounted code) and pictures of the graph before and after.
+  `indexer/scripts/live/validate.sh before`, `after` and `rotate` run it, one command per step.
 - **Golden questions:** `docs/golden-questions.md`, repeated after changes to the graph, the linker or the MCP.
 
 ## Where we are
@@ -174,6 +176,7 @@ The full text is in the ROADMAP, under "Principles".
 - **New code meets the shape targets from the start**; H5 brings the old code up to them.
 - **Corpus repos belong to third parties:** never run their code. Read and measure through the indexer's container.
 - **Long commands** (corpus, refresh) run in the background. Don't edit the indexer or the expected lists during a
-  corpus run, because the code is mounted in the containers.
+  corpus run, because the code is mounted in the containers. One heavy Docker job runs at a time on the machine: the
+  scripts take `~/.cache/aidd-corpus/heavy.lock` and end with status 75, naming the holder, when it is taken.
 - **Everything in the repo is in English:** code, commits, PRs and docs (H4-D1). One doc is still in Portuguese
   until it is rewritten: the indexer guide (`docs/indexer-evolution.md`, H4 phase 0b).

@@ -11,8 +11,8 @@
 >   absorbed here;
 > - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install.
 >
-> **State (2026-10-22):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
-> `main` requires `tests` and `gates`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3 and D5 (see
+> **State (2026-11-09):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
+> `main` requires `tests`, `gates` and `debts`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3, D5 and D6 (see
 > "Decisions made"); D2 and D4 are still to make.
 
 ## Context in one paragraph
@@ -73,7 +73,7 @@ PR does not merge with an item unjudged.
 
 ```
  every push to a PR (minutes)
-   tests and fixtures · code hygiene · shape report · docs links and repo paths · the MCP against an ephemeral Neo4j
+   tests and fixtures · code hygiene · shape report · docs links and repo paths (planned, H4.1) · the MCP against an ephemeral Neo4j
 
  a PR that touches indexer/** (to be measured; likely 15–25 min)
    the corpus of the branch vs the baseline of main's tip     ──►  gates + the classified diff, in the job's summary
@@ -105,7 +105,7 @@ PR does not merge with an item unjudged.
 The portfolio's install cannot move to GitHub: its repos are private, and a self-hosted runner on a public repo runs
 code from any fork's PR. So it has two parts:
 
-- **Local, for the maintainer:** `indexer/scripts/live-check.sh` automates what PR #5 did by hand: a dry-run of `main`
+- **Local, for the maintainer:** `indexer/scripts/live/validate.sh` (`before`, `after`, `rotate`) automates what PR #5 did by hand: a dry-run of `main`
   and of the branch on each snapshot at its SHA (with `-w` on the mounted code), pictures of the graph before and
   after the reinstall, the MCP's answers recorded through HTTP, and their diff. Its output stays on the machine.
 - **In CI, on a demo tenant of public repos** (H4.1-D4): the compose stack starts in the runner, indexes the demo with
@@ -121,7 +121,7 @@ code from any fork's PR. So it has two parts:
 | 1c | The MCP and the graph writer against a throwaway Neo4j, in the `tests` job: `mcp-it.sh`, with the graph read back against a dry-run of each snapshot by each record's key in the graph | a writer that drops a record or a field fails a PR |
 | 2 | One cause per commit, `CODEOWNERS` on the expected lists, the verdicts recorded and checked | a PR with an unjudged item cannot merge |
 | 3 | The nightly trend of time and memory, for the whole pipeline phase by phase, the resolver included | a week of medians with their spread |
-| 4 | `live-check.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
+| 4 | a scripted pass criterion for `live/validate.sh`, and the demo tenant in CI | the demo tenant's golden questions in a PR's checks |
 | 5 | After H6: the cold-equals-warm gate, and the PR corpus run only on the files the PR changed | a PR's corpus job takes a fraction of a cold run |
 | 6 | The shape report blocks (H5-D3) | the author turns it on |
 
@@ -223,6 +223,6 @@ the branch, counted by the writer's merge key, and that comparison now runs on e
 
 - The workflows (PR checks, the corpus job, the comment, the baseline publishing, the nightly trend).
 - The diff classifier, next to `scripts/corpus_metrics.py`, with tests.
-- `indexer/scripts/live-check.sh`, and the demo tenant's setup and golden questions.
+- A scripted pass criterion for `indexer/scripts/live/validate.sh`, and the demo tenant's setup and golden questions.
 - `CONTRIBUTING.md`'s part on what the bot's comment means and how to record verdicts (with H4.1).
 - The decisions H7-D1…D5 in `docs/decisions.md`.
