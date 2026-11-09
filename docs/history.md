@@ -647,3 +647,6 @@
 - 2026-11-08: the comparator of TS's edges against TypeScript's checker is in the repo (`chore(scripts)`): `indexer/scripts/judgment/ts_vs_checker.py` counts, per verdict, the typed
   edges a change adds and the by-name edges it drops, with a `.d.ts` as the JS beside it, and whether a dropped edge is replaced or lost; on gotify, between the tree before H5-D50
   and the tree after H5-D51, the checker agrees with the 3 typed edges added and with none of the 83 by-name edges dropped.
+- 2026-11-08: the cost of a pass in alternating pairs is a script of the repo (`chore(scripts)`): `indexer/scripts/protocol/cost-pairs.sh` runs `corpus.sh --jobs 1 --no-expected` on main's tree and the
+  branch's, the side that goes first flipping each pair, and prints the change in time per pair, the medians and the change in peak memory; on the saved runs of H5-D51 it gives
+  the numbers that PR reported (ghost +9.6, +9.6, +11.8 and +11.0 %, mattermost +3.4, +4.3 and +4.3 %).
