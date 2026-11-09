@@ -21,48 +21,31 @@
 - **Technical debts:** `docs/tech-debt.md` lists the known defects that do not block, each with the phase it is due in
   and a strict xfail test that fails the suite when it is fixed.
 - **In progress:**
-  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
-    `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
-    and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
-    H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
-    left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014,
-    TD-016 to TD-022, TD-027, TD-033 and TD-034 are due in `fix(csharp)` PRs before F1.2. Go's calls on an interface,
-    which reach no method of the repo unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before
-    F1.2. The calls on `base` and on `super` that reached the caller's own method or no ancestor, TD-030 and TD-031, and
-    the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
-    #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is closed
-    by `fix(graph)` #70; TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)` #72 (H5-D40),
-    and a CommonJS export its type index did not read, TD-039, by `fix(typescript)` #73 (H5-D41), a hand-written
-    declaration file discovery skipped, TD-041, by `fix(typescript)` #79 (H5-D45), a package of the repo's own
-    workspace read as an npm package, TD-042, by `fix(typescript)` #80 (H5-D46), a function a class field holds,
-    TD-037, a class a class expression declares, TD-043, and a folder import that ignored the entry its manifest names,
-    TD-049, by `fix(typescript)` #81 (H5-D47), an import of the output of a project the config references, TD-050 in
-    part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
-    `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
-    proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
-    the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053,
-    a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
-    property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a declaration file beside
-    its JS, TD-061, a wrapper behind an interface, TD-062, and a call on `super`, TD-063, are due in `fix(typescript)` PRs before F1.2; what a type checker
-    answers and the reading does not, TD-057, TD-059 and TD-060 (H5-D52), are due in F1.2. Two debts of the core's architecture, the syntax of each
-    language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
-    Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
-    twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
-    validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
-    closed (#57 to #63). TS's step 5 (H5-D29) is merged too, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45,
-    H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, all validated on a
-    live install), judged with the per-site attribution every language now has (H5-D21), which reads the resolver's stage
-    too (G2, #56). Next, the `fix` PRs of the debts due before F1.2, by scope (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
-    H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`), then 10
-    and 11;
+  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"; each PR's story is in `docs/history.md`):
+    - merged: steps 0–2, 4 and 7–9 (PR #7, H5-D8); step 5, the `TypeIndex`, in Go, C#, Python and TS (H5-D10, H5-D29; #85
+      the last), each validated on a live install and judged with the per-site attribution (H5-D21, G2 #56); F1.16 (#57
+      to #63); step 12 for the conventions, the corpus runner, the MCP's tools and the refresher (#74 to #78);
+    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-063), each with a strict xfail case, and the ones
+      it closed carry their PR there: TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014, TD-016 to TD-022, TD-027, TD-033
+      and TD-034 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
+      unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before F1.2; three forms of a declaration
+      the reading still misses, TD-048, are due in a `fix(conventions)` PR before F1.2; a workspace package whose source a
+      condition only a tool of the repo enables names, TD-052, a member of an interface whose function type a name or
+      `typeof` gives, TD-053, a member of an alias's object type below more wrappers than the query reaches, TD-055, a class
+      field or a parameter property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a
+      declaration file beside its JS, TD-061, a wrapper behind an interface, TD-062, and a call on `super`, TD-063, are due
+      in `fix(typescript)` PRs before F1.2; what a type checker answers and the reading does not, TD-057, TD-059 and
+      TD-060 (H5-D52), are due in F1.2; two debts of the core's architecture, the syntax of each language it holds,
+      TD-023, and the names of frameworks and client libraries it holds, TD-024, a gap of Python's, Django's model managers
+      found by name, TD-026, and a C# call on an interface that reaches its single implementer twice, TD-036, are due in an
+      H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036;
+    - next: the `fix` PRs of the debts due before F1.2, by scope (H5-D19); then step 6 (recognizers and the catalog; C#,
+      Go, Python, TS: H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and
+      `resolve`), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
-    designed now, plugged in after H5.
-    - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
-    - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
-    - Step 1, the prototypes, is done ("H6 step 1"). A second map that re-extracts (B), with a cache keyed per
-      package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
-    - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
-      14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
+    designed now, plugged in after H5. Steps 0 to 2 are done (the measurement and the prototypes are "H6 baseline" and
+    "H6 step 1" in the corpus report; B keyed per package, H6-D5, and batches of whole packages, H6-D6); the resolver's
+    quadratic cost in Go and C# is fixed (PR #9); ADR-004 to ADR-006 are accepted;
   - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
   - H8 (`docs/handoffs/H8-independent-review.md`): the independent reviewer, a read-only adversary for plans and diffs,
     designed and used in three rounds, five reviews (H5-D50 and H5-D51); its script is in `indexer/scripts/review/`
@@ -147,117 +130,30 @@
 Rule: the graph reaches the skills only through the `atlas` MCP and **always with a fallback**. Up to F0.6 it is
 infra in preparation — nothing to trigger day to day.
 
-### Compose validation checklist (validated 2026-09-10/11; `install-check.sh` covers items 2–7 on every upgrade)
-
-Shortcut: `~/.aidd/install-check.sh` (copied by `install.sh`) runs items 2–7 below and prints OK/FAIL per check.
-
-- [x] `.env` has `NEO4J_USER=neo4j` and `NEO4J_PASSWORD=<password>` (`install.sh` generates them; if the volume
-  already existed with another password: `docker compose down -v` and bring it up again — dev only)
-- [x] `docker compose up -d --build` with no error; `docker compose ps` shows `neo4j` *healthy* and `neo4j-init` as
-  *Exited (0)*
-- [x] `docker logs aidd-neo4j-init` with no error (cypher-shell is silent on success — empty is good; a syntax error
-  shows here)
-- [x] **Neo4j Browser** at <http://localhost:7474> (log in with `.env`): `SHOW CONSTRAINTS` lists 17 constraints;
-  `SHOW INDEXES` includes `symbol_fulltext`; `RETURN apoc.version()` answers
-- [x] `docker logs aidd-mcp-atlas` shows Uvicorn listening on 0.0.0.0:3000; `curl -s http://localhost:3005/healthz`
-  returns `{"status":"ok","neo4j":true,...}`
-- [x] (debug) `docker compose --profile debug up -d mcp-neo4j` → `curl -s -o /dev/null -w "%{http_code}"
-  http://localhost:3004/mcp/` returns an HTTP status
-- [x] In Claude Code, with `setup/.mcp.json` applied: `/mcp` lists `atlas`; asking "run `get_neo4j_schema`" returns
-  empty (a graph with no data) with no authentication error
-- [x] Re-running `install.sh` syncs `~/.aidd/neo4j/` and the new `docker-compose.yml`
-- [x] Docs: `git rm docs/graph-schema.md` (moved to `neo4j/SCHEMA.md`)
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Compose validation checklist (validated 2026-09-10/11; `install-check.sh` covers items 2–7 on every upgrade)"._
 
 ---
 
 ## Phase 0 — Foundation (end-to-end PoC, 2 repos)
 
-Goal: prove micro + macro with the minimum: two repos (Go + Node) that talk over gRPC/HTTP, and a `who_consumes`
-question answered from the graph.
-
-- [x] F0.1–F0.2 Neo4j Community in the compose file (D1) and the schema in `neo4j/SCHEMA.md`
-- [x] F0.3 The `indexer/`: `aidd index`, tree-sitter → micro nodes, idempotent `MERGE`, orphan GC and `IndexRun`.
-  Also: F0.3.1 (validated on the real atlas), F0.3.2 (idempotency and GC), F0.3.5 (the indexing process:
-  `atlas.yaml`, `plan`/`bootstrap`/`refresh`, `docs/indexing-process.md`), F0.3.6 (per-repo ref policy) and F0.3.7a
-  (host wrapper, install without fetch, D12)
-- [x] F0.4 The HTTP integrations extractor (`core/integrations.py` + `languages/<lang>/http.py`). Also:
-  - F0.4.1, validated on the portfolio;
-  - F0.4.2, the fixtures of the author's pattern (.NET: `dotnet-praticis`);
-  - F0.4.3, the public corpus, H2a and H2b: `docs/corpus-report.md`, `docs/handoffs/H2-roadmap.md`;
-  - F0.4.4, the ADR-003 refactor;
-  - F0.4.5, conventions and `Violation`.
-- [x] F0.5 The linker: `CONSUMES`/`CALLED_FROM` by `path_key` and method, with ties broken by hints. Also F0.5.1
-  (validated; `DEPENDS_ON` by manifest)
-- [x] F0.6 The `atlas` MCP, with 11 tools (`indexer/aidd_indexer/mcp/`, the tools in `tools_*.py`). Also F0.6.1,
-  validated in Claude Code
-- [x] F0.7 The 5 golden questions answered by the graph (`docs/golden-questions.md`). Also:
-  - F0.7.1–F0.7.2b, `CALLS` by receiver type in Go and C#;
-  - F0.7.3, Go interfaces and mediator dispatch.
-- [x] F0.8 The `scan` skill over the atlas, with a fallback. Also F0.8.1, validated in 3 scenarios
-
-**Phase exit:** a local graph with 2 repos, `who_consumes` working, `scan` reading from the graph. **Achieved
-(2026-10-03):** 8 repos / 28 snapshots of the portfolio + the reference .NET pair; 130 endpoints, 90 exact
-`CONSUMES`, 45 `DEPENDS_ON`; 11 tools in the MCP; Q1–Q5 answered by the graph in Go and .NET without reading code;
-40 tests, a corpus of 15 repos as regression.
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 0 — Foundation (end-to-end PoC, 2 repos)"._
 
 ## Continuous update process (its own track — VERY important)
 
-> **2026-10-12 — D15:** continuous update left the host. The compose `refresher` service (`aidd daemon`) replaces the
-> scheduler (U2, U2.1, D14) and the fetch on the host (D12/D13 still hold in principle: a read-only PAT, the personal
-> key kept out); U6 is no longer needed. The items below stay as history. Details in the **Security and operations**
-> track.
->
-> Separate from the install (D12). Without it the atlas ages and the skills answer about an outdated map. **U1–U3
-> validated on 2026-09-11**: refresh scheduled through Task Scheduler (WSL), a read-only PAT, 14 of the team's
-> snapshots re-indexed with no intervention, `install-check` green.
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 
 - [x] U1 **Service credential** (D13): a **read-only** PAT in `~/.aidd/secrets/git-token` (600), collected in step 6
   of `install.sh`; the wrapper uses it through `GIT_ASKPASS` and rewrites ssh→https remotes only for the fetch. Your
   personal key stays out of the scheduler. Validated: `fetch: ok (service)` on the 6 repos. Note: fine-grained needs
   admin approval in the org — classic (scope `repo`, short expiry) works as a bridge; a **GitHub App** is the target
   for the server (F1)
-- [x] U2 **Scheduler on the host**: `aidd schedule install|status|remove|check [--fix]` — **systemd user timer
-  preferred** (Linux and WSL with `systemd=true`; runs where Docker and the repos live, no window, `enable-linger`),
-  hidden Task Scheduler (`conhost --headless`) as a fallback on WSL without systemd, cron last; interval in
-  `AIDD_REFRESH_INTERVAL_MINUTES` (.env, default 15); `flock` + a rotating `~/.aidd/logs/refresh.log`. Validated on
-  WSL (`schtasks.exe` from the distro)
-- [x] U3 **Observability**: `aidd status` with age and `trigger` (manual/scheduled/bootstrap); `install-check.sh`
-  section 6 fails if the last refresh > 2× the interval
-- [x] U2.1 Scheduler inside WSL (D14): `systemd=true` + linger + distro autostart (`.vbs` in Startup); the Windows
-  task removed automatically; `aidd schedule check --fix` validates/repairs. Validated on a clean install 2026-09-11
-- [x] U3.1 End-to-end validation (2026-09-11): clean install → step 6 with a PAT → task created → the scheduled
-  refresh re-indexed 14 snapshots (`trigger=scheduled auth=service rc=0`) → `install-check.sh` green
-- [x] U3.2 Re-validation after the grammar fix (2026-09-11 14:29, offline image): a push to
-  `<project-a>@feature/<ticket>` → systemd timer → `1 of 26 changed` → extract/resolve/write in 1 s
-  (`orphans_deleted: 1`) → `rc=0` → `aidd status` with the new SHA, `age=1m`, `trigger=scheduled`. **Track U1–U3
-  done.**
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 - [ ] U4 **Event trigger (F3)**: a webhook/CI on a push to a protected branch → `aidd index <repo> --ref <branch>`;
   replaces the scheduler on the central server
 - [x] U5 **In-container fetch**: became the default path with the refresher (D15) — a mirror per repo, the PAT as a
   file through `git-askpass.sh`. Validated with a local remote in the e2e; **still to validate against GitHub with a
   real PAT**
-- [x] U6 **Linux / macOS portability** — solved by D15: no scheduler and no GNU bash on the host (`aidd` became a thin
-  client compatible with bash 3.2). The list below stays as history
-  - Native Linux: should work as is (systemd user timer → cron as a fallback). Only needs **validating** on a machine
-    (Ubuntu/Fedora with Docker Engine or Docker Desktop)
-  - macOS — changes needed in `setup/aidd` and `install-check.sh` (bash 3.2 and BSD utilities):
-    - [ ] scheduler: no systemd/`loginctl` → today it falls back to `crontab` (works, but asks for Full Disk Access
-      for cron and does not survive sleep well); implement a **launchd agent**
-      (`~/Library/LaunchAgents/com.aidd.refresh.plist`, `StartInterval`) as the preferred option on macOS
-    - [ ] `flock` does not exist on macOS → a fallback with a `mkdir` lock (or `shlock`/`lockfile`)
-    - [ ] `mapfile` needs bash ≥ 4 (macOS ships 3.2) → switch to `while read`, or require `brew install bash` and check
-      `BASH_VERSINFO` at the start
-    - [ ] `stat -c %s` / `stat -c %a` → `stat -f %z` / `stat -f %Lp` on BSD (a `fsize()`/`fperm()` helper detecting
-      `uname`)
-    - [ ] `date -d "<ts>" +%s` → `date -j -f ... ` on BSD (a `to_epoch()` helper), or write the epoch to the log
-      besides the ISO date
-    - [ ] `sed -i` without a suffix in `check --fix` (wsl.conf) is WSL only — ok; the `sed -i.bak && rm` pattern is
-      already used in `install.sh`
-    - [ ] in-container ssh-agent (U5, only if `fetch: true`): on Docker Desktop macOS the socket is
-      `/run/host-services/ssh-auth.sock`, not `$SSH_AUTH_SOCK`
-    - [ ] `install-check.sh` section 6: `schedule check` must recognize launchd
-      (`launchctl list | grep com.aidd.refresh`)
-  - Indexer, compose, Neo4j, Qdrant and MCPs: identical on the 3 platforms (they run in containers) — no change
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 
 ## Security and operations (its own track)
 
@@ -265,34 +161,7 @@ question answered from the graph.
 > exposed more than it should. Order: close what was exposed, take state and credentials off the host, then
 > governance.
 
-Done (2026-10-12, validated in the isolated e2e on macOS/Docker Desktop):
-
-- [x] SO1 **Exposure**: every published port on `AIDD_BIND_ADDRESS` (default `127.0.0.1`); the MCPs publish nothing
-  — the **`mcp-gateway`** (pinned nginx) serves them on the same ports (3001/3002/3003/3005, `.mcp.json` does not
-  change) and returns 403 when the `Host` is not localhost/127.0.0.1/[::1] or when a browser sends an `Origin` from
-  another site (DNS rebinding). `atlas` also validates `Host`/`Origin` by itself (MCP SDK). `install-check.sh` checks
-  the ports and the refusals
-- [x] SO2 **Credentials**: Qdrant requires `QDRANT_API_KEY` (generated by `install.sh`), CORS off; `mcp-git` without
-  an ssh key/ssh-agent (local operations; push/pull in the dev's terminal); the refresher's PAT comes in as a file
-  secret (`/run/secrets/git-token`), never as an environment variable
-- [x] SO3 **Tenant isolation (logical)**: `cypher_readonly` stays offered in both modes (default
-  `ATLAS_RAW_CYPHER=on`), but free Cypher is not bound to a tenant — on a multi-tenant atlas whose tenants must not
-  see each other (several clients on the same machine), `ATLAS_RAW_CYPHER=off` removes it; Neo4j loads only
-  `apoc.version`, `apoc.meta.*` and the pure utilities `apoc.coll/text/map.*` (no `apoc.load`/`export`/`cypher.*` →
-  no file/URL access and no dynamic Cypher); Neo4j telemetry off
-- [x] SO4 **Supply chain (partial)**: images and packages at fixed versions (neo4j 5.26.30, qdrant v1.19.1, node
-  24.21.0, python 3.12.15, nginx 1.28.0, `@cyanheads/git-mcp-server@2.15.3`, `mcp-obsidian@0.8.2`,
-  `mcp-proxy@6.7.16`, `mcp-server-qdrant==0.8.1`, `mcp-neo4j-cypher==0.6.0`); obsidian no longer downloads from npm
-  on every start
-- [x] SO5 **Refresher in a container (D15)**: `aidd daemon` in the compose file (restart unless-stopped, ± 10 %
-  jitter, SIGTERM finishes the snapshot in progress, CPU/memory limits, rotating log); `refresh` covers every tenant;
-  a **read-only** workspace + a bare mirror per repo (`core/mirror.py`): the dev's clone never receives `FETCH_HEAD`,
-  refs or root-owned files; containers as `AIDD_UID`/`AIDD_GID`; the host's `aidd` becomes a thin client (bash 3.2)
-  — `schedule install|status|check --fix` manage the container and remove old schedulers; `install.sh` migrates
-  `fetch: false` → `true` in the generated manifests
-- [x] SO6 **Visible freshness**: `status.json` + healthcheck (`aidd daemon-health`), `RefreshState` per tenant in the
-  graph, `atlas_status.refresh.stale` (> 2 intervals without running) and the `scan` skill warns; `install-check`
-  checks the age per tenant; snapshot age fixed
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Security and operations (its own track)"._
 
 Open:
 
@@ -315,12 +184,7 @@ Open:
 - [ ] SO12 **Scale with N devs**: N laptops × M repos every 15 min hit GitHub's secondary rate limit; backoff on a
   fetch failure; a central server (F3) for larger organizations. Mirrors double the repos' disk — GC of mirrors of
   repos that left the workspace
-- [x] SO13 **The skill indexes on demand** (2026-10-12): a repo outside the atlas → `scan` runs
-  `~/.aidd/aidd refresh --tenant <t> --repos <repo> --wait 300` (the same plan as the refresher: default branch +
-  active ones; waits for a refresh in progress; does not count as a refresher round and does no GC; a missing or
-  excluded repo is an error with the reason) and, for the branch it is going to work on,
-  `aidd index <repo> --ref <branch> --ephemeral`; the skill's `allowed-tools` allows only those two commands (never
-  `aidd:*`)
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Security and operations (its own track)"._
 - [ ] SO14 **Validate on WSL and native Linux** (the e2e was on macOS): `AIDD_UID`/workspace permissions (umask 077
   leaves the container without read access), Docker autostart; a real PAT against GitHub (U5)
 - [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; embeddings are
@@ -379,15 +243,7 @@ Open:
 - [x] F1.14 **HTTP extractor: what H2 left.** Closed on 2026-10-18, in 11 increments, and the next day came the 12th,
   in the validation of PR #5. Each item ended with a rule with a fixture and a judged corpus, or with a limitation
   recorded in the guide.
-  - **Final numbers and where each gap goes:** `docs/corpus-report.md`, "Closing F1.14 and H2".
-  - **Rules:** `docs/indexer-evolution.md` §3.
-  - **Milestones:** `docs/history.md`.
-  - **Scope changes:**
-    - the new hold-out moved to after H5 (H2-D21);
-    - the framework catalog as data and the `built_bundle` thresholds went to H5;
-    - Django stayed out (the portfolio is FastAPI/Flask);
-    - test app folders with production names wait for F1.1's per-repo config.
-  - **What needs an inferred type** is `needs-resolver`, for F1.2.
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)"._
 - [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slices 1 and 1c in `main`, PR #11
   and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
   untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
@@ -401,14 +257,7 @@ Open:
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
   embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D35):
-  `refactor(graph)` #57, `refactor(resolve)` #58, `feat(graph)` #59, `fix(resolve)` #60 for the calls that do not
-  dispatch (a Python `super()` reaches what follows the caller's class in each MRO) and the bases of two types of one
-  name, `feat(graph)` #61 for `OVERRIDES`, what a dispatching call may run instead as each language says, a
-  `feat(graph)` #62 for the receivers a dispatching call and an override hold, so a call on a subclass reaches only the
-  overrides an instance of it may run, then `feat(mcp)` #63, which closes it: `who_calls` lists a method's dispatching
-  callers and its overrides, and `impact_of` follows a dispatch at any hop. Of netbox's 67 sites that lose an override,
-  46 of them `_get_queryset`, the override's `who_calls` reaches all but the one TD-035 holds. It comes before TS's
-  step 5 (H5-D29). SCIP (F1.2) may then confirm the `EXTENDS` read from tree-sitter, or replace it
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)"._
 
 **Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
 
@@ -503,56 +352,9 @@ scan ──► flow / impact ──► refine-business ──► refine-tech ─
 > `policy.yaml` says what the process requires. `scan` describes the project; policy is a human decision and is not
 > discovered.
 
-Vault layout:
-
-```
-<tenant>/knowledge/
-├── <repo>/
-│   ├── <repo>.md            index: scan's fixed sections + a generated knowledge block
-│   └── insights/<slug>.md   one insight per note (frontmatter)
-└── shared/insights/         what holds for several of the tenant's repos
-```
-
-An insight's lifecycle:
-
-```
-observed ──► recurring ──► accepted ──────────► enforced
-(once)       (N times)     (a human approved:   (became a checkable rule:
-                            the agent follows)   violations / lint)
-        └──────────────► archived (discarded, or no occurrence for a long time)
-```
-
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Project knowledge (its own track)"._
 - [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contract v1)* **The vault contract** (closes S8 for knowledge):
-  the index skeleton — `scan`'s fixed sections (including the repo's effective policy, read-only: it is changed in
-  `policy.yaml`) + a block between `<!-- aidd:knowledge:start -->`/`<!-- aidd:knowledge:end -->`, generated from the
-  notes and never edited by hand; the insight note format — frontmatter `topic` (a controlled vocabulary:
-  `architecture`, `review`, `quality`, `security`, `incident`, `decision`, `business`; extensible through a topic
-  registry, not free text — avoids `security`/`segurança`/`sec`), `status`, `severity`, `scope` (`repo`|`shared`),
-  `occurrences`, `first_seen`/`last_seen`, `evidence[]` (PR, file:line, sha, tool, session), `applies_to` (files,
-  roles, symbols); payload in Qdrant `{project, type: insight, topic, status}`
-- [x] K1.1 *(2026-10-13: `core/policy.py`, `aidd policy show|check`, `install.sh` creates it from
-  `indexer/policy.example.yaml`, `install-check` validates it)* **`policy.yaml`** in `~/.aidd` (D17), with layers like
-  `atlas.yaml`: built-in defaults → tenant → area → repo (`overrides`), each level overriding only what it declares.
-  Initial content: `coverage` (`min`, `new_code_min`), `harness` (`max_attempts`), `review` (`spec_approval`,
-  `adr_when`), `knowledge` (`recurring_after`, `archive_after_days`) — everything that would be a fixed number in the
-  code. Validated with a clear error (like `atlas.yaml`'s `ConfigError`); `install.sh` creates a commented example;
-  `aidd policy show <repo>` prints the effective policy with the origin of each value
-- [x] K2 *(2026-10-13: `aidd_indexer/knowledge/`, the `mcp-knowledge` service on the gateway's port 3006)* **The
-  `knowledge` service** in the compose file (the same image as the indexer, behind `mcp-gateway`; the only one that
-  writes knowledge to the vault and to Qdrant — the atlas stays read-only). Three tools:
-  - `policy_for(repo)` → the effective policy, already combined, with the origin of each value
-    (default/tenant/area/repo) — the skills do not merge the layers
-  - `insights_for(repo, files?, roles?, topic?)` → `accepted`/`enforced` as rules, `observed`/`recurring` as context
-    (labeled: data, not instructions)
-  - `record_insight(repo, topic, summary, evidence, applies_to, severity)` → dedup (Qdrant by similarity + the same
-    topic), increments or creates the note, `recurring` on reaching `knowledge.recurring_after` occurrences (policy;
-    default 3), rebuilds the index block, mirrors to Qdrant; no tool promotes to `accepted`
-  - `refresh_index(repo)` → rewrites only the `aidd:knowledge` block from the notes (`scan` calls it when it finishes
-    the page; a new page is born with what was recorded before)
-  - Tests: dedup, rebuilding the index while preserving `scan`'s sections, idempotency
-- [x] K3 *(2026-10-13: the skill rewritten and validated on the real install — migration, repetition in another
-  language, a page from scratch)* `scan` generates the index skeleton and shows the knowledge block; the end-of-task
-  lesson (today a direct `qdrant-store`) becomes `record_insight`
+_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Project knowledge (its own track)"._
 - [ ] K4 *(with the `refine-business` review)* `refine-business` adopts the contract: consults the affected projects'
   incidents/decisions, records the card's business decisions. `refine-tech` (S5) and `implement` (S6) are born with
   it: the area's known risks in the spec; `accepted`/`enforced` as a checklist before coding and before the PR
@@ -574,7 +376,7 @@ observed ──► recurring ──► accepted ──────────�
   insights collection cannot be rebuilt from the code → they go into the backup (SO11)
 - [ ] K10 Policy inside the repo (`.aidd/policy.yaml`, read from the mirror on the default branch): in organizations,
   the policy in `~/.aidd` is each dev's, and two devs may work with different thresholds; in the repo it holds the
-  same for everyone and only changes through a PR (human review). A layer above the repo's `overrides`; after K1.1 is
+  same for everyone and only changes through a PR (human review). A layer above the repo's `overrides`; after `policy.yaml` is
   proven
 
 ## Publishing and documentation (its own track)

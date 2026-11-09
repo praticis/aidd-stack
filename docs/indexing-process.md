@@ -103,7 +103,7 @@ the images (including the `tools` profile).
 
 - D8 **Open** — the providers in use per tenant; needed only in F1.
 - D9 **Replaced by D15 (2026-10-12)** — the refresher keeps a bare mirror per repo for the `local` source too and
-  mounts the workspace read-only (see the ROADMAP, the "Security and operations" track). Original text: no mirrors
+  mounts the workspace read-only (see D15, in the header of this file). Original text: no mirrors
   for the `local` source: the indexer does `git fetch --all --prune` (SSH credentials/.gitconfig mounted as in
   `mcp-git`) and materializes refs with `git archive <sha>`; the working tree is never touched. Bare mirrors only
   with remote providers (F1).

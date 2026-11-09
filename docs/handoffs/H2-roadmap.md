@@ -10,7 +10,7 @@
 ## Summary
 
 - **H2 is closed.** F0.4.3a, F0.4.3b and F1.14, which took to the extractor what H2b and the hold-out left, are all
-  `[x]` in the ROADMAP.
+  done (`docs/history.md`).
   - **Instrument:**
     - `http_corpus.py` (`--baseline`, `--expected`, `--sample`, `--holdout`, `--reuse`) and `corpus_metrics.py`;
     - `corpus.sh`, which runs the corpus in parallel, one container per repo;
