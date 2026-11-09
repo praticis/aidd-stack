@@ -60,6 +60,13 @@ def method_of(qual):
     return re.split(r"[.:]", qual)[-1]
 
 
+def called(call):
+    """The method a call site names: what the edge records, or, when it records none, the callee's own name. An edge to the
+    type that owns a member with no symbol has the type's name as callee, so the callee alone would key it by the wrong
+    method and the checker would seem to have no row for it."""
+    return call.get("method") or method_of(qualified(call["callee_id"]))
+
+
 def checker_sites(path):
     sites = collections.defaultdict(list)
     with open(path) as rows:
@@ -82,7 +89,7 @@ def in_ts(run):
 
 def declared_at(call, sites):
     qual = qualified(call["callee_id"])
-    found = sites.get((path_of(call["caller_id"]), call["line"], method_of(qual)))
+    found = sites.get((path_of(call["caller_id"]), call["line"], called(call)))
     return qual, (None if found is None else {d for declared in found for d in declared})
 
 
@@ -123,13 +130,13 @@ class Analysis:
         self.added = [c for c in after["calls"] if ts_after(c) and key(c) not in had
                       and c["strategy"].removesuffix("-ambiguous") in TYPED]
         self.dropped = [c for c in before["calls"] if ts_before(c) and key(c) not in kept]
-        site_has = {(c["caller_id"], c["line"], method_of(qualified(c["callee_id"]))) for c in after["calls"]}
+        site_has = {(c["caller_id"], c["line"], called(c)) for c in after["calls"]}
         self.sites = sites
         self.keyed = keyed(sites, [c for c in before["calls"] if ts_before(c)] + [c for c in after["calls"] if ts_after(c)])
         self.added_verdicts = collections.Counter(verdict(c, sites) for c in self.added)
         self.dropped_verdicts = collections.Counter(verdict(c, sites) for c in self.dropped)
         self.fate = collections.Counter(
-            ("replaced" if (c["caller_id"], c["line"], method_of(qualified(c["callee_id"]))) in site_has else "lost", verdict(c, sites))
+            ("replaced" if (c["caller_id"], c["line"], called(c)) in site_has else "lost", verdict(c, sites))
             for c in self.dropped)
 
     def disagreements(self):

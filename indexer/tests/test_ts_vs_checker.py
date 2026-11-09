@@ -237,3 +237,31 @@ def test_the_threshold_is_over_the_calls_and_not_over_the_files(written, capsys)
     b, a, c = written([], calls, [site(3, "run", "src/a:Foo.run")])  # 3 of 4 calls (75 %) in a file with rows, 1 of 2 files (50 %)
     assert tool.main(["r", b, a, c, "--strict", "--min-keyed", "60"]) == 0
     assert "3 of 4 TS calls of the two runs (75.0 %)" in capsys.readouterr().out
+
+
+def test_a_site_is_keyed_by_the_method_the_edge_records_and_not_by_the_callees_name(written):
+    owner = sym("src/a", "Foo", "interface")  # a member with no symbol: the edge goes to the type that owns it
+    edge = {**call(MAIN, owner, 3, "inherited"), "method": "get"}
+    a = analyse(written, [], [edge], [site(3, "get", "src/a:Foo.get")])
+    assert dict(a.added_verdicts) == {"checker: another declaration": 1}
+
+
+def test_an_edge_that_records_no_method_is_keyed_by_the_callees_name(written):
+    a = analyse(written, [], [call(MAIN, FOO, 3, "receiver-type")], [site(3, "run", "src/a:Foo.run")])
+    assert dict(a.added_verdicts) == {"agrees": 1}
+
+
+def test_a_dropped_edge_is_replaced_when_the_site_keeps_an_edge_by_the_recorded_method(written):
+    owner = sym("src/a", "Foo", "interface")
+    before = [{**call(MAIN, owner, 12, "name"), "method": "run"}]  # a by-name edge to the type, for a call of `run`
+    after = [{**call(MAIN, FOO, 12, "receiver-type"), "method": "run"}]
+    a = analyse(written, before, after, [site(12, "run", "src/a:Foo.run")])
+    assert dict(a.fate) == {("replaced", "checker: another declaration"): 1}
+
+
+def test_a_dropped_edge_is_replaced_by_an_edge_to_the_type_that_owns_the_member_the_call_names(written):
+    owner = sym("src/a", "Foo", "interface")
+    before = [call(MAIN, BAR, 12, "name")]
+    after = [{**call(MAIN, owner, 12, "inherited"), "method": "run"}]
+    a = analyse(written, before, after, [site(12, "run", "src/a:Foo.run")])
+    assert dict(a.fate) == {("replaced", "checker: another declaration"): 1}
