@@ -104,7 +104,8 @@ because SCIP plugs in exactly at that seam.
 ## Context in one paragraph
 
 H2 and F1.14 took the HTTP extractor from almost nothing to 98–100 % precision against the expected lists and, apart from
-Python's routes, 92–99 % recall on the 55-repo corpus (`docs/corpus-report.md`). The method was one rule per increment, each with a fixture and a judged corpus run. The method worked. What
+Python (28 % of its routes, 98.6 % without Django's, and 2 of 3 calls), 92–99 % recall on the 55-repo corpus
+(`docs/corpus-report.md`). The method was one rule per increment, each with a fixture and a judged corpus run. The method worked. What
 it did not do was reorganize the code between one rule and the next. Each rule went in where it fit: one more `if`
 in the method that already handled calls, one more field in `PackageContext`, one more fact with a text key. The
 result measures well and reads badly. H5 is a refactor **with no behavior change**: the corpus and the hold-out must
@@ -1648,7 +1649,7 @@ number and a debt.
 #### TS's resolver reads the receiver's type (#84, H5-D50)
 
 The first of the two PRs of the change of behavior: a call on a receiver whose type the code declares reaches the
-methods of that type and its bases, and no homonym. The prototype measured before #81 found the checker confirming 95 to
+methods of that type and its bases, and no homonym. The prototype measured before #81 (60,824 sites judged) found the checker confirming 95 to
 100 % of the typed edges and 0.1 % or less of the by-name edges they replace; this PR declared its acceptance criterion
 before it measured, and a round of research (six investigations, a synthesis and a challenger that tried to refute it)
 changed the criterion and the rule before the code was written.

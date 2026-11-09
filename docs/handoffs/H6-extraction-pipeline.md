@@ -174,7 +174,7 @@ remote cache. Spotify's Backstage is a catalog (F2), not an indexer.
 first index, a bootstrap and the corpus. The corpus already runs 3 repos at once (`corpus.sh --jobs`), so the
 workers per repo times the jobs must fit the machine.
 
-## Open question 3 — batches (decided: H6-D6, ADR-004 §1)
+## Open question 3 — batches (decided: H6-D6, ADR-004 §4)
 
 A task per file costs more in sending than it gains. A batch per module (a Go package, a `.csproj`, a `package.json`
 workspace) is the cut F1.13 proposed and the one SCIP indexes by (F1.1), but modules vary from 1 file to thousands.

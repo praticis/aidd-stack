@@ -1,8 +1,8 @@
 # The atlas indexing process
 
-> Status: **decided and implemented for the `local` source** (2026-09-11, F0.3.5). Remote providers and the scheduler
-> wait for F1. D9 solved without mirrors: refs are materialized with `git archive` from the remote-tracking refs of
-> the dev's clone. D11 simplified: optional `areas` in the manifest. Context: F0.3 validated (`aidd index <repo>`
+> Status: **decided and implemented for the `local` source** (2026-09-11, F0.3.5). Remote providers wait for F1;
+> the refresher (`aidd daemon`) is built. D9 was first solved without mirrors (refs materialized with `git archive`
+> from the remote-tracking refs of the dev's clone) and is replaced by D15 (a bare mirror per repo). D11 simplified: optional `areas` in the manifest. Context: F0.3 validated (`aidd index <repo>`
 > works), but indexing is today a manual command, repo by repo, over whatever branch is checked out. It has to become
 > a process.
 
@@ -19,11 +19,11 @@ Three questions were left open after F0.3:
 ## 2. Principle: separate the *source* from the *workspace*
 
 The dev's workspace (`WORKSPACE_PATH`) is volatile — a checked-out branch, dirty files, only the repos they cloned.
-It does not serve as the source for the tenant's atlas. The proposal is for the atlas to have **its own source**: a
+It does not serve as the source for the tenant's atlas. The decision is for the atlas to have **its own source**: a
 mirror of repositories under aidd's control.
 
 ```
-~/.aidd/mirrors/<tenant>/<repo>.git            ← bare clones, synced by `index`, `refresh` and the daemon
+~/.aidd/mirrors/<tenant>/<repo>.git            ← bare clones, synced before each read and by the daemon
 ~/.aidd/atlas.yaml                              ← manifest: sources, selection, ref policy
 ```
 
@@ -69,7 +69,7 @@ coexist (the remote is the source of truth when both have the same repo).
 
 | command | does |
 |---|---|
-| (no `aidd sync`: `index`, `refresh` and `aidd daemon` call `core/mirror.sync`) | lists the repos in the sources (provider API), creates/updates bare mirrors (`git fetch --prune`), writes `Repo` with `url`, `default_ref`, `archived`, `last_activity` |
+| (no `aidd sync`: `plan`, `bootstrap`, `index`, `refresh` and `aidd daemon` sync the mirrors, through `core/mirror.sync` or the planner) | lists the repos in the sources (only `local` exists; a provider's API is F1), creates/updates bare mirrors (`git fetch --prune`), writes `Repo` with `url`, `default_ref`, `archived`, `last_activity` |
 | `aidd plan [--tenant T]` | shows what **would** be indexed: repos × refs by the policy, with a reason (`always`, `active: 3 commits/9d`) — without touching the graph |
 | `aidd bootstrap [--tenant T] [--all \| --repos a,b,c]` | `sync` + `index` of everything `plan` listed; idempotent; resumable |
 | `aidd index <repo> [--ref R] [--ephemeral]` | already exists; starts accepting a real `--ref` (a worktree of the mirror) besides the workspace |

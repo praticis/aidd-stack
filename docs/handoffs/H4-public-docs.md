@@ -219,8 +219,8 @@ contribution carries). The rest is here.
 - **Secrets** in the whole history of both repos (gitleaks or trufflehog), before the new repo's first push.
 - **Numbers:** every number in the public docs comes from a reproducible source (the corpus report, the golden
   questions), with a date. No productivity or token gains until H3 measures them.
-- **Dangling references:** ADR-001 (Neo4j) is cited in the history and does not exist in `docs/adr/` — write it or
-  drop the citation. aidd-stack's links to `indexer/...` start pointing at the new repo.
+- **Dangling references:** ADR-001 (Neo4j) does not exist in `docs/adr/`; its citations were dropped (decision D1 in
+  `docs/decisions.md` is the record). aidd-stack's links to `indexer/...` start pointing at the new repo.
 
 ## Order
 

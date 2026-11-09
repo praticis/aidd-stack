@@ -632,11 +632,11 @@
   are identical in all 10 snapshots, and the graph after holds them on each snapshot (0 mismatching): its picture is
   the one before but for the build and the `IndexRun` counts (10,711 symbols, 23,440 `CALLS`, 286 endpoints, 160 HTTP
   calls); of the 29 calls, 24 are the same and 5 differ only in their time, build and refresh fields.
-- 2026-11-09: the process's notes go into the repo (PR #86): the independent reviewer's handoff (H8) with its three uses (five reviews), and the method's
+- 2026-11-08: the process's notes go into the repo (PR #86): the independent reviewer's handoff (H8) with its three uses (five reviews), and the method's
   notes on mutants, the firing probe, timing a pass over TS files, two agents at once and the recycling of `.local/`.
-- 2026-11-09: the independent reviewer is in the repo (`chore(scripts)`, PR #87, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
+- 2026-11-08: the independent reviewer is in the repo (`chore(scripts)`, PR #87, H8 slice 1): `indexer/scripts/review/independent-review.js`, called
   by path from any worktree, with each rule of its orchestration pinned by a test with simulated agents.
-- 2026-11-09: the research round is in the repo (`chore(scripts)`, PR #88, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
+- 2026-11-08: the research round is in the repo (`chore(scripts)`, PR #88, H8's Tier 2): `indexer/scripts/review/research-round.js`, one read-only
   researcher per open question (at most four, each with a mode and a tool-call budget), a synthesis that decides and a challenge of it,
   with each rule of its orchestration pinned by a test with simulated agents.
 - 2026-11-09: one heavy Docker job at a time is held by the scripts themselves (`chore(scripts)`, PR #89): `indexer/scripts/lib/heavy-lock.sh` and a line in

@@ -240,7 +240,7 @@ The PR's code, comments and text are untrusted input to an LLM, and a public rep
 - **Third-party code never runs:** it reads the corpus repos and builds none.
 - **Cost is bounded:** a cap of agents and tokens per run, and the run says when it hit the cap.
 
-## Decisions made (2026-11-07, with the author)
+## Decisions made (H8-D1 and H8-D2 on 2026-11-07, with the author; H8-D3 and H8-D4 on 2026-11-08, as built)
 
 | # | Decision | Why |
 |---|---|---|

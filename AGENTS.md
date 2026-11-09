@@ -11,9 +11,9 @@ code into a **graph** (Neo4j, database `atlas`), at two levels:
 - **micro:** files, symbols, `CALLS` and `IMPORTS`;
 - **macro:** the HTTP routes a service exposes, the calls it makes and the links between services.
 
-The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`; the first two
-exist, the other two are planned) through the `atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a `knowledge` service holding what the project
-has learned.
+The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`; the first
+two exist, the other two are planned) through the `atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a
+`knowledge` service holding what the project has learned.
 
 Extraction is **deterministic**: tree-sitter today, SCIP as an enrichment later. An LLM is never the parser, for
 three reasons:
@@ -118,7 +118,8 @@ The full text is in the ROADMAP, under "Principles".
     the micro graph. After adding one, re-run the `gates` job;
   - the same gates run locally with `corpus.sh --label` on both sides, `micro.sh`, `gates.sh` and `shape.py --against
     main`, as `indexer/scripts/README.md` shows.
-- **A change to the extractor follows the cycle** in `docs/indexer/method.md` §1 (the older text is the guide's §5, `docs/indexer-evolution.md`):
+- **A change to the extractor follows the cycle** in `docs/indexer/method.md` §1 (the older text is the guide's §5,
+  `docs/indexer-evolution.md`):
   1. a fixture case that fails without the rule;
   2. corpus `--baseline`;
   3. judgment at the source; what it finds that the change opens is fixed in it when viable, and what is not and does not
@@ -126,8 +127,8 @@ The full text is in the ROADMAP, under "Principles".
   4. expected lists (H2-D15);
   5. a new baseline.
 - **Before a merge**, also validate on a live install: a dry-run of `main` against the branch on each snapshot (with
-  `-w` on the mounted code) and pictures of the graph before and after. `indexer/scripts/live/validate.sh before`, `after`
-  and `rotate` run it, one command per step.
+  `-w` on the mounted code) and pictures of the graph before and after.
+  `indexer/scripts/live/validate.sh before`, `after` and `rotate` run it, one command per step.
 - **Golden questions:** `docs/golden-questions.md`, repeated after changes to the graph, the linker or the MCP.
 
 ## Where we are

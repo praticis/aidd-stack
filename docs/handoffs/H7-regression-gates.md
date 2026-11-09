@@ -11,7 +11,7 @@
 >   absorbed here;
 > - the fifth round of `docs/golden-questions.md`: how PR #5 was validated on a live install.
 >
-> **State (2026-10-22):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
+> **State (2026-11-09):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
 > `main` requires `tests`, `gates` and `debts`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3, D5 and D6 (see
 > "Decisions made"); D2 and D4 are still to make.
 
