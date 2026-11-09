@@ -79,7 +79,7 @@ its hypothesis (a dynamic path, or only on a branch) is right in both cases and 
 
 **MCP:** `cypher_readonly` with the query below (it is the "workspace map" of `SCHEMA.md` §7; absent on a
 multi-tenant atlas with `ATLAS_RAW_CYPHER=off`); or `http_map` per repo and add them up. A candidate for a tool of its
-own (`workspace_map`) in F1.
+own (`workspace_map`) in F2.6.
 
 **Cypher:**
 

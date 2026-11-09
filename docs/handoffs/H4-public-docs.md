@@ -240,8 +240,8 @@ contribution carries). The rest is here.
      - *the working docs went from ~640 to ~273 KB. The rest of the ~150 KB target is `indexer-evolution.md`
        (97 KB), rewritten in 0b;*
      - *the old text stays in git, at `1d73bb0`;*
-     - *every doc was translated to English (H4-D1), except two: the H5 handoff, translated on its branch, which
-       still edits it, and `indexer-evolution.md`, which 0b rewrites.*
+     - *every doc was translated to English (H4-D1), except one: `indexer-evolution.md`, which 0b rewrites (the H5 handoff was
+       translated too).*
    - **0b, after H5:** `indexer-evolution.md` rewritten in English for the new architecture (it is H5's step 11).
      Before that, rewriting the rules table would be wasted work: it becomes the recognizer catalog.
 1. **Decisions** H4-D2…D12 and what to get from the author (the section above).

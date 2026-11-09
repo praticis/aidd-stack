@@ -102,7 +102,7 @@ _Effective policy for this repo — change it in `policy.yaml`, not here._
 
 Regenerated after every `record_insight` that touches the repo, by `refresh_index(repo)` (which
 `scan` calls after writing the page, so a new page lists what was already recorded) and by the
-aging job. One heading
+aging job (planned, K9). One heading
 per topic that has live insights, in vocabulary order; inside a topic, by status (`enforced`,
 `accepted`, `recurring`, `observed`), then by `occurrences` descending, then `last_seen` descending.
 `archived` insights are not listed. Shared insights that apply to the repo are listed under their
@@ -208,8 +208,8 @@ observed ──► recurring ──► accepted ──────────�
 | → `observed` | service | `record_insight` with no matching insight |
 | `observed` → `recurring` | service | `occurrences` reaches `knowledge.recurring_after` (policy) |
 | `observed`/`recurring` → `accepted` | person | approved in `refine-tech` (sets `approved_by/at`) or frontmatter edit |
-| `accepted` → `enforced` | person / service | a convention rule or lint now checks it (`rule` set) |
-| any → `archived` | service / person | not seen for `knowledge.archive_after_days` (policy), or discarded by a person |
+| `accepted` → `enforced` | person / service | a convention rule or lint now checks it (`rule` set); planned, K8 |
+| any → `archived` | service / person | not seen for `knowledge.archive_after_days` (policy; the aging is planned, K9), or discarded by a person |
 | `archived` → previous status | service | recorded again (occurrences continue) |
 
 `insights_for` returns `accepted` and `enforced` as **rules** and `observed`/`recurring` as

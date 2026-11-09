@@ -3,7 +3,8 @@
 The test checks one thing: whether a session with no memory of the work recovers where H5 stands and what comes next
 from a clean checkout, and then stops before it acts.
 
-**Status: passed in runs 4 to 8 (§4), in a clone with the fixed prompt.** Run it again after a change to these
+**Status: passed in runs 4 to 8 (§4), in a clone with the fixed prompt; the last run was on 2026-10-28, and 27 commits have
+touched `docs/indexer` since.** Run it again after a change to these
 documents or to the handoff's state. It needs a clean clone of a commit that is pushed, and a session that is not a
 subagent of the one that wrote them.
 

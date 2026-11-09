@@ -43,9 +43,9 @@ The classes bind an agent; the author runs any of these tools without asking.
 | Class | Examples | Authorization |
 |---|---|---|
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
-| 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `live/dry_sections.py`, `live/graph_vs_dry.py` | the task says to run it |
+| 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `judgment/ts_vs_checker.py`, `live/dry_sections.py`, `live/graph_vs_dry.py`, `live/json_paths_diff.py`, `live/round.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/mutants.sh`, `protocol/cost-pairs.sh`, `protocol/micro-fresh.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `checks/ts_checker.js`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -80,7 +80,7 @@ indexer/scripts/corpus.sh --holdout --label L-holdout --baseline 2026-10-18-v2-h
 
 - Baselines are named directories in `$C/runs`; in CI they are derived from the base's code. They are not published.
 - A new baseline is saved only after its diff was judged item by item. A refactor never promotes one.
-- `--reuse` rescores a saved run: it measures nothing about a change to the extractor.
+- `http_corpus.py --reuse` (not a `corpus.sh` flag) rescores a saved run: it measures nothing about a change to the extractor.
 - The hold-out's lists are written before the extractor runs on it, it is measured once, and no rule is tuned on it.
   In a change of behavior it is read only in aggregate; an item opened becomes corpus.
 - Gates (`gates.sh`): precision never lower (per repo and kind, and pooled per language); no expected pair and no
@@ -130,8 +130,8 @@ declaration, and whether a dropped edge is replaced at its site or lost.
 
 ### 4.5 Timing alone
 
-`time-alone.sh` runs the corpus's wall time and four full dry-runs on `main`'s worktree, then the branch's, with no
-other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ran one per side. Run three when time matters.
+`time-alone.sh` times the corpus on each side's worktree and then, for each of four repos (`AIDD_TIME_REPOS`), one dry-run per
+side, alternating, with no other load. The rule is the median of three runs alone (H4.1); PRs #20 to #27 ran one per side. Run three when time matters.
 
 A change to a pass over the TS files (the resolver's or the scanner's) is timed on ghost and mattermost, the two largest
 TS repos of the corpus, with `protocol/cost-pairs.sh MAIN_TREE BRANCH_TREE [--pairs N] [--prefix NAME] REPO...`: pairs of
@@ -244,7 +244,9 @@ It refuses with exit code 2 and says why:
 | `the golden calls file does not match SHA256SUMS` | ask the author; the file is private and never regenerated |
 | `a container sees other files than the host's` | a folder recreated at one path is served stale: use another `AIDD_LIVE` |
 | `the installed code is not X's: the author reinstalls from main first` | step 2 is not done: ask the author |
-| `N snapshot(s) have no ok run since the before` | wait for the refresh (up to 15 min) and run it again |
+| `N snapshot(s) have no ok last run since the before` | wait for the refresh (up to 15 min) and run it again |
+| `N snapshot(s) still hold the before's build` | wait for the refresh and run it again |
+| `no before in <inflight>` | the before is taken first, with `validate.sh before`, before the reinstall |
 | `after exists: the after is taken once` | it is taken: go to step 4 |
 
 What the counts say. After `before`: the dry-runs of `main` and of the branch are identical in every snapshot except
@@ -467,8 +469,8 @@ round, without these limits, spent 1.79M tokens, 88 % in the researchers.
 
 - **The size of a judgment sample.** Not fixed; §4.4 gives the sizes used.
 - **A memory tolerance and a time threshold.** None applies today.
-- **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live-check.sh` (H7 slice 4)
-  was never built.
+- **A scripted pass criterion for the live comparisons.** They are practice (§4.7, §4.8); `live/validate.sh` (§4.9) runs their steps, but the pass criterion is
+  still read by a person or an agent (H7 slice 4).
 - **A firing probe in the repo.** §4.14 is practice: each PR has written its own instrumented copy in a scratch folder,
   since a probe patches the decision point of one rule. A reusable one is a `chore(scripts)` PR yet to be planned. The
   authors' working copies are kept privately in `.local/plans/h5-d51-tools/`.
