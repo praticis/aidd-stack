@@ -1,0 +1,12 @@
+# What the project keeps out of a pull request's title, body and commit messages (AGENTS.md, "For contributors").
+#
+# One rule per line: `id :: regex :: reason`. The regex is a Python one, searched in each line, case-insensitively (to match
+# case, start it with `(?-i:`). A line that starts with `#` is a comment. To add a rule, add a line; the check is
+# indexer/scripts/checks/pr_text.py and runs in the `debts` job of every pull request.
+#
+# The rules below are anchored at the start of a line, with only punctuation, an emoji or a bullet before the text, on
+# purpose: a footer is refused, and a sentence that names the rule or says "generated with <a script>" in the middle of a
+# line is not. To refuse the phrase anywhere, drop the `^\W*`.
+
+attribution-trailer :: ^\W*(?:co-authored|assisted|authored|generated|created|written)-by\s*: :: an attribution trailer (Co-Authored-By, Assisted-by, ...): the project's commits and pull requests carry none
+generated-footer :: ^\W*generated\s+(?:with|by|using)\b :: a "Generated with/by <tool>" footer, from any AI tool: the project's pull requests carry none

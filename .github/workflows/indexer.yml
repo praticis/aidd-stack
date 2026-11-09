@@ -3,9 +3,10 @@ name: indexer
 # The method's checks on every change to the indexer or to the graph's schema: the tests, with the MCP and the graph
 # writer against a throwaway Neo4j; the HTTP corpus, the hold-out and the micro graph of
 # the branch against its base; the code's shape against its base; then the gates (indexer/scripts/gates.py).
-# The register of technical debts is checked on every pull request, apart from them. A push to main fills the baselines that pull
-# requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes them: the
-# extraction is deterministic, so a baseline is derived data.
+# The register of technical debts is checked on every pull request, apart from them, and so is the text of the pull
+# request: its title, body and commit messages carry no attribution line (indexer/scripts/checks/pr_text.py). A push
+# to main fills the baselines that pull requests compare with. They live in the Actions cache, keyed by the indexer's
+# tree, and a miss recomputes them: the extraction is deterministic, so a baseline is derived data.
 #
 # A pull request is a refactor, where any difference fails, when its branch starts with `refact/` or `refactor/`, when
 # one of its commits starts with `refactor:` or `refact:` (with or without a scope), or under the `refactor` label.
@@ -100,6 +101,9 @@ jobs:
   debts:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -109,6 +113,21 @@ jobs:
         # bash, not the default shell: only then does a pipe carry the script's failure past `tee`
         shell: bash
         run: python3 -I indexer/scripts/debts.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: The pull request's title, body and commit messages carry no line the project's rules refuse
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        # Fetched now, not read from the event, so that a re-run sees an edited body (editing one starts no run: an `edited`
+        # trigger would cancel the corpus). The text goes into files and never into a shell command.
+        run: |
+          gh api "repos/$REPO/pulls/$PR" --jq .title > "$RUNNER_TEMP/title"
+          gh api "repos/$REPO/pulls/$PR" --jq '.body // ""' > "$RUNNER_TEMP/body"
+          gh api "repos/$REPO/pulls/$PR/commits" --paginate --slurp > "$RUNNER_TEMP/commits.json"
+          python3 -I indexer/scripts/checks/pr_text.py --title-file "$RUNNER_TEMP/title" --body-file "$RUNNER_TEMP/body" \
+            --commits-json "$RUNNER_TEMP/commits.json" | tee -a "$GITHUB_STEP_SUMMARY"
 
   corpus:
     needs: changes
