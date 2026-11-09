@@ -116,6 +116,7 @@ python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.t
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/ts_vs_checker.py REPO BEFORE AFTER CHECKER.jsonl [--sample N [--seed S]]
+python3 -I indexer/scripts/judgment/scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
 python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
@@ -133,6 +134,16 @@ below `--min-keyed` (a percent, 50 by default) it prints a WARNING, and with `--
 first used compared a path with its extension to one without it and hid 11,145 of `ghost`'s 15,092 edges as "no site",
 and the shares it printed looked fine. The rule is the general one: run an oracle on a case whose answer is known, and
 count what it could not judge, before reading what it judged.
+
+`scorecard.py` measures a whole tree, not one change. For every repo of the micro set it gives the percent of its
+`CALLS` a type decided (`typed-share`, for every language) and, for a TS repo with the checker's rows, the keys'
+coverage, the precision of its typed edges and the recall of the sites the checker decides (`typed-recall` by a typed
+edge). Each number has a floor in `indexer/scripts/checks/reference_floors.txt` (`repo.metric :: floor :: note`): the
+value measured on `main`, rounded down to a hundredth; the graph is deterministic, so there is no tolerance. A number under
+its floor, one with no floor and a floor with no number all fail. A floor is lowered by editing its line in the diff of
+the change, under the `graph-change` label (the label alone would free every change of the graph, and the line makes the
+drop a number the author reads); it is raised when a change improves the number, and the scorecard prints the headroom.
+`--write-floors` prints the lines for a tree.
 
 ### 4.5 Timing alone
 
