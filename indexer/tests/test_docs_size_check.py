@@ -24,11 +24,10 @@ def make(tmp_path, files: dict[str, int], rules: str):
     return ["--root", str(tmp_path), "--rules", str(r)]
 
 
-def test_the_real_list_is_a_list_of_the_growth_files_with_a_reason_each():
+def test_the_real_list_loads_and_each_ceiling_is_a_doc_with_a_size_and_a_reason():
+    # its content is not pinned: a PR that only lowers a ceiling does not run the tests (the `changes` job leaves the list out)
     ceilings = D.load_ceilings((CHECKS / "docs_ceilings.txt").read_text())
-    assert {c.path for c in ceilings} == {"docs/golden-questions.md", "docs/handoffs/H5-indexer-refactor.md", "docs/decisions.md",
-                                         "docs/ROADMAP.md", "docs/history.md"}
-    assert all(c.limit > 40 * 1024 and c.reason for c in ceilings)
+    assert ceilings and all(c.path.startswith("docs/") and c.path.endswith(".md") and c.limit > 0 and c.reason for c in ceilings)
 
 
 def test_a_size_is_in_bytes_or_in_kb_of_1024_bytes_and_a_comment_or_blank_line_is_no_ceiling():
