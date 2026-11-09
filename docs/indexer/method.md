@@ -392,7 +392,7 @@ What cannot run twice, and who decides when it starts:
 | Resource | Why it is single | How it is held |
 |---|---|---|
 | The live validation (§4.9) | one install, one `before` taken with the install on `main`'s code, one pair in `inflight/` | both agents run `validate.sh` with the same `AIDD_LIVE`, so `inflight/` is the queue and `before` refuses while it exists; each asks the author before **starting** one |
-| A heavy Docker job (corpus, hold-out, micro, the full tests, a dry-run of every snapshot) | one VM of 10.4 GB, of which the live stack uses about 3.5 | `~/.cache/aidd-corpus/heavy.lock`, one line `who label start`, removed at the end, taken by the scripts themselves where they do, by hand where they do not yet |
+| A heavy Docker job (corpus, hold-out, micro, the full tests, a dry-run of every snapshot) | one VM of 10.4 GB, of which the live stack uses about 3.5 | `~/.cache/aidd-corpus/heavy.lock`, one line `who pid since label`, which the scripts that start such a job take themselves (`indexer/scripts/lib/heavy-lock.sh`): a second one ends with status 75 and names the holder, or waits with `AIDD_HEAVY_WAIT=<seconds>`; the lock is the holder's process and goes when it ends, however it ends; a line with no pid (written by hand) is never taken over |
 | A time or memory measurement (§4.5) | it needs the machine quiet | the author sets the moment |
 | The first `micro.sh` against a new `main` | it writes the base in a cache shared by tree and image | under the lock |
 | The numbers H5-Dnn, TD-nnn and the PR's | the next one is whoever opens first | reserved at the rebase onto `origin/main`, right before the PR opens |
@@ -444,7 +444,7 @@ round, without these limits, spent 1.79M tokens, 88 % in the researchers.
 | A folder deleted and recreated at one path (Docker Desktop) | a new label per run; `micro-fresh.sh` |
 | A file just written by another container, read through another mount | copy to a fresh path first |
 | The indexer's code or the expected lists edited during a run | no edits during a run |
-| Two protocols at once, or other load | one at a time; time alone |
+| Two protocols at once, or other load | one at a time: the heavy-job lock (§4.15); time alone |
 | A refactor and a rule in one commit | separate commits |
 | A dry-run that failed | the summary and the logs: the repo is "not compared" |
 | A different golden calls file before and after | the same file both times |

@@ -18,6 +18,7 @@ set -euo pipefail
 
 repo="$(cd "$(dirname "$0")/../../.." && pwd)"
 V="$repo/indexer/scripts/live"
+. "$V/../lib/heavy-lock.sh"
 live="${AIDD_LIVE:-$repo/.local/indexer/live}"
 home="${AIDD_HOME:-$HOME/.aidd}"
 calls="$live/golden-calls.json"
@@ -143,8 +144,8 @@ rotate() {
 
 mode="${1:-}"; [ $# -eq 0 ] || shift
 case "$mode" in
-  before) before "$@" ;;
-  after) after ;;
+  before) heavy_lock validate-before; before "$@" ;;
+  after) heavy_lock validate-after; after ;;
   rotate) rotate "$@" ;;
   *) sed -n '2,16p' "$0" >&2; exit 2 ;;
 esac

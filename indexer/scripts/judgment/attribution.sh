@@ -19,6 +19,8 @@ set -euo pipefail
 [ $# -ge 7 ] || { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 here="$(cd "$(dirname "$0")" && pwd)"
+. "$here/../lib/heavy-lock.sh"
+heavy_lock "attribution $1"
 home="${AIDD_CORPUS_HOME:-$HOME/.cache/aidd-corpus}"
 image="${AIDD_INDEXER_IMAGE:-aidd-indexer:local}"
 out="${AIDD_ATTRIBUTION_OUT:-$(mktemp -d)}"

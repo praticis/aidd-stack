@@ -60,6 +60,8 @@ if [ -z "$label" ]; then
   [ -z "$(git -C "$indexer" status --porcelain -- .)" ] || label="$label-dirty"
   [ -z "$holdout" ] || label="$label-holdout"
 fi
+. "$(dirname "$0")/lib/heavy-lock.sh"
+heavy_lock "corpus $label"
 docker image inspect "$image" >/dev/null 2>&1 \
   || { echo "missing image $image: build the stack's indexer image first (docker compose build at the repo root)" >&2; exit 2; }
 [ -z "$baseline" ] || [ -d "$home/runs/$baseline" ] || { echo "no baseline run: $home/runs/$baseline" >&2; exit 2; }
