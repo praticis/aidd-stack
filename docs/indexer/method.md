@@ -127,11 +127,12 @@ same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each comm
 the by-name edges it drops, what TypeScript's checker says about the callee at that site (`CHECKER.jsonl` is
 `node checks/ts_checker.js --link /corpus/REPO` in the test image), with a `.d.ts` standing for the JS beside it as one
 declaration, and whether a dropped edge is replaced at its site or lost.
-Read its `no checker site` count before the others: it is the calls the checker has no row for, and a share near the
-whole means the two sides are keyed differently, not that the checker saw nothing. The comparator #84 first used
-compared a path with its extension to one without it and hid 11,145 of `ghost`'s 15,092 edges as "no site"; the script
-keys both by the path without the extension. The rule is the general one: run an oracle on a case whose answer is known,
-and count what it could not judge, before reading what it judged.
+Each percentage it prints is over the sites the checker has a row for, and its line says how many edges that is. One
+more line says how many of the TS calls of the two runs are in a file the checker has rows for (97.9 % in `ghost`);
+below `--min-keyed` (a percent, 50 by default) it prints a WARNING, and with `--strict` it ends in 1. The comparator #84
+first used compared a path with its extension to one without it and hid 11,145 of `ghost`'s 15,092 edges as "no site",
+and the shares it printed looked fine. The rule is the general one: run an oracle on a case whose answer is known, and
+count what it could not judge, before reading what it judged.
 
 ### 4.5 Timing alone
 

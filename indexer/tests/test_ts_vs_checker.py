@@ -122,7 +122,7 @@ def test_a_dropped_edge_to_a_declaration_file_the_checker_gives_as_the_js_beside
     a = analyse(written, [call(MAIN, THING, 22, "name")], [], [site(22, "m", "src/x.d:Thing.m")])
     assert dict(a.dropped_verdicts) == {"agrees (via .d.ts pair)": 1}
     assert tool.share(a.dropped_verdicts, "agrees", "agrees (via .d.ts pair)") == (1, 1, 100.0)
-    assert any("the checker agrees with the callee 1 (100.00 %)" in line for line in tool.report("r", a, 0, 7))
+    assert any("the checker agrees with the callee 1 (100.00 % of those)" in line for line in tool.report("r", a, 0, 7))
 
 
 def test_the_percentages_count_only_the_sites_the_checker_has(written):
@@ -144,7 +144,7 @@ def test_the_report_has_the_lines_the_judgment_reads(written):
     b, a, c = written([call(MAIN, BAR, 12, "name")], ADDED, ROWS)
     out = tool.report("r", tool.Analysis(tool.load(b, "r"), tool.load(a, "r"), tool.checker_sites(c)), 0, 7)
     assert out[0].startswith("r typed edges the change adds: 6")
-    assert any("added with a checker site: 5, agree 2 (40.0 %" in line for line in out)
+    assert any("added with a checker site: 5 of 6 (83 %), agree 2 (40.0 % of those" in line for line in out)
     assert any("dropped with a checker site" in line for line in out) and any("lost" in line for line in out)
 
 
@@ -172,3 +172,68 @@ def test_a_sample_is_the_same_for_one_seed_and_a_sample_is_no_longer_than_the_ro
 def test_without_the_four_arguments_it_prints_its_usage_and_ends_with_2(capsys):
     assert tool.main(["r", "a"]) == 2
     assert "ts_vs_checker.py REPO BEFORE_DIR AFTER_DIR CHECKER.jsonl" in capsys.readouterr().err
+
+
+def test_each_percentage_says_how_many_edges_it_is_over(written):
+    b, a, c = written([call(MAIN, BAR, 12, "name")], ADDED, ROWS)
+    out = tool.report("r", tool.Analysis(tool.load(b, "r"), tool.load(a, "r"), tool.checker_sites(c)), 0, 7)
+    assert "  dropped with a checker site: 0 of 1 (0 %), the checker agrees with the callee 0 (0.00 % of those)" in out
+
+
+def test_the_calls_in_files_the_checker_has_rows_for_are_counted_over_the_ts_calls_of_both_runs(written):
+    before = [call(MAIN, FOO, 40, "name")]
+    after = [call(MAIN, FOO, 3, "receiver-type"), call(JS_MAIN, FOO, 4, "name"), call(PY_MAIN, FOO, 5, "name")]
+    a = analyse(written, before, after, ROWS)
+    assert a.keyed == (1, 2, 2, 3)  # src/use has rows; src/app does not; the Python call is no TS call
+
+
+def test_a_checker_that_names_the_files_another_way_is_a_warning_and_ends_in_0_unless_strict(written, capsys):
+    rows = [{**r, "file": "packages/web/src/use.ts"} for r in ROWS]
+    b, a, c = written([], ADDED, rows)
+    assert tool.main(["r", b, a, c]) == 0
+    out = capsys.readouterr().out
+    assert "the checker has rows for 0 of 1 TS files and 0 of 7 TS calls of the two runs (0.0 %)" in out
+    assert "  WARNING: below 50 %: the two sides are probably keyed differently" in out
+    assert tool.main(["r", b, a, c, "--strict"]) == 1
+
+
+def test_a_run_keyed_right_has_no_warning_and_strict_ends_in_0(written, capsys):
+    b, a, c = written([], ADDED, ROWS)
+    assert tool.main(["r", b, a, c, "--strict"]) == 0
+    out = capsys.readouterr().out
+    assert "the checker has rows for 1 of 1 TS files and 7 of 7 TS calls of the two runs (100.0 %)" in out and "WARNING" not in out
+
+
+def test_the_threshold_is_a_percent_of_the_calls_and_a_run_at_it_passes(written, capsys):
+    calls = [call(MAIN, FOO, 3, "receiver-type"), call(JS_MAIN, FOO, 4, "name")]
+    b, a, c = written([], calls, [site(3, "run", "src/a:Foo.run")])  # one of two calls is in a file with rows: 50 %
+    assert tool.main(["r", b, a, c, "--strict"]) == 0 and "WARNING" not in capsys.readouterr().out
+    assert tool.main(["r", b, a, c, "--strict", "--min-keyed", "50.1"]) == 1
+    assert "WARNING: below 50.1 %" in capsys.readouterr().out
+
+
+def test_a_checker_with_no_rows_at_all_is_a_warning(written, capsys):
+    b, a, c = written([], ADDED, ROWS)
+    Path(c).write_text("")
+    assert tool.main(["r", b, a, c, "--strict"]) == 1
+    assert "0 of 7 TS calls of the two runs (0.0 %)" in capsys.readouterr().out
+
+
+def test_with_no_ts_call_in_either_run_there_is_nothing_to_key_and_no_warning(written, capsys):
+    b, a, c = written([], [call(PY_MAIN, FOO, 10, "receiver-type")], ROWS)
+    assert tool.main(["r", b, a, c, "--strict"]) == 0
+    out = capsys.readouterr().out
+    assert "the checker has rows" not in out and "WARNING" not in out
+
+
+def test_an_option_it_does_not_know_ends_in_2(written, capsys):
+    b, a, c = written([], ADDED, ROWS)
+    assert tool.main(["r", b, a, c, "--nope"]) == 2
+
+
+def test_the_threshold_is_over_the_calls_and_not_over_the_files(written, capsys):
+    calls = [call(MAIN, FOO, 3, "receiver-type"), call(MAIN, FOO, 4, "receiver-type"), call(MAIN, FOO, 5, "receiver-type"),
+             call(JS_MAIN, FOO, 6, "name")]
+    b, a, c = written([], calls, [site(3, "run", "src/a:Foo.run")])  # 3 of 4 calls (75 %) in a file with rows, 1 of 2 files (50 %)
+    assert tool.main(["r", b, a, c, "--strict", "--min-keyed", "60"]) == 0
+    assert "3 of 4 TS calls of the two runs (75.0 %)" in capsys.readouterr().out

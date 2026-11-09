@@ -1,6 +1,6 @@
 """The CALLS edges a change gives TS and JS call sites, against the declaration TypeScript's checker gives each site.
 
-   ts_vs_checker.py REPO BEFORE_DIR AFTER_DIR CHECKER.jsonl [--sample N [--seed S]]
+   ts_vs_checker.py REPO BEFORE_DIR AFTER_DIR CHECKER.jsonl [--sample N [--seed S]] [--min-keyed PCT] [--strict]
 
 BEFORE_DIR and AFTER_DIR hold the micro dry-runs of the two trees (`micro.sh` leaves them in $C/micro), REPO.json.gz in
 each. CHECKER.jsonl is `node checks/ts_checker.js --link /corpus/REPO` run in the test image: one row per call, with its
@@ -11,7 +11,15 @@ edges it drops, what the checker says about the edge's callee at that site: `agr
 `checker: outside`, `checker: none`, or `no checker site` (the checker has no row for the call). A `.d.ts` that stands for the
 JS beside it counts as the same declaration (`agrees (via .d.ts pair)`). A dropped edge is `replaced` when the site keeps an
 edge to a method of that name, and `lost` when it keeps none. With --sample, it lists added typed edges where the checker
-names another declaration, to read at the source."""
+names another declaration, to read at the source.
+
+Each percentage is over the sites the checker has a row for, and the line says how many of the edges that is: a share
+read without its denominator is what hid 11,145 of one repository's 15,092 edges when the two sides were keyed
+differently. One more line says how many of the TS calls of the two runs are in a file the checker has rows for: with
+the keys right it is most of them (97.8 % in the corpus's largest TS repository), with a path compared with its
+extension to one without it, none. Below --min-keyed (a percent, 50 by default) it prints a WARNING, and with --strict
+it ends in 1. Without a warning it ends in 0, and in 2 when its arguments are wrong."""
+import argparse
 import collections
 import gzip
 import json
@@ -98,6 +106,15 @@ def share(counter, *good):
     return ok, total, 100 * ok / max(total, 1)
 
 
+def keyed(sites, calls):
+    """(TS files with a checker row, TS files, calls in them, calls) over the calls of both runs: whether the two sides name
+    a file the same way, which no share over the sites can tell."""
+    rows = {k[0] for k in sites}
+    files = collections.Counter(path_of(c["caller_id"]) for c in calls)
+    inside = {f: n for f, n in files.items() if f in rows}
+    return len(inside), len(files), sum(inside.values()), sum(files.values())
+
+
 class Analysis:
     def __init__(self, before, after, sites):
         ts_before, ts_after = in_ts(before), in_ts(after)
@@ -108,6 +125,7 @@ class Analysis:
         self.dropped = [c for c in before["calls"] if ts_before(c) and key(c) not in kept]
         site_has = {(c["caller_id"], c["line"], method_of(qualified(c["callee_id"]))) for c in after["calls"]}
         self.sites = sites
+        self.keyed = keyed(sites, [c for c in before["calls"] if ts_before(c)] + [c for c in after["calls"] if ts_after(c)])
         self.added_verdicts = collections.Counter(verdict(c, sites) for c in self.added)
         self.dropped_verdicts = collections.Counter(verdict(c, sites) for c in self.dropped)
         self.fate = collections.Counter(
@@ -118,14 +136,32 @@ class Analysis:
         return [c for c in self.added if verdict(c, self.sites) == "checker: another declaration"]
 
 
-def report(repo, analysis, sample, seed):
+def percent(n, whole):
+    return 100 * n / whole if whole else 0.0
+
+
+def keyed_percent(analysis):
+    files_in, files, calls_in, calls = analysis.keyed
+    return percent(calls_in, calls) if calls else None
+
+
+def report(repo, analysis, sample, seed, min_keyed=50.0):
     out = []
     out.append(f"{repo} typed edges the change adds: {len(analysis.added)} {dict(analysis.added_verdicts)}")
     out.append(f"{repo} by-name edges the change drops: {len(analysis.dropped)} {dict(analysis.dropped_verdicts)}")
     ok, total, pct = share(analysis.added_verdicts, "agrees", "agrees (via .d.ts pair)")
-    out.append(f"  added with a checker site: {total}, agree {ok} ({pct:.1f} %, a .d.ts pair counts as the same declaration)")
+    out.append(f"  added with a checker site: {total} of {len(analysis.added)} ({percent(total, len(analysis.added)):.0f} %), "
+               f"agree {ok} ({pct:.1f} % of those, a .d.ts pair counts as the same declaration)")
     ok, total, pct = share(analysis.dropped_verdicts, "agrees", "agrees (via .d.ts pair)")
-    out.append(f"  dropped with a checker site: {total}, the checker agrees with the callee {ok} ({pct:.2f} %)")
+    out.append(f"  dropped with a checker site: {total} of {len(analysis.dropped)} ({percent(total, len(analysis.dropped)):.0f} %), "
+               f"the checker agrees with the callee {ok} ({pct:.2f} % of those)")
+    files_in, files, calls_in, calls = analysis.keyed
+    if calls:
+        out.append(f"  the checker has rows for {files_in} of {files} TS files and {calls_in} of {calls} TS calls of the two runs "
+                   f"({keyed_percent(analysis):.1f} %)")
+        if keyed_percent(analysis) < min_keyed:
+            out.append(f"  WARNING: below {min_keyed:g} %: the two sides are probably keyed differently (the repository's path, the extension), "
+                       "so every share above is over a small part of the data")
     out.append("dropped, by whether the site keeps an edge to a method of that name, and the checker's verdict:")
     out.extend(f"  {n} {fate}: {checker}" for (fate, checker), n in sorted(analysis.fate.items()))
     if sample:
@@ -138,15 +174,23 @@ def report(repo, analysis, sample, seed):
 
 
 def main(argv):
-    args = [a for a in argv if not a.startswith("--")]
-    flags = dict(zip(argv, argv[1:]))
-    if len(args) < 4:
+    parser = argparse.ArgumentParser(prog="ts_vs_checker.py", add_help=False, usage=(
+        "ts_vs_checker.py REPO BEFORE_DIR AFTER_DIR CHECKER.jsonl [--sample N [--seed S]] [--min-keyed PCT] [--strict]"))
+    for name in ("repo", "before_dir", "after_dir", "checker"):
+        parser.add_argument(name)
+    parser.add_argument("--sample", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--min-keyed", type=float, default=50.0)
+    parser.add_argument("--strict", action="store_true")
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exit_:
         print(__doc__, file=sys.stderr)
-        return 2
-    repo, before_dir, after_dir, checker = args[:4]
-    analysis = Analysis(load(before_dir, repo), load(after_dir, repo), checker_sites(checker))
-    print("\n".join(report(repo, analysis, int(flags.get("--sample", 0)), int(flags.get("--seed", 7)))))
-    return 0
+        return exit_.code
+    analysis = Analysis(load(args.before_dir, args.repo), load(args.after_dir, args.repo), checker_sites(args.checker))
+    lines = report(args.repo, analysis, args.sample, args.seed, args.min_keyed)
+    print("\n".join(lines))
+    return 1 if args.strict and any(line.startswith("  WARNING") for line in lines) else 0
 
 
 if __name__ == "__main__":
