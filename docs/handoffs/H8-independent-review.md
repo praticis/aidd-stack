@@ -5,8 +5,7 @@
 > - `AGENTS.md`, the entry point;
 > - `docs/design.md`: the contracts, boundaries and proof a plan declares, which is what this reviewer attacks;
 > - `docs/handoffs/H7-regression-gates.md`: the deterministic gates this reviewer complements and never replaces;
-> - `docs/handoffs/H5-indexer-refactor.md`: the changes of behavior (H5-D48 to H5-D51) whose plans were the first
->   material it reviewed.
+> - `docs/decisions.md`: the changes of behavior (H5-D48 to H5-D51) whose plans were the first material it reviewed.
 >
 > **State (2026-11-08):** designed and used three times: on the plan of H5-D50 (TS call receivers), on its diff, and
 > on the plan and the diff of H5-D51 (the full Tier 1). It found a gap in D50's acceptance criterion that the author
