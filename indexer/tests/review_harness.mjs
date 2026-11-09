@@ -1,37 +1,13 @@
 // Runs a Workflow script of indexer/scripts/review/ with simulated agents and prints what it did as JSON, so
 // test_independent_review.py can assert on it. Usage: node review_harness.mjs SCRIPT
-import fs from 'node:fs'
+import { player } from './workflow_sim.mjs'
 
-const src = fs.readFileSync(process.argv[2], 'utf8').replace(/export const meta =/, 'const meta =')
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
-
-const run = async (args, agentImpl) => {
-  const logs = []
-  const calls = []
-  const fn = new AsyncFunction('args', 'agent', 'parallel', 'log', 'phase', 'budget', src)
-  const agent = async (prompt, opts) => {
-    calls.push({ label: opts.label, phase: opts.phase, schema: !!opts.schema, effort: opts.effort, prompt })
-    return agentImpl(prompt, opts)
-  }
-  // the Workflow tool's own semantics: a thunk that throws resolves to null
-  const parallel = (thunks) => Promise.all(thunks.map(async (t) => { try { return await t() } catch { return null } }))
-  const result = await fn(args, agent, parallel, (m) => logs.push(m), () => {}, { total: null })
-  return { result, logs, calls }
-}
+const { failing, scenario, out } = player(process.argv[2])
 
 const objection = (point, where, severity) => ({ point, where, evidence: 'e', severity, check: 'c' })
 const review = (verdict, objections) => ({ verdict, objections, not_checked: [] })
-const failing = async (args) => {
-  try { await run(args, async () => null); return null } catch (e) { return e.message }
-}
 
-const out = {}
-// a script that crashes in one scenario fails that scenario's tests only
-const scenario = async (name, args, impl) => {
-  try { out[name] = await run(args, impl) } catch (e) { out[name] = { crashed: e.message } }
-}
-
-await scenario('plan', 
+await scenario('plan',
   { kind: 'plan', repo: '/r', target: '/r/plan.md', conclusion: '/r/synth.md', data: ['/d/a.json'], scratch: '/s' },
   async (p, o) => (o.phase === 'Review'
     ? { ...review('weakened', [objection('a', 'x.py:1', 'blocking'), objection('b', 'y.py:2', 'minor')]), what_would_change_my_mind: ['w'] }
