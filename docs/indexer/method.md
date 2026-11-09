@@ -473,7 +473,7 @@ this change was right.
   indexer is split into start again. A text that leaves the docs in a cut is pointed to by a tag (`git show TAG:path`), not
   by a hash: a split rewrites hashes.
 - **A growth file has a ceiling.** `indexer/scripts/checks/docs_ceilings.txt` lists, in bytes, the files that grow
-  (`golden-questions.md`, the H5 handoff, `decisions.md`, the ROADMAP, `history.md`), and `docs_size.py` refuses a PR that
+  (`golden-questions.md`, the H5 handoff, `decisions.md`, the ROADMAP, `history.md`, `tech-debt.md`), and `docs_size.py` refuses a PR that
   passes one, in the `debts` job. A file over its ceiling is cut, not given room: to raise one is a line of the diff, which
   the author reads. A PR that condenses a file lowers its ceiling to about 10 % above what is left; one that only edits the list or the
   template does not run the corpus, the micro set and the tests (the `changes` job leaves them out). There is no ceiling on

@@ -21,48 +21,31 @@
 - **Technical debts:** `docs/tech-debt.md` lists the known defects that do not block, each with the phase it is due in
   and a strict xfail test that fails the suite when it is fixed.
 - **In progress:**
-  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"): its first part merged as PR #7 (H5-D8). Step 5 (the
-    `TypeIndex`) goes one language at a time, a refactor and then a change of behavior (H5-D10). Go (PRs #17, #19, #20)
-    and C# (PRs #23, #25, the `fix(csharp)` of H5-D17, #27, and the fix of which extension method a call reaches,
-    H5-D18, #30) are merged and validated on a live install. The defects the fixes leave, and the gaps H5-D16 and H5-D17
-    left out, are debts (`docs/tech-debt.md`, TD-001 to TD-022); TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014,
-    TD-016 to TD-022, TD-027, TD-033 and TD-034 are due in `fix(csharp)` PRs before F1.2. Go's calls on an interface,
-    which reach no method of the repo unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before
-    F1.2. The calls on `base` and on `super` that reached the caller's own method or no ancestor, TD-030 and TD-031, and
-    the bases two C# types of one name in one file took from each other, TD-032, are closed by F1.16's `fix(resolve)`
-    #60 (H5-D32). A symbol's signature that lost the `>` it ends with, TD-040, found by #69's live validation, is closed
-    by `fix(graph)` #70; TS's module resolution that was not the compiler's, TD-038, by `fix(typescript)` #72 (H5-D40),
-    and a CommonJS export its type index did not read, TD-039, by `fix(typescript)` #73 (H5-D41), a hand-written
-    declaration file discovery skipped, TD-041, by `fix(typescript)` #79 (H5-D45), a package of the repo's own
-    workspace read as an npm package, TD-042, by `fix(typescript)` #80 (H5-D46), a function a class field holds,
-    TD-037, a class a class expression declares, TD-043, and a folder import that ignored the entry its manifest names,
-    TD-049, by `fix(typescript)` #81 (H5-D47), an import of the output of a project the config references, TD-050 in
-    part, by `fix(typescript)` #82 (H5-D48), and the declarative conventions' four, TD-044 to TD-047, by
-    `fix(conventions)` #76 (H5-D42). Three forms of a declaration the reading still misses, TD-048, found by that PR's
-    proof, are due in a `fix(conventions)` PR before F1.2. A workspace package whose source a condition only a tool of
-    the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053,
-    a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
-    property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a declaration file beside
-    its JS, TD-061, a wrapper behind an interface, TD-062, and a call on `super`, TD-063, are due in `fix(typescript)` PRs before F1.2; what a type checker
-    answers and the reading does not, TD-057, TD-059 and TD-060 (H5-D52), are due in F1.2. Two debts of the core's architecture, the syntax of each
-    language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
-    Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
-    twice, TD-036, are due in an H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036. Python's step 5 is merged and
-    validated on a live install too (H5-D22's PRs: #42, #44, #45, #47), with TD-025 due in F1.2 (H5-D26). F1.16 is
-    closed (#57 to #63). TS's step 5 (H5-D29) is merged too, in ten PRs (H5-D36, H5-D37, H5-D39, H5-D40, H5-D41, H5-D45,
-    H5-D46, H5-D47, H5-D48) and the three that end it (H5-D49 to H5-D51: #83 to #85, all validated on a
-    live install), judged with the per-site attribution every language now has (H5-D21), which reads the resolver's stage
-    too (G2, #56). Next, the `fix` PRs of the debts due before F1.2, by scope (H5-D19); then step 6 (recognizers and the catalog; C#, Go, Python, TS:
-    H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and `resolve`), then 10
-    and 11;
+  - H5 (`docs/handoffs/H5-indexer-refactor.md`, "State"; each PR's story is in `docs/history.md`):
+    - merged: steps 0–2, 4 and 7–9 (PR #7, H5-D8); step 5, the `TypeIndex`, in Go, C#, Python and TS (H5-D10, H5-D29; #85
+      the last), each validated on a live install and judged with the per-site attribution (H5-D21, G2 #56); F1.16 (#57
+      to #63); step 12 for the conventions, the corpus runner, the MCP's tools and the refresher (#74 to #78);
+    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-063), each with a strict xfail case, and the ones
+      it closed carry their PR there: TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014, TD-016 to TD-022, TD-027, TD-033
+      and TD-034 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
+      unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before F1.2; three forms of a declaration
+      the reading still misses, TD-048, are due in a `fix(conventions)` PR before F1.2; a workspace package whose source a
+      condition only a tool of the repo enables names, TD-052, a member of an interface whose function type a name or
+      `typeof` gives, TD-053, a member of an alias's object type below more wrappers than the query reaches, TD-055, a class
+      field or a parameter property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a
+      declaration file beside its JS, TD-061, a wrapper behind an interface, TD-062, and a call on `super`, TD-063, are due
+      in `fix(typescript)` PRs before F1.2; what a type checker answers and the reading does not, TD-057, TD-059 and
+      TD-060 (H5-D52), are due in F1.2; two debts of the core's architecture, the syntax of each language it holds,
+      TD-023, and the names of frameworks and client libraries it holds, TD-024, a gap of Python's, Django's model managers
+      found by name, TD-026, and a C# call on an interface that reaches its single implementer twice, TD-036, are due in an
+      H5 step: 6 and 12 for TD-023, 6 for TD-024, TD-026 and TD-036;
+    - next: the `fix` PRs of the debts due before F1.2, by scope (H5-D19); then step 6 (recognizers and the catalog; C#,
+      Go, Python, TS: H5-D20, with the core's HTTP modules: H5-D44), step 12's last PR (the pipeline's `extract` and
+      `resolve`), then 10 and 11;
   - H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file cache,
-    designed now, plugged in after H5.
-    - Step 0, the measurement, is done ("H6 baseline" in the corpus report).
-    - It found the resolver quadratic in Go and C#. The fix, an index built once, is in `main` (PR #9).
-    - Step 1, the prototypes, is done ("H6 step 1"). A second map that re-extracts (B), with a cache keyed per
-      package (D), gives identical output and warm runs of 14–23 s on mattermost, against 73 s today.
-    - Step 2 is done: B keyed per package (H6-D5), and batches of whole packages scanned in the worker (H6-D6), with
-      14–22 % less CPU than batches of files and the same output. ADR-004 to ADR-006 are accepted.
+    designed now, plugged in after H5. Steps 0 to 2 are done (the measurement and the prototypes are "H6 baseline" and
+    "H6 step 1" in the corpus report; B keyed per package, H6-D5, and batches of whole packages, H6-D6); the resolver's
+    quadratic cost in Go and C# is fixed (PR #9); ADR-004 to ADR-006 are accepted;
   - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
   - H8 (`docs/handoffs/H8-independent-review.md`): the independent reviewer, a read-only adversary for plans and diffs,
     designed and used in three rounds, five reviews (H5-D50 and H5-D51); its script is in `indexer/scripts/review/`

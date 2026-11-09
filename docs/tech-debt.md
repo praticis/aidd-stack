@@ -29,45 +29,8 @@ Rules:
 
 Seen at: a public corpus repo's file and line, or the decision whose judgment found it when no site was kept. Decided by the author on 2026-10-27: TD-001 to TD-006 with the acceptance of H5-D18
 ([decisions.md](decisions.md)), and TD-007 to TD-022 by moving here the gaps that H5-D16 and H5-D17 had left in the H5
-handoff; TD-023 on 2026-10-28, from the design review of H5-D22, and TD-024 the same day, from the eighth resume run;
-TD-025 on 2026-10-29, from the judgment of Python's change of behavior, with H5-D26: unlike the others, that change
-creates it, and the author keeps the change's rule. TD-026 on 2026-10-30, from the judgment of where a Python absolute
-import is looked for, with H5-D28: `main` has it, that change widens it, and the author keeps the change. TD-027 the
-same day, from the review of the `fix(graph)` that keeps one `CALLS` edge per caller, callee, line and method, and TD-028
-from the review of the `fix(python)` that has the client wrappers ask the type index: like TD-025, that change creates
-it, and the author keeps the change. TD-029 on 2026-10-31, with the plan of F1.16's `feat(graph)`, from the measure of
-the calls on an interface that F1.16's `who_calls` would widen; TD-030 to TD-032 the same day, from the judgment of that
-`feat(graph)` at the source: TD-030 and TD-031 are `main`'s, which the calls that do not dispatch show, and like
-TD-025, that change creates TD-032, and the author keeps the change. TD-033 and TD-034 the same day, from the judgment of F1.16's
-`fix(resolve)` at the source, which closes TD-030 to TD-032: `main` has them (H5-D32). TD-035 the same day, from the
-proof of F1.16's `feat(mcp)` on the sites H5-D27 counted: `main` has it. TD-036 the same day, from the live validation of
-that `feat(mcp)`: `main` has it since F1.16's `feat(graph)` #61, and the author leaves its answer to a later step of the
-refactor. TD-037 to TD-039 on 2026-11-01, with H5-D39: TD-037 with the plan of TS's `feat(graph)`, and TD-038 and TD-039
-from that `feat(graph)`'s proof against TypeScript's checker over the corpus; `main` has all three. TD-040 the same
-day, from that `feat(graph)`'s live validation: `main` has it, and the author has it fixed at once. TD-041 and
-TD-042 the same day, from the proof of the `fix(typescript)` that closes TD-038 against TypeScript's module
-resolution over the corpus, with H5-D40: `main` has both, and TD-041 is the part of TD-038's row that is no
-resolution. TD-043 the same day, from the plan of the `fix(typescript)` that closes TD-039, with H5-D41:
-`main` has it. TD-044 to TD-047 the same day, from the plan of step 12's refactor of the conventions, with H5-D42:
-`main` has all four. TD-048 the same day, from the proof of the `fix(conventions)` that closes them: `main` has
-it. TD-049 the same day, from the proof of the `fix(typescript)` that closes TD-041 against TypeScript's module
-resolution over the corpus, with H5-D45: `main` has it. TD-050 on 2026-11-03, from the proof of the `fix(typescript)` that
-closes TD-042 against TypeScript's resolution through the link a package manager makes, with H5-D46: `main` has it.
-TD-051 the same day, from that PR's micro set: `main` has it, through a relative import too. TD-050 is narrowed, and TD-052
-opened, on 2026-11-03, by the `fix(typescript)` that has an import of the output of a referenced project reach its source,
-with H5-D48: `main` has both. TD-053 and TD-054 the same day, from the plan of the `fix(typescript)` that has a
-function member of an interface be a method, with H5-D49, measured against TypeScript's checker over the corpus: `main`
-has both. TD-055 the same day, from that PR's review: `main` has it. TD-050 is narrowed again, and TD-056 to TD-061
-opened, on 2026-11-07, by the `fix(typescript)` that has the resolver read a receiver's type, with H5-D50, from the judgment
-of its sample against TypeScript's checker (TD-059 to TD-061 from the review of another agent, which reproduced each in
-a minimal case, and TD-059 narrowed to the type guard once the `instanceof` form went by name): they are gaps in the declarations the resolver reads, which a call found by name reached only by
-sharing a name, and the change keeps its rule, that a call on a typed receiver reaches no homonym.
-TD-062 on 2026-11-07, from the `fix(typescript)` that has the HTTP scanner find a client by the type its receiver
-declares, with H5-D51, from the review of its plan: `main` has it, the scanner finding no client through an interface. That
-change's probes and the review of its diff found three more it opened or widened, a wrapper's key two classes of one name
-share, a type of a client library that is no client and a class that overrides a wrapper, and it fixed the three in itself,
-which is the rule the author set on 2026-11-08.
-TD-063 on 2026-11-09, from the condensation of the decisions H5-D36 to H5-D51: H5-D39 left a call on `super` to the change of behavior, which did not take it, and no row covered it. `main` has it. The author registered it the same day.
+handoff.
+The later ones, TD-023 to TD-063, entered the same way, each with the decision of the PR that found it and its case: the decision ids are in `docs/decisions.md`, the PRs in `docs/history.md`, and the chronology of how each was found is in git (`git show before-roadmap-history-condensation:docs/tech-debt.md`).
 SCIP is a possible remedy for some of them, not a proven one. A due of `fix(<scope>)` (`fix(csharp)`, `fix(go)`,
 `fix(resolve)`) is a PR of that kind before F1.2, for a defect whose answer is declared in the repo; F1.2 is for one that needs a type or a model the resolver does not
 have. A due in a step of H5 (`H5 step 6`) is for a defect of the code's architecture that the step removes.
