@@ -3,7 +3,7 @@ whose source a condition a tool of the repo enables names; a member of an interf
 does not write in place, a function an object literal holds, a member of an object type no declaration names, and one of
 an alias's wrappers the query does not reach, a class field or a parameter property typed as a function, a type
 parameter whose argument an alias gives, a class a factory call makes, a receiver a type guard narrows, the result an
-overloaded function's arguments select, and a module with a declaration file beside its JS, each the declaration
+overloaded function's arguments select, a call on `super`, and a module with a declaration file beside its JS, each the declaration
 TypeScript's checker resolves a call of the member to (scripts/checks/ts_checker.js, which a test of the case checks).
 Each case states the right answer and is a strict xfail with the reason: when the indexer learns it, the case passes,
 the xfail fails the suite, and the mark has to go."""
@@ -175,6 +175,17 @@ REACHED += [
          "reads the declaration file beside it, which TypeScript resolves the module to first"),
 ]
 
+SUPER_CHAIN = {"app/models.ts": "export class A { m() {} }\n"
+                                "export class B extends A { m() { super.m(); } }\n"
+                                "export class C extends B { m() { super.m(); } }\n"}
+SUPERS = [
+    case("a-call-on-super-reaches-the-method-of-the-nearest-base-and-no-other", SUPER_CHAIN,
+         {"app/models:B.m": "app/models:A.m", "app/models:C.m": "app/models:B.m"},
+         "a call on `super` is found by name among every class's methods, so it reaches the caller's own method and a "
+         "subclass's, which `super` never runs, and a base above the nearest one that declares it: TS has no "
+         "`declaring_after`, which Python's `super()` has (H5-D32)"),
+]
+
 
 def _write(root, files):
     for rel, body in {"package.json": '{"name": "app"}\n', **files}.items():
@@ -198,12 +209,21 @@ def test_a_base_and_an_override_the_declarations_give_are_edges(tmp_path, files,
     assert edge in {(q[e.source_id], e.kind, q[e.target_id]) for e in rv.hierarchy}
 
 
+def _declared_by_the_checker(root, files):
+    _write(root, files)
+    out = subprocess.run(["node", str(CHECKER), str(root)], capture_output=True, text=True, check=True,
+                         env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")}).stdout
+    return {d for r in map(json.loads, out.splitlines()) for d in r["declared"]}
+
+
 @pytest.mark.parametrize("files, member", [pytest.param(p.values[0], p.values[1], id=p.id) for p in MEMBERS + REACHED])
 def test_the_checker_resolves_the_call_to_the_member_the_case_names(tmp_path, files, member):
-    _write(tmp_path, files)
-    out = subprocess.run(["node", str(CHECKER), str(tmp_path)], capture_output=True, text=True, check=True,
-                         env={**os.environ, "AIDD_TYPESCRIPT": os.environ.get("AIDD_TYPESCRIPT", "typescript")}).stdout
-    assert member in {d for r in map(json.loads, out.splitlines()) for d in r["declared"]}
+    assert member in _declared_by_the_checker(tmp_path, files)
+
+
+@pytest.mark.parametrize("files, want", [pytest.param(p.values[0], p.values[1], id=p.id) for p in SUPERS])
+def test_the_checker_resolves_a_call_on_super_to_the_nearest_base(tmp_path, files, want):
+    assert _declared_by_the_checker(tmp_path, files) == set(want.values())
 
 
 @pytest.mark.parametrize("files, member", MEMBERS)
@@ -218,3 +238,13 @@ def test_the_call_reaches_the_member_the_checker_names(tmp_path, files, member):
     q = {s.id: s.qualified_name for s in res.symbols}
     callers = {s.id for s in res.symbols if s.qualified_name == "app/use:main"}
     assert member in {q[e.callee_id] for e in rv.calls if e.caller_id in callers}
+
+
+@pytest.mark.parametrize("files, want", SUPERS)
+def test_a_call_on_super_reaches_the_method_of_the_nearest_base_and_no_other(tmp_path, files, want):
+    res, rv = _indexed(tmp_path, files)
+    q = {s.id: s.qualified_name for s in res.symbols}
+    reached = {}
+    for e in rv.calls:
+        reached.setdefault(q[e.caller_id], set()).add(q[e.callee_id])
+    assert {caller: reached.get(caller) for caller in want} == {caller: {callee} for caller, callee in want.items()}

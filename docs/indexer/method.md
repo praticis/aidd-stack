@@ -127,6 +127,11 @@ same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each comm
 the by-name edges it drops, what TypeScript's checker says about the callee at that site (`CHECKER.jsonl` is
 `node checks/ts_checker.js --link /corpus/REPO` in the test image), with a `.d.ts` standing for the JS beside it as one
 declaration, and whether a dropped edge is replaced at its site or lost.
+Read its `no checker site` count before the others: it is the calls the checker has no row for, and a share near the
+whole means the two sides are keyed differently, not that the checker saw nothing. The comparator #84 first used
+compared a path with its extension to one without it and hid 11,145 of `ghost`'s 15,092 edges as "no site"; the script
+keys both by the path without the extension. The rule is the general one: run an oracle on a case whose answer is known,
+and count what it could not judge, before reading what it judged.
 
 ### 4.5 Timing alone
 
@@ -379,7 +384,7 @@ ever a survivor. Every mutant must fail a test. A mutant that survives is one of
 - **a case that is missing**: add it, as a control (a library import the flow may narrow, a class that is no client);
 - **a guard no entry point reaches**: the guard goes, since a rule nothing can break is code nothing needs.
 
-The PR reports the count and what the survivors taught (H5-D51: 13 mutants, two survivors, a control added and a guard
+The PR reports the count and what the survivors taught (PR #85: 13 mutants, two survivors, a control added and a guard
 removed). The mutants' file is the author's, kept with the PR's working papers; `checks/mutate.sh` is the other tool, for the
 graph writer against a throwaway Neo4j.
 
@@ -388,7 +393,7 @@ graph writer against a throwaway Neo4j.
 `0 repo(s) differ` on the corpus is the right result for a rule that is meant to change nothing there, and it is also
 the result of a rule the corpus never reaches. To tell them apart, run the corpus once with an instrumented copy of the
 tree, one that appends a line (file, line, the key it decided on) to a file in the corpus mount wherever the rule
-decides, and count the lines by kind. The PR then says "the rule decided in about 8,600 sites and changed none" (H5-D51),
+decides, and count the lines by kind. The PR then says "the rule decided in about 8,600 sites and changed none" (PR #85),
 and reads each site where it would matter (a published key, a library's type) at the source. Three cautions: the copy
 is never committed or measured for time; the log is deleted before each run; parallel repos write to one file and
 interleave a few lines, so the counts are "about". The proof of the gain stays in the cases against the reference
@@ -470,7 +475,8 @@ this change was right.
 - **A growth file has a ceiling.** `indexer/scripts/checks/docs_ceilings.txt` lists, in bytes, the files that grow
   (`golden-questions.md`, the H5 handoff, `decisions.md`, the ROADMAP, `history.md`), and `docs_size.py` refuses a PR that
   passes one, in the `debts` job. A file over its ceiling is cut, not given room: to raise one is a line of the diff, which
-  the author reads. A PR that condenses a file lowers its ceiling to about 10 % above what is left. There is no ceiling on
+  the author reads. A PR that condenses a file lowers its ceiling to about 10 % above what is left; one that only edits the list or the
+  template does not run the corpus, the micro set and the tests (the `changes` job leaves them out). There is no ceiling on
   the total of `docs/`: closing a handoff is what shrinks it.
 - **No attribution line.** A commit, a title or a body carries no `Co-Authored-By`, `Assisted-by` or "Generated with ..."
   footer, from any tool: the harness of an agent adds them by default. `indexer/scripts/checks/pr_text.py` refuses them in

@@ -49,7 +49,8 @@ jobs:
           if [ "${{ github.event_name }}" = pull_request ]; then base=$(git rev-parse HEAD^1); else base=$(git rev-parse HEAD); fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
           if [ "${{ github.event_name }}" != pull_request ] \
-             || git diff --name-only HEAD^1 HEAD | grep -qE '^(indexer/|neo4j/init/|\.github/workflows/indexer\.yml$)'; then
+             || git diff --name-only HEAD^1 HEAD | grep -vE '^indexer/(\.github/|scripts/checks/docs_ceilings\.txt$)' \
+                | grep -qE '^(indexer/|neo4j/init/|\.github/workflows/indexer\.yml$)'; then
             echo "indexer=true" >> "$GITHUB_OUTPUT"
           else
             echo "indexer=false" >> "$GITHUB_OUTPUT"

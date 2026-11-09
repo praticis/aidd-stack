@@ -3,7 +3,7 @@
    round.py INFLIGHT --pr N --number K --date YYYY-MM-DD --what "TEXT" [--merge SHA]
 
 INFLIGHT is the folder `validate.sh after` left (inflight/, or merged/ after the rotation). K is the round's number (the one
-after the last round in docs/golden-questions.md and in the pending docs); TEXT says in one sentence what the PR changed;
+after "the last round" in docs/golden-questions.md, which the new round replaces); TEXT says in one sentence what the PR changed;
 SHA is the commit that merged it. It prints the round, then a line of `---`, then the history line. Only counts, snapshot
 numbers, the names of the picture's lists, the names of the MCP's tools and build ids appear: never a tenant, a repository
 or a label, which the live data holds. The judgment ("what the round shows") and the sentence of what changed are the

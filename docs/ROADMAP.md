@@ -43,7 +43,7 @@
     the repo enables names, TD-052, a member of an interface whose function type a name or `typeof` gives, TD-053,
     a member of an alias's object type below more wrappers than the query reaches, TD-055, a class field or a parameter
     property typed as a function, TD-056, a class a factory call makes, TD-058, a module with a declaration file beside
-    its JS, TD-061, and a wrapper behind an interface, TD-062, are due in `fix(typescript)` PRs before F1.2; what a type checker
+    its JS, TD-061, a wrapper behind an interface, TD-062, and a call on `super`, TD-063, are due in `fix(typescript)` PRs before F1.2; what a type checker
     answers and the reading does not, TD-057, TD-059 and TD-060 (H5-D52), are due in F1.2. Two debts of the core's architecture, the syntax of each
     language it holds, TD-023, and the names of frameworks and client libraries it holds, TD-024, and a gap of Python's,
     Django's model managers found by name, TD-026, and a C# call on an interface that reaches its single implementer
