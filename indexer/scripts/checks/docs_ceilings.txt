@@ -8,7 +8,7 @@
 # condenses a file lowers its ceiling to about 10 % above what is left.
 
 docs/golden-questions.md :: 21 KB :: a golden round replaces the last one; only one that found something adds an entry
-docs/handoffs/H5-indexer-refactor.md :: 70 KB :: a State row per PR; the proof of a PR is in its body, the rule in decisions.md
+docs/handoffs/H5-indexer-refactor.md :: 66 KB :: a State row per PR; the proof of a PR is in its body, the rule in decisions.md
 docs/decisions.md :: 72 KB :: a decision is a row of about 1 KB with no PR and no measurement; the rest is in the body
 docs/ROADMAP.md :: 51 KB :: the state moves; what happened is one line of history.md
 docs/history.md :: 85 KB :: one line per PR, so it grows; when it nears the ceiling, condense it

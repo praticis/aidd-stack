@@ -11,26 +11,11 @@
 
 ## State (2026-11-09)
 
-**Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8). Step 5 for Go (refactor #17,
-change of behavior #20, `fix(mcp)` #19) and for C# (refactor #23, change of behavior #25, what a name means #27, which
-extension method a call reaches #30). Python's step 5: its case table (#42), its scope index (#44), its types (#45) and
-its change of behavior (#47); before the last, `fix(python)` #46 tries an import's roots in a fixed order, where a set's
-order followed the hash seed, and after it `fix(python)` #49 looks for an absolute import under the directory its
-package runs from (H5-D28), and `fix(python)` #51 follows a star import as CPython binds it; `fix(graph)` #53 keeps
-one `CALLS` edge per caller, callee, line and method, and `fix(python)` #55 has the client wrappers ask the type index;
-`chore(scripts)` #56 has the per-site attribution read what the resolver makes of a receiver too (G2), and
-`refactor(graph)` #57 and `refactor(resolve)` #58 make room in the graph writer and the resolver before F1.16 grows
-them, and `feat(graph)` #59 writes the types' bases and marks the calls that do not dispatch; `fix(resolve)` #60
-sends a call that does not dispatch to no implementation and no homonym, and a Python `super()` to what follows the
-caller's class in each MRO (H5-D32); `feat(graph)` #61 writes `OVERRIDES`, what a dispatching call may run instead,
-as each language says (H5-D33); `feat(graph)` #62 has a dispatching call keep its receiver's type and an override the
-receivers on which it may run (H5-D34); and `feat(mcp)` #63 has `who_calls` list a method's dispatching callers and what
-it overrides, and `impact_of` follow a dispatch at any hop (H5-D35), which closes F1.16. Each merge and its live
-validation are in `docs/history.md`; the results are in each PR's body and in `corpus-report.md`.
+**Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8), and step 5 in the four languages (the table below); F1.16 is closed (`feat(mcp)` #63, H5-D35). Each merge and its live validation are in `docs/history.md`; the results are in each PR's body and in `corpus-report.md`.
 
-**Step 5 is closed for Go, C#, Python and TS, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-062), each with a
-strict xfail test; those due before F1.2 are `fix(csharp)` PRs (17), `fix(typescript)` PRs (7: TD-052, TD-053, TD-055, TD-056, TD-058,
-TD-061 and TD-062), `fix(go)` (TD-029) and `fix(conventions)` (TD-048); TD-057, TD-059 and TD-060 are due in F1.2 (H5-D52). Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
+**Step 5 is closed for Go, C#, Python and TS, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-063), each with a
+strict xfail test; those due before F1.2 are `fix(csharp)` PRs (17), `fix(typescript)` PRs (8: TD-052, TD-053, TD-055, TD-056, TD-058,
+TD-061, TD-062 and TD-063), `fix(go)` (TD-029) and `fix(conventions)` (TD-048); TD-057, TD-059 and TD-060 are due in F1.2 (H5-D52). Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
 did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
 and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
 names of frameworks and client libraries it holds:
@@ -46,15 +31,8 @@ The counts are `shape.py`'s on 2026-11-09. The core has modules over 300 lines t
 go with step 6, and `extract.py` with step 12's last PR (H5-D44). Step 12's other PRs (#74, #75, #77, #78) brought the
 conventions, the corpus runner, the MCP's tool groups and the refresher to the targets, but for what H5-D43 accepts.
 
-**Method recovery.** Done: the validation method is in `docs/indexer/` and `indexer/scripts/` (PRs #28 and #29), and
-`docs/indexer/resume-test.md` passed all nine criteria in a clone (runs 4 to 8, 2026-10-27 and 2026-10-28). The `live/`
-chain ran on #30, and `live/validate.sh` (PR #31) runs it as one command per step; it reproduced #30's numbers on a copy
-of its folder. The debts check (`debts.py`, PR #33) and the
-expected-list tool (`lists/`, PR #34) are in; the new hold-out's tools and the per-site attribution are
-`docs/indexer/method.md` §4.11 and §4.12.
-
 **Next.**
-1. The `fix(...)` PRs of the debts due before F1.2: `fix(csharp)` (H5-D19; 17 debts), `fix(typescript)` (7 debts, after a
+1. The `fix(...)` PRs of the debts due before F1.2: `fix(csharp)` (H5-D19; 17 debts), `fix(typescript)` (8 debts, after a
    refactor of TS's scope builder that returns the cost step 5 added to the scanner), `fix(go)` (TD-029) and `fix(conventions)`
    (TD-048). TS's step 5 is closed (#65 to #85, H5-D36 to H5-D51; the PR-by-PR record is in "TS's step 5" below and in
    `docs/history.md`).
@@ -359,34 +337,8 @@ _The measures, the review and the per-commit list of this section are in git: `g
 
 C#'s change of behavior gave one answer to a name's type, but the answer still read a name in ways C# does not. A
 type's simple name skipped a block namespace and the namespaces around the code, a capitalized member was read as a
-homonym type, and a type parameter was read as a type outside the repo. The fix reads each as C# does:
-
-- **A type's simple name** is looked up in the namespace the code is in, then in each one around it out to the global
-  namespace, each followed by the `using`s its declaration holds; the file's own `using`s come last, with every
-  `global using` of its project. Of the global namespace, only the file's own project counts: other projects keep
-  their programs there (bitwarden's `Program`).
-- **A type nested in another** is no name of its namespace. Only the file that declares it, and the types deriving
-  from the one it is in, see it by its simple name, and it is named with the types around it on both sides
-  (`BaseController.Error`).
-- **A capitalized name** the caller's type has as a member, on it, on another of its parts or on a base of the repo, is
-  that member; else a type nested in the caller's type or a base of it; else a type. With a base outside the repo,
-  which may declare the name, it is still read as a type's, and a member after it is a value an extension may take
-  (smartstore's `EngineContext.Current.ResolveService<T>()`).
-- **A value typed by a type parameter** has the type argument given for it: by the type a local, a parameter or a
-  method's result writes (`SutProvider<CiphersController> sutProvider`, `Task<Provider<IPaymentMethod>>`), or by the
-  base lists down from the caller's type (`AddFixture : CoreTest<PendingReleaseService>`, whose `TestBase<TSubject>`
-  declares `Subject`). Failing that, it has the type its one constraint names (`where TItem : NavigationItem`); with
-  none, or more than one, it declares none, and its call goes by name. A method's result typed by one is given its
-  argument too, and an extension whose `this` is one takes a value of the type its constraint names (smartstore's
-  `GetLocalized<T>(this T entity) where T : class, ILocalizedEntity`).
-- **A value of an array type** is the array, `System.Array`, a type outside the repo, never a value of its element's
-  type. A call on it reaches the repo's extension methods only.
-- **A method of an extension block** (C# 14, `extension(byte[] value) { public byte[] Unzip() .. }`) that is not static
-  extends the block's receiver.
-- **A call with no receiver** is a method of the caller's type or a base of it, never an `HttpClient`'s: smartstore's
-  `CompositeFileSystem.GetAsync(subpath, ..)` was read as a client call, which made `GetDirectoryAsync("images/flags")`
-  a request. It is a request only when it is given the request's verb, as bitwarden's
-  `SendAsync(HttpMethod.Post, "push/register", body)`, which its `BaseIdentityClientService` sends.
+homonym type, and a type parameter was read as a type outside the repo. The fix reads each as C# does; the rules are the docstring of `indexer/tests/test_cs_names.py`, with
+their cases.
 
 - **What stays out:** thirteen gaps, now debts (`docs/tech-debt.md`, TD-010 to TD-022), each with a strict xfail test.
 
