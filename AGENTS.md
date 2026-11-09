@@ -171,6 +171,9 @@ The full text is in the ROADMAP, under "Principles".
 
 - **Commits:** a one-line conventional subject that names the capability, with no body and no attribution trailer;
   signed.
+- **A pull request's body follows the template** (`indexer/.github/pull_request_template.md`; the rules are in
+  `docs/indexer/method.md` §4.17): open it with `gh pr create --body-file`, and write each fact once. No attribution line in
+  a commit, a title or a body, from any tool: CI refuses one (`indexer/scripts/checks/pr_text_deny.txt`).
 - **A plan has a section called "Contracts, boundaries and proof"** (`docs/design.md` §4), and the author approves
   the plan before a branch is created.
 - **New code meets the shape targets from the start**; H5 brings the old code up to them.

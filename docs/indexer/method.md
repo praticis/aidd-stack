@@ -22,7 +22,7 @@ outputs. The tools are listed with their arguments in [`indexer/scripts/README.m
 | 9 | Live, before the merge | `scripts/live/validate.sh before` (§4.7) | dry-runs identical outside the change; picture and golden answers the same |
 | 10 | Merge, reinstall | the author only. `install.sh` copies the working tree, so `main` is checked out first | `install-check.sh` ends in "All checks passed" |
 | 11 | Live, after | `scripts/live/validate.sh after` (§4.8) | as step 9, plus the graph holds the branch's dry-run |
-| 12 | Record | a golden round, `docs/history.md`, the H5 handoff, the ROADMAP | each change supported by the evidence |
+| 12 | Record | the PR body (§4.17); a golden round; one line in `docs/history.md`; a row in `docs/decisions.md` if the change decides something; the H5 State and the ROADMAP's "Where we are" only when the state moved | each change supported by the evidence, each fact written once |
 
 A change to the extractor adds, before step 4: corpus `--baseline`, judgment at the source, the expected lists
 (`lists/expected_lists.py` edits them, `checks/expected_lists_diff.py` shows what changed; §4.10), and a new
@@ -436,6 +436,45 @@ synthesis that decides `keep-plan`, `amend-plan` or `change-path` and drops what
 the synthesis. A researcher that returns nothing is a missing report, not evidence. The plan's own challenger is
 `independent-review`, run on the amended plan. Its orchestration is tested in `tests/test_research_round.py`. The H5-D50
 round, without these limits, spent 1.79M tokens, 88 % in the researchers.
+
+### 4.17 The pull request body
+
+A fact is written once, where a later reader looks for it. The PR body is the long record of a change; the docs keep what
+a later change must keep.
+
+| The fact | Its home | How long |
+|---|---|---|
+| What the change does and why; the proof, the numbers, the objections of the review and how each was resolved, what differs from the plan | the PR body | as long as it needs |
+| The rule a later change must keep, and why it beat the obvious alternative | one row of `docs/decisions.md` (`H5-Dnn`) | about 1 KB; it names no PR and holds no measurement |
+| That the PR happened | one line of `docs/history.md`, with the PR | 3 lines |
+| The design | the plan, approved before the branch | |
+| A debt | `docs/tech-debt.md`, with its strict xfail test | |
+
+The body cites a decision's id and never copies the row. A row says what is true without the PR; the body says what shows
+this change was right.
+
+- **The template** is `indexer/.github/pull_request_template.md`. An agent copies it to a scratch file, fills it, deletes the
+  comments and opens the PR with `gh pr create --title "type(scope): ..." --body-file FILE [--label graph-change]`; it does
+  not use `--template` or `--fill`. The comment at the end of a heading lists the kinds of PR that carry the block: a
+  block that leaves out the PR's kind is deleted, not written as "N/A". A docs PR fills the top lines, "What and why",
+  "Contracts, boundaries and proof" and "Left out on purpose". The top lines are what the author reads before the merge.
+- **Numbers go in the body,** one line each, not in a comment of the PR: a comment does not reach the merge commit.
+- **The body is the archive.** The repository's merge commit takes the PR's title and description
+  (`merge_commit_message=PR_BODY`), so a clone carries the long record and a split of the repository takes it along.
+  The body is final at the merge; the live validation goes in the next PR's history line.
+- **References outlive the repository.** A PR is written `praticis/aidd-stack#NN` in the docs, because `#NN` clashes with
+  the numbers of a repository the indexer is split into. A text that leaves the docs in a cut is pointed to by a tag
+  (`git show TAG:path`), not by a hash: a split rewrites hashes.
+- **No attribution line.** A commit, a title or a body carries no `Co-Authored-By`, `Assisted-by` or "Generated with ..."
+  footer, from any tool: the harness of an agent adds them by default. `indexer/scripts/checks/pr_text.py` refuses them in
+  the `debts` job of every PR, against the list `indexer/scripts/checks/pr_text_deny.txt`: one rule per line,
+  `id :: regex :: reason`, case-insensitive, so a new rule is a new line. The two rules are anchored at the start of a line,
+  so a sentence that names the rule passes. The job fetches the text when it runs: after editing a body, re-run the job
+  (an edit starts no run, because that would cancel the corpus).
+- **Contained in `indexer/`.** The template, the check and its list live under `indexer/`, and travel with it. What is
+  outside: the step in `.github/workflows/indexer.yml` and the line in `AGENTS.md`. At the split of the repository, the
+  template becomes the new repository's `.github/pull_request_template.md` by itself; the workflow step, the merge setting,
+  the labels and the required checks are made again.
 
 ## 5. Criteria
 
