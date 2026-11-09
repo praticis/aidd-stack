@@ -3,7 +3,8 @@ and is a strict xfail with the reason: when the resolver learns it, the case pas
 mark has to go.
 
 Every case has a homonym of the right method in another type, because a call that goes by name reaches the right method
-by luck when it is the only one of its name."""
+by luck when it is the only one of its name. A creation's cases are the exception: they name the type and its
+constructor, which the creation reaches, and not the strategy that finds them."""
 
 import contextlib
 import io
@@ -157,6 +158,29 @@ CASES = [
 ]
 
 
+PLAIN = "public class Plain { public Plain() { } }\n"
+CREATIONS = [
+    case("a-target-typed-creation-reaches-the-type-and-its-constructor",
+         PLAIN + "public class Runner\n{\n    public void Run() { Plain plain = new(); }\n}\n",
+         {"Api.Services.Plain", "Api.Services.Plain.Plain"}, "reads no creation whose type is not written, as new() is"),
+    case("a-generic-creation-reaches-the-type-and-its-constructor",
+         "public class Box<T> { public Box(T value) { } }\npublic class Runner\n{\n"
+         "    public void Run() { var box = new Box<int>(1); }\n}\n",
+         {"Api.Services.Box", "Api.Services.Box.Box"}, "reads only a creation whose type is a plain name, not a generic one"),
+    case("a-qualified-creation-reaches-the-type-and-its-constructor",
+         PLAIN + "public class Runner\n{\n    public void Run() { var plain = new Api.Services.Plain(); }\n}\n",
+         {"Api.Services.Plain", "Api.Services.Plain.Plain"}, "reads only a creation whose type is a plain name, not a qualified one"),
+    case("a-creation-of-a-type-another-project-declares-reaches-it",
+         {**project("Core", "namespace Core.Entities;\n\npublic class Query\n{\n    public Query(string user) { }\n}\n"),
+          **project("Web", "namespace Web.Search;\n\nusing Core.Entities;\n\npublic static class Use\n{\n"
+                    "    public static void Build(string user) { var query = new Query(user); }\n}\n",
+                    '<ItemGroup><ProjectReference Include="../Core/Core.csproj" /></ItemGroup>')},
+         {"Core.Entities.Query", "Core.Entities.Query.Query"},
+         "finds a creation by its name alone, and a type with a constructor is two homonyms, so none is the repo's only one",
+         caller="Web.Search.Use.Build"),
+]
+
+
 def _edges(root, files, caller: str) -> set[tuple[str, str]]:
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
@@ -174,3 +198,8 @@ def _edges(root, files, caller: str) -> set[tuple[str, str]]:
 @pytest.mark.parametrize("source,caller,expected", CASES)
 def test_the_call_reaches_what_csharp_binds(tmp_path, source, caller, expected):
     assert _edges(tmp_path, source, caller) == expected
+
+
+@pytest.mark.parametrize("source,caller,expected", CREATIONS)
+def test_a_creation_reaches_the_type_and_its_constructor(tmp_path, source, caller, expected):
+    assert expected <= {callee for callee, _ in _edges(tmp_path, source, caller)}

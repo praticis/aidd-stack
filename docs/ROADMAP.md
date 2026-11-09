@@ -25,10 +25,13 @@
     - merged: steps 0–2, 4 and 7–9 (PR #7, H5-D8); step 5, the `TypeIndex`, in Go, C#, Python and TS (H5-D10, H5-D29; #85
       the last), each validated on a live install and judged with the per-site attribution (H5-D21, G2 #56); F1.16 (#57
       to #63); step 12 for the conventions, the corpus runner, the MCP's tools and the refresher (#74 to #78);
-    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-063), each with a strict xfail case, and the ones
-      it closed carry their PR there: TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014, TD-016 to TD-022, TD-027, TD-033
-      and TD-034 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
-      unless a single implementer declares it, TD-029, are due in a `fix(go)` PR before F1.2; three forms of a declaration
+    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-069), each with a strict xfail case, and the ones
+      it closed carry their PR there: TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014, TD-016 to TD-022, TD-027, TD-033,
+      TD-034, TD-067 and TD-068 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
+      unless a single implementer declares it, TD-029, a bare name that reaches a method, TD-065, and a package-qualified call
+      whose name two packages declare, TD-066, are due in `fix(go)` PRs before F1.2; a call found by name that reaches a function
+      of another language, TD-064, is due in a `fix(resolve)` PR before F1.2; an identifier read as written, where Python names it
+      by its NFKC form, TD-069, is due in a `fix(python)` PR before F1.2; three forms of a declaration
       the reading still misses, TD-048, are due in a `fix(conventions)` PR before F1.2; a workspace package whose source a
       condition only a tool of the repo enables names, TD-052, a member of an interface whose function type a name or
       `typeof` gives, TD-053, a member of an alias's object type below more wrappers than the query reaches, TD-055, a class
