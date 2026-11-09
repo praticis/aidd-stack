@@ -225,7 +225,7 @@ class 5: ask for it. The reinstall is the author's.
 | 2 | author | `install.sh` from `main`, then `install-check.sh` | the PR merged, `main` checked out and up to date |
 | 3 | agent | `indexer/scripts/live/validate.sh after` | the install on AFTER's code, and, when the build changed, every snapshot re-indexed (the refresh runs every 15 min) |
 | 4 | agent | read the counts against §4.8; report numbers only | |
-| 4b | agent | `indexer/scripts/live/round.py INFLIGHT --pr N --number K --date D --what "..." --merge SHA`: the draft of the golden round and of its history line, from the same folder | `after` done; the output is counts, snapshot numbers, list and tool names, never a label or a name; the sentence of what changed and the judgment ("what the round shows") are written by hand |
+| 4b | agent | `indexer/scripts/live/round.py INFLIGHT --pr N --number K --date D --what "..." --merge SHA`: the draft of the golden round and of its history line, from the same folder | `after` done; the output is counts, snapshot numbers, list and tool names, never a label or a name; the sentence of what changed and the judgment ("what the round shows") are written by hand. The round is the block "the last round" of `docs/golden-questions.md` and replaces the previous one: its numbers stay in its history line and its text in git; only a round that found something adds an entry to the list of findings. (Until that file is condensed, a round is added at its end.) |
 | 5 | agent | `indexer/scripts/live/validate.sh rotate --yes` | `after/` taken, the PR's records done |
 | 6 | agent | recycle `.local/` by the closing step of its README: the PR's body, the pending docs that merged, the oldest plans, the tools whose consumer merged | `rotate` done |
 
@@ -449,6 +449,7 @@ a later change must keep.
 | That the PR happened | one line of `docs/history.md`, with the PR | 3 lines |
 | The design | the plan, approved before the branch | |
 | A debt | `docs/tech-debt.md`, with its strict xfail test | |
+| The state of a handoff | one row of its State; never the proof of a PR | |
 
 The body cites a decision's id and never copies the row. A row says what is true without the PR; the body says what shows
 this change was right.
@@ -462,9 +463,15 @@ this change was right.
 - **The body is the archive.** The repository's merge commit takes the PR's title and description
   (`merge_commit_message=PR_BODY`), so a clone carries the long record and a split of the repository takes it along.
   The body is final at the merge; the live validation goes in the next PR's history line.
-- **References outlive the repository.** A PR is written `praticis/aidd-stack#NN` in the docs, because `#NN` clashes with
-  the numbers of a repository the indexer is split into. A text that leaves the docs in a cut is pointed to by a tag
-  (`git show TAG:path`), not by a hash: a split rewrites hashes.
+- **References outlive the repository.** In the docs, `#NN` is `praticis/aidd-stack#NN` (said once at the top of
+  `docs/history.md`); a reference to any other repository is written in full, because the numbers of a repository the
+  indexer is split into start again. A text that leaves the docs in a cut is pointed to by a tag (`git show TAG:path`), not
+  by a hash: a split rewrites hashes.
+- **A growth file has a ceiling.** `indexer/scripts/checks/docs_ceilings.txt` lists, in bytes, the files that grow
+  (`golden-questions.md`, the H5 handoff, `decisions.md`, the ROADMAP, `history.md`), and `docs_size.py` refuses a PR that
+  passes one, in the `debts` job. A file over its ceiling is cut, not given room: to raise one is a line of the diff, which
+  the author reads. A PR that condenses a file lowers its ceiling to about 10 % above what is left. There is no ceiling on
+  the total of `docs/`: closing a handoff is what shrinks it.
 - **No attribution line.** A commit, a title or a body carries no `Co-Authored-By`, `Assisted-by` or "Generated with ..."
   footer, from any tool: the harness of an agent adds them by default. `indexer/scripts/checks/pr_text.py` refuses them in
   the `debts` job of every PR, against the list `indexer/scripts/checks/pr_text_deny.txt`: one rule per line,

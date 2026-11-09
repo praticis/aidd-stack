@@ -1,0 +1,14 @@
+# The ceilings of the files of docs/ that grow (docs/indexer/method.md §4.17).
+#
+# One per line: `path :: size :: reason`. The path is from the repository's root; the size is in bytes or in KB (1 KB is
+# 1024 bytes); a file at its ceiling passes. A line that starts with `#` is a comment. The check is
+# indexer/scripts/checks/docs_size.py and runs in the `debts` job of every pull request.
+#
+# A file over its ceiling is cut, not given room: raising a ceiling is a line of the diff, which the author reads. A PR that
+# condenses a file lowers its ceiling to about 10 % above what is left.
+
+docs/golden-questions.md :: 106 KB :: a golden round replaces the last one; only one that found something adds an entry
+docs/handoffs/H5-indexer-refactor.md :: 186 KB :: a State row per PR; the proof of a PR is in its body, the rule in decisions.md
+docs/decisions.md :: 90 KB :: a decision is a row of about 1 KB with no PR and no measurement; the rest is in the body
+docs/ROADMAP.md :: 51 KB :: the state moves; what happened is one line of history.md
+docs/history.md :: 85 KB :: one line per PR, so it grows; when it nears the ceiling, condense it

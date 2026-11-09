@@ -299,7 +299,8 @@ architecture"). A closed handoff becomes a short summary in the same file, and i
 - **`README.md`:** minimal until step 4: what it is, how to install and a link to `AGENTS.md` and the ROADMAP.
 
 **Done when:**
-- the working docs add up to at most ~150 KB;
+- the working docs stay under the ceilings of `indexer/scripts/checks/docs_ceilings.txt` (there is no total: closing a handoff
+  is what shrinks it);
 - a new agent session, reading only `AGENTS.md` and what it points to, answers right:
   - what the project does;
   - what phase it is in;
@@ -332,7 +333,7 @@ architecture"). A closed handoff becomes a short summary in the same file, and i
 
 ## Expected deliverables
 
-- From step 0: `AGENTS.md`, `docs/history.md`, `docs/decisions.md`, the compacted working docs (at most ~150 KB), the
+- From step 0: `AGENTS.md`, `docs/history.md`, `docs/decisions.md`, the compacted working docs, the
   closed handoffs reduced to summaries, and the minimal README.
 - Two repositories with the boundary above carried out and aidd-stack installing the indexer's published image.
 - READMEs in four languages in both repos; `docs/<locale>/` with tier 1 in all of them, tier 2 in pt-BR and tier 3 in
