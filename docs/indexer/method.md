@@ -116,7 +116,7 @@ python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.t
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/ts_vs_checker.py REPO BEFORE AFTER CHECKER.jsonl [--sample N [--seed S]]
-python3 -I indexer/scripts/judgment/scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+python3 -I indexer/scripts/judgment/scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
 python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
@@ -127,7 +127,9 @@ same inputs give the same sample. Sizes used: `N` 6 to 12 per kind for each comm
 `main` against the tip. `attribution.py` is §4.12. `ts_vs_checker.py` is for a change to TS's resolution: it counts, for the typed edges the change adds and
 the by-name edges it drops, what TypeScript's checker says about the callee at that site (`CHECKER.jsonl` is
 `node checks/ts_checker.js --link /corpus/REPO` in the test image), with a `.d.ts` standing for the JS beside it as one
-declaration, and whether a dropped edge is replaced at its site or lost.
+declaration, an edge to the type that owns a member with no symbol agreeing with the checker's declaration of that member,
+an edge to what runs where the checker names the member of a declaration file neither agreeing nor contradicting, and
+whether a dropped edge is replaced at its site or lost.
 Each percentage it prints is over the sites the checker has a row for, and its line says how many edges that is. One
 more line says how many of the TS calls of the two runs are in a file the checker has rows for (97.9 % in `ghost`);
 below `--min-keyed` (a percent, 50 by default) it prints a WARNING, and with `--strict` it ends in 1. The comparator #84
@@ -135,15 +137,22 @@ first used compared a path with its extension to one without it and hid 11,145 o
 and the shares it printed looked fine. The rule is the general one: run an oracle on a case whose answer is known, and
 count what it could not judge, before reading what it judged.
 
-`scorecard.py` measures a whole tree, not one change. For every repo of the micro set it gives the percent of its
-`CALLS` a type decided (`typed-share`, for every language) and, for a TS repo with the checker's rows, the keys'
-coverage, the precision of its typed edges and the recall of the sites the checker decides (`typed-recall` by a typed
-edge). Each number has a floor in `indexer/scripts/checks/reference_floors.txt` (`repo.metric :: floor :: note`): the
-value measured on `main`, rounded down to a hundredth; the graph is deterministic, so there is no tolerance. A number under
-its floor, one with no floor and a floor with no number all fail. A floor is lowered by editing its line in the diff of
+`scorecard.py` measures a whole tree, not one change. For a TS repo with the checker's rows it classes the edge of every call by
+the checker's verdict: `confirmed` (it agrees, by the declaration, its `.d.ts` pair or the type that owns a member with no
+symbol), `contradicted` (another declaration of the repo), `indirect` (the member of a declaration file, where the edge goes to
+what runs: TD-061) and `undecided` (the checker has no opinion), and counts them by strategy. Two counts are gated, each with
+a bound in `indexer/scripts/checks/reference_floors.txt` (`repo.strategy.confirmed :: >= N :: note`, `repo.strategy.contradicted
+:: <= N :: note`): the confirmed typed edges may not fall and the contradicted ones may not rise. A count has no denominator,
+so a call form the graph learns to read, which adds by-name edges, moves none of them, and the graph is deterministic, so
+there is no tolerance (H5-D53). With `--base` it also lists the sites where the base has a confirmed typed edge and the tree has
+none, a win lost, which a count cannot see when a change swaps one edge for another, and prints, with no bound, what reads the
+graph without judging it: the typed share of every repo (a count of claims, not of correctness), recall, the by-name edges the
+checker contradicts (the number SCIP must move) and the typed edges it does not decide or reads indirectly, each as the base,
+the tree and the change. A count past its bound, one with no bound, a bound with no count and a repo whose calls are under
+`--min-keyed` in files with rows all end in 1; wins lost alone end in 3. A bound is changed by editing its line in the diff of
 the change, under the `graph-change` label (the label alone would free every change of the graph, and the line makes the
-drop a number the author reads); it is raised when a change improves the number, and the scorecard prints the headroom.
-`--write-floors` prints the lines for a tree.
+change a number the author reads). It is a tool for now: its place in CI is a later PR. `--write-floors` prints the lines
+for a tree.
 
 ### 4.5 Timing alone
 

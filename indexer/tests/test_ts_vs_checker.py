@@ -243,7 +243,7 @@ def test_a_site_is_keyed_by_the_method_the_edge_records_and_not_by_the_callees_n
     owner = sym("src/a", "Foo", "interface")  # a member with no symbol: the edge goes to the type that owns it
     edge = {**call(MAIN, owner, 3, "inherited"), "method": "get"}
     a = analyse(written, [], [edge], [site(3, "get", "src/a:Foo.get")])
-    assert dict(a.added_verdicts) == {"checker: another declaration": 1}
+    assert dict(a.added_verdicts) == {"agrees (owner of the member)": 1}  # keyed by `get`, it has a row and agrees
 
 
 def test_an_edge_that_records_no_method_is_keyed_by_the_callees_name(written):
@@ -256,7 +256,7 @@ def test_a_dropped_edge_is_replaced_when_the_site_keeps_an_edge_by_the_recorded_
     before = [{**call(MAIN, owner, 12, "name"), "method": "run"}]  # a by-name edge to the type, for a call of `run`
     after = [{**call(MAIN, FOO, 12, "receiver-type"), "method": "run"}]
     a = analyse(written, before, after, [site(12, "run", "src/a:Foo.run")])
-    assert dict(a.fate) == {("replaced", "checker: another declaration"): 1}
+    assert dict(a.fate) == {("replaced", "agrees (owner of the member)"): 1}
 
 
 def test_a_dropped_edge_is_replaced_by_an_edge_to_the_type_that_owns_the_member_the_call_names(written):
@@ -265,3 +265,30 @@ def test_a_dropped_edge_is_replaced_by_an_edge_to_the_type_that_owns_the_member_
     after = [{**call(MAIN, owner, 12, "inherited"), "method": "run"}]
     a = analyse(written, before, after, [site(12, "run", "src/a:Foo.run")])
     assert dict(a.fate) == {("replaced", "checker: another declaration"): 1}
+
+
+@pytest.mark.parametrize("qual,inside,method,expected", [
+    ("src/a:Foo", {"src/a:Foo.get"}, "get", "agrees (owner of the member)"),                  # the type that owns the member
+    ("src/a:Foo", {"src/a.d:Foo.get"}, "get", "agrees (owner of the member)"),                # its declaration file's form
+    ("src/a:Foo", {"src/a:Bar.get"}, "get", "checker: another declaration"),                  # another type's member
+    ("src/a:Foo", {"src/a:Foo.set"}, "get", "checker: another declaration"),                  # another member of the type
+    ("src/a:Outer", {"src/a:Outer.Inner.get"}, "get", "checker: another declaration"),        # the owner is the nearest type
+    ("src/a:Foo.get", {"src/a.d:Foo.get"}, "get", "agrees (via .d.ts pair)"),
+    ("src/impl:Impl.get", {"src/x.d:Iface.get"}, "get", "checker: a declaration file's member"),
+    ("src/impl:Impl.get", {"src/x.d:Iface.get", "src/y:Other.get"}, "get", "checker: another declaration"),
+])
+def test_what_an_edge_is_to_the_declarations_the_checker_names(qual, inside, method, expected):
+    assert tool.by_member(qual, inside, method) == expected
+
+
+def test_a_declaration_outside_the_repo_does_not_stop_an_owner_edge_from_agreeing(written):
+    owner = sym("src/a", "Foo", "interface")
+    edge = {**call(MAIN, owner, 3, "inherited"), "method": "get"}
+    a = analyse(written, [], [edge], [site(3, "get", "src/a:Foo.get", "outside")])
+    assert dict(a.added_verdicts) == {"agrees (owner of the member)": 1}
+
+
+def test_a_declaration_outside_the_repo_beside_a_declaration_files_member_leaves_it_that_member(written):
+    impl = sym("src/impl", "Impl.get")
+    a = analyse(written, [], [call(MAIN, impl, 3, "receiver-type")], [site(3, "get", "src/x.d:Iface.get", "outside")])
+    assert dict(a.added_verdicts) == {"checker: a declaration file's member": 1}

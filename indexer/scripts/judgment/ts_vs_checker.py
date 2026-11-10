@@ -9,9 +9,12 @@ file, line, method and the declarations it resolves to (`outside` for one of a p
 It prints, for the typed edges the change adds (`receiver-type` and `inherited`, ambiguous or not) and for the by-name
 edges it drops, what the checker says about the edge's callee at that site: `agrees`, `checker: another declaration`,
 `checker: outside`, `checker: none`, or `no checker site` (the checker has no row for the call). A `.d.ts` that stands for the
-JS beside it counts as the same declaration (`agrees (via .d.ts pair)`). A dropped edge is `replaced` when the site keeps an
-edge to a method of that name, and `lost` when it keeps none. With --sample, it lists added typed edges where the checker
-names another declaration, to read at the source.
+JS beside it counts as the same declaration (`agrees (via .d.ts pair)`), and an edge to the type that owns a member with no
+symbol, which the edge's method names, agrees with the checker's declaration of that member (`agrees (owner of the member)`).
+An edge to what runs where the checker names the member of a declaration file is `checker: a declaration file's member`:
+neither agreement nor contradiction. A dropped edge is `replaced` when the site keeps an edge to a method of that name, and
+`lost` when it keeps none. With --sample, it lists added typed edges where the checker names another declaration, to read
+at the source.
 
 Each percentage is over the sites the checker has a row for, and the line says how many of the edges that is: a share
 read without its denominator is what hid 11,145 of one repository's 15,092 edges when the two sides were keyed
@@ -30,6 +33,9 @@ import sys
 TS_SUFFIXES = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts")
 TYPED = ("receiver-type", "inherited")
 NO_SITE = "no checker site"
+OWNER = "agrees (owner of the member)"
+DECLARATION_FILE = "checker: a declaration file's member"
+AGREE = ("agrees", "agrees (via .d.ts pair)", OWNER)
 
 
 def load(directory, repo):
@@ -103,7 +109,18 @@ def verdict(call, sites):
         return "checker: none"
     if declared <= {"outside"}:
         return "checker: outside"
-    return "agrees (via .d.ts pair)" if qual in {pair(d) for d in declared} else "checker: another declaration"
+    return by_member(qual, declared - {"outside"}, called(call))
+
+
+def by_member(qual, inside, method):
+    """What an edge is to the declarations of the repo the checker names, when none is the callee itself."""
+    if qual in {pair(d) for d in inside}:
+        return "agrees (via .d.ts pair)"
+    if any(d.endswith("." + method) and pair(d.rsplit(".", 1)[0]) == pair(qual) for d in inside):
+        return OWNER
+    if all(d.split(":", 1)[0].endswith(".d") for d in inside):
+        return DECLARATION_FILE
+    return "checker: another declaration"
 
 
 def share(counter, *good):
@@ -156,10 +173,10 @@ def report(repo, analysis, sample, seed, min_keyed=50.0):
     out = []
     out.append(f"{repo} typed edges the change adds: {len(analysis.added)} {dict(analysis.added_verdicts)}")
     out.append(f"{repo} by-name edges the change drops: {len(analysis.dropped)} {dict(analysis.dropped_verdicts)}")
-    ok, total, pct = share(analysis.added_verdicts, "agrees", "agrees (via .d.ts pair)")
+    ok, total, pct = share(analysis.added_verdicts, *AGREE)
     out.append(f"  added with a checker site: {total} of {len(analysis.added)} ({percent(total, len(analysis.added)):.0f} %), "
-               f"agree {ok} ({pct:.1f} % of those, a .d.ts pair counts as the same declaration)")
-    ok, total, pct = share(analysis.dropped_verdicts, "agrees", "agrees (via .d.ts pair)")
+               f"agree {ok} ({pct:.1f} % of those, a .d.ts pair and the owner of a member with no symbol count as agreeing)")
+    ok, total, pct = share(analysis.dropped_verdicts, *AGREE)
     out.append(f"  dropped with a checker site: {total} of {len(analysis.dropped)} ({percent(total, len(analysis.dropped)):.0f} %), "
                f"the checker agrees with the callee {ok} ({pct:.2f} % of those)")
     files_in, files, calls_in, calls = analysis.keyed
