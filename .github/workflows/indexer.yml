@@ -2,12 +2,14 @@ name: indexer
 
 # The method's checks on every change to the indexer or to the graph's schema: the tests, with the MCP and the graph
 # writer against a throwaway Neo4j; the HTTP corpus, the hold-out and the micro graph of
-# the branch against its base; the code's shape against its base; then the gates (indexer/scripts/gates.py).
+# the branch against its base; the scorecard of the graph against its references and their bounds (the micro job,
+# indexer/scripts/checks/reference.sh); the code's shape against its base; then the gates (indexer/scripts/gates.py).
 # The register of technical debts is checked on every pull request, apart from them, and so are the text of the pull
 # request (its title, body and commit messages carry no attribution line: indexer/scripts/checks/pr_text.py) and the
 # size of the files of docs/ that grow (indexer/scripts/checks/docs_size.py). A push to main fills the baselines that
-# pull requests compare with. They live in the Actions cache, keyed by the indexer's tree, and a miss recomputes
-# them: the extraction is deterministic, so a baseline is derived data.
+# pull requests compare with, and the checker's rows the scorecard reads (the `rows` job). They live in the Actions
+# cache, keyed by the indexer's tree (the rows, by the clones, the checker and the image), and a miss recomputes them:
+# the extraction is deterministic, so a baseline is derived data.
 #
 # A pull request is a refactor, where any difference fails, when its branch starts with `refact/` or `refactor/`, when
 # one of its commits starts with `refactor:` or `refact:` (with or without a scope), or under the `refactor` label.
@@ -273,6 +275,33 @@ jobs:
           indexer/scripts/micro.sh --base "$BASE" > "$out/micro.txt" 2>&1
           echo $? > "$out/micro-rc.txt"
           cat "$out/micro.txt"
+      # The checker's rows depend on the clones and the checker, not on the tree: a push to main (the `rows` job) makes them,
+      # and reference.sh keeps them by content in this folder
+      - name: The checker's rows
+        id: rows
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
+          key: reference-rows-${{ hashFiles('indexer/scripts/checks/ts_*.js', 'indexer/scripts/lib/test-image.sh', 'indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+      - name: The graph against its references
+        if: github.event_name == 'pull_request'
+        run: |
+          out="$RUNNER_TEMP/out"
+          # the base's bounds, to see which ones this change lowers (none when the base has no list)
+          git show "$BASE:indexer/scripts/checks/reference_floors.txt" > "$RUNNER_TEMP/base-floors.txt" 2>/dev/null || : > "$RUNNER_TEMP/base-floors.txt"
+          set +e
+          indexer/scripts/checks/reference.sh --base "$AIDD_CORPUS_HOME/micro/${{ steps.key.outputs.dir }}" \
+            --base-floors "$RUNNER_TEMP/base-floors.txt" --out "$out"
+          rc=$?
+          # 0 every count holds, 1 one does not, 3 only wins are lost: gates.py judges those under the labels. Any other status is
+          # a run that did not finish (the image, the network, the checker), and it fails this job instead of reaching the gates
+          [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ] || [ "$rc" -eq 3 ]
+      - if: always() && github.event_name == 'pull_request' && steps.rows.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
+          key: reference-rows-${{ hashFiles('indexer/scripts/checks/ts_*.js', 'indexer/scripts/lib/test-image.sh', 'indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
       - if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
         with:
@@ -284,6 +313,46 @@ jobs:
         with:
           path: ${{ env.AIDD_CORPUS_HOME }}/repos
           key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+
+  # A push to main makes the checker's rows, which a pull request reads from the cache: its scorecard then pays for the checker
+  # only when the clones, the checker or the test image changed. A pull request's own cache is its own and is not read by another.
+  rows:
+    needs: changes
+    if: github.event_name != 'pull_request' && needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - id: key
+        run: echo "key=reference-rows-${{ hashFiles('indexer/scripts/checks/ts_*.js', 'indexer/scripts/lib/test-image.sh', 'indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}" >> "$GITHUB_OUTPUT"
+      - id: have
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
+          key: ${{ steps.key.outputs.key }}
+          lookup-only: true
+      - if: steps.have.outputs.cache-hit != 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.have.outputs.cache-hit != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+      - if: steps.have.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+          restore-keys: clones-micro-
+      - if: steps.have.outputs.cache-hit != 'true'
+        run: indexer/scripts/checks/reference.sh --rows-only
+      - if: steps.have.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
+          key: ${{ steps.key.outputs.key }}
 
   gates:
     needs: [changes, corpus, micro, shape]
@@ -328,6 +397,8 @@ jobs:
             | indexer/scripts/gates.sh --base runs/base --head runs/head \
                 --holdout-changed "$(cat "$in/corpus/holdout-changed.txt")" --label "$labels" \
                 --branch="$HEAD_REF" --commits - --micro-rc "$(cat "$in/micro/micro-rc.txt" 2>/dev/null || echo 3)" \
+                --reference-rc "$(cat "$in/micro/reference-rc.txt" 2>/dev/null || echo 99)" \
+                --floors-lowered "$(wc -l < "$in/micro/reference-lowered.txt" 2>/dev/null || echo 0)" \
                 > report.md
           rc=$?
           {
@@ -336,6 +407,8 @@ jobs:
             echo '```'
             tail -n 200 "$in/micro/micro.txt" 2>/dev/null || echo "no micro report"
             echo '```'
+            echo
+            cat "$in/micro/reference.txt" 2>/dev/null || echo "no scorecard"
           } >> "$GITHUB_STEP_SUMMARY"
           cat report.md
           exit "$rc"

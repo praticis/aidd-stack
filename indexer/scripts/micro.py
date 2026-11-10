@@ -5,6 +5,7 @@ a change to the files, symbols, `CALLS`, `IMPORTS` or violations shows only here
 
     python scripts/micro.py --dir ~/.cache/aidd-corpus/repos --prepare [repo ...]   # clone the pins, largest first
     python scripts/micro.py --compare BASE_DIR HEAD_DIR [--show N] [--ignore LIST.FIELD]... [repo ...]   # the report
+    python scripts/micro.py --references                                      # the repos TypeScript's checker is the reference of
 
 `micro.sh` runs the dry-runs in between, one container each, and keeps them as `<repo>.json.gz`. With no repo named,
 the whole set. `--compare` exits 1 when a repository differs or was not compared. `--ignore calls.virtual` leaves a
@@ -29,6 +30,8 @@ MICRO = ("eshop", "jellyfin", "btcpayserver", "umbraco",
          "vikunja", "gitea", "mattermost", "grafana",
          "dispatch", "netbox",
          "ghost", "outline")
+# The micro repos TypeScript's checker is the reference of (`checks/reference.sh` makes its rows for them).
+TS_REPOS = ("ghost", "outline")
 # Out of the HTTP corpus, which keeps every tree in memory; a dry-run fits in 5 GB.
 EXTRA_PINS = {"grafana": ("grafana/grafana", "044dd4f9457cb43fcecc30ec61f376cbff637d57")}
 PINS = {**H.CORPUS, **EXTRA_PINS}
@@ -112,11 +115,15 @@ def main() -> int:
     ap.add_argument("--prepare", action="store_true",
                     help="clone the pinned commits that are missing, then print the repositories, the largest first")
     ap.add_argument("--compare", nargs=2, type=Path, metavar=("BASE", "HEAD"), help="two directories of dry-runs")
+    ap.add_argument("--references", action="store_true", help="print the repositories TypeScript's checker is the reference of")
     ap.add_argument("--show", type=int, default=5, help="records listed per side of each list that differs")
     ap.add_argument("--ignore", action="append", default=[], metavar="LIST.FIELD",
                     help="a field left out of a list's records, as `calls.virtual`; repeatable")
     ap.add_argument("repos", nargs="*")
     args = ap.parse_args()
+    if args.references:
+        print("\n".join(TS_REPOS))
+        return 0
     names = args.repos or list(MICRO)
     unknown = [n for n in names if n not in PINS]
     if unknown:

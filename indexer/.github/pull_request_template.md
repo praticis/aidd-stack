@@ -14,7 +14,7 @@ The template of a pull request to the indexer. The rules are in docs/indexer/met
 Kind: refactor | fix | feat | chore(scripts) | docs
 Records: <decision ids (H5-Dnn); debts opened or closed (TD-nnn, each with its strict xfail test); the date the plan was approved>
 Labels: none | graph-change | holdout-measurement
-Gates: <one line: corpus 0 differ · hold-out 0 · micro 12/12 · tests N · shape 0 new; for docs, the check that ran>
+Gates: <one line: corpus 0 differ · hold-out 0 · micro 12/12 · scorecard at its floors · tests N · shape 0 new; for docs, the check that ran>
 Author decides: <what only the author can answer, or could not be tested; or "nothing">
 
 ## What and why

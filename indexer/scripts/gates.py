@@ -6,7 +6,9 @@
 - the hold-out untouched, unless the pull request carries the `holdout-measurement` label;
 - a refactor changes nothing: with the `refactor` label, a branch named `refactor/…` or a commit `refactor: …`, any
   difference fails;
-- the micro graph: identical, or judged under the `graph-change` label (`--micro-rc`, `micro.sh`'s exit code).
+- the micro graph: identical, or judged under the `graph-change` label (`--micro-rc`, `micro.sh`'s exit code);
+- the scorecard of the graph: every count within its bound; a lowered bound and a win lost only under the `graph-change` label
+  (`--reference-rc`, `--floors-lowered`; reference_gate.py).
 
 Every other difference is classified the way a judgment starts: a gain (an expected pair now found) or an item to
 judge at its source, linked to its line. Both runs are scored against the branch's expected lists. The hold-out's
@@ -14,6 +16,7 @@ items are never listed, only whether it changed. Prints Markdown for the job sum
 
     python scripts/gates.py --base RUNS --head RUNS [--holdout-base RUNS --holdout-head RUNS | --holdout-changed N]
                             [--label NAME ...] [--branch NAME] [--commits FILE|-] [--micro-rc N]
+                            [--reference-rc N] [--floors-lowered N]
     python scripts/gates.py --holdout-base RUNS --holdout-head RUNS --holdout-count     # only how many changed
 
 CI counts the hold-out's changes where it runs it, so that no artifact carries the hold-out's items.
@@ -32,6 +35,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import corpus_metrics as M  # noqa: E402
 import http_corpus as H  # noqa: E402
+import reference_gate as R  # noqa: E402
 
 GATES = ("Precision ratchet", "No win lost", "Hold-out untouched", "A refactor changes nothing", "Every repo measured")
 REFACTOR_BRANCH = re.compile(r"refact(or)?/")
@@ -257,6 +261,8 @@ def _args() -> tuple[argparse.Namespace, argparse.ArgumentParser]:
     ap.add_argument("--branch", default="", help="the pull request's branch")
     ap.add_argument("--commits", type=argparse.FileType("r"), help="its commits' subjects, one per line; - for stdin")
     ap.add_argument("--micro-rc", type=int, help="micro.sh's exit code, judged under the labels")
+    ap.add_argument("--reference-rc", type=int, help="the scorecard's exit code (checks/reference.sh), judged under the labels")
+    ap.add_argument("--floors-lowered", type=int, help="how many bounds of the scorecard the change lowers")
     ap.add_argument("--show", type=int, default=100, help="items listed per section")
     return ap.parse_args(), ap
 
@@ -277,9 +283,10 @@ def main() -> int:
     judge_holdout(changed, labels, f)
     judge_refactor(changed, labels, f)
     micro_ok, micro = _micro(args.micro_rc, labels)
+    reference_ok, reference = R.judge(args.reference_rc, args.floors_lowered, labels)
     print(f"labels: {', '.join(sorted(labels)) or 'none'}; a refactor by {why or 'nothing'}\n")
-    print(render(f, labels, args.show) + micro, end="")
-    return 0 if micro_ok and not any(f.failed.values()) else 1
+    print(render(f, labels, args.show) + micro + (f"\n## Scorecard: {reference}\n" if reference else ""), end="")
+    return 0 if micro_ok and reference_ok and not any(f.failed.values()) else 1
 
 
 if __name__ == "__main__":
