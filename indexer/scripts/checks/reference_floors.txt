@@ -8,7 +8,11 @@
 #
 # A bound is changed by editing its line in the diff of the change that moves it, under the `graph-change` label: lowering a floor
 # or raising a ceiling is a number the author reads, and the label alone would free every change of the graph. A new repo or
-# strategy gets a line: `scorecard.py RUN_DIR --rows DIR --write-floors` prints them.
+# strategy gets a line: `scorecard.py RUN_DIR --rows DIR --scopes FILE --write-floors` prints them.
+#
+# A Python repo of the micro set has the strategy `scopes`, over files: `confirmed` ones are those whose every scope and name the scope
+# index classifies as CPython's symbol table does, a floor, and `contradicted` ones are those where one differs, a ceiling
+# (`checks/python_scopes.py`).
 
 ghost.receiver-type.confirmed :: >= 8171 :: measured on main at 576902a
 ghost.receiver-type.contradicted :: <= 1 :: measured on main at 576902a
@@ -18,3 +22,7 @@ outline.receiver-type.confirmed :: >= 3327 :: measured on main at 576902a
 outline.receiver-type.contradicted :: <= 0 :: measured on main at 576902a
 outline.inherited.confirmed :: >= 0 :: measured on main at 576902a
 outline.inherited.contradicted :: <= 0 :: measured on main at 576902a
+dispatch.scopes.confirmed :: >= 717 :: measured on main at 60092d8
+dispatch.scopes.contradicted :: <= 0 :: measured on main at 60092d8
+netbox.scopes.confirmed :: >= 1290 :: measured on main at 60092d8
+netbox.scopes.contradicted :: <= 0 :: measured on main at 60092d8

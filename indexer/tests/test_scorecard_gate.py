@@ -192,7 +192,7 @@ def test_write_floors_prints_a_line_per_count_and_ends_in_0(tree, capsys):
 
 def test_the_real_list_of_bounds_loads_and_names_a_strategy_of_a_repo_each():
     bounds = S.load_floors((Path(__file__).resolve().parent.parent / "scripts" / "checks" / "reference_floors.txt").read_text())
-    assert bounds and all(b.note and b.name.split(".")[1] in ("receiver-type", "inherited") for b in bounds)
+    assert bounds and all(b.note and b.name.split(".")[1] in ("receiver-type", "inherited", "scopes") for b in bounds)
     assert {b.op for b in bounds} == {">=", "<="}
 
 

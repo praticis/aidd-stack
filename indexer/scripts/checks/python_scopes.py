@@ -8,11 +8,16 @@ of them written as a generator expression, on the same lines. symtable only comp
 A file CPython 3.12 does not compile (Python 2, or a later Python's syntax such as 3.14's `except A, B:`) or that
 tree-sitter does not parse is counted apart.
 
-    python_scopes.py [N]    N samples of each kind of difference (default 5)
+    python_scopes.py [N] [--repos NAME ...] [--root DIR] [--json FILE]
 
-In the image, with the code at /src and the corpus's repos at /corpus."""
+N is the number of samples of each kind of difference (default 5); --repos limits it to some of the repos under the root
+(`/corpus`); --json writes each repo's counts (`files`, `files compared`, `files differing`, and a count per kind of
+difference), which `judgment/scorecard.py --scopes` reads as the agreement of the repo. In the image, with the code at
+/src and the corpus's repos at /corpus."""
+import argparse
 import ast
 import collections
+import json
 import symtable
 import sys
 from pathlib import Path
@@ -163,8 +168,8 @@ def counted(counts: collections.Counter, samples: dict, n: int, kind: str, line:
         samples[kind].append(line)
 
 
-def check(f: Path, counts: collections.Counter, samples: dict, n: int) -> None:
-    rel = f.relative_to("/corpus")
+def check(f: Path, root: Path, counts: collections.Counter, samples: dict, n: int) -> None:
+    rel = f.relative_to(root)
     try:
         found = compare(f.read_bytes())
     except (SyntaxError, ValueError, UnicodeDecodeError, RecursionError) as e:
@@ -174,22 +179,39 @@ def check(f: Path, counts: collections.Counter, samples: dict, n: int) -> None:
         counted(counts, samples, n, "files tree-sitter does not parse", str(rel))
         return
     counts["files compared"] += 1
+    counts["files differing"] += bool(found)
     for d in found:
         counted(counts, samples, n, d.kind, f"{rel}:{d.line} {d.name!r} index={d.index} cpython={d.cpython}")
 
 
+def scan(root: Path, repos: list[str], n: int, samples: dict) -> dict[str, collections.Counter]:
+    """Each repo's counts: every Python file under it that is no link."""
+    out = {}
+    for repo in repos:
+        counts: collections.Counter = collections.Counter()
+        for f in sorted((root / repo).rglob("*.py")):
+            if f.is_file() and not f.is_symlink():
+                counts["files"] += 1
+                check(f, root, counts, samples, n)
+        out[repo] = counts
+    return out
+
+
 def main(argv: list[str]) -> int:
-    n = int(argv[0]) if argv else 5
-    counts: collections.Counter = collections.Counter()
+    ap = argparse.ArgumentParser(prog="python_scopes.py")
+    ap.add_argument("n", nargs="?", type=int, default=5)
+    ap.add_argument("--repos", nargs="+")
+    ap.add_argument("--root", type=Path, default=Path("/corpus"))
+    ap.add_argument("--json", type=Path)
+    args = ap.parse_args(argv)
     samples = collections.defaultdict(list)
-    for f in sorted(p for repo in sorted(Path("/corpus").iterdir()) for p in repo.rglob("*.py")):
-        if f.is_file() and not f.is_symlink():
-            counts["files"] += 1
-            check(f, counts, samples, n)
-    for key, value in counts.items():
+    by_repo = scan(args.root, args.repos or sorted(p.name for p in args.root.iterdir()), args.n, samples)
+    for key, value in sum(by_repo.values(), collections.Counter()).items():
         print(f"{key}: {value}")
     for kind, lines in sorted(samples.items()):
         print(f"\n{kind}:\n  " + "\n  ".join(lines))
+    if args.json:
+        args.json.write_text(json.dumps({repo: dict(c) for repo, c in by_repo.items()}, sort_keys=True))
     return 0
 
 

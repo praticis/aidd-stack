@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# The graph of a tree against its references: the checker's rows for the TS repos of the micro set, then judgment/scorecard.py
-# over the tree's micro dry-runs, and the base's, against checks/reference_floors.txt.
+# The graph of a tree against its references: the checker's rows for the TS repos of the micro set, the scope index's agreement
+# with CPython's symbol table on its Python repos, then judgment/scorecard.py over the tree's micro dry-runs, and the base's,
+# against checks/reference_floors.txt.
 #
 #   indexer/scripts/checks/reference.sh [--run DIR] [--base DIR] [--floors FILE] [--base-floors FILE] [--out DIR] [--rows-only]
 #
@@ -17,6 +18,9 @@
 # so they are kept in $home/reference/rows by the clone's commit, the checker's code and the test image's recipe, and read back:
 # a pull request pays for the checker (about a minute for ghost) only when one of them changed. The checker runs in the test
 # image (lib/test-image.sh), one heavy job at a time like the corpus. A clone that is missing is cloned at its pin.
+#
+# The Python repos are the ones `micro.py --symtable` names. The scope index is the tree's own code, so its comparison with
+# `symtable` (checks/python_scopes.py, in the indexer image, a few seconds) is made on each run and kept nowhere.
 #
 # Exits as the scorecard does: 0 every count holds, 1 one does not, 3 only wins are lost, 2 its input is wrong; 75 when another
 # heavy job holds the lock. Any other status is a run that did not finish (a missing clone, the image, the checker), and the
@@ -54,17 +58,26 @@ fi
 micro() { docker run --rm -e PYTHONPATH=/src -v "$indexer":/src:ro "$@"; }
 repos=$(micro --entrypoint python "$base" /src/scripts/micro.py --references)
 [ -n "$repos" ] || { echo "reference: the micro set names no repo TypeScript's checker is the reference of" >&2; exit 2; }
+python_repos=$(micro --entrypoint python "$base" /src/scripts/micro.py --symtable)
+[ -n "$python_repos" ] || { echo "reference: the micro set names no repo CPython's symbol table is the reference of" >&2; exit 2; }
 
 rows="$home/reference/rows" use="$home/reference/use"
 mkdir -p "$rows" "$home/repos"
 rm -rf "$use" && mkdir -p "$use"
 code=$(cat "$indexer"/scripts/checks/ts_*.js | cksum | cut -d' ' -f1)
-for repo in $repos; do
-  clone="$home/repos/$repo"
+
+# the clone of a repo, made at its pin when it is missing
+ensure_clone() {
+  local clone="$home/repos/$1"
   if [ ! -d "$clone" ]; then
-    micro -v "$home/repos":/corpus/repos --entrypoint python "$base" /src/scripts/micro.py --dir /corpus/repos --prepare "$repo" >/dev/null
+    micro -v "$home/repos":/corpus/repos --entrypoint python "$base" /src/scripts/micro.py --dir /corpus/repos --prepare "$1" >/dev/null
   fi
-  [ -d "$clone" ] || { echo "reference: no clone of $repo in $home/repos, and it could not be made" >&2; exit 2; }
+  [ -d "$clone" ] || { echo "reference: no clone of $1 in $home/repos, and it could not be made" >&2; exit 2; }
+}
+
+for repo in $repos; do
+  ensure_clone "$repo"
+  clone="$home/repos/$repo"
   key=$(printf '%s %s %s' "$(git -C "$clone" rev-parse HEAD)" "$code" "$stamp" | cksum | cut -d' ' -f1)
   file="$rows/$repo-$key.jsonl"
   if [ ! -s "$file" ]; then
@@ -78,9 +91,15 @@ for repo in $repos; do
 done
 [ -z "$rows_only" ] || exit 0
 
+for repo in $python_repos; do ensure_clone "$repo"; done
+# a few seconds and little memory, so it takes no lock; its samples of what differs go to the log
+micro -v "$home/repos":/corpus:ro -v "$use":/out --entrypoint python "$base" /src/scripts/checks/python_scopes.py \
+  --repos $python_repos --json /out/scopes.json > "$use/scopes.txt"
+cat "$use/scopes.txt" >&2
+
 scorecard="$indexer/scripts/judgment/scorecard.py"
 report="$(mktemp)" rc=0
-args=("$run" --rows "$use" --floors "$floors")
+args=("$run" --rows "$use" --scopes "$use/scopes.json" --floors "$floors")
 [ -z "$base_run" ] || args+=(--base "$base_run")
 python3 -I "$scorecard" "${args[@]}" > "$report" || rc=$?
 lowered=""

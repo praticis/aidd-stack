@@ -8,7 +8,11 @@ The checker's verdict on the edge of a call made in a TS or JS file (`ts_vs_chec
   undecided      the checker has no opinion: `none`, `outside`, or no row for the call
 
 Counts are over edges, by strategy (`-ambiguous` is the same strategy), and no denominator moves them: a call form the graph
-learns to read adds by-name edges and leaves every count of the typed ones where it was."""
+learns to read adds by-name edges and leaves every count of the typed ones where it was.
+
+A Python repo has no edges to count, and CPython's symbol table is its reference for what the scope index decides: the counts are
+files, `scopes.confirmed` for the ones whose every scope and name the index classifies as the table does, `scopes.contradicted`
+for those where one differs (`scopes()` reads what `checks/python_scopes.py --json` writes)."""
 from __future__ import annotations
 
 import collections
@@ -102,6 +106,19 @@ def measure(run_dir: Path, rows_dir: Path | None) -> dict[str, Repo]:
             run = json.load(handle)
         rows = rows_dir / f"checker-{repo}.jsonl" if rows_dir else None
         out[repo] = Repo(mix(repo, run), reference(run, T.checker_sites(str(rows))) if rows and rows.is_file() else None)
+    return out
+
+
+def scopes(path: Path) -> dict[str, int]:
+    """The counts of each Python repo in the JSON of `checks/python_scopes.py`: files that agree, files that differ."""
+    out = {}
+    try:
+        for repo, found in json.loads(path.read_text()).items():
+            differing = found.get("files differing", 0)
+            out[f"{repo}.scopes.confirmed"] = found.get("files compared", 0) - differing
+            out[f"{repo}.scopes.contradicted"] = differing
+    except (AttributeError, TypeError) as error:
+        raise ValueError(f"{path}: not the counts of checks/python_scopes.py ({error})") from error
     return out
 
 
