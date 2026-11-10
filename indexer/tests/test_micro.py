@@ -83,3 +83,10 @@ def test_the_repos_the_checker_is_the_reference_of_are_repos_of_the_micro_set(ca
     sys.argv = ["micro.py", "--references"]
     assert M.main() == 0
     assert capsys.readouterr().out.split() == list(M.TS_REPOS)
+
+
+def test_the_repos_the_symbol_table_is_the_reference_of_are_python_repos_of_the_micro_set(capsys):
+    assert M.PYTHON_REPOS and set(M.PYTHON_REPOS) <= set(M.MICRO) and not set(M.PYTHON_REPOS) & set(M.TS_REPOS)
+    sys.argv = ["micro.py", "--symtable"]
+    assert M.main() == 0
+    assert capsys.readouterr().out.split() == list(M.PYTHON_REPOS)

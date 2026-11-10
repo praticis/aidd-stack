@@ -1,6 +1,6 @@
 """The graph of one tree against its references: the counts a pull request may not move the wrong way.
 
-   scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]
    scorecard.py --lowered BASE_FLOORS FLOORS
 
 RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). A repo that has
@@ -12,6 +12,10 @@ not fall) and the ones it `contradicted` (a ceiling: they may not rise). A count
 learns to read, which adds by-name edges, moves none of them. The bounds are in --floors (`indexer/scripts/checks/reference_floors.txt`,
 `repo.strategy.confirmed :: >= N :: note`, `repo.strategy.contradicted :: <= N :: note`, `#` a comment), and the graph is
 deterministic, so a count past its bound is a change of the graph, never noise.
+
+--scopes FILE (`checks/python_scopes.py --json`) adds the Python repos, measured against CPython's symbol table as `repo.scopes.confirmed`
+(files whose every scope and name the index classifies as the table does) and `repo.scopes.contradicted` (files where one differs),
+bounded as the others are: it depends on the tree's code and the clone, not on the dry-runs.
 
 With --base DIR (the dry-runs of the tree it is compared to) it also lists the sites where the base has a confirmed typed edge and
 RUN_DIR has none, a win lost, and prints the numbers that have no bound (the typed share of every repo, recall, the by-name edges
@@ -180,10 +184,11 @@ def code(rows: list[Row], lost: dict[str, list]) -> int:
 
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="scorecard.py", add_help=False, usage=(
-        "scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
+        "scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
     ap.add_argument("run_dir", type=Path)
     ap.add_argument("--base", type=Path)
     ap.add_argument("--rows", type=Path)
+    ap.add_argument("--scopes", type=Path)
     ap.add_argument("--floors", type=Path)
     ap.add_argument("--min-keyed", type=float, default=50.0)
     ap.add_argument("--write-floors", action="store_true")
@@ -205,7 +210,7 @@ def run(args: argparse.Namespace) -> int:
     bounds = load_floors(args.floors.read_text()) if args.floors else []
     head = M.measure(args.run_dir, args.rows)
     base = M.measure(args.base, args.rows) if args.base else None
-    counts = M.gated(head)
+    counts = {**M.gated(head), **(M.scopes(args.scopes) if args.scopes else {})}
     if args.write_floors:
         print("\n".join(f"{n} :: {SIDE[n.rsplit('.', 1)[1]]} {v} :: measured on the base" for n, v in counts.items()))
         return 0

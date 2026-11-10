@@ -116,7 +116,7 @@ python3 -I indexer/scripts/judgment/chain_diff.py BEFORE AFTER N REPO... > out.t
 python3 -I indexer/scripts/judgment/show.py $C/repos [--short] < samples.jsonl
 python3 -I indexer/scripts/judgment/site_edges.py REPO FILE_SUFFIX:LINE[,...] DIR...
 python3 -I indexer/scripts/judgment/ts_vs_checker.py REPO BEFORE AFTER CHECKER.jsonl [--sample N [--seed S]]
-python3 -I indexer/scripts/judgment/scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+python3 -I indexer/scripts/judgment/scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]
 python3 -I indexer/scripts/judgment/csharp_extensions.py sites|back|classes|this-kind|blocks ...
 python3 -I indexer/scripts/judgment/attribution.py BEFORE AFTER OLD.jsonl NEW.jsonl N REPO... [--cases FILE] [--repos DIR] [--language LANG]
 indexer/scripts/judgment/attribution.sh LANG OLD_TREE NEW_TREE BEFORE AFTER N REPO... [--cases FILE]
@@ -154,6 +154,13 @@ the change, under the `graph-change` label (the label alone would free every cha
 change a number the author reads). `--write-floors` prints the lines for a tree, and `--lowered BASE_FLOORS FLOORS` the bounds a change lowers: a floor that
 falls, a ceiling that rises, a line that goes.
 
+A Python repo has no edges to count; CPython's `symtable` is the reference of what its scope index decides (`checks/python_scopes.py`,
+below). With `--scopes FILE`, what that check writes with `--json`, each Python repo of the micro set gets the same two bounds over
+files: `repo.scopes.confirmed` (the files whose every scope and name the index classifies as `symtable` does, a floor) and
+`repo.scopes.contradicted` (the files where one differs, a ceiling, 0 on `dispatch` and `netbox`). The check depends on the tree's
+code and the clone, not on the dry-runs, so `reference.sh` makes it on each run (a few seconds, no cache) over the repos
+`micro.py --symtable` names, and a Python repo of the set with no bound is a count with no floor (H5-D55).
+
 In CI the `micro` job runs it after the micro graph (`checks/reference.sh --base`, over the dry-runs of the branch and of its
 base). The TS repos it makes the checker's rows for are the ones the micro set names (`micro.py --references`), not the ones
 that have a bound, so a repo is not left out by deleting its lines. The rows depend on the clones, the checker and the test
@@ -184,10 +191,12 @@ in the image with `python -m cProfile -o` and `-w` on the mounted code (§6).
 facts under `/corpus`, read as the extractor reads them, through the language's per-file index. The same dump from two
 codes, compared with `cmp`, shows whether a refactor changed a fact; from one code twice, that the facts are values.
 
-`checks/python_scopes.py [N]` compares Python's scope index with CPython's `symtable` over every Python file under
-`/corpus`: each scope paired with symtable's, each name classified the same (local, global or free). It prints the
-counts, the files it compared and those CPython 3.12 does not compile, and N samples of each difference. symtable only
-compiles a file's symbols; no repository's code runs.
+`checks/python_scopes.py [N] [--repos NAME ...] [--root DIR] [--json FILE]` compares Python's scope index with CPython's `symtable`
+over every Python file under `/corpus` (or `--root`, or the repos `--repos` names): each scope paired with symtable's, each name
+classified the same (local, global or free). It prints the counts, the files it compared, those that differ and those CPython 3.12
+does not compile, and N samples of each difference; `--json` writes each repo's counts, which the scorecard bounds. symtable only
+compiles a file's symbols; no repository's code runs. The `tests` job also runs it over the standard library of the test image
+(685 files, no clone, 5 seconds), with no tolerance: a difference there is a failing test.
 
 `checks/ts_scopes.py [N]` compares TS's scope index with TypeScript's own binder over every TS and JS file the indexer
 extracts from `/corpus`: each name a file reads binds to the declarations of the file the checker's lookup through the

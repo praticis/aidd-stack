@@ -111,7 +111,8 @@ The full text is in the ROADMAP, under "Principles".
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - the scorecard of the graph (`indexer/scripts/checks/reference.sh`, in the `micro` job) measures the TS micro repos
-    against TypeScript's checker and counts, by strategy, the typed edges it confirms and the ones it contradicts: a count
+    against TypeScript's checker and counts, by strategy, the typed edges it confirms and the ones it contradicts, and the
+    Python micro repos against CPython's `symtable`, by the files whose scopes the index classifies as it does: a count
     past its bound in `indexer/scripts/checks/reference_floors.txt` fails the PR, whatever the labels, and so does a bound
     lowered on its line, or deleted, and a win lost (a site where `main` has a confirmed typed edge and the PR has none)
     without the `graph-change` label;
