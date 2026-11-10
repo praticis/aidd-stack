@@ -2,7 +2,8 @@
 """The register of technical debts (docs/tech-debt.md) against its cases and the ROADMAP, as CI runs it:
 
 - each case a debt names is a case of the debts' tests (indexer/tests/test_*_debts.py), and each case there is named
-  by a debt; each of those files marks its cases as strict xfails;
+  by a debt; each of those files marks its cases as strict xfails. An open debt with no case says so, in a Case cell that
+  starts with `none yet`, and is counted in the summary; one that says it and names a case is wrong;
 - a debt's due is `F1.2`, a `fix(<scope>)` PR before F1.2 (`fix(csharp)`, `fix(go)`, ...), a step of H5 (`H5 step 6`),
   or `closed`;
 - the ROADMAP's list of the debts due in F1.2 ("Debts due here:"), of those due in a step of H5 ("due in an H5 step")
@@ -25,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CASE_ID = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`")
 DEBT = re.compile(r"TD-(\d+)(?: to TD-(\d+))?")
+NO_CASE = "none yet"
 HERE_MARK = "Debts due here:"
 H5_MARK = "due in an H5 step"
 FIX = re.compile(r"`(fix\([a-z]+\))`")
@@ -41,7 +43,8 @@ def register(text: str) -> tuple[list[dict], list[str]]:
         if len(cells) != 5:
             found.append(f"{cells[0]}: a row has {len(cells)} columns, not 5")
             continue
-        rows.append({"id": cells[0], "due": cells[3], "cases": CASE_ID.findall(cells[4])})
+        rows.append({"id": cells[0], "due": cells[3], "cases": CASE_ID.findall(cells[4]),
+                     "pending": cells[4].lower().startswith(NO_CASE)})
     ids = [r["id"] for r in rows]
     found += [f"{i}: listed twice" for i in sorted(set(ids)) if ids.count(i) > 1]
     return rows, found
@@ -125,7 +128,9 @@ def check_cases(rows: list[dict], cases: dict[str, str]) -> list[str]:
     named = {c for r in rows for c in r["cases"]}
     found = [f"{r['id']}: names `{c}`, which no debts' test has" for r in rows for c in r["cases"] if c not in cases]
     found += [f"`{c}` ({f}) is named by no debt" for c, f in sorted(cases.items()) if c not in named]
-    found += [f"{r['id']}: names no case" for r in rows if not r["cases"] and phase(r["due"]) != "closed"]
+    found += [f"{r['id']}: names no case" for r in rows
+              if not r["cases"] and not r["pending"] and phase(r["due"]) != "closed"]
+    found += [f"{r['id']}: says there is no case yet and names one" for r in rows if r["pending"] and r["cases"]]
     return found
 
 
@@ -150,7 +155,9 @@ def check(root: Path) -> tuple[list[str], str]:
     found += more + check_cases(rows, cases)
     found += check_roadmap(rows, (root / "docs" / "ROADMAP.md").read_text(), docs)
     closed = sum(phase(r["due"]) == "closed" for r in rows)
-    return found, f"{len(rows)} debts ({len(rows) - closed} open, {closed} closed); {len(cases)} cases in the debts' tests"
+    pending = sum(r["pending"] and phase(r["due"]) != "closed" for r in rows)
+    later = f"; {pending} open with no case yet" if pending else ""
+    return found, f"{len(rows)} debts ({len(rows) - closed} open, {closed} closed); {len(cases)} cases in the debts' tests{later}"
 
 
 def main(argv: list[str]) -> int:

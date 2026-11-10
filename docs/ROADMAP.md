@@ -25,9 +25,9 @@
     - merged: steps 0–2, 4 and 7–9 (PR #7, H5-D8); step 5, the `TypeIndex`, in Go, C#, Python and TS (H5-D10, H5-D29; #85
       the last), each validated on a live install and judged with the per-site attribution (H5-D21, G2 #56); F1.16 (#57
       to #63); step 12 for the conventions, the corpus runner, the MCP's tools and the refresher (#74 to #78);
-    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-069), each with a strict xfail case, and the ones
+    - the debts step 5 leaves are in `docs/tech-debt.md` (TD-001 to TD-073), each with a strict xfail case, but two with none yet, and the ones
       it closed carry their PR there: TD-005 to TD-007, TD-010, TD-011, TD-013, TD-014, TD-016 to TD-022, TD-027, TD-033,
-      TD-034, TD-067 and TD-068 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
+      TD-034, TD-067, TD-068 and TD-070 to TD-072 are due in `fix(csharp)` PRs before F1.2; Go's calls on an interface, which reach no method of the repo
       unless a single implementer declares it, TD-029, a bare name that reaches a method, TD-065, and a package-qualified call
       whose name two packages declare, TD-066, are due in `fix(go)` PRs before F1.2; a call found by name that reaches a function
       of another language, TD-064, is due in a `fix(resolve)` PR before F1.2; an identifier read as written, where Python names it
@@ -203,12 +203,12 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
   points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
   decision 3)
   - Debts due here: TD-001 to TD-004, TD-008, TD-009, TD-012, TD-015, TD-025, TD-028, TD-035, TD-050, TD-051,
-    TD-054, TD-057, TD-059 and TD-060 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
+    TD-054, TD-057, TD-059, TD-060 and TD-073 (`docs/tech-debt.md`), C# defects `main` has, two Python ones a change of behavior made (H5-D26, and a class a
     function holds), an override of a package's method no call meets, a workspace package whose entry is a build
     no project the config references emits, an HTTP path that reads a field of an instance as a constant, a
     function an object literal holds or a member of an object type no declaration names, which need a symbol the
     schema does not have, and three answers of a type checker (a generic's argument an alias gives, a receiver a type guard
-    narrows, an overloaded function's result), each with a strict xfail test. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
+    narrows, an overloaded function's result), each with a strict xfail test, and the share of TS calls that go by name, which a case cannot state. SCIP is a possible remedy for them, not a proven one; the first case of TD-001 may be fixed
     in the resolver earlier
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot

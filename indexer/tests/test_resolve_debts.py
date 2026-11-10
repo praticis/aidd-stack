@@ -52,6 +52,36 @@ public class Reader
 """,
 }
 
+RELATIVE_NAMESPACE = {
+    "Naming/Naming.csproj": CSPROJ,
+    "Server/Server.csproj": '<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../Naming/Naming.csproj" />'
+                            "</ItemGroup></Project>\n",
+    "Naming/Resolver.cs": """namespace Emby.Naming.TV;
+
+public class EpisodeResolver
+{
+    public int Resolve(string path, bool flag) => 1;
+}
+""",
+    "Server/Resolver.cs": """namespace Emby.Server.Resolvers.TV;
+
+public class EpisodeResolver
+{
+    public int Pad() => 0;
+    public int Resolve(string path, bool flag) => 2;
+}
+
+public class SeasonResolver
+{
+    public int Run(string path)
+    {
+        var resolver = new Naming.TV.EpisodeResolver();
+        return resolver.Resolve(path, true);
+    }
+}
+""",
+}
+
 SINGLE_IMPLEMENTER = {
     "App.csproj": CSPROJ,
     "Store.cs": """namespace App;
@@ -94,6 +124,9 @@ CASES = [
          "a file's type facts keep one of two types of one name, and their methods share a qualified name"),
     case("a-type-written-with-a-namespace-outside-the-repo-is-not-the-repos", PACKAGE_NAME, (7, 15), set(),
          "reads a written type by its simple name, which the repo's own type has"),
+    case("a-type-written-with-a-namespace-relative-to-an-enclosing-one-is-not-another-of-its-simple-name",
+         RELATIVE_NAMESPACE, (14,), {5},
+         "reads a written type by its simple name, so the type of that name in the caller's own namespace is taken for it"),
     case("a-call-on-an-interface-reaches-its-single-implementer-by-the-dispatch-alone", SINGLE_IMPLEMENTER, (10,), {3},
          "a call on an interface also links to its single implementer, which the implementer's OVERRIDES reaches"),
 ]

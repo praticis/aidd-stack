@@ -181,6 +181,18 @@ CREATIONS = [
 ]
 
 
+EXTENDED = [
+    case("an-extension-of-object-reaches-a-type-with-a-base-outside-the-repo",
+         "public static class TypeNames\n{\n    public static string Name(this Type type) => type.Name;\n\n"
+         "    public static string Name(this object value) => value.GetType().Name;\n}\n"
+         "public record Command(int A) : IRequest<bool>;\n"
+         "public class Runner\n{\n    public void Run(Command command) { command.Name(); }\n}\n",
+         {"Api.Services.TypeNames.Name"},
+         "takes a type with a base outside the repo for the owner of a method the base may declare, where the repo's "
+         "extension of object, with an overload for another type, is the one that runs"),
+]
+
+
 def _edges(root, files, caller: str) -> set[tuple[str, str]]:
     from aidd_indexer.cli import extract_and_resolve
     from aidd_indexer.core.model import RepoInfo
@@ -203,3 +215,8 @@ def test_the_call_reaches_what_csharp_binds(tmp_path, source, caller, expected):
 @pytest.mark.parametrize("source,caller,expected", CREATIONS)
 def test_a_creation_reaches_the_type_and_its_constructor(tmp_path, source, caller, expected):
     assert expected <= {callee for callee, _ in _edges(tmp_path, source, caller)}
+
+
+@pytest.mark.parametrize("source,caller,expected", EXTENDED)
+def test_a_call_reaches_the_extension_and_not_the_type(tmp_path, source, caller, expected):
+    assert {callee for callee, _ in _edges(tmp_path, source, caller)} == expected

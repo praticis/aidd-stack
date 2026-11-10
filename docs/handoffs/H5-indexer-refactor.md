@@ -13,9 +13,9 @@
 
 **Merged.** Steps 0–2, 4 and 7–9, and parts of 3 and 10 (PR #7, a checkpoint, H5-D8), and step 5 in the four languages (the table below); F1.16 is closed (`feat(mcp)` #63, H5-D35). Each merge and its live validation are in `docs/history.md`; the results are in each PR's body and in `corpus-report.md`.
 
-**Step 5 is closed for Go, C#, Python and TS, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-069), each with a
-strict xfail test; those due before F1.2 are `fix(csharp)` PRs (19), `fix(typescript)` PRs (8: TD-052, TD-053, TD-055, TD-056, TD-058,
-TD-061, TD-062 and TD-063), `fix(go)` (TD-029, TD-065 and TD-066), `fix(resolve)` (TD-064), `fix(python)` (TD-069) and `fix(conventions)` (TD-048); TD-057, TD-059 and TD-060 are due in F1.2 (H5-D52). Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
+**Step 5 is closed for Go, C#, Python and TS, with debts.** The defects it leaves are `docs/tech-debt.md` (TD-001 to TD-073), each with a
+strict xfail test (TD-072 and TD-073 have none yet); those due before F1.2 are `fix(csharp)` PRs (22), `fix(typescript)` PRs (8: TD-052, TD-053, TD-055, TD-056, TD-058,
+TD-061, TD-062 and TD-063), `fix(go)` (TD-029, TD-065 and TD-066), `fix(resolve)` (TD-064), `fix(python)` (TD-069) and `fix(conventions)` (TD-048); TD-057, TD-059, TD-060 (H5-D52) and TD-073 are due in F1.2. Python's leaves TD-025 (H5-D26), due in F1.2, and TD-026 (H5-D28), due in step 6. The judgment of H5-D18 was the review of an agent that
 did not write it (H7-D6): a person's check is not feasible today. Steps 6 and 12 are open for C# as for every language,
 and two debts of the core are due in them: TD-023, the syntax of each language it holds, and TD-024 (step 6), the
 names of frameworks and client libraries it holds:
