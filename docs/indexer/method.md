@@ -45,7 +45,7 @@ The classes bind an agent; the author runs any of these tools without asking.
 | 1. Read-only | `git status/log/show`, reading files, `docker image inspect`, `gh pr view`, `debts.py` | the task |
 | 2. Offline analysis of saved artifacts | `judgment/` tools but `attribution.sh`, `gates.sh`, `checks/expected_lists_*.py`, `judgment/ts_vs_checker.py`, `live/dry_sections.py`, `live/graph_vs_dry.py`, `live/json_paths_diff.py`, `live/round.py` | the task says to run it |
 | 3. Local files | editing docs or scripts; `lists/expected_lists.py` (edits the repository's expected lists); writes to `.local/` or `$C` | the task asks; `before/` pictures are never rewritten |
-| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/mutants.sh`, `protocol/cost-pairs.sh`, `protocol/micro-fresh.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `checks/ts_checker.js`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
+| 4. Corpus or indexer execution | `corpus.sh`, `micro.sh`, `protocol.sh`, `time-alone.sh`, `test.sh`, `mcp-it.sh`, `protocol/shape.sh`, `shape.py` on the host, `checks/mutate.sh`, `checks/mutants.sh`, `protocol/cost-pairs.sh`, `protocol/micro-fresh.sh`, `checks/dump.py`, `checks/python_scopes.py`, `checks/ts_scopes.py`, `checks/ts_heritage.py`, `checks/ts_modules.py`, `checks/ts_checker.js`, `checks/reference.sh`, `lib/test-image.sh`, `probes/`, `judgment/attribution.sh`; `protocol/resume-test.sh` (a headless `claude` session on the author's account) | explicit. One protocol at a time, in the background; never edit the mounted code during a run |
 | 5. Live install | `live/validate.sh`, `graph-picture.sh`, `golden.py`, `dryrun-live.sh`, `pre-merge.sh`, `install-check.sh`, a refresh | explicit, per run. Install and reinstall are the author's alone |
 | 6. Remote or git metadata | commits, pushes, PRs, labels, merges, branches, worktrees | the author's approval each time. Commits are one conventional line, signed |
 
@@ -151,8 +151,17 @@ checker contradicts (the number SCIP must move) and the typed edges it does not 
 the tree and the change. A count past its bound, one with no bound, a bound with no count and a repo whose calls are under
 `--min-keyed` in files with rows all end in 1; wins lost alone end in 3. A bound is changed by editing its line in the diff of
 the change, under the `graph-change` label (the label alone would free every change of the graph, and the line makes the
-change a number the author reads). It is a tool for now: its place in CI is a later PR. `--write-floors` prints the lines
-for a tree.
+change a number the author reads). `--write-floors` prints the lines for a tree, and `--lowered BASE_FLOORS FLOORS` the bounds a change lowers: a floor that
+falls, a ceiling that rises, a line that goes.
+
+In CI the `micro` job runs it after the micro graph (`checks/reference.sh --base`, over the dry-runs of the branch and of its
+base). The TS repos it makes the checker's rows for are the ones the micro set names (`micro.py --references`), not the ones
+that have a bound, so a repo is not left out by deleting its lines. The rows depend on the clones, the checker and the test
+image, not on the tree, so they are kept by content, and a push to main makes them (the `rows` job) for every pull request to
+read from the cache; one that finds them missing makes them once. A run that did not finish (the image, the network, the
+checker) fails the `micro` job, and never reaches the gates as a result. `gates.py` (`reference_gate.py`) fails the PR when a
+count is past its bound, whatever the labels, and when it lowers a bound or loses a win without the `graph-change` label; a
+refactor does neither. Locally: `micro.sh`, then `checks/reference.sh`.
 
 ### 4.5 Timing alone
 

@@ -1,6 +1,7 @@
 """The graph of one tree against its references: the counts a pull request may not move the wrong way.
 
    scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py --lowered BASE_FLOORS FLOORS
 
 RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). A repo that has
 `DIR/checker-<repo>.jsonl` in --rows (what `checks/ts_checker.js --link` prints) is measured against TypeScript's checker, as
@@ -19,7 +20,8 @@ the checker contradicts, the typed edges it does not decide) as the base, the tr
 It ends in 0 when every count holds, in 1 when one is past its bound, has no bound, has a bound and was not measured, or is
 invalid (a repo's calls are under --min-keyed percent in files the checker has rows for, 50 by default: the two sides are keyed
 differently and nothing below means anything), in 3 when only wins were lost, and in 2 when its input is wrong. --write-floors
-prints the lines of the counts it measured, to review and commit."""
+prints the lines of the counts it measured, to review and commit. --lowered prints, one per line, the bounds a change lowers
+(a floor that falls, a ceiling that rises, a line that goes) between the base's list and its own; it ends in 0."""
 from __future__ import annotations
 
 import argparse
@@ -74,6 +76,19 @@ def load_floors(text: str) -> list[Bound]:
             raise ValueError(f"line {n}: {bound.name} already has a bound")
         bounds.append(bound)
     return bounds
+
+
+def lowered(base: list[Bound], head: list[Bound]) -> list[str]:
+    """The bounds of the base that the head lowers: a floor that falls, a ceiling that rises, and a bound that is gone."""
+    now = {b.name: b for b in head}
+    out = []
+    for b in base:
+        h = now.get(b.name)
+        if h is None:
+            out.append(f"{b.name}: {b.op} {b.limit}, deleted")
+        elif (h.limit < b.limit) if b.op == ">=" else (h.limit > b.limit):
+            out.append(f"{b.name}: {b.op} {b.limit}, now {h.op} {h.limit}")
+    return out
 
 
 def status(name: str, n: int | None, bound: Bound | None, keyed: dict[str, float], min_keyed: float) -> str:
@@ -175,6 +190,17 @@ def parser() -> argparse.ArgumentParser:
     return ap
 
 
+def print_lowered(files: list[str]) -> int:
+    try:
+        if len(files) != 2:
+            raise ValueError("--lowered takes the base's list and the change's")
+        print("\n".join(lowered(load_floors(Path(files[0]).read_text()), load_floors(Path(files[1]).read_text()))))
+    except (OSError, ValueError) as error:
+        print(f"scorecard.py: {error}", file=sys.stderr)
+        return 2
+    return 0
+
+
 def run(args: argparse.Namespace) -> int:
     bounds = load_floors(args.floors.read_text()) if args.floors else []
     head = M.measure(args.run_dir, args.rows)
@@ -190,6 +216,8 @@ def run(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["--lowered"]:
+        return print_lowered(argv[1:])
     try:
         args = parser().parse_args(argv)
     except SystemExit as exit_:

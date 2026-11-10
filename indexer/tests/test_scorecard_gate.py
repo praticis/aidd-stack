@@ -203,3 +203,39 @@ def test_main_judges_the_keys_by_the_threshold_it_is_given(tree, floors):
     floors.write_text("r.receiver-type.confirmed :: >= 0 :: n\nr.receiver-type.contradicted :: <= 9 :: n")
     assert S.main([str(runs), "--rows", str(rows), "--floors", str(floors)]) == 1                       # under the default 50
     assert S.main([str(runs), "--rows", str(rows), "--floors", str(floors), "--min-keyed", "30"]) == 0
+
+
+# -- the bounds a change lowers ---------------------------------------------------------------------------------------------
+
+def test_a_floor_that_falls_a_ceiling_that_rises_and_a_line_that_goes_are_lowered():
+    head = BOUNDS.replace(">= 2", ">= 1").replace("<= 1", "<= 2").replace("r.inherited.confirmed :: >= 1 :: a note\n", "")
+    assert S.lowered(S.load_floors(BOUNDS), S.load_floors(head)) == [
+        "r.receiver-type.confirmed: >= 2, now >= 1", "r.receiver-type.contradicted: <= 1, now <= 2", "r.inherited.confirmed: >= 1, deleted"]
+
+
+def test_a_floor_that_rises_a_ceiling_that_falls_a_new_line_and_an_equal_list_lower_nothing():
+    head = BOUNDS.replace(">= 2", ">= 3").replace("<= 1", "<= 0") + "r.other.confirmed :: >= 5 :: a note\n"
+    assert S.lowered(S.load_floors(BOUNDS), S.load_floors(head)) == []
+    assert S.lowered(S.load_floors(BOUNDS), S.load_floors(BOUNDS)) == []
+
+
+def test_every_bound_of_the_base_deleted_is_every_bound_lowered():
+    assert len(S.lowered(S.load_floors(BOUNDS), [])) == 4
+
+
+def test_main_prints_the_lowered_bounds_one_per_line_and_ends_in_0(tmp_path, capsys):
+    base, head = tmp_path / "base.txt", tmp_path / "head.txt"
+    base.write_text(BOUNDS)
+    head.write_text(BOUNDS.replace(">= 2", ">= 1"))
+    assert S.main(["--lowered", str(base), str(head)]) == 0
+    assert capsys.readouterr().out == "r.receiver-type.confirmed: >= 2, now >= 1\n"
+
+
+def test_lowered_ends_in_2_for_a_wrong_list_a_missing_file_or_the_wrong_number_of_files(tmp_path, capsys):
+    base, bad = tmp_path / "base.txt", tmp_path / "bad.txt"
+    base.write_text(BOUNDS)
+    bad.write_text("r.recall 50\n")
+    assert S.main(["--lowered", str(base), str(bad)]) == 2
+    assert S.main(["--lowered", str(base), str(tmp_path / "missing.txt")]) == 2
+    assert S.main(["--lowered", str(base)]) == 2
+    assert "scorecard.py:" in capsys.readouterr().err

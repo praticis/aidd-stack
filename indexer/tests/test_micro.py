@@ -76,3 +76,10 @@ def test_compare_exits_1_on_a_difference_or_a_missing_run(tmp_path, capsys):
 def test_the_set_is_pinned_and_out_of_the_holdout():
     assert set(M.MICRO) <= set(M.PINS)
     assert not set(M.MICRO) & set(H.HOLDOUT)
+
+
+def test_the_repos_the_checker_is_the_reference_of_are_repos_of_the_micro_set(capsys):
+    assert M.TS_REPOS and set(M.TS_REPOS) <= set(M.MICRO)
+    sys.argv = ["micro.py", "--references"]
+    assert M.main() == 0
+    assert capsys.readouterr().out.split() == list(M.TS_REPOS)

@@ -108,3 +108,25 @@ def test_the_micro_graph_under_the_labels():
     assert not G.judge_micro(1, set())[0]
     assert not G.judge_micro(1, {"refactor", "graph-change"})[0]       # a refactor changes nothing, judged or not
     assert not G.judge_micro(3, {"graph-change"})[0]
+
+
+def test_the_scorecard_is_a_gate_of_the_gates(tmp_path, monkeypatch, capsys):
+    for name in ("b", "h"):
+        (tmp_path / name).mkdir()
+    argv = ["gates.py", "--base", str(tmp_path / "b"), "--head", str(tmp_path / "h"), "--holdout-changed", "0", "--expected", str(tmp_path)]
+
+    def go(*extra):
+        monkeypatch.setattr(sys, "argv", argv + list(extra))
+        rc = G.main()
+        return rc, capsys.readouterr().out
+
+    rc, out = go("--reference-rc", "0", "--floors-lowered", "0")
+    assert rc == 0 and "## Scorecard: pass: every count of the graph holds its bound and no win is lost" in out
+    rc, out = go("--reference-rc", "1")
+    assert rc == 1 and "## Scorecard: FAIL: a count of the graph is past its bound" in out
+    assert go("--reference-rc", "0", "--floors-lowered", "1")[0] == 1
+    assert go("--reference-rc", "0", "--floors-lowered", "1", "--label", "graph-change")[0] == 0
+    assert go("--reference-rc", "3")[0] == 1 and go("--reference-rc", "3", "--label", "graph-change")[0] == 0   # a win lost
+    assert go("--reference-rc", "99", "--label", "graph-change")[0] == 1                                       # it did not run
+    rc, out = go()
+    assert rc == 0 and "Scorecard" not in out
