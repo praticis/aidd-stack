@@ -10,7 +10,8 @@
 #   --floors FILE       the bounds that judge the tree (default: checks/reference_floors.txt of this tree)
 #   --base-floors FILE  the base's bounds: the ones this tree lowers, or deletes, are listed (and counted, with --out)
 #   --out DIR           also writes reference.txt (what it prints), reference-rc.txt (the scorecard's exit code) and
-#                       reference-lowered.txt (the bounds this tree lowers, one per line), which `gates.py` reads
+#                       reference-lowered.txt (the bounds this tree lowers, one per line), which `gates.py` reads, and
+#                       measured.txt (the counts it measured, as lines of bounds), which `floors_bot.py` reads
 #   --rows-only         only make the checker's rows, so that a pull request finds them (what a push to main does)
 #
 # The TS repos are the ones the micro set (`micro.py --references`) says TypeScript's checker is the reference of: a repo is
@@ -101,6 +102,7 @@ scorecard="$indexer/scripts/judgment/scorecard.py"
 report="$(mktemp)" rc=0
 args=("$run" --rows "$use" --scopes "$use/scopes.json" --floors "$floors")
 [ -z "$base_run" ] || args+=(--base "$base_run")
+[ -z "$out" ] || { mkdir -p "$out"; args+=(--measured "$out/measured.txt"); }
 python3 -I "$scorecard" "${args[@]}" > "$report" || rc=$?
 lowered=""
 [ -z "$base_floors" ] || lowered=$(python3 -I "$scorecard" --lowered "$base_floors" "$floors")

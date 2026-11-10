@@ -116,6 +116,9 @@ The full text is in the ROADMAP, under "Principles".
     past its bound in `indexer/scripts/checks/reference_floors.txt` fails the PR, whatever the labels, and so does a bound
     lowered on its line, or deleted, and a win lost (a site where `main` has a confirmed typed edge and the PR has none)
     without the `graph-change` label;
+  - bounds are not raised by hand: a push to `main` runs the `floors` job (`indexer/scripts/floors.sh`), which sets the ones the
+    graph beats in the one pull request `chore/raise-floors`; a pull request that only changes the bounds runs no heavy job, and
+    `debts` refuses in it a bound lowered, deleted or added;
   - a refactor must change nothing. A PR is a refactor when its branch starts with `refact/` or `refactor/`, when one
     of its commits starts with `refactor:` or `refact:` (with or without a scope, as in `refactor(go):`), or under the
     `refactor` label. One such commit makes the whole PR strict, so a refactor and a change of behavior go in separate

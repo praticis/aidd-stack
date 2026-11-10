@@ -51,7 +51,7 @@ jobs:
           if [ "${{ github.event_name }}" = pull_request ]; then base=$(git rev-parse HEAD^1); else base=$(git rev-parse HEAD); fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
           if [ "${{ github.event_name }}" != pull_request ] \
-             || git diff --name-only HEAD^1 HEAD | grep -vE '^indexer/(\.github/|scripts/checks/docs_ceilings\.txt$)' \
+             || git diff --name-only HEAD^1 HEAD | grep -vE '^indexer/(\.github/|scripts/checks/(docs_ceilings|reference_floors)\.txt$)' \
                 | grep -qE '^(indexer/|neo4j/init/|\.github/workflows/indexer\.yml$)'; then
             echo "indexer=true" >> "$GITHUB_OUTPUT"
           else
@@ -103,6 +103,7 @@ jobs:
   # It runs on every pull request and push, docs-only ones included, because the register and the ROADMAP are docs: so
   # it can be a required check of its own.
   debts:
+    needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -110,6 +111,8 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -135,6 +138,15 @@ jobs:
       - name: The growth files of docs/ are under their ceilings (indexer/scripts/checks/docs_ceilings.txt)
         shell: bash
         run: python3 -I indexer/scripts/checks/docs_size.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: A pull request that runs no heavy job may raise the bounds of the graph and do nothing else to them
+        if: github.event_name == 'pull_request' && needs.changes.outputs.indexer != 'true'
+        shell: bash
+        # nothing else guards reference_floors.txt then, since the gates do not run: a bound lowered, deleted or added is refused here,
+        # and one that is lowered by a change of the graph is judged, under its label, by the gates of that change
+        run: |
+          git show HEAD^1:indexer/scripts/checks/reference_floors.txt > "$RUNNER_TEMP/base-floors.txt" 2>/dev/null || : > "$RUNNER_TEMP/base-floors.txt"
+          python3 -I indexer/scripts/floors_bot.py only-raises "$RUNNER_TEMP/base-floors.txt" indexer/scripts/checks/reference_floors.txt \
+            | tee -a "$GITHUB_STEP_SUMMARY"
 
   corpus:
     needs: changes
@@ -353,6 +365,82 @@ jobs:
         with:
           path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
           key: ${{ steps.key.outputs.key }}
+
+  # What main holds, raised: a push to main measures the scorecard over main's own dry-runs (the micro job leaves them in the cache)
+  # and carries every bound the graph beats in the one pull request `chore/raise-floors` (indexer/scripts/floors.sh, a script and
+  # not a model), or says that a bound is not held. Writing is done with the secret FLOORS_BOT_TOKEN, a token of a GitHub App or a
+  # fine-grained one with `contents` and `pull requests` written: the pull request of GITHUB_TOKEN starts no workflow, so its
+  # required checks would never run. Without the secret the job says what it would raise and passes.
+  floors:
+    needs: [changes, micro, rows]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.indexer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: floors
+      cancel-in-progress: true
+    env:
+      GH_TOKEN: ${{ secrets.FLOORS_BOT_TOKEN || github.token }}
+      HAS_TOKEN: ${{ secrets.FLOORS_BOT_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.FLOORS_BOT_TOKEN || github.token }}
+      - id: current
+        run: |
+          git fetch --quiet origin main
+          if [ "$(git rev-parse origin/main)" = "$GITHUB_SHA" ]; then echo "tip=true" >> "$GITHUB_OUTPUT"; else echo "main has moved: the run of a later push does this"; fi
+      - id: key
+        if: steps.current.outputs.tip == 'true'
+        run: |
+          img="${{ hashFiles('indexer/Dockerfile', 'indexer/pyproject.toml', 'indexer/conventions/**') }}"
+          echo "dir=base-$(git rev-parse "$GITHUB_SHA:indexer/aidd_indexer")-${img:0:16}" >> "$GITHUB_OUTPUT"
+      - if: steps.current.outputs.tip == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/micro/${{ steps.key.outputs.dir }}
+          key: micro-${{ steps.key.outputs.dir }}
+          fail-on-cache-miss: true
+      - if: steps.current.outputs.tip == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/reference/rows
+          key: reference-rows-${{ hashFiles('indexer/scripts/checks/ts_*.js', 'indexer/scripts/lib/test-image.sh', 'indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+      - if: steps.current.outputs.tip == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.AIDD_CORPUS_HOME }}/repos
+          key: clones-micro-${{ hashFiles('indexer/scripts/http_corpus.py', 'indexer/scripts/micro.py') }}
+          restore-keys: clones-micro-
+      - if: steps.current.outputs.tip == 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.current.outputs.tip == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: indexer
+          load: true
+          tags: aidd-indexer:local
+          cache-from: type=gha,scope=indexer
+      - name: The graph of main against its bounds
+        if: steps.current.outputs.tip == 'true'
+        shell: bash
+        run: |
+          out="$RUNNER_TEMP/out"
+          set +e
+          indexer/scripts/checks/reference.sh --run "$AIDD_CORPUS_HOME/micro/${{ steps.key.outputs.dir }}" --out "$out" > "$RUNNER_TEMP/report.md"
+          rc=$?
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+          # 0 holds and 1 does not: the next step says which bound, and raises the others. Any other status did not finish
+          [ "$rc" -le 1 ]
+      - name: The bounds main beats, in one pull request
+        if: steps.current.outputs.tip == 'true'
+        shell: bash
+        run: |
+          push=""
+          [ "$HAS_TOKEN" != true ] || push=--push
+          [ -n "$push" ] || echo "No FLOORS_BOT_TOKEN secret: this says what the bot would raise and pushes nothing." | tee -a "$GITHUB_STEP_SUMMARY"
+          indexer/scripts/floors.sh --measured "$RUNNER_TEMP/out/measured.txt" --sha "$GITHUB_SHA" $push 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
   gates:
     needs: [changes, corpus, micro, shape]

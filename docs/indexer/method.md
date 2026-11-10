@@ -170,6 +170,19 @@ checker) fails the `micro` job, and never reaches the gates as a result. `gates.
 count is past its bound, whatever the labels, and when it lowers a bound or loses a win without the `graph-change` label; a
 refactor does neither. Locally: `micro.sh`, then `checks/reference.sh`.
 
+**The bounds are raised by a script, not by hand and not by a model** (H5-D56). A change that improves a count leaves its bound
+where it was, so that two changes that improve the same count never conflict; the bound catches up after the merge. A push to
+main runs the `floors` job: `checks/reference.sh --run` over main's own dry-runs (the `micro` job left them in the cache) writes
+`measured.txt`, and `floors.sh` (`floors_bot.py`) sets each bound the count beats (a floor up to the count, a ceiling down to it,
+never the other way) on the branch `chore/raise-floors`, rebuilt from main every time, and opens or updates its one pull request, or
+closes it when nothing is left. A bound that main does not hold, a bound with no count and a count with no bound are not changes
+but alarms: the job ends red. The job writes with its own token (the secret `FLOORS_BOT_TOKEN`, a GitHub App's or a fine-grained
+one), because a pull request opened with `GITHUB_TOKEN` starts no workflow and its required checks would never run; with no secret
+it says what it would raise and passes. A pull request that changes only the bounds runs no heavy job (`changes`), so the `debts`
+job refuses in it what a raise is not: a bound lowered, deleted or added (`floors_bot.py only-raises`); lowering one takes a change of
+the graph, which the gates judge under `graph-change`. The bot's pull request is mechanical and carries no line in `history.md`. Until
+it is merged the bound is below the count, so a small loss in that window passes: merge it soon (auto-merge stays off).
+
 ### 4.5 Timing alone
 
 `time-alone.sh` times the corpus on each side's worktree and then, for each of four repos (`AIDD_TIME_REPOS`), one dry-run per
