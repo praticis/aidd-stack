@@ -1,31 +1,28 @@
-"""The graph of one tree against its references: the numbers a pull request may not lower.
+"""The graph of one tree against its references: the counts a pull request may not move the wrong way.
 
-   scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]
 
-RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). For every repo it
-measures `typed-share`, the percent of its CALLS that a type decided (`receiver-type*` and `inherited*`), which needs no
-reference and holds for every language. With --rows DIR, a repo that has `DIR/checker-<repo>.jsonl` (what
-`checks/ts_checker.js --link` prints) is also measured against TypeScript's checker, as `ts_vs_checker.py` judges one
-change's edges, but over the whole tree:
+RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). A repo that has
+`DIR/checker-<repo>.jsonl` in --rows (what `checks/ts_checker.js --link` prints) is measured against TypeScript's checker, as
+`ts_vs_checker.py` judges one change's edges, but over the whole tree (`scorecard_measure.py` says how an edge is classed).
 
-  keyed            percent of the TS calls in a file the checker has rows for; under --min-keyed (50) the two sides are
-                   keyed differently and nothing below means anything, so the repo fails
-  typed-precision  percent of the typed edges (`receiver-type`, `inherited`) at a site the checker judges that it confirms
-  recall           percent of the sites where the checker names a declaration of the repo that have an edge to it
-  typed-recall     the same, by a typed edge
+Gated, by strategy (`receiver-type`, `inherited`) of each such repo: the typed edges the checker `confirmed` (a floor: they may
+not fall) and the ones it `contradicted` (a ceiling: they may not rise). A count has no denominator, so a call form the graph
+learns to read, which adds by-name edges, moves none of them. The bounds are in --floors (`indexer/scripts/checks/reference_floors.txt`,
+`repo.strategy.confirmed :: >= N :: note`, `repo.strategy.contradicted :: <= N :: note`, `#` a comment), and the graph is
+deterministic, so a count past its bound is a change of the graph, never noise.
 
---floors FILE (`indexer/scripts/checks/reference_floors.txt`: `repo.metric :: floor :: note`, one per line, `#` a comment)
-is what a number may not fall under. The scorecard ends in 1 when a number is under its floor, has no floor, has a floor
-and was not measured, or is invalid; in 2 when its input is wrong. --write-floors prints the lines of the numbers it
-measured, each rounded down to a hundredth, to review and commit."""
+With --base DIR (the dry-runs of the tree it is compared to) it also lists the sites where the base has a confirmed typed edge and
+RUN_DIR has none, a win lost, and prints the numbers that have no bound (the typed share of every repo, recall, the by-name edges
+the checker contradicts, the typed edges it does not decide) as the base, the tree and the change.
+
+It ends in 0 when every count holds, in 1 when one is past its bound, has no bound, has a bound and was not measured, or is
+invalid (a repo's calls are under --min-keyed percent in files the checker has rows for, 50 by default: the two sides are keyed
+differently and nothing below means anything), in 3 when only wins were lost, and in 2 when its input is wrong. --write-floors
+prints the lines of the counts it measured, to review and commit."""
 from __future__ import annotations
 
 import argparse
-import collections
-import glob
-import gzip
-import json
-import math
 import os
 import re
 import sys
@@ -33,168 +30,176 @@ from pathlib import Path
 from typing import NamedTuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import ts_vs_checker as T  # noqa: E402
+import scorecard_measure as M  # noqa: E402
 
 SEPARATOR = " :: "
-NAME = re.compile(r"[a-z0-9][a-z0-9-]*\.[a-z-]+")
-MIX_TYPED = ("receiver-type", "inherited")
-AGREE = ("agrees", "agrees (via .d.ts pair)")
-BY_REFERENCE = ("typed-precision", "recall", "typed-recall")
+NAME = re.compile(r"[a-z0-9][a-z0-9-]*\.[a-z-]+\.(confirmed|contradicted)")
+LIMIT = re.compile(r"(>=|<=) (\d+)")
+SIDE = {"confirmed": ">=", "contradicted": "<="}
+LISTED = 50
 
 
-class Metric(NamedTuple):
+class Bound(NamedTuple):
     name: str
-    value: float
-    hit: int
-    of: int
-
-
-class Floor(NamedTuple):
-    name: str
-    floor: float
+    op: str
+    limit: int
     note: str
 
 
-def pct(n: int, whole: int) -> float:
-    return 100.0 * n / whole if whole else 0.0
+class Row(NamedTuple):
+    status: str
+    name: str
+    value: int | None
+    bound: Bound | None
 
 
-def rounded_down(value: float) -> float:
-    return math.floor(round(value, 6) * 100) / 100
+def parse_line(n: int, raw: str) -> Bound:
+    parts = [p.strip() for p in raw.split(SEPARATOR, 2)]
+    if len(parts) != 3 or not all(parts) or not NAME.fullmatch(parts[0]):
+        raise ValueError(f"line {n}: expected `repo.strategy.confirmed :: >= N :: note` or `repo.strategy.contradicted :: <= N :: note`")
+    side = SIDE[parts[0].rsplit(".", 1)[1]]
+    found = LIMIT.fullmatch(parts[1])
+    if not found or found.group(1) != side:
+        raise ValueError(f"line {n}: {parts[0]} takes `{side} N`, a whole number")
+    return Bound(parts[0], side, int(found.group(2)), parts[2])
 
 
-def load_floors(text: str) -> list[Floor]:
-    floors: list[Floor] = []
+def load_floors(text: str) -> list[Bound]:
+    bounds: list[Bound] = []
     for n, raw in enumerate(text.splitlines(), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
-        parts = [p.strip() for p in raw.split(SEPARATOR, 2)]
-        if len(parts) != 3 or not all(parts) or not NAME.fullmatch(parts[0]):
-            raise ValueError(f"line {n}: expected `repo.metric :: floor :: note`")
-        try:
-            value = float(parts[1])
-        except ValueError:
-            raise ValueError(f"line {n}: the floor of {parts[0]} is not a number") from None
-        if any(f.name == parts[0] for f in floors):
-            raise ValueError(f"line {n}: {parts[0]} already has a floor")
-        floors.append(Floor(parts[0], value, parts[2]))
-    return floors
+        bound = parse_line(n, raw)
+        if any(b.name == bound.name for b in bounds):
+            raise ValueError(f"line {n}: {bound.name} already has a bound")
+        bounds.append(bound)
+    return bounds
 
 
-def mix(repo: str, run: dict) -> Metric:
-    typed = sum(1 for c in run["calls"] if c["strategy"].startswith(MIX_TYPED))
-    return Metric(f"{repo}.typed-share", pct(typed, len(run["calls"])), typed, len(run["calls"]))
+def status(name: str, n: int | None, bound: Bound | None, keyed: dict[str, float], min_keyed: float) -> str:
+    if n is None:
+        return "not measured"
+    if keyed.get(name.split(".")[0], 100.0) < min_keyed:
+        return "invalid"
+    if bound is None:
+        return "unbound"
+    holds = n >= bound.limit if bound.op == ">=" else n <= bound.limit
+    if holds:
+        return "ok"
+    return "below" if bound.op == ">=" else "above"
 
 
-def decided(sites: dict) -> dict:
-    """The sites where the checker names a declaration of the repo, with the forms a `.d.ts` pair may take."""
-    out = {}
-    for key, declared in sites.items():
-        names = {d for found in declared for d in found if d != "outside"}
-        if names:
-            out[key] = names | {T.pair(d) for d in names}
-    return out
+def judge(counts: dict[str, int], bounds: list[Bound], keyed: dict[str, float], min_keyed: float) -> list[Row]:
+    """(status, name, count, bound) per name: ok, below a floor, above a ceiling, unbound, not measured, invalid."""
+    want = {b.name: b for b in bounds}
+    return [Row(status(name, counts.get(name), want.get(name), keyed, min_keyed), name, counts.get(name), want.get(name))
+            for name in sorted(set(counts) | set(want))]
 
 
-def reached(calls: list[dict]) -> dict:
-    out = collections.defaultdict(set)
-    for c in calls:
-        out[(T.path_of(c["caller_id"]), c["line"], T.called(c))].add(T.qualified(c["callee_id"]))
-    return out
+def room(row: Row) -> str:
+    if row.value is None or row.bound is None:
+        return ""
+    return f"{row.value - row.bound.limit:+d}" if row.bound.op == ">=" else f"{row.bound.limit - row.value:+d}"
 
 
-def reference(repo: str, run: dict, sites: dict) -> list[Metric]:
-    ts = T.in_ts(run)
-    calls = [c for c in run["calls"] if ts(c)]
-    typed = [c for c in calls if c["strategy"].removesuffix("-ambiguous") in T.TYPED]
-    _, _, calls_in, n = T.keyed(sites, calls)
-    verdicts = collections.Counter(T.verdict(c, sites) for c in typed)
-    judged = sum(v for k, v in verdicts.items() if k != T.NO_SITE)
-    agree = sum(verdicts[k] for k in AGREE)
-    sites_decided, any_edge, typed_edge = decided(sites), reached(calls), reached(typed)
-    hit = sum(1 for k, names in sites_decided.items() if any_edge.get(k, set()) & names)
-    typed_hit = sum(1 for k, names in sites_decided.items() if typed_edge.get(k, set()) & names)
-    return [Metric(f"{repo}.keyed", pct(calls_in, n), calls_in, n),
-            Metric(f"{repo}.typed-precision", pct(agree, judged), agree, judged),
-            Metric(f"{repo}.recall", pct(hit, len(sites_decided)), hit, len(sites_decided)),
-            Metric(f"{repo}.typed-recall", pct(typed_hit, len(sites_decided)), typed_hit, len(sites_decided))]
-
-
-def measure(run_dir: Path, rows_dir: Path | None) -> list[Metric]:
-    out: list[Metric] = []
-    for path in sorted(glob.glob(str(run_dir / "*.json.gz"))):
-        repo = os.path.basename(path)[: -len(".json.gz")]
-        with gzip.open(path, "rt") as handle:
-            run = json.load(handle)
-        out.append(mix(repo, run))
-        if rows_dir and (rows_dir / f"checker-{repo}.jsonl").is_file():
-            out += reference(repo, run, T.checker_sites(str(rows_dir / f"checker-{repo}.jsonl")))
-    return out
-
-
-def judge(metrics: list[Metric], floors: list[Floor], min_keyed: float) -> list[tuple[str, Metric | None, Floor | None]]:
-    """(status, measured, floor) per name: ok, below, invalid, unfloored, not measured."""
-    have = {m.name: m for m in metrics}
-    keyed = {m.name.split(".")[0]: m.value for m in metrics if m.name.endswith(".keyed")}
-    want = {f.name: f for f in floors}
-    rows = []
-    for name in sorted(set(have) | set(want)):
-        m, f = have.get(name), want.get(name)
-        repo = name.split(".")[0]
-        if m is None:
-            status = "not measured"
-        elif repo in keyed and keyed[repo] < min_keyed and name.split(".")[1] in BY_REFERENCE:
-            status = "invalid"
-        elif f is None:
-            status = "unfloored"
-        else:
-            status = "ok" if round(m.value, 6) >= f.floor else "below"
-        rows.append((status, m, f))
-    return rows
-
-
-def report(rows: list[tuple[str, Metric | None, Floor | None]]) -> str:
-    lines = ["### The graph against its references", "", "| Number | Value | Of | Floor | Headroom | |", "|---|---|---|---|---|---|"]
-    for status, m, f in rows:
-        name = (m or f).name
-        value = f"{m.value:.2f} %" if m else ""
-        of = f"{m.hit:,} of {m.of:,}" if m else ""
-        floor = f"{f.floor:.2f} %" if f else ""
-        room = f"{m.value - f.floor:+.2f}" if m and f else ""
-        lines.append(f"| `{name}` | {value} | {of} | {floor} | {room} | {status} |")
-    bad = [status for status, _, _ in rows if status != "ok"]
+def gated_table(rows: list[Row]) -> list[str]:
+    lines = ["| Count | Value | Bound | Room | |", "|---|---|---|---|---|"]
+    for row in rows:
+        value = f"{row.value:,}" if row.value is not None else ""
+        bound = f"{row.bound.op} {row.bound.limit:,}" if row.bound else ""
+        lines.append(f"| `{row.name}` | {value} | {bound} | {room(row)} | {row.status} |")
+    bad = [row for row in rows if row.status != "ok"]
     if bad:
-        lines += ["", f"{len(bad)} number(s) not ok: a floor is lowered, in the same diff and under the `graph-change` label, "
-                      "by editing its line in `indexer/scripts/checks/reference_floors.txt`; a new number gets a line "
-                      "(`--write-floors` prints them)."]
-    return "\n".join(lines) + "\n"
+        lines += ["", f"{len(bad)} count(s) not ok: a bound is changed, in the same diff and under the `graph-change` label, by editing "
+                      "its line in `indexer/scripts/checks/reference_floors.txt`; a new count gets a line (`--write-floors` prints them)."]
+    return lines
 
 
-def main(argv: list[str]) -> int:
+def shown(m: M.Metric | None) -> str:
+    if m is None:
+        return ""
+    return f"{m.value:,.0f}" if m.of == 0 else f"{m.value:.2f} % ({m.hit:,} of {m.of:,})"
+
+
+def change(a: M.Metric | None, b: M.Metric | None) -> str:
+    if a is None or b is None:
+        return ""
+    return f"{int(b.value - a.value):+,d}" if b.of == 0 else f"{b.value - a.value:+.2f}"
+
+
+def numbers_table(head: dict[str, M.Metric], base: dict[str, M.Metric] | None) -> list[str]:
+    if base is None:
+        lines = ["| Number | Value |", "|---|---|"]
+        return lines + [f"| `{name}` | {shown(m)} |" for name, m in head.items()]
+    lines = ["| Number | Base | Tree | Change |", "|---|---|---|---|"]
+    for name in sorted(set(head) | set(base)):
+        a, b = base.get(name), head.get(name)
+        lines.append(f"| `{name}` | {shown(a)} | {shown(b)} | {change(a, b)} |")
+    return lines
+
+
+def lost_lines(lost: dict[str, list]) -> list[str]:
+    lines = []
+    for repo, sites in lost.items():
+        lines.append(f"{repo}: {len(sites)} site(s) where the base has a confirmed typed edge and the tree has none"
+                     + (f" (the first {LISTED}):" if len(sites) > LISTED else ":"))
+        lines += [f"- `{path}:{line}` `{method}`" for path, line, method in sites[:LISTED]]
+    return lines
+
+
+def report(rows: list[Row], head: dict[str, M.Metric], base: dict[str, M.Metric] | None, lost: dict[str, list],
+           keyed: dict[str, float]) -> str:
+    out = ["### The graph against its references", ""] + gated_table(rows)
+    if keyed:
+        out += ["", "The checker has rows for " + ", ".join(f"{pct:.1f} % of {repo}'s TS calls" for repo, pct in sorted(keyed.items())) + "."]
+    if base is not None:
+        out += ["", "### Wins lost", ""] + (lost_lines(lost) if lost else ["None: every site the base confirms, the tree confirms."])
+    return "\n".join(out + ["", "### Not gated", ""] + numbers_table(head, base)) + "\n"
+
+
+def code(rows: list[Row], lost: dict[str, list]) -> int:
+    if any(row.status != "ok" for row in rows):
+        return 1
+    return 3 if lost else 0
+
+
+def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="scorecard.py", add_help=False, usage=(
-        "scorecard.py RUN_DIR [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
+        "scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
     ap.add_argument("run_dir", type=Path)
+    ap.add_argument("--base", type=Path)
     ap.add_argument("--rows", type=Path)
     ap.add_argument("--floors", type=Path)
     ap.add_argument("--min-keyed", type=float, default=50.0)
     ap.add_argument("--write-floors", action="store_true")
+    return ap
+
+
+def run(args: argparse.Namespace) -> int:
+    bounds = load_floors(args.floors.read_text()) if args.floors else []
+    head = M.measure(args.run_dir, args.rows)
+    base = M.measure(args.base, args.rows) if args.base else None
+    counts = M.gated(head)
+    if args.write_floors:
+        print("\n".join(f"{n} :: {SIDE[n.rsplit('.', 1)[1]]} {v} :: measured on the base" for n, v in counts.items()))
+        return 0
+    rows = judge(counts, bounds, M.keyed_of(head), args.min_keyed)
+    lost = M.lost_wins(base, head) if base is not None else {}
+    print(report(rows, M.numbers(head), M.numbers(base) if base is not None else None, lost, M.keyed_of(head)), end="")
+    return code(rows, lost)
+
+
+def main(argv: list[str]) -> int:
     try:
-        args = ap.parse_args(argv)
+        args = parser().parse_args(argv)
     except SystemExit as exit_:
         print(__doc__, file=sys.stderr)
         return exit_.code
     try:
-        floors = load_floors(args.floors.read_text()) if args.floors else []
-        metrics = measure(args.run_dir, args.rows)
+        return run(args)
     except (OSError, ValueError) as error:
         print(f"scorecard.py: {error}", file=sys.stderr)
         return 2
-    if args.write_floors:
-        print("\n".join(f"{m.name}{SEPARATOR}{rounded_down(m.value)}{SEPARATOR}measured on the base" for m in metrics))
-        return 0
-    rows = judge(metrics, floors, args.min_keyed)
-    print(report(rows), end="")
-    return 1 if any(status != "ok" for status, _, _ in rows) else 0
 
 
 if __name__ == "__main__":
