@@ -1,6 +1,6 @@
 """The graph of one tree against its references: the counts a pull request may not move the wrong way.
 
-   scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]
+   scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors] [--measured FILE]
    scorecard.py --lowered BASE_FLOORS FLOORS
 
 RUN_DIR holds the micro dry-runs of one tree (`<repo>.json.gz`, what `micro.sh` leaves in $C/micro). A repo that has
@@ -24,7 +24,8 @@ the checker contradicts, the typed edges it does not decide) as the base, the tr
 It ends in 0 when every count holds, in 1 when one is past its bound, has no bound, has a bound and was not measured, or is
 invalid (a repo's calls are under --min-keyed percent in files the checker has rows for, 50 by default: the two sides are keyed
 differently and nothing below means anything), in 3 when only wins were lost, and in 2 when its input is wrong. --write-floors
-prints the lines of the counts it measured, to review and commit. --lowered prints, one per line, the bounds a change lowers
+prints the lines of the counts it measured, to review and commit; --measured FILE writes them
+as well, whatever the verdict (`floors_bot.py` reads them). --lowered prints, one per line, the bounds a change lowers
 (a floor that falls, a ceiling that rises, a line that goes) between the base's list and its own; it ends in 0."""
 from __future__ import annotations
 
@@ -184,7 +185,7 @@ def code(rows: list[Row], lost: dict[str, list]) -> int:
 
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="scorecard.py", add_help=False, usage=(
-        "scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors]"))
+        "scorecard.py RUN_DIR [--base DIR] [--rows DIR] [--scopes FILE] [--floors FILE] [--min-keyed PCT] [--write-floors] [--measured FILE]"))
     ap.add_argument("run_dir", type=Path)
     ap.add_argument("--base", type=Path)
     ap.add_argument("--rows", type=Path)
@@ -192,6 +193,7 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--floors", type=Path)
     ap.add_argument("--min-keyed", type=float, default=50.0)
     ap.add_argument("--write-floors", action="store_true")
+    ap.add_argument("--measured", type=Path)
     return ap
 
 
@@ -211,8 +213,11 @@ def run(args: argparse.Namespace) -> int:
     head = M.measure(args.run_dir, args.rows)
     base = M.measure(args.base, args.rows) if args.base else None
     counts = {**M.gated(head), **(M.scopes(args.scopes) if args.scopes else {})}
+    lines = [f"{n} :: {SIDE[n.rsplit('.', 1)[1]]} {v} :: measured on the base" for n, v in counts.items()]
+    if args.measured:
+        args.measured.write_text("".join(line + "\n" for line in lines))
     if args.write_floors:
-        print("\n".join(f"{n} :: {SIDE[n.rsplit('.', 1)[1]]} {v} :: measured on the base" for n, v in counts.items()))
+        print("\n".join(lines))
         return 0
     rows = judge(counts, bounds, M.keyed_of(head), args.min_keyed)
     lost = M.lost_wins(base, head) if base is not None else {}

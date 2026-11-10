@@ -119,6 +119,8 @@ def test_it_leaves_what_the_gates_read(world):
     result = run("--run", runs("head"), "--base", runs("base"), "--floors", floors, "--base-floors", base_floors, "--out", out)
     assert result.returncode == 0
     assert (out / "reference-rc.txt").read_text() == "0\n"
+    measured = (out / "measured.txt").read_text().splitlines()
+    assert len(measured) == 12 and "dispatch.scopes.confirmed :: >= 5 :: measured on the base" in measured   # the typed counts of two repos, the scopes of two
     assert (out / "reference-lowered.txt").read_text().splitlines() == [
         "ghost.receiver-type.confirmed: >= 2, now >= 1", "outline.receiver-type.confirmed: >= 2, now >= 1"]
     assert "### The graph against its references" in (out / "reference.txt").read_text() and "Bounds this change lowers:" in result.stdout

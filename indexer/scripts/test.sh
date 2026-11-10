@@ -28,5 +28,8 @@ if [ -z "$narrow" ]; then
 fi
 if [ -n "$rebuild" ]; then test_image_ensure --rebuild; else test_image_ensure; fi
 [ $# -gt 0 ] || set -- tests
-exec docker run --rm -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$indexer":/src:ro -w /src \
+# the workflow is outside the tree that is mounted, and tests read the parts of it that guard the gates
+workflow=()
+[ ! -f "$indexer/../.github/workflows/indexer.yml" ] || workflow=(-v "$indexer/../.github/workflows/indexer.yml":/workflow/indexer.yml:ro -e AIDD_WORKFLOW=/workflow/indexer.yml)
+exec docker run --rm -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$indexer":/src:ro ${workflow[@]+"${workflow[@]}"} -w /src \
   --entrypoint python "$image" -m pytest -q -p no:cacheprovider "$@"
