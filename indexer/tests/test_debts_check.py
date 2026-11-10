@@ -125,3 +125,19 @@ def test_a_debt_listed_twice_is_found(tmp_path):
                                       ("no debts here", set())])
 def test_a_range_is_expanded(text, ids):
     assert D.listed(text) == ids
+
+
+def test_an_open_debt_that_says_it_has_no_case_yet_is_counted_and_not_found(tmp_path):
+    found, summary = make(tmp_path, rows=ROWS[:2] + [row("TD-003", FIX, "none yet: it needs a minimal interface")])
+    assert found == ["`a-third-case` (test_x_debts.py) is named by no debt"]
+    assert summary == "3 debts (3 open, 0 closed); 3 cases in the debts' tests; 1 open with no case yet"
+
+
+def test_a_debt_that_says_it_has_no_case_yet_and_names_one_is_found(tmp_path):
+    found, _ = make(tmp_path, rows=ROWS[:2] + [row("TD-003", FIX, "none yet: but `a-third-case` is one")])
+    assert found == ["TD-003: says there is no case yet and names one"]
+
+
+def test_an_open_debt_with_an_empty_case_cell_is_found(tmp_path):
+    found, _ = make(tmp_path, rows=ROWS[:2] + [row("TD-003", FIX, "")])
+    assert found == ["`a-third-case` (test_x_debts.py) is named by no debt", "TD-003: names no case"]

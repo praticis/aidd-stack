@@ -1,10 +1,12 @@
 """Python's types, where the resolver or the HTTP scanner still reads a receiver wrongly. Each case states the right
 answer, the method CPython runs for its call, that no method of the repo does where a package's method serves it, the
 client wrapper the call goes through, or the override of the repo a call to a package's method may run, and is a strict
-xfail with the reason: when the index learns it, the case passes, the xfail fails the suite, and the mark has to go."""
+xfail with the reason: when the index learns it, the case passes, the xfail fails the suite, and the mark has to go.
+An identifier's name is the one Python gives it, in its NFKC form."""
 
 import subprocess
 import sys
+import unicodedata
 
 import pytest
 
@@ -44,6 +46,12 @@ WRAPPED = [
     case("a-class-a-function-holds-reaches-its-own-wrapper", LOCAL_CLASS,
          "the type index has no name for a class a function holds, so its instance has no class"),
 ]
+# U+00B5 (micro sign) in the definition, U+03BC (Greek mu) in the call: one name for Python, which reads NFKC
+NFKC = {"app/use.py": "def µ():\n    return 1\n\n\ndef main():\n    return μ()\n"}
+NORMALIZED = [
+    case("an-identifier-is-the-same-name-in-its-nfkc-form", NFKC,
+         "reads an identifier as written, where Python names it by its NFKC form"),
+]
 
 
 @pytest.mark.parametrize("given", [DEEPCOPY])
@@ -76,3 +84,11 @@ def test_a_call_to_a_packages_method_meets_the_override_of_the_repo(tmp_path, fi
     called = {c.callee_id for c in rv.calls if c.line == 6 and c.virtual}
     assert called & {e.target_id for e in rv.hierarchy
                      if e.kind == "OVERRIDES" and e.source_id.endswith(":Prefix.get_serializer_class#method")}
+
+
+@pytest.mark.parametrize("files", NORMALIZED)
+def test_a_call_reaches_the_function_python_names_by_its_nfkc_form(tmp_path, files):
+    res, rv = indexed(tmp_path, files)
+    names = {s.id: s.qualified_name for s in res.symbols}
+    assert {(names[c.caller_id], unicodedata.normalize("NFKC", names[c.callee_id])) for c in rv.calls} == {
+        ("app/use:main", "app/use:μ")}
