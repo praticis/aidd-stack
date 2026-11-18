@@ -40,7 +40,7 @@ conventions, the corpus runner, the MCP's tool groups and the refresher to the t
    `resolve`, unblocked since TS's step 5 closed: H5-D44), the rest of step 10, step 11 (docs).
 3. Plug in H6 (`docs/handoffs/H6-extraction-pipeline.md`): the extraction as a parallel map, a reduce and a per-file
    cache, designed against ADR-004 to ADR-006. Then the new hold-out (its procedure and tools:
-   `docs/indexer/method.md` §4.11), P2 (the indexer in its own repo) and SCIP (F1.1, F1.2).
+   `docs/indexer/method.md` §4.11) and SCIP (F1.1, F1.2).
 
 **Gaps.**
 - **G1, closed.** The per-site attribution of a changed call to the answer that explains it exists for every
@@ -223,7 +223,7 @@ the safest and cheapest to the most structural. The test nets go in before code 
 | 8 | `core/matching.py`; the MCP split; Cypher tested against an ephemeral Neo4j | `who_consumes` uses `normalize_path`; the 11 tools with an integration test |
 | 9 | A generated docstring; the corpus loop through `corpus.sh` | the sum of per-repo times at ≤ 60 % of step 0's |
 | 10 | A general review of comments and docstrings (architecture, item 11), in the code, the tests and the fixtures; replacing project names | no reference to docs or project names in the code, checked by a test; the comments that stayed say a why |
-| 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until P2 (H5-D5, H5-D6) and what H5-D43 accepts; blocking turns on when the author decides (H5-D3) |
+| 11 | Docs: ADR-003 updated (or a new ADR: recognizers, catalog, type service); `indexer-evolution.md` §2, §5 and §7 | the guide describes the code as it turned out; the shape report in CI shows zero functions and zero modules off target, except `cli.py` until the removals that touch it (H5-D5, H5-D6) and what H5-D43 accepts; blocking turns on when the author decides (H5-D3) |
 | 12 | The rest of the code to the shape targets (H5-D6): the core (`extract`, `graph`, `resolve`, `mirror`; `http_base` and `http_expr` go with step 6, H5-D44), the languages' `symbols.py` that step 5 leaves, the conventions, the MCP's tool groups, and the scripts and tests the ratchet reads (`http_corpus.py`, `test_conventions.py`, `test_mcp_protocol.py`'s `read`) | the shape report shows nothing off target outside what H5-D44 gives to step 6, but `cli.py` and what H5-D43 accepts |
 
 **Regression protocol (every step).** Items 1 to 4 run in CI on every push (`.github/workflows/indexer.yml`, H7's

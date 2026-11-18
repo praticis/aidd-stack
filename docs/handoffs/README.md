@@ -17,7 +17,7 @@ request brought back. Each one has a row here, with its kind, its state and what
 | H4.1 | `H4.1-contributor-path.md` | plan | in progress | `CONTRIBUTING.md`, the templates, `CODEOWNERS` and the path check |
 | H5 | `H5-indexer-refactor.md` | plan | in progress | the end of H10's reorganization; then its "Next" |
 | H6 | `H6-extraction-pipeline.md` | design and plan | in progress | H5; then plugging it in |
-| H7 | `H7-regression-gates.md` | plan | in progress | slices 1b and 2 to 6, and its decisions D2 and D4 |
+| H7 | `H7-regression-gates.md` | plan | in progress | slices 1b and 2 to 6, and its decisions H7-D2 and H7-D4 |
 | H8 | `H8-independent-review.md` | design | in progress | a step in CI and a record per pull request. Its hooks into the process skills leave with them (H10, section 1.1) |
 | H10 | `H10-roadmap-reorganization.md` | request | judged | its ten pull requests. Until the last one merges, no other pull request enters `main` |
 | H11 | `H11-release-and-distribution.md` | request | judged | the end of H10's reorganization, which writes its items into the roadmap; then its first step |

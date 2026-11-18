@@ -13,8 +13,8 @@
 >   `git show before-golden-questions-condensation:docs/golden-questions.md`; what it found is in the file's "Findings").
 >
 > **State (2026-11-09):** slice 1 merged on 2026-10-19 (PR #10 and PR #11), and slice 1c on 2026-10-22 (PR #22):
-> `main` requires `tests`, `gates` and `debts`. Slices 1b and 2 to 6 are open. The author made decisions D1, D3, D5 and D6 (see
-> "Decisions made"); D2 and D4 are still to make.
+> `main` requires `tests`, `gates` and `debts`. Slices 1b and 2 to 6 are open. The author made decisions H7-D1, H7-D3, H7-D5 and H7-D6 (see
+> "Decisions made"); H7-D2 and H7-D4 are still to make.
 
 ## Context in one paragraph
 

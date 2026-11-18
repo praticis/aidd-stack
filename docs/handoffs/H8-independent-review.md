@@ -253,7 +253,7 @@ The PR's code, comments and text are untrusted input to an LLM, and a public rep
 | # | Decision | Recommendation | Why |
 |---|---|---|---|
 | H8-D5 | Which PRs get the panel in CI | Every PR that carries `graph-change`, `holdout-measurement` or a `refactor` commit, by label; others on request | Those are the PRs whose judgment H7-D6 wants outside the author. The rest stay with the gates |
-| H8-D6 | Whether a confirmed objection becomes a recorded insight by itself | Proposed to the author, one click, never automatic | A rule enters the knowledge store only when a person approves it (`rules` versus `context`) |
+| H8-D6 | Whether a confirmed objection becomes a recorded insight by itself. Moot since H10-D1: the `knowledge` service leaves this repository | Proposed to the author, one click, never automatic | A rule enters the knowledge store only when a person approves it (`rules` versus `context`) |
 
 ## Pitfalls
 

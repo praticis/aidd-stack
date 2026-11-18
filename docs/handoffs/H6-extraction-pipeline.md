@@ -279,7 +279,7 @@ H5 builds pieces with H6's shape:
 ## Decisions made (2026-10-19, by the author)
 
 - **H6-D1, the order:** design H6 now, refactor H5 toward the design, then plug H6 in, then the next items (the new
-  hold-out, P2, SCIP).
+  hold-out, P2, SCIP). Amended by H10-D1: the order no longer passes through P2.
 - **H6-D2, the per-file incremental cache is a requirement**, not a bonus.
 - **H6-D3, the second read is chosen by measurement**, technical and of performance: resolving in the reduce from the
   summaries, or a second map that re-parses.

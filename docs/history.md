@@ -416,3 +416,7 @@
   register with lists in the ROADMAP, which leave it; an item is not ticked while a debt due in it is open, a closed
   debt names no case that is still a strict xfail, and a pull request's summary lists, with a warning each, the open
   debts whose due it moved.
+- 2026-11-18: the roadmap keeps only the Atlas's work (`docs:`, PR #115): the skills and knowledge tracks, D2, D4, F1.6,
+  F1.10 and F2.7 leave it, each with a row in "Left this roadmap"; fifteen items are rewritten to the Atlas's part, P2
+  among them, now the Atlas in its own repository; the principles on the orchestrator and on models change; the prose
+  shrinks from 31.9 to 23.6 KB; TD-074 enters the register with no case yet.
