@@ -412,3 +412,7 @@
 - 2026-11-18: the decisions say what this repository keeps, the shape of its roadmap and how the Atlas is released
   (`docs:`, PR #113): `H10-D1`, `H10-D2` and `H11-D1`, and fourteen rows marked as amended, superseded or moot by them.
   The ceiling of `docs/decisions.md` rises from 72 to 80 KB.
+- 2026-11-18: the debts check reads only the register (`chore(scripts)`, PR #114): `debts.py` no longer compares the
+  register with lists in the ROADMAP, which leave it; an item is not ticked while a debt due in it is open, a closed
+  debt names no case that is still a strict xfail, and a pull request's summary lists, with a warning each, the open
+  debts whose due it moved.
