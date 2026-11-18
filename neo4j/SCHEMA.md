@@ -2,7 +2,7 @@
 
 Structural source of truth for the workspace. Two levels live in the same graph: **micro**
 (what exists inside one repo) and **macro** (the contracts that connect repos). Storage:
-Neo4j (decision D1 in `docs/decisions.md`; there is no ADR-001 file). Vectors in Qdrant point to nodes here by `id`.
+Neo4j (decision D1 in `docs/decisions.md`; there is no ADR-001 file).
 Constraints and indexes that enforce this document live in `init/schema.cypher`.
 
 ## 1. General rules
@@ -33,7 +33,7 @@ of them; their own properties are in §3:
 
 | prop | values | description |
 |---|---|---|
-| `confidence` | `exact` \| `heuristic` \| `llm` | how the link was established |
+| `confidence` | `exact` \| `suffix` | how the link was established; `EXPOSES` and `HANDLED_BY` are always `exact`, and §3 says when `CONSUMES` is `suffix` |
 | `evidence` | string | `repo:path:line` (or spec/manifest) the link came from |
 | `ref` | string | ref of the source repo where the evidence was seen |
 | `commit_sha` | string | commit of that ref the evidence was seen at |

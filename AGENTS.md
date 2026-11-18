@@ -11,12 +11,12 @@ code into a **graph** (Neo4j, database `atlas`), at two levels:
 - **micro:** files, symbols, `CALLS` and `IMPORTS`;
 - **macro:** the HTTP routes a service exposes, the calls it makes and the links between services.
 
-The graph's tools reach the process skills (`scan` → `refine-business` → `refine-tech` → `implement`; the first
-two exist, the other two are planned) through the `atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a
+The graph's tools reach the process skills (`scan` and `refine-business`, which leave this repository) through the
+`atlas` MCP. Alongside come an Obsidian vault, vectors in Qdrant and a
 `knowledge` service holding what the project has learned.
 
-Extraction is **deterministic**: tree-sitter today, SCIP as an enrichment later. An LLM is never the parser, for
-three reasons:
+Extraction is **deterministic**: tree-sitter today, SCIP as an enrichment later. No model writes a record of the
+graph, for three reasons:
 
 - the graph must be reproducible, the same commit giving the same graph;
 - the graph must be measurable, as in the corpus;
@@ -67,7 +67,7 @@ re-indexes it.
 
 The full text is in the ROADMAP, under "Principles".
 
-- **Orchestrator-independent:** MCP and skills only.
+- **Orchestrator-independent:** MCP only.
 - **Deterministic extraction:** a gap that needs a type not declared in sight becomes `needs-resolver` for F1.2, with
   no heuristic.
 - **Design a change by its contracts, boundaries and proof** (`docs/design.md`). Before a refactor or a new
@@ -155,8 +155,7 @@ The full text is in the ROADMAP, under "Principles".
      (`docs/handoffs/H5-indexer-refactor.md`);
   3. plug H6 in;
   4. the new hold-out;
-  5. P2 (the indexer in its own repo);
-  6. SCIP (F1.1, F1.2).
+  5. SCIP (F1.1, F1.2).
 - The current state is in the ROADMAP, under "Where we are".
 
 ## Where to find things

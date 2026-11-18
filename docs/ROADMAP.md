@@ -1,7 +1,9 @@
-# AIDD Stack — Evolution roadmap (code graph + skills)
+# The Atlas — roadmap
 
 > A living document. Mark `[x]` when done. Update the **Where we are** section every session so that any agent or
-> person picks up from the right point.
+> person picks up from the right point. The text this file had before it was condensed, Phase 0 and its `F0.x` items
+> among it, is in git (`git show before-roadmap-history-condensation:docs/ROADMAP.md`), and before it was reorganized
+> (`git show before-roadmap-reorganization:docs/ROADMAP.md`).
 
 ## Where we are
 
@@ -37,30 +39,19 @@
   - H7 (`docs/handoffs/H7-regression-gates.md`): slices 1 and 1c are in `main`; the next slices are open, and the judgment is to be automated (H7-D6).
   - H8 (`docs/handoffs/H8-independent-review.md`): the independent reviewer, a read-only adversary for plans and diffs,
     designed and used in three rounds, five reviews (H5-D50 and H5-D51); its script is in `indexer/scripts/review/`
-    (slice 1), its stage hooks and its record are open.
+    (slice 1), and its record is open.
 - **The order up to SCIP (H5-D1, H6-D1):** design H6 → H5 (the indexer refactor, `docs/handoffs/H5-indexer-refactor.md`,
   with no behavior change, built toward H6's design) → plug H6 in → the new hold-out, measured once, and its handoff
-  (H2-D21) → P2 (the indexer in its own repo) → SCIP (F1.1, F1.2).
+  (H2-D21) → SCIP (F1.1, F1.2).
 - **Handoffs:** one row each in `docs/handoffs/README.md`, with its state and what it waits for. H10, the
   reorganization of this roadmap, is under way: until its last pull request merges, no other one enters `main`.
-- **Candidates:**
-  - a handoff of its own on code quality gates, which the author asked for on 2026-10-21. Until then the shape ratchet
-    holds (H5-D9);
-  - `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
-  - re-run the .NET Q4 with dispatch.
-- **Non-blocking leftovers:**
-  - the `raw_path` of a call through a wrapper whose base ends in `/` comes out with a double slash (the normalized
-    path is right);
-  - a PAT with access to the tenant's org;
-  - validation on WSL (SO14);
-  - gaps from the code review feedback: Go `who_calls` across repos, messaging by event type.
 
 ## Principles (non-negotiable)
 
-- The knowledge layer (graph + vectors + vault) is **orchestrator-independent**: MCP + skills only. Cline, Roo,
-  Goose, Claude Code or Aider consume the same backend.
-- **Deterministic** extraction (SCIP / tree-sitter). An LLM only summarizes and disambiguates; never the primary
-  parser.
+- The Atlas is **orchestrator-independent**: MCP only.
+- **Extraction is deterministic:** no model writes a record of the graph. What a model derives from the records (an
+  embedding, a ranking) is an index beside them: rebuilt from them, never read by the extraction, never part of a
+  snapshot's comparison.
 - **Design a change by its contracts, boundaries and proof** (decided on 2026-10-28, `docs/design.md`).
   - A refactor or a new implementation first asks what already answers its question: a contract the system keeps
     between its stages, or a reference outside it. Only then does it write a new answer.
@@ -94,54 +85,23 @@
 | Universal parser | tree-sitter | MIT |
 | Precise indexing | SCIP: scip-go, scip-typescript, scip-dotnet, scip-python | Apache-2.0 |
 | Graph DB | Neo4j Community (alt.: Memgraph Community) | GPLv3 / BSL — free |
-| Vectors | Qdrant (already in the compose file) | Apache-2.0 |
-| Embeddings | FastEmbed + `jinaai/jina-embeddings-v2-base-code` (alt.: nomic-embed-code via Ollama) | Apache-2.0, local |
-| Docs/ADR | Obsidian + MCP (already in the compose file) | free (commercial use allowed since 2025) |
-| `atlas` MCP | our own FastMCP (Python) + mcp-neo4j-cypher | Apache-2.0 |
-| Local LLM | Ollama (Qwen-Coder / DeepSeek for summaries, classification) | free |
-| Frontier LLM | Claude (planning, refinement, review) | **the only variable cost** |
-| Planning | Jira via the Atlassian MCP | already available |
-| Spec | Spec Kit (optional) | MIT |
-| CI (phase 3) | GitHub Actions / GitLab CI with a self-hosted runner | free/low |
-
-## When each thing becomes usable (so as not to get lost)
-
-| Milestone | What you can now do | Does it change the skills? |
-|---|---|---|
-| Compose with Neo4j (done) | Open `localhost:7474`; the `atlas` MCP answers `get_neo4j_schema` | **No.** Empty graph; `scan` stays the same |
-| F0.3–F0.5 indexer + linker v0 | `aidd index <repo>` fills the graph; validate with Cypher / golden questions | No |
-| F0.6 our own `atlas` MCP (:3005) | Intent tools (`repo_map`, `who_consumes`…) available in Claude Code | No, but it enables the next one |
-| F0.8 `scan` v2 | `scan` queries the graph first, falling back to the current flow | **Yes** — transparent: same trigger, more precise |
-| F1.10 / F2.7 `flow`, `impact` | Micro/macro questions answered with evidence | New skills |
-| S4/S5 `refine-business`, `refine-tech` | The full refinement flow (Jira → context → area → spec) | New skills; they depend on `impact` |
-
-Rule: the graph reaches the skills only through the `atlas` MCP and **always with a fallback**. Up to F0.6 it is
-infra in preparation — nothing to trigger day to day.
-
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Compose validation checklist (validated 2026-09-10/11; `install-check.sh` covers items 2–7 on every upgrade)"._
+| `atlas` MCP | our own FastMCP (Python) | MIT |
+| CI | GitHub Actions | free |
 
 ---
 
-## Phase 0 — Foundation (end-to-end PoC, 2 repos)
-
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 0 — Foundation (end-to-end PoC, 2 repos)"._
-
 ## Continuous update process (its own track — VERY important)
-
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 
 - [x] U1 **Service credential** (D13): a **read-only** PAT in `~/.aidd/secrets/git-token` (600), collected in step 6
   of `install.sh`; the wrapper uses it through `GIT_ASKPASS` and rewrites ssh→https remotes only for the fetch. Your
   personal key stays out of the scheduler. Validated: `fetch: ok (service)` on the 6 repos. Note: fine-grained needs
   admin approval in the org — classic (scope `repo`, short expiry) works as a bridge; a **GitHub App** is the target
   for the server (F1)
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 - [ ] U4 **Event trigger (F3)**: a webhook/CI on a push to a protected branch → `aidd index <repo> --ref <branch>`;
   replaces the scheduler on the central server
 - [x] U5 **In-container fetch**: became the default path with the refresher (D15) — a mirror per repo, the PAT as a
   file through `git-askpass.sh`. Validated with a local remote in the e2e; **still to validate against GitHub with a
   real PAT**
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Continuous update process (its own track — VERY important)"._
 
 ## Security and operations (its own track)
 
@@ -149,37 +109,33 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
 > exposed more than it should. Order: close what was exposed, take state and credentials off the host, then
 > governance.
 
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Security and operations (its own track)"._
-
 Open:
 
-- [ ] SO7 **Strong isolation between tenants**: today Neo4j, Qdrant and the vault are shared (Community has no RBAC
-  and no multiple databases) and every tool accepts `tenant`. For whoever serves several organizations on the same
-  machine: one stack per tenant (a compose project with its own ports) or, on the server (F3.4), the tenant injected
-  by the token
-- [ ] SO8 **Authentication on the MCPs** (a per-dev token at the gateway; today the defense is localhost +
-  Host/Origin) — ties in with F3.4; careful: the token cannot go in the `.mcp.json` distributed into the repos
-- [ ] SO9 **Prompt injection and poisoned memory**: third-party code, Jira and notes enter the context, and what the
-  agent writes to the vault/Qdrant comes back as a "convention" in every session. Provenance on the lessons (session,
-  repo, sha), human review before something becomes a convention, skills treating that content as data — for memory,
-  the mechanism is the **Project knowledge** track (evidence per insight, only a human promotes to `accepted`, K5)
+- [ ] SO7 **Strong isolation between tenants**: today one Neo4j holds every tenant (Community has no RBAC and no
+  multiple databases) and every `atlas` tool accepts `tenant`. For whoever serves several organizations on the same
+  machine: one Atlas stack per tenant (a compose project with its own ports) or, on the server (F3.4), the tenant
+  injected by the token
+- [ ] SO8 **Authentication on the `atlas` MCP** (a per-dev token at the gateway; today the defense is localhost +
+  Host/Origin) — ties in with F3.4; careful: the token cannot go in the MCP configuration the installer writes into
+  the repos
+- [ ] SO9 **Prompt injection through the graph's answers**: third-party code reaches the agent as text it did not
+  write (a symbol's `doc` and `signature`, a violation's `message`, the docstrings `find_symbol` matches). Name the
+  answer fields that carry code text, so a consumer treats them as data; never filter or rewrite that text by heuristic
 - [ ] SO10 **Full supply chain**: digests (`@sha256`) on the images, a lock with hashes (Python `--require-hashes`,
   npm `package-lock`), SBOM + scan (Trivy/Grype) in CI, Renovate for deliberate bumps; the indexer's `pyproject.toml`
   dependencies are still ranges
-- [ ] SO11 **Backup/restore**: the graph and the mirrors can be rebuilt; the Qdrant lessons/insights and the vault
-  **cannot** (`docker compose down -v` deletes the lessons). A scheduled Qdrant snapshot + documenting what is
-  disposable
+- [ ] SO11 **What is disposable**: once only Neo4j and the mirrors hold state, everything the Atlas keeps is rebuilt
+  from the repositories; say so, and say what the host must keep (`atlas.yaml`, `.env`, the read-only token)
 - [ ] SO12 **Scale with N devs**: N laptops × M repos every 15 min hit GitHub's secondary rate limit; backoff on a
   fetch failure; a central server (F3) for larger organizations. Mirrors double the repos' disk — GC of mirrors of
   repos that left the workspace
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Security and operations (its own track)"._
 - [ ] SO14 **Validate on WSL and native Linux** (the e2e was on macOS): `AIDD_UID`/workspace permissions (umask 077
   leaves the container without read access), Docker autostart; a real PAT against GitHub (U5)
-- [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; embeddings are
-  local; telemetry off), where secrets live, what each container can touch. `mcp-neo4j` (debug profile) still has
-  write Cypher on `127.0.0.1:3004` — for debugging only
+- [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; telemetry off),
+  where secrets live, what each container of the Atlas can touch. `mcp-neo4j` (debug profile) still has write Cypher
+  on `127.0.0.1:3004` — for debugging only
 
-## Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)
+## Phase 1 — Complete micro (multi-language SCIP)
 
 - [ ] F1.1 Integrate SCIP indexers (Go, TS, .NET, Python) into `indexer/`; automatic stack detection by manifest;
   per-repo config (`.aidd/index.yaml`: excludes, connectors)
@@ -193,16 +149,14 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
 - [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
 - [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
   `(repo, ref)`
-- [ ] F1.5 Embeddings per **symbol** (signature + docstring + short body) in Qdrant, payload
-  `{node_id, repo, ref, kind}`; switch the model to the code one
-- [ ] F1.6 Hierarchical summaries via Ollama (file → module → repo) stored in the graph and in Qdrant
-- [ ] F1.7 `atlas` MCP: `get_callers`, `get_callees`, `trace_flow(entry_point)`, a hybrid `search(query)` (vector →
-  k-hop expansion → rerank)
+- [ ] F1.5 Semantic search over the symbols, not decided: a reference first (search questions with an expected list,
+  scored against `find_symbol` with `match="fuzzy"` as the baseline), whose result decides whether it is built; if it
+  is, Neo4j's vector index is the candidate store, and the `search(query)` once planned in F1.7 is this item's
+- [ ] F1.7 `atlas` MCP: `trace_flow(entry_point)`, the micro flow from an entry point (callers and callees already
+  answer through `who_calls` and `symbol_context`)
 - [ ] F1.8 `ref` support: index `main` (baseline) and `develop`; nodes/edges with `ref`; queries with an optional
   `ref` (default: develop if it exists)
 - [ ] F1.9 Git metrics as attributes: `last_touched`, `churn_90d`, `authors` (hotspots and "who touches this")
-- [ ] F1.10 A new `flow` skill: given an entry point (endpoint/handler/job), narrates the micro flow using
-  `trace_flow` + snippets
 - [ ] F1.11 An `index_runs` table (repo, ref, sha, duration, counts, errors) + an `aidd status` command
 - [ ] F1.12 Widen the golden questions to 20; an `aidd eval` script that runs them all and reports recall
 - [ ] F1.13 **Large repos (extraction scale)**, absorbed by H6 (`docs/handoffs/H6-extraction-pipeline.md`): grafana (24 thousand files) is killed for memory at 7.7 GB on Docker
@@ -226,7 +180,6 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
 - [x] F1.14 **HTTP extractor: what H2 left.** Closed on 2026-10-18, in 11 increments, and the next day came the 12th,
   in the validation of PR #5. Each item ended with a rule with a fixture and a judged corpus, or with a limitation
   recorded in the guide.
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)"._
 - [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slices 1 and 1c in `main`, PR #11
   and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
   untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
@@ -240,9 +193,9 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
   and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
   the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
   embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D35):
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Phase 1 — Complete micro (multi-language SCIP + hybrid retrieval)"._
 
-**Phase exit:** any workspace repo indexable with 1 command; `scan` and `flow` answering with facts from the graph.
+**Phase exit:** any workspace repo indexable with 1 command; the `atlas` MCP answering the golden questions with facts
+from the graph.
 
 ## Phase 2 — Complete macro (contract linker + governance)
 
@@ -254,20 +207,18 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
   HTTP calls to the target repo
 - [ ] F2.4 Database connector: migrations/ORM → `DbTable`, `READS/WRITES`; tables shared between repos = an implicit
   macro edge
-- [ ] F2.5 Confidence on the edges (`exact | heuristic | llm`) + `evidence`; an LLM pass only on the ambiguous ones;
-  the result becomes a review note in Obsidian (`<tenant>/_links-review.md`)
-- [ ] F2.6 `atlas` MCP: transitive cross-repo `impact_analysis(symbol|endpoint|topic)`, `repo_dependencies(repo)`,
-  `workspace_map(tenant)`
-- [ ] F2.7 A new `impact` skill: given a target, lists the affected repos/flows with confidence and evidence
-- [ ] F2.8 Visualization: export of the subgraph to Obsidian (canvas/notes with wikilinks) or static HTML — human
-  reading of the macro level
+- [ ] F2.5 Confidence and evidence on the macro edges F2.1 to F2.4 add, as `CONSUMES` has them (`exact`, `suffix`, and
+  the candidates listed when the linker cannot decide); no level is decided by a model
+- [ ] F2.6 `atlas` MCP: `workspace_map(tenant)`, and the cross-repo impact of an endpoint or a topic, as `impact_of`
+  gives a symbol's (`repo_map` already gives a repo's dependencies); Go's `who_calls` across repositories
+- [ ] F2.8 Visualization: export of the subgraph as static HTML or as data — human reading of the macro level
 - [ ] F2.9 Macro golden questions (≥ 15) + `aidd eval` covering micro and macro
 
 **Phase exit:** a queryable workspace map; cross-repo impact with evidence.
 
 ## Phase 3 — Central and continuous (the end goal)
 
-- [ ] F3.1 A central server (Neo4j + Qdrant + MCPs) with backup; a compose "server profile"
+- [ ] F3.1 A central server (Neo4j and the `atlas` MCP) with backup; a compose "server profile"
 - [ ] F3.2 A CI job per repo: on every merge to `main`/`develop` → `aidd index` → push to the central server (a
   self-hosted runner with a SCIP cache)
 - [ ] F3.3 A scheduled/event-driven linker on the central server; a report of new edges and divergences
@@ -275,124 +226,81 @@ _The detail of this section is in git: `git show before-roadmap-history-condensa
   trusted to the client
 - [ ] F3.5 A coverage/freshness dashboard: indexed repos, index age, % of macro edges by confidence
 - [ ] F3.6 Retention: keep N snapshots per `(repo, ref)`; GC of dead refs
-- [ ] F3.7 `install.sh` points `.mcp.json` at the central server when configured; local stays as the offline fallback
+- [ ] F3.7 The installer points the `atlas` entry of a repository's MCP configuration at the central server when
+  configured; local stays as the offline fallback
 
 ---
 
-## Parallel track — Skills and the development flow
-
-The target chain (each skill consumes the graph through MCP and writes to Obsidian/Qdrant):
-
-```
-scan ──► flow / impact ──► refine-business ──► refine-tech ──► implement ──► review
- (facts)   (micro/macro)     (card + context)    (tech spec)      (harness)    (senior)
-```
-
-- [x] S0 `scan` v1 with a vault per project (`<tenant>/knowledge/<repo>/<repo>.md`) and `refine-business` v1 (Jira →
-  candidates through Qdrant → "what to do" per project → loop → `<tenant>/cards/<card>.md`)
-- [x] S0.1 *(2026-10-12: `scan` documents `cards/`, which is where `refine-business` writes)* Align the vault layout:
-  `scan` documented `refine-business/` but `refine-business` writes to `cards/` — pick one and fix both SKILL.md
-- [ ] S1 `scan` v2: reads from the graph, falls back to the current flow; saves conventions with
-  `source: graph|llm`
-- [ ] S2 `flow`: entry point → a narrative of the micro flow (F1.10)
-- [ ] S3 `impact`: target → affected repos/flows (F2.7)
-- [ ] S4 `refine-business` v2 — where the graph fits into the existing skill (without changing the trigger):
-  - Step 2 (coverage): besides "are there conventions in Qdrant?", check "is it indexed in the atlas?"
-    (`atlas.repo_map`) and suggest `aidd index`
-  - Step 4 (affected projects): today it is only a vector search over the convention summaries; it becomes hybrid —
-    the vector finds candidate symbols/endpoints → `impact_analysis`/`who_consumes` expands to the repos linked by
-    contract. Candidates gain `confidence` + `evidence`
-  - Step 5 ("what to do"): cite the micro flow (`trace_flow`) and the macro edges that justify coordinating between
-    projects
-  - Step 7: the card's note starts to include the **delimited area of work** (repos, modules, entry symbols) — it is
-    `refine-tech`'s input
-- [ ] S5 `refine-tech`: from the delimited area, zoom in with `flow`/`get_callers`; produces a technical spec (files,
-  contracts, tests, risks, ADRs); explicit human validation before moving on. The spec has a section called
-  "Contracts, boundaries and proof", with `docs/design.md`'s questions asked of the project: what it already has that
-  answers the card (a contract, a module, a convention `scan` found), where each piece of the change belongs, and what
-  proves it
-- [ ] S6 `implement`: runs the spec on the chosen orchestrator (harness: tests, coverage, lessons → `record_insight`,
-  the **Project knowledge** track)
-- [ ] S7 `review`: injected context (spec + diff + coverage + the graph's conventions + the area's
-  `accepted`/`enforced` insights) → a senior opinion, which asks `docs/design.md`'s questions of the diff; PR
-- [ ] S8 Define a common contract between skills (frontmatter + the format of the output note) so that one's output
-  is the next one's input — the knowledge part (the project index + the insight note) is K1
-- [ ] S9 (handoff H3) Measure the effect of the atlas and of knowledge on AI-assisted development — tokens, time,
-  completeness and defects, on real tasks within a repo and across repos, with and without the stack
-  (`docs/handoffs/H3-ai-dev-efficiency.md`). After H2b, in another process
-
-## Project knowledge (its own track)
-
-> Each project has an **entry point** in the vault (the index `scan` creates) and a **knowledge base** that the
-> process stages feed and consult: what shows up in code review, Sonar, security tools, incidents and decisions
-> becomes a filtered insight, so the problem does not repeat and the review already knows what to look at. It is not
-> a skill (D16): it is a stack mechanism that `scan`, `refine-business`, `refine-tech` and `implement` use through the
-> same contract. The skill does the part that needs judgment (what is worth recording, with what evidence); the stack
-> does the deterministic part (dedup, counting, note, index, Qdrant, status rules).
->
-> What the process **requires** (minimum coverage, harness attempts, when to ask for an ADR, when an insight becomes
-> `recurring`) lives in `policy.yaml` (D17), next to `atlas.yaml`: `atlas.yaml` says how to read the code,
-> `policy.yaml` says what the process requires. `scan` describes the project; policy is a human decision and is not
-> discovered.
-
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Project knowledge (its own track)"._
-- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contract v1)* **The vault contract** (closes S8 for knowledge):
-_The detail of this section is in git: `git show before-roadmap-history-condensation:docs/ROADMAP.md`, section "Project knowledge (its own track)"._
-- [ ] K4 *(with the `refine-business` review)* `refine-business` adopts the contract: consults the affected projects'
-  incidents/decisions, records the card's business decisions. `refine-tech` (S5) and `implement` (S6) are born with
-  it: the area's known risks in the spec; `accepted`/`enforced` as a checklist before coding and before the PR
-- [ ] K5 *(born with `refine-tech`, S5)* **Promotion with a human inside the process**: `refine-tech` shows the
-  `observed`/`recurring` items that touch the delimited area ("it showed up 3×, does it become a rule?") and records
-  the approval (`accepted`, who and when); editing the frontmatter in Obsidian counts the same. Closes the memory part
-  of SO9
-- [ ] K6 *(born with `implement`, S6)* Sources inside `implement`, where the reason for an error shows up: (1) **a
-  review rejection** (the senior opinion that sends it back to execution — the reason is the insight); (2) **a
-  harness escalation** (`harness.max_attempts` exhausted: what the model could not fix by itself, and why); (3) **PR
-  review comments** while handling the feedback (`gh`). In all of them, record only what is not obvious
-- [ ] K7 *(when the tenants have a scanner in CI)* `aidd ingest <file.sarif>` (Semgrep, CodeQL, Trivy, Snyk): groups
-  findings by rule × repo, writes `observed` with a count and evidence — the raw data stays in the tool; runs in CI or
-  through the refresher. Sonar through its API later
-- [ ] K8 *(after Phase 1)* `enforced`: an insight checkable on the graph becomes a convention rule and shows up in
-  `violations`; what is not checkable stays as a checklist
-- [ ] K9 *(with a volume of insights; backup together with SO11)* Aging and backup: a `last_seen` older than
-  `knowledge.archive_after_days` with no new occurrences loses weight and goes to `archived`; the notes and the
-  insights collection cannot be rebuilt from the code → they go into the backup (SO11)
-- [ ] K10 Policy inside the repo (`.aidd/policy.yaml`, read from the mirror on the default branch): in organizations,
-  the policy in `~/.aidd` is each dev's, and two devs may work with different thresholds; in the repo it holds the
-  same for everyone and only changes through a PR (human review). A layer above the repo's `overrides`; after `policy.yaml` is
-  proven
-
 ## Publishing and documentation (its own track)
 
-> The repo is public and the README has one line. This track gives both repositories — aidd-stack and the indexer,
-> which moves to its own repo — documentation for newcomers, in English, Portuguese, Spanish and Chinese. Decisions,
-> the boundary between the repos and the order: `docs/handoffs/H4-public-docs.md`.
+> The repository is public. This track gives it documentation for newcomers, in English, Portuguese, Spanish and
+> Chinese. Decisions and the order: `docs/handoffs/H4-public-docs.md`.
 
 - [ ] P0 Recycle the working docs (H4 step 0, asked for on 2026-10-18): the current truth separated from history; an
   `AGENTS.md` at the root as the entry point for a contributor and their AI; the ROADMAP log condensed into
   `docs/history.md`; the decisions distilled into `docs/decisions.md`; the corpus report with only the method, the
   current baseline and the gaps; from ~600 KB to a ceiling per growth file (`indexer/scripts/checks/docs_ceilings.txt`), with no total. Phase 0a done on 2026-10-19, with every doc in
   English (H4-D1); phase 0b (the extractor guide, rewritten in English) after H5
-- [ ] P1 H4's decisions (H4-D1…D12, the name of the indexer's repo, reviewers per language) and a sketch of the docs
-  architecture — can run in parallel with H2b
-- [ ] P2 The indexer in its own repo: `filter-repo` with an audited history, a multi-architecture image on GHCR,
-  `knowledge` and policy in aidd-stack, the schema applied by the indexer; regression = tests, an identical corpus
-  and a clean aidd-stack install with the published image; `cli.py` brought to the shape targets, the one exception
-  H5 left (H5-D6). After the H2b merge
-- [ ] P3 English content for both repos (README + `docs/en/`), validated by someone who has never seen the project
+- [ ] P1 Redecide H4 with the premise (H10-D1): the H4 proposals that H10-D1 and H11-D1 left open, for the one
+  repository, reviewers per language, and a sketch of the docs architecture
+- [ ] P2 **The Atlas in its own repository**, named `aidd-atlas` (H10-D1), after the release of the reduced Atlas:
+  whether it is a new repository born from one commit with the reduced tree or this one renamed, where the history
+  stays, how the new tree is proven, and, if it is a new one, how the install entry passes to it are its design. This
+  repository is never deleted or made private
+- [ ] P3 English content for the repository (README + `docs/en/`), validated by someone who has never seen the project
 - [ ] P3.1 The contributor path (H4.1, `docs/handoffs/H4.1-contributor-path.md`): `CONTRIBUTING.md`, playbooks per
   contribution type, the method explained, PR and issue templates, the method's checks in CI, and an acceptance test
   in which a fresh agent re-enacts past increments and follows the method on its own
 - [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
-- [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files, GitHub settings and the first release of
-  both repos
+- [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files and GitHub settings for the repository; its
+  releases follow H11-D1
 - [ ] P6 *(optional)* A docs site, when navigation calls for it
+
+## Candidates
+
+Ideas with no item yet:
+
+- a handoff of its own on code quality gates. Until then the shape ratchet holds (H5-D9);
+- `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
+- re-run the .NET Q4 with dispatch.
 
 ## Pending decisions
 
-The decided ones (D1, D3, D6–D17, and D5 through H4-D1) are in `docs/decisions.md`.
+The decided ones (D1, D3, D6–D15, and D5 through H4-D1) are in `docs/decisions.md`; D16 and D17 are superseded by
+H10-D1. No decision of this roadmap's own is pending. F1.5 waits for one, and the open decisions of a handoff are in
+it: H4's proposals (P1), H7-D2, H7-D4 and H8-D5.
 
-- [ ] D2 Execution orchestrator (Phase S6): Claude Code (we already use skills in that format) vs Cline/Roo Code
-  (VS Code, MCP, local models) vs Goose/Aider (CLI)
-- [ ] D4 Minimum local model for agentic tasks with tool calling (evaluate Qwen-Coder ≥ 30B); 7B/14B stay for
-  summaries and classification only
+## Left this roadmap
+
+This repository keeps only the Atlas (H10-D1). The process planned around it left, and what was done of it stays here
+as the record:
+
+- [x] S0 `scan` v1 with a vault per project (`<tenant>/knowledge/<repo>/<repo>.md`) and `refine-business` v1 (Jira →
+  candidates through Qdrant → "what to do" per project → loop → `<tenant>/cards/<card>.md`)
+- [x] S0.1 *(2026-10-12: `scan` documents `cards/`, which is where `refine-business` writes)* Align the vault layout:
+  `scan` documented `refine-business/` but `refine-business` writes to `cards/` — pick one and fix both SKILL.md
+- [x] K1 *(2026-10-13: `docs/knowledge-contract.md`, contract v1)* **The vault contract** (closes S8 for knowledge):
+
+| Id | What it was | Where it went |
+|---|---|---|
+| S1 | `scan` v2, graph first | its process half moved to the author's private process roadmap; the half that teaches the graph: replaced by F1.22 |
+| S2 | a `flow` skill | withdrawn: the narration is the consumer's, and the tool is F1.7's `trace_flow` |
+| S3 | an `impact` skill | withdrawn: the consumer composes it, and `impact_of` answers it |
+| S4 | `refine-business` v2 | moved to the author's private process roadmap |
+| S5 | `refine-tech` | moved to the author's private process roadmap |
+| S6 | `implement` | moved to the author's private process roadmap |
+| S7 | `review` | moved to the author's private process roadmap |
+| S8 | a contract between skills | moved to the author's private process roadmap |
+| S9 | the Atlas's effect on AI work | moved to the author's private process roadmap |
+| K4 | `refine-business` adopts the knowledge contract | moved to the author's private process roadmap |
+| K5 | a human promotes an insight | moved to the author's private process roadmap |
+| K6 | sources of insights inside `implement` | moved to the author's private process roadmap |
+| K7 | `aidd ingest` of SARIF | moved to the author's private process roadmap |
+| K8 | an insight becomes a convention rule | moved to the author's private process roadmap |
+| K9 | aging and backup of insights | moved to the author's private process roadmap |
+| K10 | the process policy inside a repository | moved to the author's private process roadmap |
+| D2 | the execution orchestrator | moved to the author's private process roadmap |
+| D4 | a local model for tool calling | moved to the author's private process roadmap; its half on summaries and classification: withdrawn, with F1.6 |
+| F1.6 | summaries by a local model | withdrawn: no model writes a record of the graph |
+| F1.10 | a `flow` skill | withdrawn: as S2 |
+| F2.7 | an `impact` skill | withdrawn: as S3 |
