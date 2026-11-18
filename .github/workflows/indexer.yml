@@ -99,9 +99,9 @@ jobs:
         shell: bash
         run: python indexer/scripts/shape.py --against "$BASE" | tee -a "$GITHUB_STEP_SUMMARY"
 
-  # The register of technical debts (docs/tech-debt.md) against its cases and the ROADMAP (indexer/scripts/debts.py).
-  # It runs on every pull request and push, docs-only ones included, because the register and the ROADMAP are docs: so
-  # it can be a required check of its own.
+  # The register of technical debts (docs/tech-debt.md) against its cases and the roadmap's ticked items
+  # (indexer/scripts/debts.py). It runs on every pull request and push, docs-only ones included, because the register and
+  # the roadmap are docs: so it can be a required check of its own.
   debts:
     needs: changes
     runs-on: ubuntu-latest
@@ -116,10 +116,14 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Each debt's case is a strict xfail in the tests, and the ROADMAP lists the open debts by due
-        # bash, not the default shell: only then does a pipe carry the script's failure past `tee`
+      - name: Each debt's case is a strict xfail in the tests, no roadmap item is ticked with an open debt, and a moved due is listed
+        # bash, not the default shell: only then does a pipe carry the script's failure past `tee`. The base is HEAD^1: on a
+        # pull request, the branch the checkout's merge commit was made on; on a push, the commit before it. The warnings go
+        # to stderr, which the summary does not take
         shell: bash
-        run: python3 -I indexer/scripts/debts.py | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          git show HEAD^1:docs/tech-debt.md > "$RUNNER_TEMP/base-register.md" 2>/dev/null || : > "$RUNNER_TEMP/base-register.md"
+          python3 -I indexer/scripts/debts.py --base-register "$RUNNER_TEMP/base-register.md" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: The pull request's title, body and commit messages carry no line the project's rules refuse
         if: github.event_name == 'pull_request'
         shell: bash

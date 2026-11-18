@@ -107,7 +107,7 @@ The full text is in the ROADMAP, under "Principles".
   - it runs the tests, the MCP and the graph writer against a throwaway Neo4j, the corpus, the hold-out, the micro
     set and the code's shape against `main`;
   - the `debts` job also runs on every PR, docs-only ones included: it checks the register of technical debts against
-    its test cases and the ROADMAP (`indexer/scripts/debts.py`);
+    its test cases, and that no roadmap item is ticked while a debt due in it is open (`indexer/scripts/debts.py`);
   - `indexer/scripts/gates.sh` then fails the PR when a precision drops, a win is lost, the hold-out changes or a
     refactor changes anything;
   - the scorecard of the graph (`indexer/scripts/checks/reference.sh`, in the `micro` job) measures the TS micro repos

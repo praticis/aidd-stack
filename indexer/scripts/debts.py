@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""The register of technical debts (docs/tech-debt.md) against its cases and the ROADMAP, as CI runs it:
+"""The register of technical debts (docs/tech-debt.md) against its cases and the roadmap, as CI runs it:
 
 - each case a debt names is a case of the debts' tests (indexer/tests/test_*_debts.py), and each case there is named
   by a debt; each of those files marks its cases as strict xfails. An open debt with no case says so, in a Case cell that
-  starts with `none yet`, and is counted in the summary; one that says it and names a case is wrong;
+  starts with `none yet`, and is counted in the summary; one that says it and names a case is wrong. A closed debt's
+  xfail is gone, so the case it names is no longer one of them;
 - a debt's due is `F1.2`, a `fix(<scope>)` PR before F1.2 (`fix(csharp)`, `fix(go)`, ...), a step of H5 (`H5 step 6`),
-  or `closed`;
-- the ROADMAP's list of the debts due in F1.2 ("Debts due here:"), of those due in a step of H5 ("due in an H5 step")
-  and of those due in each scope's `fix` PRs ("due in a `fix(go)` PR before F1.2", "are due in `fix(csharp)` PRs
-  before F1.2") are the open debts of that due, and no document names a debt the register lacks. A scope's list is
-  required while a debt is due there.
+  or `closed`, and no document names a debt the register lacks;
+- an item of the roadmap (docs/ROADMAP.md, docs/roadmap/*.md) is not ticked while a debt due in it is open: F1.2 for
+  the debts due in F1.2 and in the `fix` PRs before it. A step of H5 locks no item yet;
+- with --base-register, the open debts whose Due cell changed against that register are listed, each with a warning on
+  stderr for the pull request's checks. A move is not a finding.
 
 Prints Markdown for the job summary; exits 1 when it finds anything. It reads files only: no Docker, no network.
 
-    python3 -I indexer/scripts/debts.py [--root DIR]
+    python3 -I indexer/scripts/debts.py [--root DIR] [--base-register FILE]
 """
 from __future__ import annotations
 
@@ -27,10 +28,8 @@ ROOT = Path(__file__).resolve().parents[2]
 CASE_ID = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`")
 DEBT = re.compile(r"TD-(\d+)(?: to TD-(\d+))?")
 NO_CASE = "none yet"
-HERE_MARK = "Debts due here:"
-H5_MARK = "due in an H5 step"
 FIX = re.compile(r"`(fix\([a-z]+\))`")
-FIX_LIST = re.compile(r"due in (?:a )?`(fix\([a-z]+\))` PRs? before F1\.2")
+ITEM = re.compile(r"^\s*- \[([ xX])\] (?:\*\*)?([A-Z]{1,2}\d+(?:\.\d+)*)\b", re.MULTILINE)
 
 
 def register(text: str) -> tuple[list[dict], list[str]]:
@@ -61,12 +60,12 @@ def phase(due: str) -> str:
     return fix.group(1) if fix else "?"
 
 
-def due_in(name: str) -> str:
-    return {"F1.2": "F1.2", "H5": "an H5 step"}.get(name, f"a `{name}` PR before F1.2")
-
-
-def mark(name: str) -> str:
-    return {"F1.2": HERE_MARK, "H5": H5_MARK}.get(name, f"due in a `{name}` PR before F1.2")
+def locked_item(due: str) -> str | None:
+    """The roadmap item an open debt keeps from being ticked: by its phase, never by the wording of its due."""
+    name = phase(due)
+    if name == "F1.2" or name.startswith("fix("):
+        return "F1.2"
+    return None
 
 
 def case_ids(text: str) -> list[str]:
@@ -98,30 +97,15 @@ def listed(segment: str) -> set[str]:
     return ids
 
 
-def _ending_at(flat: str, at: int) -> set[str]:
-    """The debts named in the clause that a mark starting at `at` ends."""
-    head = flat[:at]
-    return listed(head[max(head.rfind(c) for c in ";.)") + 1:])
-
-
-def roadmap_lists(text: str) -> dict[str, set[str] | None]:
-    """The debts each due's list names: F1.2's after its mark, an H5 step's and each scope's `fix` PRs' in the clause
-    their mark ends. F1.2's and the H5 step's are None when the ROADMAP has no such list."""
-    flat = " ".join(text.split())
-    here, h5 = flat.find(HERE_MARK), flat.find(H5_MARK)
-    lists = {"F1.2": listed(flat[here + len(HERE_MARK):].split("(")[0]) if here >= 0 else None,
-             "H5": _ending_at(flat, h5) if h5 >= 0 else None}
-    for m in FIX_LIST.finditer(flat):
-        lists.setdefault(m.group(1), _ending_at(flat, m.start()))
-    return lists
-
-
-def _check_list(name: str, want: set[str], got: set[str] | None) -> list[str]:
-    if got is None:
-        return [f"the ROADMAP has no `{mark(name)}` list of the debts due in {due_in(name)}"]
-    return ([f"the ROADMAP's list of the debts due in {due_in(name)} lacks {i}" for i in sorted(want - got)]
-            + [f"the ROADMAP's list of the debts due in {due_in(name)} names {i}, which is not open and due there"
-               for i in sorted(got - want)])
+def roadmap_items(root: Path) -> dict[str, list[tuple[str, bool]]]:
+    """Each item of the roadmap, with the file that holds it and whether it is ticked there."""
+    files = [root / "docs" / "ROADMAP.md", *sorted((root / "docs" / "roadmap").glob("*.md"))]
+    items: dict[str, list[tuple[str, bool]]] = {}
+    for path in files:
+        if path.is_file():
+            for box, item in ITEM.findall(path.read_text()):
+                items.setdefault(item, []).append((str(path.relative_to(root)), box != " "))
+    return items
 
 
 def check_cases(rows: list[dict], cases: dict[str, str]) -> list[str]:
@@ -131,20 +115,38 @@ def check_cases(rows: list[dict], cases: dict[str, str]) -> list[str]:
     found += [f"{r['id']}: names no case" for r in rows
               if not r["cases"] and not r["pending"] and phase(r["due"]) != "closed"]
     found += [f"{r['id']}: says there is no case yet and names one" for r in rows if r["pending"] and r["cases"]]
+    found += [f"{r['id']}: is closed, and its case `{c}` is still a strict xfail of {cases[c]}" for r in rows
+              if phase(r["due"]) == "closed" for c in r["cases"] if c in cases]
     return found
 
 
-def check_roadmap(rows: list[dict], text: str, docs: dict[str, str]) -> list[str]:
-    found = [f"{r['id']}: a due the check does not know ({r['due']!r}): F1.2, a `fix(<scope>)` PR, an H5 step, or "
-             "closed" for r in rows if phase(r["due"]) == "?"]
-    lists = roadmap_lists(text)
-    fixes = sorted(({phase(r["due"]) for r in rows} | set(lists)) - {"F1.2", "H5", "closed", "?"})
-    for name in ["F1.2", *fixes, "H5"]:
-        found += _check_list(name, {r["id"] for r in rows if phase(r["due"]) == name}, lists.get(name))
+def check_dues(rows: list[dict]) -> list[str]:
+    return [f"{r['id']}: a due the check does not know ({r['due']!r}): F1.2, a `fix(<scope>)` PR, an H5 step, or closed"
+            for r in rows if phase(r["due"]) == "?"]
+
+
+def check_locks(rows: list[dict], items: dict[str, list[tuple[str, bool]]]) -> list[str]:
+    """An item ticked while a debt due in it is open, and an item the register's dues name that the roadmap lacks."""
+    locked: dict[str, list[str]] = {}
+    for r in rows:
+        item = locked_item(r["due"])
+        if item:
+            locked.setdefault(item, []).append(r["id"])
+    found = []
+    for item, ids in sorted(locked.items()):
+        where = items.get(item)
+        if not where:
+            found.append(f"the roadmap has no item {item}, where {len(ids)} open debts are due")
+            continue
+        found += [f"{item} is ticked in {doc}, and {', '.join(sorted(ids))} are open and due in it"
+                  for doc, ticked in where if ticked]
+    return found
+
+
+def check_docs(rows: list[dict], docs: dict[str, str]) -> list[str]:
     known = {r["id"] for r in rows}
-    for doc, body in sorted(docs.items()):
-        found += [f"{doc} names {i}, which the register lacks" for i in sorted(listed(body) - known)]
-    return found
+    return [f"{doc} names {i}, which the register lacks"
+            for doc, body in sorted(docs.items()) for i in sorted(listed(body) - known)]
 
 
 def check(root: Path) -> tuple[list[str], str]:
@@ -152,22 +154,56 @@ def check(root: Path) -> tuple[list[str], str]:
     cases, more = debt_cases(root / "indexer" / "tests")
     docs = {str(p.relative_to(root)): p.read_text() for p in sorted((root / "docs").rglob("*.md"))
             if p.name != "tech-debt.md"}
-    found += more + check_cases(rows, cases)
-    found += check_roadmap(rows, (root / "docs" / "ROADMAP.md").read_text(), docs)
+    found += more + check_cases(rows, cases) + check_dues(rows) + check_locks(rows, roadmap_items(root))
+    found += check_docs(rows, docs)
     closed = sum(phase(r["due"]) == "closed" for r in rows)
     pending = sum(r["pending"] and phase(r["due"]) != "closed" for r in rows)
     later = f"; {pending} open with no case yet" if pending else ""
-    return found, f"{len(rows)} debts ({len(rows) - closed} open, {closed} closed); {len(cases)} cases in the debts' tests{later}"
+    counts = f"{len(rows)} debts ({len(rows) - closed} open, {closed} closed)"
+    return found, f"{counts}; {len(cases)} cases in the debts' tests{later}"
+
+
+def moved(base: list[dict], rows: list[dict]) -> list[str]:
+    """The open debts whose Due cell changed against the base, its wording included; a debt new to the register, one
+    that closed and one that reopened did not move."""
+    before = {r["id"]: r["due"] for r in base}
+    lines = []
+    for r in rows:
+        old = before.get(r["id"])
+        if old is None or old == r["due"] or "closed" in (phase(old), phase(r["due"])):
+            continue
+        shift = "" if phase(old) == phase(r["due"]) else f" (phase: {phase(old)} → {phase(r['due'])})"
+        lines.append(f'{r["id"]}: "{old}" → "{r["due"]}"{shift}')
+    return lines
+
+
+def report_moves(lines: list[str], compared: bool) -> None:
+    """The moves in the summary, and one warning each on stderr, where the runner reads it and the summary does not."""
+    if not compared:
+        print("\nThe base register is empty or missing: no due was compared.")
+        return
+    print("\nDue moved against the base:" if lines else "\nNo open debt's due moved against the base.")
+    for line in lines:
+        print(f"- {line}")
+        print(f"::warning title=A debt's due moved::{line}", file=sys.stderr)
 
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", type=Path, default=ROOT)
-    found, summary = check(ap.parse_args(argv).root)
+    ap.add_argument("--base-register", type=Path, help="the register at the base, for the debts whose due moved")
+    args = ap.parse_args(argv)
+    found, summary = check(args.root)
     print("### Technical debts\n")
     print(summary + ("" if not found else f"; {len(found)} finding(s):\n"))
     for line in found:
         print(f"- {line}")
+    lines = None
+    if args.base_register is not None:
+        tree = register((args.root / "docs" / "tech-debt.md").read_text())[0]
+        base = register(args.base_register.read_text())[0]
+        lines = moved(base, tree)
+        report_moves(lines, bool(base))
     return 1 if found else 0
 
 

@@ -18,16 +18,17 @@ Rules:
   judgment finds, does not block and the change cannot fix in itself is registered here with its strict xfail, never left
   as a note in a handoff. The author may register one before a minimal case exists: its Case cell reads `none yet:` and says
   what a case needs, `debts.py` counts such debts, and the fix writes the case first.
-- A phase of the [ROADMAP](ROADMAP.md) lists the debts due in it and closes only when they are settled or the author
-  moves them.
+- An item of the roadmap is not ticked while a debt due in it is open: F1.2 for the debts due in F1.2 or in a
+  `fix(<scope>)` PR before it. A debt moves when the author changes its Due cell, its wording included; closing a debt or
+  registering one is not a move.
 - A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR (its Due reads
   `closed in PR #n`) and shrinks to what the debt was (its first sentence), its first site and its case: how it was found
   and how it was fixed are in `docs/history.md` and the PR body.
-- CI checks this table (the `debts` job, `indexer/scripts/debts.py`) against the tests and the ROADMAP: each case named
-  here is a case of a `indexer/tests/test_*_debts.py`, in the form `case("id", ...)`, and each case there is named here;
-  the ROADMAP's `Debts due here:` (F1.2) and `due in an H5 step` lists, and each scope's `due in a `fix(<scope>)` PR
-  before F1.2` list (`are due in `fix(csharp)` PRs before F1.2`), are the open debts of those dues; no document names a
-  debt this table lacks.
+- CI checks this table (the `debts` job, `indexer/scripts/debts.py`): each case named here is a case of a
+  `indexer/tests/test_*_debts.py`, in the form `case("id", ...)`, and each case there is named here; a closed debt names
+  none, since its xfail is gone; each Due is F1.2, a `fix(<scope>)` PR before F1.2, an H5 step or `closed`; no item of
+  `docs/ROADMAP.md` or `docs/roadmap/` is ticked while a debt due in it is open; no document names a debt this table
+  lacks. On a pull request the job also lists, with a warning each, the open debts whose Due changed against the base.
 
 Seen at: a public corpus repo's file and line, or the decision whose judgment found it when no site was kept. Decided by the author on 2026-10-27: TD-001 to TD-006 with the acceptance of H5-D18
 ([decisions.md](decisions.md)), and TD-007 to TD-022 by moving here the gaps that H5-D16 and H5-D17 had left in the H5
