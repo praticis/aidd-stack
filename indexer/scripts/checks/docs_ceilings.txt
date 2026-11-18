@@ -13,3 +13,4 @@ docs/decisions.md :: 72 KB :: a decision is a row of about 1 KB with no PR and n
 docs/ROADMAP.md :: 37 KB :: the state moves; what happened is one line of history.md
 docs/history.md :: 60 KB :: one line per PR, so it grows; when it nears the ceiling, cut the oldest entries: the tag before-history-oldest-cut keeps the first ones
 docs/tech-debt.md :: 75 KB :: one row per debt, and the register's own rules; how a debt was found is in history.md and its PR body; raised from 48 KB for the debts the Go and C# references will open
+docs/handoffs/README.md :: 6 KB :: one row per handoff; what a handoff did is in history.md, and its state in its own State line
