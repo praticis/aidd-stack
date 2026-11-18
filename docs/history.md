@@ -409,3 +409,6 @@
   and what it waits for, and `AGENTS.md` and the ROADMAP point to it instead of listing them. H10 (this reorganization)
   and H11 (how the Atlas is versioned, released and installed) enter the repository, both judged. It is the first of
   H10's ten pull requests; until the last merges, no other one enters `main`.
+- 2026-11-18: the decisions say what this repository keeps, the shape of its roadmap and how the Atlas is released
+  (`docs:`, PR #113): `H10-D1`, `H10-D2` and `H11-D1`, and fourteen rows marked as amended, superseded or moot by them.
+  The ceiling of `docs/decisions.md` rises from 72 to 80 KB.
