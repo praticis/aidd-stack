@@ -3,7 +3,8 @@
 > Paste this file (or ask for `docs/handoffs/H5-indexer-refactor.md` to be read) at the start of a new chat. Before
 > anything else, the chat should read `docs/indexer/README.md` and the documents of its reading order, in that order:
 > `AGENTS.md`, this file's "State", the method, the judgment and the scripts. Then, for the refactor's context:
-> - `docs/ROADMAP.md`: "Where we are", "Principles", F1.1, F1.2 and F1.13;
+> - `docs/ROADMAP.md`: "Where we are" and "Principles"; `docs/roadmap/phase-1-micro.md`: F1.1, F1.2, F1.13 and F1.17,
+>   this handoff's item;
 > - ADRs 002 to 006;
 > - `docs/indexer-evolution.md`: §2 Code map, §5 How to measure and §8 the boundary with SCIP;
 > - `docs/corpus-report.md`: the method, where the extractor stands and the baselines table (the current one is
@@ -741,5 +742,5 @@ _The measures, the review and the per-commit list of this section are in git: `g
   (open)
 - ADR-003 updated, or a new ADR, and `indexer-evolution.md` (§2, §5, §7) describing the new code.
   (open)
-- In the ROADMAP: the H5 item checked, and SCIP (F1.1/F1.2) with the `TypeIndex` seam ready.
+- In the roadmap: F1.17 checked, and SCIP (F1.1/F1.2) with the `TypeIndex` seam ready.
   (open)

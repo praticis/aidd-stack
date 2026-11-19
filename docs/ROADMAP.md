@@ -93,6 +93,8 @@
 A family's items move to a file of their own in `docs/roadmap/`, each with its fields (H10-D2); the items not listed
 here are still below.
 
+- `docs/roadmap/phase-1-micro.md`: F1, the complete micro level: SCIP, and the refactor, the pipeline and the hold-out
+  before it; the MCP's answers, interface and guide; the references that bound the graph's edges;
 - `docs/roadmap/narrowing.md`: N, the narrowing of this repository to the Atlas, from the lock before the first removal
   to the first release of the reduced Atlas;
 - `docs/roadmap/operations.md`: the installation and release items the narrowing depends on, SO16 to SO22.
@@ -143,68 +145,6 @@ Open:
 - [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; telemetry off),
   where secrets live, what each container of the Atlas can touch. `mcp-neo4j` (debug profile) still has write Cypher
   on `127.0.0.1:3004` — for debugging only
-
-## Phase 1 — Complete micro (multi-language SCIP)
-
-- [ ] F1.1 Integrate SCIP indexers (Go, TS, .NET, Python) into `indexer/`; automatic stack detection by manifest;
-  per-repo config (`.aidd/index.yaml`: excludes, connectors)
-- [ ] F1.2 SCIP → graph converter (definitions, resolved references, IMPLEMENTS/EXTENDS, types) + a resolver for the
-  HTTP layer: a hook in `http_base` (by name by default, SCIP when the snapshot has an index) consulted only at the
-  points of indecision that F1.14 recorded as `needs-resolver` — without an index, HTTP stays as today (ADR-002,
-  decision 3)
-  - The debts due here are the open rows of `docs/tech-debt.md` whose Due is F1.2 or a `fix(<scope>)` PR before F1.2;
-    F1.2 is not ticked while one is open. SCIP is a possible remedy for the ones due in F1.2, not a proven one; the first
-    case of TD-001 may be fixed in the resolver earlier
-- [ ] F1.3 tree-sitter as the fallback for languages without SCIP (Vue SFC, SQL, YAML, templates)
-- [ ] F1.4 Incremental indexing (the per-file summary cache is H6's): `git diff` → touched packages → partial re-index; orphan removal per snapshot
-  `(repo, ref)`
-- [ ] F1.5 Semantic search over the symbols, not decided: a reference first (search questions with an expected list,
-  scored against `find_symbol` with `match="fuzzy"` as the baseline), whose result decides whether it is built; if it
-  is, Neo4j's vector index is the candidate store, and the `search(query)` once planned in F1.7 is this item's
-- [ ] F1.7 `atlas` MCP: `trace_flow(entry_point)`, the micro flow from an entry point (callers and callees already
-  answer through `who_calls` and `symbol_context`)
-- [ ] F1.8 `ref` support: index `main` (baseline) and `develop`; nodes/edges with `ref`; queries with an optional
-  `ref` (default: develop if it exists)
-- [ ] F1.9 Git metrics as attributes: `last_touched`, `churn_90d`, `authors` (hotspots and "who touches this")
-- [ ] F1.11 An `index_runs` table (repo, ref, sha, duration, counts, errors) + an `aidd status` command
-- [ ] F1.12 Widen the golden questions to 20; an `aidd eval` script that runs them all and reports recall
-- [ ] F1.13 **Large repos (extraction scale)**, absorbed by H6 (`docs/handoffs/H6-extraction-pipeline.md`): grafana (24 thousand files) is killed for memory at 7.7 GB on Docker
-  Desktop (corpus v2, 2026-10-15), because `extract_tree` keeps the tree-sitter tree and the text of **every** file
-  until the end — only the HTTP extraction needs them; the `Resolver` reads data per file (`namespaces`, `facts`).
-  H6 step 0 measured the memory per phase. Grafana peaks at 4.2 GB in a container, and the kept trees account for
-  3.7 GB of it. Extracting with each tree dropped peaks at 271 MiB. H6 step 1's prototype, with no tree kept, peaks
-  at 2.3 GB: what the reduce and the output hold. Then, in order of cost:
-  1. release each file's tree as soon as nothing else reads it — HTTP extraction directory by directory (the
-     constants and the scan are already per directory);
-  2. batches per module (Go package, `.csproj`, `package.json` workspace), each batch written to the graph, and the
-     edges between batches resolved at the end with the symbol table only — the same cut that F1.4 re-indexes and
-     that SCIP indexes per project (F1.1);
-  3. a per-repo cut in `atlas.yaml` (subfolders as units, excludes) for monorepos where only one part matters.
-
-  A constraint for whoever comes first: the HTTP mount graph (H2b) crosses files — it must work with a summary per
-  file (who mounts what, with which prefix), never holding the trees of other directories. **Done when** grafana
-  indexes under a fixed memory ceiling (e.g. 2 GB) and, on a medium repo, batched extraction is identical to the
-  whole one (the HTTP corpus with `--baseline` gives the diff). Measure along with it the cost of HTTP on repos
-  without routes it can read (netbox: 49 s of 107 s with 0 routes and 0 calls in corpus v2; zulip 17 s of 47 s)
-- [x] F1.14 **HTTP extractor: what H2 left.** Closed on 2026-10-18, in 11 increments, and the next day came the 12th,
-  in the validation of PR #5. Each item ended with a rule with a fixture and a judged corpus, or with a limitation
-  recorded in the guide.
-- [ ] F1.15 **Regression gates in CI** (H7, `docs/handoffs/H7-regression-gates.md`; slices 1 and 1c in `main`, PR #11
-  and PR #22): the method's mechanical checks as gates on every PR (precision ratchet, no win lost, hold-out
-  untouched, `0 differ` for refactors, one cause per commit), the diff classified for judgment, baselines published
-  on merge, a nightly trend, and a live check on a demo tenant
-  - Next slice, decided on 2026-10-27 (H7-D6): automate the judgment of a change of behavior, since a person's check is
-    not feasible: the per-site attribution (H5's gap G1: built for every language, H5-D21), the verdict record
-    (H7-D2) and each judged case as a test
-
-- [x] F1.16 **A typed call and the overrides it may run** (H5-D27): `CALLS` is the declaration the receiver's type
-  gives, in every language. C#'s and Python's type indexes write `EXTENDS` and `IMPLEMENTS` from the bases they read,
-  and `CALLS` marks a call that does not dispatch (`super()`, `base.`); `who_calls` and `impact_of` add the callers of
-  the methods a method overrides or implements, marked as a dispatch that may happen, and list its overrides. Go's
-  embedding promotes and never dispatches; its interface calls are a debt. Seven PRs (H5-D30 to H5-D35):
-
-**Phase exit:** any workspace repo indexable with 1 command; the `atlas` MCP answering the golden questions with facts
-from the graph.
 
 ## Phase 2 — Complete macro (contract linker + governance)
 
@@ -274,6 +214,7 @@ Ideas with no item yet:
 - re-run the .NET Q4 with dispatch.
 - a folder of conventions under the Atlas's install folder, mounted read-only, beside a path inside the workspace
   (after N14).
+- remote sources: a provider's API (GitHub first, then GitLab and Azure DevOps) beside `local`.
 
 ## Pending decisions
 

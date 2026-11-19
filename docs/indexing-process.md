@@ -1,6 +1,6 @@
 # The atlas indexing process
 
-> Status: **decided and implemented for the `local` source** (2026-09-11, F0.3.5). Remote providers wait for F1;
+> Status: **decided and implemented for the `local` source** (2026-09-11, F0.3.5). Remote providers have no item yet;
 > the refresher (`aidd daemon`) is built. D9 was first solved without mirrors (refs materialized with `git archive`
 > from the remote-tracking refs of the dev's clone) and is replaced by D15 (a bare mirror per repo). D11 simplified: optional `areas` in the manifest. Context: F0.3 validated (`aidd index <repo>`
 > works), but indexing is today a manual command, repo by repo, over whatever branch is checked out. It has to become
@@ -69,12 +69,12 @@ coexist (the remote is the source of truth when both have the same repo).
 
 | command | does |
 |---|---|
-| (no `aidd sync`: `plan`, `bootstrap`, `index`, `refresh` and `aidd daemon` sync the mirrors, through `core/mirror.sync` or the planner) | lists the repos in the sources (only `local` exists; a provider's API is F1), creates/updates bare mirrors (`git fetch --prune`), writes `Repo` with `url`, `default_ref`, `archived`, `last_activity` |
+| (no `aidd sync`: `plan`, `bootstrap`, `index`, `refresh` and `aidd daemon` sync the mirrors, through `core/mirror.sync` or the planner) | lists the repos in the sources (only `local` exists; a provider's API has no item yet, and is a candidate in the ROADMAP), creates/updates bare mirrors (`git fetch --prune`), writes `Repo` with `url`, `default_ref`, `archived`, `last_activity` |
 | `aidd plan [--tenant T]` | shows what **would** be indexed: repos × refs by the policy, with a reason (`always`, `active: 3 commits/9d`) — without touching the graph |
 | `aidd bootstrap [--tenant T] [--all \| --repos a,b,c]` | `sync` + `index` of everything `plan` listed; idempotent; resumable |
 | `aidd index <repo> [--ref R] [--ephemeral]` | already exists; starts accepting a real `--ref` (a worktree of the mirror) besides the workspace |
 | `aidd refresh` | only what changed: compares the mirror's `commit_sha` with the `Snapshot`; re-indexes the differences; GC of expired ephemeral snapshots |
-| `aidd status` | already exists; gains a `stale` column (mirror ahead of the snapshot) |
+| `aidd status` | already exists: per snapshot, its sha, age and files, and the last run's status, trigger and counts; the run's duration and first error, a failed run included, are F1.11 |
 
 ## 5. Where it goes in `install.sh`
 
@@ -95,13 +95,13 @@ the images (including the `tools` profile).
 | when | what |
 |---|---|
 | **F0.3.5 (now)** | `atlas.yaml` + the `local` source + ref policy + `aidd plan/bootstrap/refresh` + an option in `install.sh` + a real `--ref` through a worktree |
-| F1 | remote providers (GitHub first; GitLab/Azure DevOps next); the bare mirrors and the refresher (`aidd daemon`) are built (D15) |
+| F1 | the bare mirrors and the refresher (`aidd daemon`) are built (D15); remote providers (GitHub first; GitLab/Azure DevOps next) have no item yet, and are a candidate in the ROADMAP |
 | F2 | governance: read `catalog-info.yaml` (Backstage) / CODEOWNERS → `Domain`, `System`, `Team` nodes, an `OWNS` edge; optionally integrate with Backstage or Atlassian Compass as the catalog source |
 | F3 | pipeline triggers (a push to a protected branch → `aidd index`), the central server replaces the scheduler |
 
 ## 7. Decisions
 
-- D8 **Open** — the providers in use per tenant; needed only in F1.
+- D8 **Open** — the providers in use per tenant; needed only with a remote provider.
 - D9 **Replaced by D15 (2026-10-12)** — the refresher keeps a bare mirror per repo for the `local` source too and
   mounts the workspace read-only (see D15, in the header of this file). Original text: no mirrors
   for the `local` source: the indexer does `git fetch --all --prune` (SSH credentials/.gitconfig mounted as in

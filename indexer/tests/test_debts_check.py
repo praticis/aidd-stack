@@ -163,10 +163,34 @@ def test_a_roadmap_without_the_item_its_open_debts_are_due_in_is_found(tmp_path)
     assert found == ["the roadmap has no item F1.2, where 3 open debts are due"]
 
 
-def test_a_debt_due_in_a_step_of_h5_locks_no_item_yet(tmp_path):
-    rows = ROWS[:2] + [row("TD-003", "H5 step 6", "`a-third-case`")]
-    assert make(tmp_path, rows=rows, roadmap=ROADMAP + "- [x] F1.17 the steps of H5\n")[0] == []
-    assert make(tmp_path / "without", rows=rows)[0] == []
+def test_f117_ticked_while_a_debt_due_in_a_step_of_h5_is_open_is_found(tmp_path):
+    rows = [ROWS[0], row("TD-002", "H5 steps 6 and 12", "`a-second-case`"), row("TD-003", "H5 step 6", "`a-third-case`")]
+    found, _ = make(tmp_path, rows=rows, more={"docs/roadmap/phase-1-micro.md": "- [x] F1.17 the steps of H5\n"})
+    assert found == ["F1.17 is ticked in docs/roadmap/phase-1-micro.md, and TD-002, TD-003 are open and due in it"]
+
+
+def test_a_roadmap_without_f117_while_a_debt_due_in_a_step_of_h5_is_open_is_found(tmp_path):
+    rows = [ROWS[0], row("TD-002", "H5 step 6", "`a-second-case`"), row("TD-003", "H5 step 6", "`a-third-case`")]
+    assert make(tmp_path, rows=rows)[0] == ["the roadmap has no item F1.17, where 2 open debts are due"]
+
+
+def test_each_item_is_locked_by_the_debts_due_in_it_only(tmp_path):
+    h5 = [row(f"TD-00{n}", "H5 step 6", f"`a-{w}-case`") for n, w in ((1, "first"), (2, "second"), (3, "third"))]
+    assert make(tmp_path, rows=h5, roadmap="- [x] F1.2 SCIP to the graph\n- [ ] F1.17 the steps of H5\n")[0] == []
+    assert make(tmp_path / "f12", roadmap=ROADMAP + "- [x] F1.17 the steps of H5\n")[0] == []
+
+
+def test_two_ticked_items_are_found_in_the_order_of_their_ids(tmp_path):
+    rows = [ROWS[0], row("TD-002", "H5 step 6", "`a-second-case`"), row("TD-003", "H5 step 6", "`a-third-case`"),
+            row("TD-004", FIX, "none yet: a minimal case")]
+    found, _ = make(tmp_path, rows=rows, roadmap="- [x] F1.2 SCIP to the graph\n- [x] F1.17 the steps of H5\n")
+    assert found == ["F1.17 is ticked in docs/ROADMAP.md, and TD-002, TD-003 are open and due in it",
+                     "F1.2 is ticked in docs/ROADMAP.md, and TD-001, TD-004 are open and due in it"]
+
+
+def test_a_due_in_an_item_whose_id_starts_with_f12_is_a_due_the_check_does_not_know(tmp_path):
+    found, _ = make(tmp_path, rows=ROWS[:2] + [row("TD-003", "F1.27", "`a-third-case`")])
+    assert found == ["TD-003: a due the check does not know ('F1.27'): F1.2, a `fix(<scope>)` PR, an H5 step, or closed"]
 
 
 def rows_of(*lines: str) -> list[dict]:

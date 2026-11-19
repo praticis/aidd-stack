@@ -2,8 +2,8 @@
 
 > Paste this file (or ask for `docs/handoffs/H6-extraction-pipeline.md` to be read) at the start of a new chat.
 > Before anything else, the chat should read `AGENTS.md`, `docs/handoffs/H5-indexer-refactor.md` (this handoff is
-> designed together with it), ROADMAP items F1.4 and F1.13, ADR-002 and ADR-003, and the "H5 baseline" section of
-> `docs/corpus-report.md`.
+> designed together with it), the roadmap's F1.4, F1.13 and F1.18 (`docs/roadmap/phase-1-micro.md`), ADR-002 and
+> ADR-003, and the "H5 baseline" section of `docs/corpus-report.md`.
 >
 > **State (2026-11-09):** steps 0 to 2 are done (`corpus-report.md`, "H6 baseline", "H6 step 1" and its step 2
 > sections). Step 3, H5's steps built toward the ADRs, is under way: steps 4 and 7 merged with PR #7, and step 5's
@@ -150,7 +150,7 @@ Researched on 2026-10-19: systems that partition code indexing, run it in parall
 |---|---|---|
 | [GitHub's stack graphs](https://github.blog/open-source/introducing-stack-graphs) (precise code navigation) | Each file is analyzed alone, with tree-sitter, into a partial graph. References are not resolved at index time; at query time, a path search stitches the graphs of a commit's files | Option A at GitHub's scale. The stated reason: re-analyzing a file's dependents on every change is quadratic in the changed files, and per-file isolation makes it linear, with unchanged files reused across commits |
 | [Sorbet](https://blog.jez.io/error-recovery-part-1/) (Stripe's Ruby type checker; [pipeline](https://github.com/sorbet/sorbet/blob/master/docs/namer-resolver-pipeline.md)) | Parallel per-file passes that touch no global state, one sequential step that enters the definitions into the global state, then parallel again with that state immutable and shared | Option B's shape. Sorbet tracks no dependencies: on an edit it checks whether global information changed. If not, it re-checks only the edited file; if so, it redoes everything except the cached parses. That is option D |
-| [Meta's Glean](https://engineering.fb.com/2024/12/19/developer-tools/glean-open-source-code-indexing/) | Indexing jobs in parallel; facts in immutable databases. Incremental cost is O(changes), bounded by the fanout (the files that depend on a changed one), computed per language. Databases stack: a layer adds facts to the ones below or hides them | The fanout is what B, C and D compute. Stacked layers fit refs (a branch as a layer over `main`) and F1.4's second half (writing only the difference) |
+| [Meta's Glean](https://engineering.fb.com/2024/12/19/developer-tools/glean-open-source-code-indexing/) | Indexing jobs in parallel; facts in immutable databases. Incremental cost is O(changes), bounded by the fanout (the files that depend on a changed one), computed per language. Databases stack: a layer adds facts to the ones below or hides them | The fanout is what B, C and D compute. Stacked layers fit refs (a branch as a layer over `main`) and F1.4 (writing only the difference) |
 | [Kythe](https://kythe.io/docs/schema/writing-an-indexer.html) (Google) | Per-compilation-unit indexers run in parallel; their entry streams are deduplicated and joined into serving tables | A map per unit, a dedup, a join |
 | [GitHub code search](https://github.blog/engineering/architecture-optimization/the-technology-behind-githubs-new-code-search/) (Blackbird) | Shards by git blob id, so content duplicated across repos and branches is stored once; Kafka between the ingest services | A cache keyed by content; a queue between services, not inside one job |
 | [Bazel's remote cache](https://blog.engflow.com/2024/05/13/the-many-caches-of-bazel/) (used by [Uber's Go monorepo](https://www.uber.com/blog/go-monorepo-bazel/)) | An action's key is a digest of every declared input (content, command, environment, tools); outputs go to a content-addressed store; misses come from undeclared inputs | H6's cache key. The pitfall "anything the map reads that is not in the key" is Bazel's hermeticity |
@@ -236,7 +236,7 @@ The cache is a requirement (H6-D2). These are what make it safe:
 7. **The same file on two refs is one entry:** a feature branch that shares 99 % of its files with `main` costs only
    the files it changed, plus the reduce.
 8. **The graph write still writes the whole snapshot.** Writing only the difference from the previous snapshot is
-   F1.4's second half, after the write's share is measured.
+   F1.4, after the write's share is measured.
 
 ## How H6 relates to H5
 
@@ -329,4 +329,4 @@ the corpus clones.
   author.
 - The map, the reduce and the cache in the indexer, with the corpus cold, warm and the baseline identical.
 - grafana indexed under the memory ceiling; the refresh time on a live install, cold and after a one-file push.
-- ROADMAP: F1.13 checked, and F1.4's first half (the per-file cache) checked.
+- The roadmap: F1.18 and F1.13 checked.
