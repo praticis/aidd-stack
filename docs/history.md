@@ -424,3 +424,7 @@
   (the lock before the first removal, the removals, the launcher, the install folder and the release of the reduced
   Atlas) open `docs/roadmap/narrowing.md`, and SO16 to SO22, the installation and release items they depend on, open
   `docs/roadmap/operations.md`, each with its fields; `docs/atlas-interface.md` says what a consumer may rely on.
+- 2026-11-19: phase 1's items move to their own file, and a debt due in a step of H5 locks F1.17 (`chore(scripts)`,
+  PR #117): `docs/roadmap/phase-1-micro.md` holds F1 with its fields, and F1.17 to F1.29 are new (H5's refactor, the
+  pipeline and the hold-out before SCIP, the MCP's answers, interface and guide, and the references that bound the
+  graph's edges); F1.8 is ticked, and F1.11 narrows to what is missing; a due of `F1.27` no longer reads as F1.2.

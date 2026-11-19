@@ -8,7 +8,7 @@
 - a debt's due is `F1.2`, a `fix(<scope>)` PR before F1.2 (`fix(csharp)`, `fix(go)`, ...), a step of H5 (`H5 step 6`),
   or `closed`, and no document names a debt the register lacks;
 - an item of the roadmap (docs/ROADMAP.md, docs/roadmap/*.md) is not ticked while a debt due in it is open: F1.2 for
-  the debts due in F1.2 and in the `fix` PRs before it. A step of H5 locks no item yet;
+  the debts due in F1.2 and in the `fix` PRs before it, and F1.17 for those due in a step of H5;
 - with --base-register, the open debts whose Due cell changed against that register are listed, each with a warning on
   stderr for the pull request's checks. A move is not a finding.
 
@@ -29,6 +29,7 @@ CASE_ID = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`")
 DEBT = re.compile(r"TD-(\d+)(?: to TD-(\d+))?")
 NO_CASE = "none yet"
 FIX = re.compile(r"`(fix\([a-z]+\))`")
+F12 = re.compile(r"F1\.2(?!\d)")
 ITEM = re.compile(r"^\s*- \[([ xX])\] (?:\*\*)?([A-Z]{1,2}\d+(?:\.\d+)*)\b", re.MULTILINE)
 
 
@@ -52,7 +53,7 @@ def register(text: str) -> tuple[list[dict], list[str]]:
 def phase(due: str) -> str:
     if due.lower().startswith("closed"):
         return "closed"
-    if due.startswith("F1.2"):
+    if F12.match(due):
         return "F1.2"
     if due.startswith("H5 step"):
         return "H5"
@@ -65,6 +66,8 @@ def locked_item(due: str) -> str | None:
     name = phase(due)
     if name == "F1.2" or name.startswith("fix("):
         return "F1.2"
+    if name == "H5":
+        return "F1.17"
     return None
 
 

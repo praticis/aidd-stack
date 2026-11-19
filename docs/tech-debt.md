@@ -19,8 +19,8 @@ Rules:
   as a note in a handoff. The author may register one before a minimal case exists: its Case cell reads `none yet:` and says
   what a case needs, `debts.py` counts such debts, and the fix writes the case first.
 - An item of the roadmap is not ticked while a debt due in it is open: F1.2 for the debts due in F1.2 or in a
-  `fix(<scope>)` PR before it. A debt moves when the author changes its Due cell, its wording included; closing a debt or
-  registering one is not a move.
+  `fix(<scope>)` PR before it, and F1.17 for those due in a step of H5. A debt moves when the author changes its Due
+  cell, its wording included; closing a debt or registering one is not a move.
 - A debt closes in the PR that removes its xfail mark; its row here is then marked closed with that PR (its Due reads
   `closed in PR #n`) and shrinks to what the debt was (its first sentence), its first site and its case: how it was found
   and how it was fixed are in `docs/history.md` and the PR body.
