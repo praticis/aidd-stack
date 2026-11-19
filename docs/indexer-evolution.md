@@ -341,7 +341,7 @@ com os números do corpus):
 - **Fora do extrator:** o prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é do
   **linker** (match por sufixo + `target_hint`/`env_hints`); a spec como fonte de rotas, do **F2.1**; a mesma rota em
   dois apps do repo (o id do endpoint é por repo), do modelo (F1.14); pastas de app de teste com nome de produção
-  (`integration/` do nest e do fastify), da config por repo (F1.1, `.aidd/index.yaml`).
+  (`integration/` do nest e do fastify), da config por repo (F1.1, em `atlas.yaml`).
 
 ## 4. Como rodar localmente (sem Neo4j)
 
