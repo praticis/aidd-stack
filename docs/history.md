@@ -420,3 +420,7 @@
   F1.10 and F2.7 leave it, each with a row in "Left this roadmap"; fifteen items are rewritten to the Atlas's part, P2
   among them, now the Atlas in its own repository; the principles on the orchestrator and on models change; the prose
   shrinks from 31.9 to 23.6 KB; TD-074 enters the register with no case yet.
+- 2026-11-19: the narrowing to the Atlas has its items, and the Atlas a stable interface (`docs:`, PR #116): N1 to N14
+  (the lock before the first removal, the removals, the launcher, the install folder and the release of the reduced
+  Atlas) open `docs/roadmap/narrowing.md`, and SO16 to SO22, the installation and release items they depend on, open
+  `docs/roadmap/operations.md`, each with its fields; `docs/atlas-interface.md` says what a consumer may rely on.

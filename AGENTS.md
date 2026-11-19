@@ -171,6 +171,7 @@ The full text is in the ROADMAP, under "Principles".
 | How the indexer's changes are validated (the cycle, the tools, how a difference is judged) and how to resume safely | `docs/indexer/README.md`, the entry point to `docs/indexer/` |
 | The known defects that do not block, and the phase each is due in | `docs/tech-debt.md` |
 | The graph model | `neo4j/SCHEMA.md` |
+| What the Atlas keeps stable for a consumer | `docs/atlas-interface.md` |
 | The indexing process (sources, refs, refresh) | `docs/indexing-process.md` |
 | The vault and knowledge contract | `docs/knowledge-contract.md` |
 | Work in progress | `docs/handoffs/README.md`: one row per handoff, with its kind, its state and what it waits for |
