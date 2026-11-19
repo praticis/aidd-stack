@@ -187,4 +187,4 @@ RETURN a.name, type(x), labels(c)[0], c.id, b.name, x.confidence;
 ## 8. Out of scope for v1 (recorded so it is not forgotten)
 
 Intra-procedural dataflow (taint), generic type graphs, contract versioning (OpenAPI v1 vs v2 of
-the same endpoint), team ownership (will come from Jira/CODEOWNERS in phase 2).
+the same endpoint), team ownership (a candidate in the ROADMAP, from CODEOWNERS or a catalog file).

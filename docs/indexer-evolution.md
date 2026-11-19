@@ -337,7 +337,7 @@ com os números do corpus):
   entregue por uma interface (gotify `instance.RegisterWebhook(base, g)` aos plugins), ou por uma variável de função
   que um `init()` de build tag atribui (photoprism `registerAPIDocs = api.GetDocs`, só no build de debug: `/docs`
   sai sem o prefixo); rotas de biblioteca que o usuário monta (`middleware.Profiler()` do chi); URL montada em
-  runtime sem literal; gRPC/proto e mensageria (F1/F2.2).
+  runtime sem literal; gRPC/proto (F2.11) e mensageria (F2.2).
 - **Fora do extrator:** o prefixo que viaja na base URL (`{base}items/{id}` vs `/api/catalog/items/{id}`) é do
   **linker** (match por sufixo + `target_hint`/`env_hints`); a spec como fonte de rotas, do **F2.1**; a mesma rota em
   dois apps do repo (o id do endpoint é por repo), do modelo (F1.14); pastas de app de teste com nome de produção
@@ -491,7 +491,8 @@ inspecionar o que o extrator viu num repo específico.
   (nome exato normalizado, nunca a si mesmo, dois publicadores → nenhuma aresta). `repo_map` devolve
   `depends_on`/`depended_by`. É a dependência que o scan HTTP não enxerga (contratos, SDKs internos).
 - **F0.7 perguntas douradas**: `who_consumes('/v1/<rota>')` respondida pelo grafo no par piloto.
-- F1: SCIP para `CALLS` resolvidos, gRPC/proto, mensageria, Qdrant.
+- F1: SCIP para `CALLS` resolvidos (F1.1, F1.2); gRPC/proto é a F2.11, a mensageria é a F2.2, e a busca semântica
+  (F1.5) não está decidida.
 - **Onde o extrator para (fronteira com o SCIP, 2026-10-17).** O SCIP diz *qual definição* um nome referencia
   (herança, função de outro pacote, tipo de um campo, alias de import), com precisão de compilador; não guarda
   *valores* (as strings de template e prefixo) nem conhece *convenções de framework* — e exige o build (`dotnet

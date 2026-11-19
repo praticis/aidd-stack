@@ -7,7 +7,8 @@
 > - `README.md`, `setup/install.sh`, `setup/install-check.sh`, the `setup/aidd` wrapper and `docker-compose.yml`;
 > - `.github/workflows/indexer.yml`, and `docs/indexer/method.md` §4.7 to §4.9 (the live validation);
 > - `indexer/aidd_indexer/core/build.py` (the build fingerprint) and `indexer/aidd_indexer/__init__.py`;
-> - `docs/decisions.md`, rows H4-D10 and H4-D12, and `docs/ROADMAP.md`, items SO10, F3.2 and F3.7.
+> - `docs/decisions.md`, rows H4-D10 and H4-D12; `docs/ROADMAP.md`, item SO10; and `docs/roadmap/phase-3-central.md`,
+>   items F3.2 and F3.7.
 >
 > The author has a **private appendix** for this handoff, with a reference that cannot be named in a public repository. Ask
 > for it before planning, and do not copy any line of it into `docs/`, a PR or an issue.
