@@ -88,6 +88,15 @@
 | `atlas` MCP | our own FastMCP (Python) | MIT |
 | CI | GitHub Actions | free |
 
+## The families in `docs/roadmap/`
+
+A family's items move to a file of their own in `docs/roadmap/`, each with its fields (H10-D2); the items not listed
+here are still below.
+
+- `docs/roadmap/narrowing.md`: N, the narrowing of this repository to the Atlas, from the lock before the first removal
+  to the first release of the reduced Atlas;
+- `docs/roadmap/operations.md`: the installation and release items the narrowing depends on, SO16 to SO22.
+
 ---
 
 ## Continuous update process (its own track — VERY important)
@@ -263,6 +272,8 @@ Ideas with no item yet:
 - a handoff of its own on code quality gates. Until then the shape ratchet holds (H5-D9);
 - `dispatch` for validators reached by the bus pipeline (`SendAsync(cmd)` → `AbstractValidator<cmd>`);
 - re-run the .NET Q4 with dispatch.
+- a folder of conventions under the Atlas's install folder, mounted read-only, beside a path inside the workspace
+  (after N14).
 
 ## Pending decisions
 
