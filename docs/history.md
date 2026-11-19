@@ -428,3 +428,7 @@
   PR #117): `docs/roadmap/phase-1-micro.md` holds F1 with its fields, and F1.17 to F1.29 are new (H5's refactor, the
   pipeline and the hold-out before SCIP, the MCP's answers, interface and guide, and the references that bound the
   graph's edges); F1.8 is ticked, and F1.11 narrows to what is missing; a due of `F1.27` no longer reads as F1.2.
+- 2026-11-19: phases 2 and 3's items move to their own files (`docs:`, PR #118): `docs/roadmap/phase-2-macro.md`
+  holds F2 with its fields, and F2.10, the front-end flows, and F2.11, gRPC, are new; `docs/roadmap/phase-3-central.md`
+  holds F3 with its fields, and F3.6 now asks to bound the runs kept per `(repo, ref)` and to collect a persistent
+  snapshot whose ref is gone; ownership, which no item held, is a candidate.

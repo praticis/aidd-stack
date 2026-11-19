@@ -96,7 +96,7 @@ the images (including the `tools` profile).
 |---|---|
 | **F0.3.5 (now)** | `atlas.yaml` + the `local` source + ref policy + `aidd plan/bootstrap/refresh` + an option in `install.sh` + a real `--ref` through a worktree |
 | F1 | the bare mirrors and the refresher (`aidd daemon`) are built (D15); remote providers (GitHub first; GitLab/Azure DevOps next) have no item yet, and are a candidate in the ROADMAP |
-| F2 | governance: read `catalog-info.yaml` (Backstage) / CODEOWNERS → `Domain`, `System`, `Team` nodes, an `OWNS` edge; optionally integrate with Backstage or Atlassian Compass as the catalog source |
+| F2 | the macro connectors (specs, messaging, infrastructure, databases); ownership (`catalog-info.yaml` from Backstage, or CODEOWNERS → `Domain`, `System`, `Team` nodes, an `OWNS` edge) has no item yet, and is a candidate in the ROADMAP |
 | F3 | pipeline triggers (a push to a protected branch → `aidd index`), the central server replaces the scheduler |
 
 ## 7. Decisions
@@ -109,4 +109,5 @@ the images (including the `tools` profile).
   with remote providers (F1).
 - D10 **Solved** — defaults `14 days / 5 per repo / GC 30 days`, editable in `atlas.yaml`.
 - D11 **Simplified** — optional `areas:` in the manifest (name → repos/globs), used by `aidd plan` to group and
-  written to `Repo.area`. `Domain`/`System`/`Team` nodes and Backstage/Compass wait for F2.
+  written to `Repo.area`. `Domain`/`System`/`Team` nodes and Backstage/Compass have no item yet (a candidate in the
+  ROADMAP).

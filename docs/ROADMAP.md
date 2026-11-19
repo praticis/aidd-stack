@@ -95,6 +95,10 @@ here are still below.
 
 - `docs/roadmap/phase-1-micro.md`: F1, the complete micro level: SCIP, and the refactor, the pipeline and the hold-out
   before it; the MCP's answers, interface and guide; the references that bound the graph's edges;
+- `docs/roadmap/phase-2-macro.md`: F2, the complete macro level: the connectors that link services, the evidence of
+  each link, the MCP's answers across repositories, and the front-end flows;
+- `docs/roadmap/phase-3-central.md`: F3, the central server: the Atlas served to a team, kept current by CI, with
+  authentication per tenant;
 - `docs/roadmap/narrowing.md`: N, the narrowing of this repository to the Atlas, from the lock before the first removal
   to the first release of the reduced Atlas;
 - `docs/roadmap/operations.md`: the installation and release items the narrowing depends on, SO16 to SO22.
@@ -146,38 +150,6 @@ Open:
   where secrets live, what each container of the Atlas can touch. `mcp-neo4j` (debug profile) still has write Cypher
   on `127.0.0.1:3004` — for debugging only
 
-## Phase 2 — Complete macro (contract linker + governance)
-
-- [ ] F2.1 OpenAPI connector: specs → `HttpEndpoint`; routes extracted from the code reconciled with the spec
-  (divergence = alert)
-- [ ] F2.2 Messaging connector: topics/queues in constants, config and env (Kafka, RabbitMQ, SQS/SNS) →
-  `PUBLISHES`/`SUBSCRIBES`; event schemas when they exist
-- [ ] F2.3 Infra connector: `docker-compose`, k8s/Helm, gateway → resolve `ENV_VAR → URL → repo` to link outbound
-  HTTP calls to the target repo
-- [ ] F2.4 Database connector: migrations/ORM → `DbTable`, `READS/WRITES`; tables shared between repos = an implicit
-  macro edge
-- [ ] F2.5 Confidence and evidence on the macro edges F2.1 to F2.4 add, as `CONSUMES` has them (`exact`, `suffix`, and
-  the candidates listed when the linker cannot decide); no level is decided by a model
-- [ ] F2.6 `atlas` MCP: `workspace_map(tenant)`, and the cross-repo impact of an endpoint or a topic, as `impact_of`
-  gives a symbol's (`repo_map` already gives a repo's dependencies); Go's `who_calls` across repositories
-- [ ] F2.8 Visualization: export of the subgraph as static HTML or as data — human reading of the macro level
-- [ ] F2.9 Macro golden questions (≥ 15) + `aidd eval` covering micro and macro
-
-**Phase exit:** a queryable workspace map; cross-repo impact with evidence.
-
-## Phase 3 — Central and continuous (the end goal)
-
-- [ ] F3.1 A central server (Neo4j and the `atlas` MCP) with backup; a compose "server profile"
-- [ ] F3.2 A CI job per repo: on every merge to `main`/`develop` → `aidd index` → push to the central server (a
-  self-hosted runner with a SCIP cache)
-- [ ] F3.3 A scheduled/event-driven linker on the central server; a report of new edges and divergences
-- [ ] F3.4 MCP auth per tenant (a token per dev/team behind a reverse proxy); the tenant filter injected, never
-  trusted to the client
-- [ ] F3.5 A coverage/freshness dashboard: indexed repos, index age, % of macro edges by confidence
-- [ ] F3.6 Retention: keep N snapshots per `(repo, ref)`; GC of dead refs
-- [ ] F3.7 The installer points the `atlas` entry of a repository's MCP configuration at the central server when
-  configured; local stays as the offline fallback
-
 ---
 
 ## Publishing and documentation (its own track)
@@ -215,6 +187,8 @@ Ideas with no item yet:
 - a folder of conventions under the Atlas's install folder, mounted read-only, beside a path inside the workspace
   (after N14).
 - remote sources: a provider's API (GitHub first, then GitLab and Azure DevOps) beside `local`.
+- ownership and domains: the team that owns a service and the domain or system it belongs to, read from
+  `CODEOWNERS` or a catalog file (Backstage, Compass), as nodes of the graph.
 
 ## Pending decisions
 

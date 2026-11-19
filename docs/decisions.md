@@ -17,10 +17,10 @@
 | D3 | Refs: the tenant's `always` = `[main, master]`. Feature branches come in through the `active` policy (≤ 14 days, ≤ 5 per repo, ephemeral, GC after 30 days) and through `refs.overrides`. | The organization does not use `develop`, which stays in the code's default for compatibility (2026-10-03, F0.3.6). |
 | D6 | The name **Atlas**, for the Neo4j database and for the agent-facing MCP server (`atlas`). `neo4j/` stays as the infra folder. | Intent tools replace raw Cypher (F0.6). |
 | D7 | No default tenant: `AIDD_TENANT` comes from `install.sh` (`.env`), is `${AIDD_TENANT:?}` in the compose file and is required in the indexer. An `auto` that derives no tenant is an error. | A wrong tenant mixes clients' graphs. |
-| D8 | Providers: **GitHub first** (F1). The manifest already accepts N sources per tenant. | Each tenant combines providers without changing the format. |
+| D8 | Providers: **GitHub first**. The manifest already accepts N sources per tenant. | Each tenant combines providers without changing the format. |
 | D9 | A `local` source is read through `git archive` of the refs; revised by D15: also with a mirror, so the workspace stays read-only. | Read without touching the dev's checkout. |
 | D10 | Default ref policy: `main`, `master` and `develop` always; active ones ≤ 14 days, ≤ 5 per repo; GC of ephemeral ones after 30 days. | Bounds the indexing cost per repo. |
-| D11 | Areas: an optional `areas:` section in `atlas.yaml` (`Repo.area`, groups the `plan`). Domain nodes and Backstage/Compass wait for F2. | Grouping without a premature domain model. |
+| D11 | Areas: an optional `areas:` section in `atlas.yaml` (`Repo.area`, groups the `plan`). Domain nodes and Backstage/Compass are deferred. | Grouping without a premature domain model. |
 | D12 | Install ≠ update. The bootstrap indexes the local refs as cloned (no fetch, no credential); keeping the atlas current is a process of its own. | The install cannot depend on a credential or on the network. |
 | D13 | Automatic refresh with a dedicated read-only PAT, never the personal key; a 15 min interval. D13's and D14's scheduler was replaced by D15. | A minimal, revocable service credential. |
 | D15 | The refresher is a compose service (`aidd daemon`) with bare mirrors in `~/.aidd/mirrors`. The workspace is mounted read-only, and the containers run as the host user. Replaces D14 (systemd on WSL) and D12's fetch on the host. | Works the same on macOS, Linux and WSL, and Docker restarts it. |

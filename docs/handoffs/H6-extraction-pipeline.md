@@ -157,7 +157,7 @@ Researched on 2026-10-19: systems that partition code indexing, run it in parall
 | rustc's incremental compilation and [Salsa](https://rust.googlesource.com/rust/+/f095de4bf105e92b035a7cd64c34bcce56b7cb78/src/tools/rust-analyzer/docs/dev/guide.md) (rust-analyzer) | Memoized pure queries, each with the dependencies it read; a query whose inputs did not change is reused without running ("red-green") | Option C. rust-analyzer only announced persistent caches in 2025: recording dependencies is the costly part |
 
 No public material on code indexing was found from Spotify or YouTube. Uber's is the Go monorepo on Bazel with a
-remote cache. Spotify's Backstage is a catalog (F2), not an indexer.
+remote cache. Spotify's Backstage is a catalog, not an indexer.
 
 ## Open question 2 — what runs the map (decided: ADR-004 §4)
 
