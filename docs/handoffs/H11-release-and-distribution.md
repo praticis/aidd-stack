@@ -7,8 +7,8 @@
 > - `README.md`, `setup/install.sh`, `setup/install-check.sh`, the `setup/aidd` wrapper and `docker-compose.yml`;
 > - `.github/workflows/indexer.yml`, and `docs/indexer/method.md` §4.7 to §4.9 (the live validation);
 > - `indexer/aidd_indexer/core/build.py` (the build fingerprint) and `indexer/aidd_indexer/__init__.py`;
-> - `docs/decisions.md`, rows H4-D10 and H4-D12; `docs/ROADMAP.md`, item SO10; and `docs/roadmap/phase-3-central.md`,
->   items F3.2 and F3.7.
+> - `docs/decisions.md`, rows H4-D10 and H4-D12; `docs/roadmap/operations.md`, items SO10 and SO23; and
+>   `docs/roadmap/phase-3-central.md`, items F3.2 and F3.7.
 >
 > The author has a **private appendix** for this handoff, with a reference that cannot be named in a public repository. Ask
 > for it before planning, and do not copy any line of it into `docs/`, a PR or an issue.
@@ -39,8 +39,8 @@
 - **The consumers now live outside this repository.** They talk to the Atlas only through MCP and need a version to check
   (H10, section 1.3, point 5).
 - **Two decisions already ask for it,** written for a split of the repository that no longer happens: an image on a
-  registry, per tag (H4-D10), and SemVer, a changelog and the README at a release (H4-D12). The supply-chain item (SO10) asks
-  for digests, a hash lock, an SBOM and a scan.
+  registry, per tag (H4-D10), and SemVer, a changelog and the README at a release (H4-D12). The supply-chain items
+  (SO10 and SO23) ask for digests, a hash lock, an SBOM and a scan.
 
 ## 2. What this repository has today
 
@@ -91,7 +91,7 @@ What is different here, and the round should weigh:
    schema, the stable interface. What makes a change breaking for a consumer (H10, section 1.3) and for an installed graph.
    Who or what moves the number, and how it lives with the build fingerprint, which must keep deciding the re-index.
 2. **What is a release made of?** A tag; notes or a changelog; the images (which, for which architectures); the installer at
-   that version; the scan and the SBOM of SO10. What is the least that deserves the name.
+   that version; the scan and the SBOM of SO23. What is the least that deserves the name.
 3. **How does a machine install, and upgrade?** Whether the installer resolves a version (the latest release, or one that is
    named) and pulls images instead of building them. What the command of today's README does the day after. What an upgrade
    does when the new version no longer installs something the machine has: stop and say, migrate, or go on. How to go back.

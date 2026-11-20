@@ -97,7 +97,7 @@ the images (including the `tools` profile).
 | **F0.3.5 (now)** | `atlas.yaml` + the `local` source + ref policy + `aidd plan/bootstrap/refresh` + an option in `install.sh` + a real `--ref` through a worktree |
 | F1 | the bare mirrors and the refresher (`aidd daemon`) are built (D15); remote providers (GitHub first; GitLab/Azure DevOps next) have no item yet, and are a candidate in the ROADMAP |
 | F2 | the macro connectors (specs, messaging, infrastructure, databases); ownership (`catalog-info.yaml` from Backstage, or CODEOWNERS → `Domain`, `System`, `Team` nodes, an `OWNS` edge) has no item yet, and is a candidate in the ROADMAP |
-| F3 | pipeline triggers (a push to a protected branch → `aidd index`), the central server replaces the scheduler |
+| F3 | pipeline triggers (a push to a protected branch → `aidd index`), which replace the refresher's polling on the central server |
 
 ## 7. Decisions
 

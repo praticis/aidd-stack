@@ -288,7 +288,7 @@ Regras aprendidas no corpus (não regredir):
 | `@fastify/autoload` (fastify-demo, 14 rotas sem `/api/tasks`, `/api`, `/`); `app.register(fp(serviceApp))` não montava o plugin | `register(autoload, { dir: path.join(__dirname \| import.meta.dirname, 'routes'), options: { prefix } })`: cada arquivo sob o `dir` é plugin sob o caminho das pastas (`dirNameRoutePrefix: false` desliga) — no `compose`, o router que o default export do arquivo recebe (`param:<arquivo>:default:0`) é montado onde o `register` leva. `x.register(plugin, { prefix })` com plugin do repo (por nome, `require(..)` ou `fp(plugin)` do `fastify-plugin`) monta o primeiro parâmetro do plugin em `x` (F1.14) |
 | Next.js (taxonomy, 9 rotas): nenhuma rota, não há chamada de registro | num pacote cujo `package.json` mais próximo exige `next` (`RepoView.manifest_dir`): `app/**/route.ts` (também em `src/`) exportando os verbos (`export async function GET`, `export const PATCH = ..`, `export { remove as DELETE }`) e `pages/api/**` com default export, `ANY`; `[id]` e `[...rest]` são parâmetro, `[[...rest]]` também o caminho da pasta; `(grupo)` e `@slot` não entram; nada sob pasta `_privada`; `page.tsx` e `_route.ts` não são rota (F1.14) |
 
-Limitações conhecidas no fechamento do H2 (2026-10-17; as que são evolução do extrator estão no ROADMAP, **F1.14**,
+Limitações conhecidas no fechamento do H2 (2026-10-17; as que são evolução do extrator estão no roadmap, **F1.14**,
 com os números do corpus):
 
 - **Sem scanner:** Django urlconf e DRF (`path()`, `rest_path()`, `router.register()`); ~~rotas por arquivo (Next.js
@@ -439,7 +439,8 @@ inspecionar o que o extrator viu num repo específico.
    Novo label/índice → `neo4j/init/schema.cypher` (idempotente; `neo4j-init` reaplica no `up`) e `neo4j/SCHEMA.md`.
 4. Se o MCP precisa expor o dado novo → `mcp/tools_*.py` (ferramenta nova ou campo em `http_map`/`repo_map`; o `server.py` só as registra);
    validar com o teste de protocolo (`build_server(store=Fake)`) — não precisa de Neo4j.
-5. Atualizar a tabela de regras (§3), o docstring do módulo alterado e o ROADMAP ("Onde estamos" + item F0.x).
+5. Atualizar a tabela de regras (§3), o docstring do módulo alterado, o "Where we are" do ROADMAP e o item em
+   `docs/roadmap/`.
 6. Nunca gravar nomes de projetos/tenant/tickets reais em docs ou código do repo (open-source): usar
    `<project-a>`, `<tenant>`, `<ticket>`.
 

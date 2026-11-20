@@ -90,8 +90,7 @@
 
 ## The families in `docs/roadmap/`
 
-A family's items move to a file of their own in `docs/roadmap/`, each with its fields (H10-D2); the items not listed
-here are still below.
+The Atlas's items are in `docs/roadmap/`, one file per family, each open one with its fields (H10-D2):
 
 - `docs/roadmap/phase-1-micro.md`: F1, the complete micro level: SCIP, and the refactor, the pipeline and the hold-out
   before it; the MCP's answers, interface and guide; the references that bound the graph's edges;
@@ -101,81 +100,10 @@ here are still below.
   authentication per tenant;
 - `docs/roadmap/narrowing.md`: N, the narrowing of this repository to the Atlas, from the lock before the first removal
   to the first release of the reduced Atlas;
-- `docs/roadmap/operations.md`: the installation and release items the narrowing depends on, SO16 to SO22.
-
----
-
-## Continuous update process (its own track — VERY important)
-
-- [x] U1 **Service credential** (D13): a **read-only** PAT in `~/.aidd/secrets/git-token` (600), collected in step 6
-  of `install.sh`; the wrapper uses it through `GIT_ASKPASS` and rewrites ssh→https remotes only for the fetch. Your
-  personal key stays out of the scheduler. Validated: `fetch: ok (service)` on the 6 repos. Note: fine-grained needs
-  admin approval in the org — classic (scope `repo`, short expiry) works as a bridge; a **GitHub App** is the target
-  for the server (F1)
-- [ ] U4 **Event trigger (F3)**: a webhook/CI on a push to a protected branch → `aidd index <repo> --ref <branch>`;
-  replaces the scheduler on the central server
-- [x] U5 **In-container fetch**: became the default path with the refresher (D15) — a mirror per repo, the PAT as a
-  file through `git-askpass.sh`. Validated with a local remote in the e2e; **still to validate against GitHub with a
-  real PAT**
-
-## Security and operations (its own track)
-
-> A prerequisite for adoption by organizations. Review of 2026-10-12: the stack was born as one dev's local tool and
-> exposed more than it should. Order: close what was exposed, take state and credentials off the host, then
-> governance.
-
-Open:
-
-- [ ] SO7 **Strong isolation between tenants**: today one Neo4j holds every tenant (Community has no RBAC and no
-  multiple databases) and every `atlas` tool accepts `tenant`. For whoever serves several organizations on the same
-  machine: one Atlas stack per tenant (a compose project with its own ports) or, on the server (F3.4), the tenant
-  injected by the token
-- [ ] SO8 **Authentication on the `atlas` MCP** (a per-dev token at the gateway; today the defense is localhost +
-  Host/Origin) — ties in with F3.4; careful: the token cannot go in the MCP configuration the installer writes into
-  the repos
-- [ ] SO9 **Prompt injection through the graph's answers**: third-party code reaches the agent as text it did not
-  write (a symbol's `doc` and `signature`, a violation's `message`, the docstrings `find_symbol` matches). Name the
-  answer fields that carry code text, so a consumer treats them as data; never filter or rewrite that text by heuristic
-- [ ] SO10 **Full supply chain**: digests (`@sha256`) on the images, a lock with hashes (Python `--require-hashes`,
-  npm `package-lock`), SBOM + scan (Trivy/Grype) in CI, Renovate for deliberate bumps; the indexer's `pyproject.toml`
-  dependencies are still ranges
-- [ ] SO11 **What is disposable**: once only Neo4j and the mirrors hold state, everything the Atlas keeps is rebuilt
-  from the repositories; say so, and say what the host must keep (`atlas.yaml`, `.env`, the read-only token)
-- [ ] SO12 **Scale with N devs**: N laptops × M repos every 15 min hit GitHub's secondary rate limit; backoff on a
-  fetch failure; a central server (F3) for larger organizations. Mirrors double the repos' disk — GC of mirrors of
-  repos that left the workspace
-- [ ] SO14 **Validate on WSL and native Linux** (the e2e was on macOS): `AIDD_UID`/workspace permissions (umask 077
-  leaves the container without read access), Docker autostart; a real PAT against GitHub (U5)
-- [ ] SO15 **Data flow / threat model** for adopters: what leaves the machine (what the LLM reads; telemetry off),
-  where secrets live, what each container of the Atlas can touch. `mcp-neo4j` (debug profile) still has write Cypher
-  on `127.0.0.1:3004` — for debugging only
-
----
-
-## Publishing and documentation (its own track)
-
-> The repository is public. This track gives it documentation for newcomers, in English, Portuguese, Spanish and
-> Chinese. Decisions and the order: `docs/handoffs/H4-public-docs.md`.
-
-- [ ] P0 Recycle the working docs (H4 step 0, asked for on 2026-10-18): the current truth separated from history; an
-  `AGENTS.md` at the root as the entry point for a contributor and their AI; the ROADMAP log condensed into
-  `docs/history.md`; the decisions distilled into `docs/decisions.md`; the corpus report with only the method, the
-  current baseline and the gaps; from ~600 KB to a ceiling per growth file (`indexer/scripts/checks/docs_ceilings.txt`), with no total. Phase 0a done on 2026-10-19, with every doc in
-  English (H4-D1); phase 0b (the extractor guide, rewritten in English) after H5
-- [ ] P1 Redecide H4 with the premise (H10-D1): the H4 proposals that H10-D1 and H11-D1 left open, for the one
-  repository, reviewers per language, and a sketch of the docs architecture
-- [ ] P2 **The Atlas in its own repository**, named `aidd-atlas` (H10-D1), after the release of the reduced Atlas:
-  whether it is a new repository born from one commit with the reduced tree or this one renamed, where the history
-  stays, how the new tree is proven, and, if it is a new one, how the install entry passes to it are its design. This
-  repository is never deleted or made private
-- [ ] P3 English content for the repository (README + `docs/en/`), validated by someone who has never seen the project
-- [ ] P3.1 The contributor path (H4.1, `docs/handoffs/H4.1-contributor-path.md`): `CONTRIBUTING.md`, playbooks per
-  contribution type, the method explained, PR and issue templates, the method's checks in CI, and an acceptance test
-  in which a fresh agent re-enacts past increments and follows the method on its own
-- [ ] P4 Languages: a glossary, a style guide, `i18n_check.py` in CI; translations per tier into pt-BR, es and zh-CN
-- [ ] P5 Visual assets (manifest `docs/assets/README.md`), community files and GitHub settings for the repository; its
-  releases follow H11-D1
-- [ ] P6 *(optional)* A docs site, when navigation calls for it
+- `docs/roadmap/operations.md`: U and SO, how the Atlas is kept current, kept safe, installed and released, the
+  installation and release items the narrowing depends on among them;
+- `docs/roadmap/publishing.md`: P, the public repository: its documentation for newcomers, in four languages, the
+  contributor path, and the Atlas in its own repository.
 
 ## Candidates
 
