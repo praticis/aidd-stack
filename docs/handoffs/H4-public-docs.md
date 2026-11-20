@@ -1,9 +1,10 @@
 # Handoff H4 — Public documentation: aidd-stack, the indexer in its own repo, and four languages
 
 > Paste this file (or ask for `docs/handoffs/H4-public-docs.md` to be read) at the start of a new chat. Before
-> anything else, the chat should read `AGENTS.md`, `docs/ROADMAP.md` ("Where we are", "Principles" and the tracks),
-> the current `README.md` and `indexer/README.md`, ADRs 002 and 003, `docs/knowledge-contract.md`, `neo4j/SCHEMA.md`,
-> `docker-compose.yml` (services), `setup/install.sh` (steps) and the skills in `setup/skills/`.
+> anything else, the chat should read `AGENTS.md`, `docs/ROADMAP.md` ("Where we are" and "Principles"),
+> `docs/roadmap/publishing.md`, the current `README.md` and `indexer/README.md`, ADRs 002 and 003,
+> `docs/knowledge-contract.md`, `neo4j/SCHEMA.md`, `docker-compose.yml` (services), `setup/install.sh` (steps) and the
+> skills in `setup/skills/`.
 >
 > **State (2026-10-19):** step 0a done; the rest not started. The visual assets (brand, banner, featured diagram,
 > social preview) are made in another process; this handoff defines where they go and what the docs ask of them. H2b

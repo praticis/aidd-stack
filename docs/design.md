@@ -82,7 +82,7 @@ The author approves the plan before a branch is created. A choice that sets the 
 (`docs/decisions.md`).
 
 An alternative left out because what it needs does not exist yet is not dropped:
-- it is written into the item of the work that builds what it needs, in the handoff or the ROADMAP;
+- it is written into the item of the work that builds what it needs, in the handoff or in `docs/roadmap/`;
 - where a test can tell that what it needs has come, a test fails then, and is replaced by the alternative's own
   check.
 

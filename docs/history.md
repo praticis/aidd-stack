@@ -432,3 +432,7 @@
   holds F2 with its fields, and F2.10, the front-end flows, and F2.11, gRPC, are new; `docs/roadmap/phase-3-central.md`
   holds F3 with its fields, and F3.6 now asks to bound the runs kept per `(repo, ref)` and to collect a persistent
   snapshot whose ref is gone; ownership, which no item held, is a candidate.
+- 2026-11-20: the operations and publishing items move to their own files (`docs:`, PR #119):
+  `docs/roadmap/operations.md` holds U and SO7 to SO15 with their fields, beside the installation and release items,
+  and SO23, the SBOM, the scan and the dependency updates of a published image, is new, which leaves SO10 the pinned
+  images and the hashed lock; `docs/roadmap/publishing.md` holds P with its fields; the ROADMAP keeps no open item.
